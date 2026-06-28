@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Idle Grounds — Prototype</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Top bar -->
+  <header id="topbar">
+    <nav id="tabs"></nav>
+    <div class="top-right">
+      <button id="upgrades-btn">⚙ Upgrades</button>
+      <div class="gold-pill">🪙 Gold: <span id="gold-amount">0</span></div>
+    </div>
+  </header>
+
+  <!-- Main: area grid + crafting panel -->
+  <main id="main">
+    <section id="area-panel">
+      <h2 id="area-title">Forest</h2>
+      <div id="grid"></div>
+      <div id="unlock-row"></div>
+    </section>
+
+    <aside id="crafting-panel">
+      <div class="craft-header">
+        <h2>Crafting</h2>
+        <div class="filter">
+          <button id="filter-active" class="on">This Area</button>
+          <button id="filter-all">Show All</button>
+        </div>
+      </div>
+      <div id="recipe-list"></div>
+    </aside>
+  </main>
+
+  <!-- Inventory -->
+  <footer id="inventory-bar">
+    <span class="inv-label">INVENTORY</span>
+    <div id="inventory"></div>
+  </footer>
+
+  <!-- Upgrades modal -->
+  <div id="upgrades-modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h2>⚙ Upgrades</h2>
+        <div class="gold-pill">🪙 <span id="up-gold">0</span></div>
+        <button id="upgrades-close" class="close-btn">✕</button>
+      </div>
+      <div id="upgrades-body"></div>
+    </div>
+  </div>
+
+  <!-- Win modal -->
+  <div id="win-modal" class="modal hidden">
+    <div class="modal-box win-box">
+      <h1>🌍 The Worldstone is Forged!</h1>
+      <p class="win-sub">The concentrated essence of all four domains is yours.</p>
+      <div id="win-stats"></div>
+      <button id="win-continue" class="craft-btn">Continue in Sandbox ▶</button>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
