@@ -13,11 +13,13 @@
 
 ## What this is
 
-A browser-based incremental/idle sandbox ("Idle Grounds") built from the GDD at:
-`C:\Users\tarno\Downloads\GDD_IdleGrounds_v0.1.md`
+A browser-based incremental/idle sandbox ("Idle Grounds"). Originally built from the
+GDD at `C:\Users\tarno\Downloads\GDD_IdleGrounds_v0.1.md`, then pivoted to a **single
+spatial tilemap world** (see "Architecture pivot" below).
 
-Four areas (Forest, Farm, Mine, Fishing) share one tier/harvest system feeding a
-crafting system; the win condition is crafting the **Worldstone**.
+The world is one big **+ shape**: **Forest** (centre), **Farm** (left), **Mine**
+(right), **Fishing** (down), and an empty reserved arm (up). The win condition is
+still crafting the **Worldstone**.
 
 ## Tech / how to run
 
@@ -28,99 +30,103 @@ crafting system; the win condition is crafting the **Worldstone**.
 - A `.claude/launch.json` here defines a preview server named `idle-grounds`
   (`node server.js`, port 5174). The Claude preview tool reads the **session root's**
   launch.json, so this only works if the session is rooted in this folder.
+- **View at a real desktop width.** The world viewport is a fixed 640×640; a fixed
+  320px crafting panel sits beside it, so a narrow window squeezes the layout.
 
 ## File map
 
 | File | Role |
 |------|------|
-| `index.html`   | DOM layout: top bar/tabs, area grid, crafting panel, inventory, upgrades + win modals |
-| `style.css`    | Dark theme, tier-colored badges, pulse / cooldown-ring / AUTO animations |
-| `js/data.js`   | All static config: areas × 5 tiers (drops/timers/durability), recipes, costs |
-| `js/state.js`  | Mutable game state `window.GS` + constructors |
-| `js/engine.js` | Pure logic (no DOM): tier rolls, harvest, durability, crafting, gold sinks, ticks |
-| `js/ui.js`     | DOM rendering, reads `GS` (rAF-coalesced) |
-| `js/main.js`   | Bootstrap: prime tiles, wire events, start the 3 game-loop intervals |
+| `index.html`   | DOM: top bar, world viewport (`#grid` + `#arrows`), crafting panel, inventory, modals |
+| `style.css`    | Dark theme, world ground tints, node sprites, travel arrows, slide anim, panels |
+| `js/data.js`   | Static config: areas × 5 tiers, `GRID` (cell/grid sizing), `WORLD` (+ layout, arrow costs), recipes, resource costs, `TEST` knobs |
+| `js/state.js`  | Mutable `window.GS`; lays out each area's nodes on a lattice (`makeAreaNodes`) |
+| `js/engine.js` | Pure logic (no DOM): tier rolls, harvest, durability, crafting, resource costs, node/area unlocks, camera moves, ticks |
+| `js/ui.js`     | DOM rendering: world viewport, node sprites, arrows, crafting/inventory/upgrades (rAF-coalesced) |
+| `js/main.js`   | Bootstrap: prime nodes, wire events, start the 2 game-loop intervals |
 | `server.js`    | Dependency-free static file server for local preview |
 
 Architecture note: engine is DOM-free and globals hang off `window` (`DATA`, `GS`,
-`ENGINE`, `UI`). This made a headless Node smoke test possible (see "Testing").
+`ENGINE`, `UI`).
 
-## What's implemented (all 12 GDD core systems)
+## What's implemented
 
-- Per-area grids with `ready` / `cooldown` / `locked` tile states
-- Click-to-harvest → drops to inventory → weighted tier roll → cooldown
-- Mine **durability** (tiers 3-5 need multiple clicks to break)
-- Inventory bar
-- Crafting panel: recipe cards, ingredient availability coloring, Craft / Craft 10,
-  "This Area" vs "Show All" filter
-- Gold: passive +1/10s drip, 10% per-harvest bonus, one-time milestone craft bonuses
-- Upgrades modal: tier unlocks (50/200/800/3000G), speed (−20%/lvl, ×3),
-  automation (I/II/III @ 500/1500/4000G)
-- Tile unlocks with scaling Gold cost (+25G per tile beyond initial)
-- Area-unlock gating via milestone crafts (Wooden Fence→Farm, Iron Pickaxe→Mine,
-  Fishing Rod→Fishing)
-- Automation tick: harvests highest-tier ready tiles first, runs across all areas
-- Worldstone win check + win screen (time played, gathered, crafted)
+- **Single +-shaped world** with a **camera locked to one area** at a time. Each area
+  is a **20×20 grid of 32px cells** (640×640px), with a per-area ground tint.
+- **Resource nodes** on a lattice: each occupies a **2×2 footprint** but draws a
+  **larger emoji sprite that overflows upward** (z-ordered by row so nearer nodes
+  layer in front). Sprites are **emoji placeholders** (per-tier, see `DATA.TIER_SPRITES`).
+- **Click-to-harvest** → drops to inventory → weighted tier roll → cooldown → regrow.
+  Mine durability (tiers 3-5 need multiple clicks) preserved.
+- **Travel arrows** on the four edges. A locked arrow shows its resource cost; clicking
+  it **spends the resources, opens that area, and moves the camera there**. Once open,
+  clicking an arrow just pans (with a directional slide animation). The up arm is a
+  disabled `🔒 ???` placeholder.
+- **Per-tile (plot) unlocks**: each area starts with `initialActive` central nodes;
+  the rest are **locked plots** cleared by spending the area's base resource.
+- **Crafting panel**: recipe cards, "This Area" vs "Show All" filter, Craft / Craft 10.
+- **Upgrades modal**: tier unlocks, speed (−20%/lvl ×3), automation (I/II/III) — all
+  **paid in each area's base resource**; the modal shows each area's resource bank.
+- **Automation tick** harvests highest-tier ready nodes across unlocked areas.
+- **Worldstone win check** + win screen (time / gathered / crafted).
 
-## Key design decisions / deviations from the GDD
+## Key design decisions
 
-1. **Station-gating cut to avoid dependency cycles.** The GDD's stations have circular
-   deps (Forge needs Copper Ingot but is meant to *unlock* metal recipes;
-   Workbench→Tier 3 and Enchanting→Essence Extract are similar, and the Worldstone
-   needs Essence Extract). Resolution:
-   - **Only the Worldstone is gated** (behind the **Enchanting Table** — clean, acyclic).
-   - **Workbench / Forge are optional milestone crafts** that grant one-time Gold
-     bonuses; all chain recipes are always craftable when you have materials.
-   - *If you want literal GDD station-gating, the chains need reworking to break the
-     cycles (e.g. a no-station "Bloomery" pre-recipe for the first Copper Ingot).*
-2. **Tier spawn** = simple weighted random among currently-unlocked tiers using base
-   weights `[70,20,7,2.5,0.5]`. The GDD's "higher-tier upgrades shift probabilities
-   upward" is NOT yet implemented (no progressive shifting).
-3. **Cooldown timing**: next tier is rolled at harvest time and the regrow timer uses
-   *that* tier's duration (so a Void tree takes 90s to grow back).
-4. **Speed upgrades** are multiplicative: `timer × 0.8^level`.
+1. **Gold removed entirely.** The economy is **100% resources** now. Each area has a
+   `base` resource that funds its plot unlocks and upgrades: Forest→`wood`,
+   Farm→`wheat`, Mine→`stone`, Fishing→`fish`. Area (arrow) unlocks are paid from
+   current inventory (all in `wood`, since you start in Forest) — see `WORLD.unlockCost`.
+2. **Areas unlock via the world arrows, not via crafting.** The old recipe-gated area
+   unlocks (Wooden Fence→Farm, etc.) are gone. Those milestone recipes still exist as
+   craftable **items** but no longer gate anything (candidates for removal/repurposing).
+3. **No dependency cycles in unlocks.** All area-unlock costs are payable with Forest
+   `wood`, so no area can deadlock. (Earlier a recipe-gating cycle blocked Mine/Fishing;
+   that whole mechanic is now replaced by resource-paid arrows.)
+4. **Render loop avoids full DOM rebuilds.** The 100 ms tick calls `requestLiveTick()`
+   → `refreshGrid()`, which updates cooldown timers **in place** and rebuilds only nodes
+   whose state changed. A full `render()` every frame previously destroyed the node
+   under the cursor mid-click (hover flicker / dropped clicks); keep this invariant.
+5. **Sprites:** 2×2 footprint for occupancy/click, larger visual that overflows. Emoji
+   can't truly fill the intended 4×6-cell silhouette — swap `TIER_SPRITES` for real
+   PNG/SVG art later; the footprint/overflow/z-order plumbing is already there.
+6. **Tier spawn** = weighted random among unlocked tiers (`[70,20,7,2.5,0.5]`); no
+   progressive shifting yet. Cooldown rolls the next tier at harvest time.
 
-## Testing
+## Testing knobs (`DATA.TEST`)
 
-- Headless engine smoke test (20 assertions, all passing) lived in the scratchpad —
-  it stubs `window`, loads `data/state/engine.js` in VM scopes, and exercises
-  harvest/craft/unlock/upgrade/automation/win. Re-create it if you want regression
-  coverage (it is NOT committed; engine globals make it ~80 lines).
-- Verified live in-browser: click→harvest→craft→inventory loop, cooldown rendering,
-  gold accrual — all working, no console errors.
+- `ENABLED` — master switch; set `false` to restore base balance.
+- `timeScale: 0.2` — cooldown/regrow length multiplier (15s → 3s).
+- `costScale: 0.5` — multiplier on node-unlock / arrow-unlock / upgrade costs.
 
-## Known quirks
+## Verifying in the headless preview
 
-- `preview_screenshot` times out: the ready-tile `pulse` is an infinite CSS animation,
-  so the capture tool never gets a settled frame. Game is fine; use the accessibility
-  snapshot / `preview_eval` instead. (Could gate pulse behind `prefers-reduced-motion`.)
-- The preview tool's synthetic click may not fire `onclick`; native `element.click()`
-  and real user clicks work.
+- `preview_screenshot` **times out** — the ready-node pulse is an infinite CSS
+  animation, so the capture never settles. Use `preview_eval` / DOM geometry instead
+  (could gate the pulse behind `prefers-reduced-motion`).
+- `requestAnimationFrame` is **throttled** in the headless preview, so the rAF-driven
+  live tick lags there — validate `refreshGrid()` logic by calling it directly.
+- The preview window defaults to **1px wide**; call `preview_resize` to a real desktop
+  width (e.g. 1280×820) before checking layout.
 
-## Suggested next steps (not yet done)
+## Suggested next steps
 
-- [ ] **Balance pass** — gold costs, tile-unlock scaling, drop rates vs the GDD's
-      ~4hr target progression curve (Section 8).
-- [ ] **Progressive tier probability shifting** on tier upgrades (GDD Section 4 intent).
-- [ ] **Win sequence polish** — GDD Section 9: tiles light up area-by-area before the
-      win modal; add the craft particle/glow.
-- [ ] **Automation visuals** — GDD wants a semi-transparent hand/cursor doing the
-      area's action animation; currently only an "AUTO" label + flash.
-- [ ] **Crafting search box** (GDD panel shows a Search/Filter field; only the
-      area toggle exists).
-- [ ] Optional: revisit literal station-gating (see decision #1) if desired.
-- [ ] Optional: per-area action flavor (axe swing / splash / etc.) — currently shared.
+- [ ] **Real sprite art** to fill the 4×6 silhouette (replace emoji in `TIER_SPRITES`).
+- [ ] **Balance pass** on resource costs, plot-unlock scaling, drop rates.
+- [ ] **Flesh out the empty (up) arm** — give it an area + content.
+- [ ] **Progressive tier probability shifting** on tier upgrades.
+- [ ] Decide the fate of the now-ungating **milestone recipes** (fence/pickaxe/rod).
+- [ ] Optional: per-area harvest flavour, automation hand/cursor visual.
 
 ## Git
 
-- This folder is its own git repo. Initial commit: `Initial commit: Idle Grounds
-  prototype (GDD v0.1)`.
-- Commit only when asked. Keep all git operations inside this repo.
+- This folder is its own git repo (no remote). Commit only when asked; keep all git
+  operations inside this repo. History is on `master`.
 
 ## Last session summary
 
-Built the full prototype from the GDD, verified the core loop live in the browser,
-and committed it. Spent time correcting an early mistake where the session (rooted in
-the Legend folder) caused preview/git defaults to point at the wrong project — fully
-reverted, no changes left in Legend. This handoff exists so the next session starts
-cleanly rooted in THIS folder.
+Removed gold; rebuilt the game from a tab-per-area button grid into a single
+**+-shaped tilemap world** with a camera locked per area, edge **travel arrows** that
+open adjacent areas for resources, 20×20 grids with 2×2 nodes drawing larger
+overflowing emoji sprites, and a fully **resource-based economy** (plot/area unlocks
+and upgrades all cost each area's base resource). Verified the whole loop end-to-end
+(harvest → clear plot → travel → upgrade) with no console errors.

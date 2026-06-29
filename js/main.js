@@ -5,9 +5,9 @@
 (function init() {
   const E = window.ENGINE;
 
-  // Prime tiles for every already-unlocked area (just Forest at start).
+  // Prime nodes for every already-unlocked area (just Forest at start).
   for (const key of Object.keys(window.DATA.AREAS)) {
-    if (window.GS.areas[key].unlocked) E.primeAreaTiles(key);
+    if (E.isAreaUnlocked(key)) E.primeAreaNodes(key);
   }
 
   // Static UI wiring.
@@ -20,10 +20,10 @@
 
   window.UI.render();
 
-  // Game loop: promote ready tiles + refresh visible timers (~10fps).
-  setInterval(() => { E.gameTick(); window.requestRender(); }, 100);
-  // Passive gold drip: +1 every 10s.
-  setInterval(() => { E.goldTick(); window.requestRender(); }, 10000);
-  // Automation: harvest on behalf of the player every second.
-  setInterval(() => { E.automationTick(); window.requestRender(); }, 1000);
+  // Game loop: promote ready nodes + refresh visible timers (~10fps).
+  // Live tick does in-place updates so the grid isn't rebuilt every frame.
+  setInterval(() => { E.gameTick(); window.requestLiveTick(); }, 100);
+  // Automation: harvest on behalf of the player every second. A full render
+  // is only needed when it actually harvested (inventory/crafting changed).
+  setInterval(() => { if (E.automationTick() > 0) window.requestRender(); }, 1000);
 })();

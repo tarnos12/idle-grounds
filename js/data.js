@@ -54,16 +54,25 @@ const ITEM_ICONS = {
 const TIER_WEIGHTS = [70, 20, 7, 2.5, 0.5];
 const TIER_LABELS = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
 
+// Per-tier emoji sprite for each area (the big overflowing world sprite).
+// Index 0..4 = tier 1..5. Cosmetic only.
+const TIER_SPRITES = {
+  forest:  ["🌳", "🌲", "🌴", "🎄", "🌌"],
+  farm:    ["🌾", "🥕", "🎃", "🌿", "⭐"],
+  mine:    ["🪨", "🧱", "🟤", "⛏️", "💠"],
+  fishing: ["🐟", "🐠", "🎣", "🌙", "🔮"],
+};
+
 // d(item, min, max) -> drop spec. max defaults to min (fixed amount).
 function d(item, min, max) { return { item, min, max: max == null ? min : max }; }
 
-// Each area: grid shape + the per-tier definition (drops/timer/durability).
+// Each area: per-tier definition (drops/timer/durability) + which basic
+// resource funds its unlocks/upgrades (`base`), and how it seeds nodes.
 const AREAS = {
   forest: {
     name: "Forest", icon: "🌲", verb: "Chop", actionIcon: "🪓",
-    cols: 5, maxTiles: 25, initialTiles: 9, initialReady: true,
+    base: "wood", initialReady: true, initialActive: 6,
     speedLabel: "Regrow Speed", timerLabel: "Regrow",
-    unlockRecipe: null, // available from start
     tiers: [
       { name: "Oak",      drops: [d("wood", 2, 3)],                                  timer: 15 },
       { name: "Hardwood", drops: [d("wood", 3), d("hardwood", 1)],                   timer: 25 },
@@ -74,9 +83,8 @@ const AREAS = {
   },
   farm: {
     name: "Farm", icon: "🌱", verb: "Harvest", actionIcon: "🌾",
-    cols: 5, maxTiles: 25, initialTiles: 6, initialReady: false,
+    base: "wheat", initialReady: false, initialActive: 6,
     speedLabel: "Growth Speed", timerLabel: "Growth",
-    unlockRecipe: "wooden_fence",
     tiers: [
       { name: "Wheat",       drops: [d("wheat", 2, 3)],                              timer: 20 },
       { name: "Carrot",      drops: [d("wheat", 2), d("carrot", 1)],                 timer: 30 },
@@ -87,9 +95,8 @@ const AREAS = {
   },
   mine: {
     name: "Mine", icon: "⛰️", verb: "Mine", actionIcon: "⛏️",
-    cols: 5, maxTiles: 20, initialTiles: 9, initialReady: true,
+    base: "stone", initialReady: true, initialActive: 6,
     speedLabel: "Mining Speed", timerLabel: "Respawn",
-    unlockRecipe: "iron_pickaxe",
     tiers: [
       { name: "Stone",      drops: [d("stone", 3), d("clay", 1)],                    timer: 10, durability: 1 },
       { name: "Clay Vein",  drops: [d("clay", 4)],                                   timer: 15, durability: 1 },
@@ -100,9 +107,8 @@ const AREAS = {
   },
   fishing: {
     name: "Fishing", icon: "🎣", verb: "Reel", actionIcon: "🎣",
-    cols: 4, maxTiles: 8, initialTiles: 3, initialReady: false,
+    base: "fish", initialReady: false, initialActive: 6,
     speedLabel: "Fishing Speed", timerLabel: "Bite",
-    unlockRecipe: "fishing_rod",
     tiers: [
       { name: "Minnow",      drops: [d("fish", 1, 2)],                               timer: 12 },
       { name: "Bass",        drops: [d("fish", 2), d("fish_scale", 1)],              timer: 20 },
@@ -113,9 +119,43 @@ const AREAS = {
   },
 };
 
+// ------------------------------------------------------------------
+// World: one big map laid out as a + . Forest is the centre; the four
+// arms branch out. The camera is locked to one area at a time and the
+// player pays resources at the border arrow to open the next area.
+// ------------------------------------------------------------------
+const GRID = {
+  cell: 32,           // px per cell
+  cells: 20,          // 20 x 20 cells per area  ->  640 x 640 px
+  foot: 2,            // a resource node occupies a 2 x 2 footprint
+  spriteW: 4,         // visual sprite spans 4 cells wide ...
+  spriteH: 6,         // ... and 6 cells tall (overflows above the footprint)
+  // lattice the nodes sit on (cell indices of each footprint's top-left)
+  nodeRows: [4, 8, 12, 16],
+  nodeCols: [2, 6, 10, 14, 18],
+};
+
+const WORLD = {
+  // area-grid offsets from Forest; "void" is the empty arm (up), reserved.
+  layout: {
+    forest:  { x: 0,  y: 0 },
+    farm:    { x: -1, y: 0 },   // left
+    mine:    { x: 1,  y: 0 },   // right
+    fishing: { x: 0,  y: 1 },   // down
+    void:    { x: 0,  y: -1 },  // up  — empty for now
+  },
+  dirs: { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } },
+  dirGlyph: { up: "▲", down: "▼", left: "◀", right: "▶" },
+  // resource cost to first open each area (spent from current inventory).
+  unlockCost: {
+    farm:    { wood: 20 },
+    mine:    { wood: 40 },
+    fishing: { wood: 60 },
+  },
+};
+
 // Crafting recipes. `in` = {item: qty}, `out` = {item: qty}.
 // area = which area tab filter it belongs to ("misc" = always shown).
-// unlocksArea / firstCraftGold / requires are optional.
 const RECIPES = [
   // Wood
   { id: "plank",        name: "Plank",        area: "forest", in: { wood: 3 },                       out: { plank: 1 } },
@@ -139,22 +179,16 @@ const RECIPES = [
   { id: "refined_oil",  name: "Refined Oil",  area: "fishing",in: { fish_oil: 2 },                   out: { refined_oil: 1 } },
   { id: "rare_fillet",  name: "Rare Fillet",  area: "fishing",in: { rare_fish: 2 },                  out: { rare_fillet: 1 } },
   { id: "polished_pearl", name: "Polished Pearl", area: "fishing", in: { star_pearl: 2 },            out: { polished_pearl: 1 } },
-  // Rope (gateway to fishing)
-  { id: "braided_rope", name: "Braided Rope", area: "fishing",in: { wheat: 5, fish_fillet: 2 },      out: { braided_rope: 1 } },
+  // Rope
+  { id: "braided_rope", name: "Braided Rope", area: "fishing",in: { wheat: 6 },                      out: { braided_rope: 1 } },
 
-  // Milestones
-  { id: "wooden_fence", name: "Wooden Fence", area: "misc", in: { plank: 6 },
-    out: { wooden_fence: 1 }, unlocksArea: "farm", firstCraftGold: 25 },
-  { id: "iron_pickaxe", name: "Iron Pickaxe", area: "misc", in: { plank: 4, stone_block: 3 },
-    out: { iron_pickaxe: 1 }, unlocksArea: "mine", firstCraftGold: 50 },
-  { id: "fishing_rod",  name: "Fishing Rod",  area: "misc", in: { plank: 3, braided_rope: 2 },
-    out: { fishing_rod: 1 }, unlocksArea: "fishing", firstCraftGold: 75 },
-  { id: "workbench",    name: "Workbench",    area: "misc", in: { plank: 6, stone_block: 4 },
-    out: { workbench: 1 }, firstCraftGold: 100 },
-  { id: "forge",        name: "Forge",        area: "misc", in: { stone_block: 4, clay_brick: 4, copper_ingot: 2 },
-    out: { forge: 1 }, firstCraftGold: 150 },
-  { id: "enchanting_table", name: "Enchanting Table", area: "misc", in: { foundation_slab: 6, essence_extract: 4 },
-    out: { enchanting_table: 1 }, firstCraftGold: 250 },
+  // Milestones (flavour / intermediate crafts)
+  { id: "wooden_fence", name: "Wooden Fence", area: "misc", in: { plank: 6 },                        out: { wooden_fence: 1 } },
+  { id: "iron_pickaxe", name: "Iron Pickaxe", area: "misc", in: { plank: 4, lumber_frame: 2 },       out: { iron_pickaxe: 1 } },
+  { id: "fishing_rod",  name: "Fishing Rod",  area: "misc", in: { plank: 3, braided_rope: 2 },       out: { fishing_rod: 1 } },
+  { id: "workbench",    name: "Workbench",    area: "misc", in: { plank: 6, stone_block: 4 },        out: { workbench: 1 } },
+  { id: "forge",        name: "Forge",        area: "misc", in: { stone_block: 4, clay_brick: 4, copper_ingot: 2 }, out: { forge: 1 } },
+  { id: "enchanting_table", name: "Enchanting Table", area: "misc", in: { foundation_slab: 6, essence_extract: 4 }, out: { enchanting_table: 1 } },
 
   // Endgame — gated behind the Enchanting Table
   { id: "worldstone", name: "Worldstone", area: "misc", requires: "enchanting_table",
@@ -165,18 +199,27 @@ const RECIPES = [
     out: { worldstone: 1 }, isWin: true },
 ];
 
-// Gold upgrade costs.
+// Resource costs (in the AREA's base resource) for unlocks/upgrades.
 const COSTS = {
-  tierUnlock: { 2: 50, 3: 200, 4: 800, 5: 3000 },   // per area, by tier
-  speed: [100, 300, 700],                            // I / II / III
-  automation: [500, 1500, 4000],                     // I / II / III
-  tileBase: 25,                                      // +25 per tile beyond initial
+  tierUnlock: { 2: 20, 3: 60, 4: 160, 5: 400 },   // per area, by tier
+  speed: [40, 100, 220],                           // I / II / III
+  automation: [120, 320, 700],                     // I / II / III
+  nodeBase: 8,                                      // +8 per node beyond the initial set
 };
 
-// How many ready tiles each automation level harvests per tick.
+// How many ready nodes each automation level harvests per tick.
 const AUTOMATION_CLICKS = { 1: 1, 2: 2, 3: Infinity };
 
+// ------------------------------------------------------------------
+// TESTING CONVENIENCES — flip ENABLED to false to restore GDD balance.
+// ------------------------------------------------------------------
+const TEST = {
+  ENABLED: true,
+  timeScale: 0.2,    // cooldown/regrow length multiplier (15s -> 3s)
+  costScale: 0.5,    // node-unlock / arrow-unlock / upgrade cost multiplier
+};
+
 window.DATA = {
-  ITEM_NAMES, ITEM_ICONS, TIER_WEIGHTS, TIER_LABELS,
-  AREAS, RECIPES, COSTS, AUTOMATION_CLICKS,
+  ITEM_NAMES, ITEM_ICONS, TIER_WEIGHTS, TIER_LABELS, TIER_SPRITES,
+  AREAS, GRID, WORLD, RECIPES, COSTS, AUTOMATION_CLICKS, TEST,
 };

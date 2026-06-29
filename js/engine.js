@@ -1,7 +1,6 @@
 /* ============================================================
    Idle Grounds — game engine (pure logic, no DOM)
-   Mutates window.GS; UI re-renders from it. Emits "render"
-   requests via window.requestRender() (defined in ui.js).
+   Mutates window.GS; UI re-renders from it.
    ============================================================ */
 
 const D = window.DATA;
@@ -12,25 +11,34 @@ function itemName(key) {
 function itemIcon(key) { return D.ITEM_ICONS[key] || "📦"; }
 
 function inv(item) { return window.GS.inventory[item] || 0; }
-function addItem(item, qty) {
-  window.GS.inventory[item] = inv(item) + qty;
-}
+function addItem(item, qty) { window.GS.inventory[item] = inv(item) + qty; }
 
-function addGold(n) { window.GS.gold += n; }
+// ---- Resource costs (cost = { item: qty }) ------------------
+
+function canAfford(cost) {
+  for (const [item, qty] of Object.entries(cost)) if (inv(item) < qty) return false;
+  return true;
+}
+function spend(cost) {
+  if (!canAfford(cost)) return false;
+  for (const [item, qty] of Object.entries(cost)) window.GS.inventory[item] = inv(item) - qty;
+  return true;
+}
+function scaled(n) { return Math.max(1, Math.ceil(D.TEST.ENABLED ? n * D.TEST.costScale : n)); }
 
 // ---- Timers --------------------------------------------------
 
-// Effective timer for a tier in an area, after speed upgrades (-20% each, multiplicative).
+// Effective timer for a tier in an area, after speed upgrades (-20% each).
 function effectiveTimer(areaKey, tierIndex) {
   const cfg = D.AREAS[areaKey];
   const base = cfg.tiers[tierIndex].timer;
   const speed = window.GS.areas[areaKey].upgrades.speed;
-  return base * Math.pow(0.8, speed);
+  const testScale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+  return base * Math.pow(0.8, speed) * testScale;
 }
 
 // ---- Tier rolling -------------------------------------------
 
-// Weighted random tier (1..maxTier) using base weights.
 function rollTier(areaKey) {
   const maxTier = window.GS.areas[areaKey].upgrades.maxTier;
   let total = 0;
@@ -43,33 +51,31 @@ function rollTier(areaKey) {
   return 1;
 }
 
-// ---- Tile lifecycle -----------------------------------------
+// ---- Node lifecycle -----------------------------------------
 
-// Put a tile into cooldown: roll its next tier now and time the regrow
-// off that tier (so a slow Void tree takes 90s to grow back).
-function startCooldown(areaKey, tile) {
-  tile.tier = rollTier(areaKey);
-  tile.state = "cooldown";
-  tile.cooldownEnd = Date.now() + effectiveTimer(areaKey, tile.tier - 1) * 1000;
+function startCooldown(areaKey, node) {
+  node.tier = rollTier(areaKey);
+  node.state = "cooldown";
+  node.cooldownEnd = Date.now() + effectiveTimer(areaKey, node.tier - 1) * 1000;
 }
 
-function setReady(areaKey, tile) {
+function setReady(areaKey, node) {
   const cfg = D.AREAS[areaKey];
-  tile.state = "ready";
-  tile.hitsLeft = cfg.tiers[tile.tier - 1].durability || 1;
+  node.state = "ready";
+  node.hitsLeft = cfg.tiers[node.tier - 1].durability || 1;
 }
 
-// Initialize tile states for a (possibly newly unlocked) area.
-function primeAreaTiles(areaKey) {
+// Initialize node states for a (possibly newly unlocked) area.
+function primeAreaNodes(areaKey) {
   const cfg = D.AREAS[areaKey];
-  for (const tile of window.GS.areas[areaKey].tiles) {
-    if (!tile.unlocked) { tile.state = "locked"; continue; }
-    if (tile.state !== "locked") continue; // already primed
+  for (const node of window.GS.areas[areaKey].nodes) {
+    if (!node.unlocked) { node.state = "locked"; continue; }
+    if (node.state !== "locked") continue; // already primed
     if (cfg.initialReady) {
-      tile.tier = rollTier(areaKey);
-      setReady(areaKey, tile);
+      node.tier = rollTier(areaKey);
+      setReady(areaKey, node);
     } else {
-      startCooldown(areaKey, tile);
+      startCooldown(areaKey, node);
     }
   }
 }
@@ -80,35 +86,34 @@ function rollAmount(spec) {
   return spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1));
 }
 
-// Click a ready tile. Returns true if anything happened.
-// isAuto suppresses some feedback but otherwise identical.
-function harvestTile(areaKey, tileId, isAuto) {
-  const area = window.GS.areas[areaKey];
-  const tile = area.tiles[tileId];
-  if (!tile || tile.state !== "ready") return false;
+function nodeById(areaKey, id) {
+  return window.GS.areas[areaKey].nodes.find(n => n.id === id);
+}
+
+// Click a ready node. Returns true if anything happened.
+function harvestNode(areaKey, nodeId, isAuto) {
+  const node = nodeById(areaKey, nodeId);
+  if (!node || node.state !== "ready") return false;
 
   const cfg = D.AREAS[areaKey];
 
   // Mine durability: needs multiple clicks to break.
-  if (tile.hitsLeft > 1) {
-    tile.hitsLeft--;
-    if (isAuto) tile.autoFlash = Date.now() + 400;
+  if (node.hitsLeft > 1) {
+    node.hitsLeft--;
+    if (isAuto) node.autoFlash = Date.now() + 400;
     return true;
   }
 
   // Break / harvest: grant drops.
-  const tierDef = cfg.tiers[tile.tier - 1];
+  const tierDef = cfg.tiers[node.tier - 1];
   for (const spec of tierDef.drops) {
     const amt = rollAmount(spec);
     addItem(spec.item, amt);
     window.GS.stats.totalGathered += amt;
   }
 
-  // Harvesting Gold bonus: 10% chance of +1 Gold per harvest.
-  if (Math.random() < 0.10) addGold(1);
-
-  if (isAuto) tile.autoFlash = Date.now() + 600;
-  startCooldown(areaKey, tile);
+  if (isAuto) node.autoFlash = Date.now() + 600;
+  startCooldown(areaKey, node);
   return true;
 }
 
@@ -116,7 +121,6 @@ function harvestTile(areaKey, tileId, isAuto) {
 
 function recipeById(id) { return D.RECIPES.find(r => r.id === id); }
 
-// Why a recipe can't be crafted right now: null if craftable.
 function craftBlockReason(recipe, times = 1) {
   if (recipe.requires && !window.GS.inventory[recipe.requires]) {
     return `Requires ${itemName(recipe.requires)}`;
@@ -127,7 +131,6 @@ function craftBlockReason(recipe, times = 1) {
   return null;
 }
 
-// Largest N (<= cap) we can craft right now.
 function maxCraftable(recipe, cap) {
   if (recipe.requires && !window.GS.inventory[recipe.requires]) return 0;
   let n = cap;
@@ -137,7 +140,6 @@ function maxCraftable(recipe, cap) {
   return Math.max(0, n);
 }
 
-// Craft a recipe `times`. Returns number actually crafted.
 function craft(recipeId, times) {
   const recipe = recipeById(recipeId);
   if (!recipe) return 0;
@@ -152,13 +154,6 @@ function craft(recipeId, times) {
   }
   window.GS.stats.totalCrafted += n;
 
-  // One-time effects fire on first successful craft only.
-  if (!window.GS.craftedOnce[recipe.id]) {
-    window.GS.craftedOnce[recipe.id] = true;
-    if (recipe.firstCraftGold) addGold(recipe.firstCraftGold);
-    if (recipe.unlocksArea) unlockArea(recipe.unlocksArea);
-  }
-
   if (recipe.isWin && !window.GS.won) {
     window.GS.won = true;
     window.onWin && window.onWin();
@@ -166,59 +161,41 @@ function craft(recipeId, times) {
   return n;
 }
 
-function unlockArea(areaKey) {
-  const area = window.GS.areas[areaKey];
-  if (area.unlocked) return;
-  area.unlocked = true;
-  primeAreaTiles(areaKey);
-}
+// ---- Node unlocks (paid in the area's base resource) --------
 
-// ---- Gold sinks ---------------------------------------------
-
-function tileUnlockCost(areaKey) {
+function nodeUnlockCost(areaKey) {
   const cfg = D.AREAS[areaKey];
-  const area = window.GS.areas[areaKey];
-  const unlockedCount = area.tiles.filter(t => t.unlocked).length;
-  const beyondInitial = unlockedCount - cfg.initialTiles; // 0 for first extra
-  return D.COSTS.tileBase * (beyondInitial + 1);
+  const unlockedCount = window.GS.areas[areaKey].nodes.filter(n => n.unlocked).length;
+  const beyondInitial = unlockedCount - cfg.initialActive; // 0 for the first extra
+  const qty = scaled(D.COSTS.nodeBase * (beyondInitial + 1));
+  return { [cfg.base]: qty };
 }
 
-function nextLockedTile(areaKey) {
-  return window.GS.areas[areaKey].tiles.find(t => !t.unlocked) || null;
-}
-
-function unlockTile(areaKey) {
-  const tile = nextLockedTile(areaKey);
-  if (!tile) return false;
-  const cost = tileUnlockCost(areaKey);
-  if (window.GS.gold < cost) return false;
-  window.GS.gold -= cost;
-  tile.unlocked = true;
-  tile.state = "locked";   // primeAreaTiles will activate it
-  primeAreaTiles(areaKey);
+function unlockNode(areaKey, nodeId) {
+  const node = nodeById(areaKey, nodeId);
+  if (!node || node.unlocked) return false;
+  if (!spend(nodeUnlockCost(areaKey))) return false;
+  node.unlocked = true;
+  node.state = "locked";   // primeAreaNodes will activate it
+  primeAreaNodes(areaKey);
   return true;
 }
 
-// Upgrade purchase. type: "tier" | "speed" | "automation".
+// ---- Upgrades (paid in the area's base resource) ------------
+
 function upgradeCost(areaKey, type) {
   const up = window.GS.areas[areaKey].upgrades;
-  if (type === "tier") {
-    const next = up.maxTier + 1;
-    return next > 5 ? null : D.COSTS.tierUnlock[next];
-  }
-  if (type === "speed") {
-    return up.speed >= 3 ? null : D.COSTS.speed[up.speed];
-  }
-  if (type === "automation") {
-    return up.automation >= 3 ? null : D.COSTS.automation[up.automation];
-  }
-  return null;
+  const base = D.AREAS[areaKey].base;
+  let raw = null;
+  if (type === "tier") { const next = up.maxTier + 1; raw = next > 5 ? null : D.COSTS.tierUnlock[next]; }
+  if (type === "speed") raw = up.speed >= 3 ? null : D.COSTS.speed[up.speed];
+  if (type === "automation") raw = up.automation >= 3 ? null : D.COSTS.automation[up.automation];
+  return raw == null ? null : { [base]: scaled(raw) };
 }
 
 function buyUpgrade(areaKey, type) {
   const cost = upgradeCost(areaKey, type);
-  if (cost == null || window.GS.gold < cost) return false;
-  window.GS.gold -= cost;
+  if (!cost || !spend(cost)) return false;
   const up = window.GS.areas[areaKey].upgrades;
   if (type === "tier") up.maxTier++;
   else if (type === "speed") up.speed++;
@@ -226,52 +203,91 @@ function buyUpgrade(areaKey, type) {
   return true;
 }
 
+// ---- World / camera -----------------------------------------
+
+// Which area lies in `dir` from `fromArea` ("up"|"down"|"left"|"right").
+// Returns an area key, "void" for the reserved empty arm, or null.
+function neighborOf(fromArea, dir) {
+  const here = D.WORLD.layout[fromArea];
+  const delta = D.WORLD.dirs[dir];
+  const tx = here.x + delta.x, ty = here.y + delta.y;
+  for (const [key, pos] of Object.entries(D.WORLD.layout)) {
+    if (pos.x === tx && pos.y === ty) return key;
+  }
+  return null;
+}
+
+function areaUnlockCost(areaKey) {
+  const base = D.WORLD.unlockCost[areaKey];
+  if (!base) return null;
+  const out = {};
+  for (const [item, qty] of Object.entries(base)) out[item] = scaled(qty);
+  return out;
+}
+
+function isAreaUnlocked(areaKey) { return !!window.GS.world.unlocked[areaKey]; }
+
+// Pay to open an adjacent area, then move the camera onto it.
+function unlockArea(areaKey) {
+  if (areaKey === "void" || !D.AREAS[areaKey]) return false;
+  if (isAreaUnlocked(areaKey)) return moveTo(areaKey);
+  const cost = areaUnlockCost(areaKey);
+  if (!cost || !spend(cost)) return false;
+  window.GS.world.unlocked[areaKey] = true;
+  primeAreaNodes(areaKey);
+  window.GS.world.currentArea = areaKey;
+  return true;
+}
+
+function moveTo(areaKey) {
+  if (!isAreaUnlocked(areaKey)) return false;
+  window.GS.world.currentArea = areaKey;
+  return true;
+}
+
 // ---- Ticks --------------------------------------------------
 
-// Promote any cooldown tiles whose timer has elapsed.
+// Promote any cooldown nodes whose timer has elapsed.
 function gameTick() {
   const now = Date.now();
   for (const areaKey of Object.keys(D.AREAS)) {
-    const area = window.GS.areas[areaKey];
-    if (!area.unlocked) continue;
-    for (const tile of area.tiles) {
-      if (tile.state === "cooldown" && now >= tile.cooldownEnd) {
-        setReady(areaKey, tile);
-      }
+    if (!isAreaUnlocked(areaKey)) continue;
+    for (const node of window.GS.areas[areaKey].nodes) {
+      if (node.state === "cooldown" && now >= node.cooldownEnd) setReady(areaKey, node);
     }
   }
 }
 
-// Passive gold drip: +1 every 10s.
-function goldTick() { addGold(1); }
-
 // Automation: each unlocked area with automation harvests its readiest
-// tiles (highest tier first), up to the level's click budget.
+// nodes (highest tier first), up to the level's click budget.
 function automationTick() {
+  let harvested = 0;
   for (const areaKey of Object.keys(D.AREAS)) {
-    const area = window.GS.areas[areaKey];
-    if (!area.unlocked) continue;
-    const level = area.upgrades.automation;
+    if (!isAreaUnlocked(areaKey)) continue;
+    const level = window.GS.areas[areaKey].upgrades.automation;
     if (level <= 0) continue;
 
     const budget = D.AUTOMATION_CLICKS[level];
-    const ready = area.tiles
-      .filter(t => t.state === "ready")
+    const ready = window.GS.areas[areaKey].nodes
+      .filter(n => n.state === "ready")
       .sort((a, b) => b.tier - a.tier);
 
     let clicks = 0;
-    for (const tile of ready) {
+    for (const node of ready) {
       if (clicks >= budget) break;
-      harvestTile(areaKey, tile.id, true);
+      harvestNode(areaKey, node.id, true);
       clicks++;
     }
+    harvested += clicks;
   }
+  return harvested;
 }
 
 window.ENGINE = {
-  itemName, itemIcon, inv, addItem, addGold,
-  effectiveTimer, rollTier, startCooldown, setReady, primeAreaTiles,
-  harvestTile, recipeById, craftBlockReason, maxCraftable, craft,
-  unlockArea, tileUnlockCost, nextLockedTile, unlockTile,
-  upgradeCost, buyUpgrade, gameTick, goldTick, automationTick,
+  itemName, itemIcon, inv, addItem, canAfford,
+  effectiveTimer, rollTier, startCooldown, setReady, primeAreaNodes,
+  nodeById, harvestNode, recipeById, craftBlockReason, maxCraftable, craft,
+  nodeUnlockCost, unlockNode, upgradeCost, buyUpgrade,
+  neighborOf, areaUnlockCost, isAreaUnlocked, unlockArea, moveTo,
+  gameTick, automationTick,
 };

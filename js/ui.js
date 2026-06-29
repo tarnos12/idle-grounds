@@ -4,6 +4,7 @@
 
 const E = window.ENGINE;
 const DD = window.DATA;
+const G = DD.GRID;
 
 const $ = sel => document.querySelector(sel);
 function el(tag, cls, html) {
@@ -14,8 +15,9 @@ function el(tag, cls, html) {
 }
 
 let upgradesOpen = false;
+let pendingSlide = null; // direction the camera just moved, for the slide-in anim
 
-// Coalesce render requests into one per animation frame.
+// Coalesce full render requests into one per animation frame.
 let renderQueued = false;
 function requestRender() {
   if (renderQueued) return;
@@ -24,87 +26,161 @@ function requestRender() {
 }
 window.requestRender = requestRender;
 
-// ---- Top bar / tabs -----------------------------------------
+// Lightweight per-frame update: refresh cooldown timers in place WITHOUT
+// rebuilding nodes (a full rebuild every frame destroys the node under the
+// cursor mid-click — hover flicker / dropped clicks).
+let liveTickQueued = false;
+function requestLiveTick() {
+  if (liveTickQueued) return;
+  liveTickQueued = true;
+  requestAnimationFrame(() => { liveTickQueued = false; refreshGrid(); });
+}
+window.requestLiveTick = requestLiveTick;
+
+// ---- Top bar -------------------------------------------------
 
 function renderTopBar() {
-  const tabs = $("#tabs");
-  tabs.innerHTML = "";
-  for (const [key, cfg] of Object.entries(DD.AREAS)) {
-    const area = window.GS.areas[key];
-    const tab = el("button", "tab" + (key === window.GS.activeArea ? " active" : "") + (area.unlocked ? "" : " locked"));
-    tab.innerHTML = `<span class="ico">${cfg.icon}</span>${cfg.name}` +
-      (area.unlocked ? "" : ` 🔒`);
-    if (area.unlocked) tab.onclick = () => { window.GS.activeArea = key; render(); };
-    else tab.title = `Unlock by crafting ${E.itemName(cfg.unlockRecipe)}`;
-    tabs.appendChild(tab);
-  }
-  $("#gold-amount").textContent = Math.floor(window.GS.gold);
+  const area = DD.AREAS[window.GS.world.currentArea];
+  $("#area-name").innerHTML = `${area.icon} ${area.name}`;
 }
 
-// ---- Area grid ----------------------------------------------
+// ---- World grid + sprites -----------------------------------
 
-function tileLabel(areaKey, tile) {
-  const cfg = DD.AREAS[areaKey];
-  if (tile.state === "cooldown") {
-    const remain = Math.max(0, tile.cooldownEnd - Date.now());
-    return `${(remain / 1000).toFixed(1)}s`;
-  }
-  return cfg.tiers[tile.tier - 1].name;
+function costText(cost) {
+  return Object.entries(cost)
+    .map(([item, qty]) => `${qty} ${E.itemIcon(item)}`)
+    .join(" ");
 }
 
-function renderGrid() {
-  const areaKey = window.GS.activeArea;
-  const cfg = DD.AREAS[areaKey];
-  const area = window.GS.areas[areaKey];
+// Position a node's 2x2 footprint and its larger overflowing sprite box.
+function placeNode(nodeEl, node) {
+  const c = G.cell;
+  nodeEl.style.left = (node.col * c) + "px";
+  nodeEl.style.top = (node.row * c) + "px";
+  nodeEl.style.width = (G.foot * c) + "px";
+  nodeEl.style.height = (G.foot * c) + "px";
+  nodeEl.style.zIndex = node.row; // lower rows draw in front
+}
 
-  $("#area-title").innerHTML = `${cfg.icon} ${cfg.name}`;
+function buildNodeEl(areaKey, node, now) {
+  const cfg = DD.AREAS[areaKey];
+  const n = el("button", "node");
+  n.dataset.nodeId = node.id;
+  n.dataset.state = node.unlocked ? node.state : "lockedslot";
+  n.dataset.tier = node.tier;
+  placeNode(n, node);
+
+  if (!node.unlocked) {
+    n.classList.add("slot-locked");
+    const cost = E.nodeUnlockCost(areaKey);
+    n.innerHTML = `<span class="slot-plus">＋</span><span class="slot-cost">${costText(cost)}</span>`;
+    n.title = `Clear plot — ${costText(cost)}`;
+    n.onclick = () => { if (E.unlockNode(areaKey, node.id)) render(); };
+    return n;
+  }
+
+  if (node.state === "ready") {
+    n.classList.add("ready");
+    const tierDef = cfg.tiers[node.tier - 1];
+    const sprite = (DD.TIER_SPRITES[areaKey] || [])[node.tier - 1] || cfg.icon;
+    let inner = `<span class="sprite t${node.tier}">${sprite}</span>`;
+    inner += `<span class="node-tag t${node.tier}">${tierDef.name}</span>`;
+    if ((tierDef.durability || 1) > 1) {
+      inner += `<span class="hits">${node.hitsLeft}/${tierDef.durability} ${cfg.actionIcon}</span>`;
+      n.dataset.hits = node.hitsLeft;
+    }
+    n.innerHTML = inner;
+    n.onclick = () => { E.harvestNode(areaKey, node.id, false); render(); };
+  } else {
+    n.classList.add("cooldown");
+    const sprite = (DD.TIER_SPRITES[areaKey] || [])[node.tier - 1] || cfg.icon;
+    const remain = Math.max(0, node.cooldownEnd - now);
+    n.innerHTML =
+      `<span class="sprite dim">${sprite}</span>` +
+      `<span class="cd-timer">${(remain / 1000).toFixed(1)}s</span>`;
+  }
+
+  if (node.autoFlash > now) n.classList.add("auto");
+  return n;
+}
+
+function renderWorld() {
+  const areaKey = window.GS.world.currentArea;
+  const px = G.cell * G.cells;
 
   const grid = $("#grid");
-  grid.style.gridTemplateColumns = `repeat(${cfg.cols}, 1fr)`;
+  grid.dataset.area = areaKey;
+  grid.style.width = px + "px";
+  grid.style.height = px + "px";
+  grid.style.backgroundSize = `${G.cell}px ${G.cell}px`;
   grid.innerHTML = "";
 
-  for (const tile of area.tiles) {
-    if (!tile.unlocked) continue; // locked tiles shown via the unlock button row
-    const t = el("button", "tile");
-    t.dataset.tier = tile.tier;
-    const now = Date.now();
-
-    if (tile.state === "ready") {
-      t.classList.add("ready");
-      const tierDef = cfg.tiers[tile.tier - 1];
-      let inner = `<div class="tier-badge t${tile.tier}">${DD.TIER_LABELS[tile.tier - 1]}</div>`;
-      inner += `<div class="tile-emoji">${cfg.icon}</div>`;
-      inner += `<div class="tile-name">${tierDef.name}</div>`;
-      if ((tierDef.durability || 1) > 1) {
-        inner += `<div class="hits">${tile.hitsLeft}/${tierDef.durability} ${cfg.actionIcon}</div>`;
-      }
-      t.innerHTML = inner;
-      t.onclick = () => { E.harvestTile(areaKey, tile.id, false); render(); };
-    } else {
-      t.classList.add("cooldown");
-      const remain = Math.max(0, tile.cooldownEnd - now);
-      const total = E.effectiveTimer(areaKey, tile.tier - 1) * 1000;
-      const pct = total > 0 ? Math.max(0, Math.min(100, (1 - remain / total) * 100)) : 100;
-      t.innerHTML =
-        `<div class="cd-ring" style="--pct:${pct}"></div>` +
-        `<div class="tile-emoji dim">⏳</div>` +
-        `<div class="tile-name">${(remain / 1000).toFixed(1)}s</div>`;
-    }
-
-    if (tile.autoFlash > now) t.classList.add("auto");
-    grid.appendChild(t);
+  const now = Date.now();
+  for (const node of window.GS.areas[areaKey].nodes) {
+    grid.appendChild(buildNodeEl(areaKey, node, now));
   }
 
-  // Unlock-tile button row.
-  const unlockRow = $("#unlock-row");
-  unlockRow.innerHTML = "";
-  const next = E.nextLockedTile(areaKey);
-  if (next) {
-    const cost = E.tileUnlockCost(areaKey);
-    const btn = el("button", "unlock-tile" + (window.GS.gold >= cost ? "" : " disabled"));
-    btn.innerHTML = `🔒 Unlock Tile — ${cost}G`;
-    btn.onclick = () => { if (E.unlockTile(areaKey)) render(); };
-    unlockRow.appendChild(btn);
+  // Camera slide-in animation when we just changed area.
+  if (pendingSlide) {
+    grid.style.animation = "none";
+    void grid.offsetWidth; // reflow so the animation restarts
+    grid.style.animation = `slide-${pendingSlide} .28s ease`;
+    pendingSlide = null;
+  }
+
+  renderArrows(areaKey);
+}
+
+function renderArrows(areaKey) {
+  const wrap = $("#arrows");
+  wrap.innerHTML = "";
+  for (const dir of ["up", "down", "left", "right"]) {
+    const target = E.neighborOf(areaKey, dir);
+    if (!target) continue; // no area in this direction
+
+    const a = el("button", `edge-arrow ${dir}`);
+    if (target === "void" || !DD.AREAS[target]) {
+      a.classList.add("disabled");
+      a.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">🔒 ???</span>`;
+      a.title = "Reserved — nothing here yet";
+    } else if (!E.isAreaUnlocked(target)) {
+      a.classList.add("locked");
+      const cost = E.areaUnlockCost(target);
+      const ok = E.canAfford(cost);
+      if (!ok) a.classList.add("cant");
+      a.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span>` +
+        `<span class="arr-label">🔒 ${DD.AREAS[target].name}<br>${costText(cost)}</span>`;
+      a.title = `Open ${DD.AREAS[target].name} — ${costText(cost)}`;
+      a.onclick = () => { if (E.unlockArea(target)) { pendingSlide = dir; render(); } };
+    } else {
+      a.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span>` +
+        `<span class="arr-label">${DD.AREAS[target].icon} ${DD.AREAS[target].name}</span>`;
+      a.title = `Go to ${DD.AREAS[target].name}`;
+      a.onclick = () => { if (E.moveTo(target)) { pendingSlide = dir; render(); } };
+    }
+    wrap.appendChild(a);
+  }
+}
+
+// Per-frame live refresh: update cooldown countdowns in place, rebuild a
+// node only when its state actually changed. Keeps node identity stable so
+// hover/clicks survive — never clears the grid.
+function refreshGrid() {
+  const areaKey = window.GS.world.currentArea;
+  const grid = $("#grid");
+  const now = Date.now();
+
+  for (const node of window.GS.areas[areaKey].nodes) {
+    const elNode = grid.querySelector(`[data-node-id="${node.id}"]`);
+    if (!elNode) { render(); return; }
+
+    const wantState = node.unlocked ? node.state : "lockedslot";
+    if (elNode.dataset.state !== wantState || Number(elNode.dataset.tier) !== node.tier) {
+      elNode.replaceWith(buildNodeEl(areaKey, node, now)); // rebuild just this node
+    } else if (node.unlocked && node.state === "cooldown") {
+      const t = elNode.querySelector(".cd-timer");
+      if (t) t.textContent = `${(Math.max(0, node.cooldownEnd - now) / 1000).toFixed(1)}s`;
+    }
   }
 }
 
@@ -112,7 +188,7 @@ function renderGrid() {
 
 function recipeVisible(recipe) {
   if (window.GS.craftFilter === "all") return true;
-  const a = window.GS.activeArea;
+  const a = window.GS.world.currentArea;
   return recipe.area === a || recipe.area === "misc";
 }
 
@@ -144,9 +220,6 @@ function renderCrafting() {
     if (recipe.requires) {
       const ok = window.GS.inventory[recipe.requires];
       body += `<div class="r-req ${ok ? "ok" : "miss"}">Requires: ${E.itemName(recipe.requires)}</div>`;
-    }
-    if (recipe.unlocksArea && !window.GS.areas[recipe.unlocksArea].unlocked) {
-      body += `<div class="r-unlock">🔓 Unlocks ${DD.AREAS[recipe.unlocksArea].name}</div>`;
     }
     if (recipe.isWin) card.classList.add("win-recipe");
 
@@ -186,13 +259,13 @@ function upgradeRow(areaKey, type, label, descFn) {
   const cost = E.upgradeCost(areaKey, type);
   const up = window.GS.areas[areaKey].upgrades;
   const row = el("div", "up-row");
-  let status, btnLabel, maxed = false;
+  let status, maxed = false;
   if (type === "tier") { maxed = up.maxTier >= 5; status = `Tier ${up.maxTier}/5`; }
   if (type === "speed") { maxed = up.speed >= 3; status = `Lv ${up.speed}/3`; }
   if (type === "automation") { maxed = up.automation >= 3; status = `Lv ${up.automation}/3`; }
 
-  const affordable = cost != null && window.GS.gold >= cost;
-  btnLabel = maxed ? "MAX" : `${cost}G`;
+  const affordable = cost != null && E.canAfford(cost);
+  const btnLabel = maxed ? "MAX" : costText(cost);
   row.innerHTML = `<div class="up-info"><b>${label}</b> <span class="up-status">${status}</span>` +
     `<div class="up-desc">${descFn(up)}</div></div>`;
   const btn = el("button", "up-buy" + (maxed ? " maxed" : affordable ? "" : " disabled"), btnLabel);
@@ -204,14 +277,14 @@ function upgradeRow(areaKey, type, label, descFn) {
 function renderUpgrades() {
   const body = $("#upgrades-body");
   body.innerHTML = "";
-  $("#up-gold").textContent = Math.floor(window.GS.gold);
 
   for (const [areaKey, cfg] of Object.entries(DD.AREAS)) {
-    const area = window.GS.areas[areaKey];
-    const sec = el("div", "up-area" + (area.unlocked ? "" : " dim"));
-    sec.appendChild(el("h3", null, `${cfg.icon} ${cfg.name}${area.unlocked ? "" : " 🔒"}`));
-    if (!area.unlocked) {
-      sec.appendChild(el("div", "up-desc", `Unlock by crafting ${E.itemName(cfg.unlockRecipe)}.`));
+    const unlocked = E.isAreaUnlocked(areaKey);
+    const sec = el("div", "up-area" + (unlocked ? "" : " dim"));
+    sec.appendChild(el("h3", null, `${cfg.icon} ${cfg.name}${unlocked ? "" : " 🔒"} ` +
+      `<span class="up-bank">${E.itemIcon(cfg.base)} ${E.inv(cfg.base)}</span>`));
+    if (!unlocked) {
+      sec.appendChild(el("div", "up-desc", `Travel here and open it from the world map first.`));
       body.appendChild(sec);
       continue;
     }
@@ -220,9 +293,9 @@ function renderUpgrades() {
     sec.appendChild(upgradeRow(areaKey, "speed", cfg.speedLabel,
       up => `${cfg.timerLabel} timers −20% each (now ×${Math.pow(0.8, up.speed).toFixed(2)}).`));
     sec.appendChild(upgradeRow(areaKey, "automation", "Automation",
-      up => up.automation === 0 ? "Auto-harvests ready tiles." :
-        up.automation === 3 ? "Harvests ALL ready tiles each tick." :
-        `Harvests ${DD.AUTOMATION_CLICKS[up.automation]} tile(s) per tick.`));
+      up => up.automation === 0 ? "Auto-harvests ready nodes." :
+        up.automation === 3 ? "Harvests ALL ready nodes each tick." :
+        `Harvests ${DD.AUTOMATION_CLICKS[up.automation]} node(s) per tick.`));
     body.appendChild(sec);
   }
 }
@@ -249,7 +322,7 @@ window.onWin = function () {
 
 function render() {
   renderTopBar();
-  renderGrid();
+  renderWorld();
   renderCrafting();
   renderInventory();
   if (upgradesOpen) renderUpgrades();
