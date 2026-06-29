@@ -26,7 +26,8 @@ function makeAreaNodes(cfg) {
     tier: 1,
     state: "locked",   // locked | ready | cooldown
     cooldownEnd: 0,     // ms timestamp
-    hitsLeft: 1,        // for mine durability
+    hitsLeft: 1,        // remaining chops/strikes (chop & break areas)
+    surfaceUntil: 0,    // ms timestamp a surfaced fish dives (fishing)
     autoFlash: 0,       // ms timestamp until which the AUTO pulse shows
   }));
 }

@@ -66,24 +66,31 @@ const TIER_SPRITES = {
 // d(item, min, max) -> drop spec. max defaults to min (fixed amount).
 function d(item, min, max) { return { item, min, max: max == null ? min : max }; }
 
-// Each area: per-tier definition (drops/timer/durability) + which basic
-// resource funds its unlocks/upgrades (`base`), and how it seeds nodes.
+// Each area plays differently (see `interaction`):
+//   chop    (forest)  — multiple swings; every swing yields a bit (`perHit`),
+//                       the felling swing also grants the tier `drops`.
+//   instant (farm)    — a single click harvests the whole tier `drops`.
+//   break   (mine)    — multiple strikes yield nothing; ore (`drops`) only
+//                       drops when the rock finally cracks (last `hits`).
+//   surface (fishing) — a fish surfaces for `surfaceWindow`s; click while it's
+//                       up to land the `drops`, else it dives and resurfaces.
+// `base` is the resource that funds the area's plot/upgrade costs.
 const AREAS = {
   forest: {
     name: "Forest", icon: "🌲", verb: "Chop", actionIcon: "🪓",
-    base: "wood", initialReady: true, initialActive: 6,
+    base: "wood", initialReady: true, initialActive: 6, interaction: "chop",
     speedLabel: "Regrow Speed", timerLabel: "Regrow",
     tiers: [
-      { name: "Oak",      drops: [d("wood", 2, 3)],                                  timer: 15 },
-      { name: "Hardwood", drops: [d("wood", 3), d("hardwood", 1)],                   timer: 25 },
-      { name: "Ancient",  drops: [d("wood", 2), d("hardwood", 2), d("ancient_bark", 1)], timer: 40 },
-      { name: "Magic",    drops: [d("hardwood", 2), d("magic_wood", 1)],             timer: 60 },
-      { name: "Void",     drops: [d("magic_wood", 1), d("void_timber", 1)],          timer: 90 },
+      { name: "Oak",      hits: 3, perHit: [d("wood", 1, 2)],   drops: [],                                   timer: 15 },
+      { name: "Hardwood", hits: 3, perHit: [d("wood", 2)],      drops: [d("hardwood", 1)],                   timer: 25 },
+      { name: "Ancient",  hits: 4, perHit: [d("wood", 2)],      drops: [d("hardwood", 1), d("ancient_bark", 1)], timer: 40 },
+      { name: "Magic",    hits: 4, perHit: [d("hardwood", 1)],  drops: [d("magic_wood", 1)],                 timer: 60 },
+      { name: "Void",     hits: 5, perHit: [d("hardwood", 1)],  drops: [d("magic_wood", 1), d("void_timber", 1)], timer: 90 },
     ],
   },
   farm: {
     name: "Farm", icon: "🌱", verb: "Harvest", actionIcon: "🌾",
-    base: "wheat", initialReady: false, initialActive: 6,
+    base: "wheat", initialReady: false, initialActive: 6, interaction: "instant",
     speedLabel: "Growth Speed", timerLabel: "Growth",
     tiers: [
       { name: "Wheat",       drops: [d("wheat", 2, 3)],                              timer: 20 },
@@ -95,19 +102,20 @@ const AREAS = {
   },
   mine: {
     name: "Mine", icon: "⛰️", verb: "Mine", actionIcon: "⛏️",
-    base: "stone", initialReady: true, initialActive: 6,
+    base: "stone", initialReady: true, initialActive: 6, interaction: "break",
     speedLabel: "Mining Speed", timerLabel: "Respawn",
     tiers: [
-      { name: "Stone",      drops: [d("stone", 3), d("clay", 1)],                    timer: 10, durability: 1 },
-      { name: "Clay Vein",  drops: [d("clay", 4)],                                   timer: 15, durability: 1 },
-      { name: "Copper Vein",drops: [d("stone", 2), d("copper_ore", 2)],              timer: 30, durability: 2 },
-      { name: "Iron Vein",  drops: [d("copper_ore", 1), d("iron_ore", 2)],           timer: 50, durability: 3 },
-      { name: "Adamantine", drops: [d("iron_ore", 1), d("adamantine_ore", 1)],       timer: 90, durability: 4 },
+      { name: "Stone",      hits: 2, drops: [d("stone", 3), d("clay", 1)],           timer: 10 },
+      { name: "Clay Vein",  hits: 2, drops: [d("clay", 4)],                          timer: 15 },
+      { name: "Copper Vein",hits: 3, drops: [d("stone", 2), d("copper_ore", 2)],     timer: 30 },
+      { name: "Iron Vein",  hits: 4, drops: [d("copper_ore", 1), d("iron_ore", 2)],  timer: 50 },
+      { name: "Adamantine", hits: 5, drops: [d("iron_ore", 1), d("adamantine_ore", 1)], timer: 90 },
     ],
   },
   fishing: {
     name: "Fishing", icon: "🎣", verb: "Reel", actionIcon: "🎣",
-    base: "fish", initialReady: false, initialActive: 6,
+    base: "fish", initialReady: false, initialActive: 6, interaction: "surface",
+    surfaceWindow: 3,   // seconds a fish stays up before it dives again
     speedLabel: "Fishing Speed", timerLabel: "Bite",
     tiers: [
       { name: "Minnow",      drops: [d("fish", 1, 2)],                               timer: 12 },

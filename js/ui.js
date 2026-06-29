@@ -80,20 +80,30 @@ function buildNodeEl(areaKey, node, now) {
   }
 
   if (node.state === "ready") {
-    n.classList.add("ready");
+    n.classList.add("ready", cfg.interaction);
     const tierDef = cfg.tiers[node.tier - 1];
     const sprite = (DD.TIER_SPRITES[areaKey] || [])[node.tier - 1] || cfg.icon;
     let inner = `<span class="sprite t${node.tier}">${sprite}</span>`;
     inner += `<span class="node-tag t${node.tier}">${tierDef.name}</span>`;
-    if ((tierDef.durability || 1) > 1) {
-      inner += `<span class="hits">${node.hitsLeft}/${tierDef.durability} ${cfg.actionIcon}</span>`;
+    const totalHits = tierDef.hits || 1;
+    if (totalHits > 1) {
+      // chop / break: show remaining swings so the player knows it takes more.
+      inner += `<span class="hits">${node.hitsLeft}/${totalHits} ${cfg.actionIcon}</span>`;
       n.dataset.hits = node.hitsLeft;
+    }
+    if (cfg.interaction === "surface") {
+      // fishing: a surfaced fish has a short catch window — show the urgency.
+      const left = Math.max(0, node.surfaceUntil - now);
+      inner += `<span class="cd-timer catch">❗${(left / 1000).toFixed(1)}s</span>`;
     }
     n.innerHTML = inner;
     n.onclick = () => { E.harvestNode(areaKey, node.id, false); render(); };
   } else {
     n.classList.add("cooldown");
-    const sprite = (DD.TIER_SPRITES[areaKey] || [])[node.tier - 1] || cfg.icon;
+    // Fishing shows ripples while the fish is down; others show a dim sprite.
+    const sprite = cfg.interaction === "surface"
+      ? "🌊"
+      : (DD.TIER_SPRITES[areaKey] || [])[node.tier - 1] || cfg.icon;
     const remain = Math.max(0, node.cooldownEnd - now);
     n.innerHTML =
       `<span class="sprite dim">${sprite}</span>` +
@@ -167,6 +177,7 @@ function renderArrows(areaKey) {
 // hover/clicks survive — never clears the grid.
 function refreshGrid() {
   const areaKey = window.GS.world.currentArea;
+  const surface = DD.AREAS[areaKey].interaction === "surface";
   const grid = $("#grid");
   const now = Date.now();
 
@@ -180,6 +191,9 @@ function refreshGrid() {
     } else if (node.unlocked && node.state === "cooldown") {
       const t = elNode.querySelector(".cd-timer");
       if (t) t.textContent = `${(Math.max(0, node.cooldownEnd - now) / 1000).toFixed(1)}s`;
+    } else if (node.unlocked && node.state === "ready" && surface) {
+      const t = elNode.querySelector(".cd-timer.catch");
+      if (t) t.textContent = `❗${(Math.max(0, node.surfaceUntil - now) / 1000).toFixed(1)}s`;
     }
   }
 }

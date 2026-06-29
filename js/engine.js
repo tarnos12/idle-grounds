@@ -56,13 +56,18 @@ function rollTier(areaKey) {
 function startCooldown(areaKey, node) {
   node.tier = rollTier(areaKey);
   node.state = "cooldown";
+  node.surfaceUntil = 0;
   node.cooldownEnd = Date.now() + effectiveTimer(areaKey, node.tier - 1) * 1000;
 }
 
 function setReady(areaKey, node) {
   const cfg = D.AREAS[areaKey];
   node.state = "ready";
-  node.hitsLeft = cfg.tiers[node.tier - 1].durability || 1;
+  node.hitsLeft = cfg.tiers[node.tier - 1].hits || 1;
+  // Fishing: a surfaced fish is only catchable for a short window.
+  node.surfaceUntil = cfg.interaction === "surface"
+    ? Date.now() + (cfg.surfaceWindow || 3) * 1000
+    : 0;
 }
 
 // Initialize node states for a (possibly newly unlocked) area.
@@ -86,32 +91,50 @@ function rollAmount(spec) {
   return spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1));
 }
 
+function grantDrops(specs) {
+  for (const spec of specs || []) {
+    const amt = rollAmount(spec);
+    addItem(spec.item, amt);
+    window.GS.stats.totalGathered += amt;
+  }
+}
+
 function nodeById(areaKey, id) {
   return window.GS.areas[areaKey].nodes.find(n => n.id === id);
 }
 
-// Click a ready node. Returns true if anything happened.
+// Click a ready node. Behaviour depends on the area's `interaction`.
+// Returns true if the click did anything.
 function harvestNode(areaKey, nodeId, isAuto) {
   const node = nodeById(areaKey, nodeId);
   if (!node || node.state !== "ready") return false;
 
   const cfg = D.AREAS[areaKey];
+  const tierDef = cfg.tiers[node.tier - 1];
 
-  // Mine durability: needs multiple clicks to break.
-  if (node.hitsLeft > 1) {
+  if (cfg.interaction === "chop") {
+    // Every swing drops a bit of wood; the felling swing adds the tier drops.
+    grantDrops(tierDef.perHit);
     node.hitsLeft--;
     if (isAuto) node.autoFlash = Date.now() + 400;
+    if (node.hitsLeft > 0) return true;        // tree still standing
+    grantDrops(tierDef.drops);                 // felled — bonus material
+    startCooldown(areaKey, node);
     return true;
   }
 
-  // Break / harvest: grant drops.
-  const tierDef = cfg.tiers[node.tier - 1];
-  for (const spec of tierDef.drops) {
-    const amt = rollAmount(spec);
-    addItem(spec.item, amt);
-    window.GS.stats.totalGathered += amt;
+  if (cfg.interaction === "break") {
+    // Strikes yield nothing until the rock cracks on the final hit.
+    node.hitsLeft--;
+    if (isAuto) node.autoFlash = Date.now() + 400;
+    if (node.hitsLeft > 0) return true;        // not broken yet
+    grantDrops(tierDef.drops);
+    startCooldown(areaKey, node);
+    return true;
   }
 
+  // "instant" (farm) and "surface" (fishing): one click lands the drops.
+  grantDrops(tierDef.drops);
   if (isAuto) node.autoFlash = Date.now() + 600;
   startCooldown(areaKey, node);
   return true;
@@ -247,13 +270,18 @@ function moveTo(areaKey) {
 
 // ---- Ticks --------------------------------------------------
 
-// Promote any cooldown nodes whose timer has elapsed.
+// Promote ready/cooldown nodes whose timer has elapsed.
 function gameTick() {
   const now = Date.now();
   for (const areaKey of Object.keys(D.AREAS)) {
     if (!isAreaUnlocked(areaKey)) continue;
+    const surface = D.AREAS[areaKey].interaction === "surface";
     for (const node of window.GS.areas[areaKey].nodes) {
-      if (node.state === "cooldown" && now >= node.cooldownEnd) setReady(areaKey, node);
+      if (node.state === "cooldown" && now >= node.cooldownEnd) {
+        setReady(areaKey, node);
+      } else if (surface && node.state === "ready" && node.surfaceUntil && now >= node.surfaceUntil) {
+        startCooldown(areaKey, node); // fish dove back down — no penalty, just resurfaces later
+      }
     }
   }
 }
