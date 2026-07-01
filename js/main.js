@@ -17,9 +17,10 @@
   window.UI.wireInput();
   window.UI.render();
 
-  // Game loop: fishing dives + node respawns, then repaint. Full rebuild is
-  // safe because all world interaction is captured at the viewport level.
-  setInterval(() => { E.gameTick(); window.UI.render(); }, 100);
+  // Game loop: fishing dives + node respawns, then repaint. renderPlay only
+  // rebuilds the passive grid — NOT the arrows/build menu — so hovering an
+  // arrow or clicking a build card isn't disrupted by the tick.
+  setInterval(() => { E.gameTick(); window.UI.renderPlay(); }, 100);
   // Automation: harvest on behalf of the player every second.
-  setInterval(() => { if (E.automationTick() > 0) window.UI.render(); }, 1000);
+  setInterval(() => { if (E.automationTick() > 0) window.UI.renderPlay(); }, 1000);
 })();

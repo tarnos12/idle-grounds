@@ -138,7 +138,8 @@ const AREAS = {
 // ------------------------------------------------------------------
 const GRID = {
   cell: 32,           // px per cell
-  cells: 24,          // 24 x 24 cells per area  ->  768 x 768 px
+  cells: 24,          // 24 x 24 PLAYABLE cells per area
+  margin: 5,          // inert border cells on every side (world = 24 + 2*5 = 34)
   building: { w: 2, h: 3 },   // every building occupies a 2-wide x 3-tall block
 };
 
