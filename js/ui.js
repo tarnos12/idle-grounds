@@ -1,10 +1,15 @@
 /* ============================================================
-   Idle Grounds — UI rendering (reads window.GS, writes DOM)
+   Idle Grounds — UI rendering + mouse interaction
+   All world interaction is cursor/GS hit-tested at the viewport
+   level, so the world DOM can rebuild freely without losing clicks.
    ============================================================ */
 
 const E = window.ENGINE;
 const DD = window.DATA;
 const G = DD.GRID;
+// NOTE: `CELL` is declared in engine.js; classic scripts share one global
+// scope, so we reuse it here rather than redeclaring (which would throw).
+const GRID_PX = G.cell * G.cells;
 
 const $ = sel => document.querySelector(sel);
 function el(tag, cls, html) {
@@ -14,10 +19,24 @@ function el(tag, cls, html) {
   return n;
 }
 
-let upgradesOpen = false;
-let pendingSlide = null; // direction the camera just moved, for the slide-in anim
+// ---- input state --------------------------------------------
+const cursor = { x: 0, y: 0, cx: 0, cy: 0, over: false }; // grid px + client px
+let leftHeld = false, rightHeld = false, pickupMode = false;
+let holdStart = 0, lastDrop = 0, loopRunning = false;
 
-// Coalesce full render requests into one per animation frame.
+function area() { return window.GS.world.currentArea; }
+function pointFromEvent(e) {
+  const r = $("#grid").getBoundingClientRect();
+  const x = Math.max(0, Math.min(GRID_PX - 1, e.clientX - r.left));
+  const y = Math.max(0, Math.min(GRID_PX - 1, e.clientY - r.top));
+  return { x, y, row: Math.floor(y / CELL), col: Math.floor(x / CELL) };
+}
+function nodeAtCell(row, col) {
+  return window.GS.areas[area()].nodes.find(n =>
+    row >= n.row && row < n.row + n.size && col >= n.col && col < n.col + n.size) || null;
+}
+
+// ---- render coalescing --------------------------------------
 let renderQueued = false;
 function requestRender() {
   if (renderQueued) return;
@@ -26,119 +45,100 @@ function requestRender() {
 }
 window.requestRender = requestRender;
 
-// Lightweight per-frame update: refresh cooldown timers in place WITHOUT
-// rebuilding nodes (a full rebuild every frame destroys the node under the
-// cursor mid-click — hover flicker / dropped clicks).
-let liveTickQueued = false;
-function requestLiveTick() {
-  if (liveTickQueued) return;
-  liveTickQueued = true;
-  requestAnimationFrame(() => { liveTickQueued = false; refreshGrid(); });
-}
-window.requestLiveTick = requestLiveTick;
-
-// ---- Top bar -------------------------------------------------
-
+// ---- top bar ------------------------------------------------
 function renderTopBar() {
-  const area = DD.AREAS[window.GS.world.currentArea];
-  $("#area-name").innerHTML = `${area.icon} ${area.name}`;
+  const a = DD.AREAS[area()];
+  $("#area-name").innerHTML = `${a.icon} ${a.name}`;
+  $("#hand-count").textContent = `${E.handTotal()}/${DD.HAND_CAP}`;
+  $("#build-btn").classList.toggle("on", window.GS.build.open);
 }
 
-// ---- World grid + sprites -----------------------------------
-
-function costText(cost) {
-  return Object.entries(cost)
-    .map(([item, qty]) => `${qty} ${E.itemIcon(item)}`)
-    .join(" ");
-}
-
-// Position a node's 2x2 footprint and its larger overflowing sprite box.
-function placeNode(nodeEl, node) {
-  const c = G.cell;
-  nodeEl.style.left = (node.col * c) + "px";
-  nodeEl.style.top = (node.row * c) + "px";
-  nodeEl.style.width = (G.foot * c) + "px";
-  nodeEl.style.height = (G.foot * c) + "px";
-  nodeEl.style.zIndex = node.row; // lower rows draw in front
-}
-
-function buildNodeEl(areaKey, node, now) {
-  const cfg = DD.AREAS[areaKey];
-  const n = el("button", "node");
-  n.dataset.nodeId = node.id;
-  n.dataset.state = node.unlocked ? node.state : "lockedslot";
-  n.dataset.tier = node.tier;
-  placeNode(n, node);
-
-  if (!node.unlocked) {
-    n.classList.add("slot-locked");
-    const cost = E.nodeUnlockCost(areaKey);
-    n.innerHTML = `<span class="slot-plus">＋</span><span class="slot-cost">${costText(cost)}</span>`;
-    n.title = `Clear plot — ${costText(cost)}`;
-    n.onclick = () => { if (E.unlockNode(areaKey, node.id)) render(); };
-    return n;
-  }
-
-  if (node.state === "ready") {
-    n.classList.add("ready", cfg.interaction);
-    const tierDef = cfg.tiers[node.tier - 1];
-    const sprite = (DD.TIER_SPRITES[areaKey] || [])[node.tier - 1] || cfg.icon;
-    let inner = `<span class="sprite t${node.tier}">${sprite}</span>`;
-    inner += `<span class="node-tag t${node.tier}">${tierDef.name}</span>`;
-    const totalHits = tierDef.hits || 1;
-    if (totalHits > 1) {
-      // chop / break: show remaining swings so the player knows it takes more.
-      inner += `<span class="hits">${node.hitsLeft}/${totalHits} ${cfg.actionIcon}</span>`;
-      n.dataset.hits = node.hitsLeft;
-    }
-    if (cfg.interaction === "surface") {
-      // fishing: a surfaced fish has a short catch window — show the urgency.
-      const left = Math.max(0, node.surfaceUntil - now);
-      inner += `<span class="cd-timer catch">❗${(left / 1000).toFixed(1)}s</span>`;
-    }
-    n.innerHTML = inner;
-    n.onclick = () => { E.harvestNode(areaKey, node.id, false); render(); };
-  } else {
-    n.classList.add("cooldown");
-    // Fishing shows ripples while the fish is down; others show a dim sprite.
-    const sprite = cfg.interaction === "surface"
-      ? "🌊"
-      : (DD.TIER_SPRITES[areaKey] || [])[node.tier - 1] || cfg.icon;
-    const remain = Math.max(0, node.cooldownEnd - now);
-    n.innerHTML =
-      `<span class="sprite dim">${sprite}</span>` +
-      `<span class="cd-timer">${(remain / 1000).toFixed(1)}s</span>`;
-  }
-
-  if (node.autoFlash > now) n.classList.add("auto");
-  return n;
-}
+// ---- world --------------------------------------------------
+function spriteSize(size) { return size >= 2 ? 72 : 30; }
 
 function renderWorld() {
-  const areaKey = window.GS.world.currentArea;
-  const px = G.cell * G.cells;
-
+  const a = area();
   const grid = $("#grid");
-  grid.dataset.area = areaKey;
-  grid.style.width = px + "px";
-  grid.style.height = px + "px";
-  grid.style.backgroundSize = `${G.cell}px ${G.cell}px`;
+  grid.dataset.area = a;
+  grid.style.width = GRID_PX + "px";
+  grid.style.height = GRID_PX + "px";
+  grid.style.backgroundSize = `${CELL}px ${CELL}px`;
   grid.innerHTML = "";
 
+  // reserved wild-land zones (no building allowed there)
+  for (const z of E.zoneRects(a)) {
+    const zd = el("div", "zone");
+    zd.style.left = z.c0 * CELL + "px";
+    zd.style.top = z.r0 * CELL + "px";
+    zd.style.width = (z.c1 - z.c0 + 1) * CELL + "px";
+    zd.style.height = (z.r1 - z.r0 + 1) * CELL + "px";
+    grid.appendChild(zd);
+  }
+
+  // buildings (ghosts + built)
+  const B = G.building;
+  for (const b of window.GS.areas[a].buildings) {
+    const cfg = DD.BUILDINGS[b.type];
+    const bd = el("div", "building" + (b.built ? " built" : " ghost"));
+    bd.style.left = b.col * CELL + "px";
+    bd.style.top = b.row * CELL + "px";
+    bd.style.width = B.w * CELL + "px";
+    bd.style.height = B.h * CELL + "px";
+    let inner = `<span class="b-ico">${cfg.icon}</span><span class="b-name">${cfg.name}</span>`;
+    if (!b.built) {
+      const needs = E.buildingNeeds(b);
+      const list = Object.entries(needs).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+      inner += `<span class="b-needs">${list || "…"}</span>`;
+    }
+    bd.innerHTML = inner;
+    grid.appendChild(bd);
+  }
+
+  // resource nodes
   const now = Date.now();
-  for (const node of window.GS.areas[areaKey].nodes) {
-    grid.appendChild(buildNodeEl(areaKey, node, now));
+  for (const node of window.GS.areas[a].nodes) {
+    const cfg = DD.AREAS[a];
+    const nd = el("div", "node ready");
+    nd.style.left = node.col * CELL + "px";
+    nd.style.top = node.row * CELL + "px";
+    nd.style.width = node.size * CELL + "px";
+    nd.style.height = node.size * CELL + "px";
+    nd.style.zIndex = node.row + 5;
+    const sprite = (DD.TIER_SPRITES[a] || [])[node.tier - 1] || cfg.icon;
+    let inner = `<span class="sprite" style="font-size:${spriteSize(node.size)}px">${sprite}</span>`;
+    if ((cfg.interaction === "chop" || cfg.interaction === "break") && node.hitsLeft > 0) {
+      inner += `<span class="hits">${node.hitsLeft} ${cfg.actionIcon}</span>`;
+    }
+    if (cfg.interaction === "surface" && node.surfaceUntil) {
+      nd.classList.add("surface");
+      inner += `<span class="cd-timer catch">${Math.max(0, (node.surfaceUntil - now) / 1000).toFixed(1)}s</span>`;
+    }
+    if (node.autoFlash > now) nd.classList.add("auto");
+    nd.innerHTML = inner;
+    grid.appendChild(nd);
   }
 
-  // Camera slide-in animation when we just changed area.
-  if (pendingSlide) {
-    grid.style.animation = "none";
-    void grid.offsetWidth; // reflow so the animation restarts
-    grid.style.animation = `slide-${pendingSlide} .28s ease`;
-    pendingSlide = null;
+  // ground items
+  for (const g of window.GS.areas[a].ground) {
+    const gd = el("div", "ground");
+    gd.style.left = g.x + "px";
+    gd.style.top = g.y + "px";
+    gd.innerHTML = `<span class="g-ico">${E.itemIcon(g.item)}</span><span class="g-qty">${g.qty}</span>`;
+    grid.appendChild(gd);
   }
 
-  renderArrows(areaKey);
+  // placement preview
+  if (window.GS.build.placing && cursor.over) {
+    const ok = E.canPlaceBuilding(a, cursor.row, cursor.col);
+    const pv = el("div", "preview " + (ok ? "ok" : "bad"));
+    pv.style.left = cursor.col * CELL + "px";
+    pv.style.top = cursor.row * CELL + "px";
+    pv.style.width = B.w * CELL + "px";
+    pv.style.height = B.h * CELL + "px";
+    grid.appendChild(pv);
+  }
+
+  renderArrows(a);
 }
 
 function renderArrows(areaKey) {
@@ -146,129 +146,57 @@ function renderArrows(areaKey) {
   wrap.innerHTML = "";
   for (const dir of ["up", "down", "left", "right"]) {
     const target = E.neighborOf(areaKey, dir);
-    if (!target) continue; // no area in this direction
-
-    const a = el("button", `edge-arrow ${dir}`);
+    if (!target) continue;
+    const btn = el("button", `edge-arrow ${dir}`);
     if (target === "void" || !DD.AREAS[target]) {
-      a.classList.add("disabled");
-      a.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">🔒 ???</span>`;
-      a.title = "Reserved — nothing here yet";
+      btn.classList.add("disabled");
+      btn.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">🔒 ???</span>`;
     } else if (!E.isAreaUnlocked(target)) {
-      a.classList.add("locked");
       const cost = E.areaUnlockCost(target);
-      const ok = E.canAfford(cost);
-      if (!ok) a.classList.add("cant");
-      a.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span>` +
-        `<span class="arr-label">🔒 ${DD.AREAS[target].name}<br>${costText(cost)}</span>`;
-      a.title = `Open ${DD.AREAS[target].name} — ${costText(cost)}`;
-      a.onclick = () => { if (E.unlockArea(target)) { pendingSlide = dir; render(); } };
+      const label = Object.entries(cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+      btn.classList.add("locked");
+      if (!E.canAfford(cost)) btn.classList.add("cant");
+      btn.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">🔒 ${DD.AREAS[target].name}<br>${label}</span>`;
+      btn.onclick = () => { if (E.unlockArea(target)) render(); };
     } else {
-      a.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span>` +
-        `<span class="arr-label">${DD.AREAS[target].icon} ${DD.AREAS[target].name}</span>`;
-      a.title = `Go to ${DD.AREAS[target].name}`;
-      a.onclick = () => { if (E.moveTo(target)) { pendingSlide = dir; render(); } };
+      btn.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">${DD.AREAS[target].icon} ${DD.AREAS[target].name}</span>`;
+      btn.onclick = () => { if (E.moveTo(target)) render(); };
     }
-    wrap.appendChild(a);
+    wrap.appendChild(btn);
   }
 }
 
-// Per-frame live refresh: update cooldown countdowns in place, rebuild a
-// node only when its state actually changed. Keeps node identity stable so
-// hover/clicks survive — never clears the grid.
-function refreshGrid() {
-  const areaKey = window.GS.world.currentArea;
-  const surface = DD.AREAS[areaKey].interaction === "surface";
-  const grid = $("#grid");
-  const now = Date.now();
-
-  for (const node of window.GS.areas[areaKey].nodes) {
-    const elNode = grid.querySelector(`[data-node-id="${node.id}"]`);
-    if (!elNode) { render(); return; }
-
-    const wantState = node.unlocked ? node.state : "lockedslot";
-    if (elNode.dataset.state !== wantState || Number(elNode.dataset.tier) !== node.tier) {
-      elNode.replaceWith(buildNodeEl(areaKey, node, now)); // rebuild just this node
-    } else if (node.unlocked && node.state === "cooldown") {
-      const t = elNode.querySelector(".cd-timer");
-      if (t) t.textContent = `${(Math.max(0, node.cooldownEnd - now) / 1000).toFixed(1)}s`;
-    } else if (node.unlocked && node.state === "ready" && surface) {
-      const t = elNode.querySelector(".cd-timer.catch");
-      if (t) t.textContent = `❗${(Math.max(0, node.surfaceUntil - now) / 1000).toFixed(1)}s`;
-    }
-  }
+// ---- hand cursor overlay ------------------------------------
+function renderHandCursor() {
+  const hc = $("#hand-cursor");
+  const hand = window.GS.hand;
+  if (!hand.length) { hc.classList.add("hidden"); return; }
+  hc.classList.remove("hidden");
+  hc.style.left = cursor.cx + "px";
+  hc.style.top = cursor.cy + "px";
+  const top = hand[0];
+  hc.innerHTML =
+    `<span class="hc-ico">${E.itemIcon(top.item)}</span>` +
+    `<span class="hc-qty">${top.qty}</span>` +
+    (hand.length > 1 ? `<span class="hc-more">+${hand.length - 1}</span>` : "");
 }
 
-// ---- Crafting panel -----------------------------------------
-
-function recipeVisible(recipe) {
-  if (window.GS.craftFilter === "all") return true;
-  const a = window.GS.world.currentArea;
-  return recipe.area === a || recipe.area === "misc";
-}
-
-function renderCrafting() {
-  const list = $("#recipe-list");
-  list.innerHTML = "";
-
-  $("#filter-active").classList.toggle("on", window.GS.craftFilter === "active");
-  $("#filter-all").classList.toggle("on", window.GS.craftFilter === "all");
-
-  for (const recipe of DD.RECIPES) {
-    if (!recipeVisible(recipe)) continue;
-
-    const reason = E.craftBlockReason(recipe, 1);
-    const card = el("div", "recipe" + (reason ? " blocked" : ""));
-
-    const out = Object.entries(recipe.out)[0];
-    let head = `<div class="r-head"><span class="r-ico">${E.itemIcon(out[0])}</span>` +
-      `<span class="r-name">${recipe.name}</span></div>`;
-
-    const ins = Object.entries(recipe.in)
-      .map(([item, qty]) => {
-        const have = E.inv(item);
-        const ok = have >= qty ? "ok" : "miss";
-        return `<span class="ing ${ok}">${qty}× ${E.itemName(item)} <em>(${have})</em></span>`;
-      }).join(" ");
-    let body = `<div class="r-ing">${ins} → ${out[1]}× ${recipe.name}</div>`;
-
-    if (recipe.requires) {
-      const ok = window.GS.inventory[recipe.requires];
-      body += `<div class="r-req ${ok ? "ok" : "miss"}">Requires: ${E.itemName(recipe.requires)}</div>`;
-    }
-    if (recipe.isWin) card.classList.add("win-recipe");
-
-    const can1 = E.maxCraftable(recipe, 1) >= 1;
-    const can10 = E.maxCraftable(recipe, 10) >= 1;
-    const actions = el("div", "r-actions");
-    const b1 = el("button", "craft-btn" + (can1 ? "" : " disabled"), "Craft ▶");
-    b1.onclick = () => { if (E.craft(recipe.id, 1)) render(); };
-    const b10 = el("button", "craft-btn small" + (can10 ? "" : " disabled"), "Craft 10 ▶");
-    b10.onclick = () => { if (E.craft(recipe.id, 10)) render(); };
-    actions.appendChild(b1); actions.appendChild(b10);
-
-    card.innerHTML = head + body;
-    card.appendChild(actions);
-    list.appendChild(card);
-  }
-}
-
-// ---- Inventory ----------------------------------------------
-
-function renderInventory() {
-  const bar = $("#inventory");
+// ---- build menu ---------------------------------------------
+function renderBuildMenu() {
+  const bar = $("#build-menu");
+  bar.classList.toggle("hidden", !window.GS.build.open);
+  if (!window.GS.build.open) return;
   bar.innerHTML = "";
-  const entries = Object.entries(window.GS.inventory).filter(([, n]) => n > 0);
-  if (entries.length === 0) {
-    bar.appendChild(el("span", "inv-empty", "Inventory empty — start harvesting!"));
-    return;
-  }
-  for (const [item, n] of entries) {
-    bar.appendChild(el("span", "inv-item", `${E.itemIcon(item)} ${E.itemName(item)}: <b>${n}</b>`));
+  for (const b of E.buildingCatalog()) {
+    const cost = Object.entries(b.cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+    const card = el("button", "build-card" + (window.GS.build.placing === b.id ? " active" : ""));
+    card.innerHTML = `<span class="bc-ico">${b.icon}</span><span class="bc-name">${b.name}</span><span class="bc-cost">${cost}</span>`;
+    card.onclick = () => { window.GS.build.placing = b.id; window.GS.build.open = false; render(); };
+    bar.appendChild(card);
   }
 }
 
-// ---- Upgrades modal -----------------------------------------
-
+// ---- upgrades modal (paid from hand) ------------------------
 function upgradeRow(areaKey, type, label, descFn) {
   const cost = E.upgradeCost(areaKey, type);
   const up = window.GS.areas[areaKey].upgrades;
@@ -277,69 +205,125 @@ function upgradeRow(areaKey, type, label, descFn) {
   if (type === "tier") { maxed = up.maxTier >= 5; status = `Tier ${up.maxTier}/5`; }
   if (type === "speed") { maxed = up.speed >= 3; status = `Lv ${up.speed}/3`; }
   if (type === "automation") { maxed = up.automation >= 3; status = `Lv ${up.automation}/3`; }
-
   const affordable = cost != null && E.canAfford(cost);
-  const btnLabel = maxed ? "MAX" : costText(cost);
-  row.innerHTML = `<div class="up-info"><b>${label}</b> <span class="up-status">${status}</span>` +
-    `<div class="up-desc">${descFn(up)}</div></div>`;
+  const btnLabel = maxed ? "MAX" : Object.entries(cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+  row.innerHTML = `<div class="up-info"><b>${label}</b> <span class="up-status">${status}</span><div class="up-desc">${descFn(up)}</div></div>`;
   const btn = el("button", "up-buy" + (maxed ? " maxed" : affordable ? "" : " disabled"), btnLabel);
-  if (!maxed) btn.onclick = () => { if (E.buyUpgrade(areaKey, type)) renderUpgrades(); };
+  if (!maxed) btn.onclick = () => { if (E.buyUpgrade(areaKey, type)) render(); };
   row.appendChild(btn);
   return row;
 }
-
 function renderUpgrades() {
   const body = $("#upgrades-body");
   body.innerHTML = "";
-
   for (const [areaKey, cfg] of Object.entries(DD.AREAS)) {
     const unlocked = E.isAreaUnlocked(areaKey);
     const sec = el("div", "up-area" + (unlocked ? "" : " dim"));
-    sec.appendChild(el("h3", null, `${cfg.icon} ${cfg.name}${unlocked ? "" : " 🔒"} ` +
-      `<span class="up-bank">${E.itemIcon(cfg.base)} ${E.inv(cfg.base)}</span>`));
-    if (!unlocked) {
-      sec.appendChild(el("div", "up-desc", `Travel here and open it from the world map first.`));
-      body.appendChild(sec);
-      continue;
-    }
+    sec.appendChild(el("h3", null, `${cfg.icon} ${cfg.name}${unlocked ? "" : " 🔒"} <span class="up-bank">✋ ${E.itemIcon(cfg.base)} ${E.handCount(cfg.base)}</span>`));
+    if (!unlocked) { sec.appendChild(el("div", "up-desc", "Travel here and open it first.")); body.appendChild(sec); continue; }
     sec.appendChild(upgradeRow(areaKey, "tier", "Unlock Next Tier",
-      up => up.maxTier >= 5 ? "All tiers unlocked." : `Enables ${DD.TIER_LABELS[up.maxTier]} ${cfg.tiers[up.maxTier].name} to spawn.`));
+      up => up.maxTier >= 5 ? "All tiers unlocked." : `Enables ${DD.TIER_LABELS[up.maxTier]} ${cfg.tiers[up.maxTier].name}.`));
     sec.appendChild(upgradeRow(areaKey, "speed", cfg.speedLabel,
       up => `${cfg.timerLabel} timers −20% each (now ×${Math.pow(0.8, up.speed).toFixed(2)}).`));
     sec.appendChild(upgradeRow(areaKey, "automation", "Automation",
-      up => up.automation === 0 ? "Auto-harvests ready nodes." :
-        up.automation === 3 ? "Harvests ALL ready nodes each tick." :
-        `Harvests ${DD.AUTOMATION_CLICKS[up.automation]} node(s) per tick.`));
+      up => up.automation === 0 ? "Auto-harvests nodes." : `Harvests ${DD.AUTOMATION_CLICKS[up.automation]} node(s)/tick.`));
     body.appendChild(sec);
   }
 }
-
+let upgradesOpen = false;
 function toggleUpgrades(force) {
   upgradesOpen = force != null ? force : !upgradesOpen;
   $("#upgrades-modal").classList.toggle("hidden", !upgradesOpen);
   if (upgradesOpen) renderUpgrades();
 }
+function toggleBuild(force) {
+  window.GS.build.open = force != null ? force : !window.GS.build.open;
+  if (window.GS.build.open) window.GS.build.placing = null;
+  render();
+}
 
-// ---- Win screen ---------------------------------------------
-
-window.onWin = function () {
-  const s = window.GS.stats;
-  const mins = ((Date.now() - s.started) / 60000).toFixed(1);
-  $("#win-stats").innerHTML =
-    `<div>⏱️ Time played: <b>${mins} min</b></div>` +
-    `<div>⛏️ Resources gathered: <b>${s.totalGathered}</b></div>` +
-    `<div>🛠️ Items crafted: <b>${s.totalCrafted}</b></div>`;
-  $("#win-modal").classList.remove("hidden");
-};
-
-// ---- Master render ------------------------------------------
-
+// ---- master render ------------------------------------------
 function render() {
   renderTopBar();
   renderWorld();
-  renderCrafting();
-  renderInventory();
+  renderBuildMenu();
+  renderHandCursor();
   if (upgradesOpen) renderUpgrades();
 }
 
-window.UI = { render, toggleUpgrades };
+// ---- mouse interaction --------------------------------------
+function onMouseMove(e) {
+  cursor.cx = e.clientX; cursor.cy = e.clientY;
+  const vp = $("#world-viewport").getBoundingClientRect();
+  cursor.over = e.clientX >= vp.left && e.clientX <= vp.right && e.clientY >= vp.top && e.clientY <= vp.bottom;
+  if (cursor.over) { const p = pointFromEvent(e); cursor.x = p.x; cursor.y = p.y; cursor.row = p.row; cursor.col = p.col; }
+  renderHandCursor();
+  if (window.GS.build.placing && cursor.over) requestRender();
+}
+
+function onMouseDown(e) {
+  if (!cursor.over) return;
+  const p = pointFromEvent(e);
+  cursor.x = p.x; cursor.y = p.y; cursor.row = p.row; cursor.col = p.col;
+
+  if (e.button === 2) { // right — drop / feed (or cancel placement)
+    e.preventDefault();
+    if (window.GS.build.placing) { window.GS.build.placing = null; render(); return; }
+    rightHeld = true; holdStart = Date.now(); lastDrop = 0;
+    E.dropFromHand(area(), p.x, p.y);   // immediate first drop
+    startLoop(); render();
+    return;
+  }
+  if (e.button !== 0) return;
+
+  // placement mode: left-click places the ghost
+  if (window.GS.build.placing) {
+    if (E.placeBuilding(area(), window.GS.build.placing, p.row, p.col)) {
+      if (!e.shiftKey) window.GS.build.placing = null; // shift = place several
+    }
+    render();
+    return;
+  }
+
+  // click a node -> one harvest swing; else start vacuum pickup
+  const node = nodeAtCell(p.row, p.col);
+  if (node) { E.harvestNode(area(), node.id, false); render(); return; }
+  leftHeld = true; pickupMode = true;
+  E.pickupNear(area(), p.x, p.y, 40);
+  startLoop(); render();
+}
+
+function onMouseUp(e) {
+  if (e.button === 0) { leftHeld = false; pickupMode = false; }
+  if (e.button === 2) rightHeld = false;
+}
+
+// while a mouse button is held, keep vacuuming / drip-dropping
+function startLoop() {
+  if (loopRunning) return;
+  loopRunning = true;
+  const step = () => {
+    let dirty = false;
+    if (leftHeld && pickupMode && cursor.over) { if (E.pickupNear(area(), cursor.x, cursor.y, 40) > 0) dirty = true; }
+    if (rightHeld && cursor.over) {
+      const elapsed = Date.now() - holdStart;
+      const interval = elapsed >= 1000 ? 200 : 1000 - elapsed * 0.8; // 1/s ramping to 5/s
+      if (Date.now() - lastDrop >= interval) { E.dropFromHand(area(), cursor.x, cursor.y); lastDrop = Date.now(); dirty = true; }
+    }
+    if (dirty) render();
+    if (leftHeld || rightHeld) requestAnimationFrame(step);
+    else loopRunning = false;
+  };
+  requestAnimationFrame(step);
+}
+
+function wireInput() {
+  const vp = $("#world-viewport");
+  vp.addEventListener("mousedown", onMouseDown);
+  vp.addEventListener("contextmenu", e => e.preventDefault());
+  window.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("mouseup", onMouseUp);
+  window.addEventListener("keydown", e => { if (e.key === "Escape") { window.GS.build.placing = null; render(); } });
+}
+
+window.UI = { render, toggleUpgrades, toggleBuild, wireInput };
