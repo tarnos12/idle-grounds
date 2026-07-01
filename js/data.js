@@ -7,7 +7,7 @@
 // title-cased version of its key (see itemName() in engine.js).
 const ITEM_NAMES = {
   wood: "Wood", hardwood: "Hardwood", ancient_bark: "Ancient Bark",
-  magic_wood: "Magic Wood", void_timber: "Void Timber",
+  magic_wood: "Magic Wood", void_timber: "Void Timber", leaves: "Leaves",
   plank: "Plank", lumber_frame: "Lumber Frame",
 
   wheat: "Wheat", carrot: "Carrot", pumpkin: "Pumpkin",
@@ -35,7 +35,7 @@ const ITEM_NAMES = {
 
 // Small emoji per item, purely cosmetic for inventory/cards.
 const ITEM_ICONS = {
-  wood: "🪵", hardwood: "🪵", ancient_bark: "🪵", magic_wood: "✨", void_timber: "🌑",
+  wood: "🪵", hardwood: "🪵", ancient_bark: "🪵", magic_wood: "✨", void_timber: "🌑", leaves: "🍃",
   plank: "📏", lumber_frame: "🗜️",
   wheat: "🌾", carrot: "🥕", pumpkin: "🎃", seed_pouch: "👝", mystic_herb: "🌿", starfruit: "⭐",
   flour: "🥖", carrot_bundle: "🥕", essence_extract: "🧪", starfruit_concentrate: "🧴",
@@ -66,20 +66,20 @@ const TIER_SPRITES = {
 // d(item, min, max) -> drop spec. max defaults to min (fixed amount).
 function d(item, min, max) { return { item, min, max: max == null ? min : max }; }
 
-// Each area plays differently (see `interaction`):
-//   chop    (forest)  — multiple swings; every swing yields a bit (`perHit`),
-//                       the felling swing also grants the tier `drops`.
-//   instant (farm)    — a single click harvests the whole tier `drops`.
-//   break   (mine)    — multiple strikes yield nothing; ore (`drops`) only
-//                       drops when the rock finally cracks (last `hits`).
-//   surface (fishing) — a fish surfaces for `surfaceWindow`s; click while it's
-//                       up to land the `drops`, else it dives and resurfaces.
-// `base` is the resource that funds the area's plot/upgrade costs.
+// Per-node `interaction`:
+//   chop    — multiple swings; every swing yields `perHit`, the felling
+//             swing also grants `drops`; then the node relocates.
+//   instant — a single click harvests the whole `drops`.
+//   break   — strikes yield nothing until the last `hits` cracks it.
+//   surface — surfaces for `surfaceWindow`s; click while up to land `drops`.
+//   quarry  — a fixed object; every `clicksPerDrop` clicks yields 1 `drop`.
+// An area's `spawners` describe relocating nodes (each has its own zone,
+// sizes, target and interaction). `fixtures` are fixed objects placed once.
+// `generators` auto-spawn ground items. `noBuild` = zone(s) buildings avoid.
 const AREAS = {
   forest: {
     name: "Forest", icon: "🌲", verb: "Chop", actionIcon: "🪓",
-    base: "wood", interaction: "chop",
-    spawn: "corners", nodeSizes: [2], target: 12,
+    base: "wood", noBuild: "corners",
     speedLabel: "Regrow Speed", timerLabel: "Regrow",
     tiers: [
       { name: "Oak",      hits: 3, perHit: [d("wood", 1, 2)],   drops: [],                                   timer: 15 },
@@ -88,12 +88,29 @@ const AREAS = {
       { name: "Magic",    hits: 4, perHit: [d("hardwood", 1)],  drops: [d("magic_wood", 1)],                 timer: 60 },
       { name: "Void",     hits: 5, perHit: [d("hardwood", 1)],  drops: [d("magic_wood", 1), d("void_timber", 1)], timer: 90 },
     ],
+    spawners: [
+      // trees in the two TOP corners
+      { kind: "tree", zone: "cornersTop", sizes: [2], target: 8, interaction: "chop", useTiers: true, swingMs: 350 },
+      // bushes in the buildable centre — chopped for leaves, then respawn
+      { kind: "bush", zone: "centre", sizes: [2], target: 5, interaction: "chop", swingMs: 300,
+        sprite: "🌿", hits: 2, regrow: 12, perHit: [d("leaves", 1)], drops: [d("leaves", 1, 2)] },
+    ],
+    fixtures: [
+      // one big fixed quarry in the bottom-left; hold auto-mines at 1/s,
+      // 5 clicks -> 1 stone (both rates upgradeable later)
+      { kind: "quarry", zone: "cornerBL", size: 5, interaction: "quarry", swingMs: 1000,
+        sprite: "⛰️", clicksPerDrop: 5, drop: "stone" },
+    ],
+    generators: [
+      // clay ground in the bottom-right auto-spawns clay up to a cap
+      { kind: "clay", zone: "cornerBR", item: "clay", intervalMs: 1500, cap: 10 },
+    ],
   },
   farm: {
     name: "Farm", icon: "🌱", verb: "Harvest", actionIcon: "🌾",
-    base: "wheat", interaction: "instant",
-    spawn: "corners", nodeSizes: [2], target: 12,
+    base: "wheat", noBuild: "corners",
     speedLabel: "Growth Speed", timerLabel: "Growth",
+    spawners: [{ kind: "crop", zone: "corners", sizes: [2], target: 12, interaction: "instant", useTiers: true, swingMs: 300 }],
     tiers: [
       { name: "Wheat",       drops: [d("wheat", 2, 3)],                              timer: 20 },
       { name: "Carrot",      drops: [d("wheat", 2), d("carrot", 1)],                 timer: 30 },
@@ -104,9 +121,9 @@ const AREAS = {
   },
   mine: {
     name: "Mine", icon: "⛰️", verb: "Mine", actionIcon: "⛏️",
-    base: "stone", interaction: "break",
-    spawn: "centre", nodeSizes: [1, 2], target: 10,   // 1x1 ore + 2x2 boulders
+    base: "stone", noBuild: "centre",
     speedLabel: "Mining Speed", timerLabel: "Respawn",
+    spawners: [{ kind: "ore", zone: "centre", sizes: [1, 2], target: 10, interaction: "break", useTiers: true, swingMs: 450 }],
     tiers: [
       { name: "Stone",      hits: 2, drops: [d("stone", 3), d("clay", 1)],           timer: 10 },
       { name: "Clay Vein",  hits: 2, drops: [d("clay", 4)],                          timer: 15 },
@@ -117,10 +134,10 @@ const AREAS = {
   },
   fishing: {
     name: "Fishing", icon: "🎣", verb: "Reel", actionIcon: "🎣",
-    base: "fish", interaction: "surface",
-    spawn: "centre", nodeSizes: [1], target: 8,
+    base: "fish", noBuild: "centre",
     surfaceWindow: 3,   // seconds a fish stays up before it dives again
     speedLabel: "Fishing Speed", timerLabel: "Bite",
+    spawners: [{ kind: "fish", zone: "centre", sizes: [1], target: 8, interaction: "surface", useTiers: true, swingMs: 350 }],
     tiers: [
       { name: "Minnow",      drops: [d("fish", 1, 2)],                               timer: 12 },
       { name: "Bass",        drops: [d("fish", 2), d("fish_scale", 1)],              timer: 20 },
@@ -147,16 +164,17 @@ const GRID = {
 //   corners = four 8x8 blocks; centre = the middle 8x8 block.
 // Resource nodes spawn ONLY in an area's spawn zone; buildings may go
 // anywhere EXCEPT a spawn zone (the reserved wild land).
+const _TL = { r0: 0, c0: 0, r1: 7, c1: 7 };
+const _TR = { r0: 0, c0: 16, r1: 7, c1: 23 };
+const _BL = { r0: 16, c0: 0, r1: 23, c1: 7 };
+const _BR = { r0: 16, c0: 16, r1: 23, c1: 23 };
+const _CENTRE = { r0: 8, c0: 8, r1: 15, c1: 15 };
 const ZONES = {
-  corners: [
-    { r0: 0,  c0: 0,  r1: 7,  c1: 7  },   // top-left
-    { r0: 0,  c0: 16, r1: 7,  c1: 23 },   // top-right
-    { r0: 16, c0: 0,  r1: 23, c1: 7  },   // bottom-left
-    { r0: 16, c0: 16, r1: 23, c1: 23 },   // bottom-right
-  ],
-  centre: [
-    { r0: 8, c0: 8, r1: 15, c1: 15 },
-  ],
+  corners:    [_TL, _TR, _BL, _BR],
+  cornersTop: [_TL, _TR],
+  cornerBL:   [_BL],
+  cornerBR:   [_BR],
+  centre:     [_CENTRE],
 };
 
 // Buildings the player can place. cost is paid by dropping resources into

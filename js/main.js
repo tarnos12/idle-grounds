@@ -13,6 +13,7 @@
   document.getElementById("upgrades-btn").onclick = () => window.UI.toggleUpgrades();
   document.getElementById("upgrades-close").onclick = () => window.UI.toggleUpgrades(false);
   document.getElementById("build-btn").onclick = () => window.UI.toggleBuild();
+  document.getElementById("debug-btn").onclick = () => window.UI.toggleDebug();
 
   window.UI.wireInput();
   window.UI.render();

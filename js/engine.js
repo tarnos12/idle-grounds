@@ -5,6 +5,8 @@
 
 const D = window.DATA;
 const CELL = D.GRID.cell;
+const PLAY_PX = D.GRID.cells * D.GRID.cell;                 // 24 * 32 = 768
+function clampPx(v) { return Math.max(4, Math.min(PLAY_PX - 4, v)); }
 
 function itemName(key) {
   return D.ITEM_NAMES[key] || key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -14,7 +16,8 @@ function itemIcon(key) { return D.ITEM_ICONS[key] || "📦"; }
 // ---- The hand (cursor carry, ordered stacks, total <= HAND_CAP) ----
 
 function handTotal() { return window.GS.hand.reduce((s, x) => s + x.qty, 0); }
-function handSpace() { return D.HAND_CAP - handTotal(); }
+function handCap() { return window.GS.handCap; }
+function handSpace() { return window.GS.handCap - handTotal(); }
 function handCount(item) { const s = window.GS.hand.find(x => x.item === item); return s ? s.qty : 0; }
 
 // Add up to `qty`, capped by remaining space. Returns the amount added.
@@ -65,6 +68,13 @@ function effectiveTimer(areaKey, tierIndex) {
   return base * Math.pow(0.8, speed) * testScale;
 }
 
+// Delay between held auto-swings for a node, reduced 20% per harvestSpeed lvl.
+function harvestInterval(areaKey, node) {
+  const base = (node && node.swingMs) || 350;
+  const lvl = window.GS.areas[areaKey].upgrades.harvestSpeed || 0;
+  return base * Math.pow(0.8, lvl);
+}
+
 function rollTier(areaKey) {
   const maxTier = window.GS.areas[areaKey].upgrades.maxTier;
   let total = 0;
@@ -76,10 +86,12 @@ function rollTier(areaKey) {
 
 // ---- Grid / zones -------------------------------------------
 
-function zoneRects(areaKey) { return D.ZONES[D.AREAS[areaKey].spawn] || []; }
+function zoneRects(zoneKey) { return D.ZONES[zoneKey] || []; }
+function noBuildRects(areaKey) { return zoneRects(D.AREAS[areaKey].noBuild); }
 
-function inSpawnZone(areaKey, r, c) {
-  return zoneRects(areaKey).some(z => r >= z.r0 && r <= z.r1 && c >= z.c0 && c <= z.c1);
+// A cell a building isn't allowed on (the area's reserved wild land).
+function inNoBuild(areaKey, r, c) {
+  return noBuildRects(areaKey).some(z => r >= z.r0 && r <= z.r1 && c >= z.c0 && c <= z.c1);
 }
 
 // Set of "r,c" cells occupied by live nodes and placed buildings.
@@ -98,21 +110,30 @@ function occupiedCells(areaKey) {
 
 function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
 
-// ---- Node spawning (random free slot inside the spawn zone) --
+// ---- Node spawning ------------------------------------------
 
 function nodeCenterPx(node) {
   return { x: (node.col + node.size / 2) * CELL, y: (node.row + node.size / 2) * CELL };
 }
 function nodeById(areaKey, id) { return window.GS.areas[areaKey].nodes.find(n => n.id === id); }
 
-function spawnNode(areaKey) {
-  const cfg = D.AREAS[areaKey];
+// The drop specs for a node (tier-based, or the spawner's own drops).
+function nodeSpecs(areaKey, node) {
+  if (node.useTiers) {
+    const t = D.AREAS[areaKey].tiers[node.tier - 1];
+    return { perHit: t.perHit || [], drops: t.drops || [] };
+  }
+  return { perHit: node.perHit || [], drops: node.drops || [] };
+}
+
+// Try to place one node from a spawner into a random free slot in its zone.
+function spawnFromSpawner(areaKey, sp) {
   const area = window.GS.areas[areaKey];
   const occ = occupiedCells(areaKey);
-  const rects = zoneRects(areaKey);
+  const rects = zoneRects(sp.zone);
 
   for (let attempt = 0; attempt < 40; attempt++) {
-    const size = cfg.nodeSizes[rand(0, cfg.nodeSizes.length - 1)];
+    const size = sp.sizes[rand(0, sp.sizes.length - 1)];
     const z = rects[rand(0, rects.length - 1)];
     if (z.r1 - z.r0 + 1 < size || z.c1 - z.c0 + 1 < size) continue;
     const row = rand(z.r0, z.r1 - size + 1);
@@ -123,11 +144,17 @@ function spawnNode(areaKey) {
         if (occ.has(r + "," + c)) free = false;
     if (!free) continue;
 
-    const tier = rollTier(areaKey);
+    const useTiers = !!sp.useTiers;
+    const tier = useTiers ? rollTier(areaKey) : 1;
+    const tierDef = useTiers ? D.AREAS[areaKey].tiers[tier - 1] : null;
     const node = {
-      id: area.nextNodeId++, row, col, size, tier,
-      hitsLeft: cfg.tiers[tier - 1].hits || 1,
-      surfaceUntil: cfg.interaction === "surface" ? Date.now() + (cfg.surfaceWindow || 3) * 1000 : 0,
+      id: area.nextNodeId++, row, col, size,
+      kind: sp.kind, spawnerKind: sp.kind, interaction: sp.interaction, useTiers,
+      tier, hitsLeft: useTiers ? (tierDef.hits || 1) : (sp.hits || 1),
+      regrowSec: useTiers ? tierDef.timer : (sp.regrow || 10),
+      swingMs: sp.swingMs || 350, sprite: sp.sprite || null,
+      perHit: sp.perHit || null, drops: sp.drops || null,
+      surfaceUntil: sp.interaction === "surface" ? Date.now() + (D.AREAS[areaKey].surfaceWindow || 3) * 1000 : 0,
       autoFlash: 0,
     };
     area.nodes.push(node);
@@ -136,31 +163,51 @@ function spawnNode(areaKey) {
   return null; // zone was full
 }
 
-// Fill an area up to its live-node target (called on first unlock).
-function initArea(areaKey) {
-  const target = D.AREAS[areaKey].target;
-  let guard = 0;
-  while (window.GS.areas[areaKey].nodes.length < target && guard++ < 200) {
-    if (!spawnNode(areaKey)) break;
-  }
+// Place a fixed object (the quarry) centred in its zone, once.
+function placeFixture(areaKey, fx) {
+  const area = window.GS.areas[areaKey];
+  const z = zoneRects(fx.zone)[0];
+  const row = z.r0 + Math.floor((z.r1 - z.r0 + 1 - fx.size) / 2);
+  const col = z.c0 + Math.floor((z.c1 - z.c0 + 1 - fx.size) / 2);
+  area.nodes.push({
+    id: area.nextNodeId++, row, col, size: fx.size, kind: fx.kind, interaction: fx.interaction,
+    fixed: true, tier: 1, clicks: 0, clicksPerDrop: fx.clicksPerDrop, dropItem: fx.drop,
+    swingMs: fx.swingMs || 1000, sprite: fx.sprite || "⛰️", autoFlash: 0,
+  });
 }
 
-// Remove a node and schedule a replacement to appear elsewhere later.
+// Fill an area to its spawner targets, place fixtures, seed generators.
+function initArea(areaKey) {
+  const cfg = D.AREAS[areaKey], area = window.GS.areas[areaKey];
+  for (const sp of cfg.spawners || []) {
+    let guard = 0;
+    const live = () => area.nodes.filter(n => n.spawnerKind === sp.kind).length;
+    while (live() < sp.target && guard++ < 200) if (!spawnFromSpawner(areaKey, sp)) break;
+  }
+  for (const fx of cfg.fixtures || [])
+    if (!area.nodes.some(n => n.kind === fx.kind)) placeFixture(areaKey, fx);
+  area.genTimers = (cfg.generators || []).map(() => 0);
+}
+
+// Remove a relocating node and queue a replacement from its spawner.
 function depleteNode(areaKey, node) {
   const area = window.GS.areas[areaKey];
   const i = area.nodes.indexOf(node);
   if (i >= 0) area.nodes.splice(i, 1);
-  area.spawnQueue.push(Date.now() + effectiveTimer(areaKey, node.tier - 1) * 1000);
+  const speed = window.GS.areas[areaKey].upgrades.speed;
+  const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+  const delay = (node.regrowSec || 10) * Math.pow(0.8, speed) * scale * 1000;
+  area.spawnQueue.push({ at: Date.now() + delay, kind: node.spawnerKind });
 }
 
-// ---- Ground items -------------------------------------------
+// ---- Ground items (never stack — one icon per item) ---------
 
 function dropGround(areaKey, item, qty, x, y) {
-  if (qty <= 0) return;
   const area = window.GS.areas[areaKey];
-  // small scatter so a burst of drops doesn't stack on one pixel
-  const jx = x + rand(-14, 14), jy = y + rand(-14, 14);
-  area.ground.push({ id: area.nextGroundId++, item, qty, x: jx, y: jy });
+  for (let k = 0; k < qty; k++) {
+    const jx = clampPx(x + rand(-16, 16)), jy = clampPx(y + rand(-16, 16));
+    area.ground.push({ id: area.nextGroundId++, item, x: jx, y: jy });
+  }
 }
 
 function rollAmount(spec) { return spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1)); }
@@ -173,7 +220,35 @@ function grantDropsGround(areaKey, node, specs) {
   }
 }
 
-// Vacuum ground items near (x,y) into the hand. Returns amount picked up.
+// Drop a node's accumulated (deferred) yield — used when a chop clears.
+function flushPending(areaKey, node) {
+  if (!node.pending) return;
+  const c = nodeCenterPx(node);
+  for (const [item, qty] of Object.entries(node.pending)) {
+    if (qty > 0) { dropGround(areaKey, item, qty, c.x, c.y); window.GS.stats.totalGathered += qty; }
+  }
+  node.pending = null;
+}
+
+// Push overlapping ground items apart so they don't sit on top of each other.
+function settleGround(areaKey) {
+  const items = window.GS.areas[areaKey].ground;
+  const MIN = 18;
+  for (let i = 0; i < items.length; i++) {
+    for (let j = i + 1; j < items.length; j++) {
+      const a = items[i], b = items[j];
+      let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
+      if (d < 0.01) { dx = rand(-10, 10) || 1; dy = rand(-10, 10) || 1; d = Math.hypot(dx, dy); }
+      if (d < MIN) {
+        const push = (MIN - d) / 2, ux = dx / d, uy = dy / d;
+        a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
+      }
+    }
+  }
+  for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
+}
+
+// Vacuum ground items near (x,y) into the hand (one item per icon).
 function pickupNear(areaKey, x, y, radius) {
   const area = window.GS.areas[areaKey];
   const near = area.ground
@@ -181,44 +256,66 @@ function pickupNear(areaKey, x, y, radius) {
     .filter(o => o.d <= radius)
     .sort((a, b) => a.d - b.d);
   let picked = 0;
+  const taken = new Set();
   for (const { g } of near) {
     if (handSpace() <= 0) break;
-    const got = handAdd(g.item, g.qty);
-    g.qty -= got; picked += got;
+    if (handAdd(g.item, 1) > 0) { taken.add(g.id); picked++; }
   }
-  area.ground = area.ground.filter(g => g.qty > 0);
+  if (taken.size) area.ground = area.ground.filter(g => !taken.has(g.id));
   return picked;
 }
 
 // ---- Harvesting ---------------------------------------------
 
-// Click a live node. Behaviour depends on the area's `interaction`.
+// Click a node. Behaviour depends on its `interaction`.
 function harvestNode(areaKey, nodeId, isAuto) {
   const node = nodeById(areaKey, nodeId);
   if (!node) return false;
-  const cfg = D.AREAS[areaKey];
-  const tierDef = cfg.tiers[node.tier - 1];
 
-  if (cfg.interaction === "chop") {
-    grantDropsGround(areaKey, node, tierDef.perHit);   // a bit each swing
+  // AUTO badge should stay solid while auto-mining: last longer than the gap
+  // between auto-swings (and the 1s automation tick).
+  const flashMs = Math.max(node.swingMs || 400, 1000) + 300;
+
+  if (node.interaction === "quarry") {
+    // fixed object: every `clicksPerDrop` clicks yields one drop; never depletes
+    node.clicks = (node.clicks || 0) + 1;
+    if (isAuto) node.autoFlash = Date.now() + flashMs;
+    if (node.clicks >= node.clicksPerDrop) {
+      node.clicks = 0;
+      const c = nodeCenterPx(node);
+      dropGround(areaKey, node.dropItem, 1, c.x, c.y);
+      window.GS.stats.totalGathered += 1;
+    }
+    return true;
+  }
+
+  const specs = nodeSpecs(areaKey, node);
+  if (node.interaction === "chop") {
+    // Nothing drops mid-chop: accumulate each swing's yield, release on clear.
+    node.pending = node.pending || {};
+    for (const spec of specs.perHit || []) {
+      const amt = rollAmount(spec);
+      if (amt > 0) node.pending[spec.item] = (node.pending[spec.item] || 0) + amt;
+    }
     node.hitsLeft--;
-    if (isAuto) node.autoFlash = Date.now() + 400;
+    if (isAuto) node.autoFlash = Date.now() + flashMs;
     if (node.hitsLeft > 0) return true;
-    grantDropsGround(areaKey, node, tierDef.drops);     // felled bonus
+    flushPending(areaKey, node);                      // felled/cleared — drop it all
+    grantDropsGround(areaKey, node, specs.drops);
     depleteNode(areaKey, node);
     return true;
   }
-  if (cfg.interaction === "break") {
+  if (node.interaction === "break") {
     node.hitsLeft--;
-    if (isAuto) node.autoFlash = Date.now() + 400;
-    if (node.hitsLeft > 0) return true;                 // nothing until it cracks
-    grantDropsGround(areaKey, node, tierDef.drops);
+    if (isAuto) node.autoFlash = Date.now() + flashMs;
+    if (node.hitsLeft > 0) return true;               // nothing until it cracks
+    grantDropsGround(areaKey, node, specs.drops);
     depleteNode(areaKey, node);
     return true;
   }
-  // instant (farm) & surface (fishing): one click lands the drops
-  grantDropsGround(areaKey, node, tierDef.drops);
-  if (isAuto) node.autoFlash = Date.now() + 600;
+  // instant (crops) & surface (fishing): one click lands the drops
+  grantDropsGround(areaKey, node, specs.drops);
+  if (isAuto) node.autoFlash = Date.now() + flashMs;
   depleteNode(areaKey, node);
   return true;
 }
@@ -242,7 +339,7 @@ function canPlaceBuilding(areaKey, row, col) {
   const occ = occupiedCells(areaKey);
   for (let r = row; r < row + B.h; r++)
     for (let c = col; c < col + B.w; c++) {
-      if (inSpawnZone(areaKey, r, c)) return false;   // no building on wild land
+      if (inNoBuild(areaKey, r, c)) return false;   // no building on wild land
       if (occ.has(r + "," + c)) return false;
     }
   return true;
@@ -309,13 +406,31 @@ function upgradeCost(areaKey, type) {
   return raw == null ? null : { [base]: scaled(raw) };
 }
 
+// How much has already been paid toward the current level of an upgrade.
+function upgradePaid(areaKey, type) {
+  return window.GS.areas[areaKey].upgrades.paid[type] || 0;
+}
+
+// Contribute toward an upgrade from the hand. Since the hand only holds 20,
+// expensive upgrades are funded over several trips (like feeding a building):
+// each call pays as much as the hand currently holds, and the upgrade applies
+// once its cost is fully covered.
 function buyUpgrade(areaKey, type) {
   const cost = upgradeCost(areaKey, type);
-  if (!cost || !spend(cost)) return false;
+  if (!cost) return false;
+  const [item, qty] = Object.entries(cost)[0];
   const up = window.GS.areas[areaKey].upgrades;
-  if (type === "tier") up.maxTier++;
-  else if (type === "speed") up.speed++;
-  else if (type === "automation") up.automation++;
+  const need = qty - (up.paid[type] || 0);
+  const pay = Math.min(need, handCount(item));
+  if (pay <= 0) return false;
+  handTake(item, pay);
+  up.paid[type] = (up.paid[type] || 0) + pay;
+  if (up.paid[type] >= qty) {
+    up.paid[type] = 0;
+    if (type === "tier") up.maxTier++;
+    else if (type === "speed") up.speed++;
+    else if (type === "automation") up.automation++;
+  }
   return true;
 }
 
@@ -360,22 +475,38 @@ function moveTo(areaKey) {
 
 function gameTick() {
   const now = Date.now();
+  const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   for (const areaKey of Object.keys(D.AREAS)) {
     if (!isAreaUnlocked(areaKey)) continue;
     const area = window.GS.areas[areaKey];
     const cfg = D.AREAS[areaKey];
 
-    // Fishing: a surfaced fish that isn't caught in time dives (relocates).
-    if (cfg.interaction === "surface") {
-      for (const node of area.nodes.slice())
-        if (node.surfaceUntil && now >= node.surfaceUntil) depleteNode(areaKey, node);
-    }
-    // Bring queued respawns to life once their timer elapses.
+    // Surfaced nodes (fishing) not caught in time dive / relocate.
+    for (const node of area.nodes.slice())
+      if (node.surfaceUntil && now >= node.surfaceUntil) depleteNode(areaKey, node);
+
+    // Bring queued respawns to life (each carries which spawner it belongs to).
     if (area.spawnQueue.length) {
-      const due = area.spawnQueue.filter(t => t <= now);
-      area.spawnQueue = area.spawnQueue.filter(t => t > now);
-      for (let i = 0; i < due.length; i++) if (!spawnNode(areaKey)) area.spawnQueue.push(now + 500);
+      const due = area.spawnQueue.filter(e => e.at <= now);
+      area.spawnQueue = area.spawnQueue.filter(e => e.at > now);
+      for (const e of due) {
+        const sp = (cfg.spawners || []).find(s => s.kind === e.kind);
+        if (sp && !spawnFromSpawner(areaKey, sp)) area.spawnQueue.push({ at: now + 500, kind: e.kind });
+      }
     }
+
+    // Generators (e.g. clay ground) auto-drop items up to their cap.
+    (cfg.generators || []).forEach((gen, gi) => {
+      if (!area.genTimers) area.genTimers = [];
+      if (now < (area.genTimers[gi] || 0)) return;
+      area.genTimers[gi] = now + gen.intervalMs * scale;
+      if (area.ground.filter(g => g.item === gen.item).length >= gen.cap) return;
+      const z = zoneRects(gen.zone)[0];
+      dropGround(areaKey, gen.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
+    });
+
+    // Separate overlapping ground items (gravity-like repulsion).
+    if (area.ground.length > 1) settleGround(areaKey);
   }
 }
 
@@ -400,13 +531,13 @@ function automationTick() {
 
 window.ENGINE = {
   itemName, itemIcon,
-  handTotal, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
-  effectiveTimer, rollTier, zoneRects, inSpawnZone, occupiedCells,
-  spawnNode, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
-  dropGround, grantDropsGround, pickupNear,
+  handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
+  effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
+  spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
+  dropGround, grantDropsGround, settleGround, pickupNear,
   buildingCatalog, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand,
-  upgradeCost, buyUpgrade,
+  upgradeCost, upgradePaid, buyUpgrade,
   neighborOf, areaUnlockCost, isAreaUnlocked, unlockArea, moveTo,
   gameTick, automationTick,
 };

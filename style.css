@@ -31,6 +31,12 @@ body {
   background: radial-gradient(circle at 50% -10%, #243039, var(--bg) 60%);
   color: var(--text);
   display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  /* it's a click-heavy game — never let the browser select emoji/labels */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* ---- Top bar ---- */
@@ -45,12 +51,12 @@ body {
   border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 14px;
 }
 .hand-pill { color: var(--accent); }
-#build-btn, #upgrades-btn {
+#build-btn, #upgrades-btn, #debug-btn {
   background: var(--panel); color: var(--text); border: 1px solid var(--line);
   border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px;
 }
-#build-btn:hover, #upgrades-btn:hover { background: var(--panel-2); }
-#build-btn.on { background: var(--accent-dk); border-color: var(--accent); color: #fff; }
+#build-btn:hover, #upgrades-btn:hover, #debug-btn:hover { background: var(--panel-2); }
+#build-btn.on, #debug-btn.on { background: var(--accent-dk); border-color: var(--accent); color: #fff; }
 
 /* ---- Main / viewport ---- */
 #main { flex: 1 1 auto; display: flex; min-height: 0; }
@@ -68,6 +74,7 @@ body {
     linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
   will-change: transform;
+  transform-origin: 0 0;
 }
 /* frame around the 24x24 play area; its huge box-shadow dims the inert margin */
 .play-frame {
@@ -85,6 +92,11 @@ body {
   position: absolute; z-index: 1; pointer-events: none;
   background: rgba(74,222,128,.05);
   outline: 1px dashed rgba(74,222,128,.18); outline-offset: -1px;
+}
+/* clay patch — a distinctly-coloured stretch of ground */
+.zone.gen-clay {
+  background: rgba(184,115,66,.30);
+  outline: 1px dashed rgba(210,150,90,.5);
 }
 
 /* ---- Resource nodes ---- */
@@ -201,6 +213,7 @@ body {
 .up-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; }
 .up-info { flex: 1; }
 .up-status { color: var(--muted); font-size: 12px; margin-left: 6px; }
+.up-prog { color: var(--gold); font-weight: 700; }
 .up-desc { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 .up-buy { flex: 0 0 96px; background: var(--accent-dk); color: #fff; border: 1px solid var(--accent); border-radius: 8px; padding: 9px; cursor: pointer; font-weight: 700; }
 .up-buy:hover { background: var(--accent); }

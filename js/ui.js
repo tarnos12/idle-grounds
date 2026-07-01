@@ -12,7 +12,9 @@ const G = DD.GRID;
 const MARGIN = G.margin;              // inert border cells each side
 const OFF = MARGIN * G.cell;          // px offset of the play area inside the world
 const WORLD_PX = (G.cells + 2 * MARGIN) * G.cell;  // 34 * 32 = 1088
-const VIEW_PX = G.cells * G.cell;     // viewport size = the play area (768)
+const PLAY_W = G.cells * G.cell;      // full 24x24 play area in px (768)
+const VIEW_FRAC = 0.8;                // camera shows ~80% of the play area at a time
+const VIEW_PX = Math.round(PLAY_W * VIEW_FRAC);    // logical camera window (~614)
 
 const $ = sel => document.querySelector(sel);
 function el(tag, cls, html) {
@@ -22,28 +24,57 @@ function el(tag, cls, html) {
   return n;
 }
 
+const PICKUP_R = G.cell;   // vacuum radius while holding left = 1 cell
+
 // ---- input state --------------------------------------------
 // cursor.x/y are in PLAY coordinates (0..VIEW_PX); negative / out-of-range
 // means the cursor is over the inert margin (cursor.inPlay === false).
 const cursor = { x: 0, y: 0, cx: 0, cy: 0, over: false, inPlay: false, row: -1, col: -1 };
-let leftHeld = false, rightHeld = false, pickupMode = false;
-let holdStart = 0, lastDrop = 0, loopRunning = false;
+let debugShow = false;   // show per-node swing/click counters (Debug button)
+let leftHeld = false, rightHeld = false, pickupMode = false, harvestHeld = false;
+let holdStart = 0, lastDrop = 0, lastSwing = 0, loopRunning = false;
+// Manual clicks are rate-limited; faster spam isn't counted as a real hit
+// (we still play feedback later). Holding is exempt (it auto-swings).
+const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
+let lastClickAt = 0;
 
 // camera pan (px offset of the world within the viewport), clamped to bounds
-const cam = { x: (WORLD_PX - VIEW_PX) / 2, y: (WORLD_PX - VIEW_PX) / 2 };
+const cam = { x: 0, y: 0 };   // set to top-centre by recenterCamera()
 const CAM_MAX = WORLD_PX - VIEW_PX;
 const keys = new Set();
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 let panning = false, panStartX = 0, panStartY = 0, camStartX = 0, camStartY = 0;
-function recenterCamera() { cam.x = CAM_MAX / 2; cam.y = CAM_MAX / 2; }
-function applyCamera() { $("#grid").style.transform = `translate(${-cam.x}px, ${-cam.y}px)`; }
+let viewScale = 1;   // logical->physical zoom (viewport fills the window)
+// Start looking at the TOP-CENTRE of the play area (pan to see the rest).
+function recenterCamera() {
+  cam.x = clamp((OFF + PLAY_W / 2) - VIEW_PX / 2, 0, CAM_MAX);  // horizontally centred
+  cam.y = clamp(OFF, 0, CAM_MAX);                                // top edge of the play area
+}
+function applyCamera() {
+  $("#grid").style.transform =
+    `translate(${-cam.x * viewScale}px, ${-cam.y * viewScale}px) scale(${viewScale})`;
+}
+
+// The viewport fills the available window square; since it only shows ~80% of
+// the play area, the map is zoomed in (cells rendered larger than 32px).
+function fitViewport() {
+  const top = ($("#topbar").getBoundingClientRect().height) || 56;
+  const avail = Math.min(window.innerWidth - 36, window.innerHeight - top - 36);
+  const rendered = Math.max(280, Math.min(avail, 860));
+  viewScale = rendered / VIEW_PX;
+  const vp = $("#world-viewport");
+  vp.style.width = rendered + "px";
+  vp.style.height = rendered + "px";
+  applyCamera();
+}
 
 function area() { return window.GS.world.currentArea; }
 function pointFromEvent(e) {
-  const r = $("#grid").getBoundingClientRect();   // reflects the camera transform
-  const rawX = Math.max(0, Math.min(WORLD_PX - 1, e.clientX - r.left));
-  const rawY = Math.max(0, Math.min(WORLD_PX - 1, e.clientY - r.top));
-  const x = rawX - OFF, y = rawY - OFF;            // play-space px
+  const r = $("#grid").getBoundingClientRect();       // reflects transform + scale
+  const s = r.width / WORLD_PX;                        // rendered px per logical px
+  const rawX = Math.max(0, Math.min(WORLD_PX - 1, (e.clientX - r.left) / s));
+  const rawY = Math.max(0, Math.min(WORLD_PX - 1, (e.clientY - r.top) / s));
+  const x = rawX - OFF, y = rawY - OFF;                // play-space (logical) px
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
   const inPlay = row >= 0 && row < G.cells && col >= 0 && col < G.cells;
   return { x, y, row, col, inPlay };
@@ -66,12 +97,13 @@ window.requestRender = requestRender;
 function renderTopBar() {
   const a = DD.AREAS[area()];
   $("#area-name").innerHTML = `${a.icon} ${a.name}`;
-  $("#hand-count").textContent = `${E.handTotal()}/${DD.HAND_CAP}`;
+  $("#hand-count").textContent = `${E.handTotal()}/${E.handCap()}`;
   $("#build-btn").classList.toggle("on", window.GS.build.open);
+  $("#debug-btn").classList.toggle("on", debugShow);
 }
 
 // ---- world --------------------------------------------------
-function spriteSize(size) { return size >= 2 ? 72 : 30; }
+function spriteSize(size) { return size >= 4 ? size * 30 : size >= 2 ? 72 : 30; }
 
 // Rebuilds only the passive grid contents (zones/buildings/nodes/ground/
 // preview). None of these are hover/click targets, so this can run every
@@ -84,7 +116,7 @@ function renderGrid() {
   grid.style.width = WORLD_PX + "px";
   grid.style.height = WORLD_PX + "px";
   grid.style.backgroundSize = `${CELL}px ${CELL}px`;
-  grid.style.transform = `translate(${-cam.x}px, ${-cam.y}px)`;
+  applyCamera();
   grid.innerHTML = "";
 
   // frame around the 24x24 play area (everything outside is inert margin)
@@ -94,14 +126,18 @@ function renderGrid() {
   grid.appendChild(frame);
 
   // reserved wild-land zones (no building allowed there)
-  for (const z of E.zoneRects(a)) {
-    const zd = el("div", "zone");
+  const zoneBox = (z, cls) => {
+    const zd = el("div", cls);
     zd.style.left = z.c0 * CELL + OFF + "px";
     zd.style.top = z.r0 * CELL + OFF + "px";
     zd.style.width = (z.c1 - z.c0 + 1) * CELL + "px";
     zd.style.height = (z.r1 - z.r0 + 1) * CELL + "px";
     grid.appendChild(zd);
-  }
+  };
+  for (const z of E.noBuildRects(a)) zoneBox(z, "zone");
+  // tinted ground for generators (e.g. clay patch)
+  for (const gen of DD.AREAS[a].generators || [])
+    for (const z of E.zoneRects(gen.zone)) zoneBox(z, "zone gen-" + gen.item);
 
   // buildings (ghosts + built)
   const B = G.building;
@@ -122,22 +158,24 @@ function renderGrid() {
     grid.appendChild(bd);
   }
 
-  // resource nodes
+  // resource nodes (trees, bushes, crops, ore, fish, quarry)
   const now = Date.now();
   for (const node of window.GS.areas[a].nodes) {
     const cfg = DD.AREAS[a];
-    const nd = el("div", "node ready");
+    const nd = el("div", "node ready" + (node.kind ? " k-" + node.kind : ""));
     nd.style.left = node.col * CELL + OFF + "px";
     nd.style.top = node.row * CELL + OFF + "px";
     nd.style.width = node.size * CELL + "px";
     nd.style.height = node.size * CELL + "px";
     nd.style.zIndex = node.row + 5;
-    const sprite = (DD.TIER_SPRITES[a] || [])[node.tier - 1] || cfg.icon;
+    const sprite = node.sprite || (DD.TIER_SPRITES[a] || [])[node.tier - 1] || cfg.icon;
     let inner = `<span class="sprite" style="font-size:${spriteSize(node.size)}px">${sprite}</span>`;
-    if ((cfg.interaction === "chop" || cfg.interaction === "break") && node.hitsLeft > 0) {
+    if (debugShow && node.interaction === "quarry") {
+      inner += `<span class="hits">${node.clicks || 0}/${node.clicksPerDrop} ${cfg.actionIcon}</span>`;
+    } else if (debugShow && (node.interaction === "chop" || node.interaction === "break") && node.hitsLeft > 0) {
       inner += `<span class="hits">${node.hitsLeft} ${cfg.actionIcon}</span>`;
     }
-    if (cfg.interaction === "surface" && node.surfaceUntil) {
+    if (node.interaction === "surface" && node.surfaceUntil) {
       nd.classList.add("surface");
       inner += `<span class="cd-timer catch">${Math.max(0, (node.surfaceUntil - now) / 1000).toFixed(1)}s</span>`;
     }
@@ -146,12 +184,12 @@ function renderGrid() {
     grid.appendChild(nd);
   }
 
-  // ground items
+  // ground items — one icon per item (they never stack)
   for (const g of window.GS.areas[a].ground) {
     const gd = el("div", "ground");
     gd.style.left = g.x + OFF + "px";
     gd.style.top = g.y + OFF + "px";
-    gd.innerHTML = `<span class="g-ico">${E.itemIcon(g.item)}</span><span class="g-qty">${g.qty}</span>`;
+    gd.innerHTML = `<span class="g-ico">${E.itemIcon(g.item)}</span>`;
     grid.appendChild(gd);
   }
 
@@ -231,10 +269,19 @@ function upgradeRow(areaKey, type, label, descFn) {
   if (type === "tier") { maxed = up.maxTier >= 5; status = `Tier ${up.maxTier}/5`; }
   if (type === "speed") { maxed = up.speed >= 3; status = `Lv ${up.speed}/3`; }
   if (type === "automation") { maxed = up.automation >= 3; status = `Lv ${up.automation}/3`; }
-  const affordable = cost != null && E.canAfford(cost);
-  const btnLabel = maxed ? "MAX" : Object.entries(cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
-  row.innerHTML = `<div class="up-info"><b>${label}</b> <span class="up-status">${status}</span><div class="up-desc">${descFn(up)}</div></div>`;
-  const btn = el("button", "up-buy" + (maxed ? " maxed" : affordable ? "" : " disabled"), btnLabel);
+  // Upgrades are funded incrementally from the hand: show remaining cost and
+  // any progress already paid. The button is active if the hand holds any of
+  // the resource (it contributes as much as it can each click).
+  let btnLabel = "MAX", canPay = false, progress = "";
+  if (!maxed) {
+    const [item, qty] = Object.entries(cost)[0];
+    const paid = E.upgradePaid(areaKey, type);
+    btnLabel = `${qty - paid} ${E.itemIcon(item)}`;
+    canPay = E.handCount(item) > 0;
+    if (paid > 0) progress = ` <span class="up-prog">paid ${paid}/${qty}</span>`;
+  }
+  row.innerHTML = `<div class="up-info"><b>${label}</b> <span class="up-status">${status}${progress}</span><div class="up-desc">${descFn(up)}</div></div>`;
+  const btn = el("button", "up-buy" + (maxed ? " maxed" : canPay ? "" : " disabled"), btnLabel);
   if (!maxed) btn.onclick = () => { if (E.buyUpgrade(areaKey, type)) render(); };
   row.appendChild(btn);
   return row;
@@ -261,6 +308,10 @@ function toggleUpgrades(force) {
   upgradesOpen = force != null ? force : !upgradesOpen;
   $("#upgrades-modal").classList.toggle("hidden", !upgradesOpen);
   if (upgradesOpen) renderUpgrades();
+}
+function toggleDebug(force) {
+  debugShow = force != null ? force : !debugShow;
+  render();
 }
 function toggleBuild(force) {
   window.GS.build.open = force != null ? force : !window.GS.build.open;
@@ -301,8 +352,8 @@ function syncCursor(e) {
 function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   if (panning) {                          // dragging the map
-    cam.x = clamp(camStartX - (e.clientX - panStartX), 0, CAM_MAX);
-    cam.y = clamp(camStartY - (e.clientY - panStartY), 0, CAM_MAX);
+    cam.x = clamp(camStartX - (e.clientX - panStartX) / viewScale, 0, CAM_MAX);
+    cam.y = clamp(camStartY - (e.clientY - panStartY) / viewScale, 0, CAM_MAX);
     applyCamera();
     renderHandCursor();
     return;
@@ -321,8 +372,9 @@ function onMouseDown(e) {
     e.preventDefault();
     if (window.GS.build.placing) { window.GS.build.placing = null; render(); return; }
     if (!p.inPlay) return;               // the margin is inert
-    rightHeld = true; holdStart = Date.now(); lastDrop = 0;
-    E.dropFromHand(area(), p.x, p.y);   // immediate first drop
+    rightHeld = true; holdStart = Date.now();
+    E.dropFromHand(area(), p.x, p.y);   // a single right-click drops one item
+    lastDrop = holdStart;               // next drop waits a full interval
     startLoop(); renderPlay();
     return;
   }
@@ -342,11 +394,18 @@ function onMouseDown(e) {
   // inert margin) a left-drag pans the map.
   if (p.inPlay) {
     const node = nodeAtCell(p.row, p.col);
-    if (node) { E.harvestNode(area(), node.id, false); renderPlay(); return; }
-    const itemsNear = window.GS.areas[area()].ground.some(g => Math.hypot(g.x - p.x, g.y - p.y) <= 40);
+    if (node) {
+      // a manual click swings once (rate-limited); holding then auto-swings
+      const t = Date.now();
+      if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(area(), node.id, false); lastClickAt = t; }
+      leftHeld = true; harvestHeld = true; lastSwing = t;
+      startLoop(); renderPlay();
+      return;
+    }
+    const itemsNear = window.GS.areas[area()].ground.some(g => Math.hypot(g.x - p.x, g.y - p.y) <= PICKUP_R);
     if (itemsNear) {
       leftHeld = true; pickupMode = true;
-      E.pickupNear(area(), p.x, p.y, 40);
+      E.pickupNear(area(), p.x, p.y, PICKUP_R);
       startLoop(); renderPlay();
       return;
     }
@@ -387,7 +446,7 @@ function onKeyUp(e) { keys.delete(e.key.toLowerCase()); }
 
 function onMouseUp(e) {
   if (e.button === 0) {
-    leftHeld = false; pickupMode = false;
+    leftHeld = false; pickupMode = false; harvestHeld = false;
     if (panning) { panning = false; $("#world-viewport").classList.remove("grabbing"); }
   }
   if (e.button === 2) rightHeld = false;
@@ -399,10 +458,21 @@ function startLoop() {
   loopRunning = true;
   const step = () => {
     let dirty = false;
-    if (leftHeld && pickupMode && cursor.over) { if (E.pickupNear(area(), cursor.x, cursor.y, 40) > 0) dirty = true; }
+    if (leftHeld && pickupMode && cursor.over) { if (E.pickupNear(area(), cursor.x, cursor.y, PICKUP_R) > 0) dirty = true; }
+    // hold-left over a node auto-swings at that node's own harvest rate
+    if (harvestHeld && cursor.over && cursor.inPlay) {
+      const n = nodeAtCell(cursor.row, cursor.col);
+      if (n && Date.now() - lastSwing >= E.harvestInterval(area(), n)) {
+        E.harvestNode(area(), n.id, true); lastSwing = Date.now(); dirty = true;
+      }
+    }
     if (rightHeld && cursor.over) {
+      // deliberate for the first second, then accelerate hard so you can dump fast
       const elapsed = Date.now() - holdStart;
-      const interval = elapsed >= 1000 ? 200 : 1000 - elapsed * 0.8; // 1/s ramping to 5/s
+      const rate = elapsed < 1000
+        ? 4                                             // 4/s for the first second
+        : 4 + Math.min((elapsed - 1000) / 1000, 1) * 16; // ramp 4 -> 20/s over the next second
+      const interval = 1000 / rate;
       if (Date.now() - lastDrop >= interval) { E.dropFromHand(area(), cursor.x, cursor.y); lastDrop = Date.now(); dirty = true; }
     }
     if (dirty) renderPlay();
@@ -420,6 +490,10 @@ function wireInput() {
   window.addEventListener("mouseup", onMouseUp);
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
+  window.addEventListener("resize", fitViewport);
+  recenterCamera();                     // start at the top-centre of the play area
+  fitViewport();
+  requestAnimationFrame(fitViewport);   // re-fit once layout has settled
 }
 
-window.UI = { render, renderPlay, recenterCamera, toggleUpgrades, toggleBuild, wireInput };
+window.UI = { render, renderPlay, recenterCamera, toggleUpgrades, toggleBuild, toggleDebug, wireInput };
