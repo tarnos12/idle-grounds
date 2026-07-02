@@ -120,7 +120,18 @@ body {
 .node { position: absolute; pointer-events: none; }
 .node .sprite {
   position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
+  transform-origin: 50% 100%;   /* squash from the ground up */
   line-height: 1; filter: drop-shadow(0 5px 4px rgba(0,0,0,.5));
+}
+/* hit feedback: quick squash & rebound, ONE pulse per click. The negative
+   --hit-delay (elapsed time) makes rebuilt elements resume mid-animation
+   instead of replaying; a fresh click resets the delay to 0. */
+.node.hit .sprite { animation: hit-squash .18s ease-out; animation-delay: var(--hit-delay, 0ms); }
+@keyframes hit-squash {
+  0%   { transform: translateX(-50%) scaleY(1); }
+  35%  { transform: translateX(-50%) scaleY(.84) scaleX(1.07); }
+  70%  { transform: translateX(-50%) scaleY(1.06) scaleX(.98); }
+  100% { transform: translateX(-50%) scaleY(1); }
 }
 .node.surface .sprite { animation: bob .8s ease-in-out infinite; }
 @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }

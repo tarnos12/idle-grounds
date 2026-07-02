@@ -320,6 +320,11 @@ function harvestNode(areaKey, nodeId, isAuto) {
   // between auto-swings (and the 1s automation tick).
   const flashMs = Math.max(node.swingMs || 400, 1000) + 300;
 
+  // Every swing on a chop/break/quarry node plays the hit squash animation
+  // (the UI also stamps this for throttled clicks that don't count).
+  if (node.interaction === "chop" || node.interaction === "break" || node.interaction === "quarry")
+    node.hitAt = Date.now();
+
   if (node.interaction === "quarry") {
     // fixed object: every N clicks yields one drop (N shrinks with the
     // area's quarry upgrade); never depletes

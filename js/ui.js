@@ -249,6 +249,13 @@ function renderRegion(grid, key, ox, oy, now, view) {
     if (!seen(node.col * CELL + ox, node.row * CELL + oy - 3 * CELL, // sprites overflow upward
               node.size * CELL, (node.size + 3) * CELL)) continue;
     const nd = el("div", "node ready" + (node.kind ? " k-" + node.kind : ""));
+    // ONE pulse per click: a rebuilt element resumes the squash mid-flight
+    // (negative delay = elapsed time), so unrelated re-renders don't replay
+    // it — only a new click (fresh hitAt) restarts from zero.
+    if (node.hitAt && now - node.hitAt < 180) {
+      nd.classList.add("hit");
+      nd.style.setProperty("--hit-delay", `${-(now - node.hitAt)}ms`);
+    }
     nd.style.left = node.col * CELL + ox + "px";
     nd.style.top = node.row * CELL + oy + "px";
     nd.style.width = node.size * CELL + "px";
@@ -531,6 +538,7 @@ function onMouseDown(e) {
       // a manual click swings once (rate-limited); holding then auto-swings
       const t = Date.now();
       if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(p.region, node.id, false); lastClickAt = t; }
+      else node.hitAt = t;   // too fast to count as damage — still show the hit
       leftHeld = true; harvestHeld = true; lastSwing = t;
       startLoop(); renderPlay();
       return;
