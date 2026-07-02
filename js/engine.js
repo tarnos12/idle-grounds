@@ -109,7 +109,10 @@ function rollTier(areaKey) {
 // ---- Grid / zones -------------------------------------------
 
 function zoneRects(zoneKey) { return D.ZONES[zoneKey] || []; }
-function noBuildRects(areaKey) { return zoneRects(D.AREAS[areaKey].noBuild); }
+function noBuildRects(areaKey) {
+  const nb = D.AREAS[areaKey].noBuild;
+  return (Array.isArray(nb) ? nb : [nb]).flatMap(zoneRects);
+}
 
 // A cell a building isn't allowed on (the area's reserved wild land).
 function inNoBuild(areaKey, r, c) {
@@ -473,19 +476,20 @@ function buyUpgrade(areaKey, type) {
 
 // ---- World regions (one continuous map) ---------------------
 
-// Global play-cell origin of a region (regions tile a WORLD.cols x WORLD.rows
-// grid; each block is GRID.cells x GRID.cells).
+// Global play-cell origin of a region. Regions tile a WORLD.cols x WORLD.rows
+// grid with a GRID.gap-cell void strip separating adjacent blocks.
 function regionOrigin(areaKey) {
   const r = D.WORLD.regions[areaKey];
-  return { row: r.ry * D.GRID.cells, col: r.rx * D.GRID.cells };
+  const stride = D.GRID.cells + D.GRID.gap;
+  return { row: r.ry * stride, col: r.rx * stride };
 }
 
-// Which region a global play cell belongs to (null = void / between arms).
+// Which region a global play cell belongs to (null = void / gap / margin).
 function regionAt(gRow, gCol) {
-  const N = D.GRID.cells;
+  const N = D.GRID.cells, stride = N + D.GRID.gap;
   for (const [key, r] of Object.entries(D.WORLD.regions)) {
-    if (gRow >= r.ry * N && gRow < (r.ry + 1) * N &&
-        gCol >= r.rx * N && gCol < (r.rx + 1) * N) return key;
+    if (gRow >= r.ry * stride && gRow < r.ry * stride + N &&
+        gCol >= r.rx * stride && gCol < r.rx * stride + N) return key;
   }
   return null;
 }

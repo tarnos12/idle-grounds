@@ -108,6 +108,11 @@ body {
   background: rgba(184,115,66,.30);
   outline: 1px dashed rgba(210,150,90,.5);
 }
+/* sand patch — pale sandy ground (farm's middle-left band) */
+.zone.gen-sand {
+  background: rgba(226,201,126,.28);
+  outline: 1px dashed rgba(235,215,150,.5);
+}
 
 /* ---- Resource nodes ---- */
 .node { position: absolute; pointer-events: none; }

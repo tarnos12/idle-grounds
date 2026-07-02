@@ -12,9 +12,10 @@ const G = DD.GRID;
 const MARGIN = G.margin;              // inert border cells around the whole map
 const OFF = MARGIN * G.cell;          // px offset of the region grid inside the world
 const PLAY_W = G.cells * G.cell;      // one region's play size in px
-// ONE continuous map: WORLD.cols x WORLD.rows regions + margin all around.
-const WORLD_W = (DD.WORLD.cols * G.cells + 2 * MARGIN) * G.cell;
-const WORLD_H = (DD.WORLD.rows * G.cells + 2 * MARGIN) * G.cell;
+const GAP_PX = G.gap * G.cell;        // void strip separating adjacent regions
+// ONE continuous map: WORLD.cols x WORLD.rows regions + gaps + margin around.
+const WORLD_W = (DD.WORLD.cols * G.cells + (DD.WORLD.cols - 1) * G.gap + 2 * MARGIN) * G.cell;
+const WORLD_H = (DD.WORLD.rows * G.cells + (DD.WORLD.rows - 1) * G.gap + 2 * MARGIN) * G.cell;
 // Fixed camera window (~35 tiles) — you pan the camera to explore the map.
 const VIEW_PX = 35 * G.cell;
 
@@ -54,8 +55,9 @@ function regionPx(key) {
   const o = E.regionOrigin(key);
   return { x: o.col * CELL + OFF, y: o.row * CELL + OFF };
 }
-// The camera may only roam the bounding box of UNLOCKED regions (+ margin) —
-// locked regions stay visible at the edge but you can't pan into them.
+// The camera may only roam the bounding box of UNLOCKED regions, expanded by
+// exactly the gap strip — so its edge reaches a locked neighbour's border but
+// never shows a single pixel of the locked region itself.
 function allowedBox() {
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const key of Object.keys(DD.WORLD.regions)) {
@@ -65,8 +67,8 @@ function allowedBox() {
     x1 = Math.max(x1, p.x + PLAY_W); y1 = Math.max(y1, p.y + PLAY_W);
   }
   return {
-    x0: Math.max(0, x0 - OFF), y0: Math.max(0, y0 - OFF),
-    x1: Math.min(WORLD_W, x1 + OFF), y1: Math.min(WORLD_H, y1 + OFF),
+    x0: Math.max(0, x0 - GAP_PX), y0: Math.max(0, y0 - GAP_PX),
+    x1: Math.min(WORLD_W, x1 + GAP_PX), y1: Math.min(WORLD_H, y1 + GAP_PX),
   };
 }
 function clampCam() {
@@ -176,7 +178,7 @@ function renderTopBar() {
 }
 
 // ---- world --------------------------------------------------
-function spriteSize(size) { return size >= 4 ? size * 30 : size >= 2 ? 72 : 30; }
+function spriteSize(size) { return size >= 4 ? size * 30 : size >= 3 ? 90 : size >= 2 ? 72 : 30; }
 
 // Rebuilds only the passive grid contents (zones/buildings/nodes/ground/
 // preview). None of these are hover/click targets, so this can run every

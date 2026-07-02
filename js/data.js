@@ -15,7 +15,7 @@ const ITEM_NAMES = {
   flour: "Flour", carrot_bundle: "Carrot Bundle",
   essence_extract: "Essence Extract", starfruit_concentrate: "Starfruit Concentrate",
 
-  stone: "Stone", clay: "Clay", copper_ore: "Copper Ore",
+  stone: "Stone", clay: "Clay", sand: "Sand", copper_ore: "Copper Ore",
   iron_ore: "Iron Ore", adamantine_ore: "Adamantine Ore",
   stone_block: "Stone Block", clay_brick: "Clay Brick",
   foundation_slab: "Foundation Slab", copper_ingot: "Copper Ingot",
@@ -39,7 +39,7 @@ const ITEM_ICONS = {
   plank: "📏", lumber_frame: "🗜️",
   wheat: "🌾", carrot: "🥕", pumpkin: "🎃", seed_pouch: "👝", mystic_herb: "🌿", starfruit: "⭐",
   flour: "🥖", carrot_bundle: "🥕", essence_extract: "🧪", starfruit_concentrate: "🧴",
-  stone: "🪨", clay: "🧱", copper_ore: "🟤", iron_ore: "⚙️", adamantine_ore: "💠",
+  stone: "🪨", clay: "🧱", sand: "🟡", copper_ore: "🟤", iron_ore: "⚙️", adamantine_ore: "💠",
   stone_block: "🧊", clay_brick: "🧱", foundation_slab: "🟫",
   copper_ingot: "🟧", iron_ingot: "⬜", steel_alloy: "🔩", adamantine_ingot: "💎",
   fish: "🐟", fish_scale: "🐠", rare_fish: "🎣", fish_oil: "🛢️",
@@ -110,9 +110,15 @@ const AREAS = {
   },
   farm: {
     name: "Farm", icon: "🌱", verb: "Harvest", actionIcon: "🌾",
-    base: "wheat", noBuild: "corners",
+    base: "wheat", noBuild: ["centre", "midLeft"],
     speedLabel: "Growth Speed", timerLabel: "Growth",
-    spawners: [{ kind: "crop", zone: "corners", sizes: [2], target: 12, interaction: "instant", useTiers: true, swingMs: 300 }],
+    // crops grow ONLY in the centre of the farm, as big 3x3 plots
+    spawners: [{ kind: "crop", zone: "centre", sizes: [3], target: 8, scaleWithArea: false,
+                 interaction: "instant", useTiers: true, swingMs: 300 }],
+    generators: [
+      // sand ground in the middle-left band auto-spawns sand (like centre's clay)
+      { kind: "sand", zone: "midLeft", item: "sand", intervalMs: 1500, cap: 10 },
+    ],
     tiers: [
       { name: "Wheat",       drops: [d("wheat", 2, 3)],                              timer: 20 },
       { name: "Carrot",      drops: [d("wheat", 2), d("carrot", 1)],                 timer: 30 },
@@ -158,7 +164,8 @@ const AREAS = {
 const GRID = {
   cell: 32,           // px per cell
   cells: 75,          // 75 x 75 PLAYABLE cells per area (~10x the old 24x24 area)
-  margin: 10,         // inert border cells on every side
+  margin: 10,         // inert border cells around the whole map
+  gap: 5,             // inert void cells separating adjacent regions
   building: { w: 3, h: 2 },   // every building occupies a 3-wide x 2-tall block
 };
 
@@ -180,6 +187,7 @@ const ZONES = {
   cornerBL:   [_BL],
   cornerBR:   [_BR],
   centre:     [_CENTRE],
+  midLeft:    [{ r0: _T, c0: 0, r1: _N - _T - 1, c1: _T - 1 }],   // middle-left band
 };
 
 // Buildings the player can place. cost is paid by dropping resources into
