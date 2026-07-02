@@ -51,12 +51,14 @@ body {
   border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 14px;
 }
 .hand-pill { color: var(--accent); }
-#build-btn, #upgrades-btn, #debug-btn {
+#build-btn, #upgrades-btn, #debug-btn, #reset-btn {
   background: var(--panel); color: var(--text); border: 1px solid var(--line);
   border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px;
 }
 #build-btn:hover, #upgrades-btn:hover, #debug-btn:hover { background: var(--panel-2); }
 #build-btn.on, #debug-btn.on { background: var(--accent-dk); border-color: var(--accent); color: #fff; }
+#reset-btn { color: var(--danger); }
+#reset-btn:hover { background: #3a2626; }
 
 /* ---- Main / viewport ---- */
 #main { flex: 1 1 auto; display: flex; min-height: 0; }

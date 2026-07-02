@@ -257,7 +257,7 @@ function renderRegion(grid, key, ox, oy, now, view) {
     const sprite = node.sprite || (DD.TIER_SPRITES[key] || [])[node.tier - 1] || cfg.icon;
     let inner = `<span class="sprite" style="font-size:${spriteSize(node.size)}px">${sprite}</span>`;
     if (debugShow && node.interaction === "quarry") {
-      inner += `<span class="hits">${node.clicks || 0}/${node.clicksPerDrop} ${cfg.actionIcon}</span>`;
+      inner += `<span class="hits">${node.clicks || 0}/${E.quarryClicksPerDrop(key, node)} ${cfg.actionIcon}</span>`;
     } else if (debugShow && (node.interaction === "chop" || node.interaction === "break") && node.hitsLeft > 0) {
       inner += `<span class="hits">${node.hitsLeft} ${cfg.actionIcon}</span>`;
     }
@@ -378,7 +378,9 @@ function upgradeRow(areaKey, type, label, descFn) {
   let status, maxed = false;
   if (type === "tier") { maxed = up.maxTier >= 5; status = `Tier ${up.maxTier}/5`; }
   if (type === "speed") { maxed = up.speed >= 3; status = `Lv ${up.speed}/3`; }
+  if (type === "harvestSpeed") { maxed = up.harvestSpeed >= 3; status = `Lv ${up.harvestSpeed}/3`; }
   if (type === "automation") { maxed = up.automation >= 3; status = `Lv ${up.automation}/3`; }
+  if (type === "quarry") { maxed = (up.quarry || 0) >= 3; status = `Lv ${up.quarry || 0}/3`; }
   // Upgrades are funded incrementally from the hand: show remaining cost and
   // any progress already paid. The button is active if the hand holds any of
   // the resource (it contributes as much as it can each click).
@@ -408,6 +410,13 @@ function renderUpgrades() {
       up => up.maxTier >= 5 ? "All tiers unlocked." : `Enables ${DD.TIER_LABELS[up.maxTier]} ${cfg.tiers[up.maxTier].name}.`));
     sec.appendChild(upgradeRow(areaKey, "speed", cfg.speedLabel,
       up => `${cfg.timerLabel} timers −20% each (now ×${Math.pow(0.8, up.speed).toFixed(2)}).`));
+    sec.appendChild(upgradeRow(areaKey, "harvestSpeed", "Action Speed",
+      up => `Chop/mine/hold swings −20% each (now ×${Math.pow(0.8, up.harvestSpeed).toFixed(2)}).`));
+    if ((cfg.fixtures || []).some(f => f.kind === "quarry")) {
+      const base = cfg.fixtures.find(f => f.kind === "quarry").clicksPerDrop;
+      sec.appendChild(upgradeRow(areaKey, "quarry", "Quarry Yield",
+        up => `1 stone every ${Math.max(1, base - (up.quarry || 0))} clicks.`));
+    }
     sec.appendChild(upgradeRow(areaKey, "automation", "Automation",
       up => up.automation === 0 ? "Auto-harvests nodes." : `Harvests ${DD.AUTOMATION_CLICKS[up.automation]} node(s)/tick.`));
     body.appendChild(sec);

@@ -268,8 +268,10 @@ const RECIPES = [
 // Resource costs (in the AREA's base resource) for upgrades.
 const COSTS = {
   tierUnlock: { 2: 20, 3: 60, 4: 160, 5: 400 },   // per area, by tier
-  speed: [40, 100, 220],                           // I / II / III
+  speed: [40, 100, 220],                           // regrow/growth, I / II / III
+  harvestSpeed: [30, 80, 180],                     // swing/chop/mine/hold rate, -20% each
   automation: [120, 320, 700],                     // I / II / III
+  quarry: [40, 120, 300],                          // -1 click per stone each level
 };
 
 // How many ready nodes each automation level harvests per tick.

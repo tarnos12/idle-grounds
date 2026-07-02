@@ -97,6 +97,11 @@ function harvestInterval(areaKey, node) {
   return base * Math.pow(0.8, lvl);
 }
 
+// Effective clicks needed per quarry drop (base minus the quarry upgrade).
+function quarryClicksPerDrop(areaKey, node) {
+  return Math.max(1, node.clicksPerDrop - (window.GS.areas[areaKey].upgrades.quarry || 0));
+}
+
 function rollTier(areaKey) {
   const maxTier = window.GS.areas[areaKey].upgrades.maxTier;
   let total = 0;
@@ -316,10 +321,11 @@ function harvestNode(areaKey, nodeId, isAuto) {
   const flashMs = Math.max(node.swingMs || 400, 1000) + 300;
 
   if (node.interaction === "quarry") {
-    // fixed object: every `clicksPerDrop` clicks yields one drop; never depletes
+    // fixed object: every N clicks yields one drop (N shrinks with the
+    // area's quarry upgrade); never depletes
     node.clicks = (node.clicks || 0) + 1;
     if (isAuto) node.autoFlash = Date.now() + flashMs;
-    if (node.clicks >= node.clicksPerDrop) {
+    if (node.clicks >= quarryClicksPerDrop(areaKey, node)) {
       node.clicks = 0;
       const c = nodeCenterPx(node);
       dropGround(areaKey, node.dropItem, 1, c.x, c.y);
@@ -442,7 +448,9 @@ function upgradeCost(areaKey, type) {
   let raw = null;
   if (type === "tier") { const next = up.maxTier + 1; raw = next > 5 ? null : D.COSTS.tierUnlock[next]; }
   if (type === "speed") raw = up.speed >= 3 ? null : D.COSTS.speed[up.speed];
+  if (type === "harvestSpeed") raw = up.harvestSpeed >= 3 ? null : D.COSTS.harvestSpeed[up.harvestSpeed];
   if (type === "automation") raw = up.automation >= 3 ? null : D.COSTS.automation[up.automation];
+  if (type === "quarry") raw = (up.quarry || 0) >= 3 ? null : D.COSTS.quarry[up.quarry || 0];
   return raw == null ? null : { [base]: scaled(raw) };
 }
 
@@ -469,7 +477,9 @@ function buyUpgrade(areaKey, type) {
     up.paid[type] = 0;
     if (type === "tier") up.maxTier++;
     else if (type === "speed") up.speed++;
+    else if (type === "harvestSpeed") up.harvestSpeed++;
     else if (type === "automation") up.automation++;
+    else if (type === "quarry") up.quarry = (up.quarry || 0) + 1;
   }
   return true;
 }
@@ -588,7 +598,7 @@ window.ENGINE = {
   itemName, itemIcon,
   handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
   depositToStorehouse, takeFromStorehouse,
-  effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
+  effectiveTimer, harvestInterval, quarryClicksPerDrop, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
   dropGround, grantDropsGround, settleGround, pickupNear,
   buildingCatalog, buildingFootprint, canPlaceBuilding, placeBuilding,

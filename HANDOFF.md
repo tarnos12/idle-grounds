@@ -12,132 +12,114 @@
 
 ## What this is
 
-A browser-based sandbox/idle prototype ("Idle Grounds"). It began from a GDD but
-has since pivoted into a **spatial, mouse-driven world game**: a `+`-shaped map of
-four areas, physical resource nodes you harvest onto the ground, a cursor "hand"
-that carries items, and buildings you place and feed.
-
-The four areas branch off a centre: **Forest** (centre), **Farm** (left),
-**Mine** (right), **Fishing** (down); the up arm is reserved/empty.
+A browser-based sandbox/idle prototype ("Idle Grounds"): ONE continuous,
+mouse-driven world you pan around. Physical resource nodes drop items on the
+ground; a cursor "hand" carries them; buildings are placed as ghosts and fed
+resources to construct. Originally from a GDD, long since pivoted.
 
 ## Tech / how to run
 
-- **Vanilla HTML/CSS/JS, no build step.** Plain `<script>` tags (not modules).
-- **Run it:** double-click `index.html`, OR `node server.js` (static, port 5174)
-  and open `http://localhost:5174`. `.claude/launch.json` defines the preview
-  server `idle-grounds`.
-- **View at a real desktop width** and reasonably tall — the world viewport is
-  768×768 with a build menu / top bar around it.
+- **Vanilla HTML/CSS/JS, no build step**, plain `<script>` tags (shared global
+  scope — don't redeclare `const`s across files; `CELL` lives in engine.js).
+- **Run:** `node server.js` (port 5174) or double-click `index.html`.
+  `.claude/launch.json` defines preview server `idle-grounds`.
+- Progress **autosaves to localStorage** every 5s (`state.js`, key
+  `idle-grounds-save-v1`); the **↺ Reset** button wipes it.
 
-## File map
+## The world (one continuous map)
 
-| File | Role |
-|------|------|
-| `index.html` | Top bar (area, hand count, Build, Upgrades), world viewport, build menu, hand-cursor overlay, modals |
-| `style.css`  | Theme, world ground/zones, nodes, ground items, buildings/ghosts, arrows, hand cursor, build menu, camera frame |
-| `js/data.js` | Config: areas × 5 tiers (per-area `interaction`), `GRID` (cell/cells/margin/building), `ZONES`, `BUILDINGS`, `WORLD` (+ layout, arrow costs), `HAND_CAP`, `COSTS`, `TEST` |
-| `js/state.js`| `window.GS`: `hand`, per-area `{nodes,ground,buildings,spawnQueue,upgrades}`, `world`, `build` |
-| `js/engine.js`| Pure logic: hand ops, tier roll, zone/spawn, harvest, ground drop/pickup, buildings, upgrades, world/camera, ticks |
-| `js/ui.js`   | Rendering + all mouse/keyboard interaction (viewport-level hit testing), camera |
-| `js/main.js` | Bootstrap: init areas, wire input, run the 2 tick intervals |
-| `server.js`  | Dependency-free static server |
+- Regions on a 3×2 region grid, each **75×75 cells** (32px): **Farm** (left),
+  **Center** (middle — the old "forest"), **Mine** (right), **Fishing** (below
+  centre). Bottom corners + gaps are void. `DATA.WORLD.regions`.
+- **5-cell void gap** separates adjacent regions; 10-cell margin rings the map.
+- **No travel arrows** — pan with **WASD or left-drag on empty land**. The
+  camera window is fixed (~35 tiles); viewport scales to the window.
+- **Locked regions:** populated & present but the camera clamps to the union
+  of unlocked regions + the gap, so **zero pixels of a locked region are ever
+  visible**. Edge buttons ("🔓 Unlock Farm — N🪵") pay from the hand; unlocking
+  just widens the camera range and enables interaction.
 
-Globals hang off `window` (`DATA`, `GS`, `ENGINE`, `UI`). Engine is DOM-free.
-NOTE: classic scripts share ONE global scope — `CELL` is declared once (engine.js)
-and reused in ui.js; don't redeclare shared `const`s across files.
+## Region contents (spawners / fixtures / generators — `DATA.AREAS`)
 
-## Current model (what's implemented)
+- **Center:** trees (chop) in the two top-corner zones; 10 small 1×1 bushes
+  (chop → leaves, capped, spread ≥6 cells) in the buildable centre; a fixed
+  **2×2 quarry** bottom-left (1 stone per 5 clicks; hold = auto-mine 1/s); a
+  **clay patch** bottom-right auto-spawning pickable clay (cap 10).
+- **Farm:** crops ONLY in its central zone as **3×3 plots** (8, unscaled);
+  **sand flat** in the middle-left band (generator like clay, cap 10).
+- **Mine:** 1×1 ore + 2×2 boulders (break — yield only on the final strike)
+  in its centre. **Fishing:** surfacing fish (catch within ~3s or they dive).
+- Interactions per node: `chop` (multi-swing; yield **only on the clearing
+  swing** — accumulated via `node.pending`), `instant`, `break`, `surface`,
+  `quarry`. Depleted nodes **relocate**: respawn in a random free zone slot.
 
-**World / camera**
-- Each area's **playable grid is 24×24** cells (32px). It sits inside a **34×34
-  world** with a **5-cell inert border** (dimmed, framed) — no harvesting,
-  dropping, or building there.
-- **Camera** pans with **WASD** or by **left-dragging empty land**; clamped to the
-  world, recenters on area change. Hit-testing reads the grid's transformed rect,
-  so clicks stay accurate at any pan.
-- **Travel arrows** on the edges open/switch areas; opening costs resources paid
-  from the hand (kept ≤ hand cap). Camera slides/recenters on move.
+## Carrying / economy (no global inventory)
 
-**Resource nodes (spawn in reserved zones, relocate on depletion)**
-- Nodes spawn RANDOMLY into an area's spawn zone — Forest/Farm use the four **8×8
-  corners**; Mine/Fishing use the **centre 8×8**. There are NO buyable slots.
-- Harvesting a node **depletes it (removes it) and queues a respawn** at a random
-  free zone slot after the regrow timer (`depleteNode` + `spawnQueue`).
-- **Per-area `interaction`:** `chop` (forest — many swings, wood each swing +
-  bonus on felling), `instant` (farm — one click), `break` (mine — ore only on the
-  final strike; 1×1 ore & 2×2 boulders), `surface` (fishing — a fish is catchable
-  for `surfaceWindow`s, else it dives/relocates).
+- Harvest drops items **on the ground** — 1 icon per item, never stacked;
+  a per-tick repulsion (`settleGround`) keeps them apart.
+- **Hand** (cursor): hold-left vacuums within **1 cell**; cap `GS.handCap`
+  (20, mutable). Right-click drops 1; hold ramps 4→20/s after 1s.
+- Manual clicks rate-limited to ~10/s (`CLICK_COOLDOWN`); holding auto-swings
+  at each node's own `swingMs` (chop 350 / mine 450 / quarry 1000...).
+- **Storehouse** (built building) = visible single-item container (cap 200):
+  right-click deposits matching items, left-click/hold withdraws (1/s → 5/s
+  over 3s). Shown on the building: "🪵 Wood ×47".
+- **Buildings:** `B` or 🔨 opens the menu → 3-wide × 2-tall ghost (green/red
+  preview) → right-click-feed resources to construct. Blocked on each
+  region's `noBuild` zones (accepts an array, e.g. farm's centre + sand band).
+  Only the Storehouse *does* anything yet.
+- **Upgrades** (modal, paid in the region's base resource, funded
+  **incrementally** from the hand — progress shows "paid X/Y"): tier unlock,
+  regrow speed, **Action Speed** (swing rate −20%/lvl), **Quarry Yield**
+  (−1 click/stone per lvl, centre only), automation.
 
-**Ground items + hand carry (no global stockpile)**
-- Harvesting **drops items on the ground** where the node was.
-- The **hand** (cursor) carries up to `HAND_CAP` (20), ordered stacks. **Hold left**
-  over items to vacuum them in; **right-click** drops 1 at a time, ramping 1→5/s
-  after a 1s hold. A cursor overlay shows what's carried.
-- Left-click routing (viewport-level): node → harvest; on/near a pile → vacuum;
-  empty land → drag-pan.
+## Performance invariants (a regression here stalled whole machines)
 
-**Buildings (placement + construction; no function yet)**
-- **Build** button opens a bottom menu of **unlocked** buildings. Select → a 2×3
-  **ghost** previews (green ok / red blocked; can't overlap zones/occupied/off-grid).
-  Left-click places; Esc / right-click cancels.
-- **Right-click a ghost** with a needed resource in hand to feed it; it **builds**
-  when fully paid (e.g. Forge = 5 wood + 10 stone). Built buildings do nothing yet.
+1. **Never promote the world div to a GPU layer** (no `will-change` — it's
+   ~8000×5600px; re-rasterizing it 10×/s froze PCs).
+2. **Render only what's on camera**: `renderRegion` culls every element to
+   the view (+4-cell fringe). ~40 DOM elements on screen vs ~400 in state.
+3. **Idle ticks don't repaint**: `gameTick()`/`settleGround()` return changed
+   flags; main.js repaints only when changed or `needsLiveRepaint()` (visible
+   fish countdown / AUTO badge). Idle = 0 rebuilds.
+4. **Interactive UI (unlock buttons, build menu, bottom bar) is rebuilt only
+   on discrete events**, never on ticks (tick-rebuild caused hover flicker +
+   eaten clicks). Pan/preview repaints coalesce via `requestGridPaint()`.
+5. All world input is hit-tested at the viewport level from cursor→GS
+   (`pointFromEvent` → region + region-local coords), so DOM rebuilds never
+   lose clicks. Text selection is disabled globally.
 
-**Upgrades (incrementally funded from hand)**
-- Upgrades modal: tier / speed / automation, paid in each area's base resource.
-- Because the hand caps at 20, upgrades are **funded incrementally** — each click
-  pays as much as the hand holds and tracks `upgrades.paid[type]`; the upgrade
-  applies once fully covered. The button shows remaining cost + "paid X/Y".
+## Testing knobs & debug
 
-## Key decisions
-
-1. **No gold — economy is 100% resources.** Base resource per area funds arrow
-   unlocks + upgrades (Forest→wood, Farm→wheat, Mine→stone, Fishing→fish).
-2. **Areas unlock via arrows** (resources), not crafting. The old crafting panel
-   and global inventory are gone; carry is the hand + ground.
-3. **Render split (important):** the 100 ms tick calls `renderPlay()` which rebuilds
-   ONLY the passive world grid. `render()` (full — also rebuilds arrows + build
-   menu) is used on discrete events. Rebuilding interactive UI every tick caused
-   hover flicker + dropped clicks; keep this invariant.
-4. **Viewport-level input:** all world interaction is hit-tested from cursor→GS at
-   the viewport listener, so the grid DOM can rebuild every tick without losing
-   clicks (harvest fires on mousedown, not on a per-node handler).
-5. **Sprites are emoji placeholders** (`TIER_SPRITES`, `BUILDINGS[].icon`).
-
-## Testing knobs (`DATA.TEST`)
-
-- `ENABLED` master switch; `timeScale: 0.2` (regrow ×0.2); `costScale: 0.5`
-  (arrow/upgrade cost ×0.5).
-
-## Verifying in the headless preview
-
-- `requestAnimationFrame` is **throttled** headless — so the WASD/drag pan loop
-  and the mouse hold-loops (vacuum, drop-accel) won't advance there. Verify their
-  ENGINE ops directly; confirm live *feel* in a real browser.
-- `preview_screenshot` tends to **time out** (infinite CSS animations) — use
-  `preview_eval` / DOM geometry instead.
-- The preview window can default to **1px wide**; `preview_resize` to a desktop
-  size before checking layout.
+- `DATA.TEST`: `ENABLED`, `timeScale 0.2` (regrow ×0.2), `costScale 0.5`.
+- **🐞 Debug** toggles per-node swing/click counters. **↺ Reset** wipes save.
+- Headless preview: rAF is throttled (hold-loops/pan don't advance — call
+  engine fns directly), `preview_screenshot` times out (infinite CSS anims),
+  resize needs a `window.dispatchEvent(new Event('resize'))` after
+  `preview_resize`. Verify logic via `preview_eval`.
 
 ## Suggested next steps
 
-- [ ] **Give buildings a function** (they only place/build right now).
-- [ ] **Save/persistence** — a refresh currently wipes all progress.
-- [ ] **Real sprite art** to fill the intended larger silhouettes.
-- [ ] **Balance pass** (costs, timers, spawn counts, drop rates).
-- [ ] **Flesh out the empty ↑ arm**; progressive tier-probability shifting.
-- [ ] Automation vs multi-hit areas: it does one hit per node per tick (slow).
+- [ ] **Building functions beyond Storehouse** — needs a design call: with
+      the crafting panel gone, what do Workbench/Forge do? (e.g. Forge
+      converts ore→ingots dropped into it; Workbench unlocks building types.)
+- [ ] Offline/idle catch-up on load (saves store absolute timestamps; away
+      time currently just fires everything due at once).
+- [ ] Enrich Mine/Fishing like Center/Farm got (unique sub-features).
+- [ ] Feedback polish: throttled-click "fake hit" animation/SFX, hit
+      particles, floating +N numbers.
+- [ ] Real sprite art; balance pass; the empty region slots.
 
 ## Git
 
 - Own git repo, no remote, history on `master`. Commit only when asked.
-- Recent: pannable camera + flicker fix → 24×24 zones/ground/buildings →
-  per-area mechanics → +-world / gold removal.
 
 ## Last session summary
 
-Built the spatial overhaul: 24×24 zoned grids with random-spawn/relocate nodes,
-ground-item drops + a 20-item hand (hold-to-vacuum, right-click drop), building
-ghosts fed by resources, a pannable camera (WASD + drag) with a 5-cell inert
-border, and fixed tick-driven flicker on arrows/build menu. Upgrades are now
-funded incrementally from the hand so expensive ones aren't blocked by the cap.
+Merged the four areas into one continuous pannable map (regions as side
+extensions of the Center with 5-cell void gaps; camera hard-clamped so locked
+regions never show; edge-button unlocks), reworked the farm (central 3×3
+crops, middle-left sand generator), fixed a machine-stalling rendering
+runaway (GPU layer + full-DOM ticks → culling + dirty-flag repaints), made
+the Storehouse a visible single-type container with paced withdraw, added
+localStorage autosave + Reset, and added Action Speed / Quarry Yield upgrades.

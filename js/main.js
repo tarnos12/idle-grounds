@@ -13,9 +13,16 @@
   document.getElementById("upgrades-close").onclick = () => window.UI.toggleUpgrades(false);
   document.getElementById("build-btn").onclick = () => window.UI.toggleBuild();
   document.getElementById("debug-btn").onclick = () => window.UI.toggleDebug();
+  document.getElementById("reset-btn").onclick = () => {
+    if (confirm("Reset ALL progress and start over?")) { window.SAVE.clearSave(); location.reload(); }
+  };
 
   window.UI.wireInput();
   window.UI.render();
+
+  // Autosave: every 5s and on tab close. (state.js loads it back on boot.)
+  setInterval(() => window.SAVE.saveState(), 5000);
+  window.addEventListener("beforeunload", () => window.SAVE.saveState());
 
   // Game loop: fishing dives + node respawns. Repaint ONLY when the tick
   // changed something (or an on-screen countdown/badge needs its text
