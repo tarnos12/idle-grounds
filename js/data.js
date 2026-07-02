@@ -57,7 +57,7 @@ const TIER_LABELS = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
 // Per-tier emoji sprite for each area (the big overflowing world sprite).
 // Index 0..4 = tier 1..5. Cosmetic only.
 const TIER_SPRITES = {
-  forest:  ["🌳", "🌲", "🌴", "🎄", "🌌"],
+  center:  ["🌳", "🌲", "🌴", "🎄", "🌌"],
   farm:    ["🌾", "🥕", "🎃", "🌿", "⭐"],
   mine:    ["🪨", "🧱", "🟤", "⛏️", "💠"],
   fishing: ["🐟", "🐠", "🎣", "🌙", "🔮"],
@@ -77,8 +77,8 @@ function d(item, min, max) { return { item, min, max: max == null ? min : max };
 // sizes, target and interaction). `fixtures` are fixed objects placed once.
 // `generators` auto-spawn ground items. `noBuild` = zone(s) buildings avoid.
 const AREAS = {
-  forest: {
-    name: "Forest", icon: "🌲", verb: "Chop", actionIcon: "🪓",
+  center: {
+    name: "Center", icon: "🌲", verb: "Chop", actionIcon: "🪓",
     base: "wood", noBuild: "corners",
     speedLabel: "Regrow Speed", timerLabel: "Regrow",
     tiers: [
@@ -91,14 +91,16 @@ const AREAS = {
     spawners: [
       // trees in the two TOP corners
       { kind: "tree", zone: "cornersTop", sizes: [2], target: 8, interaction: "chop", useTiers: true, swingMs: 350 },
-      // bushes in the buildable centre — chopped for leaves, then respawn
-      { kind: "bush", zone: "centre", sizes: [2], target: 5, interaction: "chop", swingMs: 300,
-        sprite: "🌿", hits: 2, regrow: 12, perHit: [d("leaves", 1)], drops: [d("leaves", 1, 2)] },
+      // bushes in the buildable centre — small (1x1), capped at 10, spread out;
+      // chopped for leaves, then respawn.
+      { kind: "bush", zone: "centre", sizes: [1], target: 10, scaleWithArea: false, spacing: 6,
+        interaction: "chop", swingMs: 300, sprite: "🌿", hits: 2, regrow: 12,
+        perHit: [d("leaves", 1)], drops: [d("leaves", 1, 2)] },
     ],
     fixtures: [
       // one big fixed quarry in the bottom-left; hold auto-mines at 1/s,
       // 5 clicks -> 1 stone (both rates upgradeable later)
-      { kind: "quarry", zone: "cornerBL", size: 5, interaction: "quarry", swingMs: 1000,
+      { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 1000,
         sprite: "⛰️", clicksPerDrop: 5, drop: "stone" },
     ],
     generators: [
@@ -155,20 +157,23 @@ const AREAS = {
 // ------------------------------------------------------------------
 const GRID = {
   cell: 32,           // px per cell
-  cells: 24,          // 24 x 24 PLAYABLE cells per area
-  margin: 5,          // inert border cells on every side (world = 24 + 2*5 = 34)
-  building: { w: 2, h: 3 },   // every building occupies a 2-wide x 3-tall block
+  cells: 75,          // 75 x 75 PLAYABLE cells per area (~10x the old 24x24 area)
+  margin: 10,         // inert border cells on every side
+  building: { w: 3, h: 2 },   // every building occupies a 3-wide x 2-tall block
 };
 
 // Named zone rectangles (inclusive cell bounds) on the 24x24 grid.
 //   corners = four 8x8 blocks; centre = the middle 8x8 block.
 // Resource nodes spawn ONLY in an area's spawn zone; buildings may go
 // anywhere EXCEPT a spawn zone (the reserved wild land).
-const _TL = { r0: 0, c0: 0, r1: 7, c1: 7 };
-const _TR = { r0: 0, c0: 16, r1: 7, c1: 23 };
-const _BL = { r0: 16, c0: 0, r1: 23, c1: 7 };
-const _BR = { r0: 16, c0: 16, r1: 23, c1: 23 };
-const _CENTRE = { r0: 8, c0: 8, r1: 15, c1: 15 };
+// Zones are a 3x3 division of the play grid (each block ~1/3 of the side), so
+// they scale automatically with GRID.cells.
+const _N = GRID.cells, _T = Math.floor(GRID.cells / 3);
+const _TL = { r0: 0, c0: 0, r1: _T - 1, c1: _T - 1 };
+const _TR = { r0: 0, c0: _N - _T, r1: _T - 1, c1: _N - 1 };
+const _BL = { r0: _N - _T, c0: 0, r1: _N - 1, c1: _T - 1 };
+const _BR = { r0: _N - _T, c0: _N - _T, r1: _N - 1, c1: _N - 1 };
+const _CENTRE = { r0: _T, c0: _T, r1: _N - _T - 1, c1: _N - _T - 1 };
 const ZONES = {
   corners:    [_TL, _TR, _BL, _BR],
   cornersTop: [_TL, _TR],
@@ -182,22 +187,24 @@ const ZONES = {
 const BUILDINGS = {
   workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true },
   forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: true },
-  storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 },           unlocked: true },
+  storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 }, cap: 200,  unlocked: true },
   altar:     { name: "Altar",     icon: "🔮", cost: { stone: 20, wood: 10 },unlocked: false },
 };
 
 const WORLD = {
-  // area-grid offsets from Forest; "void" is the empty arm (up), reserved.
-  layout: {
-    forest:  { x: 0,  y: 0 },
-    farm:    { x: -1, y: 0 },   // left
-    mine:    { x: 1,  y: 0 },   // right
-    fishing: { x: 0,  y: 1 },   // down
-    void:    { x: 0,  y: -1 },  // up  — empty for now
+  // ONE continuous map. Each region is a full GRID.cells x GRID.cells block;
+  // farm/mine/fishing extend the centre's sides and you PAN between them
+  // (no travel arrows). rx/ry are region-grid coordinates.
+  regions: {
+    farm:    { rx: 0, ry: 0 },   // left of centre
+    center:  { rx: 1, ry: 0 },
+    mine:    { rx: 2, ry: 0 },   // right of centre
+    fishing: { rx: 1, ry: 1 },   // below centre
   },
-  dirs: { up: { x: 0, y: -1 }, down: { x: 0, y: 1 }, left: { x: -1, y: 0 }, right: { x: 1, y: 0 } },
-  dirGlyph: { up: "▲", down: "▼", left: "◀", right: "▶" },
-  // resource cost to first open each area (paid from hand, so <= hand cap).
+  cols: 3, rows: 2,              // region-grid extents (bottom corners = void)
+  // which viewport edge hosts a locked region's unlock button
+  unlockSide: { farm: "left", mine: "right", fishing: "down" },
+  // resource cost to open each region (paid from hand, so <= hand cap).
   unlockCost: {
     farm:    { wood: 10 },
     mine:    { wood: 16 },
@@ -209,8 +216,8 @@ const WORLD = {
 // area = which area tab filter it belongs to ("misc" = always shown).
 const RECIPES = [
   // Wood
-  { id: "plank",        name: "Plank",        area: "forest", in: { wood: 3 },                       out: { plank: 1 } },
-  { id: "lumber_frame", name: "Lumber Frame", area: "forest", in: { plank: 4 },                      out: { lumber_frame: 1 } },
+  { id: "plank",        name: "Plank",        area: "center", in: { wood: 3 },                       out: { plank: 1 } },
+  { id: "lumber_frame", name: "Lumber Frame", area: "center", in: { plank: 4 },                      out: { lumber_frame: 1 } },
   // Stone
   { id: "stone_block",  name: "Stone Block",  area: "mine",   in: { stone: 3 },                      out: { stone_block: 1 } },
   { id: "clay_brick",   name: "Clay Brick",   area: "mine",   in: { clay: 2 },                       out: { clay_brick: 1 } },

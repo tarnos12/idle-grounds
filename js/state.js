@@ -30,8 +30,9 @@ function makeInitialState() {
     handCap: window.DATA.HAND_CAP,   // inventory space (may grow over time)
     areas,
     world: {
-      currentArea: "forest",
-      unlocked: { forest: true, farm: false, mine: false, fishing: false },
+      // One continuous map; regions are visible but the camera can't pan into
+      // a region until it's unlocked at its border button.
+      unlocked: { center: true, farm: false, mine: false, fishing: false },
     },
     build: { open: false, placing: null },  // build menu state (placing = building id)
     won: false,

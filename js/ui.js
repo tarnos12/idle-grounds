@@ -9,12 +9,14 @@ const DD = window.DATA;
 const G = DD.GRID;
 // NOTE: `CELL` is declared in engine.js; classic scripts share one global
 // scope, so we reuse it here rather than redeclaring (which would throw).
-const MARGIN = G.margin;              // inert border cells each side
-const OFF = MARGIN * G.cell;          // px offset of the play area inside the world
-const WORLD_PX = (G.cells + 2 * MARGIN) * G.cell;  // 34 * 32 = 1088
-const PLAY_W = G.cells * G.cell;      // full 24x24 play area in px (768)
-const VIEW_FRAC = 0.8;                // camera shows ~80% of the play area at a time
-const VIEW_PX = Math.round(PLAY_W * VIEW_FRAC);    // logical camera window (~614)
+const MARGIN = G.margin;              // inert border cells around the whole map
+const OFF = MARGIN * G.cell;          // px offset of the region grid inside the world
+const PLAY_W = G.cells * G.cell;      // one region's play size in px
+// ONE continuous map: WORLD.cols x WORLD.rows regions + margin all around.
+const WORLD_W = (DD.WORLD.cols * G.cells + 2 * MARGIN) * G.cell;
+const WORLD_H = (DD.WORLD.rows * G.cells + 2 * MARGIN) * G.cell;
+// Fixed camera window (~35 tiles) — you pan the camera to explore the map.
+const VIEW_PX = 35 * G.cell;
 
 const $ = sel => document.querySelector(sel);
 function el(tag, cls, html) {
@@ -27,28 +29,57 @@ function el(tag, cls, html) {
 const PICKUP_R = G.cell;   // vacuum radius while holding left = 1 cell
 
 // ---- input state --------------------------------------------
-// cursor.x/y are in PLAY coordinates (0..VIEW_PX); negative / out-of-range
-// means the cursor is over the inert margin (cursor.inPlay === false).
-const cursor = { x: 0, y: 0, cx: 0, cy: 0, over: false, inPlay: false, row: -1, col: -1 };
+// cursor.region is the map region under the pointer (null = void/margin);
+// lx/ly + lrow/lcol are REGION-LOCAL px / cells (what the engine expects).
+const cursor = { cx: 0, cy: 0, over: false, region: null, lx: 0, ly: 0, lrow: -1, lcol: -1 };
 let debugShow = false;   // show per-node swing/click counters (Debug button)
 let leftHeld = false, rightHeld = false, pickupMode = false, harvestHeld = false;
+let withdrawSH = null;   // storehouse being vacuumed with left-hold
+let withdrawStart = 0, lastWithdraw = 0;
 let holdStart = 0, lastDrop = 0, lastSwing = 0, loopRunning = false;
 // Manual clicks are rate-limited; faster spam isn't counted as a real hit
 // (we still play feedback later). Holding is exempt (it auto-swings).
 const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
 let lastClickAt = 0;
 
-// camera pan (px offset of the world within the viewport), clamped to bounds
-const cam = { x: 0, y: 0 };   // set to top-centre by recenterCamera()
-const CAM_MAX = WORLD_PX - VIEW_PX;
+// camera pan (px offset of the world within the viewport)
+const cam = { x: 0, y: 0 };   // set to the centre region by recenterCamera()
 const keys = new Set();
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 let panning = false, panStartX = 0, panStartY = 0, camStartX = 0, camStartY = 0;
 let viewScale = 1;   // logical->physical zoom (viewport fills the window)
-// Start looking at the TOP-CENTRE of the play area (pan to see the rest).
+
+// World-px origin of a region.
+function regionPx(key) {
+  const o = E.regionOrigin(key);
+  return { x: o.col * CELL + OFF, y: o.row * CELL + OFF };
+}
+// The camera may only roam the bounding box of UNLOCKED regions (+ margin) —
+// locked regions stay visible at the edge but you can't pan into them.
+function allowedBox() {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const key of Object.keys(DD.WORLD.regions)) {
+    if (!E.isAreaUnlocked(key)) continue;
+    const p = regionPx(key);
+    x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y);
+    x1 = Math.max(x1, p.x + PLAY_W); y1 = Math.max(y1, p.y + PLAY_W);
+  }
+  return {
+    x0: Math.max(0, x0 - OFF), y0: Math.max(0, y0 - OFF),
+    x1: Math.min(WORLD_W, x1 + OFF), y1: Math.min(WORLD_H, y1 + OFF),
+  };
+}
+function clampCam() {
+  const b = allowedBox();
+  cam.x = clamp(cam.x, b.x0, Math.max(b.x0, b.x1 - VIEW_PX));
+  cam.y = clamp(cam.y, b.y0, Math.max(b.y0, b.y1 - VIEW_PX));
+}
+// Start looking at the TOP-CENTRE of the centre region.
 function recenterCamera() {
-  cam.x = clamp((OFF + PLAY_W / 2) - VIEW_PX / 2, 0, CAM_MAX);  // horizontally centred
-  cam.y = clamp(OFF, 0, CAM_MAX);                                // top edge of the play area
+  const p = regionPx("center");
+  cam.x = p.x + PLAY_W / 2 - VIEW_PX / 2;
+  cam.y = p.y;
+  clampCam();
 }
 function applyCamera() {
   $("#grid").style.transform =
@@ -68,20 +99,32 @@ function fitViewport() {
   applyCamera();
 }
 
-function area() { return window.GS.world.currentArea; }
+// Map a mouse event to { region, local px (lx,ly), local cells (lrow,lcol) }.
+// region === null means the pointer is over void / the outer margin.
 function pointFromEvent(e) {
   const r = $("#grid").getBoundingClientRect();       // reflects transform + scale
-  const s = r.width / WORLD_PX;                        // rendered px per logical px
-  const rawX = Math.max(0, Math.min(WORLD_PX - 1, (e.clientX - r.left) / s));
-  const rawY = Math.max(0, Math.min(WORLD_PX - 1, (e.clientY - r.top) / s));
-  const x = rawX - OFF, y = rawY - OFF;                // play-space (logical) px
-  const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
-  const inPlay = row >= 0 && row < G.cells && col >= 0 && col < G.cells;
-  return { x, y, row, col, inPlay };
+  const s = r.width / WORLD_W;                         // rendered px per logical px
+  const wx = clamp((e.clientX - r.left) / s, 0, WORLD_W - 1);
+  const wy = clamp((e.clientY - r.top) / s, 0, WORLD_H - 1);
+  const gx = wx - OFF, gy = wy - OFF;                  // global play-space px
+  const gRow = Math.floor(gy / CELL), gCol = Math.floor(gx / CELL);
+  const region = (gx >= 0 && gy >= 0) ? E.regionAt(gRow, gCol) : null;
+  let lx = 0, ly = 0, lrow = -1, lcol = -1;
+  if (region) {
+    const o = E.regionOrigin(region);
+    lx = gx - o.col * CELL; ly = gy - o.row * CELL;
+    lrow = gRow - o.row; lcol = gCol - o.col;
+  }
+  return { region, lx, ly, lrow, lcol };
 }
-function nodeAtCell(row, col) {
-  return window.GS.areas[area()].nodes.find(n =>
+function nodeAtCell(region, row, col) {
+  return window.GS.areas[region].nodes.find(n =>
     row >= n.row && row < n.row + n.size && col >= n.col && col < n.col + n.size) || null;
+}
+// Region under the camera's centre — used for the location pill.
+function regionAtCamCentre() {
+  const gx = cam.x + VIEW_PX / 2 - OFF, gy = cam.y + VIEW_PX / 2 - OFF;
+  return E.regionAt(Math.floor(gy / CELL), Math.floor(gx / CELL));
 }
 
 // ---- render coalescing --------------------------------------
@@ -93,10 +136,40 @@ function requestRender() {
 }
 window.requestRender = requestRender;
 
+// Coalesced grid-only repaint (max one per frame) — used while panning /
+// moving a placement preview so mousemove bursts don't rebuild the DOM
+// dozens of times per frame.
+let gridPaintQueued = false;
+function requestGridPaint() {
+  if (gridPaintQueued) return;
+  gridPaintQueued = true;
+  requestAnimationFrame(() => { gridPaintQueued = false; renderGrid(); });
+}
+
+// Whether something animated is on camera (a surfaced fish's countdown or an
+// AUTO badge) — only then does an "idle" tick still need to repaint.
+function needsLiveRepaint() {
+  const now = Date.now();
+  const fr = 4 * CELL;
+  const l = cam.x - fr, t = cam.y - fr, r = cam.x + VIEW_PX + fr, b = cam.y + VIEW_PX + fr;
+  for (const key of Object.keys(DD.WORLD.regions)) {
+    if (!E.isAreaUnlocked(key)) continue;
+    const p = regionPx(key);
+    if (p.x > r || p.x + PLAY_W < l || p.y > b || p.y + PLAY_W < t) continue;
+    for (const n of window.GS.areas[key].nodes) {
+      if (!(n.surfaceUntil > now || n.autoFlash > now)) continue;
+      const nx = n.col * CELL + p.x, ny = n.row * CELL + p.y;
+      if (nx < r && nx + n.size * CELL > l && ny < b && ny + n.size * CELL > t) return true;
+    }
+  }
+  return false;
+}
+
 // ---- top bar ------------------------------------------------
 function renderTopBar() {
-  const a = DD.AREAS[area()];
-  $("#area-name").innerHTML = `${a.icon} ${a.name}`;
+  const key = regionAtCamCentre();
+  const a = key ? DD.AREAS[key] : null;
+  $("#area-name").innerHTML = a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds";
   $("#hand-count").textContent = `${E.handTotal()}/${E.handCap()}`;
   $("#build-btn").classList.toggle("on", window.GS.build.open);
   $("#debug-btn").classList.toggle("on", debugShow);
@@ -109,73 +182,84 @@ function spriteSize(size) { return size >= 4 ? size * 30 : size >= 2 ? 72 : 30; 
 // preview). None of these are hover/click targets, so this can run every
 // tick. The interactive arrows + build menu are rendered separately and
 // NOT rebuilt on ticks — otherwise they flicker and drop clicks.
-function renderGrid() {
-  const a = area();
-  const grid = $("#grid");
-  grid.dataset.area = a;
-  grid.style.width = WORLD_PX + "px";
-  grid.style.height = WORLD_PX + "px";
-  grid.style.backgroundSize = `${CELL}px ${CELL}px`;
-  applyCamera();
-  grid.innerHTML = "";
+// Render one region's contents at its world-px offset (ox, oy).
+// Only elements intersecting the camera rect (view) are appended — the world
+// is huge now, and painting everything each tick is what stalled machines.
+function renderRegion(grid, key, ox, oy, now, view) {
+  const cfg = DD.AREAS[key];
+  const areaState = window.GS.areas[key];
+  const unlocked = E.isAreaUnlocked(key);
+  const seen = (x, y, w, h) => x < view.r && x + w > view.l && y < view.b && y + h > view.t;
 
-  // frame around the 24x24 play area (everything outside is inert margin)
+  // ground tint + frame for the region
+  const bg = el("div", "region-bg");
+  bg.dataset.area = key;
+  bg.style.left = ox + "px"; bg.style.top = oy + "px";
+  bg.style.width = PLAY_W + "px"; bg.style.height = PLAY_W + "px";
+  grid.appendChild(bg);
   const frame = el("div", "play-frame");
-  frame.style.left = OFF + "px"; frame.style.top = OFF + "px";
-  frame.style.width = VIEW_PX + "px"; frame.style.height = VIEW_PX + "px";
+  frame.style.left = ox + "px"; frame.style.top = oy + "px";
+  frame.style.width = PLAY_W + "px"; frame.style.height = PLAY_W + "px";
   grid.appendChild(frame);
 
   // reserved wild-land zones (no building allowed there)
   const zoneBox = (z, cls) => {
+    const zx = z.c0 * CELL + ox, zy = z.r0 * CELL + oy;
+    const zw = (z.c1 - z.c0 + 1) * CELL, zh = (z.r1 - z.r0 + 1) * CELL;
+    if (!seen(zx, zy, zw, zh)) return;
     const zd = el("div", cls);
-    zd.style.left = z.c0 * CELL + OFF + "px";
-    zd.style.top = z.r0 * CELL + OFF + "px";
-    zd.style.width = (z.c1 - z.c0 + 1) * CELL + "px";
-    zd.style.height = (z.r1 - z.r0 + 1) * CELL + "px";
+    zd.style.left = zx + "px"; zd.style.top = zy + "px";
+    zd.style.width = zw + "px"; zd.style.height = zh + "px";
     grid.appendChild(zd);
   };
-  for (const z of E.noBuildRects(a)) zoneBox(z, "zone");
-  // tinted ground for generators (e.g. clay patch)
-  for (const gen of DD.AREAS[a].generators || [])
+  for (const z of E.noBuildRects(key)) zoneBox(z, "zone");
+  for (const gen of cfg.generators || [])
     for (const z of E.zoneRects(gen.zone)) zoneBox(z, "zone gen-" + gen.item);
 
   // buildings (ghosts + built)
   const B = G.building;
-  for (const b of window.GS.areas[a].buildings) {
-    const cfg = DD.BUILDINGS[b.type];
+  for (const b of areaState.buildings) {
+    if (!seen(b.col * CELL + ox, b.row * CELL + oy, B.w * CELL, B.h * CELL)) continue;
+    const bCfg = DD.BUILDINGS[b.type];
     const bd = el("div", "building" + (b.built ? " built" : " ghost"));
-    bd.style.left = b.col * CELL + OFF + "px";
-    bd.style.top = b.row * CELL + OFF + "px";
+    bd.style.left = b.col * CELL + ox + "px";
+    bd.style.top = b.row * CELL + oy + "px";
     bd.style.width = B.w * CELL + "px";
     bd.style.height = B.h * CELL + "px";
-    let inner = `<span class="b-ico">${cfg.icon}</span><span class="b-name">${cfg.name}</span>`;
-    if (!b.built) {
-      const needs = E.buildingNeeds(b);
-      const list = Object.entries(needs).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
-      inner += `<span class="b-needs">${list || "…"}</span>`;
+    let inner;
+    if (b.built && b.type === "storehouse") {
+      inner = `<span class="b-ico">${b.item ? E.itemIcon(b.item) : bCfg.icon}</span>` +
+        `<span class="b-name">${b.item ? E.itemName(b.item) + " ×" + b.qty : "empty"}</span>`;
+    } else {
+      inner = `<span class="b-ico">${bCfg.icon}</span><span class="b-name">${bCfg.name}</span>`;
+      if (!b.built) {
+        const needs = E.buildingNeeds(b);
+        const list = Object.entries(needs).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+        inner += `<span class="b-needs">${list || "…"}</span>`;
+      }
     }
     bd.innerHTML = inner;
     grid.appendChild(bd);
   }
 
   // resource nodes (trees, bushes, crops, ore, fish, quarry)
-  const now = Date.now();
-  for (const node of window.GS.areas[a].nodes) {
-    const cfg = DD.AREAS[a];
+  for (const node of areaState.nodes) {
+    if (!seen(node.col * CELL + ox, node.row * CELL + oy - 3 * CELL, // sprites overflow upward
+              node.size * CELL, (node.size + 3) * CELL)) continue;
     const nd = el("div", "node ready" + (node.kind ? " k-" + node.kind : ""));
-    nd.style.left = node.col * CELL + OFF + "px";
-    nd.style.top = node.row * CELL + OFF + "px";
+    nd.style.left = node.col * CELL + ox + "px";
+    nd.style.top = node.row * CELL + oy + "px";
     nd.style.width = node.size * CELL + "px";
     nd.style.height = node.size * CELL + "px";
     nd.style.zIndex = node.row + 5;
-    const sprite = node.sprite || (DD.TIER_SPRITES[a] || [])[node.tier - 1] || cfg.icon;
+    const sprite = node.sprite || (DD.TIER_SPRITES[key] || [])[node.tier - 1] || cfg.icon;
     let inner = `<span class="sprite" style="font-size:${spriteSize(node.size)}px">${sprite}</span>`;
     if (debugShow && node.interaction === "quarry") {
       inner += `<span class="hits">${node.clicks || 0}/${node.clicksPerDrop} ${cfg.actionIcon}</span>`;
     } else if (debugShow && (node.interaction === "chop" || node.interaction === "break") && node.hitsLeft > 0) {
       inner += `<span class="hits">${node.hitsLeft} ${cfg.actionIcon}</span>`;
     }
-    if (node.interaction === "surface" && node.surfaceUntil) {
+    if (unlocked && node.interaction === "surface" && node.surfaceUntil) {
       nd.classList.add("surface");
       inner += `<span class="cd-timer catch">${Math.max(0, (node.surfaceUntil - now) / 1000).toFixed(1)}s</span>`;
     }
@@ -185,47 +269,71 @@ function renderGrid() {
   }
 
   // ground items — one icon per item (they never stack)
-  for (const g of window.GS.areas[a].ground) {
+  for (const g of areaState.ground) {
+    if (!seen(g.x + ox - 16, g.y + oy - 16, 32, 32)) continue;
     const gd = el("div", "ground");
-    gd.style.left = g.x + OFF + "px";
-    gd.style.top = g.y + OFF + "px";
+    gd.style.left = g.x + ox + "px";
+    gd.style.top = g.y + oy + "px";
     gd.innerHTML = `<span class="g-ico">${E.itemIcon(g.item)}</span>`;
     grid.appendChild(gd);
   }
 
-  // placement preview
-  if (window.GS.build.placing && cursor.over && cursor.inPlay) {
-    const ok = E.canPlaceBuilding(a, cursor.row, cursor.col);
+  // locked regions are visible but dimmed behind a lock veil
+  if (!unlocked) {
+    const veil = el("div", "region-lock", "🔒");
+    veil.style.left = ox + "px"; veil.style.top = oy + "px";
+    veil.style.width = PLAY_W + "px"; veil.style.height = PLAY_W + "px";
+    grid.appendChild(veil);
+  }
+}
+
+function renderGrid() {
+  const grid = $("#grid");
+  grid.style.width = WORLD_W + "px";
+  grid.style.height = WORLD_H + "px";
+  grid.style.backgroundSize = `${CELL}px ${CELL}px`;
+  applyCamera();
+  grid.innerHTML = "";
+
+  const now = Date.now();
+  // Cull to the camera view (+4-cell fringe): first whole regions, then every
+  // element inside renderRegion. Panning repaints per frame, so edges fill in.
+  const fr = 4 * CELL;
+  const view = { l: cam.x - fr, t: cam.y - fr, r: cam.x + VIEW_PX + fr, b: cam.y + VIEW_PX + fr };
+  for (const key of Object.keys(DD.WORLD.regions)) {
+    const p = regionPx(key);
+    if (p.x > view.r || p.x + PLAY_W < view.l || p.y > view.b || p.y + PLAY_W < view.t) continue;
+    renderRegion(grid, key, p.x, p.y, now, view);
+  }
+
+  // placement preview (only in an unlocked region)
+  if (window.GS.build.placing && cursor.over && cursor.region) {
+    const B = G.building;
+    const ok = E.isAreaUnlocked(cursor.region) &&
+      E.canPlaceBuilding(cursor.region, cursor.lrow, cursor.lcol);
+    const p = regionPx(cursor.region);
     const pv = el("div", "preview " + (ok ? "ok" : "bad"));
-    pv.style.left = cursor.col * CELL + OFF + "px";
-    pv.style.top = cursor.row * CELL + OFF + "px";
+    pv.style.left = cursor.lcol * CELL + p.x + "px";
+    pv.style.top = cursor.lrow * CELL + p.y + "px";
     pv.style.width = B.w * CELL + "px";
     pv.style.height = B.h * CELL + "px";
     grid.appendChild(pv);
   }
 }
 
-function renderArrows(areaKey) {
+// Edge buttons for LOCKED neighbour regions: pay to open them (the map is
+// continuous — once open you simply pan across; no travel arrows).
+function renderUnlockButtons() {
   const wrap = $("#arrows");
   wrap.innerHTML = "";
-  for (const dir of ["up", "down", "left", "right"]) {
-    const target = E.neighborOf(areaKey, dir);
-    if (!target) continue;
-    const btn = el("button", `edge-arrow ${dir}`);
-    if (target === "void" || !DD.AREAS[target]) {
-      btn.classList.add("disabled");
-      btn.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">🔒 ???</span>`;
-    } else if (!E.isAreaUnlocked(target)) {
-      const cost = E.areaUnlockCost(target);
-      const label = Object.entries(cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
-      btn.classList.add("locked");
-      if (!E.canAfford(cost)) btn.classList.add("cant");
-      btn.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">🔒 ${DD.AREAS[target].name}<br>${label}</span>`;
-      btn.onclick = () => { if (E.unlockArea(target)) { recenterCamera(); render(); } };
-    } else {
-      btn.innerHTML = `<span class="arr">${DD.WORLD.dirGlyph[dir]}</span><span class="arr-label">${DD.AREAS[target].icon} ${DD.AREAS[target].name}</span>`;
-      btn.onclick = () => { if (E.moveTo(target)) { recenterCamera(); render(); } };
-    }
+  for (const [key, side] of Object.entries(DD.WORLD.unlockSide)) {
+    if (E.isAreaUnlocked(key)) continue;
+    const cost = E.areaUnlockCost(key);
+    const label = Object.entries(cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+    const btn = el("button", `edge-arrow ${side} locked` + (E.canAfford(cost) ? "" : " cant"));
+    btn.innerHTML = `<span class="arr">🔓</span>` +
+      `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span>`;
+    btn.onclick = () => { if (E.unlockArea(key)) { clampCam(); render(); } };
     wrap.appendChild(btn);
   }
 }
@@ -293,7 +401,7 @@ function renderUpgrades() {
     const unlocked = E.isAreaUnlocked(areaKey);
     const sec = el("div", "up-area" + (unlocked ? "" : " dim"));
     sec.appendChild(el("h3", null, `${cfg.icon} ${cfg.name}${unlocked ? "" : " 🔒"} <span class="up-bank">✋ ${E.itemIcon(cfg.base)} ${E.handCount(cfg.base)}</span>`));
-    if (!unlocked) { sec.appendChild(el("div", "up-desc", "Travel here and open it first.")); body.appendChild(sec); continue; }
+    if (!unlocked) { sec.appendChild(el("div", "up-desc", "Unlock this region at its border first.")); body.appendChild(sec); continue; }
     sec.appendChild(upgradeRow(areaKey, "tier", "Unlock Next Tier",
       up => up.maxTier >= 5 ? "All tiers unlocked." : `Enables ${DD.TIER_LABELS[up.maxTier]} ${cfg.tiers[up.maxTier].name}.`));
     sec.appendChild(upgradeRow(areaKey, "speed", cfg.speedLabel,
@@ -309,6 +417,7 @@ function toggleUpgrades(force) {
   $("#upgrades-modal").classList.toggle("hidden", !upgradesOpen);
   if (upgradesOpen) renderUpgrades();
 }
+
 function toggleDebug(force) {
   debugShow = force != null ? force : !debugShow;
   render();
@@ -325,7 +434,7 @@ function toggleBuild(force) {
 function render() {
   renderTopBar();
   renderGrid();
-  renderArrows(area());
+  renderUnlockButtons();
   renderBuildMenu();
   renderHandCursor();
   if (upgradesOpen) renderUpgrades();
@@ -347,34 +456,38 @@ function syncCursor(e) {
   const vp = $("#world-viewport").getBoundingClientRect();
   cursor.over = e.clientX >= vp.left && e.clientX <= vp.right && e.clientY >= vp.top && e.clientY <= vp.bottom;
   const p = pointFromEvent(e);
-  cursor.x = p.x; cursor.y = p.y; cursor.row = p.row; cursor.col = p.col; cursor.inPlay = p.inPlay;
+  cursor.region = p.region; cursor.lx = p.lx; cursor.ly = p.ly; cursor.lrow = p.lrow; cursor.lcol = p.lcol;
 }
 function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   if (panning) {                          // dragging the map
-    cam.x = clamp(camStartX - (e.clientX - panStartX) / viewScale, 0, CAM_MAX);
-    cam.y = clamp(camStartY - (e.clientY - panStartY) / viewScale, 0, CAM_MAX);
+    cam.x = camStartX - (e.clientX - panStartX) / viewScale;
+    cam.y = camStartY - (e.clientY - panStartY) / viewScale;
+    clampCam();
     applyCamera();
+    requestGridPaint();                   // culled content must fill in as we pan
     renderHandCursor();
     return;
   }
   syncCursor(e);
   renderHandCursor();
-  if (window.GS.build.placing && cursor.over) renderGrid(); // move the preview
+  if (window.GS.build.placing && cursor.over) requestGridPaint(); // move the preview
 }
 
 function onMouseDown(e) {
   if (!cursor.over) return;
   const p = pointFromEvent(e);
-  cursor.x = p.x; cursor.y = p.y; cursor.row = p.row; cursor.col = p.col; cursor.inPlay = p.inPlay;
+  cursor.region = p.region; cursor.lx = p.lx; cursor.ly = p.ly; cursor.lrow = p.lrow; cursor.lcol = p.lcol;
+  // interactions only work in an UNLOCKED region; anywhere else is inert land
+  const active = p.region && E.isAreaUnlocked(p.region);
 
   if (e.button === 2) { // right — drop / feed (or cancel placement)
     e.preventDefault();
     if (window.GS.build.placing) { window.GS.build.placing = null; render(); return; }
-    if (!p.inPlay) return;               // the margin is inert
+    if (!active) return;
     rightHeld = true; holdStart = Date.now();
-    E.dropFromHand(area(), p.x, p.y);   // a single right-click drops one item
-    lastDrop = holdStart;               // next drop waits a full interval
+    E.dropFromHand(p.region, p.lx, p.ly);  // ground drop, ghost feed, or storehouse deposit
+    lastDrop = holdStart;                  // next drop waits a full interval
     startLoop(); renderPlay();
     return;
   }
@@ -382,30 +495,39 @@ function onMouseDown(e) {
 
   // placement mode: left-click places the ghost
   if (window.GS.build.placing) {
-    if (p.inPlay && E.placeBuilding(area(), window.GS.build.placing, p.row, p.col)) {
+    if (active && E.placeBuilding(p.region, window.GS.build.placing, p.lrow, p.lcol)) {
       if (!e.shiftKey) window.GS.build.placing = null; // shift = place several
     }
     render();
     return;
   }
 
-  // Inside the play area, a press on a node harvests, and a press on/near a
-  // pile of dropped items starts the vacuum. Anywhere else (empty land or the
-  // inert margin) a left-drag pans the map.
-  if (p.inPlay) {
-    const node = nodeAtCell(p.row, p.col);
+  // Inside an unlocked region, a press on a node harvests, and a press on/near
+  // a pile of dropped items starts the vacuum. Anywhere else (empty land,
+  // locked regions, void) a left-drag pans the map.
+  if (active) {
+    // left-click/hold a storehouse to vacuum its contents into the hand
+    const sh = E.buildingAt(p.region, p.lrow, p.lcol);
+    if (sh && sh.built && sh.type === "storehouse") {
+      leftHeld = true; withdrawSH = sh;
+      E.takeFromStorehouse(sh, 1);      // a click takes one; holding accelerates
+      withdrawStart = Date.now(); lastWithdraw = withdrawStart;
+      startLoop(); renderPlay();
+      return;
+    }
+    const node = nodeAtCell(p.region, p.lrow, p.lcol);
     if (node) {
       // a manual click swings once (rate-limited); holding then auto-swings
       const t = Date.now();
-      if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(area(), node.id, false); lastClickAt = t; }
+      if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(p.region, node.id, false); lastClickAt = t; }
       leftHeld = true; harvestHeld = true; lastSwing = t;
       startLoop(); renderPlay();
       return;
     }
-    const itemsNear = window.GS.areas[area()].ground.some(g => Math.hypot(g.x - p.x, g.y - p.y) <= PICKUP_R);
+    const itemsNear = window.GS.areas[p.region].ground.some(g => Math.hypot(g.x - p.lx, g.y - p.ly) <= PICKUP_R);
     if (itemsNear) {
       leftHeld = true; pickupMode = true;
-      E.pickupNear(area(), p.x, p.y, PICKUP_R);
+      E.pickupNear(p.region, p.lx, p.ly, PICKUP_R);
       startLoop(); renderPlay();
       return;
     }
@@ -420,15 +542,16 @@ let panRunning = false;
 function panStep() {
   const s = 12;                          // px per frame
   let moved = false;
-  if (keys.has("w")) { cam.y = Math.max(0, cam.y - s); moved = true; }
-  if (keys.has("s")) { cam.y = Math.min(CAM_MAX, cam.y + s); moved = true; }
-  if (keys.has("a")) { cam.x = Math.max(0, cam.x - s); moved = true; }
-  if (keys.has("d")) { cam.x = Math.min(CAM_MAX, cam.x + s); moved = true; }
+  if (keys.has("w")) { cam.y -= s; moved = true; }
+  if (keys.has("s")) { cam.y += s; moved = true; }
+  if (keys.has("a")) { cam.x -= s; moved = true; }
+  if (keys.has("d")) { cam.x += s; moved = true; }
   if (moved) {
+    clampCam();
     applyCamera();
+    requestGridPaint();                   // culled content must fill in as we pan
     // the world slid under the cursor, so recompute what it's over
     syncCursor({ clientX: cursor.cx, clientY: cursor.cy });
-    if (window.GS.build.placing) renderGrid();
   }
   if (["w", "a", "s", "d"].some(k => keys.has(k))) requestAnimationFrame(panStep);
   else panRunning = false;
@@ -440,13 +563,14 @@ function onKeyDown(e) {
     if (!panRunning) { panRunning = true; requestAnimationFrame(panStep); }
     return;
   }
+  if (k === "b") { toggleBuild(); return; }   // B toggles the build menu
   if (e.key === "Escape") { window.GS.build.placing = null; render(); }
 }
 function onKeyUp(e) { keys.delete(e.key.toLowerCase()); }
 
 function onMouseUp(e) {
   if (e.button === 0) {
-    leftHeld = false; pickupMode = false; harvestHeld = false;
+    leftHeld = false; pickupMode = false; harvestHeld = false; withdrawSH = null;
     if (panning) { panning = false; $("#world-viewport").classList.remove("grabbing"); }
   }
   if (e.button === 2) rightHeld = false;
@@ -458,22 +582,33 @@ function startLoop() {
   loopRunning = true;
   const step = () => {
     let dirty = false;
-    if (leftHeld && pickupMode && cursor.over) { if (E.pickupNear(area(), cursor.x, cursor.y, PICKUP_R) > 0) dirty = true; }
-    // hold-left over a node auto-swings at that node's own harvest rate
-    if (harvestHeld && cursor.over && cursor.inPlay) {
-      const n = nodeAtCell(cursor.row, cursor.col);
-      if (n && Date.now() - lastSwing >= E.harvestInterval(area(), n)) {
-        E.harvestNode(area(), n.id, true); lastSwing = Date.now(); dirty = true;
+    // everything below acts in the region under the cursor (if unlocked)
+    const rg = cursor.region && E.isAreaUnlocked(cursor.region) ? cursor.region : null;
+    if (leftHeld && pickupMode && cursor.over && rg) { if (E.pickupNear(rg, cursor.lx, cursor.ly, PICKUP_R) > 0) dirty = true; }
+    if (leftHeld && withdrawSH) {
+      // withdraw rate tweens 1/s -> 5/s over the first 3 seconds of the hold
+      const elapsed = Date.now() - withdrawStart;
+      const rate = 1 + Math.min(elapsed / 3000, 1) * 4;   // 1 .. 5 items per second
+      if (Date.now() - lastWithdraw >= 1000 / rate) {
+        if (E.takeFromStorehouse(withdrawSH, 1) > 0) dirty = true;
+        lastWithdraw = Date.now();
       }
     }
-    if (rightHeld && cursor.over) {
+    // hold-left over a node auto-swings at that node's own harvest rate
+    if (harvestHeld && cursor.over && rg) {
+      const n = nodeAtCell(rg, cursor.lrow, cursor.lcol);
+      if (n && Date.now() - lastSwing >= E.harvestInterval(rg, n)) {
+        E.harvestNode(rg, n.id, true); lastSwing = Date.now(); dirty = true;
+      }
+    }
+    if (rightHeld && cursor.over && rg) {
       // deliberate for the first second, then accelerate hard so you can dump fast
       const elapsed = Date.now() - holdStart;
       const rate = elapsed < 1000
         ? 4                                             // 4/s for the first second
         : 4 + Math.min((elapsed - 1000) / 1000, 1) * 16; // ramp 4 -> 20/s over the next second
       const interval = 1000 / rate;
-      if (Date.now() - lastDrop >= interval) { E.dropFromHand(area(), cursor.x, cursor.y); lastDrop = Date.now(); dirty = true; }
+      if (Date.now() - lastDrop >= interval) { E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true; }
     }
     if (dirty) renderPlay();
     if (leftHeld || rightHeld) requestAnimationFrame(step);
@@ -496,4 +631,4 @@ function wireInput() {
   requestAnimationFrame(fitViewport);   // re-fit once layout has settled
 }
 
-window.UI = { render, renderPlay, recenterCamera, toggleUpgrades, toggleBuild, toggleDebug, wireInput };
+window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, toggleUpgrades, toggleBuild, toggleDebug, wireInput };

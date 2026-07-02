@@ -5,10 +5,9 @@
 (function init() {
   const E = window.ENGINE;
 
-  // Populate every already-unlocked area (just Forest at start).
-  for (const key of Object.keys(window.DATA.AREAS)) {
-    if (E.isAreaUnlocked(key)) E.initArea(key);
-  }
+  // Populate EVERY region at boot — locked ones are visible on the map (the
+  // camera just can't pan into them until they're unlocked at their border).
+  for (const key of Object.keys(window.DATA.AREAS)) E.initArea(key);
 
   document.getElementById("upgrades-btn").onclick = () => window.UI.toggleUpgrades();
   document.getElementById("upgrades-close").onclick = () => window.UI.toggleUpgrades(false);
@@ -18,10 +17,14 @@
   window.UI.wireInput();
   window.UI.render();
 
-  // Game loop: fishing dives + node respawns, then repaint. renderPlay only
-  // rebuilds the passive grid — NOT the arrows/build menu — so hovering an
-  // arrow or clicking a build card isn't disrupted by the tick.
-  setInterval(() => { E.gameTick(); window.UI.renderPlay(); }, 100);
+  // Game loop: fishing dives + node respawns. Repaint ONLY when the tick
+  // changed something (or an on-screen countdown/badge needs its text
+  // updated) — unconditionally rebuilding the huge world DOM every 100ms
+  // pegged the GPU/CPU hard enough to stall the whole machine.
+  setInterval(() => {
+    const changed = E.gameTick();
+    if (changed || window.UI.needsLiveRepaint()) window.UI.renderPlay();
+  }, 100);
   // Automation: harvest on behalf of the player every second.
   setInterval(() => { if (E.automationTick() > 0) window.UI.renderPlay(); }, 1000);
 })();

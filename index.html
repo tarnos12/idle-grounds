@@ -7,18 +7,6 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Top bar -->
-  <header id="topbar">
-    <div class="brand">🌍 Idle Grounds</div>
-    <div class="top-right">
-      <div class="area-pill">📍 <span id="area-name">Forest</span></div>
-      <div class="hand-pill">✋ <span id="hand-count">0/20</span></div>
-      <button id="build-btn">🔨 Build</button>
-      <button id="upgrades-btn">⚙ Upgrades</button>
-      <button id="debug-btn">🐞 Debug</button>
-    </div>
-  </header>
-
   <!-- Main: camera-locked world viewport -->
   <main id="main">
     <section id="area-panel">
@@ -29,8 +17,20 @@
     </section>
   </main>
 
-  <!-- Build menu (toggled by the Build button) -->
+  <!-- Build menu (toggled by the Build button / B key) -->
   <div id="build-menu" class="hidden"></div>
+
+  <!-- Bottom bar (moved from the top) -->
+  <header id="topbar">
+    <div class="brand">🌍 Idle Grounds</div>
+    <div class="top-right">
+      <div class="area-pill">📍 <span id="area-name">Forest</span></div>
+      <div class="hand-pill">✋ <span id="hand-count">0/20</span></div>
+      <button id="build-btn">🔨 Build</button>
+      <button id="upgrades-btn">⚙ Upgrades</button>
+      <button id="debug-btn">🐞 Debug</button>
+    </div>
+  </header>
 
   <!-- Hand cursor overlay (follows the mouse, shows what you carry) -->
   <div id="hand-cursor" class="hidden"></div>

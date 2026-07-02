@@ -57,6 +57,28 @@ function spend(cost) {
   for (const [item, qty] of Object.entries(cost)) handTake(item, qty);
   return true;
 }
+
+// ---- Storehouse: each built storehouse holds ONE item type --------
+function storehouseCap() { return D.BUILDINGS.storehouse.cap || Infinity; }
+// Right-click deposit: move one matching item from hand into the storehouse
+// (an empty storehouse adopts the first hand item's type). Returns truthy on
+// success so the accelerating right-hold loop keeps feeding it.
+function depositToStorehouse(sh) {
+  if (!sh.item) { const first = window.GS.hand[0]; if (!first) return null; sh.item = first.item; sh.qty = 0; }
+  if (sh.qty >= storehouseCap() || handCount(sh.item) <= 0) return null;
+  handTake(sh.item, 1); sh.qty++;
+  return { deposited: sh.item };
+}
+// Left-click withdraw: take `n` items out into the hand (UI paces the rate).
+function takeFromStorehouse(sh, n) {
+  if (!sh.item) return 0;
+  const take = Math.min(n || 1, handSpace(), sh.qty);
+  if (take <= 0) return 0;
+  const item = sh.item;
+  handAdd(item, take); sh.qty -= take;
+  if (sh.qty <= 0) sh.item = null;
+  return take;
+}
 function scaled(n) { return Math.max(1, Math.ceil(D.TEST.ENABLED ? n * D.TEST.costScale : n)); }
 
 // ---- Timers / tier rolling ----------------------------------
@@ -144,6 +166,10 @@ function spawnFromSpawner(areaKey, sp) {
         if (occ.has(r + "," + c)) free = false;
     if (!free) continue;
 
+    // keep same-kind nodes at least `spacing` cells apart (spread them out)
+    if (sp.spacing && area.nodes.some(n => n.spawnerKind === sp.kind &&
+        Math.hypot(n.row - row, n.col - col) < sp.spacing)) continue;
+
     const useTiers = !!sp.useTiers;
     const tier = useTiers ? rollTier(areaKey) : 1;
     const tierDef = useTiers ? D.AREAS[areaKey].tiers[tier - 1] : null;
@@ -177,12 +203,18 @@ function placeFixture(areaKey, fx) {
 }
 
 // Fill an area to its spawner targets, place fixtures, seed generators.
+// Node targets scale with the play area (relative to the original 24x24) so a
+// bigger map stays populated at a similar density.
+function areaScale() { return Math.max(1, Math.round((D.GRID.cells / 24) ** 2)); }
+
 function initArea(areaKey) {
   const cfg = D.AREAS[areaKey], area = window.GS.areas[areaKey];
+  const factor = areaScale();
   for (const sp of cfg.spawners || []) {
+    const target = sp.scaleWithArea === false ? sp.target : sp.target * factor;
     let guard = 0;
     const live = () => area.nodes.filter(n => n.spawnerKind === sp.kind).length;
-    while (live() < sp.target && guard++ < 200) if (!spawnFromSpawner(areaKey, sp)) break;
+    while (live() < target && guard++ < target * 8 + 50) if (!spawnFromSpawner(areaKey, sp)) break;
   }
   for (const fx of cfg.fixtures || [])
     if (!area.nodes.some(n => n.kind === fx.kind)) placeFixture(areaKey, fx);
@@ -231,9 +263,11 @@ function flushPending(areaKey, node) {
 }
 
 // Push overlapping ground items apart so they don't sit on top of each other.
+// Returns how many pushes happened (0 = everything already settled).
 function settleGround(areaKey) {
   const items = window.GS.areas[areaKey].ground;
   const MIN = 18;
+  let moves = 0;
   for (let i = 0; i < items.length; i++) {
     for (let j = i + 1; j < items.length; j++) {
       const a = items[i], b = items[j];
@@ -242,10 +276,12 @@ function settleGround(areaKey) {
       if (d < MIN) {
         const push = (MIN - d) / 2, ux = dx / d, uy = dy / d;
         a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
+        moves++;
       }
     }
   }
-  for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
+  if (moves) for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
+  return moves;
 }
 
 // Vacuum ground items near (x,y) into the hand (one item per icon).
@@ -349,7 +385,7 @@ function placeBuilding(areaKey, type, row, col) {
   if (!D.BUILDINGS[type] || !D.BUILDINGS[type].unlocked) return null;
   if (!canPlaceBuilding(areaKey, row, col)) return null;
   const area = window.GS.areas[areaKey];
-  const b = { id: area.nextBuildId++, type, row, col, paid: {}, built: false };
+  const b = { id: area.nextBuildId++, type, row, col, paid: {}, built: false, item: null, qty: 0 };
   area.buildings.push(b);
   return b;
 }
@@ -376,6 +412,7 @@ function buildingAt(areaKey, row, col) {
 function dropFromHand(areaKey, x, y) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
   const b = buildingAt(areaKey, row, col);
+  if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
   if (b && !b.built) {
     const needs = buildingNeeds(b);
     for (const item of Object.keys(needs)) {
@@ -434,13 +471,22 @@ function buyUpgrade(areaKey, type) {
   return true;
 }
 
-// ---- World / camera -----------------------------------------
+// ---- World regions (one continuous map) ---------------------
 
-function neighborOf(fromArea, dir) {
-  const here = D.WORLD.layout[fromArea], delta = D.WORLD.dirs[dir];
-  const tx = here.x + delta.x, ty = here.y + delta.y;
-  for (const [key, pos] of Object.entries(D.WORLD.layout))
-    if (pos.x === tx && pos.y === ty) return key;
+// Global play-cell origin of a region (regions tile a WORLD.cols x WORLD.rows
+// grid; each block is GRID.cells x GRID.cells).
+function regionOrigin(areaKey) {
+  const r = D.WORLD.regions[areaKey];
+  return { row: r.ry * D.GRID.cells, col: r.rx * D.GRID.cells };
+}
+
+// Which region a global play cell belongs to (null = void / between arms).
+function regionAt(gRow, gCol) {
+  const N = D.GRID.cells;
+  for (const [key, r] of Object.entries(D.WORLD.regions)) {
+    if (gRow >= r.ry * N && gRow < (r.ry + 1) * N &&
+        gCol >= r.rx * N && gCol < (r.rx + 1) * N) return key;
+  }
   return null;
 }
 
@@ -454,28 +500,30 @@ function areaUnlockCost(areaKey) {
 
 function isAreaUnlocked(areaKey) { return !!window.GS.world.unlocked[areaKey]; }
 
+// Pay to open a region. All regions exist (and are visible) from the start;
+// unlocking only widens where the camera may pan and enables interaction.
 function unlockArea(areaKey) {
-  if (areaKey === "void" || !D.AREAS[areaKey]) return false;
-  if (isAreaUnlocked(areaKey)) return moveTo(areaKey);
+  if (!D.AREAS[areaKey] || isAreaUnlocked(areaKey)) return false;
   const cost = areaUnlockCost(areaKey);
   if (!cost || !spend(cost)) return false;
   window.GS.world.unlocked[areaKey] = true;
-  initArea(areaKey);
-  window.GS.world.currentArea = areaKey;
-  return true;
-}
-
-function moveTo(areaKey) {
-  if (!isAreaUnlocked(areaKey)) return false;
-  window.GS.world.currentArea = areaKey;
+  // Refresh stale surfaced fish so they don't all dive the instant it opens.
+  const cfg = D.AREAS[areaKey];
+  for (const n of window.GS.areas[areaKey].nodes)
+    if (n.surfaceUntil)
+      n.surfaceUntil = Date.now() + (cfg.surfaceWindow || 3) * 1000 * (0.5 + Math.random());
   return true;
 }
 
 // ---- Ticks --------------------------------------------------
 
+// Advance the world. Returns true only if something visible changed, so the
+// caller can skip repainting idle frames (repainting a huge world every tick
+// was expensive enough to stall the machine).
 function gameTick() {
   const now = Date.now();
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+  let changed = false;
   for (const areaKey of Object.keys(D.AREAS)) {
     if (!isAreaUnlocked(areaKey)) continue;
     const area = window.GS.areas[areaKey];
@@ -483,7 +531,7 @@ function gameTick() {
 
     // Surfaced nodes (fishing) not caught in time dive / relocate.
     for (const node of area.nodes.slice())
-      if (node.surfaceUntil && now >= node.surfaceUntil) depleteNode(areaKey, node);
+      if (node.surfaceUntil && now >= node.surfaceUntil) { depleteNode(areaKey, node); changed = true; }
 
     // Bring queued respawns to life (each carries which spawner it belongs to).
     if (area.spawnQueue.length) {
@@ -491,7 +539,8 @@ function gameTick() {
       area.spawnQueue = area.spawnQueue.filter(e => e.at > now);
       for (const e of due) {
         const sp = (cfg.spawners || []).find(s => s.kind === e.kind);
-        if (sp && !spawnFromSpawner(areaKey, sp)) area.spawnQueue.push({ at: now + 500, kind: e.kind });
+        if (sp && spawnFromSpawner(areaKey, sp)) changed = true;
+        else if (sp) area.spawnQueue.push({ at: now + 500, kind: e.kind });
       }
     }
 
@@ -503,11 +552,13 @@ function gameTick() {
       if (area.ground.filter(g => g.item === gen.item).length >= gen.cap) return;
       const z = zoneRects(gen.zone)[0];
       dropGround(areaKey, gen.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
+      changed = true;
     });
 
     // Separate overlapping ground items (gravity-like repulsion).
-    if (area.ground.length > 1) settleGround(areaKey);
+    if (area.ground.length > 1 && settleGround(areaKey) > 0) changed = true;
   }
+  return changed;
 }
 
 function automationTick() {
@@ -532,12 +583,13 @@ function automationTick() {
 window.ENGINE = {
   itemName, itemIcon,
   handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
+  depositToStorehouse, takeFromStorehouse,
   effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
   dropGround, grantDropsGround, settleGround, pickupNear,
   buildingCatalog, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand,
   upgradeCost, upgradePaid, buyUpgrade,
-  neighborOf, areaUnlockCost, isAreaUnlocked, unlockArea, moveTo,
+  regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,
   gameTick, automationTick,
 };
