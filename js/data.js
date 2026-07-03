@@ -8,15 +8,17 @@
 // title-cased name / 📦 icon.
 const ITEM_NAMES = {
   wood: "Wood", leaves: "Leaves",
-  wheat: "Wheat",
-  stone: "Stone", clay: "Clay", sand: "Sand",
-  fish: "Fish",
+  wheat: "Wheat", cotton: "Cotton",
+  stone: "Stone", clay: "Clay", sand: "Sand", iron_ore: "Iron Ore",
+  fish: "Fish", algae: "Algae", water: "Water",
+  spirit_essence: "Spirit Essence",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
-  wheat: "🌾",
-  stone: "🪨", clay: "🧱", sand: "🟡",
-  fish: "🐟",
+  wheat: "🌾", cotton: "☁️",
+  stone: "🪨", clay: "🧱", sand: "🟡", iron_ore: "🔩",
+  fish: "🐟", algae: "🪸", water: "💧",
+  spirit_essence: "✨",
 };
 
 // One sprite per area's resource (tiers are gone — single type each).
@@ -36,21 +38,21 @@ function d(item, min, max) { return { item, min, max: max == null ? min : max };
 //   instant — a single click harvests the whole `drops`.
 //   break   — strikes yield nothing until the last `hits` cracks it.
 //   surface — surfaces for `surfaceWindow`s; click while up to land `drops`.
-//   quarry  — a fixed object; every `clicksPerDrop` clicks yields 1 `drop`.
+//   quarry  — a fixed object; every `clicksPerDrop` clicks yields
+//             `dropMin..dropMax` (default 1) of `drop`.
 // An area's `spawners` describe relocating nodes (each has its own zone,
 // sizes, target and interaction). `fixtures` are fixed objects placed once.
 // `generators` auto-spawn ground items. `noBuild` = zone(s) buildings avoid.
+// `enemies` describes the area's roaming beasts (click to fight).
 const AREAS = {
   center: {
     name: "Center", icon: "🌲", verb: "Chop", actionIcon: "🪓",
-    base: "wood", noBuild: "corners",
+    base: "wood", noBuild: ["corners", "midTop"],
     speedLabel: "Regrow Speed", timerLabel: "Regrow",
     tiers: [
       { name: "Oak", hits: 3, perHit: [d("wood", 1, 2)], drops: [], timer: 15 },
     ],
     spawners: [
-      // trees in the two TOP corners
-      { kind: "tree", zone: "cornersTop", sizes: [2], target: 8, interaction: "chop", useTiers: true, swingMs: 350 },
       // bushes in the buildable centre — small (1x1), capped at 10, spread out;
       // chopped for leaves, then respawn.
       { kind: "bush", zone: "centre", sizes: [1], target: 10, scaleWithArea: false, spacing: 6,
@@ -63,6 +65,11 @@ const AREAS = {
       // (see the generator below)
       { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 1000,
         sprite: "⛰️", clicksPerDrop: 5, drop: "stone" },
+      // the Spirit Tree: ONE great tree centred in the top band — the only
+      // wood source in the Center. Works like the rock but has NO passive
+      // production: it only gives while you click / hold on it.
+      { kind: "spirittree", zone: "midTop", size: 4, interaction: "quarry", swingMs: 1000,
+        sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3 },
     ],
     generators: [
       // clay ground: a small field centred in the bottom-right corner
@@ -72,14 +79,24 @@ const AREAS = {
       // "quarry" upgrade speeds it up
       { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry" },
     ],
+    // Fox Spirits haunt the top-right corner: they wander their zone, take a
+    // few hits to slay, and drop Spirit Essence. cap/damage/AoE are the hooks
+    // for future combat upgrades.
+    enemies: { zone: "cornerTR", name: "Fox Spirit", sprite: "🦊", cap: 1, hp: 3,
+               speed: 30, respawnMs: 6000, attackMs: 400, drops: [d("spirit_essence", 1, 2)] },
   },
   farm: {
     name: "Farm", icon: "🌱", verb: "Harvest", actionIcon: "🌾",
     base: "wheat", noBuild: ["centre", "midLeft"],
     speedLabel: "Growth Speed", timerLabel: "Growth",
-    // crops grow ONLY in the centre of the farm, as big 3x3 plots
-    spawners: [{ kind: "crop", zone: "centre", sizes: [3], target: 8, scaleWithArea: false,
-                 interaction: "instant", useTiers: true, swingMs: 300 }],
+    // crops grow ONLY in the centre of the farm: big 3x3 wheat plots plus a
+    // few smaller cotton patches.
+    spawners: [
+      { kind: "crop", zone: "centre", sizes: [3], target: 8, scaleWithArea: false,
+        interaction: "instant", useTiers: true, swingMs: 300 },
+      { kind: "cotton", zone: "centre", sizes: [2], target: 5, scaleWithArea: false,
+        interaction: "instant", swingMs: 300, sprite: "☁️", regrow: 18, drops: [d("cotton", 1, 2)] },
+    ],
     generators: [
       // sand ground in the middle-left band auto-spawns sand (like centre's clay)
       { kind: "sand", zone: "midLeft", item: "sand", intervalMs: 1500, cap: 10 },
@@ -92,7 +109,12 @@ const AREAS = {
     name: "Mine", icon: "⛰️", verb: "Mine", actionIcon: "⛏️",
     base: "stone", noBuild: "centre",
     speedLabel: "Mining Speed", timerLabel: "Respawn",
-    spawners: [{ kind: "ore", zone: "centre", sizes: [1, 2], target: 10, interaction: "break", useTiers: true, swingMs: 450 }],
+    spawners: [
+      { kind: "ore", zone: "centre", sizes: [1, 2], target: 10, interaction: "break", useTiers: true, swingMs: 450 },
+      // iron veins: rarer, tougher rocks scattered among the stone
+      { kind: "ironvein", zone: "centre", sizes: [2], target: 2, interaction: "break",
+        swingMs: 500, sprite: "⚙️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)] },
+    ],
     tiers: [
       { name: "Stone", hits: 2, drops: [d("stone", 3), d("clay", 1)], timer: 10 },
     ],
@@ -102,7 +124,22 @@ const AREAS = {
     base: "fish", noBuild: "centre",
     surfaceWindow: 3,   // seconds a fish stays up before it dives again
     speedLabel: "Fishing Speed", timerLabel: "Bite",
-    spawners: [{ kind: "fish", zone: "centre", sizes: [1], target: 8, interaction: "surface", useTiers: true, swingMs: 350 }],
+    // the water yields EITHER fish or algae — mostly algae early on (the
+    // Algae Farm building later automates algae entirely).
+    spawners: [
+      { kind: "fish", zone: "centre", sizes: [1], target: 4, interaction: "surface", useTiers: true, swingMs: 350 },
+      { kind: "algae", zone: "centre", sizes: [1], target: 10, interaction: "surface",
+        swingMs: 350, sprite: "🪸", regrow: 8, drops: [d("algae", 1, 2)] },
+    ],
+    fixtures: [
+      // the spring: click/hold for water, and it wells up passively into the
+      // field around it (see the generator)
+      { kind: "spring", zone: "cornerTL", size: 2, interaction: "quarry", swingMs: 1000,
+        sprite: "⛲", clicksPerDrop: 3, drop: "water" },
+    ],
+    generators: [
+      { kind: "water", zone: "springField", item: "water", intervalMs: 2000, cap: 10 },
+    ],
     tiers: [
       { name: "Minnow", drops: [d("fish", 1, 2)], timer: 12 },
     ],
@@ -122,12 +159,10 @@ const GRID = {
   building: { w: 3, h: 2 },   // every building occupies a 3-wide x 2-tall block
 };
 
-// Named zone rectangles (inclusive cell bounds) on the 24x24 grid.
-//   corners = four 8x8 blocks; centre = the middle 8x8 block.
+// Named zone rectangles (inclusive cell bounds), a 3x3 division of the play
+// grid (each block ~1/3 of the side) so they scale with GRID.cells.
 // Resource nodes spawn ONLY in an area's spawn zone; buildings may go
-// anywhere EXCEPT a spawn zone (the reserved wild land).
-// Zones are a 3x3 division of the play grid (each block ~1/3 of the side), so
-// they scale automatically with GRID.cells.
+// anywhere EXCEPT a noBuild zone (the reserved wild land).
 const _N = GRID.cells, _T = Math.floor(GRID.cells / 3);
 const _TL = { r0: 0, c0: 0, r1: _T - 1, c1: _T - 1 };
 const _TR = { r0: 0, c0: _N - _T, r1: _T - 1, c1: _N - 1 };
@@ -136,10 +171,12 @@ const _BR = { r0: _N - _T, c0: _N - _T, r1: _N - 1, c1: _N - 1 };
 const _CENTRE = { r0: _T, c0: _T, r1: _N - _T - 1, c1: _N - _T - 1 };
 const ZONES = {
   corners:    [_TL, _TR, _BL, _BR],
-  cornersTop: [_TL, _TR],
+  cornerTL:   [_TL],
+  cornerTR:   [_TR],
   cornerBL:   [_BL],
   cornerBR:   [_BR],
   centre:     [_CENTRE],
+  midTop:     [{ r0: 0, c0: _T, r1: _T - 1, c1: _N - _T - 1 }],   // top-centre band
   midLeft:    [{ r0: _T, c0: 0, r1: _N - _T - 1, c1: _T - 1 }],   // middle-left band
   // small clay field centred INSIDE the bottom-right corner (doesn't touch it)
   clayField:  [(() => { const m = Math.floor((_N - _T + _N - 1) / 2), h = 4;   // centre of the BR block, 9x9
@@ -147,20 +184,44 @@ const ZONES = {
   // matching stone field around the quarry rock, centred in the BL block
   quarryField:[(() => { const m = Math.floor((_N - _T + _N - 1) / 2), c = Math.floor((_T - 1) / 2), h = 4;
                         return { r0: m - h, c0: c - h, r1: m + h, c1: c + h }; })()],
+  // water field around the spring, centred in the TL block (fishing region)
+  springField:[(() => { const m = Math.floor((_T - 1) / 2), h = 4;
+                        return { r0: m - h, c0: m - h, r1: m + h, c1: m + h }; })()],
 };
 
 // Buildings the player can place. cost is paid by dropping resources into
-// the ghost. size defaults to GRID.building. Only `unlocked` ones are listed.
+// the ghost (multi-resource costs allowed, max 3 types). size defaults to
+// GRID.building. Listed when `unlocked`, OR once the Sleeping Dragon reaches
+// `stageUnlock` (its feeding milestones teach new recipes).
 const BUILDINGS = {
   // The Altar anchors the upgrade system: a 5x5 pre-placed exactly in the
   // middle of the centre region, never buildable or destroyable. Click it to
   // pick an upgrade, then feed it resources like a ghost.
   // (type stays "center" internally; only the display name is Altar)
   center:    { name: "Altar",     icon: "🏛️", cost: {}, size: { w: 5, h: 5 }, unlocked: false, indestructible: true },
+  // The Sleeping Dragon: pre-placed in the Center's top-left corner. Feed it
+  // each stage's tribute (see DRAGON_STAGES) and it unlocks new recipes.
+  dragon:    { name: "Sleeping Dragon", icon: "🐉", cost: {}, size: { w: 5, h: 5 }, unlocked: false, indestructible: true },
   workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true },
-  forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: true },
+  forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1 },
   storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 }, cap: 200,  unlocked: true },
+  // Algae Farm: can ONLY be placed in the water (fishing's centre zone);
+  // passively grows algae around itself.
+  algae_farm:{ name: "Algae Farm", icon: "🪸", cost: { wood: 12, algae: 6 }, unlocked: false, stageUnlock: 2,
+               waterOnly: true, gen: { item: "algae", intervalMs: 4000, cap: 8 } },
 };
+
+// The Dragon's feeding milestones. Each stage lists the tribute it wants
+// (max 3 resource types) and what waking it a little further unlocks.
+// This is the future hook for recipe unlocks and story dialogue.
+const DRAGON_STAGES = [
+  { needs: { leaves: 15 },
+    text: "The dragon cracks one eye open… and teaches you the Forge." },
+  { needs: { stone: 25, clay: 10 },
+    text: "The dragon yawns a plume of steam… and teaches you the Algae Farm." },
+  { needs: { iron_ore: 15, algae: 15, water: 10 },
+    text: "The dragon stirs deep in its dream… (its next lesson is not written yet)" },
+];
 
 const WORLD = {
   // ONE continuous map. Each region is a full GRID.cells x GRID.cells block;
@@ -183,15 +244,6 @@ const WORLD = {
   },
 };
 
-// Resource costs (in the AREA's base resource) for upgrades.
-const COSTS = {
-  speed: [40, 100, 220],                           // regrow/growth, I / II / III
-  harvestSpeed: [30, 80, 180],                     // swing/chop/mine/hold rate, -20% each
-  automation: [120, 320, 700],                     // I / II / III
-  quarry: [40, 120, 300],                          // -1 click per stone each level
-  hand: [10, 30, 80],                              // +5 carry capacity each level
-};
-
 // ------------------------------------------------------------------
 // Upgrade TREE (nodebuster-style, drawn on canvas). Root = Hand Size at
 // the centre; buying level 1 of a node unlocks its linked neighbours.
@@ -199,38 +251,53 @@ const COSTS = {
 // >=3 hidden (the tree screen's debug toggle reveals them).
 // x/y are FREE-FORM pixel offsets from the root — scattered organically
 // rather than on a grid.
+// Each node carries its own `costs` — one {item: qty} map per level
+// (multi-resource, max 3 types; feeds through the Altar like a ghost).
 // ------------------------------------------------------------------
 const UPGRADE_TREE = [
   { id: "hand",   icon: "✋", name: "Hand Size",       x: 0,    y: 0,    area: "center",  type: "hand",
-    desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m"] },
+    desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m"],
+    costs: [{ wood: 10 }, { wood: 25, leaves: 10 }, { cotton: 15, wood: 40 }] },
   // east — centre economy, drifting to fishing
   { id: "spd_c",  icon: "⏱️", name: "Regrow Speed",    x: 150,  y: -35,  area: "center",  type: "speed",
-    desc: "Center trees & bushes respawn faster.", links: ["auto_c"] },
+    desc: "Center bushes respawn faster.", links: ["auto_c"],
+    costs: [{ wood: 20 }, { wood: 50, leaves: 15 }, { wood: 120, spirit_essence: 10 }] },
   { id: "auto_c", icon: "🤖", name: "Automation",      x: 300,  y: -85,  area: "center",  type: "automation",
-    desc: "Auto-harvests Center nodes.", links: ["act_fi"] },
+    desc: "Auto-harvests Center nodes.", links: ["act_fi"],
+    costs: [{ wood: 60, stone: 30 }, { stone: 120, clay: 40 }, { iron_ore: 40, spirit_essence: 20 }] },
   { id: "act_fi", icon: "🎣", name: "Reel Speed",      x: 455,  y: -45,  area: "fishing", type: "harvestSpeed",
-    desc: "Faster reeling when fishing.", links: [] },
+    desc: "Faster reeling when fishing.", links: [],
+    costs: [{ fish: 10, algae: 15 }, { algae: 40, wood: 30 }, { fish: 40, iron_ore: 15 }] },
   // west — harvesting power
   { id: "act_c",  icon: "🪓", name: "Action Speed",    x: -150, y: -35,  area: "center",  type: "harvestSpeed",
-    desc: "Faster chop/hold swings in the Center.", links: ["quarry"] },
+    desc: "Faster chop/hold swings in the Center.", links: ["quarry"],
+    costs: [{ wood: 15, stone: 5 }, { stone: 40, leaves: 20 }, { stone: 80, spirit_essence: 15 }] },
   { id: "quarry", icon: "⛏️", name: "Quarry Output",   x: -295, y: 40,   area: "center",  type: "quarry",
-    desc: "The quarry produces stone faster.", links: ["act_m"] },
+    desc: "The quarry produces stone faster.", links: ["act_m"],
+    costs: [{ wood: 20, stone: 10 }, { stone: 50, clay: 20 }, { stone: 100, water: 25 }] },
   { id: "act_m",  icon: "⚒️", name: "Mine Speed",      x: -450, y: -15,  area: "mine",    type: "harvestSpeed",
-    desc: "Faster strikes in the Mine.", links: [] },
+    desc: "Faster strikes in the Mine.", links: [],
+    costs: [{ stone: 30 }, { stone: 60, clay: 25 }, { iron_ore: 30, clay: 50 }] },
   // north — farm
   { id: "spd_f",  icon: "💧", name: "Growth Speed",    x: 40,   y: -150, area: "farm",    type: "speed",
-    desc: "Farm crops regrow faster.", links: ["act_f"] },
+    desc: "Farm crops regrow faster.", links: ["act_f"],
+    costs: [{ wheat: 15, wood: 20 }, { wheat: 40, water: 15 }, { wheat: 80, cotton: 20 }] },
   { id: "act_f",  icon: "🌾", name: "Harvest Speed",   x: -45,  y: -290, area: "farm",    type: "harvestSpeed",
-    desc: "Faster crop harvesting.", links: ["auto_f"] },
+    desc: "Faster crop harvesting.", links: ["auto_f"],
+    costs: [{ wheat: 25 }, { wheat: 50, sand: 15 }, { cotton: 25, water: 20 }] },
   { id: "auto_f", icon: "🚜", name: "Farm Automation", x: 55,   y: -430, area: "farm",    type: "automation",
-    desc: "Auto-harvests Farm crops.", links: [] },
+    desc: "Auto-harvests Farm crops.", links: [],
+    costs: [{ wheat: 60, wood: 40 }, { wheat: 120, cotton: 30 }, { cotton: 60, water: 40, iron_ore: 20 }] },
   // south — mine & fishing economy
   { id: "spd_m",  icon: "⛰️", name: "Respawn Speed",   x: -40,  y: 150,  area: "mine",    type: "speed",
-    desc: "Mine nodes respawn faster.", links: ["spd_fi"] },
+    desc: "Mine nodes respawn faster.", links: ["spd_fi"],
+    costs: [{ stone: 25, wood: 20 }, { stone: 60, clay: 30 }, { iron_ore: 25, water: 20 }] },
   { id: "spd_fi", icon: "🌊", name: "Bite Speed",      x: 50,   y: 290,  area: "fishing", type: "speed",
-    desc: "Fish surface more often.", links: ["auto_m"] },
+    desc: "Fish & algae surface more often.", links: ["auto_m"],
+    costs: [{ fish: 10, wood: 20 }, { algae: 30, clay: 20 }, { fish: 30, water: 30 }] },
   { id: "auto_m", icon: "🛠️", name: "Mine Automation", x: -40,  y: 430,  area: "mine",    type: "automation",
-    desc: "Auto-mines ore veins.", links: [] },
+    desc: "Auto-mines ore veins.", links: [],
+    costs: [{ stone: 80, clay: 30 }, { iron_ore: 30, stone: 100 }, { iron_ore: 60, water: 30, algae: 30 }] },
 ];
 
 // How many ready nodes each automation level harvests per tick.
@@ -249,6 +316,6 @@ const TEST = {
 
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
-  AREAS, GRID, ZONES, BUILDINGS, WORLD, COSTS, AUTOMATION_CLICKS,
+  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, WORLD, AUTOMATION_CLICKS,
   UPGRADE_TREE, HAND_CAP, TEST,
 };

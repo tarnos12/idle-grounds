@@ -43,11 +43,19 @@ const C = {
   gold: "#fbbf24", danger: "#f87171", line: "#3c4651", panel: "#2b333c", panel2: "#37414d",
   region: { center: "#25351f", farm: "#3a3318", mine: "#2c2c33", fishing: "#16323b" },
   zone: "rgba(74,222,128,.05)", zoneEdge: "rgba(74,222,128,.18)",
-  clay: "rgba(184,115,66,.30)", sand: "rgba(226,201,126,.28)",
   frame: "rgba(74,222,128,.30)",
   built: "rgba(60,70,80,.95)", ghost: "rgba(74,222,128,.10)",
   altar: "rgba(74,60,30,.95)",
+  dragon: "rgba(52,36,70,.95)", dragonEdge: "#a855f7",
+  enemyZone: "rgba(248,113,113,.07)", enemyZoneEdge: "rgba(248,113,113,.30)",
   veil: "rgba(0,0,0,.55)",
+};
+// generator-field ground tints, per produced item: [fill, edge]
+const FIELD_TINT = {
+  clay:  ["rgba(184,115,66,.30)",  "rgba(220,190,120,.4)"],
+  sand:  ["rgba(226,201,126,.28)", "rgba(220,190,120,.4)"],
+  stone: ["rgba(148,163,184,.22)", "rgba(148,163,184,.4)"],
+  water: ["rgba(96,165,250,.28)",  "rgba(96,165,250,.45)"],
 };
 // "Twemoji Mozilla" FIRST: Firefox mishandles Windows 11's Segoe UI Emoji
 // (COLR v1) in canvas — glyphs come out as dim fillStyle-tinted silhouettes,
@@ -61,7 +69,7 @@ const TEXT_FONT = '"Segoe UI", system-ui, sans-serif';
 const cursor = { cx: 0, cy: 0, over: false, region: null, lx: 0, ly: 0, lrow: -1, lcol: -1 };
 let debugShow = false;    // show per-node swing/click counters (Debug button)
 let demolishMode = false; // next building clicked gets destroyed (refunds drop)
-let leftHeld = false, rightHeld = false, pickupMode = false, harvestHeld = false;
+let leftHeld = false, rightHeld = false, pickupMode = false, harvestHeld = false, attackHeld = false;
 let withdrawSH = null;    // storehouse being vacuumed with left-hold
 let withdrawStart = 0, lastWithdraw = 0;
 let holdStart = 0, lastDrop = 0, lastSwing = 0, loopRunning = false;
@@ -242,6 +250,13 @@ function animActive() {
       if (unlocked && n.surfaceUntil > now) return true;   // bob + countdown
       if (n.autoFlash > now) return true;
     }
+    // wandering enemies animate whenever one is on screen
+    if (unlocked) for (const en of window.GS.areas[key].enemies || []) {
+      const ex = en.x + p.x, ey = en.y + p.y;
+      if (ex > l && ex < r && ey > t && ey < b) return true;
+    }
+    // the dragon's floating stage text needs repaints until it fades
+    if (key === "center" && unlocked && window.GS.dragon.msgUntil > now) return true;
   }
   return false;
 }
@@ -332,7 +347,7 @@ function drawWorldInner() {
   if (window.GS.build.placing && cursor.over && cursor.region) {
     const B = G.building;
     const ok = E.isAreaUnlocked(cursor.region) &&
-      E.canPlaceBuilding(cursor.region, cursor.lrow, cursor.lcol);
+      E.canPlaceBuilding(cursor.region, cursor.lrow, cursor.lcol, window.GS.build.placing);
     const p = regionPx(cursor.region);
     const px = X(p.x + cursor.lcol * CELL), py = Y(p.y + cursor.lrow * CELL);
     ctx.fillStyle = ok ? "rgba(74,222,128,.25)" : "rgba(248,113,113,.25)";
@@ -365,9 +380,13 @@ function drawRegionGround(key, ox, oy, view, s, X, Y) {
     }
   };
   for (const z of E.noBuildRects(key)) zoneRect(z, C.zone, C.zoneEdge);
-  for (const gen of cfg.generators || [])
-    for (const z of E.zoneRects(gen.zone))
-      zoneRect(z, gen.item === "clay" ? C.clay : C.sand, "rgba(220,190,120,.4)");
+  for (const gen of cfg.generators || []) {
+    const tint = FIELD_TINT[gen.item] || FIELD_TINT.sand;
+    for (const z of E.zoneRects(gen.zone)) zoneRect(z, tint[0], tint[1]);
+  }
+  // the enemy zone reads as danger (reddish over the wild-land green)
+  if (cfg.enemies)
+    for (const z of E.zoneRects(cfg.enemies.zone)) zoneRect(z, C.enemyZone, C.enemyZoneEdge);
 
   ctx.strokeStyle = C.frame; ctx.lineWidth = 2;
   ctx.strokeRect(X(ox), Y(oy), PLAY_W * s, PLAY_W * s);
@@ -391,8 +410,9 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
     if (!seen(bx, by, bw, bh)) continue;
     const bCfg = DD.BUILDINGS[b.type];
     const isAltar = b.type === "center";
-    ctx.fillStyle = !b.built ? C.ghost : isAltar ? C.altar : C.built;
-    ctx.strokeStyle = !b.built ? C.accent : isAltar ? C.gold : C.line;
+    const isDragon = b.type === "dragon";
+    ctx.fillStyle = !b.built ? C.ghost : isAltar ? C.altar : isDragon ? C.dragon : C.built;
+    ctx.strokeStyle = !b.built ? C.accent : isAltar ? C.gold : isDragon ? C.dragonEdge : C.line;
     ctx.lineWidth = Math.max(1.5, 2 * s / 0.7);
     if (!b.built) ctx.setLineDash([6, 4]);
     ctx.fillRect(X(bx), Y(by), bw * s, bh * s);
@@ -408,8 +428,32 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.fillStyle = C.text; ctx.font = `800 ${24 * s}px ${TEXT_FONT}`;
       ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.68));
       if (job) {
+        const rem = Object.entries(E.jobRemaining(job))
+          .map(([it, q]) => `${q} ${E.itemIcon(it)}`).join("  ");
         ctx.fillStyle = C.gold; ctx.font = `800 ${20 * s}px ${TEXT_FONT}`;
-        ctx.fillText(`${job.qty - job.paid} ${E.itemIcon(job.item)}`, cxp, Y(by + bh * 0.86));
+        ctx.fillText(rem || "…", cxp, Y(by + bh * 0.86));
+      }
+    } else if (b.built && isDragon) {
+      ctx.fillStyle = C.text;
+      ctx.font = `${64 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.36));
+      ctx.fillStyle = "#d8b4fe"; ctx.font = `800 ${18 * s}px ${TEXT_FONT}`;
+      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.64));
+      const st = E.dragonStage();
+      if (st) {
+        const rem = Object.entries(E.dragonRemaining())
+          .map(([it, q]) => `${q} ${E.itemIcon(it)}`).join("  ");
+        ctx.fillStyle = C.gold; ctx.font = `800 ${15 * s}px ${TEXT_FONT}`;
+        ctx.fillText(`Feed: ${rem || "…"}`, cxp, Y(by + bh * 0.84));
+      } else {
+        ctx.fillStyle = C.muted; ctx.font = `700 ${13 * s}px ${TEXT_FONT}`;
+        ctx.fillText("dreaming…", cxp, Y(by + bh * 0.84));
+      }
+      // stage-up murmur floats above the dragon for a few seconds
+      const dr = window.GS.dragon;
+      if (dr.msg && dr.msgUntil > Date.now()) {
+        ctx.fillStyle = "#e9d5ff"; ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
+        ctx.fillText(dr.msg, cxp, Y(by - 12));
       }
     } else if (b.built && b.type === "storehouse") {
       ctx.fillStyle = C.text;
@@ -435,6 +479,34 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
   }
 
   drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlocked, seen);
+  if (unlocked) drawRegionEnemies(key, ox, oy, now, s, X, Y, cfg, st, seen);
+}
+
+// roaming enemies: sprite + hp pips, hit squash on strikes
+function drawRegionEnemies(key, ox, oy, now, s, X, Y, cfg, st, seen) {
+  const ecfg = cfg.enemies;
+  if (!ecfg) return;
+  for (const en of st.enemies || []) {
+    const ex = ox + en.x, ey = oy + en.y;
+    if (!seen(ex - 24, ey - 30, 48, 60)) continue;
+    const sq = hitSquash(en, now);
+    ctx.save();
+    ctx.translate(X(ex), Y(ey));
+    if (sq) ctx.scale(sq.sx, sq.sy);
+    ctx.fillStyle = C.text;
+    ctx.font = `${26 * s}px ${EMOJI_FONT}`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(ecfg.sprite, 0, 0);
+    ctx.restore();
+    // hp pips above the beast
+    const n = en.maxHp, px0 = X(ex) - ((n - 1) * 10 * s) / 2;
+    for (let i = 0; i < n; i++) {
+      ctx.beginPath();
+      ctx.arc(px0 + i * 10 * s, Y(ey - 24), 3 * s, 0, Math.PI * 2);
+      ctx.fillStyle = i < en.hp ? C.danger : "rgba(255,255,255,.25)";
+      ctx.fill();
+    }
+  }
 }
 
 // resource nodes, back-to-front by row so nearer sprites overlap correctly
@@ -474,6 +546,13 @@ function drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlock
     ctx.font = `${fpx}px ${EMOJI_FONT}`;
     ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
     ctx.fillText(sprite, 0, 0);
+    // the Spirit Tree shimmers: sparkles over its canopy (fantasy dressing)
+    if (node.kind === "spirittree") {
+      ctx.font = `${fpx * 0.22}px ${EMOJI_FONT}`;
+      ctx.fillText("✨", -fpx * 0.28, -fpx * 0.72);
+      ctx.fillText("✨", fpx * 0.3, -fpx * 0.55);
+      ctx.fillText("✨", fpx * 0.05, -fpx * 0.92);
+    }
     ctx.restore();
 
     // overlays
@@ -627,10 +706,13 @@ function treeTip(i) {
   const job = window.GS.upgradeJob;
   const isSel = job && job.area === i.n.area && job.type === i.n.type;
   const costTxt = cost ? Object.entries(cost).map(([it, qy]) => `${qy} ${E.itemName(it)}`).join(", ") : null;
+  const fedTxt = isSel
+    ? `${Object.values(job.paid).reduce((a, b) => a + b, 0)}/${Object.values(job.needs).reduce((a, b) => a + b, 0)}`
+    : "";
   return `<div class="t-name">${i.n.name}</div>` +
     `<div class="t-lv">Level: ${lvl}/${max}</div>` +
     `<div class="t-desc">${i.n.desc}</div>` +
-    (isSel ? `<div class="t-fed">Selected — fed ${job.paid}/${job.qty}</div>` : "") +
+    (isSel ? `<div class="t-fed">Selected — fed ${fedTxt}</div>` : "") +
     (costTxt ? `<div class="t-cost">Cost: ${costTxt}</div>` : `<div class="t-max">MAX</div>`);
 }
 function drawTree() {
@@ -865,6 +947,16 @@ function onMouseDown(e) {
   }
 
   if (active) {
+    // enemies are struck before anything else under the cursor
+    const en = E.enemyAt(p.region, p.lx, p.ly);
+    if (en) {
+      const t = Date.now();
+      if (t - lastClickAt >= CLICK_COOLDOWN) { E.attackEnemy(p.region, en.id); lastClickAt = t; }
+      else en.hitAt = t;   // too fast to count — still flinch
+      leftHeld = true; attackHeld = true; lastSwing = t;
+      startLoop(); renderPlay();
+      return;
+    }
     const sh = E.buildingAt(p.region, p.lrow, p.lcol);
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
@@ -954,7 +1046,7 @@ function onKeyDown(e) {
 function onKeyUp(e) { keys.delete(e.key.toLowerCase()); }
 
 function onMouseUp(e) {
-  if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; withdrawSH = null; }
+  if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; attackHeld = false; withdrawSH = null; }
   if (e.button === 2) rightHeld = false;
 }
 
@@ -977,6 +1069,15 @@ function startLoop() {
       if (Date.now() - lastWithdraw >= 1000 / rate) {
         if (E.takeFromStorehouse(withdrawSH, 1) > 0) dirty = true;
         lastWithdraw = Date.now();
+      }
+    }
+    // hold-left over an enemy keeps striking at the area's attack rate
+    // (the beast moves, so re-hit-test under the cursor every swing)
+    if (attackHeld && cursor.over && rg) {
+      const ecfg = DD.AREAS[rg].enemies;
+      if (ecfg && Date.now() - lastSwing >= (ecfg.attackMs || 400)) {
+        const en = E.enemyAt(rg, cursor.lx, cursor.ly);
+        if (en) { E.attackEnemy(rg, en.id); lastSwing = Date.now(); dirty = true; }
       }
     }
     // hold-left over a node auto-swings at that node's own harvest rate

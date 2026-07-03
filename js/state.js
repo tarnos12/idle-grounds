@@ -7,14 +7,17 @@
 // buildings are placed by the player.
 function makeAreaState() {
   return {
-    nodes: [],        // live resource nodes + fixtures (quarry)
+    nodes: [],        // live resource nodes + fixtures (quarry, spirit tree…)
     ground: [],       // dropped items        {id,item,x,y}  (one item per icon)
     buildings: [],    // placed buildings     {id,type,row,col,paid:{},built}
     spawnQueue: [],   // { at, kind } respawns pending per spawner
     genTimers: [],    // next-spawn time per generator
+    enemies: [],      // roaming beasts       {id,x,y,hp,maxHp,tx,ty,hitAt}
+    enemyRespawnAt: 0,
     nextNodeId: 1,
     nextGroundId: 1,
     nextBuildId: 1,
+    nextEnemyId: 1,
     // speed = regrow/growth; harvestSpeed = swing/chop/mine/hold rate;
     // quarry = fewer clicks per stone. paid = incremental upgrade funding.
     upgrades: { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0, paid: {} },
@@ -37,8 +40,11 @@ function makeInitialState() {
     },
     build: { open: false, placing: null },  // build menu state (transient)
     // The Center building's active upgrade project:
-    // { area, type, item, qty, paid } — fed by right-clicking the building.
+    // { area, type, needs:{item:qty}, paid:{item:qty} } — fed by right-click.
     upgradeJob: null,
+    // The Sleeping Dragon's progression: feed each stage's tribute to advance
+    // (unlocks recipes). msg/msgUntil float its stage text briefly.
+    dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0 },
     won: false,
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0 },
   };
@@ -82,21 +88,27 @@ function loadState() {
     if (s.handCap) fresh.handCap = s.handCap;
     fresh.handLevel = s.handLevel || 0;
     if (s.upgradeJob) fresh.upgradeJob = s.upgradeJob;
+    if (s.dragon) fresh.dragon = Object.assign({ stage: 0, paid: {}, msg: null, msgUntil: 0 }, s.dragon);
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
     fresh.won = !!s.won;
     if (s.stats) fresh.stats = s.stats;
 
     // ---- migration: scrub content that no longer exists in the game ----
-    // (old saves may hold tier-2+ nodes and removed item types)
+    // (old saves may hold removed node kinds, tiers and item types)
     const LIVE = new Set(Object.keys(window.DATA.ITEM_NAMES));
     for (const k of Object.keys(fresh.areas)) {
       const a = fresh.areas[k];
-      // decorative rings changed shape and the quarry became an inert
-      // auto-producer: drop both so initArea regenerates them with the
-      // current config. Also drop any structurally corrupt entries — one
-      // NaN-positioned node would make the canvas painter throw every frame.
-      a.nodes = (a.nodes || []).filter(n => !n.deco && n.kind !== "quarry" &&
+      const cfg = window.DATA.AREAS[k];
+      const spKinds = new Set((cfg.spawners || []).map(sp => sp.kind));
+      const fxKinds = new Set((cfg.fixtures || []).map(fx => fx.kind));
+      // keep only nodes the CURRENT config still spawns/places (corner trees,
+      // old fixtures etc. vanish; initArea refills anything missing). Deco
+      // rings are dropped + regenerated. Also drop structurally corrupt
+      // entries — one NaN-positioned node would make the painter throw.
+      a.nodes = (a.nodes || []).filter(n => !n.deco &&
+        (n.fixed ? fxKinds.has(n.kind) : spKinds.has(n.spawnerKind)) &&
         Number.isFinite(n.row) && Number.isFinite(n.col) && Number.isFinite(n.size) && n.size > 0);
+      a.spawnQueue = (a.spawnQueue || []).filter(e => spKinds.has(e.kind));
       a.buildings = (a.buildings || []).filter(b =>
         window.DATA.BUILDINGS[b.type] && Number.isFinite(b.row) && Number.isFinite(b.col));
       for (const n of a.nodes) {
@@ -107,6 +119,8 @@ function loadState() {
         }
       }
       a.ground = (a.ground || []).filter(g => LIVE.has(g.item) && Number.isFinite(g.x) && Number.isFinite(g.y));
+      a.enemies = (a.enemies || []).filter(en =>
+        Number.isFinite(en.x) && Number.isFinite(en.y) && Number.isFinite(en.hp) && en.hp > 0);
       for (const b of a.buildings || []) {
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
@@ -114,8 +128,11 @@ function loadState() {
       if (a.upgrades) a.upgrades.maxTier = 1;    // tier upgrades are gone
     }
     fresh.hand = fresh.hand.filter(st => LIVE.has(st.item) && st.qty > 0);
-    if (fresh.upgradeJob && (fresh.upgradeJob.type === "tier" || !LIVE.has(fresh.upgradeJob.item)))
+    // upgrade jobs went multi-resource ({needs,paid} maps): drop the old
+    // single-item {item,qty} format instead of guessing a conversion.
+    if (fresh.upgradeJob && (!fresh.upgradeJob.needs || fresh.upgradeJob.item))
       fresh.upgradeJob = null;
+    for (const it of Object.keys(fresh.dragon.paid || {})) if (!LIVE.has(it)) delete fresh.dragon.paid[it];
     return fresh;
   } catch (e) { return null; }
 }

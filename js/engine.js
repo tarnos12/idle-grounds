@@ -217,6 +217,7 @@ function placeFixture(areaKey, fx) {
     id: area.nextNodeId++, row, col, size: fx.size, kind: fx.kind, interaction: fx.interaction,
     fixed: true, tier: 1, deco: fx.interaction === "none",   // inert fixtures are pure scenery
     clicks: 0, clicksPerDrop: fx.clicksPerDrop, dropItem: fx.drop,
+    dropMin: fx.dropMin, dropMax: fx.dropMax,
     swingMs: fx.swingMs || 1000, sprite: fx.sprite || "⛰️", autoFlash: 0,
   });
 }
@@ -267,6 +268,17 @@ function initArea(areaKey) {
       paid: {}, built: true, item: null, qty: 0,
     });
   }
+  // The Sleeping Dragon: pre-placed dead centre of the top-left corner zone.
+  if (areaKey === "center" && !area.buildings.some(b => b.type === "dragon")) {
+    const s = buildingSize("dragon");
+    const z = zoneRects("cornerTL")[0];
+    area.buildings.push({
+      id: area.nextBuildId++, type: "dragon",
+      row: z.r0 + Math.floor((z.r1 - z.r0 + 1 - s.h) / 2),
+      col: z.c0 + Math.floor((z.c1 - z.c0 + 1 - s.w) / 2),
+      paid: {}, built: true, item: null, qty: 0,
+    });
+  }
   // fixtures first (fixed positions), then their decorative borders,
   // then the random spawners fill in around everything.
   for (const fx of cfg.fixtures || [])
@@ -283,6 +295,12 @@ function initArea(areaKey) {
     let guard = 0;
     const live = () => area.nodes.filter(n => n.spawnerKind === sp.kind).length;
     while (live() < target && guard++ < target * 8 + 50) if (!spawnFromSpawner(areaKey, sp)) break;
+    // and TRIM overshoot — an old save keeps its nodes, but a config that
+    // lowered this spawner's target should apply to it too
+    if (live() > target) {
+      const excess = new Set(area.nodes.filter(n => n.spawnerKind === sp.kind).slice(target).map(n => n.id));
+      area.nodes = area.nodes.filter(n => !excess.has(n.id));
+    }
   }
   area.genTimers = (cfg.generators || []).map(() => 0);
 }
@@ -437,15 +455,17 @@ function harvestNode(areaKey, nodeId, isAuto) {
     node.hitAt = Date.now();
 
   if (node.interaction === "quarry") {
-    // manual mining has NO cap: every `clicksPerDrop` clicks drops 1 stone
-    // (passive production is handled separately by the area's generator)
+    // manual gathering has NO cap: every `clicksPerDrop` clicks drops
+    // `dropMin..dropMax` (default 1) of the fixture's item (any passive
+    // production is handled separately by the area's generator)
     node.clicks = (node.clicks || 0) + 1;
     if (isAuto) node.autoFlash = Date.now() + flashMs;
     if (node.clicks >= (node.clicksPerDrop || 5)) {
       node.clicks = 0;
+      const amt = node.dropMin ? rand(node.dropMin, node.dropMax || node.dropMin) : 1;
       const c = nodeCenterPx(node);
-      dropGround(areaKey, node.dropItem || "stone", 1, c.x, c.y);
-      window.GS.stats.totalGathered += 1;
+      dropGround(areaKey, node.dropItem || "stone", amt, c.x, c.y);
+      window.GS.stats.totalGathered += amt;
     }
     return true;
   }
@@ -483,9 +503,16 @@ function harvestNode(areaKey, nodeId, isAuto) {
 
 // ---- Buildings ----------------------------------------------
 
+// Unlocked outright, or taught by the Sleeping Dragon (stageUnlock).
+function isBuildingUnlocked(type) {
+  const b = D.BUILDINGS[type];
+  if (!b) return false;
+  return !!b.unlocked || (b.stageUnlock != null && (window.GS.dragon.stage || 0) >= b.stageUnlock);
+}
+
 function buildingCatalog() {
   return Object.entries(D.BUILDINGS)
-    .filter(([, b]) => b.unlocked)
+    .filter(([id]) => isBuildingUnlocked(id))
     .map(([id, b]) => ({ id, ...b }));
 }
 
@@ -494,21 +521,30 @@ function buildingFootprint(row, col) {
   return { row, col, h: B.h, w: B.w };
 }
 
-function canPlaceBuilding(areaKey, row, col) {
+// Is cell (r,c) inside a named zone?
+function cellInZone(zoneKey, r, c) {
+  return zoneRects(zoneKey).some(z => r >= z.r0 && r <= z.r1 && c >= z.c0 && c <= z.c1);
+}
+
+function canPlaceBuilding(areaKey, row, col, type) {
   const B = D.GRID.building;
   if (row < 0 || col < 0 || row + B.h > D.GRID.cells || col + B.w > D.GRID.cells) return false;
+  const water = type && D.BUILDINGS[type] && D.BUILDINGS[type].waterOnly;
+  if (water && areaKey !== "fishing") return false;   // water buildings live in the fishing waters
   const occ = occupiedCells(areaKey);
   for (let r = row; r < row + B.h; r++)
     for (let c = col; c < col + B.w; c++) {
-      if (inNoBuild(areaKey, r, c)) return false;   // no building on wild land
+      // waterOnly buildings INVERT the rule: every cell must be in the water
+      // (fishing's centre zone); everything else avoids the wild land.
+      if (water ? !cellInZone("centre", r, c) : inNoBuild(areaKey, r, c)) return false;
       if (occ.has(r + "," + c)) return false;
     }
   return true;
 }
 
 function placeBuilding(areaKey, type, row, col) {
-  if (!D.BUILDINGS[type] || !D.BUILDINGS[type].unlocked) return null;
-  if (!canPlaceBuilding(areaKey, row, col)) return null;
+  if (!isBuildingUnlocked(type)) return null;
+  if (!canPlaceBuilding(areaKey, row, col, type)) return null;
   const area = window.GS.areas[areaKey];
   const b = { id: area.nextBuildId++, type, row, col, paid: {}, built: false, item: null, qty: 0 };
   area.buildings.push(b);
@@ -557,35 +593,53 @@ function demolishBuilding(areaKey, buildingId) {
 
 // ---- Right-click drop: feed a ghost, else drop on the ground -
 
+// Shared feeding rule (ghosts / altar / dragon): if the FRONT hand stack is
+// something `rem` still needs, spend 1 into `paid`; otherwise the click just
+// reorders a needed item we carry to the front (the NEXT click feeds it).
+function feedNeeds(rem, paid) {
+  const first = window.GS.hand[0];
+  if (first && rem[first.item]) {
+    handTake(first.item, 1);
+    paid[first.item] = (paid[first.item] || 0) + 1;
+    return { fed: first.item };
+  }
+  for (const item of Object.keys(rem))
+    if (handCount(item) > 0) { handMoveToFront(item); return { reordered: item }; }
+  return null;
+}
+
 function dropFromHand(areaKey, x, y) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
   const b = buildingAt(areaKey, row, col);
-  // Center building: feed the selected upgrade job (same reorder rule).
+  // Center building: feed the selected upgrade job (multi-resource).
   if (b && b.built && b.type === "center") {
     const job = window.GS.upgradeJob;
-    if (!job || handCount(job.item) <= 0) return null;
-    if (window.GS.hand[0].item !== job.item) { handMoveToFront(job.item); return { reordered: job.item }; }
-    handTake(job.item, 1); job.paid++;
-    if (job.paid >= job.qty) { applyUpgrade(job.area, job.type); window.GS.upgradeJob = null; }
-    return { fed: job.item };
+    if (!job) return null;
+    const res = feedNeeds(jobRemaining(job), job.paid);
+    if (res && res.fed && !Object.keys(jobRemaining(job)).length) {
+      applyUpgrade(job.area, job.type);
+      window.GS.upgradeJob = null;
+    }
+    return res;
+  }
+  // The Sleeping Dragon: feed its current stage's tribute; when sated it
+  // advances a stage (unlocking recipes) and murmurs its stage text.
+  if (b && b.built && b.type === "dragon") {
+    if (!dragonStage()) return null;
+    const dr = window.GS.dragon;
+    const res = feedNeeds(dragonRemaining(), dr.paid);
+    if (res && res.fed && !Object.keys(dragonRemaining()).length) {
+      const st = dragonStage();
+      dr.stage++; dr.paid = {};
+      dr.msg = st.text; dr.msgUntil = Date.now() + 8000;
+    }
+    return res;
   }
   if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
   if (b && !b.built) {
-    const needs = buildingNeeds(b);
-    const first = window.GS.hand[0];
-    // the FRONT stack feeds; if it's something this ghost needs, spend 1
-    if (first && needs[first.item]) {
-      handTake(first.item, 1);
-      b.paid[first.item] = (b.paid[first.item] || 0) + 1;
-      if (Object.keys(buildingNeeds(b)).length === 0) b.built = true;
-      return { fed: first.item, building: b.id };
-    }
-    // otherwise the click just brings a needed item we carry to the front
-    // (reorders the hand, consumes nothing) — the NEXT click feeds it
-    for (const item of Object.keys(needs)) {
-      if (handCount(item) > 0) { handMoveToFront(item); return { reordered: item, building: b.id }; }
-    }
-    return null; // over a ghost but hand has nothing it needs
+    const res = feedNeeds(buildingNeeds(b), b.paid);
+    if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) b.built = true;
+    return res ? Object.assign(res, { building: b.id }) : null;
   }
   const item = handTakeFirst();
   if (!item) return null;
@@ -595,17 +649,17 @@ function dropFromHand(areaKey, x, y) {
 
 // ---- Upgrades (paid from the hand) --------------------------
 
+// Each tree node carries its own per-level cost maps (multi-resource, max 3
+// types). Returns { item: qty } scaled for TEST mode, or null when maxed.
 function upgradeCost(areaKey, type) {
-  const up = window.GS.areas[areaKey].upgrades;
-  const base = D.AREAS[areaKey].base;
-  let raw = null;
-  // "tier" upgrades are gone (single resource type per node) — never buyable
-  if (type === "speed") raw = up.speed >= 3 ? null : D.COSTS.speed[up.speed];
-  if (type === "harvestSpeed") raw = up.harvestSpeed >= 3 ? null : D.COSTS.harvestSpeed[up.harvestSpeed];
-  if (type === "automation") raw = up.automation >= 3 ? null : D.COSTS.automation[up.automation];
-  if (type === "quarry") raw = (up.quarry || 0) >= 3 ? null : D.COSTS.quarry[up.quarry || 0];
-  if (type === "hand") raw = (window.GS.handLevel || 0) >= 3 ? null : D.COSTS.hand[window.GS.handLevel || 0];
-  return raw == null ? null : { [base]: scaled(raw) };
+  const { lvl, max } = upgradeLevel(areaKey, type);
+  if (max <= 0 || lvl >= max) return null;
+  const node = D.UPGRADE_TREE.find(n => n.area === areaKey && n.type === type);
+  const raw = node && node.costs && node.costs[lvl];
+  if (!raw) return null;
+  const out = {};
+  for (const [item, qty] of Object.entries(raw)) out[item] = scaled(qty);
+  return out;
 }
 
 // Bought levels + max for an upgrade — drives the tree display.
@@ -632,17 +686,28 @@ function applyUpgrade(areaKey, type) {
   else if (type === "hand") { window.GS.handLevel = (window.GS.handLevel || 0) + 1; window.GS.handCap += 5; }
 }
 
+// Per-item amounts an upgrade job still needs: { item: qty }.
+function jobRemaining(job) {
+  const rem = {};
+  for (const [item, qty] of Object.entries(job.needs || {})) {
+    const r = qty - (job.paid[item] || 0);
+    if (r > 0) rem[item] = r;
+  }
+  return rem;
+}
+
 // Drop whatever was inserted into the current job on the ground by the
 // Center building, then clear the job.
 function refundUpgradeJob() {
   const job = window.GS.upgradeJob;
   window.GS.upgradeJob = null;
-  if (!job || job.paid <= 0) return;
+  if (!job) return;
   const cb = window.GS.areas.center.buildings.find(b => b.type === "center");
   const s = buildingSize("center");
   const x = cb ? (cb.col + s.w / 2) * CELL : PLAY_PX / 2;
   const y = cb ? (cb.row + s.h / 2) * CELL : PLAY_PX / 2;
-  dropGround("center", job.item, job.paid, x, y);
+  for (const [item, qty] of Object.entries(job.paid || {}))
+    if (qty > 0) dropGround("center", item, qty, x, y);
 }
 
 // Pick the Center building's active upgrade project. Switching away from a
@@ -653,9 +718,25 @@ function selectUpgrade(areaKey, type) {
   const job = window.GS.upgradeJob;
   if (job && job.area === areaKey && job.type === type) return true;  // already selected
   if (job) refundUpgradeJob();
-  const [item, qty] = Object.entries(cost)[0];
-  window.GS.upgradeJob = { area: areaKey, type, item, qty, paid: 0 };
+  window.GS.upgradeJob = { area: areaKey, type, needs: cost, paid: {} };
   return true;
+}
+
+// ---- The Sleeping Dragon (automated recipe-unlock progression) ----
+
+// The dragon's CURRENT stage definition, or null once fully progressed.
+function dragonStage() { return D.DRAGON_STAGES[window.GS.dragon.stage] || null; }
+
+// Per-item tribute the current stage still wants (TEST-scaled): { item: qty }.
+function dragonRemaining() {
+  const st = dragonStage();
+  if (!st) return {};
+  const rem = {};
+  for (const [item, qty] of Object.entries(st.needs)) {
+    const r = scaled(qty) - (window.GS.dragon.paid[item] || 0);
+    if (r > 0) rem[item] = r;
+  }
+  return rem;
 }
 
 // ---- World regions (one continuous map) ---------------------
@@ -751,12 +832,79 @@ function gameTick() {
       changed = true;
     });
 
+    // Generator BUILDINGS (e.g. the Algae Farm) drip their item around
+    // themselves up to a nearby cap.
+    for (const b of area.buildings) {
+      const gcfg = b.built && D.BUILDINGS[b.type].gen;
+      if (!gcfg) continue;
+      if (now < (b.nextGen || 0)) continue;
+      b.nextGen = now + gcfg.intervalMs * scale;
+      const bs = buildingSize(b.type);
+      const bx = (b.col + bs.w / 2) * CELL, by = (b.row + bs.h / 2) * CELL;
+      const R = 4 * CELL;
+      const near = area.ground.filter(g => g.item === gcfg.item &&
+        Math.hypot(g.x - bx, g.y - by) <= R).length;
+      if (near >= gcfg.cap) continue;
+      dropGround(areaKey, gcfg.item, 1, bx + rand(-R / 2, R / 2), by + rand(-R / 2, R / 2));
+      changed = true;
+    }
+
+    // Enemies: spawn up to the cap, then wander between random waypoints
+    // inside their zone. (Movement doesn't set `changed` — the UI animates
+    // visible enemies itself, so off-screen wandering costs no repaints.)
+    const ecfg = cfg.enemies;
+    if (ecfg) {
+      const z = zoneRects(ecfg.zone)[0];
+      const x0 = (z.c0 + 1) * CELL, x1 = z.c1 * CELL;
+      const y0 = (z.r0 + 1) * CELL, y1 = z.r1 * CELL;
+      if (area.enemies.length < ecfg.cap && now >= (area.enemyRespawnAt || 0)) {
+        area.enemies.push({
+          id: area.nextEnemyId++, x: rand(x0, x1), y: rand(y0, y1),
+          hp: ecfg.hp, maxHp: ecfg.hp, tx: rand(x0, x1), ty: rand(y0, y1), hitAt: 0,
+        });
+        changed = true;
+      }
+      const step = ecfg.speed / 10;                 // px per 100ms tick
+      for (const en of area.enemies) {
+        const dx = en.tx - en.x, dy = en.ty - en.y, dd = Math.hypot(dx, dy);
+        if (dd < step || Math.random() < 0.01) { en.tx = rand(x0, x1); en.ty = rand(y0, y1); }
+        else { en.x += (dx / dd) * step; en.y += (dy / dd) * step; }
+      }
+    }
+
     // Separate overlapping ground items (gravity-like repulsion), and keep
     // them out of solid footprints (buildings, the quarry stone).
     if (area.ground.length > 1 && settleGround(areaKey) > 0) changed = true;
     if (pushOutOfColliders(areaKey) > 0) changed = true;
   }
   return changed;
+}
+
+// ---- Enemies (click-combat) ----------------------------------
+
+function enemyAt(areaKey, x, y) {
+  return window.GS.areas[areaKey].enemies.find(en => Math.hypot(en.x - x, en.y - y) <= 22) || null;
+}
+
+// One hit. A slain enemy drops its loot where it stood and schedules the
+// zone's next spawn.
+function attackEnemy(areaKey, id) {
+  const area = window.GS.areas[areaKey];
+  const i = area.enemies.findIndex(en => en.id === id);
+  if (i < 0) return false;
+  const en = area.enemies[i];
+  en.hp -= 1; en.hitAt = Date.now();
+  if (en.hp <= 0) {
+    area.enemies.splice(i, 1);
+    const ecfg = D.AREAS[areaKey].enemies;
+    for (const spec of ecfg.drops || []) {
+      const amt = rollAmount(spec);
+      if (amt > 0) { dropGround(areaKey, spec.item, amt, en.x, en.y); window.GS.stats.totalGathered += amt; }
+    }
+    const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+    area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
+  }
+  return true;
 }
 
 function automationTick() {
@@ -786,8 +934,9 @@ window.ENGINE = {
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
   dropGround, grantDropsGround, settleGround, pickupNear, suctionStep, pushOutOfColliders,
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
-  buildingNeeds, buildingAt, dropFromHand,
+  buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
+  jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,
   gameTick, automationTick,
 };

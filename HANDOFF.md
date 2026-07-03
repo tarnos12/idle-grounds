@@ -9,114 +9,134 @@
 - Start the session **rooted in this folder**. Do **not** touch the sibling
   `Legend of the Fallen Warrior - ORIGINAL` folder — separate, unrelated project.
 - Verify on startup: `git rev-parse --show-toplevel` should print this folder.
+- **Always give the user the game link** after changes: http://localhost:5174
 
 ## What this is
 
-A browser-based sandbox/idle prototype ("Idle Grounds"): ONE continuous,
-mouse-driven world you pan around. Physical resource nodes drop items on the
-ground; a cursor "hand" carries them; buildings are placed as ghosts and fed
-resources to construct. Originally from a GDD, long since pivoted.
+A browser-based sandbox/idle prototype ("Idle Grounds") drifting toward a
+**cultivation/xianxia** theme (Sleeping Dragon, Spirit Tree, Fox Spirits…):
+ONE continuous, mouse-driven world you pan around. Physical resource nodes
+drop items on the ground; a cursor "hand" carries them; buildings are placed
+as ghosts and fed resources to construct. 100% resource economy — no gold.
 
 ## Tech / how to run
 
 - **Vanilla HTML/CSS/JS, no build step**, plain `<script>` tags (shared global
   scope — don't redeclare `const`s across files; `CELL` lives in engine.js).
-- **Run:** `node server.js` (port 5174) or double-click `index.html`.
-  `.claude/launch.json` defines preview server `idle-grounds`.
+- **The world AND the upgrade tree render on `<canvas>`** (no DOM rebuilds).
+  DOM is only overlays: bottom bar, unlock buttons, build menu, hand cursor,
+  tooltip, modals.
+- **Run:** `node server.js` (port 5174; sends `Cache-Control: no-store`).
+  `.claude/launch.json` defines preview server `idle-grounds`. Assets are
+  version-tagged (`?v=N` in index.html) — **bump on every change batch**.
 - Progress **autosaves to localStorage** every 5s (`state.js`, key
-  `idle-grounds-save-v1`); the **↺ Reset** button wipes it.
+  `idle-grounds-save-v1`); the **↺ Reset** button wipes it (`clearSave()`
+  sets `saveDisabled` so the beforeunload autosave can't resurrect it).
+  `loadState()` migrates old saves idempotently: scrubs dead items/kinds
+  against the CURRENT config, drops corrupt entries, resets deco rings.
+
+## ⚠️ Firefox canvas emoji (the "dark film" saga)
+
+Firefox mishandles Windows 11's Segoe UI Emoji (COLR v1) in canvas — glyphs
+render as dim fillStyle-tinted silhouettes (reads as a grey film over all
+icons). Fixes that must stay:
+- `EMOJI_FONT = '"Twemoji Mozilla", "Segoe UI Emoji", …'` (Twemoji FIRST).
+- Explicit bright `ctx.fillStyle = C.text` before every emoji `fillText`.
+- Canvas contexts use `{ willReadFrequently: true }` (CPU rasterization —
+  GPU-composited canvases corrupt on some Windows drivers).
+- Backing store maps to whole device px; CSS size = backing/dpr exactly.
 
 ## The world (one continuous map)
 
 - Regions on a 3×2 region grid, each **75×75 cells** (32px): **Farm** (left),
-  **Center** (middle — the old "forest"), **Mine** (right), **Fishing** (below
-  centre). Bottom corners + gaps are void. `DATA.WORLD.regions`.
-- **5-cell void gap** separates adjacent regions; 10-cell margin rings the map.
-- **No travel arrows** — pan with **WASD only** (no drag-pan); **Shift
-  toggles sprint** (2x pan speed, 🏃 tag in the location pill). The camera
-  window is fixed (~35 tiles); viewport scales to the window.
-- **Locked regions:** populated & present but the camera clamps to the union
-  of unlocked regions + the gap, so **zero pixels of a locked region are ever
-  visible**. Edge buttons ("🔓 Unlock Farm — N🪵") pay from the hand; unlocking
-  just widens the camera range and enables interaction.
+  **Center** (middle), **Mine** (right), **Fishing** (below centre).
+- **5-cell void gap** between regions; camera clamps to unlocked regions +
+  gap so locked regions never show a pixel. Edge buttons pay wood to unlock.
+- **WASD pan** (Shift toggles 2× sprint), **wheel zoom 1×–3×** (2× default),
+  16:9 viewport. No drag-pan.
 
-## Region contents (spawners / fixtures / generators — `DATA.AREAS`)
+## Region contents (`DATA.AREAS`)
 
-- **Center:** trees (chop) in the two top-corner zones; 10 small 1×1 bushes
-  (chop → leaves, capped, spread ≥6 cells) in the buildable centre; a fixed
-  **2×2 quarry** bottom-left (1 stone per 5 clicks; hold = auto-mine 1/s); a
-  **clay patch** bottom-right auto-spawning pickable clay (cap 10).
-- **Farm:** crops ONLY in its central zone as **3×3 plots** (8, unscaled);
-  **sand flat** in the middle-left band (generator like clay, cap 10).
-- **Mine:** 1×1 ore + 2×2 boulders (break — yield only on the final strike)
-  in its centre. **Fishing:** surfacing fish (catch within ~3s or they dive).
-- Interactions per node: `chop` (multi-swing; yield **only on the clearing
-  swing** — accumulated via `node.pending`), `instant`, `break`, `surface`,
-  `quarry`. Depleted nodes **relocate**: respawn in a random free zone slot.
+- **Center:** 10 small bushes (chop → leaves) mid; **Spirit Tree** (4×4,
+  top-centre band) — the only wood source: quarry-style manual clicking
+  (3 clicks → 2-3 wood), NO passive output; **quarry rock** bottom-left
+  (5 clicks → 1 stone manual, unlimited, PLUS passive top-up to 10 stones in
+  its field); **clay patch** bottom-right (generator, cap 10);
+  **Sleeping Dragon 🐉** (5×5 building, top-left corner) — feed each stage's
+  tribute (`DATA.DRAGON_STAGES`: 15 leaves → Forge; stone+clay → Algae Farm;
+  iron+algae+water → TBD) to unlock recipes; future story hook;
+  **Fox Spirits 🦊** (top-right corner, red-tinted zone) — wander, 3 clicks
+  to kill (hold = auto-attack), drop Spirit Essence, respawn; cap 1
+  (cap/damage/AoE are future upgrade hooks). Config: `AREAS.center.enemies`.
+- **Farm:** 3×3 wheat plots + 2×2 cotton patches (centre zone only); sand
+  generator in the middle-left band.
+- **Mine:** stone ore (drops stone+clay) + tougher **iron veins** (⚙️, 3
+  hits → iron ore) in its centre.
+- **Fishing:** surfacing **algae** (100) and **fish** (40) — mostly algae
+  early, by design; a **spring ⛲** top-left corner (3 clicks → 1 water +
+  passive water field, cap 10). The **Algae Farm** building (dragon stage 2)
+  is `waterOnly`: places ONLY inside the fishing waters, passively grows
+  algae around itself (cap 8 nearby).
+- Items: wood, leaves, wheat, cotton, stone, clay, sand, iron_ore, fish,
+  algae, water, spirit_essence. Interactions: `chop`, `instant`, `break`,
+  `surface`, `quarry` (fixtures, `dropMin..dropMax`).
 
-## Carrying / economy (no global inventory)
+## Carrying / economy
 
-- Harvest drops items **on the ground** — 1 icon per item, never stacked;
-  a per-tick repulsion (`settleGround`) keeps them apart.
-- **Hand** (cursor): hold-left vacuums within **1 cell**; cap `GS.handCap`
-  (20, mutable). Right-click drops 1; hold ramps 4→20/s after 1s.
-- Manual clicks rate-limited to ~10/s (`CLICK_COOLDOWN`); holding auto-swings
-  at each node's own `swingMs` (chop 350 / mine 450 / quarry 1000...).
-- **Storehouse** (built building) = visible single-item container (cap 200):
-  right-click deposits matching items, left-click/hold withdraws (1/s → 5/s
-  over 3s). Shown on the building: "🪵 Wood ×47".
-- **Buildings:** `B` or 🔨 opens the menu → 3-wide × 2-tall ghost (green/red
-  preview) → right-click-feed resources to construct. Blocked on each
-  region's `noBuild` zones (accepts an array, e.g. farm's centre + sand band).
-  Only the Storehouse *does* anything yet.
-- **Upgrades live in the 🏛️ Center building** (indestructible, pre-placed
-  mid-centre). Left-click it → menu; SELECT an upgrade → its cost shows on
-  the building like a ghost; right-click-feed the region's base resource to
-  fund it (`GS.upgradeJob`). Selecting a different upgrade drops whatever
-  was fed into the previous one. Types: tier unlock, regrow speed, **Action
-  Speed** (swing rate −20%/lvl), **Quarry Yield** (−1 click/stone per lvl,
-  centre only), automation.
-- **🗑 Demolish** (bottom bar): next building clicked is destroyed — a
-  complete building refunds 100% of its cost (+ storehouse contents), a
-  ghost refunds only what was inserted; refunds drop on the ground. The
-  Center building can't be demolished. Esc/right-click cancels the mode.
+- Drops lie **on the ground** (1 icon per item, repulsion, building
+  colliders). Hold-left = gravity suction (2-cell radius); right-click drops
+  (4→20/s ramp). Hand cap 20, +5 per Hand Size level.
+- **Storehouse** = visible single-item container (cap 200, paced withdraw).
+- **Feeding rule everywhere** (ghosts / Altar / Dragon): front hand stack
+  feeds if needed; otherwise the click reorders a needed item to the front
+  (`feedNeeds` in engine.js).
+- **Costs are multi-resource (max 3 types)**: building `cost` maps and each
+  upgrade-tree node's own `costs: [lvl1, lvl2, lvl3]` array in
+  `DATA.UPGRADE_TREE`. (Tier-2 conversions — e.g. Iron Ore → Iron Bar at the
+  Forge — are the intended next economy layer.)
+- **Upgrades:** click the **Altar** (5×5, exact centre) → nodebuster-style
+  canvas tree (square nodes, GREEN=buyable / GOLD=maxed / RED=locked, "?" at
+  distance 2, hidden ≥3, WASD pans, instant tooltip). Selecting sets
+  `GS.upgradeJob {needs, paid}`; feed the Altar to fund; switching refunds.
+- **Demolish** refunds 100% built / partial ghosts; Altar & Dragon are
+  indestructible.
 
 ## Performance invariants (a regression here stalled whole machines)
 
-1. **Never promote the world div to a GPU layer** (no `will-change` — it's
-   ~8000×5600px; re-rasterizing it 10×/s froze PCs).
-2. **Render only what's on camera**: `renderRegion` culls every element to
-   the view (+4-cell fringe). ~40 DOM elements on screen vs ~400 in state.
-3. **Idle ticks don't repaint**: `gameTick()`/`settleGround()` return changed
-   flags; main.js repaints only when changed or `needsLiveRepaint()` (visible
-   fish countdown / AUTO badge). Idle = 0 rebuilds.
-4. **Interactive UI (unlock buttons, build menu, bottom bar) is rebuilt only
-   on discrete events**, never on ticks (tick-rebuild caused hover flicker +
-   eaten clicks). Pan/preview repaints coalesce via `requestGridPaint()`.
-5. All world input is hit-tested at the viewport level from cursor→GS
-   (`pointFromEvent` → region + region-local coords), so DOM rebuilds never
-   lose clicks. Text selection is disabled globally.
+1. **Dirty-flag rendering**: `gameTick()` returns changed; repaint only when
+   changed or `animActive()` (hit squash, fish bob, AUTO badge, **visible
+   enemies**, dragon msg). Idle = 0 draws. Enemy wandering deliberately does
+   NOT set changed — the UI animates them only while on screen.
+2. Coalesced paints via `requestGridPaint()` (max 1/frame, self-chains only
+   while animating).
+3. Interactive DOM (unlock buttons, build menu) rebuilt only on discrete
+   events, never on ticks (tick-rebuild = hover flicker + eaten clicks).
+4. Input is hit-tested from cursor→state (`pointFromEvent`), decoupled from
+   rendering; interactions gate on `E.isAreaUnlocked`.
+5. LAYERED painter: all grounds → locked stacks+veils → unlocked objects →
+   item icons on top (a later region can never cover an earlier one's sprites).
 
 ## Testing knobs & debug
 
-- `DATA.TEST`: `ENABLED`, `timeScale 0.2` (regrow ×0.2), `costScale 0.5`.
-- **🐞 Debug** toggles per-node swing/click counters. **↺ Reset** wipes save.
-- Headless preview: rAF is throttled (hold-loops/pan don't advance — call
-  engine fns directly), `preview_screenshot` times out (infinite CSS anims),
-  resize needs a `window.dispatchEvent(new Event('resize'))` after
-  `preview_resize`. Verify logic via `preview_eval`.
+- `DATA.TEST`: `ENABLED`, `timeScale 0.2`, `costScale 0.5` (dragon tribute
+  is also scaled).
+- **🐞 Debug** shows node click/hit counters; tree modal has its own Debug
+  (reveal hidden nodes). **F9** = rendering self-diagnostic alert.
+- Headless preview: rAF throttled (call engine fns directly),
+  `preview_screenshot` may time out (sample canvas pixels via
+  `getImageData` instead), `window.dispatchEvent(new Event('resize'))` after
+  `preview_resize`, stub `alert` for F9. Module-level `cam`/`lastDrawError`
+  are reachable from `preview_eval` (classic-script globals).
 
 ## Suggested next steps
 
-- [ ] **Building functions beyond Storehouse** — needs a design call: with
-      the crafting panel gone, what do Workbench/Forge do? (e.g. Forge
-      converts ore→ingots dropped into it; Workbench unlocks building types.)
-- [ ] Offline/idle catch-up on load (saves store absolute timestamps; away
-      time currently just fires everything due at once).
-- [ ] Enrich Mine/Fishing like Center/Farm got (unique sub-features).
-- [ ] Feedback polish: throttled-click "fake hit" animation/SFX, hit
-      particles, floating +N numbers.
-- [ ] Real sprite art; balance pass; the empty region slots.
+- [ ] **Forge function**: convert Iron Ore → Iron Bar (first tier-2
+      resource — the user explicitly plans resource conversion).
+- [ ] Dragon stage 3+ rewards, story dialogue UI for stage-ups.
+- [ ] Combat upgrades: enemy cap, click damage, AoE attack (hooks exist).
+- [ ] More tree nodes (combat/dragon branches); Workbench function.
+- [ ] Offline/idle catch-up on load; feedback polish (particles, +N
+      floaters, SFX); real sprite art; balance pass.
 
 ## Git
 
@@ -124,10 +144,12 @@ resources to construct. Originally from a GDD, long since pivoted.
 
 ## Last session summary
 
-Merged the four areas into one continuous pannable map (regions as side
-extensions of the Center with 5-cell void gaps; camera hard-clamped so locked
-regions never show; edge-button unlocks), reworked the farm (central 3×3
-crops, middle-left sand generator), fixed a machine-stalling rendering
-runaway (GPU layer + full-DOM ticks → culling + dirty-flag repaints), made
-the Storehouse a visible single-type container with paced withdraw, added
-localStorage autosave + Reset, and added Action Speed / Quarry Yield upgrades.
+Xianxia content drop: 4 new basic resources (water/spring+field in Fishing,
+cotton plots, iron veins, algae outnumbering fish) + Spirit Essence;
+multi-resource costs everywhere (per-node `costs` in the tree, multi-item
+`upgradeJob`); corner trees replaced by ONE Spirit Tree (top-centre,
+manual-only wood); Sleeping Dragon (top-left) — feed tribute stages to
+unlock Forge → Algae Farm (water-only placement, passive algae); Fox Spirit
+enemies (top-right) with click/hold combat, loot and respawn. All engine
+paths verified headless via preview_eval; saves migrate (node kinds scrubbed
+against config, spawner overshoot trimmed, old job format dropped).
