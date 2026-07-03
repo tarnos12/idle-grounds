@@ -9,9 +9,10 @@
   // camera just can't pan into them until they're unlocked at their border).
   for (const key of Object.keys(window.DATA.AREAS)) E.initArea(key);
 
-  document.getElementById("upgrades-btn").onclick = () => window.UI.toggleUpgrades();
   document.getElementById("upgrades-close").onclick = () => window.UI.toggleUpgrades(false);
+  document.getElementById("tree-debug-btn").onclick = () => window.UI.toggleTreeDebug();
   document.getElementById("build-btn").onclick = () => window.UI.toggleBuild();
+  document.getElementById("demolish-btn").onclick = () => window.UI.toggleDemolish();
   document.getElementById("debug-btn").onclick = () => window.UI.toggleDebug();
   document.getElementById("reset-btn").onclick = () => {
     if (confirm("Reset ALL progress and start over?")) { window.SAVE.clearSave(); location.reload(); }

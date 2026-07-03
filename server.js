@@ -17,7 +17,12 @@ http.createServer((req, res) => {
   if (!filePath.startsWith(root)) { res.writeHead(403); res.end("Forbidden"); return; }
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end("Not found"); return; }
-    res.writeHead(200, { "Content-Type": types[path.extname(filePath)] || "application/octet-stream" });
+    res.writeHead(200, {
+      "Content-Type": types[path.extname(filePath)] || "application/octet-stream",
+      // Never cache: the game is a handful of plain scripts, and a stale
+      // ui.js/style.css mixed with fresh files renders as broken overlays.
+      "Cache-Control": "no-store",
+    });
     res.end(data);
   });
 }).listen(port, () => console.log(`Idle Grounds on http://localhost:${port}`));

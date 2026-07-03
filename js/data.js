@@ -3,64 +3,28 @@
    Loaded as a plain script: everything hangs off window.DATA
    ============================================================ */
 
-// Human-readable item names. Anything not listed falls back to a
-// title-cased version of its key (see itemName() in engine.js).
+// The ONLY items that exist in the game. Anything else found in an old
+// save is scrubbed on load (see loadState). Unknown keys fall back to a
+// title-cased name / 📦 icon.
 const ITEM_NAMES = {
-  wood: "Wood", hardwood: "Hardwood", ancient_bark: "Ancient Bark",
-  magic_wood: "Magic Wood", void_timber: "Void Timber", leaves: "Leaves",
-  plank: "Plank", lumber_frame: "Lumber Frame",
-
-  wheat: "Wheat", carrot: "Carrot", pumpkin: "Pumpkin",
-  seed_pouch: "Seed Pouch", mystic_herb: "Mystic Herb", starfruit: "Starfruit",
-  flour: "Flour", carrot_bundle: "Carrot Bundle",
-  essence_extract: "Essence Extract", starfruit_concentrate: "Starfruit Concentrate",
-
-  stone: "Stone", clay: "Clay", sand: "Sand", copper_ore: "Copper Ore",
-  iron_ore: "Iron Ore", adamantine_ore: "Adamantine Ore",
-  stone_block: "Stone Block", clay_brick: "Clay Brick",
-  foundation_slab: "Foundation Slab", copper_ingot: "Copper Ingot",
-  iron_ingot: "Iron Ingot", steel_alloy: "Steel Alloy",
-  adamantine_ingot: "Adamantine Ingot",
-
-  fish: "Fish", fish_scale: "Fish Scale", rare_fish: "Rare Fish",
-  fish_oil: "Fish Oil", moonfish_fillet: "Moonfish Fillet", star_pearl: "Star Pearl",
-  fish_fillet: "Fish Fillet", refined_oil: "Refined Oil",
-  rare_fillet: "Rare Fillet", polished_pearl: "Polished Pearl",
-
-  braided_rope: "Braided Rope",
-  wooden_fence: "Wooden Fence", iron_pickaxe: "Iron Pickaxe",
-  fishing_rod: "Fishing Rod", workbench: "Workbench", forge: "Forge",
-  enchanting_table: "Enchanting Table", worldstone: "Worldstone",
+  wood: "Wood", leaves: "Leaves",
+  wheat: "Wheat",
+  stone: "Stone", clay: "Clay", sand: "Sand",
+  fish: "Fish",
 };
-
-// Small emoji per item, purely cosmetic for inventory/cards.
 const ITEM_ICONS = {
-  wood: "🪵", hardwood: "🪵", ancient_bark: "🪵", magic_wood: "✨", void_timber: "🌑", leaves: "🍃",
-  plank: "📏", lumber_frame: "🗜️",
-  wheat: "🌾", carrot: "🥕", pumpkin: "🎃", seed_pouch: "👝", mystic_herb: "🌿", starfruit: "⭐",
-  flour: "🥖", carrot_bundle: "🥕", essence_extract: "🧪", starfruit_concentrate: "🧴",
-  stone: "🪨", clay: "🧱", sand: "🟡", copper_ore: "🟤", iron_ore: "⚙️", adamantine_ore: "💠",
-  stone_block: "🧊", clay_brick: "🧱", foundation_slab: "🟫",
-  copper_ingot: "🟧", iron_ingot: "⬜", steel_alloy: "🔩", adamantine_ingot: "💎",
-  fish: "🐟", fish_scale: "🐠", rare_fish: "🎣", fish_oil: "🛢️",
-  moonfish_fillet: "🌙", star_pearl: "🔮",
-  fish_fillet: "🍣", refined_oil: "🫗", rare_fillet: "🍱", polished_pearl: "⚪",
-  braided_rope: "🪢", wooden_fence: "🚧", iron_pickaxe: "⛏️", fishing_rod: "🎏",
-  workbench: "🛠️", forge: "🔥", enchanting_table: "🔮", worldstone: "🌍",
+  wood: "🪵", leaves: "🍃",
+  wheat: "🌾",
+  stone: "🪨", clay: "🧱", sand: "🟡",
+  fish: "🐟",
 };
 
-// Base spawn weights by tier index (1-5). Used by weighted roll among
-// whichever tiers are currently unlocked in an area.
-const TIER_WEIGHTS = [70, 20, 7, 2.5, 0.5];
-const TIER_LABELS = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
-
-// Per-tier emoji sprite for each area (the big overflowing world sprite).
-// Index 0..4 = tier 1..5. Cosmetic only.
+// One sprite per area's resource (tiers are gone — single type each).
 const TIER_SPRITES = {
-  center:  ["🌳", "🌲", "🌴", "🎄", "🌌"],
-  farm:    ["🌾", "🥕", "🎃", "🌿", "⭐"],
-  mine:    ["🪨", "🧱", "🟤", "⛏️", "💠"],
-  fishing: ["🐟", "🐠", "🎣", "🌙", "🔮"],
+  center:  ["🌳"],
+  farm:    ["🌾"],
+  mine:    ["🪨"],
+  fishing: ["🐟"],
 };
 
 // d(item, min, max) -> drop spec. max defaults to min (fixed amount).
@@ -82,11 +46,7 @@ const AREAS = {
     base: "wood", noBuild: "corners",
     speedLabel: "Regrow Speed", timerLabel: "Regrow",
     tiers: [
-      { name: "Oak",      hits: 3, perHit: [d("wood", 1, 2)],   drops: [],                                   timer: 15 },
-      { name: "Hardwood", hits: 3, perHit: [d("wood", 2)],      drops: [d("hardwood", 1)],                   timer: 25 },
-      { name: "Ancient",  hits: 4, perHit: [d("wood", 2)],      drops: [d("hardwood", 1), d("ancient_bark", 1)], timer: 40 },
-      { name: "Magic",    hits: 4, perHit: [d("hardwood", 1)],  drops: [d("magic_wood", 1)],                 timer: 60 },
-      { name: "Void",     hits: 5, perHit: [d("hardwood", 1)],  drops: [d("magic_wood", 1), d("void_timber", 1)], timer: 90 },
+      { name: "Oak", hits: 3, perHit: [d("wood", 1, 2)], drops: [], timer: 15 },
     ],
     spawners: [
       // trees in the two TOP corners
@@ -98,14 +58,19 @@ const AREAS = {
         perHit: [d("leaves", 1)], drops: [d("leaves", 1, 2)] },
     ],
     fixtures: [
-      // one big fixed quarry in the bottom-left; hold auto-mines at 1/s,
-      // 5 clicks -> 1 stone (both rates upgradeable later)
+      // the quarry rock: manually minable WITHOUT limit (5 clicks -> 1 stone,
+      // hold auto-clicks at 1/s) — and it ALSO produces stone passively
+      // (see the generator below)
       { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 1000,
         sprite: "⛰️", clicksPerDrop: 5, drop: "stone" },
     ],
     generators: [
-      // clay ground in the bottom-right auto-spawns clay up to a cap
-      { kind: "clay", zone: "cornerBR", item: "clay", intervalMs: 1500, cap: 10 },
+      // clay ground: a small field centred in the bottom-right corner
+      { kind: "clay", zone: "clayField", item: "clay", intervalMs: 1500, cap: 10 },
+      // passive stone production: silently tops the ground AROUND the rock up
+      // to 10 stones (only counts stones lying in the quarry field); the
+      // "quarry" upgrade speeds it up
+      { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry" },
     ],
   },
   farm: {
@@ -120,11 +85,7 @@ const AREAS = {
       { kind: "sand", zone: "midLeft", item: "sand", intervalMs: 1500, cap: 10 },
     ],
     tiers: [
-      { name: "Wheat",       drops: [d("wheat", 2, 3)],                              timer: 20 },
-      { name: "Carrot",      drops: [d("wheat", 2), d("carrot", 1)],                 timer: 30 },
-      { name: "Pumpkin",     drops: [d("carrot", 1), d("pumpkin", 1), d("seed_pouch", 1)], timer: 50 },
-      { name: "Mystic Herb", drops: [d("pumpkin", 1), d("mystic_herb", 1)],          timer: 75 },
-      { name: "Starfruit",   drops: [d("mystic_herb", 1), d("starfruit", 1)],        timer: 120 },
+      { name: "Wheat", drops: [d("wheat", 2, 3)], timer: 20 },
     ],
   },
   mine: {
@@ -133,11 +94,7 @@ const AREAS = {
     speedLabel: "Mining Speed", timerLabel: "Respawn",
     spawners: [{ kind: "ore", zone: "centre", sizes: [1, 2], target: 10, interaction: "break", useTiers: true, swingMs: 450 }],
     tiers: [
-      { name: "Stone",      hits: 2, drops: [d("stone", 3), d("clay", 1)],           timer: 10 },
-      { name: "Clay Vein",  hits: 2, drops: [d("clay", 4)],                          timer: 15 },
-      { name: "Copper Vein",hits: 3, drops: [d("stone", 2), d("copper_ore", 2)],     timer: 30 },
-      { name: "Iron Vein",  hits: 4, drops: [d("copper_ore", 1), d("iron_ore", 2)],  timer: 50 },
-      { name: "Adamantine", hits: 5, drops: [d("iron_ore", 1), d("adamantine_ore", 1)], timer: 90 },
+      { name: "Stone", hits: 2, drops: [d("stone", 3), d("clay", 1)], timer: 10 },
     ],
   },
   fishing: {
@@ -147,11 +104,7 @@ const AREAS = {
     speedLabel: "Fishing Speed", timerLabel: "Bite",
     spawners: [{ kind: "fish", zone: "centre", sizes: [1], target: 8, interaction: "surface", useTiers: true, swingMs: 350 }],
     tiers: [
-      { name: "Minnow",      drops: [d("fish", 1, 2)],                               timer: 12 },
-      { name: "Bass",        drops: [d("fish", 2), d("fish_scale", 1)],              timer: 20 },
-      { name: "Sunfish",     drops: [d("fish", 2), d("rare_fish", 1), d("fish_oil", 1)], timer: 35 },
-      { name: "Moonfish",    drops: [d("rare_fish", 1), d("moonfish_fillet", 1)],    timer: 55 },
-      { name: "Cosmic Carp", drops: [d("moonfish_fillet", 1), d("star_pearl", 1)],   timer: 90 },
+      { name: "Minnow", drops: [d("fish", 1, 2)], timer: 12 },
     ],
   },
 };
@@ -188,15 +141,25 @@ const ZONES = {
   cornerBR:   [_BR],
   centre:     [_CENTRE],
   midLeft:    [{ r0: _T, c0: 0, r1: _N - _T - 1, c1: _T - 1 }],   // middle-left band
+  // small clay field centred INSIDE the bottom-right corner (doesn't touch it)
+  clayField:  [(() => { const m = Math.floor((_N - _T + _N - 1) / 2), h = 4;   // centre of the BR block, 9x9
+                        return { r0: m - h, c0: m - h, r1: m + h, c1: m + h }; })()],
+  // matching stone field around the quarry rock, centred in the BL block
+  quarryField:[(() => { const m = Math.floor((_N - _T + _N - 1) / 2), c = Math.floor((_T - 1) / 2), h = 4;
+                        return { r0: m - h, c0: c - h, r1: m + h, c1: c + h }; })()],
 };
 
 // Buildings the player can place. cost is paid by dropping resources into
 // the ghost. size defaults to GRID.building. Only `unlocked` ones are listed.
 const BUILDINGS = {
+  // The Altar anchors the upgrade system: a 5x5 pre-placed exactly in the
+  // middle of the centre region, never buildable or destroyable. Click it to
+  // pick an upgrade, then feed it resources like a ghost.
+  // (type stays "center" internally; only the display name is Altar)
+  center:    { name: "Altar",     icon: "🏛️", cost: {}, size: { w: 5, h: 5 }, unlocked: false, indestructible: true },
   workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true },
   forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: true },
   storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 }, cap: 200,  unlocked: true },
-  altar:     { name: "Altar",     icon: "🔮", cost: { stone: 20, wood: 10 },unlocked: false },
 };
 
 const WORLD = {
@@ -220,59 +183,55 @@ const WORLD = {
   },
 };
 
-// Crafting recipes. `in` = {item: qty}, `out` = {item: qty}.
-// area = which area tab filter it belongs to ("misc" = always shown).
-const RECIPES = [
-  // Wood
-  { id: "plank",        name: "Plank",        area: "center", in: { wood: 3 },                       out: { plank: 1 } },
-  { id: "lumber_frame", name: "Lumber Frame", area: "center", in: { plank: 4 },                      out: { lumber_frame: 1 } },
-  // Stone
-  { id: "stone_block",  name: "Stone Block",  area: "mine",   in: { stone: 3 },                      out: { stone_block: 1 } },
-  { id: "clay_brick",   name: "Clay Brick",   area: "mine",   in: { clay: 2 },                       out: { clay_brick: 1 } },
-  { id: "foundation_slab", name: "Foundation Slab", area: "mine", in: { stone_block: 2, clay_brick: 1 }, out: { foundation_slab: 1 } },
-  // Metal
-  { id: "copper_ingot", name: "Copper Ingot", area: "mine",   in: { copper_ore: 2 },                 out: { copper_ingot: 1 } },
-  { id: "iron_ingot",   name: "Iron Ingot",   area: "mine",   in: { iron_ore: 2 },                   out: { iron_ingot: 1 } },
-  { id: "steel_alloy",  name: "Steel Alloy",  area: "mine",   in: { copper_ingot: 2, iron_ingot: 1 },out: { steel_alloy: 1 } },
-  { id: "adamantine_ingot", name: "Adamantine Ingot", area: "mine", in: { adamantine_ore: 2 },       out: { adamantine_ingot: 1 } },
-  // Farm
-  { id: "flour",        name: "Flour",        area: "farm",   in: { wheat: 4 },                      out: { flour: 1 } },
-  { id: "carrot_bundle",name: "Carrot Bundle",area: "farm",   in: { carrot: 3 },                     out: { carrot_bundle: 1 } },
-  { id: "essence_extract", name: "Essence Extract", area: "farm", in: { mystic_herb: 2 },            out: { essence_extract: 1 } },
-  { id: "starfruit_concentrate", name: "Starfruit Concentrate", area: "farm", in: { starfruit: 2 }, out: { starfruit_concentrate: 1 } },
-  // Fish
-  { id: "fish_fillet",  name: "Fish Fillet",  area: "fishing",in: { fish: 3 },                       out: { fish_fillet: 1 } },
-  { id: "refined_oil",  name: "Refined Oil",  area: "fishing",in: { fish_oil: 2 },                   out: { refined_oil: 1 } },
-  { id: "rare_fillet",  name: "Rare Fillet",  area: "fishing",in: { rare_fish: 2 },                  out: { rare_fillet: 1 } },
-  { id: "polished_pearl", name: "Polished Pearl", area: "fishing", in: { star_pearl: 2 },            out: { polished_pearl: 1 } },
-  // Rope
-  { id: "braided_rope", name: "Braided Rope", area: "fishing",in: { wheat: 6 },                      out: { braided_rope: 1 } },
-
-  // Milestones (flavour / intermediate crafts)
-  { id: "wooden_fence", name: "Wooden Fence", area: "misc", in: { plank: 6 },                        out: { wooden_fence: 1 } },
-  { id: "iron_pickaxe", name: "Iron Pickaxe", area: "misc", in: { plank: 4, lumber_frame: 2 },       out: { iron_pickaxe: 1 } },
-  { id: "fishing_rod",  name: "Fishing Rod",  area: "misc", in: { plank: 3, braided_rope: 2 },       out: { fishing_rod: 1 } },
-  { id: "workbench",    name: "Workbench",    area: "misc", in: { plank: 6, stone_block: 4 },        out: { workbench: 1 } },
-  { id: "forge",        name: "Forge",        area: "misc", in: { stone_block: 4, clay_brick: 4, copper_ingot: 2 }, out: { forge: 1 } },
-  { id: "enchanting_table", name: "Enchanting Table", area: "misc", in: { foundation_slab: 6, essence_extract: 4 }, out: { enchanting_table: 1 } },
-
-  // Endgame — gated behind the Enchanting Table
-  { id: "worldstone", name: "Worldstone", area: "misc", requires: "enchanting_table",
-    in: {
-      void_timber: 4, starfruit_concentrate: 4, adamantine_ingot: 4, polished_pearl: 4,
-      essence_extract: 10, steel_alloy: 6, lumber_frame: 6, refined_oil: 8,
-    },
-    out: { worldstone: 1 }, isWin: true },
-];
-
 // Resource costs (in the AREA's base resource) for upgrades.
 const COSTS = {
-  tierUnlock: { 2: 20, 3: 60, 4: 160, 5: 400 },   // per area, by tier
   speed: [40, 100, 220],                           // regrow/growth, I / II / III
   harvestSpeed: [30, 80, 180],                     // swing/chop/mine/hold rate, -20% each
   automation: [120, 320, 700],                     // I / II / III
   quarry: [40, 120, 300],                          // -1 click per stone each level
+  hand: [10, 30, 80],                              // +5 carry capacity each level
 };
+
+// ------------------------------------------------------------------
+// Upgrade TREE (nodebuster-style, drawn on canvas). Root = Hand Size at
+// the centre; buying level 1 of a node unlocks its linked neighbours.
+// Visibility by distance from owned nodes: <=1 full, ==2 shows "?",
+// >=3 hidden (the tree screen's debug toggle reveals them).
+// x/y are FREE-FORM pixel offsets from the root — scattered organically
+// rather than on a grid.
+// ------------------------------------------------------------------
+const UPGRADE_TREE = [
+  { id: "hand",   icon: "✋", name: "Hand Size",       x: 0,    y: 0,    area: "center",  type: "hand",
+    desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m"] },
+  // east — centre economy, drifting to fishing
+  { id: "spd_c",  icon: "⏱️", name: "Regrow Speed",    x: 150,  y: -35,  area: "center",  type: "speed",
+    desc: "Center trees & bushes respawn faster.", links: ["auto_c"] },
+  { id: "auto_c", icon: "🤖", name: "Automation",      x: 300,  y: -85,  area: "center",  type: "automation",
+    desc: "Auto-harvests Center nodes.", links: ["act_fi"] },
+  { id: "act_fi", icon: "🎣", name: "Reel Speed",      x: 455,  y: -45,  area: "fishing", type: "harvestSpeed",
+    desc: "Faster reeling when fishing.", links: [] },
+  // west — harvesting power
+  { id: "act_c",  icon: "🪓", name: "Action Speed",    x: -150, y: -35,  area: "center",  type: "harvestSpeed",
+    desc: "Faster chop/hold swings in the Center.", links: ["quarry"] },
+  { id: "quarry", icon: "⛏️", name: "Quarry Output",   x: -295, y: 40,   area: "center",  type: "quarry",
+    desc: "The quarry produces stone faster.", links: ["act_m"] },
+  { id: "act_m",  icon: "⚒️", name: "Mine Speed",      x: -450, y: -15,  area: "mine",    type: "harvestSpeed",
+    desc: "Faster strikes in the Mine.", links: [] },
+  // north — farm
+  { id: "spd_f",  icon: "💧", name: "Growth Speed",    x: 40,   y: -150, area: "farm",    type: "speed",
+    desc: "Farm crops regrow faster.", links: ["act_f"] },
+  { id: "act_f",  icon: "🌾", name: "Harvest Speed",   x: -45,  y: -290, area: "farm",    type: "harvestSpeed",
+    desc: "Faster crop harvesting.", links: ["auto_f"] },
+  { id: "auto_f", icon: "🚜", name: "Farm Automation", x: 55,   y: -430, area: "farm",    type: "automation",
+    desc: "Auto-harvests Farm crops.", links: [] },
+  // south — mine & fishing economy
+  { id: "spd_m",  icon: "⛰️", name: "Respawn Speed",   x: -40,  y: 150,  area: "mine",    type: "speed",
+    desc: "Mine nodes respawn faster.", links: ["spd_fi"] },
+  { id: "spd_fi", icon: "🌊", name: "Bite Speed",      x: 50,   y: 290,  area: "fishing", type: "speed",
+    desc: "Fish surface more often.", links: ["auto_m"] },
+  { id: "auto_m", icon: "🛠️", name: "Mine Automation", x: -40,  y: 430,  area: "mine",    type: "automation",
+    desc: "Auto-mines ore veins.", links: [] },
+];
 
 // How many ready nodes each automation level harvests per tick.
 const AUTOMATION_CLICKS = { 1: 1, 2: 2, 3: Infinity };
@@ -289,7 +248,7 @@ const TEST = {
 };
 
 window.DATA = {
-  ITEM_NAMES, ITEM_ICONS, TIER_WEIGHTS, TIER_LABELS, TIER_SPRITES,
-  AREAS, GRID, ZONES, BUILDINGS, WORLD, RECIPES, COSTS, AUTOMATION_CLICKS,
-  HAND_CAP, TEST,
+  ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
+  AREAS, GRID, ZONES, BUILDINGS, WORLD, COSTS, AUTOMATION_CLICKS,
+  UPGRADE_TREE, HAND_CAP, TEST,
 };

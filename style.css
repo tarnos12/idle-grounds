@@ -51,25 +51,29 @@ body {
   border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: 14px;
 }
 .hand-pill { color: var(--accent); }
-#build-btn, #upgrades-btn, #debug-btn, #reset-btn {
+#build-btn, #demolish-btn, #debug-btn, #reset-btn {
   background: var(--panel); color: var(--text); border: 1px solid var(--line);
   border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: 14px;
 }
-#build-btn:hover, #upgrades-btn:hover, #debug-btn:hover { background: var(--panel-2); }
+#build-btn:hover, #demolish-btn:hover, #debug-btn:hover { background: var(--panel-2); }
 #build-btn.on, #debug-btn.on { background: var(--accent-dk); border-color: var(--accent); color: #fff; }
+#demolish-btn.on { background: #7f2d2d; border-color: var(--danger); color: #fff; }
 #reset-btn { color: var(--danger); }
 #reset-btn:hover { background: #3a2626; }
 
 /* ---- Main / viewport ---- */
 #main { flex: 1 1 auto; display: flex; min-height: 0; }
 #area-panel { flex: 1 1 auto; padding: 16px; overflow: auto; display: flex; align-items: center; justify-content: center; }
+#game-canvas { display: block; }
+#tree-canvas { display: block; }
 #world-viewport {
-  position: relative; width: calc(var(--cell) * 24); height: calc(var(--cell) * 24);
+  /* 16:9 play window; fitViewport() sizes it to the browser window */
+  position: relative; width: 1120px; height: 630px;
   border: 1px solid var(--line); border-radius: 12px; overflow: hidden; flex: 0 0 auto;
   box-shadow: 0 14px 40px -18px #000;
   cursor: crosshair;
 }
-#world-viewport.grabbing { cursor: grabbing; }
+.sprint-tag { color: var(--accent); font-size: 12px; }
 #grid {
   position: absolute; top: 0; left: 0; background-color: #161b16; /* void */
   background-image:
@@ -201,14 +205,18 @@ body {
 #hand-cursor {
   position: fixed; z-index: 300; pointer-events: none;
   transform: translate(14px, 14px);
-  display: flex; align-items: center; gap: 2px;
+  display: flex; align-items: center; gap: 6px;
   background: rgba(20,25,30,.9); border: 1px solid var(--accent);
-  border-radius: 8px; padding: 2px 6px;
+  border-radius: 8px; padding: 2px 7px;
 }
 #hand-cursor.hidden { display: none; }
-.hc-ico { font-size: 18px; line-height: 1; }
-.hc-qty { font-size: 12px; font-weight: 800; color: var(--text); }
-.hc-more { font-size: 10px; color: var(--muted); margin-left: 2px; }
+.hc-stack {
+  display: flex; align-items: center; gap: 1px;
+  font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap;
+}
+.hc-stack .hc-ico { font-size: 16px; line-height: 1; }
+.hc-stack.first { color: var(--accent); }
+.hc-stack.first .hc-ico { font-size: 18px; }
 
 /* ---- Build menu ---- */
 #build-menu {
@@ -247,6 +255,68 @@ body {
 .up-buy:hover { background: var(--accent); }
 .up-buy.disabled { opacity: .4; cursor: not-allowed; }
 .up-buy.maxed { background: var(--panel-2); color: var(--muted); border-color: var(--line); cursor: default; }
+.up-buy.selected { background: #3a2f12; color: var(--gold); border-color: var(--gold); }
+
+/* ---- Upgrade tree (Altar) ---- */
+.upgrades-box {
+  width: min(920px, 96vw); height: min(880px, 92vh);
+  display: flex; flex-direction: column;
+}
+.upgrades-box #upgrades-body { flex: 1; overflow: hidden; position: relative; }  /* WASD pans, no scrollbars */
+#tree-debug-btn {
+  background: var(--panel); color: var(--text); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px;
+}
+#tree-debug-btn.on { background: var(--accent-dk); border-color: var(--accent); color: #fff; }
+.utree { position: absolute; left: 0; top: 0; }
+/* instant tooltip — nodebuster style: dark card centred ABOVE its node,
+   title + level + description, with a white MAX bar when complete */
+#utip {
+  position: fixed; z-index: 500; pointer-events: none;
+  width: 230px; border-radius: 6px; overflow: hidden;
+  transform: translate(-50%, -100%);
+  background: rgba(8,11,13,.97); border: 1px solid #2a3136;
+  font-size: 12.5px; line-height: 1.4; color: var(--text); text-align: center;
+}
+#utip.hidden { display: none; }
+#utip .t-name { font-weight: 800; font-size: 13.5px; padding: 8px 12px 0; }
+#utip .t-lv { font-weight: 700; color: #cdd6de; padding: 1px 12px; }
+#utip .t-desc { color: var(--muted); padding: 2px 12px 8px; }
+#utip .t-fed { color: var(--gold); font-weight: 700; padding: 0 12px 6px; }
+#utip .t-cost { color: var(--gold); font-weight: 800; padding: 5px 12px 7px; border-top: 1px solid #232a30; }
+#utip .t-max { background: #e8ecef; color: #0b0e10; font-weight: 800; letter-spacing: 1px; padding: 4px 0; }
+.uedges { position: absolute; inset: 0; pointer-events: none; }
+.uedges line { stroke: rgba(255,255,255,.18); stroke-width: 2; }
+.unode {
+  position: absolute; width: 62px; height: 62px; border-radius: 50%;
+  background: var(--panel); color: var(--text); border: 2px solid var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1px; cursor: default; padding: 0;
+}
+.unode .u-ico { font-size: 22px; line-height: 1; }
+.unode .u-lv { font-size: 9px; font-weight: 800; color: var(--muted); }
+.unode .u-name {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 4px; font-size: 10px; color: var(--muted); white-space: nowrap; pointer-events: none;
+}
+.unode.full:not(.selectable):not(.owned) { opacity: .5; }           /* visible but locked */
+.unode.selectable { cursor: pointer; border-color: var(--accent); }
+.unode.selectable:hover { background: var(--panel-2); transform: scale(1.07); }
+.unode.owned { border-color: var(--accent); box-shadow: 0 0 10px -3px var(--accent); }
+.unode.owned .u-lv { color: var(--accent); }
+.unode.active { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(251,191,36,.35); }
+.unode.maxed { border-color: var(--accent-dk); cursor: default; }
+.unode.mystery { opacity: .55; border-style: dashed; }
+.unode.mystery .u-ico { color: var(--muted); font-weight: 800; font-size: 24px; }
+.unode.hidden-dbg { opacity: .35; }
+/* the Altar (type "center") stands out — it's the upgrade hub */
+.building.built.b-center { background: rgba(74,60,30,.95); border-color: var(--gold); }
+.building.b-center .b-ico { font-size: 56px; }
+.building.b-center .b-name { font-size: 24px; font-weight: 800; }
+.building.b-center .b-needs { font-size: 20px; font-weight: 800; }
+
+/* decorative border trees: darker, desaturated, clearly not harvestable */
+.node.k-deco .sprite { filter: grayscale(.5) brightness(.6) drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
 
 .win-box { text-align: center; }
 .win-box h1 { margin: 6px 0; font-size: 26px; }

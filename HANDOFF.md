@@ -32,8 +32,9 @@ resources to construct. Originally from a GDD, long since pivoted.
   **Center** (middle — the old "forest"), **Mine** (right), **Fishing** (below
   centre). Bottom corners + gaps are void. `DATA.WORLD.regions`.
 - **5-cell void gap** separates adjacent regions; 10-cell margin rings the map.
-- **No travel arrows** — pan with **WASD or left-drag on empty land**. The
-  camera window is fixed (~35 tiles); viewport scales to the window.
+- **No travel arrows** — pan with **WASD only** (no drag-pan); **Shift
+  toggles sprint** (2x pan speed, 🏃 tag in the location pill). The camera
+  window is fixed (~35 tiles); viewport scales to the window.
 - **Locked regions:** populated & present but the camera clamps to the union
   of unlocked regions + the gap, so **zero pixels of a locked region are ever
   visible**. Edge buttons ("🔓 Unlock Farm — N🪵") pay from the hand; unlocking
@@ -68,10 +69,17 @@ resources to construct. Originally from a GDD, long since pivoted.
   preview) → right-click-feed resources to construct. Blocked on each
   region's `noBuild` zones (accepts an array, e.g. farm's centre + sand band).
   Only the Storehouse *does* anything yet.
-- **Upgrades** (modal, paid in the region's base resource, funded
-  **incrementally** from the hand — progress shows "paid X/Y"): tier unlock,
-  regrow speed, **Action Speed** (swing rate −20%/lvl), **Quarry Yield**
-  (−1 click/stone per lvl, centre only), automation.
+- **Upgrades live in the 🏛️ Center building** (indestructible, pre-placed
+  mid-centre). Left-click it → menu; SELECT an upgrade → its cost shows on
+  the building like a ghost; right-click-feed the region's base resource to
+  fund it (`GS.upgradeJob`). Selecting a different upgrade drops whatever
+  was fed into the previous one. Types: tier unlock, regrow speed, **Action
+  Speed** (swing rate −20%/lvl), **Quarry Yield** (−1 click/stone per lvl,
+  centre only), automation.
+- **🗑 Demolish** (bottom bar): next building clicked is destroyed — a
+  complete building refunds 100% of its cost (+ storehouse contents), a
+  ghost refunds only what was inserted; refunds drop on the ground. The
+  Center building can't be demolished. Esc/right-click cancels the mode.
 
 ## Performance invariants (a regression here stalled whole machines)
 

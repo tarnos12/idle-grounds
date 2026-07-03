@@ -4,14 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
-  <link rel="stylesheet" href="style.css" />
+  <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
+  <link rel="stylesheet" href="style.css?v=8" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
   <main id="main">
     <section id="area-panel">
       <div id="world-viewport">
-        <div id="grid"></div>
+        <canvas id="game-canvas"></canvas>
         <div id="arrows"></div>
       </div>
     </section>
@@ -27,7 +28,7 @@
       <div class="area-pill">📍 <span id="area-name">Forest</span></div>
       <div class="hand-pill">✋ <span id="hand-count">0/20</span></div>
       <button id="build-btn">🔨 Build</button>
-      <button id="upgrades-btn">⚙ Upgrades</button>
+      <button id="demolish-btn" title="Destroy a building (refunds its resources)">🗑 Demolish</button>
       <button id="debug-btn">🐞 Debug</button>
       <button id="reset-btn" title="Wipe the save and start over">↺ Reset</button>
     </div>
@@ -36,14 +37,18 @@
   <!-- Hand cursor overlay (follows the mouse, shows what you carry) -->
   <div id="hand-cursor" class="hidden"></div>
 
-  <!-- Upgrades modal -->
+  <!-- Instant tooltip for the upgrade tree -->
+  <div id="utip" class="hidden"></div>
+
+  <!-- Upgrade tree (opened by clicking the Altar) -->
   <div id="upgrades-modal" class="modal hidden">
-    <div class="modal-box">
+    <div class="modal-box upgrades-box">
       <div class="modal-head">
-        <h2>⚙ Upgrades</h2>
+        <h2>🏛️ Altar — Upgrades</h2>
+        <button id="tree-debug-btn" title="Reveal hidden upgrades (debug)">🐞 Debug</button>
         <button id="upgrades-close" class="close-btn">✕</button>
       </div>
-      <div id="upgrades-body"></div>
+      <div id="upgrades-body"><canvas id="tree-canvas"></canvas></div>
     </div>
   </div>
 
@@ -56,10 +61,10 @@
     </div>
   </div>
 
-  <script src="js/data.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/engine.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/data.js?v=8"></script>
+  <script src="js/state.js?v=8"></script>
+  <script src="js/engine.js?v=8"></script>
+  <script src="js/ui.js?v=8"></script>
+  <script src="js/main.js?v=8"></script>
 </body>
 </html>

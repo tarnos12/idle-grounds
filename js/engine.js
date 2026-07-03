@@ -36,6 +36,15 @@ function handTakeFirst() {
   if (s.qty <= 0) window.GS.hand.shift();
   return s.item;
 }
+// Bring an item's stack to the front of the hand (slot 1 = the active item
+// that right-click drops/feeds next). Returns true if the item is in hand.
+function handMoveToFront(item) {
+  const idx = window.GS.hand.findIndex(x => x.item === item);
+  if (idx < 0) return false;
+  if (idx > 0) window.GS.hand.unshift(window.GS.hand.splice(idx, 1)[0]);
+  return true;
+}
+
 // Remove up to `n` of a specific item. Returns amount removed.
 function handTake(item, n) {
   const idx = window.GS.hand.findIndex(x => x.item === item);
@@ -66,6 +75,9 @@ function storehouseCap() { return D.BUILDINGS.storehouse.cap || Infinity; }
 function depositToStorehouse(sh) {
   if (!sh.item) { const first = window.GS.hand[0]; if (!first) return null; sh.item = first.item; sh.qty = 0; }
   if (sh.qty >= storehouseCap() || handCount(sh.item) <= 0) return null;
+  // same rule as ghosts: if the matching item isn't the front stack, the
+  // click just reorders it to the front; the next click deposits
+  if (window.GS.hand[0].item !== sh.item) { handMoveToFront(sh.item); return { reordered: sh.item }; }
   handTake(sh.item, 1); sh.qty++;
   return { deposited: sh.item };
 }
@@ -97,19 +109,11 @@ function harvestInterval(areaKey, node) {
   return base * Math.pow(0.8, lvl);
 }
 
-// Effective clicks needed per quarry drop (base minus the quarry upgrade).
-function quarryClicksPerDrop(areaKey, node) {
-  return Math.max(1, node.clicksPerDrop - (window.GS.areas[areaKey].upgrades.quarry || 0));
-}
 
-function rollTier(areaKey) {
-  const maxTier = window.GS.areas[areaKey].upgrades.maxTier;
-  let total = 0;
-  for (let t = 0; t < maxTier; t++) total += D.TIER_WEIGHTS[t];
-  let r = Math.random() * total;
-  for (let t = 0; t < maxTier; t++) { r -= D.TIER_WEIGHTS[t]; if (r <= 0) return t + 1; }
-  return 1;
-}
+// Tiers are removed from the game: every resource spawns as its single base
+// type (one tree, one crop, one ore, one fish). Kept as a function so the
+// spawn path stays unchanged if tiers ever return.
+function rollTier() { return 1; }
 
 // ---- Grid / zones -------------------------------------------
 
@@ -124,6 +128,11 @@ function inNoBuild(areaKey, r, c) {
   return noBuildRects(areaKey).some(z => r >= z.r0 && r <= z.r1 && c >= z.c0 && c <= z.c1);
 }
 
+// Footprint of a building type (most use the default 3x2; the Altar is 5x5).
+function buildingSize(type) {
+  return (D.BUILDINGS[type] && D.BUILDINGS[type].size) || D.GRID.building;
+}
+
 // Set of "r,c" cells occupied by live nodes and placed buildings.
 function occupiedCells(areaKey) {
   const set = new Set();
@@ -131,10 +140,11 @@ function occupiedCells(areaKey) {
   for (const n of area.nodes)
     for (let r = n.row; r < n.row + n.size; r++)
       for (let c = n.col; c < n.col + n.size; c++) set.add(r + "," + c);
-  const B = D.GRID.building;
-  for (const b of area.buildings)
-    for (let r = b.row; r < b.row + B.h; r++)
-      for (let c = b.col; c < b.col + B.w; c++) set.add(r + "," + c);
+  for (const b of area.buildings) {
+    const s = buildingSize(b.type);
+    for (let r = b.row; r < b.row + s.h; r++)
+      for (let c = b.col; c < b.col + s.w; c++) set.add(r + "," + c);
+  }
   return set;
 }
 
@@ -205,7 +215,8 @@ function placeFixture(areaKey, fx) {
   const col = z.c0 + Math.floor((z.c1 - z.c0 + 1 - fx.size) / 2);
   area.nodes.push({
     id: area.nextNodeId++, row, col, size: fx.size, kind: fx.kind, interaction: fx.interaction,
-    fixed: true, tier: 1, clicks: 0, clicksPerDrop: fx.clicksPerDrop, dropItem: fx.drop,
+    fixed: true, tier: 1, deco: fx.interaction === "none",   // inert fixtures are pure scenery
+    clicks: 0, clicksPerDrop: fx.clicksPerDrop, dropItem: fx.drop,
     swingMs: fx.swingMs || 1000, sprite: fx.sprite || "⛰️", autoFlash: 0,
   });
 }
@@ -215,8 +226,57 @@ function placeFixture(areaKey, fx) {
 // bigger map stays populated at a similar density.
 function areaScale() { return Math.max(1, Math.round((D.GRID.cells / 24) ** 2)); }
 
+// Ring of decorative, non-interactive border trees around a cell rect.
+// Purely scenery: the trees are LARGER than gameplay trees and jittered in
+// size/position, and the ring leaves an ENTRANCE gap on the side that faces
+// the centre of the map.
+function placeDecoRing(areaKey, rect, sprite) {
+  const area = window.GS.areas[areaKey];
+  const occ = occupiedCells(areaKey);
+  const N = D.GRID.cells;
+  const cx = (rect.c0 + rect.c1 + 1) / 2, cy = (rect.r0 + rect.r1 + 1) / 2;
+  const aim = Math.atan2(N / 2 - cy, N / 2 - cx);   // direction toward the map centre
+  for (let r = rect.r0 - 1; r <= rect.r1 + 1; r++) {
+    for (let c = rect.c0 - 1; c <= rect.c1 + 1; c++) {
+      const onRing = r === rect.r0 - 1 || r === rect.r1 + 1 || c === rect.c0 - 1 || c === rect.c1 + 1;
+      if (!onRing || r < 0 || c < 0 || r >= N || c >= N) continue;
+      if (occ.has(r + "," + c)) continue;
+      // entrance: skip ring cells within ~±32° of the centre-facing direction
+      const ang = Math.atan2(r + 0.5 - cy, c + 0.5 - cx);
+      const diff = Math.atan2(Math.sin(ang - aim), Math.cos(ang - aim));
+      if (Math.abs(diff) < 0.55) continue;
+      area.nodes.push({ id: area.nextNodeId++, row: r, col: c, size: 1, kind: "deco",
+        interaction: "none", deco: true, tier: 1, sprite,
+        decoScale: 1.6 + Math.random() * 0.8,        // 48..72px — bigger than play trees' cells
+        decoDx: rand(-6, 6), decoDy: rand(-3, 3),    // organic jitter
+        autoFlash: 0 });
+      occ.add(r + "," + c);
+    }
+  }
+}
+
 function initArea(areaKey) {
   const cfg = D.AREAS[areaKey], area = window.GS.areas[areaKey];
+  // The indestructible Altar (type "center") anchors the upgrade system:
+  // a 5x5 placed EXACTLY centred, before spawners so nothing overlaps it.
+  if (areaKey === "center" && !area.buildings.some(b => b.type === "center")) {
+    const s = buildingSize("center");
+    area.buildings.push({
+      id: area.nextBuildId++, type: "center",
+      row: (D.GRID.cells - s.h) / 2, col: (D.GRID.cells - s.w) / 2,   // 75-5 -> 35: exact centre
+      paid: {}, built: true, item: null, qty: 0,
+    });
+  }
+  // fixtures first (fixed positions), then their decorative borders,
+  // then the random spawners fill in around everything.
+  for (const fx of cfg.fixtures || [])
+    if (!area.nodes.some(n => n.kind === fx.kind)) placeFixture(areaKey, fx);
+  if (areaKey === "center" && !area.nodes.some(n => n.kind === "deco")) {
+    // the rings border the WHOLE reserved corner blocks (the light-green
+    // tinted zones), not just the quarry rock / clay field inside them
+    for (const z of D.ZONES.cornerBL) placeDecoRing(areaKey, z, "🌲");
+    for (const z of D.ZONES.cornerBR) placeDecoRing(areaKey, z, "🌲");
+  }
   const factor = areaScale();
   for (const sp of cfg.spawners || []) {
     const target = sp.scaleWithArea === false ? sp.target : sp.target * factor;
@@ -224,8 +284,6 @@ function initArea(areaKey) {
     const live = () => area.nodes.filter(n => n.spawnerKind === sp.kind).length;
     while (live() < target && guard++ < target * 8 + 50) if (!spawnFromSpawner(areaKey, sp)) break;
   }
-  for (const fx of cfg.fixtures || [])
-    if (!area.nodes.some(n => n.kind === fx.kind)) placeFixture(areaKey, fx);
   area.genTimers = (cfg.generators || []).map(() => 0);
 }
 
@@ -292,6 +350,59 @@ function settleGround(areaKey) {
   return moves;
 }
 
+// Buildings (incl. the Altar) and fixed nodes (the big quarry stone) are
+// solid to ground items: anything inside a footprint is pushed out through
+// the nearest edge. Returns how many items were pushed.
+function pushOutOfColliders(areaKey) {
+  const area = window.GS.areas[areaKey];
+  if (!area.ground.length) return 0;
+  const rects = [];
+  for (const b of area.buildings) {
+    const s = buildingSize(b.type);
+    rects.push({ x0: b.col * CELL, y0: b.row * CELL, x1: (b.col + s.w) * CELL, y1: (b.row + s.h) * CELL });
+  }
+  for (const n of area.nodes)
+    if (n.fixed) rects.push({ x0: n.col * CELL, y0: n.row * CELL, x1: (n.col + n.size) * CELL, y1: (n.row + n.size) * CELL });
+  if (!rects.length) return 0;
+  let moved = 0;
+  for (const g of area.ground) {
+    for (const r of rects) {
+      if (g.x <= r.x0 || g.x >= r.x1 || g.y <= r.y0 || g.y >= r.y1) continue;
+      const dl = g.x - r.x0, dr = r.x1 - g.x, dt = g.y - r.y0, db = r.y1 - g.y;
+      const m = Math.min(dl, dr, dt, db);
+      if (m === dl) g.x = r.x0 - 8; else if (m === dr) g.x = r.x1 + 8;
+      else if (m === dt) g.y = r.y0 - 8; else g.y = r.y1 + 8;
+      g.x = clampPx(g.x); g.y = clampPx(g.y);
+      moved++;
+    }
+  }
+  return moved;
+}
+
+// Gravity suction while holding left: items within `radius` of the cursor
+// are pulled toward it (faster the closer they get); once they reach the
+// cursor they're collected as usual. Does nothing when the hand is full.
+function suctionStep(areaKey, x, y, radius) {
+  if (handSpace() <= 0) return { moved: 0, picked: 0 };
+  const area = window.GS.areas[areaKey];
+  let moved = 0, picked = 0;
+  const taken = new Set();
+  for (const g of area.ground) {
+    const dx = x - g.x, dy = y - g.y, d = Math.hypot(dx, dy);
+    if (d > radius) continue;
+    if (d <= 12) {                                   // reached the cursor — collect
+      if (handSpace() > 0 && handAdd(g.item, 1) > 0) { taken.add(g.id); picked++; }
+      continue;
+    }
+    const pull = 1 + (1 - d / radius) * 3;           // gentle gravity: stronger when closer
+    g.x += (dx / d) * Math.min(pull, d);
+    g.y += (dy / d) * Math.min(pull, d);
+    moved++;
+  }
+  if (taken.size) area.ground = area.ground.filter(g => !taken.has(g.id));
+  return { moved, picked };
+}
+
 // Vacuum ground items near (x,y) into the hand (one item per icon).
 function pickupNear(areaKey, x, y, radius) {
   const area = window.GS.areas[areaKey];
@@ -314,7 +425,7 @@ function pickupNear(areaKey, x, y, radius) {
 // Click a node. Behaviour depends on its `interaction`.
 function harvestNode(areaKey, nodeId, isAuto) {
   const node = nodeById(areaKey, nodeId);
-  if (!node) return false;
+  if (!node || node.deco) return false;   // decorative nodes can't be interacted with
 
   // AUTO badge should stay solid while auto-mining: last longer than the gap
   // between auto-swings (and the 1s automation tick).
@@ -326,14 +437,14 @@ function harvestNode(areaKey, nodeId, isAuto) {
     node.hitAt = Date.now();
 
   if (node.interaction === "quarry") {
-    // fixed object: every N clicks yields one drop (N shrinks with the
-    // area's quarry upgrade); never depletes
+    // manual mining has NO cap: every `clicksPerDrop` clicks drops 1 stone
+    // (passive production is handled separately by the area's generator)
     node.clicks = (node.clicks || 0) + 1;
     if (isAuto) node.autoFlash = Date.now() + flashMs;
-    if (node.clicks >= quarryClicksPerDrop(areaKey, node)) {
+    if (node.clicks >= (node.clicksPerDrop || 5)) {
       node.clicks = 0;
       const c = nodeCenterPx(node);
-      dropGround(areaKey, node.dropItem, 1, c.x, c.y);
+      dropGround(areaKey, node.dropItem || "stone", 1, c.x, c.y);
       window.GS.stats.totalGathered += 1;
     }
     return true;
@@ -416,9 +527,32 @@ function buildingNeeds(b) {
 }
 
 function buildingAt(areaKey, row, col) {
-  const B = D.GRID.building;
-  return window.GS.areas[areaKey].buildings.find(b =>
-    row >= b.row && row < b.row + B.h && col >= b.col && col < b.col + B.w) || null;
+  return window.GS.areas[areaKey].buildings.find(b => {
+    const s = buildingSize(b.type);
+    return row >= b.row && row < b.row + s.h && col >= b.col && col < b.col + s.w;
+  }) || null;
+}
+
+// Destroy a building. A COMPLETE building refunds 100% of its build cost
+// (plus a storehouse's contents); a ghost refunds only what was inserted.
+// Everything drops on the ground at the building. The Center is protected.
+function demolishBuilding(areaKey, buildingId) {
+  const area = window.GS.areas[areaKey];
+  const i = area.buildings.findIndex(b => b.id === buildingId);
+  if (i < 0) return false;
+  const b = area.buildings[i];
+  const cfg = D.BUILDINGS[b.type];
+  if (cfg.indestructible) return false;
+  const s = buildingSize(b.type);
+  const x = (b.col + s.w / 2) * CELL, y = (b.row + s.h / 2) * CELL;
+  if (b.built) {
+    for (const [item, qty] of Object.entries(cfg.cost)) dropGround(areaKey, item, qty, x, y);
+    if (b.type === "storehouse" && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y);
+  } else {
+    for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y);
+  }
+  area.buildings.splice(i, 1);
+  return true;
 }
 
 // ---- Right-click drop: feed a ghost, else drop on the ground -
@@ -426,16 +560,30 @@ function buildingAt(areaKey, row, col) {
 function dropFromHand(areaKey, x, y) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
   const b = buildingAt(areaKey, row, col);
+  // Center building: feed the selected upgrade job (same reorder rule).
+  if (b && b.built && b.type === "center") {
+    const job = window.GS.upgradeJob;
+    if (!job || handCount(job.item) <= 0) return null;
+    if (window.GS.hand[0].item !== job.item) { handMoveToFront(job.item); return { reordered: job.item }; }
+    handTake(job.item, 1); job.paid++;
+    if (job.paid >= job.qty) { applyUpgrade(job.area, job.type); window.GS.upgradeJob = null; }
+    return { fed: job.item };
+  }
   if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
   if (b && !b.built) {
     const needs = buildingNeeds(b);
+    const first = window.GS.hand[0];
+    // the FRONT stack feeds; if it's something this ghost needs, spend 1
+    if (first && needs[first.item]) {
+      handTake(first.item, 1);
+      b.paid[first.item] = (b.paid[first.item] || 0) + 1;
+      if (Object.keys(buildingNeeds(b)).length === 0) b.built = true;
+      return { fed: first.item, building: b.id };
+    }
+    // otherwise the click just brings a needed item we carry to the front
+    // (reorders the hand, consumes nothing) — the NEXT click feeds it
     for (const item of Object.keys(needs)) {
-      if (handCount(item) > 0) {
-        handTake(item, 1);
-        b.paid[item] = (b.paid[item] || 0) + 1;
-        if (Object.keys(buildingNeeds(b)).length === 0) b.built = true;
-        return { fed: item, building: b.id };
-      }
+      if (handCount(item) > 0) { handMoveToFront(item); return { reordered: item, building: b.id }; }
     }
     return null; // over a ghost but hand has nothing it needs
   }
@@ -451,41 +599,62 @@ function upgradeCost(areaKey, type) {
   const up = window.GS.areas[areaKey].upgrades;
   const base = D.AREAS[areaKey].base;
   let raw = null;
-  if (type === "tier") { const next = up.maxTier + 1; raw = next > 5 ? null : D.COSTS.tierUnlock[next]; }
+  // "tier" upgrades are gone (single resource type per node) — never buyable
   if (type === "speed") raw = up.speed >= 3 ? null : D.COSTS.speed[up.speed];
   if (type === "harvestSpeed") raw = up.harvestSpeed >= 3 ? null : D.COSTS.harvestSpeed[up.harvestSpeed];
   if (type === "automation") raw = up.automation >= 3 ? null : D.COSTS.automation[up.automation];
   if (type === "quarry") raw = (up.quarry || 0) >= 3 ? null : D.COSTS.quarry[up.quarry || 0];
+  if (type === "hand") raw = (window.GS.handLevel || 0) >= 3 ? null : D.COSTS.hand[window.GS.handLevel || 0];
   return raw == null ? null : { [base]: scaled(raw) };
 }
 
-// How much has already been paid toward the current level of an upgrade.
-function upgradePaid(areaKey, type) {
-  return window.GS.areas[areaKey].upgrades.paid[type] || 0;
+// Bought levels + max for an upgrade — drives the tree display.
+function upgradeLevel(areaKey, type) {
+  const up = window.GS.areas[areaKey].upgrades;
+  if (type === "tier") return { lvl: up.maxTier - 1, max: 4 };
+  if (type === "speed") return { lvl: up.speed, max: 3 };
+  if (type === "harvestSpeed") return { lvl: up.harvestSpeed, max: 3 };
+  if (type === "automation") return { lvl: up.automation, max: 3 };
+  if (type === "quarry") return { lvl: up.quarry || 0, max: 3 };
+  if (type === "hand") return { lvl: window.GS.handLevel || 0, max: 3 };
+  return { lvl: 0, max: 0 };
 }
 
-// Contribute toward an upgrade from the hand. Since the hand only holds 20,
-// expensive upgrades are funded over several trips (like feeding a building):
-// each call pays as much as the hand currently holds, and the upgrade applies
-// once its cost is fully covered.
-function buyUpgrade(areaKey, type) {
+// ---- Upgrade jobs (funded by feeding the Center building) ----
+
+function applyUpgrade(areaKey, type) {
+  const up = window.GS.areas[areaKey].upgrades;
+  if (type === "tier") up.maxTier++;
+  else if (type === "speed") up.speed++;
+  else if (type === "harvestSpeed") up.harvestSpeed++;
+  else if (type === "automation") up.automation++;
+  else if (type === "quarry") up.quarry = (up.quarry || 0) + 1;
+  else if (type === "hand") { window.GS.handLevel = (window.GS.handLevel || 0) + 1; window.GS.handCap += 5; }
+}
+
+// Drop whatever was inserted into the current job on the ground by the
+// Center building, then clear the job.
+function refundUpgradeJob() {
+  const job = window.GS.upgradeJob;
+  window.GS.upgradeJob = null;
+  if (!job || job.paid <= 0) return;
+  const cb = window.GS.areas.center.buildings.find(b => b.type === "center");
+  const s = buildingSize("center");
+  const x = cb ? (cb.col + s.w / 2) * CELL : PLAY_PX / 2;
+  const y = cb ? (cb.row + s.h / 2) * CELL : PLAY_PX / 2;
+  dropGround("center", job.item, job.paid, x, y);
+}
+
+// Pick the Center building's active upgrade project. Switching away from a
+// partially-fed job drops its inserted resources on the ground first.
+function selectUpgrade(areaKey, type) {
   const cost = upgradeCost(areaKey, type);
   if (!cost) return false;
+  const job = window.GS.upgradeJob;
+  if (job && job.area === areaKey && job.type === type) return true;  // already selected
+  if (job) refundUpgradeJob();
   const [item, qty] = Object.entries(cost)[0];
-  const up = window.GS.areas[areaKey].upgrades;
-  const need = qty - (up.paid[type] || 0);
-  const pay = Math.min(need, handCount(item));
-  if (pay <= 0) return false;
-  handTake(item, pay);
-  up.paid[type] = (up.paid[type] || 0) + pay;
-  if (up.paid[type] >= qty) {
-    up.paid[type] = 0;
-    if (type === "tier") up.maxTier++;
-    else if (type === "speed") up.speed++;
-    else if (type === "harvestSpeed") up.harvestSpeed++;
-    else if (type === "automation") up.automation++;
-    else if (type === "quarry") up.quarry = (up.quarry || 0) + 1;
-  }
+  window.GS.upgradeJob = { area: areaKey, type, item, qty, paid: 0 };
   return true;
 }
 
@@ -567,15 +736,25 @@ function gameTick() {
     (cfg.generators || []).forEach((gen, gi) => {
       if (!area.genTimers) area.genTimers = [];
       if (now < (area.genTimers[gi] || 0)) return;
-      area.genTimers[gi] = now + gen.intervalMs * scale;
-      if (area.ground.filter(g => g.item === gen.item).length >= gen.cap) return;
+      // some generators speed up with an upgrade (e.g. quarry stone output)
+      const upLvl = gen.upgrade ? (area.upgrades[gen.upgrade] || 0) : 0;
+      area.genTimers[gi] = now + gen.intervalMs * scale * Math.pow(0.8, upLvl);
+      // the cap counts only items lying INSIDE this generator's field —
+      // items mined/carried elsewhere don't block passive production
       const z = zoneRects(gen.zone)[0];
+      const fx0 = z.c0 * CELL - 16, fx1 = (z.c1 + 1) * CELL + 16;
+      const fy0 = z.r0 * CELL - 16, fy1 = (z.r1 + 1) * CELL + 16;
+      const inField = area.ground.filter(g => g.item === gen.item &&
+        g.x >= fx0 && g.x <= fx1 && g.y >= fy0 && g.y <= fy1).length;
+      if (inField >= gen.cap) return;
       dropGround(areaKey, gen.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
       changed = true;
     });
 
-    // Separate overlapping ground items (gravity-like repulsion).
+    // Separate overlapping ground items (gravity-like repulsion), and keep
+    // them out of solid footprints (buildings, the quarry stone).
     if (area.ground.length > 1 && settleGround(areaKey) > 0) changed = true;
+    if (pushOutOfColliders(areaKey) > 0) changed = true;
   }
   return changed;
 }
@@ -587,7 +766,7 @@ function automationTick() {
     const level = window.GS.areas[areaKey].upgrades.automation;
     if (level <= 0) continue;
     const budget = D.AUTOMATION_CLICKS[level];
-    const nodes = window.GS.areas[areaKey].nodes.slice().sort((a, b) => b.tier - a.tier);
+    const nodes = window.GS.areas[areaKey].nodes.filter(n => !n.deco).sort((a, b) => b.tier - a.tier);
     let clicks = 0;
     for (const node of nodes) {
       if (clicks >= budget) break;
@@ -603,12 +782,12 @@ window.ENGINE = {
   itemName, itemIcon,
   handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
   depositToStorehouse, takeFromStorehouse,
-  effectiveTimer, harvestInterval, quarryClicksPerDrop, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
+  effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
-  dropGround, grantDropsGround, settleGround, pickupNear,
-  buildingCatalog, buildingFootprint, canPlaceBuilding, placeBuilding,
+  dropGround, grantDropsGround, settleGround, pickupNear, suctionStep, pushOutOfColliders,
+  buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand,
-  upgradeCost, upgradePaid, buyUpgrade,
+  upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,
   gameTick, automationTick,
 };

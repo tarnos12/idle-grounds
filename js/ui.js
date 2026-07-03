@@ -1,7 +1,9 @@
 /* ============================================================
-   Idle Grounds — UI rendering + mouse interaction
-   All world interaction is cursor/GS hit-tested at the viewport
-   level, so the world DOM can rebuild freely without losing clicks.
+   Idle Grounds — canvas rendering + mouse interaction
+   The world and the upgrade tree are drawn on <canvas> (no DOM
+   rebuilds — hundreds of ground items are just fillText calls).
+   All interaction is hit-tested from cursor -> game state, so
+   rendering and input stay fully decoupled.
    ============================================================ */
 
 const E = window.ENGINE;
@@ -16,8 +18,13 @@ const GAP_PX = G.gap * G.cell;        // void strip separating adjacent regions
 // ONE continuous map: WORLD.cols x WORLD.rows regions + gaps + margin around.
 const WORLD_W = (DD.WORLD.cols * G.cells + (DD.WORLD.cols - 1) * G.gap + 2 * MARGIN) * G.cell;
 const WORLD_H = (DD.WORLD.rows * G.cells + (DD.WORLD.rows - 1) * G.gap + 2 * MARGIN) * G.cell;
-// Fixed camera window (~35 tiles) — you pan the camera to explore the map.
-const VIEW_PX = 35 * G.cell;
+// Camera window size is zoom-driven: zoom 1 = closest (~17.5 tiles),
+// 2 = default (~35 tiles), 3 = furthest (~52.5 tiles).
+const ZOOM_UNIT_PX = 17.5 * G.cell;   // logical view WIDTH px per zoom unit (560)
+const VIEW_ASPECT = 9 / 16;           // the play window is 16:9 (width is the zoom anchor)
+let zoom = 2, zoomTarget = 2;
+let VIEW_W = ZOOM_UNIT_PX * zoom;
+let VIEW_H = VIEW_W * VIEW_ASPECT;
 
 const $ = sel => document.querySelector(sel);
 function el(tag, cls, html) {
@@ -27,28 +34,51 @@ function el(tag, cls, html) {
   return n;
 }
 
-const PICKUP_R = G.cell;   // vacuum radius while holding left = 1 cell
+const PICKUP_R = G.cell * 2;   // gravity-field radius while holding left = 2 cells
+
+// palette (kept in sync with style.css)
+const C = {
+  void: "#161b16", gridLine: "rgba(255,255,255,.05)",
+  text: "#e6edf3", muted: "#94a3b8", accent: "#4ade80", accentDk: "#22a35a",
+  gold: "#fbbf24", danger: "#f87171", line: "#3c4651", panel: "#2b333c", panel2: "#37414d",
+  region: { center: "#25351f", farm: "#3a3318", mine: "#2c2c33", fishing: "#16323b" },
+  zone: "rgba(74,222,128,.05)", zoneEdge: "rgba(74,222,128,.18)",
+  clay: "rgba(184,115,66,.30)", sand: "rgba(226,201,126,.28)",
+  frame: "rgba(74,222,128,.30)",
+  built: "rgba(60,70,80,.95)", ghost: "rgba(74,222,128,.10)",
+  altar: "rgba(74,60,30,.95)",
+  veil: "rgba(0,0,0,.55)",
+};
+// "Twemoji Mozilla" FIRST: Firefox mishandles Windows 11's Segoe UI Emoji
+// (COLR v1) in canvas — glyphs come out as dim fillStyle-tinted silhouettes,
+// which reads as a translucent grey film over every icon. Firefox always
+// ships Twemoji Mozilla and renders it in canvas correctly; Chrome doesn't
+// know the name and falls through to Segoe UI Emoji as before.
+const EMOJI_FONT = '"Twemoji Mozilla", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+const TEXT_FONT = '"Segoe UI", system-ui, sans-serif';
 
 // ---- input state --------------------------------------------
-// cursor.region is the map region under the pointer (null = void/margin);
-// lx/ly + lrow/lcol are REGION-LOCAL px / cells (what the engine expects).
 const cursor = { cx: 0, cy: 0, over: false, region: null, lx: 0, ly: 0, lrow: -1, lcol: -1 };
-let debugShow = false;   // show per-node swing/click counters (Debug button)
+let debugShow = false;    // show per-node swing/click counters (Debug button)
+let demolishMode = false; // next building clicked gets destroyed (refunds drop)
 let leftHeld = false, rightHeld = false, pickupMode = false, harvestHeld = false;
-let withdrawSH = null;   // storehouse being vacuumed with left-hold
+let withdrawSH = null;    // storehouse being vacuumed with left-hold
 let withdrawStart = 0, lastWithdraw = 0;
 let holdStart = 0, lastDrop = 0, lastSwing = 0, loopRunning = false;
-// Manual clicks are rate-limited; faster spam isn't counted as a real hit
-// (we still play feedback later). Holding is exempt (it auto-swings).
 const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
 let lastClickAt = 0;
 
 // camera pan (px offset of the world within the viewport)
-const cam = { x: 0, y: 0 };   // set to the centre region by recenterCamera()
+const cam = { x: 0, y: 0 };
 const keys = new Set();
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-let panning = false, panStartX = 0, panStartY = 0, camStartX = 0, camStartY = 0;
-let viewScale = 1;   // logical->physical zoom (viewport fills the window)
+let sprint = false;  // Shift toggles 2x WASD pan speed
+let viewScale = 1;   // logical world px -> CSS px
+
+// ---- canvases ------------------------------------------------
+let cvs = null, ctx = null;     // game world
+let tcvs = null, tctx = null;   // upgrade tree
+let dpr = 1;
 
 // World-px origin of a region.
 function regionPx(key) {
@@ -73,41 +103,86 @@ function allowedBox() {
 }
 function clampCam() {
   const b = allowedBox();
-  cam.x = clamp(cam.x, b.x0, Math.max(b.x0, b.x1 - VIEW_PX));
-  cam.y = clamp(cam.y, b.y0, Math.max(b.y0, b.y1 - VIEW_PX));
+  cam.x = clamp(cam.x, b.x0, Math.max(b.x0, b.x1 - VIEW_W));
+  cam.y = clamp(cam.y, b.y0, Math.max(b.y0, b.y1 - VIEW_H));
 }
 // Start looking at the TOP-CENTRE of the centre region.
 function recenterCamera() {
   const p = regionPx("center");
-  cam.x = p.x + PLAY_W / 2 - VIEW_PX / 2;
+  cam.x = p.x + PLAY_W / 2 - VIEW_W / 2;
   cam.y = p.y;
   clampCam();
 }
-function applyCamera() {
-  $("#grid").style.transform =
-    `translate(${-cam.x * viewScale}px, ${-cam.y * viewScale}px) scale(${viewScale})`;
-}
+// Camera moved: repaint (canvas redraws; there is no DOM transform anymore).
+function applyCamera() { requestGridPaint(); }
 
-// The viewport fills the available window square; since it only shows ~80% of
-// the play area, the map is zoomed in (cells rendered larger than 32px).
+// The viewport fills the available window; viewScale maps the logical camera
+// window (zoom-dependent) onto it.
+let renderedW = 1200;
 function fitViewport() {
   const top = ($("#topbar").getBoundingClientRect().height) || 56;
-  const avail = Math.min(window.innerWidth - 36, window.innerHeight - top - 36);
-  const rendered = Math.max(280, Math.min(avail, 860));
-  viewScale = rendered / VIEW_PX;
+  const availW = window.innerWidth - 36;
+  const availH = (window.innerHeight - top - 36) / VIEW_ASPECT;
+  renderedW = Math.max(320, Math.min(availW, availH, 1440));
+  viewScale = renderedW / VIEW_W;
   const vp = $("#world-viewport");
-  vp.style.width = rendered + "px";
-  vp.style.height = rendered + "px";
-  applyCamera();
+  vp.style.width = renderedW + "px";
+  vp.style.height = (renderedW * VIEW_ASPECT) + "px";
+  sizeCanvas();
+  requestGridPaint();
+  if (upgradesOpen) { sizeTreeCanvas(); drawTree(); }
+}
+function sizeCanvas() {
+  if (!cvs) return;
+  dpr = window.devicePixelRatio || 1;
+  // Backing store must map to WHOLE device pixels, and the CSS size must be
+  // exactly backing/dpr — a half-device-pixel disagreement (dpr 1.25 etc.)
+  // makes the browser resample the whole canvas (soft/blurry output).
+  cvs.width = Math.round(renderedW * dpr);
+  cvs.height = Math.round(renderedW * VIEW_ASPECT * dpr);
+  cvs.style.width = (cvs.width / dpr) + "px";
+  cvs.style.height = (cvs.height / dpr) + "px";
+}
+
+// Apply a zoom level immediately (keeps the view centre anchored).
+function setZoom(z) {
+  z = clamp(z, 1, 3);
+  const oldW = VIEW_W, oldH = VIEW_H;
+  zoom = z; zoomTarget = z;
+  VIEW_W = ZOOM_UNIT_PX * zoom;
+  VIEW_H = VIEW_W * VIEW_ASPECT;
+  cam.x += (oldW - VIEW_W) / 2;
+  cam.y += (oldH - VIEW_H) / 2;
+  viewScale = renderedW / VIEW_W;
+  clampCam(); requestGridPaint();
+}
+// Smooth wheel zoom: ease toward the target a bit each frame.
+let zoomAnimRunning = false;
+function zoomStep() {
+  const d = zoomTarget - zoom;
+  const next = Math.abs(d) < 0.005 ? zoomTarget : zoom + d * 0.2;
+  const oldW = VIEW_W, oldH = VIEW_H;
+  zoom = next;
+  VIEW_W = ZOOM_UNIT_PX * zoom;
+  VIEW_H = VIEW_W * VIEW_ASPECT;
+  cam.x += (oldW - VIEW_W) / 2;
+  cam.y += (oldH - VIEW_H) / 2;
+  viewScale = renderedW / VIEW_W;
+  clampCam(); requestGridPaint();
+  if (zoom !== zoomTarget) requestAnimationFrame(zoomStep);
+  else zoomAnimRunning = false;
+}
+function onWheel(e) {
+  e.preventDefault();
+  zoomTarget = clamp(zoomTarget + (e.deltaY > 0 ? 0.25 : -0.25), 1, 3);
+  if (!zoomAnimRunning) { zoomAnimRunning = true; requestAnimationFrame(zoomStep); }
 }
 
 // Map a mouse event to { region, local px (lx,ly), local cells (lrow,lcol) }.
-// region === null means the pointer is over void / the outer margin.
 function pointFromEvent(e) {
-  const r = $("#grid").getBoundingClientRect();       // reflects transform + scale
-  const s = r.width / WORLD_W;                         // rendered px per logical px
-  const wx = clamp((e.clientX - r.left) / s, 0, WORLD_W - 1);
-  const wy = clamp((e.clientY - r.top) / s, 0, WORLD_H - 1);
+  const r = cvs.getBoundingClientRect();
+  const wx = clamp(cam.x + (e.clientX - r.left) / viewScale, 0, WORLD_W - 1);
+  const wy = clamp(cam.y + (e.clientY - r.top) / viewScale, 0, WORLD_H - 1);
   const gx = wx - OFF, gy = wy - OFF;                  // global play-space px
   const gRow = Math.floor(gy / CELL), gCol = Math.floor(gx / CELL);
   const region = (gx >= 0 && gy >= 0) ? E.regionAt(gRow, gCol) : null;
@@ -125,11 +200,11 @@ function nodeAtCell(region, row, col) {
 }
 // Region under the camera's centre — used for the location pill.
 function regionAtCamCentre() {
-  const gx = cam.x + VIEW_PX / 2 - OFF, gy = cam.y + VIEW_PX / 2 - OFF;
+  const gx = cam.x + VIEW_W / 2 - OFF, gy = cam.y + VIEW_H / 2 - OFF;
   return E.regionAt(Math.floor(gy / CELL), Math.floor(gx / CELL));
 }
 
-// ---- render coalescing --------------------------------------
+// ---- paint scheduling ----------------------------------------
 let renderQueued = false;
 function requestRender() {
   if (renderQueued) return;
@@ -138,182 +213,120 @@ function requestRender() {
 }
 window.requestRender = requestRender;
 
-// Coalesced grid-only repaint (max one per frame) — used while panning /
-// moving a placement preview so mousemove bursts don't rebuild the DOM
-// dozens of times per frame.
-let gridPaintQueued = false;
+// Coalesced canvas repaint (max one per frame). While something on screen is
+// animating (hit squash, fish bob, AUTO badge) it self-chains frames.
+let drawQueued = false;
 function requestGridPaint() {
-  if (gridPaintQueued) return;
-  gridPaintQueued = true;
-  requestAnimationFrame(() => { gridPaintQueued = false; renderGrid(); });
+  if (drawQueued) return;
+  drawQueued = true;
+  requestAnimationFrame(() => {
+    drawQueued = false;
+    drawWorld();
+    if (animActive()) requestGridPaint();
+  });
 }
 
-// Whether something animated is on camera (a surfaced fish's countdown or an
-// AUTO badge) — only then does an "idle" tick still need to repaint.
-function needsLiveRepaint() {
+// Anything time-animated visible right now?
+function animActive() {
   const now = Date.now();
-  const fr = 4 * CELL;
-  const l = cam.x - fr, t = cam.y - fr, r = cam.x + VIEW_PX + fr, b = cam.y + VIEW_PX + fr;
+  const fr = 2 * CELL;
+  const l = cam.x - fr, t = cam.y - fr, r = cam.x + VIEW_W + fr, b = cam.y + VIEW_H + fr;
   for (const key of Object.keys(DD.WORLD.regions)) {
-    if (!E.isAreaUnlocked(key)) continue;
     const p = regionPx(key);
     if (p.x > r || p.x + PLAY_W < l || p.y > b || p.y + PLAY_W < t) continue;
+    const unlocked = E.isAreaUnlocked(key);
     for (const n of window.GS.areas[key].nodes) {
-      if (!(n.surfaceUntil > now || n.autoFlash > now)) continue;
       const nx = n.col * CELL + p.x, ny = n.row * CELL + p.y;
-      if (nx < r && nx + n.size * CELL > l && ny < b && ny + n.size * CELL > t) return true;
+      if (nx > r || nx + n.size * CELL < l || ny > b || ny + n.size * CELL < t) continue;
+      if (n.hitAt && now - n.hitAt < 200) return true;
+      if (unlocked && n.surfaceUntil > now) return true;   // bob + countdown
+      if (n.autoFlash > now) return true;
     }
   }
   return false;
 }
+// Tick gate: repaint on "idle" ticks only when something animated is visible.
+function needsLiveRepaint() { return animActive(); }
 
-// ---- top bar ------------------------------------------------
+// ---- top bar --------------------------------------------------
 function renderTopBar() {
   const key = regionAtCamCentre();
   const a = key ? DD.AREAS[key] : null;
-  $("#area-name").innerHTML = a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds";
+  $("#area-name").innerHTML = (a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds")
+    + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "");
   $("#hand-count").textContent = `${E.handTotal()}/${E.handCap()}`;
   $("#build-btn").classList.toggle("on", window.GS.build.open);
+  $("#demolish-btn").classList.toggle("on", demolishMode);
   $("#debug-btn").classList.toggle("on", debugShow);
 }
 
-// ---- world --------------------------------------------------
+// ---- world painter --------------------------------------------
 function spriteSize(size) { return size >= 4 ? size * 30 : size >= 3 ? 90 : size >= 2 ? 72 : 30; }
 
-// Rebuilds only the passive grid contents (zones/buildings/nodes/ground/
-// preview). None of these are hover/click targets, so this can run every
-// tick. The interactive arrows + build menu are rendered separately and
-// NOT rebuilt on ticks — otherwise they flicker and drop clicks.
-// Render one region's contents at its world-px offset (ox, oy).
-// Only elements intersecting the camera rect (view) are appended — the world
-// is huge now, and painting everything each tick is what stalled machines.
-function renderRegion(grid, key, ox, oy, now, view) {
-  const cfg = DD.AREAS[key];
-  const areaState = window.GS.areas[key];
-  const unlocked = E.isAreaUnlocked(key);
-  const seen = (x, y, w, h) => x < view.r && x + w > view.l && y < view.b && y + h > view.t;
-
-  // ground tint + frame for the region
-  const bg = el("div", "region-bg");
-  bg.dataset.area = key;
-  bg.style.left = ox + "px"; bg.style.top = oy + "px";
-  bg.style.width = PLAY_W + "px"; bg.style.height = PLAY_W + "px";
-  grid.appendChild(bg);
-  const frame = el("div", "play-frame");
-  frame.style.left = ox + "px"; frame.style.top = oy + "px";
-  frame.style.width = PLAY_W + "px"; frame.style.height = PLAY_W + "px";
-  grid.appendChild(frame);
-
-  // reserved wild-land zones (no building allowed there)
-  const zoneBox = (z, cls) => {
-    const zx = z.c0 * CELL + ox, zy = z.r0 * CELL + oy;
-    const zw = (z.c1 - z.c0 + 1) * CELL, zh = (z.r1 - z.r0 + 1) * CELL;
-    if (!seen(zx, zy, zw, zh)) return;
-    const zd = el("div", cls);
-    zd.style.left = zx + "px"; zd.style.top = zy + "px";
-    zd.style.width = zw + "px"; zd.style.height = zh + "px";
-    grid.appendChild(zd);
-  };
-  for (const z of E.noBuildRects(key)) zoneBox(z, "zone");
-  for (const gen of cfg.generators || [])
-    for (const z of E.zoneRects(gen.zone)) zoneBox(z, "zone gen-" + gen.item);
-
-  // buildings (ghosts + built)
-  const B = G.building;
-  for (const b of areaState.buildings) {
-    if (!seen(b.col * CELL + ox, b.row * CELL + oy, B.w * CELL, B.h * CELL)) continue;
-    const bCfg = DD.BUILDINGS[b.type];
-    const bd = el("div", "building" + (b.built ? " built" : " ghost"));
-    bd.style.left = b.col * CELL + ox + "px";
-    bd.style.top = b.row * CELL + oy + "px";
-    bd.style.width = B.w * CELL + "px";
-    bd.style.height = B.h * CELL + "px";
-    let inner;
-    if (b.built && b.type === "storehouse") {
-      inner = `<span class="b-ico">${b.item ? E.itemIcon(b.item) : bCfg.icon}</span>` +
-        `<span class="b-name">${b.item ? E.itemName(b.item) + " ×" + b.qty : "empty"}</span>`;
-    } else {
-      inner = `<span class="b-ico">${bCfg.icon}</span><span class="b-name">${bCfg.name}</span>`;
-      if (!b.built) {
-        const needs = E.buildingNeeds(b);
-        const list = Object.entries(needs).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
-        inner += `<span class="b-needs">${list || "…"}</span>`;
-      }
-    }
-    bd.innerHTML = inner;
-    grid.appendChild(bd);
-  }
-
-  // resource nodes (trees, bushes, crops, ore, fish, quarry)
-  for (const node of areaState.nodes) {
-    if (!seen(node.col * CELL + ox, node.row * CELL + oy - 3 * CELL, // sprites overflow upward
-              node.size * CELL, (node.size + 3) * CELL)) continue;
-    const nd = el("div", "node ready" + (node.kind ? " k-" + node.kind : ""));
-    // ONE pulse per click: a rebuilt element resumes the squash mid-flight
-    // (negative delay = elapsed time), so unrelated re-renders don't replay
-    // it — only a new click (fresh hitAt) restarts from zero.
-    if (node.hitAt && now - node.hitAt < 180) {
-      nd.classList.add("hit");
-      nd.style.setProperty("--hit-delay", `${-(now - node.hitAt)}ms`);
-    }
-    nd.style.left = node.col * CELL + ox + "px";
-    nd.style.top = node.row * CELL + oy + "px";
-    nd.style.width = node.size * CELL + "px";
-    nd.style.height = node.size * CELL + "px";
-    nd.style.zIndex = node.row + 5;
-    const sprite = node.sprite || (DD.TIER_SPRITES[key] || [])[node.tier - 1] || cfg.icon;
-    let inner = `<span class="sprite" style="font-size:${spriteSize(node.size)}px">${sprite}</span>`;
-    if (debugShow && node.interaction === "quarry") {
-      inner += `<span class="hits">${node.clicks || 0}/${E.quarryClicksPerDrop(key, node)} ${cfg.actionIcon}</span>`;
-    } else if (debugShow && (node.interaction === "chop" || node.interaction === "break") && node.hitsLeft > 0) {
-      inner += `<span class="hits">${node.hitsLeft} ${cfg.actionIcon}</span>`;
-    }
-    if (unlocked && node.interaction === "surface" && node.surfaceUntil) {
-      nd.classList.add("surface");
-      inner += `<span class="cd-timer catch">${Math.max(0, (node.surfaceUntil - now) / 1000).toFixed(1)}s</span>`;
-    }
-    if (node.autoFlash > now) nd.classList.add("auto");
-    nd.innerHTML = inner;
-    grid.appendChild(nd);
-  }
-
-  // ground items — one icon per item (they never stack)
-  for (const g of areaState.ground) {
-    if (!seen(g.x + ox - 16, g.y + oy - 16, 32, 32)) continue;
-    const gd = el("div", "ground");
-    gd.style.left = g.x + ox + "px";
-    gd.style.top = g.y + oy + "px";
-    gd.innerHTML = `<span class="g-ico">${E.itemIcon(g.item)}</span>`;
-    grid.appendChild(gd);
-  }
-
-  // locked regions are visible but dimmed behind a lock veil
-  if (!unlocked) {
-    const veil = el("div", "region-lock", "🔒");
-    veil.style.left = ox + "px"; veil.style.top = oy + "px";
-    veil.style.width = PLAY_W + "px"; veil.style.height = PLAY_W + "px";
-    grid.appendChild(veil);
-  }
+// One-pulse squash driven purely by hitAt time — re-draws resume mid-pulse
+// automatically, and a fresh click (new hitAt) restarts it from zero.
+function hitSquash(node, now) {
+  const t = now - (node.hitAt || 0);
+  if (t < 0 || t >= 180) return null;
+  const p = t / 180;
+  let sy;
+  if (p < 0.35) sy = 1 - (p / 0.35) * 0.16;
+  else if (p < 0.7) sy = 0.84 + ((p - 0.35) / 0.35) * 0.22;
+  else sy = 1.06 - ((p - 0.7) / 0.3) * 0.06;
+  return { sy, sx: 1 + (1 - sy) * 0.4 };
 }
 
-function renderGrid() {
-  const grid = $("#grid");
-  grid.style.width = WORLD_W + "px";
-  grid.style.height = WORLD_H + "px";
-  grid.style.backgroundSize = `${CELL}px ${CELL}px`;
-  applyCamera();
-  grid.innerHTML = "";
+let lastDrawError = null;   // surfaced by the F9 diagnostic
+function drawWorld() {
+  if (!ctx) return;
+  try { drawWorldInner(); }
+  catch (err) { lastDrawError = String((err && err.stack) || err); }
+}
+function drawWorldInner() {
+  const s = viewScale, now = Date.now();
+  const vw = renderedW, vh = renderedW * VIEW_ASPECT;
+  const X = wx => (wx - cam.x) * s, Y = wy => (wy - cam.y) * s;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // hard-reset every stateful knob: a leak (or an exception that skipped a
+  // restore) must never carry translucency/dashes/shadows into next frames —
+  // that manifests as a permanent semi-transparent film over the world
+  ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
+  ctx.shadowBlur = 0;
+  ctx.filter = "none";
+  ctx.globalCompositeOperation = "source-over";
 
-  const now = Date.now();
-  // Cull to the camera view (+4-cell fringe): first whole regions, then every
-  // element inside renderRegion. Panning repaints per frame, so edges fill in.
+  // void + faint world-aligned grid lines
+  ctx.fillStyle = C.void;
+  ctx.fillRect(0, 0, vw, vh);
+  const step = CELL * s;
+  if (step >= 7) {
+    ctx.strokeStyle = C.gridLine; ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = (Math.ceil(cam.x / CELL) * CELL - cam.x) * s; x <= vw; x += step) { ctx.moveTo(x, 0); ctx.lineTo(x, vh); }
+    for (let y = (Math.ceil(cam.y / CELL) * CELL - cam.y) * s; y <= vh; y += step) { ctx.moveTo(0, y); ctx.lineTo(vw, y); }
+    ctx.stroke();
+  }
+
   const fr = 4 * CELL;
-  const view = { l: cam.x - fr, t: cam.y - fr, r: cam.x + VIEW_PX + fr, b: cam.y + VIEW_PX + fr };
+  const view = { l: cam.x - fr, t: cam.y - fr, r: cam.x + VIEW_W + fr, b: cam.y + VIEW_H + fr };
+  const visible = [];
   for (const key of Object.keys(DD.WORLD.regions)) {
     const p = regionPx(key);
     if (p.x > view.r || p.x + PLAY_W < view.l || p.y > view.b || p.y + PLAY_W < view.t) continue;
-    renderRegion(grid, key, p.x, p.y, now, view);
+    visible.push({ key, ox: p.x, oy: p.y, unlocked: E.isAreaUnlocked(key) });
   }
+  // LAYERED painting across ALL regions: every ground first, then locked
+  // stacks (objects under their veil), then every unlocked region's objects,
+  // then all item icons on the very top. A later-drawn region's background or
+  // veil can never cover an earlier region's sprites this way.
+  for (const v of visible) drawRegionGround(v.key, v.ox, v.oy, view, s, X, Y);
+  for (const v of visible) if (!v.unlocked) {
+    drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
+    drawRegionVeil(v.ox, v.oy, s, X, Y);
+  }
+  for (const v of visible) if (v.unlocked) drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
+  for (const v of visible) if (v.unlocked) drawRegionItems(v.key, v.ox, v.oy, view, s, X, Y);
 
   // placement preview (only in an unlocked region)
   if (window.GS.build.placing && cursor.over && cursor.region) {
@@ -321,17 +334,192 @@ function renderGrid() {
     const ok = E.isAreaUnlocked(cursor.region) &&
       E.canPlaceBuilding(cursor.region, cursor.lrow, cursor.lcol);
     const p = regionPx(cursor.region);
-    const pv = el("div", "preview " + (ok ? "ok" : "bad"));
-    pv.style.left = cursor.lcol * CELL + p.x + "px";
-    pv.style.top = cursor.lrow * CELL + p.y + "px";
-    pv.style.width = B.w * CELL + "px";
-    pv.style.height = B.h * CELL + "px";
-    grid.appendChild(pv);
+    const px = X(p.x + cursor.lcol * CELL), py = Y(p.y + cursor.lrow * CELL);
+    ctx.fillStyle = ok ? "rgba(74,222,128,.25)" : "rgba(248,113,113,.25)";
+    ctx.strokeStyle = ok ? C.accent : C.danger;
+    ctx.lineWidth = 2;
+    ctx.fillRect(px, py, B.w * CELL * s, B.h * CELL * s);
+    ctx.strokeRect(px, py, B.w * CELL * s, B.h * CELL * s);
   }
 }
 
-// Edge buttons for LOCKED neighbour regions: pay to open them (the map is
-// continuous — once open you simply pan across; no travel arrows).
+// LAYER 1 — flat ground: region tint, zone tints, frame.
+function drawRegionGround(key, ox, oy, view, s, X, Y) {
+  const cfg = DD.AREAS[key];
+  const seen = (x, y, w, h) => x < view.r && x + w > view.l && y < view.b && y + h > view.t;
+
+  ctx.fillStyle = C.region[key] || C.region.center;
+  ctx.fillRect(X(ox), Y(oy), PLAY_W * s, PLAY_W * s);
+
+  const zoneRect = (z, fill, edge) => {
+    const zx = z.c0 * CELL + ox, zy = z.r0 * CELL + oy;
+    const zw = (z.c1 - z.c0 + 1) * CELL, zh = (z.r1 - z.r0 + 1) * CELL;
+    if (!seen(zx, zy, zw, zh)) return;
+    ctx.fillStyle = fill;
+    ctx.fillRect(X(zx), Y(zy), zw * s, zh * s);
+    if (edge) {
+      ctx.strokeStyle = edge; ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.strokeRect(X(zx), Y(zy), zw * s, zh * s);
+      ctx.setLineDash([]);
+    }
+  };
+  for (const z of E.noBuildRects(key)) zoneRect(z, C.zone, C.zoneEdge);
+  for (const gen of cfg.generators || [])
+    for (const z of E.zoneRects(gen.zone))
+      zoneRect(z, gen.item === "clay" ? C.clay : C.sand, "rgba(220,190,120,.4)");
+
+  ctx.strokeStyle = C.frame; ctx.lineWidth = 2;
+  ctx.strokeRect(X(ox), Y(oy), PLAY_W * s, PLAY_W * s);
+}
+
+// LAYER 2 — objects: buildings and resource nodes.
+// phase: "all" | "noTrees" (skip tree nodes) | "treesOnly" (only tree nodes)
+function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
+  const cfg = DD.AREAS[key];
+  const st = window.GS.areas[key];
+  const unlocked = E.isAreaUnlocked(key);
+  const seen = (x, y, w, h) => x < view.r && x + w > view.l && y < view.b && y + h > view.t;
+
+  if (phase === "treesOnly") { drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlocked, seen); return; }
+
+  // buildings (ghosts + built)
+  for (const b of st.buildings) {
+    const bs = E.buildingSize(b.type);
+    const bx = b.col * CELL + ox, by = b.row * CELL + oy;
+    const bw = bs.w * CELL, bh = bs.h * CELL;
+    if (!seen(bx, by, bw, bh)) continue;
+    const bCfg = DD.BUILDINGS[b.type];
+    const isAltar = b.type === "center";
+    ctx.fillStyle = !b.built ? C.ghost : isAltar ? C.altar : C.built;
+    ctx.strokeStyle = !b.built ? C.accent : isAltar ? C.gold : C.line;
+    ctx.lineWidth = Math.max(1.5, 2 * s / 0.7);
+    if (!b.built) ctx.setLineDash([6, 4]);
+    ctx.fillRect(X(bx), Y(by), bw * s, bh * s);
+    ctx.strokeRect(X(bx), Y(by), bw * s, bh * s);
+    ctx.setLineDash([]);
+    const cxp = X(bx + bw / 2);
+    ctx.textAlign = "center";
+    if (b.built && isAltar) {
+      const job = window.GS.upgradeJob;
+      ctx.fillStyle = C.text;
+      ctx.font = `${56 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.38));
+      ctx.fillStyle = C.text; ctx.font = `800 ${24 * s}px ${TEXT_FONT}`;
+      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.68));
+      if (job) {
+        ctx.fillStyle = C.gold; ctx.font = `800 ${20 * s}px ${TEXT_FONT}`;
+        ctx.fillText(`${job.qty - job.paid} ${E.itemIcon(job.item)}`, cxp, Y(by + bh * 0.86));
+      }
+    } else if (b.built && b.type === "storehouse") {
+      ctx.fillStyle = C.text;
+      ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
+      ctx.fillText(b.item ? E.itemIcon(b.item) : bCfg.icon, cxp, Y(by + bh * 0.4));
+      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
+      ctx.fillText(b.item ? `${E.itemName(b.item)} ×${b.qty}` : "empty", cxp, Y(by + bh * 0.78));
+    } else {
+      ctx.fillStyle = C.text;
+      ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
+      ctx.globalAlpha = b.built ? 1 : 0.7;
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.38));
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
+      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.66));
+      if (!b.built) {
+        const needs = E.buildingNeeds(b);
+        const list = Object.entries(needs).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+        ctx.fillStyle = C.gold; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
+        ctx.fillText(list || "…", cxp, Y(by + bh * 0.86));
+      }
+    }
+  }
+
+  drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlocked, seen);
+}
+
+// resource nodes, back-to-front by row so nearer sprites overlap correctly
+function drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlocked, seen) {
+  const nodes = st.nodes.filter(n => {
+    if (phase === "noTrees" && n.kind === "tree") return false;
+    if (phase === "treesOnly" && n.kind !== "tree") return false;
+    return seen(n.col * CELL + ox, n.row * CELL + oy - 3 * CELL, n.size * CELL, (n.size + 3) * CELL);
+  }).sort((a, b) => a.row - b.row);
+  for (const node of nodes) {
+    const w = node.size * CELL;
+    const bx = ox + node.col * CELL + w / 2;          // sprite base (bottom-centre)
+    let by = oy + (node.row + node.size) * CELL - 2;
+    const interactive = unlocked && !node.deco;
+
+    // fish bob
+    if (unlocked && node.interaction === "surface" && node.surfaceUntil > now)
+      by -= Math.abs(Math.sin(now / 300)) * 5;
+
+    // ground pad under interactive nodes
+    if (interactive) {
+      ctx.fillStyle = "rgba(74,222,128,.16)";
+      ctx.beginPath();
+      ctx.ellipse(X(bx), Y(oy + (node.row + node.size) * CELL - 2), w * 0.42 * s, 7 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const sprite = node.sprite || (DD.TIER_SPRITES[key] || [])[node.tier - 1] || cfg.icon;
+    // deco border trees are oversized + jittered (scenery, not gameplay)
+    const fpx = (node.deco ? 30 * (node.decoScale || 1.8) : spriteSize(node.size)) * s;
+    const sq = hitSquash(node, now);
+    ctx.save();
+    ctx.translate(X(bx + (node.decoDx || 0)), Y(by + (node.decoDy || 0)));
+    if (sq) ctx.scale(sq.sx, sq.sy);                  // squash from the ground up
+    if (node.deco) ctx.globalAlpha = 0.55;
+    ctx.fillStyle = C.text;   // if a browser ever silhouettes the glyph, keep it bright
+    ctx.font = `${fpx}px ${EMOJI_FONT}`;
+    ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.fillText(sprite, 0, 0);
+    ctx.restore();
+
+    // overlays
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    if (debugShow && node.interaction === "quarry") {
+      ctx.fillStyle = C.gold; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillText(`${node.clicks || 0}/${node.clicksPerDrop || 5}`, X(bx), Y(by - w - 6));
+    } else if (debugShow && (node.interaction === "chop" || node.interaction === "break") && node.hitsLeft > 0) {
+      ctx.fillStyle = C.gold; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillText(`${node.hitsLeft}`, X(bx), Y(by - w - 6));
+    }
+    if (unlocked && node.interaction === "surface" && node.surfaceUntil) {
+      ctx.fillStyle = C.danger; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillText(`${Math.max(0, (node.surfaceUntil - now) / 1000).toFixed(1)}s`, X(bx), Y(by + 10));
+    }
+    if (node.autoFlash > now) {
+      ctx.fillStyle = C.gold; ctx.font = `800 ${9 * s}px ${TEXT_FONT}`;
+      ctx.fillText("AUTO", X(bx + w / 2), Y(by - w - 2));
+    }
+  }
+}
+
+// LAYER 3 — item icons on the very top (one emoji per dropped item).
+function drawRegionItems(key, ox, oy, view, s, X, Y) {
+  const st = window.GS.areas[key];
+  const seen = (x, y, w, h) => x < view.r && x + w > view.l && y < view.b && y + h > view.t;
+  ctx.fillStyle = C.text;
+  ctx.font = `${18 * s}px ${EMOJI_FONT}`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  for (const g of st.ground) {
+    if (!seen(g.x + ox - 16, g.y + oy - 16, 32, 32)) continue;
+    ctx.fillText(E.itemIcon(g.item), X(ox + g.x), Y(oy + g.y));
+  }
+}
+
+// Veil over a locked region (drawn right after its own objects).
+function drawRegionVeil(ox, oy, s, X, Y) {
+  ctx.fillStyle = C.veil;
+  ctx.fillRect(X(ox), Y(oy), PLAY_W * s, PLAY_W * s);
+  ctx.fillStyle = C.text;
+  ctx.font = `${64 * s}px ${EMOJI_FONT}`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText("🔒", X(ox + PLAY_W / 2), Y(oy + PLAY_W / 2));
+}
+
+// Edge buttons for LOCKED neighbour regions (DOM overlay — event-driven UI).
 function renderUnlockButtons() {
   const wrap = $("#arrows");
   wrap.innerHTML = "";
@@ -355,11 +543,9 @@ function renderHandCursor() {
   hc.classList.remove("hidden");
   hc.style.left = cursor.cx + "px";
   hc.style.top = cursor.cy + "px";
-  const top = hand[0];
-  hc.innerHTML =
-    `<span class="hc-ico">${E.itemIcon(top.item)}</span>` +
-    `<span class="hc-qty">${top.qty}</span>` +
-    (hand.length > 1 ? `<span class="hc-more">+${hand.length - 1}</span>` : "");
+  hc.innerHTML = hand.map((s, i) =>
+    `<span class="hc-stack${i === 0 ? " first" : ""}">${s.qty}<span class="hc-ico">${E.itemIcon(s.item)}</span></span>`
+  ).join("");
 }
 
 // ---- build menu ---------------------------------------------
@@ -377,63 +563,218 @@ function renderBuildMenu() {
   }
 }
 
-// ---- upgrades modal (paid from hand) ------------------------
-function upgradeRow(areaKey, type, label, descFn) {
-  const cost = E.upgradeCost(areaKey, type);
-  const up = window.GS.areas[areaKey].upgrades;
-  const row = el("div", "up-row");
-  let status, maxed = false;
-  if (type === "tier") { maxed = up.maxTier >= 5; status = `Tier ${up.maxTier}/5`; }
-  if (type === "speed") { maxed = up.speed >= 3; status = `Lv ${up.speed}/3`; }
-  if (type === "harvestSpeed") { maxed = up.harvestSpeed >= 3; status = `Lv ${up.harvestSpeed}/3`; }
-  if (type === "automation") { maxed = up.automation >= 3; status = `Lv ${up.automation}/3`; }
-  if (type === "quarry") { maxed = (up.quarry || 0) >= 3; status = `Lv ${up.quarry || 0}/3`; }
-  // Upgrades are funded incrementally from the hand: show remaining cost and
-  // any progress already paid. The button is active if the hand holds any of
-  // the resource (it contributes as much as it can each click).
-  let btnLabel = "MAX", canPay = false, progress = "";
-  if (!maxed) {
-    const [item, qty] = Object.entries(cost)[0];
-    const paid = E.upgradePaid(areaKey, type);
-    btnLabel = `${qty - paid} ${E.itemIcon(item)}`;
-    canPay = E.handCount(item) > 0;
-    if (paid > 0) progress = ` <span class="up-prog">paid ${paid}/${qty}</span>`;
+// ---- upgrade TREE (canvas, nodebuster-style) -----------------
+// Free-form node positions (px, from data), curved edges, radial guide rings.
+// Visibility by distance from OWNED nodes: <=1 full, ==2 "?", >=3 hidden
+// unless the tree's debug toggle reveals them.
+let treeDebug = false;
+let treeCam = null;         // screen position of the tree's (0,0)
+let treeHoverId = null;
+const TREE_R = 26;          // half-size of a node square
+
+function treeStates() {
+  const nodes = DD.UPGRADE_TREE;
+  const adj = {}; nodes.forEach(n => adj[n.id] = new Set());
+  nodes.forEach(n => (n.links || []).forEach(l => { adj[n.id].add(l); adj[l].add(n.id); }));
+  const owned = new Set(nodes.filter(n => E.upgradeLevel(n.area, n.type).lvl > 0).map(n => n.id));
+  const src = owned.size ? [...owned] : ["hand"];
+  const dist = {}; src.forEach(id => dist[id] = 0);
+  const q = [...src];
+  while (q.length) { const id = q.shift(); for (const nb of adj[id]) if (!(nb in dist)) { dist[nb] = dist[id] + 1; q.push(nb); } }
+  const info = {};
+  for (const n of nodes) {
+    const d = dist[n.id] ?? 99;
+    const tier = d <= 1 ? "full" : d === 2 ? "mystery" : "hidden";
+    info[n.id] = {
+      n, tier,
+      visible: tier !== "hidden" || treeDebug,
+      selectable: tier === "full" && (n.id === "hand" || owned.has(n.id) || [...adj[n.id]].some(a => owned.has(a))),
+      owned: owned.has(n.id),
+    };
   }
-  row.innerHTML = `<div class="up-info"><b>${label}</b> <span class="up-status">${status}${progress}</span><div class="up-desc">${descFn(up)}</div></div>`;
-  const btn = el("button", "up-buy" + (maxed ? " maxed" : canPay ? "" : " disabled"), btnLabel);
-  if (!maxed) btn.onclick = () => { if (E.buyUpgrade(areaKey, type)) render(); };
-  row.appendChild(btn);
-  return row;
+  return info;
 }
-function renderUpgrades() {
+function treeBBox() {
+  let minX = 0, minY = 0, maxX = 0, maxY = 0;
+  for (const n of DD.UPGRADE_TREE) {
+    minX = Math.min(minX, n.x); maxX = Math.max(maxX, n.x);
+    minY = Math.min(minY, n.y); maxY = Math.max(maxY, n.y);
+  }
+  return { minX, minY, maxX, maxY };
+}
+function sizeTreeCanvas() {
+  if (!tcvs) return;
   const body = $("#upgrades-body");
-  body.innerHTML = "";
-  for (const [areaKey, cfg] of Object.entries(DD.AREAS)) {
-    const unlocked = E.isAreaUnlocked(areaKey);
-    const sec = el("div", "up-area" + (unlocked ? "" : " dim"));
-    sec.appendChild(el("h3", null, `${cfg.icon} ${cfg.name}${unlocked ? "" : " 🔒"} <span class="up-bank">✋ ${E.itemIcon(cfg.base)} ${E.handCount(cfg.base)}</span>`));
-    if (!unlocked) { sec.appendChild(el("div", "up-desc", "Unlock this region at its border first.")); body.appendChild(sec); continue; }
-    sec.appendChild(upgradeRow(areaKey, "tier", "Unlock Next Tier",
-      up => up.maxTier >= 5 ? "All tiers unlocked." : `Enables ${DD.TIER_LABELS[up.maxTier]} ${cfg.tiers[up.maxTier].name}.`));
-    sec.appendChild(upgradeRow(areaKey, "speed", cfg.speedLabel,
-      up => `${cfg.timerLabel} timers −20% each (now ×${Math.pow(0.8, up.speed).toFixed(2)}).`));
-    sec.appendChild(upgradeRow(areaKey, "harvestSpeed", "Action Speed",
-      up => `Chop/mine/hold swings −20% each (now ×${Math.pow(0.8, up.harvestSpeed).toFixed(2)}).`));
-    if ((cfg.fixtures || []).some(f => f.kind === "quarry")) {
-      const base = cfg.fixtures.find(f => f.kind === "quarry").clicksPerDrop;
-      sec.appendChild(upgradeRow(areaKey, "quarry", "Quarry Yield",
-        up => `1 stone every ${Math.max(1, base - (up.quarry || 0))} clicks.`));
+  dpr = window.devicePixelRatio || 1;
+  tcvs.width = Math.round(body.clientWidth * dpr);
+  tcvs.height = Math.round(body.clientHeight * dpr);
+  tcvs.style.width = (tcvs.width / dpr) + "px";
+  tcvs.style.height = (tcvs.height / dpr) + "px";
+}
+function clampTreeCam() {
+  const body = $("#upgrades-body");
+  const bw = body.clientWidth, bh = body.clientHeight;
+  const bb = treeBBox(), m = 90;
+  treeCam.x = clamp(treeCam.x, Math.min(bw / 2, bw - m - bb.maxX), Math.max(bw / 2, m - bb.minX));
+  treeCam.y = clamp(treeCam.y, Math.min(bh / 2, bh - m - bb.maxY), Math.max(bh / 2, m - bb.minY));
+}
+// Nodebuster-style tooltip: name / "Level: x/y" / description, with a white
+// MAX bar when complete or the cost line otherwise.
+function treeTip(i) {
+  if (i.tier === "mystery" && !treeDebug) return `<div class="t-name">???</div><div class="t-desc">Undiscovered upgrade</div>`;
+  const { lvl, max } = E.upgradeLevel(i.n.area, i.n.type);
+  const cost = E.upgradeCost(i.n.area, i.n.type);
+  const job = window.GS.upgradeJob;
+  const isSel = job && job.area === i.n.area && job.type === i.n.type;
+  const costTxt = cost ? Object.entries(cost).map(([it, qy]) => `${qy} ${E.itemName(it)}`).join(", ") : null;
+  return `<div class="t-name">${i.n.name}</div>` +
+    `<div class="t-lv">Level: ${lvl}/${max}</div>` +
+    `<div class="t-desc">${i.n.desc}</div>` +
+    (isSel ? `<div class="t-fed">Selected — fed ${job.paid}/${job.qty}</div>` : "") +
+    (costTxt ? `<div class="t-cost">Cost: ${costTxt}</div>` : `<div class="t-max">MAX</div>`);
+}
+function drawTree() {
+  if (!tctx || !upgradesOpen) return;
+  const body = $("#upgrades-body");
+  const bw = body.clientWidth, bh = body.clientHeight;
+  if (!treeCam) treeCam = { x: bw / 2, y: bh / 2 };
+  clampTreeCam();
+  const info = treeStates();
+  const nodes = DD.UPGRADE_TREE;
+  const P = n => ({ x: treeCam.x + n.x, y: treeCam.y + n.y });
+
+  tctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  tctx.globalAlpha = 1; tctx.setLineDash([]); tctx.shadowBlur = 0;
+  // dark board (nodebuster-style)
+  tctx.fillStyle = "#232926";
+  tctx.fillRect(0, 0, bw, bh);
+
+  // thick pale connector lines between visible nodes
+  for (const n of nodes) {
+    for (const l of n.links || []) {
+      const a = info[n.id], b = info[l];
+      if (!a.visible || !b.visible) continue;
+      const p1 = P(n), p2 = P(nodes.find(m => m.id === l));
+      tctx.strokeStyle = a.owned && b.owned ? "rgba(225,232,224,.45)" : "rgba(225,232,224,.22)";
+      tctx.lineWidth = 5;
+      tctx.beginPath();
+      tctx.moveTo(p1.x, p1.y);
+      tctx.lineTo(p2.x, p2.y);
+      tctx.stroke();
     }
-    sec.appendChild(upgradeRow(areaKey, "automation", "Automation",
-      up => up.automation === 0 ? "Auto-harvests nodes." : `Harvests ${DD.AUTOMATION_CLICKS[up.automation]} node(s)/tick.`));
-    body.appendChild(sec);
+  }
+
+  // square nodes with state-coloured borders
+  const job = window.GS.upgradeJob;
+  const S = TREE_R;                                  // half-size of the square
+  for (const n of nodes) {
+    const i = info[n.id];
+    if (!i.visible) continue;
+    const p = P(n);
+    const { lvl, max } = E.upgradeLevel(n.area, n.type);
+    const cost = E.upgradeCost(n.area, n.type);
+    const isSel = job && job.area === n.area && job.type === n.type;
+    const hovered = treeHoverId === n.id;
+    const mystery = i.tier === "mystery" && !treeDebug;
+
+    // GREEN = can be upgraded now, GOLD = fully complete, RED = locked
+    const ring = mystery ? C.danger
+      : !cost ? C.gold
+      : i.selectable ? C.accent
+      : C.danger;
+    tctx.globalAlpha = mystery ? 0.75 : (i.tier === "full" && !i.selectable && !i.owned) ? 0.6 : 1;
+    tctx.fillStyle = hovered && i.selectable ? "#171c1f" : "#0d1113";
+    tctx.strokeStyle = ring;
+    tctx.lineWidth = 3;
+    tctx.beginPath();
+    tctx.roundRect(p.x - S, p.y - S, S * 2, S * 2, 7);
+    tctx.fill();
+    tctx.stroke();
+
+    tctx.textAlign = "center";
+    if (mystery) {
+      tctx.fillStyle = C.danger; tctx.font = `800 26px ${TEXT_FONT}`; tctx.textBaseline = "middle";
+      tctx.fillText("?", p.x, p.y);
+    } else {
+      tctx.fillStyle = C.text;
+      tctx.font = `24px ${EMOJI_FONT}`; tctx.textBaseline = "middle";
+      tctx.fillText(n.icon, p.x, p.y - 3);
+      tctx.fillStyle = ring;
+      tctx.font = `800 9px ${TEXT_FONT}`;
+      tctx.fillText(`${lvl}/${max}`, p.x, p.y + S - 8);
+    }
+    tctx.globalAlpha = 1;
+
+    // white corner brackets on hover / around the active job (selection frame)
+    if (hovered || isSel) {
+      const o = S + 6, L = 11;
+      tctx.strokeStyle = isSel && !hovered ? C.gold : "#e8ecef";
+      tctx.lineWidth = 3;
+      tctx.beginPath();
+      for (const [sx, sy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+        tctx.moveTo(p.x + sx * o - sx * L, p.y + sy * o);
+        tctx.lineTo(p.x + sx * o, p.y + sy * o);
+        tctx.lineTo(p.x + sx * o, p.y + sy * o - sy * L);
+      }
+      tctx.stroke();
+    }
   }
 }
+function treeNodeAtScreen(mx, my) {
+  if (!treeCam) return null;
+  const info = treeStates();
+  for (const n of DD.UPGRADE_TREE) {
+    const i = info[n.id];
+    if (!i.visible) continue;
+    const x = treeCam.x + n.x, y = treeCam.y + n.y;
+    if (Math.abs(mx - x) <= TREE_R + 4 && Math.abs(my - y) <= TREE_R + 4) return i;
+  }
+  return null;
+}
+function onTreeMove(e) {
+  const r = tcvs.getBoundingClientRect();
+  const i = treeNodeAtScreen(e.clientX - r.left, e.clientY - r.top);
+  const id = i ? i.n.id : null;
+  if (id !== treeHoverId) { treeHoverId = id; drawTree(); }
+  tcvs.style.cursor = i && i.selectable ? "pointer" : "default";
+  if (i) {
+    // tooltip sits centred ABOVE the node (nodebuster-style), not at the mouse
+    const nx = r.left + treeCam.x + i.n.x;
+    const ny = r.top + treeCam.y + i.n.y - TREE_R - 12;
+    showTip(treeTip(i), nx, ny);
+  } else hideTip();
+}
+function onTreeClick(e) {
+  const r = tcvs.getBoundingClientRect();
+  const i = treeNodeAtScreen(e.clientX - r.left, e.clientY - r.top);
+  if (!i || !i.selectable) return;
+  if (!E.upgradeCost(i.n.area, i.n.type)) return;   // maxed
+  if (E.selectUpgrade(i.n.area, i.n.type)) { hideTip(); toggleUpgrades(false); render(); }
+}
+
+// Instant tooltip (native title tooltips have a fixed OS delay).
+// Anchored bottom-centre at (x, y): CSS translates it up and centres it.
+function showTip(html, x, y) {
+  const t = $("#utip");
+  t.innerHTML = html;
+  t.style.left = clamp(x, 140, window.innerWidth - 140) + "px";
+  t.style.top = Math.max(120, y) + "px";
+  t.classList.remove("hidden");
+}
+function hideTip() { $("#utip").classList.add("hidden"); }
+
+function renderUpgrades() { sizeTreeCanvas(); drawTree(); }
 let upgradesOpen = false;
 function toggleUpgrades(force) {
   upgradesOpen = force != null ? force : !upgradesOpen;
   $("#upgrades-modal").classList.toggle("hidden", !upgradesOpen);
-  if (upgradesOpen) renderUpgrades();
+  if (upgradesOpen) { treeCam = null; treeHoverId = null; renderUpgrades(); }   // recentre on open
+  else hideTip();
+}
+function toggleTreeDebug() {
+  treeDebug = !treeDebug;
+  $("#tree-debug-btn").classList.toggle("on", treeDebug);
+  drawTree();
 }
 
 function toggleDebug(force) {
@@ -442,28 +783,30 @@ function toggleDebug(force) {
 }
 function toggleBuild(force) {
   window.GS.build.open = force != null ? force : !window.GS.build.open;
-  if (window.GS.build.open) window.GS.build.placing = null;
+  if (window.GS.build.open) { window.GS.build.placing = null; demolishMode = false; }
+  render();
+}
+function toggleDemolish(force) {
+  demolishMode = force != null ? force : !demolishMode;
+  if (demolishMode) { window.GS.build.placing = null; window.GS.build.open = false; }
   render();
 }
 
 // ---- master render ------------------------------------------
-// Full render — rebuilds interactive UI too (arrows, build menu). Use on
-// discrete events, never on a repeating tick.
+// Full render — repaints the canvas AND rebuilds event-driven DOM UI
+// (unlock buttons, build menu). Use on discrete events, not ticks.
 function render() {
   renderTopBar();
-  renderGrid();
+  requestGridPaint();
   renderUnlockButtons();
   renderBuildMenu();
   renderHandCursor();
-  if (upgradesOpen) renderUpgrades();
+  if (upgradesOpen) drawTree();
 }
-
-// Tick / hold-loop render — updates only the fast-changing world grid, hand
-// count and cursor overlay. Leaves arrows + build menu untouched so they
-// don't flicker or lose clicks while the game ticks or you drag the mouse.
+// Tick / hold-loop render — canvas + fast HUD only.
 function renderPlay() {
   renderTopBar();
-  renderGrid();
+  requestGridPaint();
   renderHandCursor();
 }
 window.renderPlay = renderPlay;
@@ -478,15 +821,6 @@ function syncCursor(e) {
 }
 function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
-  if (panning) {                          // dragging the map
-    cam.x = camStartX - (e.clientX - panStartX) / viewScale;
-    cam.y = camStartY - (e.clientY - panStartY) / viewScale;
-    clampCam();
-    applyCamera();
-    requestGridPaint();                   // culled content must fill in as we pan
-    renderHandCursor();
-    return;
-  }
   syncCursor(e);
   renderHandCursor();
   if (window.GS.build.placing && cursor.over) requestGridPaint(); // move the preview
@@ -496,12 +830,11 @@ function onMouseDown(e) {
   if (!cursor.over) return;
   const p = pointFromEvent(e);
   cursor.region = p.region; cursor.lx = p.lx; cursor.ly = p.ly; cursor.lrow = p.lrow; cursor.lcol = p.lcol;
-  // interactions only work in an UNLOCKED region; anywhere else is inert land
   const active = p.region && E.isAreaUnlocked(p.region);
 
-  if (e.button === 2) { // right — drop / feed (or cancel placement)
+  if (e.button === 2) { // right — drop / feed (or cancel placement/demolish)
     e.preventDefault();
-    if (window.GS.build.placing) { window.GS.build.placing = null; render(); return; }
+    if (window.GS.build.placing || demolishMode) { window.GS.build.placing = null; demolishMode = false; render(); return; }
     if (!active) return;
     rightHeld = true; holdStart = Date.now();
     E.dropFromHand(p.region, p.lx, p.ly);  // ground drop, ghost feed, or storehouse deposit
@@ -520,12 +853,22 @@ function onMouseDown(e) {
     return;
   }
 
-  // Inside an unlocked region, a press on a node harvests, and a press on/near
-  // a pile of dropped items starts the vacuum. Anywhere else (empty land,
-  // locked regions, void) a left-drag pans the map.
+  // demolish mode: left-click a building to destroy it (refunds drop)
+  if (demolishMode) {
+    if (active) {
+      const target = E.buildingAt(p.region, p.lrow, p.lcol);
+      if (target) E.demolishBuilding(p.region, target.id);
+    }
+    demolishMode = false;
+    render();
+    return;
+  }
+
   if (active) {
-    // left-click/hold a storehouse to vacuum its contents into the hand
     const sh = E.buildingAt(p.region, p.lrow, p.lcol);
+    // the Altar opens the upgrade tree
+    if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
+    // left-click/hold a storehouse to withdraw its contents
     if (sh && sh.built && sh.type === "storehouse") {
       leftHeld = true; withdrawSH = sh;
       E.takeFromStorehouse(sh, 1);      // a click takes one; holding accelerates
@@ -534,8 +877,7 @@ function onMouseDown(e) {
       return;
     }
     const node = nodeAtCell(p.region, p.lrow, p.lcol);
-    if (node) {
-      // a manual click swings once (rate-limited); holding then auto-swings
+    if (node && !node.deco) {   // decorative border trees are inert
       const t = Date.now();
       if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(p.region, node.id, false); lastClickAt = t; }
       else node.hitAt = t;   // too fast to count as damage — still show the hit
@@ -546,31 +888,35 @@ function onMouseDown(e) {
     const itemsNear = window.GS.areas[p.region].ground.some(g => Math.hypot(g.x - p.lx, g.y - p.ly) <= PICKUP_R);
     if (itemsNear) {
       leftHeld = true; pickupMode = true;
-      E.pickupNear(p.region, p.lx, p.ly, PICKUP_R);
+      E.suctionStep(p.region, p.lx, p.ly, PICKUP_R);   // starts the pull; loop continues it
       startLoop(); renderPlay();
       return;
     }
   }
-  // grab-drag the map
-  panning = true; panStartX = e.clientX; panStartY = e.clientY; camStartX = cam.x; camStartY = cam.y;
-  $("#world-viewport").classList.add("grabbing");
 }
 
 // ---- WASD camera pan ----------------------------------------
 let panRunning = false;
 function panStep() {
-  const s = 12;                          // px per frame
-  let moved = false;
-  if (keys.has("w")) { cam.y -= s; moved = true; }
-  if (keys.has("s")) { cam.y += s; moved = true; }
-  if (keys.has("a")) { cam.x -= s; moved = true; }
-  if (keys.has("d")) { cam.x += s; moved = true; }
-  if (moved) {
-    clampCam();
-    applyCamera();
-    requestGridPaint();                   // culled content must fill in as we pan
-    // the world slid under the cursor, so recompute what it's over
-    syncCursor({ clientX: cursor.cx, clientY: cursor.cy });
+  const s = sprint ? 24 : 12;            // px per frame (Shift sprint = 2x)
+  let dx = 0, dy = 0;
+  if (keys.has("w")) dy -= s;
+  if (keys.has("s")) dy += s;
+  if (keys.has("a")) dx -= s;
+  if (keys.has("d")) dx += s;
+  if (dx || dy) {
+    if (upgradesOpen) {
+      // pan the upgrade tree instead of the map while it's open
+      if (!treeCam) treeCam = { x: 0, y: 0 };
+      treeCam.x -= dx; treeCam.y -= dy;
+      drawTree();
+    } else {
+      cam.x += dx; cam.y += dy;
+      clampCam();
+      requestGridPaint();
+      // the world slid under the cursor, so recompute what it's over
+      syncCursor({ clientX: cursor.cx, clientY: cursor.cy });
+    }
   }
   if (["w", "a", "s", "d"].some(k => keys.has(k))) requestAnimationFrame(panStep);
   else panRunning = false;
@@ -582,16 +928,33 @@ function onKeyDown(e) {
     if (!panRunning) { panRunning = true; requestAnimationFrame(panStep); }
     return;
   }
+  if (k === "shift" && !e.repeat) { sprint = !sprint; renderTopBar(); return; }  // sprint toggle (2x pan)
   if (k === "b") { toggleBuild(); return; }   // B toggles the build menu
-  if (e.key === "Escape") { window.GS.build.placing = null; render(); }
+  if (e.key === "F9") {                       // self-diagnostic (rendering issues)
+    e.preventDefault();
+    const r = cvs.getBoundingClientRect();
+    const mid = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    const GSx = window.GS;
+    alert("IDLE GROUNDS DIAGNOSTIC\n" + JSON.stringify({
+      drawError: lastDrawError,
+      dpr: window.devicePixelRatio, zoom: +zoom.toFixed(2),
+      canvas: { attrW: cvs.width, attrH: cvs.height, cssW: Math.round(r.width), cssH: Math.round(r.height) },
+      topElementAtCentre: mid ? (mid.id || String(mid.className).slice(0, 30) || mid.tagName) : "none",
+      unlocked: GSx.world.unlocked,
+      nodes: Object.fromEntries(Object.keys(GSx.areas).map(a => [a, GSx.areas[a].nodes.length])),
+      ground: Object.fromEntries(Object.keys(GSx.areas).map(a => [a, GSx.areas[a].ground.length])),
+    }, null, 1));
+    return;
+  }
+  if (e.key === "Escape") {
+    if (upgradesOpen) { toggleUpgrades(false); return; }
+    window.GS.build.placing = null; demolishMode = false; render();
+  }
 }
 function onKeyUp(e) { keys.delete(e.key.toLowerCase()); }
 
 function onMouseUp(e) {
-  if (e.button === 0) {
-    leftHeld = false; pickupMode = false; harvestHeld = false; withdrawSH = null;
-    if (panning) { panning = false; $("#world-viewport").classList.remove("grabbing"); }
-  }
+  if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; withdrawSH = null; }
   if (e.button === 2) rightHeld = false;
 }
 
@@ -601,9 +964,12 @@ function startLoop() {
   loopRunning = true;
   const step = () => {
     let dirty = false;
-    // everything below acts in the region under the cursor (if unlocked)
     const rg = cursor.region && E.isAreaUnlocked(cursor.region) ? cursor.region : null;
-    if (leftHeld && pickupMode && cursor.over && rg) { if (E.pickupNear(rg, cursor.lx, cursor.ly, PICKUP_R) > 0) dirty = true; }
+    if (leftHeld && pickupMode && cursor.over && rg) {
+      // gravity suction: items in range drift to the cursor, collect on arrival
+      const s = E.suctionStep(rg, cursor.lx, cursor.ly, PICKUP_R);
+      if (s.moved > 0 || s.picked > 0) dirty = true;
+    }
     if (leftHeld && withdrawSH) {
       // withdraw rate tweens 1/s -> 5/s over the first 3 seconds of the hold
       const elapsed = Date.now() - withdrawStart;
@@ -616,7 +982,7 @@ function startLoop() {
     // hold-left over a node auto-swings at that node's own harvest rate
     if (harvestHeld && cursor.over && rg) {
       const n = nodeAtCell(rg, cursor.lrow, cursor.lcol);
-      if (n && Date.now() - lastSwing >= E.harvestInterval(rg, n)) {
+      if (n && !n.deco && Date.now() - lastSwing >= E.harvestInterval(rg, n)) {
         E.harvestNode(rg, n.id, true); lastSwing = Date.now(); dirty = true;
       }
     }
@@ -626,8 +992,7 @@ function startLoop() {
       const rate = elapsed < 1000
         ? 4                                             // 4/s for the first second
         : 4 + Math.min((elapsed - 1000) / 1000, 1) * 16; // ramp 4 -> 20/s over the next second
-      const interval = 1000 / rate;
-      if (Date.now() - lastDrop >= interval) { E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true; }
+      if (Date.now() - lastDrop >= 1000 / rate) { E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true; }
     }
     if (dirty) renderPlay();
     if (leftHeld || rightHeld) requestAnimationFrame(step);
@@ -637,17 +1002,31 @@ function startLoop() {
 }
 
 function wireInput() {
+  // willReadFrequently forces CPU rasterization — GPU-composited canvases
+  // corrupt on some Windows drivers (stale frames showing through as a
+  // translucent layer, smearing on pan). Software drawing costs ~1.6ms/frame
+  // for this game, so this is pure win.
+  cvs = $("#game-canvas");
+  ctx = cvs.getContext("2d", { willReadFrequently: true });
+  tcvs = $("#tree-canvas");
+  tctx = tcvs.getContext("2d", { willReadFrequently: true });
   const vp = $("#world-viewport");
   vp.addEventListener("mousedown", onMouseDown);
+  vp.addEventListener("wheel", onWheel, { passive: false });
   vp.addEventListener("contextmenu", e => e.preventDefault());
+  tcvs.addEventListener("mousemove", onTreeMove);
+  tcvs.addEventListener("click", onTreeClick);
+  tcvs.addEventListener("mouseleave", () => { treeHoverId = null; hideTip(); if (upgradesOpen) drawTree(); });
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", onMouseUp);
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
   window.addEventListener("resize", fitViewport);
-  recenterCamera();                     // start at the top-centre of the play area
+  recenterCamera();                     // start at the top-centre of the centre region
   fitViewport();
   requestAnimationFrame(fitViewport);   // re-fit once layout has settled
 }
 
-window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, toggleUpgrades, toggleBuild, toggleDebug, wireInput };
+window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
+  toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
+  _draw: () => drawWorld() };   // test hook
