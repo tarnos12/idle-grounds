@@ -18,28 +18,30 @@ in rough priority order (confirm with the user first):
 
 ## Session setup
 
-- **When the user asks to test the game, ALWAYS end with a clickable
-  link** (on request, not automatically):
-  1. `git pull` the working branch first — cloud sessions push finished
-     work to git, so always sync before serving.
-  2. Give the user the right link for WHERE THE SESSION RUNS:
-     - **Local session** (user's PC, `C:\Work\Marrow Tap Projects\Farm
-       Prototype Claude`): run `node server.js` (backgrounded) and hand
-       out http://localhost:5174. (The user can also double-click
-       `start-game.bat` there — it pulls, serves and opens the browser.)
-     - **Cloud session**: the user's browser can NEVER reach the
-       container's localhost — never hand out a localhost link, and don't
-       just point at the Preview badge (the user wants a real link).
-       Instead bundle + publish an Artifact:
-       `node tools/build-artifact.js <scratchpad>/idle-grounds.html`,
-       then the Artifact tool (favicon 🌍). REDEPLOY TO THE SAME URL by
-       passing `url:` https://claude.ai/code/artifact/69f9e3c1-fb9f-45f8-8927-80e5fd02eb67
-       — that's the user's bookmark; don't mint new URLs per session.
-       (Artifact sandbox: localStorage/autosave may be dead — all call
-       sites try/catch so the game still runs; confirm() for Reset may be
-       blocked too. It's a test build, note that to the user.)
+- **FIRST, before ANY work: sync with git.** `git fetch origin`, pull the
+  working branch, and check `origin/master` too — new commits can appear
+  from the user or from OTHER Claude sessions (local and cloud sessions
+  share this repo). If master is ahead, bring those commits into the
+  working branch before touching anything.
+- **Division of labour (agreed 2026-07-04):**
+  - **Cloud sessions** develop, test headless, push — and when the user
+    asks to test, they give the ARTIFACT link, never localhost (a cloud
+    container's localhost is unreachable from the user's browser; don't
+    re-litigate this). To refresh the build:
+    `node tools/build-artifact.js <scratchpad>/idle-grounds.html`, then
+    publish with the Artifact tool (favicon 🌍), REDEPLOYING TO THE SAME
+    URL via the `url:` param:
+    https://claude.ai/code/artifact/69f9e3c1-fb9f-45f8-8927-80e5fd02eb67
+    — that's the user's bookmark; never mint a new URL. (Artifact
+    sandbox: localStorage autosave / confirm() may be blocked — all call
+    sites try/catch, the game still runs; mention it's a test build.)
+  - **Local sessions** (user's PC, `C:\Work\Marrow Tap Projects\Farm
+    Prototype Claude`) own localhost: pull latest, run `node server.js`
+    (backgrounded), give http://localhost:5174. The user may also
+    double-click `start-game.bat` there (pulls + serves + opens browser).
 - Merge the working `claude/...` branch into `master` only when the user
-  asks for it.
+  asks — but note the user sometimes fast-forwards master themselves;
+  check where master points instead of assuming.
 
 ## What this is
 
