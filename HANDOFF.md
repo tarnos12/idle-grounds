@@ -3,6 +3,18 @@
 > Read this first when starting a new Claude Code session. It captures the
 > current state of the prototype, key decisions, and what's left to do.
 
+## ▶ NEXT SESSION: start here (agreed 2026-07-04)
+
+Build the **Forge function + combat upgrades** in one batch:
+1. **Forge smelts Iron Ore → Iron Bar** (first tier-2 resource): right-click
+   feed ore (+ maybe wood as fuel) into a built Forge; it converts on a timer
+   and drops Iron Bars on the ground. Reuse the pattern for future
+   converter buildings (Workbench etc.).
+2. **Combat branch in the upgrade tree**: enemy cap (+1 fox/level), click
+   damage, AoE strike — config hooks already exist in `AREAS.center.enemies`;
+   Spirit Essence is the intended currency.
+3. Then dragon stage 3 can demand Iron Bars and unlock the next layer.
+
 ## ⚠️ Session setup (important)
 
 - **Work ONLY in this folder:** `C:\Work\Marrow Tap Projects\Farm Prototype Claude`
