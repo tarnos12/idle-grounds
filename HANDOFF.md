@@ -18,18 +18,25 @@ in rough priority order (confirm with the user first):
 
 ## Session setup
 
-- **When the user asks to test the game** (on request, not automatically):
+- **When the user asks to test the game, ALWAYS end with a clickable
+  link** (on request, not automatically):
   1. `git pull` the working branch first — cloud sessions push finished
      work to git, so always sync before serving.
-  2. Start the server: `node server.js` (background it so the session can
-     keep working).
-  3. Give the user the right link for WHERE THE SESSION RUNS:
+  2. Give the user the right link for WHERE THE SESSION RUNS:
      - **Local session** (user's PC, `C:\Work\Marrow Tap Projects\Farm
-       Prototype Claude`): http://localhost:5174 works — hand it out.
+       Prototype Claude`): run `node server.js` (backgrounded) and hand
+       out http://localhost:5174.
      - **Cloud session**: the user's browser can NEVER reach the
-       container's localhost — never hand out a localhost link. Instead
-       point them at the session UI's Preview / port badge for port 5174
-       (`.claude/launch.json` registers the `idle-grounds` server).
+       container's localhost — never hand out a localhost link, and don't
+       just point at the Preview badge (the user wants a real link).
+       Instead bundle + publish an Artifact:
+       `node tools/build-artifact.js <scratchpad>/idle-grounds.html`,
+       then the Artifact tool (favicon 🌍). REDEPLOY TO THE SAME URL by
+       passing `url:` https://claude.ai/code/artifact/69f9e3c1-fb9f-45f8-8927-80e5fd02eb67
+       — that's the user's bookmark; don't mint new URLs per session.
+       (Artifact sandbox: localStorage/autosave may be dead — all call
+       sites try/catch so the game still runs; confirm() for Reset may be
+       blocked too. It's a test build, note that to the user.)
 - Merge the working `claude/...` branch into `master` only when the user
   asks for it.
 
