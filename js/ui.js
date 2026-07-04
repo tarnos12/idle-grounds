@@ -1157,9 +1157,9 @@ function startLoop() {
       if (s.moved > 0 || s.picked > 0) dirty = true;
     }
     if (leftHeld && withdrawSH) {
-      // withdraw rate tweens 1/s -> 5/s over the first 3 seconds of the hold
+      // withdraw rate ramps 1/s -> 5/s over the first 0.2s of the hold
       const elapsed = Date.now() - withdrawStart;
-      const rate = 1 + Math.min(elapsed / 3000, 1) * 4;   // 1 .. 5 items per second
+      const rate = 1 + Math.min(elapsed / 200, 1) * 4;   // 1 .. 5 items per second
       if (Date.now() - lastWithdraw >= 1000 / rate) {
         if (E.takeFromStorehouse(withdrawSH, 1) > 0) dirty = true;
         lastWithdraw = Date.now();
@@ -1182,11 +1182,9 @@ function startLoop() {
       }
     }
     if (rightHeld && cursor.over && rg) {
-      // deliberate for the first second, then accelerate hard so you can dump fast
+      // near-instant spin-up: ramp 4 -> 20/s over the first 0.2s of the hold
       const elapsed = Date.now() - holdStart;
-      const rate = elapsed < 1000
-        ? 4                                             // 4/s for the first second
-        : 4 + Math.min((elapsed - 1000) / 1000, 1) * 16; // ramp 4 -> 20/s over the next second
+      const rate = 4 + Math.min(elapsed / 200, 1) * 16;
       if (Date.now() - lastDrop >= 1000 / rate) { E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true; }
     }
     if (dirty) renderPlay();

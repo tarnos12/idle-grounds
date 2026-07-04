@@ -138,7 +138,7 @@ icons). Fixes that must stay:
 
 - Drops lie **on the ground** (1 icon per item, repulsion, building
   colliders). Hold-left = gravity suction (2-cell radius); right-click drops
-  (4→20/s ramp). Hand cap 20, +5 per Hand Size level.
+  (4→20/s, max in 0.2s; storehouse withdraw ramps in 0.2s too). Hand cap 20, +5 per Hand Size level.
 - **Storehouse** = visible single-item container (cap 200, paced withdraw).
 - **Converter buildings** (the Forge; pattern for Workbench etc.): a `smelt`
   config in `BUILDINGS` — `{ inputs, output, outputQty, timeMs, queueCap }`.
