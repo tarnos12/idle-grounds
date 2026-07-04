@@ -18,7 +18,20 @@ in rough priority order (confirm with the user first):
 
 ## Session setup
 
-- **Always give the user the game link** after changes: http://localhost:5174
+- **When the user asks to test the game** (on request, not automatically):
+  1. `git pull` the working branch first — cloud sessions push finished
+     work to git, so always sync before serving.
+  2. Start the server: `node server.js` (background it so the session can
+     keep working).
+  3. Give the user the right link for WHERE THE SESSION RUNS:
+     - **Local session** (user's PC, `C:\Work\Marrow Tap Projects\Farm
+       Prototype Claude`): http://localhost:5174 works — hand it out.
+     - **Cloud session**: the user's browser can NEVER reach the
+       container's localhost — never hand out a localhost link. Instead
+       point them at the session UI's Preview / port badge for port 5174
+       (`.claude/launch.json` registers the `idle-grounds` server).
+- Merge the working `claude/...` branch into `master` only when the user
+  asks for it.
 
 ## What this is
 
