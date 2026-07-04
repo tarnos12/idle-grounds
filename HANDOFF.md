@@ -37,8 +37,7 @@ in rough priority order (confirm with the user first):
     sites try/catch, the game still runs; mention it's a test build.)
   - **Local sessions** (user's PC, `C:\Work\Marrow Tap Projects\Farm
     Prototype Claude`) own localhost: pull latest, run `node server.js`
-    (backgrounded), give http://localhost:5174. The user may also
-    double-click `start-game.bat` there (pulls + serves + opens browser).
+    (backgrounded), give http://localhost:5174.
 - Merge the working `claude/...` branch into `master` only when the user
   asks — but note the user sometimes fast-forwards master themselves;
   check where master points instead of assuming.
