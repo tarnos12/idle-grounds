@@ -26,6 +26,17 @@ const body = index
   .split(/<script\s/i)[0]
   .trim();
 
+// pixel-art item icons as data URIs (the artifact CSP blocks file requests;
+// ui.js prefers window.ICON_DATA over the assets/icons/ paths when present)
+const iconDir = path.join(root, "assets", "icons");
+const icons = {};
+if (fs.existsSync(iconDir))
+  for (const f of fs.readdirSync(iconDir))
+    if (f.endsWith(".png"))
+      icons[f.slice(0, -4)] = "data:image/png;base64," +
+        fs.readFileSync(path.join(iconDir, f)).toString("base64");
+const iconScript = `<script>window.ICON_DATA = ${JSON.stringify(icons)};</script>`;
+
 // same order as index.html — classic scripts sharing one global scope
 const files = ["data.js", "state.js", "engine.js", "ui.js", "main.js"];
 const scripts = files.map(f => {
@@ -39,6 +50,7 @@ const page = `<title>Idle Grounds — Prototype</title>
 ${css}
 </style>
 ${body}
+${iconScript}
 ${scripts}
 `;
 
