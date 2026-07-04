@@ -17,6 +17,7 @@
   document.getElementById("reset-btn").onclick = () => {
     if (confirm("Reset ALL progress and start over?")) { window.SAVE.clearSave(); location.reload(); }
   };
+  document.getElementById("dragon-continue").onclick = () => window.UI.dismissDragonDialog();
 
   window.UI.wireInput();
   window.UI.render();

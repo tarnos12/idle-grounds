@@ -418,8 +418,10 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
     const bCfg = DD.BUILDINGS[b.type];
     const isAltar = b.type === "center";
     const isDragon = b.type === "dragon";
+    const dragonAwake = isDragon && !E.dragonStage();   // gold once fully woken
     ctx.fillStyle = !b.built ? C.ghost : isAltar ? C.altar : isDragon ? C.dragon : C.built;
-    ctx.strokeStyle = !b.built ? C.accent : isAltar ? C.gold : isDragon ? C.dragonEdge : C.line;
+    ctx.strokeStyle = !b.built ? C.accent : isAltar ? C.gold
+      : isDragon ? (dragonAwake ? C.gold : C.dragonEdge) : C.line;
     ctx.lineWidth = Math.max(1.5, 2 * s / 0.7);
     if (!b.built) ctx.setLineDash([6, 4]);
     ctx.fillRect(X(bx), Y(by), bw * s, bh * s);
@@ -441,12 +443,13 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.fillText(rem || "…", cxp, Y(by + bh * 0.86));
       }
     } else if (b.built && isDragon) {
+      const st = E.dragonStage();
+      const awake = !st;                             // all stages fed: it AWAKENS
       ctx.fillStyle = C.text;
       ctx.font = `${64 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
-      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.36));
-      ctx.fillStyle = "#d8b4fe"; ctx.font = `800 ${18 * s}px ${TEXT_FONT}`;
-      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.64));
-      const st = E.dragonStage();
+      ctx.fillText(awake ? "🐲" : bCfg.icon, cxp, Y(by + bh * 0.36));
+      ctx.fillStyle = awake ? C.gold : "#d8b4fe"; ctx.font = `800 ${18 * s}px ${TEXT_FONT}`;
+      ctx.fillText(awake ? "Awakened Dragon" : bCfg.name, cxp, Y(by + bh * 0.64));
       if (st) {
         const rem = Object.entries(E.dragonRemaining())
           .map(([it, q]) => `${q} ${E.itemIcon(it)}`).join("  ");
@@ -454,7 +457,7 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.fillText(`Feed: ${rem || "…"}`, cxp, Y(by + bh * 0.84));
       } else {
         ctx.fillStyle = C.muted; ctx.font = `700 ${13 * s}px ${TEXT_FONT}`;
-        ctx.fillText("dreaming…", cxp, Y(by + bh * 0.84));
+        ctx.fillText("watches over the grounds", cxp, Y(by + bh * 0.84));
       }
       // stage-up murmur floats above the dragon for a few seconds
       const dr = window.GS.dragon;
@@ -903,6 +906,23 @@ function toggleDemolish(force) {
   render();
 }
 
+// ---- dragon story dialog ------------------------------------
+// A stage-up stores its line in GS.dragon.dialog; the modal shows until the
+// player continues. Sync is idempotent — called from both render paths.
+function syncDragonDialog() {
+  const dlg = window.GS.dragon && window.GS.dragon.dialog;
+  const modal = $("#dragon-modal");
+  if (!modal) return;
+  const show = !!dlg;
+  if (show) $("#dragon-text").textContent = dlg;
+  modal.classList.toggle("hidden", !show);
+}
+function dismissDragonDialog() {
+  window.GS.dragon.dialog = null;
+  syncDragonDialog();
+  render();   // catalog may have gained a freshly-taught building
+}
+
 // ---- master render ------------------------------------------
 // Full render — repaints the canvas AND rebuilds event-driven DOM UI
 // (unlock buttons, build menu). Use on discrete events, not ticks.
@@ -912,6 +932,7 @@ function render() {
   renderUnlockButtons();
   renderBuildMenu();
   renderHandCursor();
+  syncDragonDialog();
   if (upgradesOpen) drawTree();
 }
 // Tick / hold-loop render — canvas + fast HUD only.
@@ -919,6 +940,7 @@ function renderPlay() {
   renderTopBar();
   requestGridPaint();
   renderHandCursor();
+  syncDragonDialog();
 }
 window.renderPlay = renderPlay;
 
@@ -1159,4 +1181,5 @@ function wireInput() {
 
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
+  dismissDragonDialog,
   _draw: () => drawWorld() };   // test hook

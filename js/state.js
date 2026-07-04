@@ -45,8 +45,9 @@ function makeInitialState() {
     // { area, type, needs:{item:qty}, paid:{item:qty} } — fed by right-click.
     upgradeJob: null,
     // The Sleeping Dragon's progression: feed each stage's tribute to advance
-    // (unlocks recipes). msg/msgUntil float its stage text briefly.
-    dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0 },
+    // (unlocks recipes). msg/msgUntil float its stage text briefly; dialog
+    // holds the story line for the modal until the player dismisses it.
+    dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null },
     won: false,
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0 },
   };
@@ -91,7 +92,7 @@ function loadState() {
     if (s.handCap) fresh.handCap = s.handCap;
     fresh.handLevel = s.handLevel || 0;
     if (s.upgradeJob) fresh.upgradeJob = s.upgradeJob;
-    if (s.dragon) fresh.dragon = Object.assign({ stage: 0, paid: {}, msg: null, msgUntil: 0 }, s.dragon);
+    if (s.dragon) fresh.dragon = Object.assign({ stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null }, s.dragon);
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
     fresh.won = !!s.won;
     if (s.stats) fresh.stats = s.stats;

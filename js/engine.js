@@ -660,6 +660,8 @@ function dropFromHand(areaKey, x, y) {
       const st = dragonStage();
       dr.stage++; dr.paid = {};
       dr.msg = st.text; dr.msgUntil = Date.now() + 8000;
+      dr.dialog = st.text;   // story dialog box (persists until dismissed)
+      if (!dragonStage()) window.GS.won = true;   // final stage: it AWAKENS
     }
     return res;
   }

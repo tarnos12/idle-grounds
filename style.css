@@ -318,6 +318,11 @@ body {
 /* decorative border trees: darker, desaturated, clearly not harvestable */
 .node.k-deco .sprite { filter: grayscale(.5) brightness(.6) drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
 
+.dragon-box { text-align: center; border-color: #a855f7; box-shadow: 0 0 40px rgba(168,85,247,.25); }
+.dragon-box .dragon-ico { font-size: 56px; margin: 4px 0 10px; }
+.dragon-box p { font-size: 16px; line-height: 1.55; margin: 0 6px 16px; }
+.dragon-box .build-card { margin: 0 auto; }
+
 .win-box { text-align: center; }
 .win-box h1 { margin: 6px 0; font-size: 26px; }
 #win-stats { display: flex; flex-direction: column; gap: 8px; margin: 18px 0; font-size: 16px; }

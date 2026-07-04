@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
@@ -52,6 +52,15 @@
     </div>
   </div>
 
+  <!-- Dragon story dialog (stage-ups) -->
+  <div id="dragon-modal" class="modal hidden">
+    <div class="modal-box dragon-box">
+      <div class="dragon-ico">🐉</div>
+      <p id="dragon-text"></p>
+      <button id="dragon-continue" class="build-card">Continue ▶</button>
+    </div>
+  </div>
+
   <!-- Win modal -->
   <div id="win-modal" class="modal hidden">
     <div class="modal-box win-box">
@@ -61,10 +70,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=10"></script>
-  <script src="js/state.js?v=10"></script>
-  <script src="js/engine.js?v=10"></script>
-  <script src="js/ui.js?v=10"></script>
-  <script src="js/main.js?v=10"></script>
+  <script src="js/data.js?v=11"></script>
+  <script src="js/state.js?v=11"></script>
+  <script src="js/engine.js?v=11"></script>
+  <script src="js/ui.js?v=11"></script>
+  <script src="js/main.js?v=11"></script>
 </body>
 </html>

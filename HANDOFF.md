@@ -5,16 +5,16 @@
 
 ## ▶ NEXT SESSION: start here
 
-The Forge + combat batch is DONE (see "Last session summary"). Next up,
-in rough priority order (confirm with the user first):
-1. **Dragon stage 3 reward + stage 4**: stage 3 now demands Iron Bars
-   (8🧲 + 15🪸 + 10💧) but its reward text is still "not written yet" —
-   decide what it unlocks (next building/recipe/region?) and add a stage 4.
-2. **Workbench function**: it builds but does nothing. Reuse the Forge's
+Dragon stages 3+4 and the story-dialog UI are DONE (see "Last session
+summary"). Next up, in rough priority order (confirm with the user first):
+1. **Workbench function**: it builds but does nothing. Reuse the Forge's
    `smelt` converter config in `BUILDINGS` (rename the concept if it grows
-   beyond smelting) — e.g. wood + iron bars → tools.
-3. Story dialogue UI for dragon stage-ups; offline/idle catch-up on load;
-   feedback polish (particles, +N floaters).
+   beyond smelting) — e.g. wood + iron bars → tools; Spirit Herbs are now
+   available as a crafting input too (elixirs?).
+2. **Post-awakening content**: the dragon awakening sets `GS.won` but
+   nothing consumes it yet (the old #win-modal is unused) — a stats screen,
+   a prestige loop, or the dragon granting a passive blessing.
+3. Offline/idle catch-up on load; feedback polish (particles, +N floaters).
 
 ## Session setup
 
@@ -95,7 +95,9 @@ icons). Fixes that must stay:
   its field); **clay patch** bottom-right (generator, cap 10);
   **Sleeping Dragon 🐉** (5×5 building, top-left corner) — feed each stage's
   tribute (`DATA.DRAGON_STAGES`: 15 leaves → Forge; stone+clay → Algae Farm;
-  iron BARS+algae+water → TBD) to unlock recipes; future story hook;
+  iron bars+algae+water → Herb Garden; herbs+essence+bars → it AWAKENS 🐲,
+  gold border, refuses food, sets `GS.won`). Each stage-up opens the story
+  dialog modal (#dragon-modal, `GS.dragon.dialog`);
   **Fox Spirits 🦊** (top-right corner, red-tinted zone) — wander, 3 hp,
   click to fight (hold = auto-attack), drop Spirit Essence, respawn; base
   cap 1. The tree's combat branch (foe_cap/foe_dmg/foe_aoe nodes) raises
@@ -113,9 +115,9 @@ icons). Fixes that must stay:
   is `waterOnly`: places ONLY inside the fishing waters, passively grows
   algae around itself (cap 8 nearby).
 - Items: wood, leaves, wheat, cotton, stone, clay, sand, iron_ore,
-  iron_bar 🧲 (tier-2, Forge-only), fish, algae, water, spirit_essence.
-  Interactions: `chop`, `instant`, `break`, `surface`, `quarry` (fixtures,
-  `dropMin..dropMax`).
+  iron_bar 🧲 (tier-2, Forge-only), fish, algae, water, spirit_essence,
+  spirit_herb 🌱 (Herb Garden-only). Interactions: `chop`, `instant`,
+  `break`, `surface`, `quarry` (fixtures, `dropMin..dropMax`).
 
 ## Carrying / economy
 
@@ -175,8 +177,9 @@ icons). Fixes that must stay:
 
 - [x] **Forge function**: Iron Ore → Iron Bar converter (done).
 - [x] Combat upgrades: enemy cap, click damage, AoE attack (done).
-- [ ] Dragon stage 3+ rewards, story dialogue UI for stage-ups.
+- [x] Dragon stage 3 (Herb Garden) + stage 4 (awakening) + story dialog UI.
 - [ ] More tree nodes (dragon branch); Workbench function (reuse `smelt`).
+- [ ] Post-awakening content (GS.won is set but unused).
 - [ ] Offline/idle catch-up on load; feedback polish (particles, +N
       floaters, SFX); real sprite art; balance pass.
 
@@ -189,17 +192,14 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
-Forge + combat batch: **iron_bar 🧲** item; the Forge is the first
-**converter building** (`smelt` config: 2 iron_ore + 1 wood → 1 iron_bar /
-6s, queue up to 5 batches, gold progress bar + "+N queued" on canvas,
-demolish refunds queue + partial feed — reuse for the Workbench).
-**Combat branch** in the tree (south-east from the root): Spirit Call
-(+1 fox cap/lvl), Spirit Blade (+1 click damage/lvl), Spirit Wave (AoE
-ripple, radius `lvl × 1.5` cells), Spirit Essence + iron bars as currency;
-`attackEnemy` split into target pick + `damageEnemy`. **Dragon stage 3**
-now demands 8 iron_bar + 15 algae + 10 water (reward still TBD). Saves
-migrate (forge counters sanitised, dead smeltPaid items scrubbed, new
-upgrade fields default 0). Verified headless in node (vm harness over
-data/state/engine) AND in real Chromium via playwright: boot, feed→queue→
-smelt→bar-drop, 3-fox cap, AoE hit, tree render — no page or draw errors.
-Assets bumped to `?v=10`.
+Dragon stages 3+4 + story dialog: **spirit_herb 🌱** item; **Herb Garden 🪴**
+building (dragon stage 3, cost 10🪵+5💧+5🧱, land placement, `gen` grows
+spirit herbs nearby, cap 6). Stage 3's tribute (8🧲+15🪸+10💧) now teaches
+it with proper story text. **Stage 4** (20🌱+15✨+5🧲) AWAKENS the dragon:
+sprite 🐲, gold border, "watches over the grounds", refuses further food,
+sets `GS.won` (unused so far). **Story dialog UI**: stage-ups set
+`GS.dragon.dialog`; `syncDragonDialog()` (called from both render paths)
+shows #dragon-modal until Continue clears it (persists across reloads
+mid-dialog). Verified headless: full stage 0→4 walk, catalog unlocks per
+stage, modal show/dismiss via the real render path, herb generation capped,
+no draw errors. Assets bumped to `?v=11`.

@@ -12,7 +12,7 @@ const ITEM_NAMES = {
   stone: "Stone", clay: "Clay", sand: "Sand", iron_ore: "Iron Ore",
   iron_bar: "Iron Bar",
   fish: "Fish", algae: "Algae", water: "Water",
-  spirit_essence: "Spirit Essence",
+  spirit_essence: "Spirit Essence", spirit_herb: "Spirit Herb",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -20,7 +20,7 @@ const ITEM_ICONS = {
   stone: "🪨", clay: "🧱", sand: "🟡", iron_ore: "🔩",
   iron_bar: "🧲",
   fish: "🐟", algae: "🪸", water: "💧",
-  spirit_essence: "✨",
+  spirit_essence: "✨", spirit_herb: "🌱",
 };
 
 // One sprite per area's resource (tiers are gone — single type each).
@@ -217,6 +217,10 @@ const BUILDINGS = {
   // passively grows algae around itself.
   algae_farm:{ name: "Algae Farm", icon: "🪸", cost: { wood: 12, algae: 6 }, unlocked: false, stageUnlock: 2,
                waterOnly: true, gen: { item: "algae", intervalMs: 4000, cap: 8 } },
+  // Herb Garden: taught at dragon stage 3 — passively grows Spirit Herbs
+  // (the cultivation herbs) around itself, on land.
+  herb_garden:{ name: "Herb Garden", icon: "🪴", cost: { wood: 10, water: 5, clay: 5 }, unlocked: false,
+                stageUnlock: 3, gen: { item: "spirit_herb", intervalMs: 5000, cap: 6 } },
 };
 
 // The Dragon's feeding milestones. Each stage lists the tribute it wants
@@ -228,7 +232,9 @@ const DRAGON_STAGES = [
   { needs: { stone: 25, clay: 10 },
     text: "The dragon yawns a plume of steam… and teaches you the Algae Farm." },
   { needs: { iron_bar: 8, algae: 15, water: 10 },
-    text: "The dragon tastes forged iron and rumbles approval… (its next lesson is not written yet)" },
+    text: "The dragon tastes forged iron and rumbles approval. \"You shape the earth well, little cultivator. Grow me the herbs of spirit — I will teach you to garden what cannot be farmed.\" (Herb Garden unlocked)" },
+  { needs: { spirit_herb: 20, spirit_essence: 15, iron_bar: 5 },
+    text: "The dragon breathes in the herbs, the essence, the iron — and OPENS ITS EYES. \"I dreamed a thousand years, and you woke me with patience, not swords. Cultivate on, little one. I will watch over these grounds.\" 🐲 THE DRAGON IS AWAKE." },
 ];
 
 const WORLD = {
