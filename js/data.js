@@ -10,6 +10,7 @@ const ITEM_NAMES = {
   wood: "Wood", leaves: "Leaves",
   wheat: "Wheat", cotton: "Cotton",
   stone: "Stone", clay: "Clay", sand: "Sand", iron_ore: "Iron Ore",
+  iron_bar: "Iron Bar",
   fish: "Fish", algae: "Algae", water: "Water",
   spirit_essence: "Spirit Essence",
 };
@@ -17,6 +18,7 @@ const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
   wheat: "🌾", cotton: "☁️",
   stone: "🪨", clay: "🧱", sand: "🟡", iron_ore: "🔩",
+  iron_bar: "🧲",
   fish: "🐟", algae: "🪸", water: "💧",
   spirit_essence: "✨",
 };
@@ -80,8 +82,8 @@ const AREAS = {
       { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry" },
     ],
     // Fox Spirits haunt the top-right corner: they wander their zone, take a
-    // few hits to slay, and drop Spirit Essence. cap/damage/AoE are the hooks
-    // for future combat upgrades.
+    // few hits to slay, and drop Spirit Essence. `cap` is the BASE cap — the
+    // enemyCap/damage/aoe upgrades in the tree raise it and boost combat.
     enemies: { zone: "cornerTR", name: "Fox Spirit", sprite: "🦊", cap: 1, hp: 3,
                speed: 30, respawnMs: 6000, attackMs: 400, drops: [d("spirit_essence", 1, 2)] },
   },
@@ -203,7 +205,13 @@ const BUILDINGS = {
   // each stage's tribute (see DRAGON_STAGES) and it unlocks new recipes.
   dragon:    { name: "Sleeping Dragon", icon: "🐉", cost: {}, size: { w: 5, h: 5 }, unlocked: false, indestructible: true },
   workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true },
-  forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1 },
+  // Converter buildings carry a `smelt` recipe: right-click feed the inputs
+  // (same feeding rule as ghosts); each complete set queues one batch, the
+  // building works through the queue on a timer and drops the output on the
+  // ground beside itself. Reuse this pattern for the Workbench etc.
+  forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1,
+               smelt: { inputs: { iron_ore: 2, wood: 1 }, output: "iron_bar", outputQty: 1,
+                        timeMs: 6000, queueCap: 5 } },
   storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 }, cap: 200,  unlocked: true },
   // Algae Farm: can ONLY be placed in the water (fishing's centre zone);
   // passively grows algae around itself.
@@ -219,8 +227,8 @@ const DRAGON_STAGES = [
     text: "The dragon cracks one eye open… and teaches you the Forge." },
   { needs: { stone: 25, clay: 10 },
     text: "The dragon yawns a plume of steam… and teaches you the Algae Farm." },
-  { needs: { iron_ore: 15, algae: 15, water: 10 },
-    text: "The dragon stirs deep in its dream… (its next lesson is not written yet)" },
+  { needs: { iron_bar: 8, algae: 15, water: 10 },
+    text: "The dragon tastes forged iron and rumbles approval… (its next lesson is not written yet)" },
 ];
 
 const WORLD = {
@@ -256,7 +264,7 @@ const WORLD = {
 // ------------------------------------------------------------------
 const UPGRADE_TREE = [
   { id: "hand",   icon: "✋", name: "Hand Size",       x: 0,    y: 0,    area: "center",  type: "hand",
-    desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m"],
+    desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m", "foe_cap"],
     costs: [{ wood: 10 }, { wood: 25, leaves: 10 }, { cotton: 15, wood: 40 }] },
   // east — centre economy, drifting to fishing
   { id: "spd_c",  icon: "⏱️", name: "Regrow Speed",    x: 150,  y: -35,  area: "center",  type: "speed",
@@ -298,6 +306,16 @@ const UPGRADE_TREE = [
   { id: "auto_m", icon: "🛠️", name: "Mine Automation", x: -40,  y: 430,  area: "mine",    type: "automation",
     desc: "Auto-mines ore veins.", links: [],
     costs: [{ stone: 80, clay: 30 }, { iron_ore: 30, stone: 100 }, { iron_ore: 60, water: 30, algae: 30 }] },
+  // south-east — combat (Fox Spirits; Spirit Essence is the branch currency)
+  { id: "foe_cap", icon: "🦊", name: "Spirit Call",    x: 160,  y: 120,  area: "center",  type: "enemyCap",
+    desc: "+1 Fox Spirit roams the grove per level.", links: ["foe_dmg"],
+    costs: [{ leaves: 25, wood: 15 }, { spirit_essence: 10, wood: 40 }, { spirit_essence: 25, iron_bar: 5 }] },
+  { id: "foe_dmg", icon: "⚔️", name: "Spirit Blade",   x: 315,  y: 205,  area: "center",  type: "damage",
+    desc: "+1 damage per strike on beasts.", links: ["foe_aoe"],
+    costs: [{ spirit_essence: 5, stone: 20 }, { spirit_essence: 15, iron_ore: 10 }, { spirit_essence: 30, iron_bar: 8 }] },
+  { id: "foe_aoe", icon: "💥", name: "Spirit Wave",    x: 470,  y: 300,  area: "center",  type: "aoe",
+    desc: "Strikes ripple outward, hitting nearby beasts (wider per level).", links: [],
+    costs: [{ spirit_essence: 12, water: 10 }, { spirit_essence: 25, iron_bar: 5 }, { spirit_essence: 50, iron_bar: 12 }] },
 ];
 
 // How many ready nodes each automation level harvests per tick.

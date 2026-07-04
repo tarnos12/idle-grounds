@@ -551,6 +551,25 @@ function placeBuilding(areaKey, type, row, col) {
   return b;
 }
 
+// ---- Converter buildings (the Forge's smelt recipe) ----------
+// A `smelt` config turns fed inputs into queued batches; gameTick works
+// through the queue on a timer and drops the output beside the building.
+
+function smeltCfg(type) { return (D.BUILDINGS[type] && D.BUILDINGS[type].smelt) || null; }
+
+// Inputs the current (partially fed) batch still needs: { item: qty }.
+function smeltRemaining(b) {
+  const cfg = smeltCfg(b.type);
+  if (!cfg) return {};
+  b.smeltPaid = b.smeltPaid || {};
+  const rem = {};
+  for (const [item, qty] of Object.entries(cfg.inputs)) {
+    const r = qty - (b.smeltPaid[item] || 0);
+    if (r > 0) rem[item] = r;
+  }
+  return rem;
+}
+
 // Remaining resources a ghost still needs: { item: qty }.
 function buildingNeeds(b) {
   const cost = D.BUILDINGS[b.type].cost;
@@ -584,6 +603,15 @@ function demolishBuilding(areaKey, buildingId) {
   if (b.built) {
     for (const [item, qty] of Object.entries(cfg.cost)) dropGround(areaKey, item, qty, x, y);
     if (b.type === "storehouse" && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y);
+    // a converter refunds every batch not yet delivered (queued + in-progress)
+    // plus whatever was partially fed toward the next one
+    if (cfg.smelt) {
+      const batches = (b.queue || 0) + (b.smeltDoneAt > 0 ? 1 : 0);
+      for (const [item, qty] of Object.entries(cfg.smelt.inputs))
+        if (qty * batches > 0) dropGround(areaKey, item, qty * batches, x, y);
+      for (const [item, qty] of Object.entries(b.smeltPaid || {}))
+        if (qty > 0) dropGround(areaKey, item, qty, x, y);
+    }
   } else {
     for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y);
   }
@@ -635,6 +663,20 @@ function dropFromHand(areaKey, x, y) {
     }
     return res;
   }
+  // Converter buildings (the Forge): feed the recipe's inputs; every complete
+  // set queues one batch (up to queueCap counting the one being smelted).
+  if (b && b.built && smeltCfg(b.type)) {
+    const cfg = smeltCfg(b.type);
+    const pending = (b.queue || 0) + (b.smeltDoneAt > Date.now() ? 1 : 0);
+    if (pending >= (cfg.queueCap || 5)) return null;
+    b.smeltPaid = b.smeltPaid || {};
+    const res = feedNeeds(smeltRemaining(b), b.smeltPaid);
+    if (res && res.fed && !Object.keys(smeltRemaining(b)).length) {
+      b.queue = (b.queue || 0) + 1;
+      b.smeltPaid = {};
+    }
+    return res;
+  }
   if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
   if (b && !b.built) {
     const res = feedNeeds(buildingNeeds(b), b.paid);
@@ -671,6 +713,9 @@ function upgradeLevel(areaKey, type) {
   if (type === "automation") return { lvl: up.automation, max: 3 };
   if (type === "quarry") return { lvl: up.quarry || 0, max: 3 };
   if (type === "hand") return { lvl: window.GS.handLevel || 0, max: 3 };
+  if (type === "enemyCap") return { lvl: up.enemyCap || 0, max: 3 };
+  if (type === "damage") return { lvl: up.damage || 0, max: 3 };
+  if (type === "aoe") return { lvl: up.aoe || 0, max: 3 };
   return { lvl: 0, max: 0 };
 }
 
@@ -683,6 +728,9 @@ function applyUpgrade(areaKey, type) {
   else if (type === "harvestSpeed") up.harvestSpeed++;
   else if (type === "automation") up.automation++;
   else if (type === "quarry") up.quarry = (up.quarry || 0) + 1;
+  else if (type === "enemyCap") up.enemyCap = (up.enemyCap || 0) + 1;
+  else if (type === "damage") up.damage = (up.damage || 0) + 1;
+  else if (type === "aoe") up.aoe = (up.aoe || 0) + 1;
   else if (type === "hand") { window.GS.handLevel = (window.GS.handLevel || 0) + 1; window.GS.handCap += 5; }
 }
 
@@ -849,6 +897,28 @@ function gameTick() {
       changed = true;
     }
 
+    // Converter buildings (the Forge) work through their queued batches:
+    // finish the active batch (drop its output beside the building), then
+    // pull the next batch off the queue.
+    for (const b of area.buildings) {
+      const scfg = b.built && smeltCfg(b.type);
+      if (!scfg) continue;
+      if (b.smeltDoneAt && now >= b.smeltDoneAt) {
+        const bs = buildingSize(b.type);
+        const bx = (b.col + bs.w / 2) * CELL, by = (b.row + bs.h) * CELL + 12;
+        const qty = scfg.outputQty || 1;
+        dropGround(areaKey, scfg.output, qty, bx, by);
+        window.GS.stats.totalCrafted += qty;
+        b.smeltDoneAt = 0;
+        changed = true;
+      }
+      if (!b.smeltDoneAt && (b.queue || 0) > 0) {
+        b.queue--;
+        b.smeltDoneAt = now + scfg.timeMs * scale;
+        changed = true;
+      }
+    }
+
     // Enemies: spawn up to the cap, then wander between random waypoints
     // inside their zone. (Movement doesn't set `changed` — the UI animates
     // visible enemies itself, so off-screen wandering costs no repaints.)
@@ -857,7 +927,8 @@ function gameTick() {
       const z = zoneRects(ecfg.zone)[0];
       const x0 = (z.c0 + 1) * CELL, x1 = z.c1 * CELL;
       const y0 = (z.r0 + 1) * CELL, y1 = z.r1 * CELL;
-      if (area.enemies.length < ecfg.cap && now >= (area.enemyRespawnAt || 0)) {
+      const cap = ecfg.cap + (area.upgrades.enemyCap || 0);   // Spirit Call upgrade
+      if (area.enemies.length < cap && now >= (area.enemyRespawnAt || 0)) {
         area.enemies.push({
           id: area.nextEnemyId++, x: rand(x0, x1), y: rand(y0, y1),
           hp: ecfg.hp, maxHp: ecfg.hp, tx: rand(x0, x1), ty: rand(y0, y1), hitAt: 0,
@@ -886,24 +957,37 @@ function enemyAt(areaKey, x, y) {
   return window.GS.areas[areaKey].enemies.find(en => Math.hypot(en.x - x, en.y - y) <= 22) || null;
 }
 
-// One hit. A slain enemy drops its loot where it stood and schedules the
-// zone's next spawn.
+// Deal `dmg` to one enemy. A slain enemy drops its loot where it stood and
+// schedules the zone's next spawn.
+function damageEnemy(areaKey, en, dmg) {
+  const area = window.GS.areas[areaKey];
+  en.hp -= dmg; en.hitAt = Date.now();
+  if (en.hp > 0) return;
+  const i = area.enemies.indexOf(en);
+  if (i >= 0) area.enemies.splice(i, 1);
+  const ecfg = D.AREAS[areaKey].enemies;
+  for (const spec of ecfg.drops || []) {
+    const amt = rollAmount(spec);
+    if (amt > 0) { dropGround(areaKey, spec.item, amt, en.x, en.y); window.GS.stats.totalGathered += amt; }
+  }
+  const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+  area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
+}
+
+// One strike on the targeted enemy. Damage scales with the Spirit Blade
+// upgrade; with Spirit Wave the strike also ripples to every other enemy
+// within `aoe level * 1.5 cells` of the target.
 function attackEnemy(areaKey, id) {
   const area = window.GS.areas[areaKey];
-  const i = area.enemies.findIndex(en => en.id === id);
-  if (i < 0) return false;
-  const en = area.enemies[i];
-  en.hp -= 1; en.hitAt = Date.now();
-  if (en.hp <= 0) {
-    area.enemies.splice(i, 1);
-    const ecfg = D.AREAS[areaKey].enemies;
-    for (const spec of ecfg.drops || []) {
-      const amt = rollAmount(spec);
-      if (amt > 0) { dropGround(areaKey, spec.item, amt, en.x, en.y); window.GS.stats.totalGathered += amt; }
-    }
-    const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
-    area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
-  }
+  const target = area.enemies.find(en => en.id === id);
+  if (!target) return false;
+  const up = area.upgrades;
+  const dmg = 1 + (up.damage || 0);
+  const R = (up.aoe || 0) * 1.5 * CELL;
+  const hit = R > 0
+    ? area.enemies.filter(en => en === target || Math.hypot(en.x - target.x, en.y - target.y) <= R)
+    : [target];
+  for (const en of hit) damageEnemy(areaKey, en, dmg);
   return true;
 }
 
@@ -934,7 +1018,7 @@ window.ENGINE = {
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
   dropGround, grantDropsGround, settleGround, pickupNear, suctionStep, pushOutOfColliders,
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
-  buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked,
+  buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, smeltCfg, smeltRemaining,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

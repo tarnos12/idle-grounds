@@ -19,8 +19,10 @@ function makeAreaState() {
     nextBuildId: 1,
     nextEnemyId: 1,
     // speed = regrow/growth; harvestSpeed = swing/chop/mine/hold rate;
-    // quarry = fewer clicks per stone. paid = incremental upgrade funding.
-    upgrades: { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0, paid: {} },
+    // quarry = fewer clicks per stone; enemyCap/damage/aoe = combat branch.
+    // paid = incremental upgrade funding.
+    upgrades: { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
+                enemyCap: 0, damage: 0, aoe: 0, paid: {} },
   };
 }
 
@@ -81,7 +83,8 @@ function loadState() {
       if (!s.areas[k]) continue;
       Object.assign(fresh.areas[k], s.areas[k]);
       fresh.areas[k].upgrades = Object.assign(
-        { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0, paid: {} },
+        { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
+          enemyCap: 0, damage: 0, aoe: 0, paid: {} },
         s.areas[k].upgrades || {});
     }
     if (Array.isArray(s.hand)) fresh.hand = s.hand;
@@ -124,6 +127,12 @@ function loadState() {
       for (const b of a.buildings || []) {
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
+        // converter (Forge) state: scrub dead input items, sanitise counters
+        if (window.DATA.BUILDINGS[b.type].smelt) {
+          if (b.smeltPaid) for (const it of Object.keys(b.smeltPaid)) if (!LIVE.has(it)) delete b.smeltPaid[it];
+          if (!Number.isFinite(b.queue) || b.queue < 0) b.queue = 0;
+          if (!Number.isFinite(b.smeltDoneAt) || b.smeltDoneAt < 0) b.smeltDoneAt = 0;
+        }
       }
       if (a.upgrades) a.upgrades.maxTier = 1;    // tier upgrades are gone
     }

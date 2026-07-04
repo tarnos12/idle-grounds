@@ -3,17 +3,18 @@
 > Read this first when starting a new Claude Code session. It captures the
 > current state of the prototype, key decisions, and what's left to do.
 
-## ▶ NEXT SESSION: start here (agreed 2026-07-04)
+## ▶ NEXT SESSION: start here
 
-Build the **Forge function + combat upgrades** in one batch:
-1. **Forge smelts Iron Ore → Iron Bar** (first tier-2 resource): right-click
-   feed ore (+ maybe wood as fuel) into a built Forge; it converts on a timer
-   and drops Iron Bars on the ground. Reuse the pattern for future
-   converter buildings (Workbench etc.).
-2. **Combat branch in the upgrade tree**: enemy cap (+1 fox/level), click
-   damage, AoE strike — config hooks already exist in `AREAS.center.enemies`;
-   Spirit Essence is the intended currency.
-3. Then dragon stage 3 can demand Iron Bars and unlock the next layer.
+The Forge + combat batch is DONE (see "Last session summary"). Next up,
+in rough priority order (confirm with the user first):
+1. **Dragon stage 3 reward + stage 4**: stage 3 now demands Iron Bars
+   (8🧲 + 15🪸 + 10💧) but its reward text is still "not written yet" —
+   decide what it unlocks (next building/recipe/region?) and add a stage 4.
+2. **Workbench function**: it builds but does nothing. Reuse the Forge's
+   `smelt` converter config in `BUILDINGS` (rename the concept if it grows
+   beyond smelting) — e.g. wood + iron bars → tools.
+3. Story dialogue UI for dragon stage-ups; offline/idle catch-up on load;
+   feedback polish (particles, +N floaters).
 
 ## Session setup
 
@@ -72,10 +73,14 @@ icons). Fixes that must stay:
   its field); **clay patch** bottom-right (generator, cap 10);
   **Sleeping Dragon 🐉** (5×5 building, top-left corner) — feed each stage's
   tribute (`DATA.DRAGON_STAGES`: 15 leaves → Forge; stone+clay → Algae Farm;
-  iron+algae+water → TBD) to unlock recipes; future story hook;
-  **Fox Spirits 🦊** (top-right corner, red-tinted zone) — wander, 3 clicks
-  to kill (hold = auto-attack), drop Spirit Essence, respawn; cap 1
-  (cap/damage/AoE are future upgrade hooks). Config: `AREAS.center.enemies`.
+  iron BARS+algae+water → TBD) to unlock recipes; future story hook;
+  **Fox Spirits 🦊** (top-right corner, red-tinted zone) — wander, 3 hp,
+  click to fight (hold = auto-attack), drop Spirit Essence, respawn; base
+  cap 1. The tree's combat branch (foe_cap/foe_dmg/foe_aoe nodes) raises
+  the cap (+1/level), click damage (+1/level) and adds an AoE ripple
+  (strikes also hit enemies within `aoe lvl × 1.5` cells of the target).
+  Config: `AREAS.center.enemies`; state in `areas.center.upgrades`
+  (`enemyCap`/`damage`/`aoe`).
 - **Farm:** 3×3 wheat plots + 2×2 cotton patches (centre zone only); sand
   generator in the middle-left band.
 - **Mine:** stone ore (drops stone+clay) + tougher **iron veins** (⚙️, 3
@@ -85,9 +90,10 @@ icons). Fixes that must stay:
   passive water field, cap 10). The **Algae Farm** building (dragon stage 2)
   is `waterOnly`: places ONLY inside the fishing waters, passively grows
   algae around itself (cap 8 nearby).
-- Items: wood, leaves, wheat, cotton, stone, clay, sand, iron_ore, fish,
-  algae, water, spirit_essence. Interactions: `chop`, `instant`, `break`,
-  `surface`, `quarry` (fixtures, `dropMin..dropMax`).
+- Items: wood, leaves, wheat, cotton, stone, clay, sand, iron_ore,
+  iron_bar 🧲 (tier-2, Forge-only), fish, algae, water, spirit_essence.
+  Interactions: `chop`, `instant`, `break`, `surface`, `quarry` (fixtures,
+  `dropMin..dropMax`).
 
 ## Carrying / economy
 
@@ -95,6 +101,13 @@ icons). Fixes that must stay:
   colliders). Hold-left = gravity suction (2-cell radius); right-click drops
   (4→20/s ramp). Hand cap 20, +5 per Hand Size level.
 - **Storehouse** = visible single-item container (cap 200, paced withdraw).
+- **Converter buildings** (the Forge; pattern for Workbench etc.): a `smelt`
+  config in `BUILDINGS` — `{ inputs, output, outputQty, timeMs, queueCap }`.
+  Right-click feed the inputs (same `feedNeeds` rule); each complete set
+  queues one batch; `gameTick` runs the queue on a timer (TEST-timescaled)
+  and drops the output beside the building. UI shows queue count + a gold
+  progress bar (repaints via `animActive`). Demolish refunds undelivered
+  batches + the partial feed. Forge: 2 iron_ore + 1 wood → 1 iron_bar / 6s.
 - **Feeding rule everywhere** (ghosts / Altar / Dragon): front hand stack
   feeds if needed; otherwise the click reorders a needed item to the front
   (`feedNeeds` in engine.js).
@@ -138,26 +151,33 @@ icons). Fixes that must stay:
 
 ## Suggested next steps
 
-- [ ] **Forge function**: convert Iron Ore → Iron Bar (first tier-2
-      resource — the user explicitly plans resource conversion).
+- [x] **Forge function**: Iron Ore → Iron Bar converter (done).
+- [x] Combat upgrades: enemy cap, click damage, AoE attack (done).
 - [ ] Dragon stage 3+ rewards, story dialogue UI for stage-ups.
-- [ ] Combat upgrades: enemy cap, click damage, AoE attack (hooks exist).
-- [ ] More tree nodes (combat/dragon branches); Workbench function.
+- [ ] More tree nodes (dragon branch); Workbench function (reuse `smelt`).
 - [ ] Offline/idle catch-up on load; feedback polish (particles, +N
       floaters, SFX); real sprite art; balance pass.
 
 ## Git
 
-- Own git repo, no remote, history on `master`. Commit only when asked.
+- Remote: `origin` = github.com/tarnos12/idle-grounds (private). Cloud
+  sessions develop on their designated `claude/...` branch and push there;
+  `master` is the main line. Commit only when asked (cloud sessions: commit
+  + push at the end of each batch as instructed).
 
 ## Last session summary
 
-Xianxia content drop: 4 new basic resources (water/spring+field in Fishing,
-cotton plots, iron veins, algae outnumbering fish) + Spirit Essence;
-multi-resource costs everywhere (per-node `costs` in the tree, multi-item
-`upgradeJob`); corner trees replaced by ONE Spirit Tree (top-centre,
-manual-only wood); Sleeping Dragon (top-left) — feed tribute stages to
-unlock Forge → Algae Farm (water-only placement, passive algae); Fox Spirit
-enemies (top-right) with click/hold combat, loot and respawn. All engine
-paths verified headless via preview_eval; saves migrate (node kinds scrubbed
-against config, spawner overshoot trimmed, old job format dropped).
+Forge + combat batch: **iron_bar 🧲** item; the Forge is the first
+**converter building** (`smelt` config: 2 iron_ore + 1 wood → 1 iron_bar /
+6s, queue up to 5 batches, gold progress bar + "+N queued" on canvas,
+demolish refunds queue + partial feed — reuse for the Workbench).
+**Combat branch** in the tree (south-east from the root): Spirit Call
+(+1 fox cap/lvl), Spirit Blade (+1 click damage/lvl), Spirit Wave (AoE
+ripple, radius `lvl × 1.5` cells), Spirit Essence + iron bars as currency;
+`attackEnemy` split into target pick + `damageEnemy`. **Dragon stage 3**
+now demands 8 iron_bar + 15 algae + 10 water (reward still TBD). Saves
+migrate (forge counters sanitised, dead smeltPaid items scrubbed, new
+upgrade fields default 0). Verified headless in node (vm harness over
+data/state/engine) AND in real Chromium via playwright: boot, feed→queue→
+smelt→bar-drop, 3-fox cap, AoE hit, tree render — no page or draw errors.
+Assets bumped to `?v=10`.

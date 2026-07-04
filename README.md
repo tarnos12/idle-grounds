@@ -5,7 +5,7 @@ one continuous pannable world where resource nodes drop physical items on
 the ground, a cursor "hand" carries them, and buildings are built by
 feeding them resources. Feed the Sleeping Dragon 🐉 tribute to unlock new
 recipes; fight Fox Spirits 🦊 for Spirit Essence; click the Spirit Tree
-for wood.
+for wood; smelt Iron Bars at the Forge 🔥.
 
 **Vanilla HTML/CSS/JS — no build step, no dependencies.**
 
