@@ -15,12 +15,8 @@ Build the **Forge function + combat upgrades** in one batch:
    Spirit Essence is the intended currency.
 3. Then dragon stage 3 can demand Iron Bars and unlock the next layer.
 
-## ⚠️ Session setup (important)
+## Session setup
 
-- **Work ONLY in this folder:** `C:\Work\Marrow Tap Projects\Farm Prototype Claude`
-- Start the session **rooted in this folder**. Do **not** touch the sibling
-  `Legend of the Fallen Warrior - ORIGINAL` folder — separate, unrelated project.
-- Verify on startup: `git rev-parse --show-toplevel` should print this folder.
 - **Always give the user the game link** after changes: http://localhost:5174
 
 ## What this is
