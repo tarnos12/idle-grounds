@@ -25,7 +25,8 @@ in rough priority order (confirm with the user first):
   2. Give the user the right link for WHERE THE SESSION RUNS:
      - **Local session** (user's PC, `C:\Work\Marrow Tap Projects\Farm
        Prototype Claude`): run `node server.js` (backgrounded) and hand
-       out http://localhost:5174.
+       out http://localhost:5174. (The user can also double-click
+       `start-game.bat` there — it pulls, serves and opens the browser.)
      - **Cloud session**: the user's browser can NEVER reach the
        container's localhost — never hand out a localhost link, and don't
        just point at the Preview badge (the user wants a real link).
