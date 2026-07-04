@@ -57,6 +57,56 @@ const FIELD_TINT = {
   stone: ["rgba(148,163,184,.22)", "rgba(148,163,184,.4)"],
   water: ["rgba(96,165,250,.28)",  "rgba(96,165,250,.45)"],
 };
+// ---- item icon art (assets/icons/<key>.png, 16px pixel art) ---------
+// Loaded lazily; anything missing keeps its emoji, so new items work before
+// art exists. Pixel art is drawn with image smoothing OFF (crisp scaling).
+const ICON_IMGS = {};
+for (const key of Object.keys(DD.ITEM_ICONS)) {
+  const img = new Image();
+  img.onload = () => { ICON_IMGS[key] = img; if (window.requestRender) window.requestRender(); };
+  img.src = `assets/icons/${key}.png`;
+}
+// Draw an item icon centred at (cx, cy), px square, on the world canvas.
+function drawItemIcon(key, cx, cy, px) {
+  const img = ICON_IMGS[key];
+  if (img) { ctx.drawImage(img, Math.round(cx - px / 2), Math.round(cy - px / 2), px, px); return; }
+  ctx.save();
+  ctx.fillStyle = C.text;
+  ctx.font = `${Math.round(px * 0.9)}px ${EMOJI_FONT}`;
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(E.itemIcon(key), cx, cy);
+  ctx.restore();
+}
+// Draw a "qty ICON  qty ICON…" needs list centred at (cx, cy); the caller
+// sets fillStyle. Optional prefix text ("Feed:") leads the line.
+function drawNeedsLine(entries, cx, cy, px, prefix) {
+  ctx.font = `800 ${px}px ${TEXT_FONT}`;
+  ctx.textBaseline = "middle";
+  if (!entries.length) { ctx.textAlign = "center"; ctx.fillText((prefix ? prefix + " " : "") + "…", cx, cy); return; }
+  const gap = px * 0.3, iconPx = Math.round(px * 1.35);
+  const pre = prefix ? prefix + " " : "";
+  let total = pre ? ctx.measureText(pre).width : 0;
+  for (const [, q] of entries) total += ctx.measureText(String(q)).width + gap * 0.5 + iconPx + gap;
+  total -= gap;
+  let x = cx - total / 2;
+  ctx.textAlign = "left";
+  if (pre) { ctx.fillText(pre, x, cy); x += ctx.measureText(pre).width; }
+  for (const [it, q] of entries) {
+    ctx.fillText(String(q), x, cy);
+    x += ctx.measureText(String(q)).width + gap * 0.5;
+    drawItemIcon(it, x + iconPx / 2, cy, iconPx);
+    x += iconPx + gap;
+  }
+  ctx.textAlign = "center";
+}
+// DOM contexts (hand cursor, build menu, unlock buttons): <img> once the
+// icon exists, emoji otherwise.
+function iconHTML(key) {
+  return ICON_IMGS[key]
+    ? `<img class="item-ico" src="assets/icons/${key}.png" alt="${E.itemName(key)}">`
+    : E.itemIcon(key);
+}
+
 // "Twemoji Mozilla" FIRST: Firefox mishandles Windows 11's Segoe UI Emoji
 // (COLR v1) in canvas — glyphs come out as dim fillStyle-tinted silhouettes,
 // which reads as a translucent grey film over every icon. Firefox always
@@ -317,6 +367,7 @@ function drawWorldInner() {
   ctx.shadowBlur = 0;
   ctx.filter = "none";
   ctx.globalCompositeOperation = "source-over";
+  ctx.imageSmoothingEnabled = false;   // pixel-art icons scale crisply
 
   // void + faint world-aligned grid lines
   ctx.fillStyle = C.void;
@@ -437,10 +488,8 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.fillStyle = C.text; ctx.font = `800 ${24 * s}px ${TEXT_FONT}`;
       ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.68));
       if (job) {
-        const rem = Object.entries(E.jobRemaining(job))
-          .map(([it, q]) => `${q} ${E.itemIcon(it)}`).join("  ");
-        ctx.fillStyle = C.gold; ctx.font = `800 ${20 * s}px ${TEXT_FONT}`;
-        ctx.fillText(rem || "…", cxp, Y(by + bh * 0.86));
+        ctx.fillStyle = C.gold;
+        drawNeedsLine(Object.entries(E.jobRemaining(job)), cxp, Y(by + bh * 0.86), 20 * s);
       }
     } else if (b.built && isDragon) {
       const st = E.dragonStage();
@@ -451,10 +500,8 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.fillStyle = awake ? C.gold : "#d8b4fe"; ctx.font = `800 ${18 * s}px ${TEXT_FONT}`;
       ctx.fillText(awake ? "Awakened Dragon" : bCfg.name, cxp, Y(by + bh * 0.64));
       if (st) {
-        const rem = Object.entries(E.dragonRemaining())
-          .map(([it, q]) => `${q} ${E.itemIcon(it)}`).join("  ");
-        ctx.fillStyle = C.gold; ctx.font = `800 ${15 * s}px ${TEXT_FONT}`;
-        ctx.fillText(`Feed: ${rem || "…"}`, cxp, Y(by + bh * 0.84));
+        ctx.fillStyle = C.gold;
+        drawNeedsLine(Object.entries(E.dragonRemaining()), cxp, Y(by + bh * 0.84), 15 * s, "Feed:");
       } else {
         ctx.fillStyle = C.muted; ctx.font = `700 ${13 * s}px ${TEXT_FONT}`;
         ctx.fillText("watches over the grounds", cxp, Y(by + bh * 0.84));
@@ -482,16 +529,17 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 5 * s);
         ctx.fillStyle = C.gold; ctx.fillRect(px0, py0, pw * frac, 5 * s);
       } else {
-        const rem = Object.entries(E.smeltRemaining(b))
-          .map(([it, qy]) => `${qy} ${E.itemIcon(it)}`).join("  ");
-        ctx.fillStyle = C.gold; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
-        ctx.fillText(`Feed: ${rem || "…"}`, cxp, Y(by + bh * 0.8));
+        ctx.fillStyle = C.gold;
+        drawNeedsLine(Object.entries(E.smeltRemaining(b)), cxp, Y(by + bh * 0.8), 10 * s, "Feed:");
       }
     } else if (b.built && b.type === "storehouse") {
-      ctx.fillStyle = C.text;
-      ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
-      ctx.fillText(b.item ? E.itemIcon(b.item) : bCfg.icon, cxp, Y(by + bh * 0.4));
-      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
+      if (b.item) drawItemIcon(b.item, cxp, Y(by + bh * 0.4), 26 * s);
+      else {
+        ctx.fillStyle = C.text;
+        ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
+        ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.4));
+      }
+      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`; ctx.textBaseline = "middle";
       ctx.fillText(b.item ? `${E.itemName(b.item)} ×${b.qty}` : "empty", cxp, Y(by + bh * 0.78));
     } else {
       ctx.fillStyle = C.text;
@@ -502,10 +550,8 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
       ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.66));
       if (!b.built) {
-        const needs = E.buildingNeeds(b);
-        const list = Object.entries(needs).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
-        ctx.fillStyle = C.gold; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
-        ctx.fillText(list || "…", cxp, Y(by + bh * 0.86));
+        ctx.fillStyle = C.gold;
+        drawNeedsLine(Object.entries(E.buildingNeeds(b)), cxp, Y(by + bh * 0.86), 10 * s);
       }
     }
   }
@@ -611,12 +657,9 @@ function drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlock
 function drawRegionItems(key, ox, oy, view, s, X, Y) {
   const st = window.GS.areas[key];
   const seen = (x, y, w, h) => x < view.r && x + w > view.l && y < view.b && y + h > view.t;
-  ctx.fillStyle = C.text;
-  ctx.font = `${18 * s}px ${EMOJI_FONT}`;
-  ctx.textAlign = "center"; ctx.textBaseline = "middle";
   for (const g of st.ground) {
     if (!seen(g.x + ox - 16, g.y + oy - 16, 32, 32)) continue;
-    ctx.fillText(E.itemIcon(g.item), X(ox + g.x), Y(oy + g.y));
+    drawItemIcon(g.item, X(ox + g.x), Y(oy + g.y), 20 * s);
   }
 }
 
@@ -637,7 +680,7 @@ function renderUnlockButtons() {
   for (const [key, side] of Object.entries(DD.WORLD.unlockSide)) {
     if (E.isAreaUnlocked(key)) continue;
     const cost = E.areaUnlockCost(key);
-    const label = Object.entries(cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+    const label = Object.entries(cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
     const btn = el("button", `edge-arrow ${side} locked` + (E.canAfford(cost) ? "" : " cant"));
     btn.innerHTML = `<span class="arr">🔓</span>` +
       `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span>`;
@@ -655,7 +698,7 @@ function renderHandCursor() {
   hc.style.left = cursor.cx + "px";
   hc.style.top = cursor.cy + "px";
   hc.innerHTML = hand.map((s, i) =>
-    `<span class="hc-stack${i === 0 ? " first" : ""}">${s.qty}<span class="hc-ico">${E.itemIcon(s.item)}</span></span>`
+    `<span class="hc-stack${i === 0 ? " first" : ""}">${s.qty}<span class="hc-ico">${iconHTML(s.item)}</span></span>`
   ).join("");
 }
 
@@ -666,7 +709,7 @@ function renderBuildMenu() {
   if (!window.GS.build.open) return;
   bar.innerHTML = "";
   for (const b of E.buildingCatalog()) {
-    const cost = Object.entries(b.cost).map(([it, q]) => `${q} ${E.itemIcon(it)}`).join(" ");
+    const cost = Object.entries(b.cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
     const card = el("button", "build-card" + (window.GS.build.placing === b.id ? " active" : ""));
     card.innerHTML = `<span class="bc-ico">${b.icon}</span><span class="bc-name">${b.name}</span><span class="bc-cost">${cost}</span>`;
     card.onclick = () => { window.GS.build.placing = b.id; window.GS.build.open = false; render(); };

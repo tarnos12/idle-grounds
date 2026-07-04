@@ -318,6 +318,9 @@ body {
 /* decorative border trees: darker, desaturated, clearly not harvestable */
 .node.k-deco .sprite { filter: grayscale(.5) brightness(.6) drop-shadow(0 3px 3px rgba(0,0,0,.5)); }
 
+/* pixel-art item icons in DOM overlays (hand cursor, build menu, unlock buttons) */
+img.item-ico { width: 1.2em; height: 1.2em; image-rendering: pixelated; vertical-align: -0.25em; }
+
 .dragon-box { text-align: center; border-color: #a855f7; box-shadow: 0 0 40px rgba(168,85,247,.25); }
 .dragon-box .dragon-ico { font-size: 56px; margin: 4px 0 10px; }
 .dragon-box p { font-size: 16px; line-height: 1.55; margin: 0 6px 16px; }

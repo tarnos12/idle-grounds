@@ -66,6 +66,21 @@ as ghosts and fed resources to construct. 100% resource economy — no gold.
   `loadState()` migrates old saves idempotently: scrubs dead items/kinds
   against the CURRENT config, drops corrupt entries, resets deco rings.
 
+## Item icon art (assets/icons/)
+
+- All 14 resources use **16px pixel-art icons** from `assets/items_sheet.png`
+  (user-provided sheet, 36×35 grid of 16px cells), extracted to
+  `assets/icons/<item_key>.png`. `tools/sheet.js` (zero-dep PNG
+  decode/crop/scale) does the extraction:
+  `node tools/sheet.js crop <sheet> <x> <y> 16 16 1 assets/icons/<key>.png`.
+- ui.js preloads them into `ICON_IMGS`; **anything missing falls back to the
+  emoji** (`ITEM_ICONS`), so new items work before art exists. Canvas draws
+  via `drawItemIcon` / `drawNeedsLine` (qty+icon lists) with
+  `imageSmoothingEnabled = false`; DOM overlays via `iconHTML()`
+  (`img.item-ico`, `image-rendering: pixelated`).
+- Node/building/enemy sprites are still emoji — same sheet + tool can supply
+  them later (there are trees, fish, gems, tools… on it).
+
 ## ⚠️ Firefox canvas emoji (the "dark film" saga)
 
 Firefox mishandles Windows 11's Segoe UI Emoji (COLR v1) in canvas — glyphs
