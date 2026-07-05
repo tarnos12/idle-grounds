@@ -49,11 +49,14 @@ input. The Furnace Spirit logistics building auto-stokes burners in ~3 cells.
 Endpoints: **Gathering Stone** (vacuums ground items, radius 10 cells,
 buffer 20), **Warding Seal** (typed pass-through, cap 5; right-click with
 an item tunes it), **Storehouse** (typed buffer; `lock` keeps type when
-empty), any **converter** (accepts only its remaining recipe inputs, up to
-queue cap). **Wisp Lantern** holds a LIST of links {from,to}; every beat
+empty), any **converter** (holds an INPUT STOCK per recipe item, cap 20 —
+stockCap in the smelt config; batches start themselves whenever the stock
+covers the recipe; feeding past the cap is refused). **Wisp Lantern** holds a LIST of links {from,to}; every beat
 (1s base, upgradeable) it services ONE link round-robin in added order,
 sending 1 item the target accepts; wisps physically fly the cargo
-(~120 px/s) and drop it on the ground if the target refuses on arrival.
+(~120 px/s) and and if the target refuses on arrival (e.g. the player hand-filled it
+mid-flight) the wisp flies the cargo BACK to its source (red glow),
+dropping it only if home is gone/full too.
 Left-click any buffer building withdraws into the hand. Demolition severs
 links and refunds buffers. Still missing: an in-game UI to create/edit
 links (engine hook: `ENGINE.addLink`), rate/speed upgrades, Furnace Spirit.

@@ -548,25 +548,26 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         : `${(b.links || []).length}⛓`;
       ctx.fillText(badge, cxp, Y(by + bh + 8));
     } else if (b.built && bCfg.smelt) {
-      // converter (Forge): icon + queue count, then a progress bar while a
-      // batch smelts, else the inputs the next batch still needs
+      // converter (Forge): icon + name, a progress bar while a batch works,
+      // and the input STOCK it holds (or what the next batch still needs)
       ctx.fillStyle = C.text;
       ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
       ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.32));
       ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
-      const q = b.queue || 0;
-      ctx.fillText(bCfg.name + (q > 0 ? `  +${q} queued` : ""), cxp, Y(by + bh * 0.58));
+      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.56));
       const now2 = Date.now();
       if (b.smeltDoneAt > now2) {
         const total = bCfg.smelt.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1);
         const frac = clamp(1 - (b.smeltDoneAt - now2) / total, 0, 1);
-        const pw = bw * 0.7 * s, px0 = X(bx + bw * 0.15), py0 = Y(by + bh * 0.74);
-        ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 5 * s);
-        ctx.fillStyle = C.gold; ctx.fillRect(px0, py0, pw * frac, 5 * s);
-      } else {
-        ctx.fillStyle = C.gold;
-        drawNeedsLine(Object.entries(E.smeltRemaining(b)), cxp, Y(by + bh * 0.8), 10 * s, "Feed:");
+        const pw = bw * 0.7 * s, px0 = X(bx + bw * 0.15), py0 = Y(by + bh * 0.7);
+        ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 4 * s);
+        ctx.fillStyle = C.gold; ctx.fillRect(px0, py0, pw * frac, 4 * s);
       }
+      const stockEntries = Object.entries(b.stock || {}).filter(([, q]) => q > 0);
+      ctx.fillStyle = C.gold;
+      if (stockEntries.length) drawNeedsLine(stockEntries, cxp, Y(by + bh * 0.88), 10 * s);
+      else if (b.smeltDoneAt <= now2)
+        drawNeedsLine(Object.entries(E.smeltRemaining(b)), cxp, Y(by + bh * 0.88), 10 * s, "Feed:");
     } else if (b.built && b.type === "storehouse") {
       if (b.item) drawItemIcon(b.item, cxp, Y(by + bh * 0.4), 26 * s);
       else {
@@ -703,7 +704,8 @@ function drawRegionItems(key, ox, oy, view, s, X, Y) {
     const p = E.wispPos(key, w, nowW);
     if (!seen(p.x + ox - 16, p.y + oy - 24, 32, 48)) continue;
     const wx = X(ox + p.x), wy = Y(oy + p.y);
-    ctx.fillStyle = "rgba(74,222,128,.30)";
+    // returning wisps (refused delivery, flying cargo home) glow red
+    ctx.fillStyle = w.returning ? "rgba(248,113,113,.35)" : "rgba(74,222,128,.30)";
     ctx.beginPath(); ctx.arc(wx, wy, 7 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#eafff2";
     ctx.beginPath(); ctx.arc(wx, wy, 2.5 * s, 0, Math.PI * 2); ctx.fill();

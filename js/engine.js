@@ -358,9 +358,10 @@ function setupStarterNetwork() {
   const mill  = placeBuilt(A, "paper_mill", 52, 36);
   const kiln  = placeBuilt(A, "kiln", 52, 41);
   const array = placeBuilt(A, "infusion_array", 52, 46);
-  // typed storehouses for the rare finds
-  const shJade   = placeBuilt(A, "storehouse", 56, 28, { item: "jade_shard", lock: true });
-  const shBamboo = placeBuilt(A, "storehouse", 56, 34, { item: "bamboo", lock: true });
+  // typed storehouses for the rare finds — placed NEAR their source
+  // (just outside the wild-land corners, beside the quarry / below the tree)
+  const shJade   = placeBuilt(A, "storehouse", 60, 26, { item: "jade_shard", lock: true });
+  const shBamboo = placeBuilt(A, "storehouse", 26, 36, { item: "bamboo", lock: true });
   // collectors at each source
   const gsStone = placeBuilt(A, "gathering_stone", 62, 18);
   const gsWood  = placeBuilt(A, "gathering_stone", 16, 33);
@@ -655,17 +656,40 @@ function placeBuilding(areaKey, type, row, col) {
 
 function smeltCfg(type) { return (D.BUILDINGS[type] && D.BUILDINGS[type].smelt) || null; }
 
-// Inputs the current (partially fed) batch still needs: { item: qty }.
+// Converters hold an INPUT STOCK per item (cap `stockCap`, default 20).
+// Batches start automatically whenever the stock covers the recipe; feeding
+// (by hand or wisp) only tops the stock up — past the cap it is refused.
+
+// Inputs the NEXT batch still needs beyond current stock: { item: qty }.
 function smeltRemaining(b) {
   const cfg = smeltCfg(b.type);
   if (!cfg) return {};
-  b.smeltPaid = b.smeltPaid || {};
+  b.stock = b.stock || {};
   const rem = {};
   for (const [item, qty] of Object.entries(cfg.inputs)) {
-    const r = qty - (b.smeltPaid[item] || 0);
+    const r = qty - (b.stock[item] || 0);
     if (r > 0) rem[item] = r;
   }
   return rem;
+}
+// Free stock space per input item (feeding stops at the cap): { item: qty }.
+function smeltSpace(b) {
+  const cfg = smeltCfg(b.type);
+  if (!cfg) return {};
+  b.stock = b.stock || {};
+  const cap = cfg.stockCap || 20;
+  const space = {};
+  for (const item of Object.keys(cfg.inputs)) {
+    const s = cap - (b.stock[item] || 0);
+    if (s > 0) space[item] = s;
+  }
+  return space;
+}
+function canStartBatch(b) {
+  const cfg = smeltCfg(b.type);
+  if (!cfg) return false;
+  b.stock = b.stock || {};
+  return Object.entries(cfg.inputs).every(([it, q]) => (b.stock[it] || 0) >= q);
 }
 
 // ---- Wisp logistics ------------------------------------------
@@ -690,9 +714,9 @@ function endpointAccepts(b, item) {
   if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
   if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
   if (cfg.smelt) {
-    const pending = (b.queue || 0) + (b.smeltDoneAt > Date.now() ? 1 : 0);
-    if (pending >= (cfg.smelt.queueCap || 5)) return false;
-    return (smeltRemaining(b)[item] || 0) > 0;
+    if (cfg.smelt.inputs[item] == null) return false;
+    b.stock = b.stock || {};
+    return (b.stock[item] || 0) < (cfg.smelt.stockCap || 20);
   }
   return false;
 }
@@ -733,9 +757,8 @@ function endpointGive(b, item) {
     return true;
   }
   if (cfg.smelt) {
-    b.smeltPaid = b.smeltPaid || {};
-    b.smeltPaid[item] = (b.smeltPaid[item] || 0) + 1;
-    if (!Object.keys(smeltRemaining(b)).length) { b.queue = (b.queue || 0) + 1; b.smeltPaid = {}; }
+    b.stock = b.stock || {};
+    b.stock[item] = (b.stock[item] || 0) + 1;
     return true;
   }
   return false;
@@ -794,14 +817,13 @@ function demolishBuilding(areaKey, buildingId) {
     for (const [item, qty] of Object.entries(cfg.cost)) dropGround(areaKey, item, qty, x, y);
     if ((b.type === "storehouse" || cfg.seal) && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y);
     for (const st of b.inv || []) if (st.qty > 0) dropGround(areaKey, st.item, st.qty, x, y);
-    // a converter refunds every batch not yet delivered (queued + in-progress)
-    // plus whatever was partially fed toward the next one
+    // a converter refunds its whole input stock plus the batch in progress
     if (cfg.smelt) {
-      const batches = (b.queue || 0) + (b.smeltDoneAt > 0 ? 1 : 0);
-      for (const [item, qty] of Object.entries(cfg.smelt.inputs))
-        if (qty * batches > 0) dropGround(areaKey, item, qty * batches, x, y);
-      for (const [item, qty] of Object.entries(b.smeltPaid || {}))
+      for (const [item, qty] of Object.entries(b.stock || {}))
         if (qty > 0) dropGround(areaKey, item, qty, x, y);
+      if (b.smeltDoneAt > 0)
+        for (const [item, qty] of Object.entries(cfg.smelt.inputs))
+          dropGround(areaKey, item, qty, x, y);
     }
   } else {
     for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y);
@@ -859,19 +881,11 @@ function dropFromHand(areaKey, x, y) {
     }
     return res;
   }
-  // Converter buildings (the Forge): feed the recipe's inputs; every complete
-  // set queues one batch (up to queueCap counting the one being smelted).
+  // Converter buildings (the Forge): feed recipe inputs into the stock —
+  // up to the per-item cap; batches start themselves from the stock.
   if (b && b.built && smeltCfg(b.type)) {
-    const cfg = smeltCfg(b.type);
-    const pending = (b.queue || 0) + (b.smeltDoneAt > Date.now() ? 1 : 0);
-    if (pending >= (cfg.queueCap || 5)) return null;
-    b.smeltPaid = b.smeltPaid || {};
-    const res = feedNeeds(smeltRemaining(b), b.smeltPaid);
-    if (res && res.fed && !Object.keys(smeltRemaining(b)).length) {
-      b.queue = (b.queue || 0) + 1;
-      b.smeltPaid = {};
-    }
-    return res;
+    b.stock = b.stock || {};
+    return feedNeeds(smeltSpace(b), b.stock);
   }
   // Warding Seal: right-click TUNES it to the front hand item (consumes
   // nothing) — from then on wisps only route that item through it.
@@ -1112,9 +1126,9 @@ function gameTick() {
       changed = true;
     }
 
-    // Converter buildings (the Forge) work through their queued batches:
-    // finish the active batch (drop its output beside the building), then
-    // pull the next batch off the queue.
+    // Converter buildings (the Forge): finish the active batch (drop its
+    // output beside the building), then start the next straight from the
+    // input stock whenever it covers the recipe.
     for (const b of area.buildings) {
       const scfg = b.built && smeltCfg(b.type);
       if (!scfg) continue;
@@ -1127,8 +1141,8 @@ function gameTick() {
         b.smeltDoneAt = 0;
         changed = true;
       }
-      if (!b.smeltDoneAt && (b.queue || 0) > 0) {
-        b.queue--;
+      if (!b.smeltDoneAt && canStartBatch(b)) {
+        for (const [it, q] of Object.entries(scfg.inputs)) b.stock[it] -= q;
         b.smeltDoneAt = now + scfg.timeMs * scale;
         changed = true;
       }
@@ -1168,9 +1182,11 @@ function gameTick() {
           endpointTake(src, item);
           const sc = buildingCenterPx(src);
           // parametric flight: position is derived from departure time, so
-          // rendering is silky at any framerate regardless of tick rate
+          // rendering is silky at any framerate regardless of tick rate.
+          // fromId lets a refused delivery fly its cargo back home.
           area.wisps.push({ id: area.nextWispId++, x0: sc.x, y0: sc.y, x: sc.x, y: sc.y,
-                            item, toId: l.to, t0: now, sp: bCfg.lantern.speed || 170 });
+                            item, toId: l.to, fromId: l.from, t0: now,
+                            sp: bCfg.lantern.speed || 170 });
           b.connIdx = (b.connIdx + k + 1) % b.links.length;
           b.nextSend = now + (bCfg.lantern.rateMs || 1000);
           changed = true;
@@ -1189,8 +1205,17 @@ function gameTick() {
         const p = wispPos(areaKey, w, now);
         w.x = p.x; w.y = p.y;               // persisted fallback position
         if (p.frac >= 1) {
-          if (!endpointGive(dst, w.item)) dropGround(areaKey, w.item, 1, p.x, p.y + 24);
-          done.add(w.id); changed = true;
+          if (endpointGive(dst, w.item)) { done.add(w.id); changed = true; }
+          else if (!w.returning && w.fromId && buildingById(areaKey, w.fromId)) {
+            // target filled up mid-flight (e.g. hand-fed): fly the cargo home
+            w.returning = true;
+            w.toId = w.fromId;
+            w.x0 = p.x; w.y0 = p.y; w.t0 = now;
+            changed = true;
+          } else {
+            dropGround(areaKey, w.item, 1, p.x, p.y + 24);
+            done.add(w.id); changed = true;
+          }
         }
       }
       if (done.size) area.wisps = area.wisps.filter(w => !done.has(w.id));
@@ -1297,7 +1322,7 @@ window.ENGINE = {
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, smeltCfg, smeltRemaining,
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, setupStarterNetwork,
-  wispPos,
+  wispPos, endpointAccepts, endpointGive, smeltSpace,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

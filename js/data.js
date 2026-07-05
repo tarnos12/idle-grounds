@@ -213,25 +213,25 @@ const BUILDINGS = {
   dragon:    { name: "Sleeping Dragon", icon: "🐉", cost: {}, size: { w: 5, h: 5 }, unlocked: false, indestructible: true },
   workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true,
                smelt: { inputs: { wood: 3 }, output: "plank", outputQty: 1,
-                        timeMs: 4000, queueCap: 5 } },
+                        timeMs: 4000, stockCap: 20 } },
   kiln:      { name: "Kiln",      icon: "🏺", cost: { wood: 10, clay: 5 },  unlocked: true,
                smelt: { inputs: { clay: 2, wood: 1 }, output: "brick", outputQty: 1,
-                        timeMs: 5000, queueCap: 5 } },
+                        timeMs: 5000, stockCap: 20 } },
   paper_mill:{ name: "Paper Mill", icon: "📜", cost: { wood: 10, stone: 5 }, unlocked: true,
                smelt: { inputs: { bamboo: 1, wood: 2 }, output: "paper", outputQty: 1,
-                        timeMs: 5000, queueCap: 5 } },
+                        timeMs: 5000, stockCap: 20 } },
   // Infusion Array: a formation circle that imbues mundane stone with fox
   // essence — the Spirit Stone source (premium late-game currency).
   infusion_array: { name: "Infusion Array", icon: "🔮", cost: { stone: 10, spirit_essence: 5 }, unlocked: true,
                smelt: { inputs: { stone: 3, spirit_essence: 1 }, output: "spirit_stone", outputQty: 1,
-                        timeMs: 8000, queueCap: 5 } },
+                        timeMs: 8000, stockCap: 20 } },
   // Converter buildings carry a `smelt` recipe: right-click feed the inputs
   // (same feeding rule as ghosts); each complete set queues one batch, the
   // building works through the queue on a timer and drops the output on the
   // ground beside itself. Reuse this pattern for the Workbench etc.
   forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1,
                smelt: { inputs: { iron_ore: 2, wood: 1 }, output: "iron_bar", outputQty: 1,
-                        timeMs: 6000, queueCap: 5 } },
+                        timeMs: 6000, stockCap: 20 } },
   storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 }, cap: 200,  unlocked: true },
   // Algae Farm: can ONLY be placed in the water (fishing's centre zone);
   // passively grows algae around itself.
