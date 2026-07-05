@@ -388,6 +388,10 @@ img.item-ico { width: 1.2em; height: 1.2em; image-rendering: pixelated; vertical
 .dragon-box p { font-size: 16px; line-height: 1.55; margin: 0 6px 16px; }
 .dragon-box .build-card { margin: 0 auto; }
 
+.ascend-box { text-align: center; border-color: var(--gold); box-shadow: 0 0 44px rgba(251,191,36,.25); }
+.ascend-box p { font-size: 14px; color: var(--muted); line-height: 1.55; margin: 6px 10px; }
+.ascend-row { display: flex; gap: 12px; justify-content: center; margin-top: 14px; }
+
 .win-box { text-align: center; }
 .win-box h1 { margin: 6px 0; font-size: 26px; }
 #win-stats { display: flex; flex-direction: column; gap: 8px; margin: 18px 0; font-size: 16px; }

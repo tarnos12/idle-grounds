@@ -117,6 +117,29 @@ function buffActive(kind) {
   return !!(b && b.kind === kind && b.until > Date.now());
 }
 
+// Prestige: each completed Ascension shaves 8% off every duration
+// (regrowth, batches, lantern beats). Compounds multiplicatively.
+function prestigeFactor() { return Math.pow(0.92, window.GS.ascensions || 0); }
+
+// Is a Dragon Shrine standing anywhere? (blessings +60s, scales 2x rate)
+function shrineBuilt() {
+  for (const k of Object.keys(window.GS.areas))
+    if (window.GS.areas[k].buildings.some(b => b.built && D.BUILDINGS[b.type].shrine)) return true;
+  return false;
+}
+
+// The Ascension itself: reset the grounds, keep the prestige counter (and
+// spare veterans the tutorial). Saves, then reboots into the fresh run.
+function ascend() {
+  const asc = (window.GS.ascensions || 0) + 1;
+  const fresh = window.SAVE.fresh();
+  fresh.ascensions = asc;
+  fresh.quest.idx = D.QUESTS.length;   // veterans skip the tutorial chain
+  window.GS = fresh;
+  window.SAVE.saveState();
+  location.reload();
+}
+
 // ---- Timers / tier rolling ----------------------------------
 
 function effectiveTimer(areaKey, tierIndex) {
@@ -403,7 +426,7 @@ function depleteNode(areaKey, node) {
   const speed = window.GS.areas[areaKey].upgrades.speed;
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   const buffFac = buffActive("verdant_pill") ? 0.5 : 1;   // Verdant Blessing
-  const delay = (node.regrowSec || 10) * Math.pow(0.8, speed) * scale * 1000 * buffFac;
+  const delay = (node.regrowSec || 10) * Math.pow(0.8, speed) * scale * 1000 * buffFac * prestigeFactor();
   area.spawnQueue.push({ at: Date.now() + delay, kind: node.spawnerKind });
 }
 
@@ -955,7 +978,8 @@ function dropFromHand(areaKey, x, y) {
     const first0 = window.GS.hand[0];
     if (first0 && D.DRAGON_BUFFS[first0.item]) {
       handTake(first0.item, 1);
-      const dur = 60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0);
+      const dur = 60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0)
+        + (shrineBuilt() ? 60000 : 0);   // a Dragon Shrine honours the blessing
       window.GS.buff = { kind: first0.item, until: Date.now() + dur };
       return { fed: first0.item };
     }
@@ -1021,6 +1045,8 @@ function dropFromHand(areaKey, x, y) {
     if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) {
       b.built = true;
       window.GS.stats.buildingsBuilt = (window.GS.stats.buildingsBuilt || 0) + 1;
+      // completing the Ascension Gate offers the ending
+      if (D.BUILDINGS[b.type].gate) window.GS.ascendPrompt = true;
     }
     return res ? Object.assign(res, { building: b.id }) : null;
   }
@@ -1262,7 +1288,7 @@ function gameTick() {
         changed = true;
       }
       if (!b.smeltDoneAt && canStartBatch(b)) {
-        let cost = scfg.timeMs * scale;
+        let cost = scfg.timeMs * scale * prestigeFactor();
         // Ember Blessing: burners work twice as fast (and burn half the fuel)
         if (D.BUILDINGS[b.type].fuel && buffActive("ember_pill")) cost *= 0.5;
         // burners spend fuel equal to the batch duration; no fuel = no work
@@ -1319,7 +1345,7 @@ function gameTick() {
                             item, toId: l.to, fromId: l.from, t0: now,
                             sp: (bCfg.lantern.speed || 170) * (1 + 0.25 * haste) / wind });
           b.connIdx = (b.connIdx + k + 1) % b.links.length;
-          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste) * wind;
+          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste) * wind * prestigeFactor();
           changed = true;
           break;
         }
@@ -1391,6 +1417,26 @@ function gameTick() {
         const dx = en.tx - en.x, dy = en.ty - en.y, dd = Math.hypot(dx, dy);
         if (dd < step || Math.random() < 0.01) { en.tx = rand(x0, x1); en.ty = rand(y0, y1); }
         else { en.x += (dx / dd) * step; en.y += (dy / dd) * step; }
+      }
+    }
+
+    // The AWAKENED dragon sheds Dragon Scales beside itself now and then
+    // (twice as often while a Dragon Shrine stands; small pile cap).
+    if (areaKey === "center" && !D.DRAGON_STAGES[window.GS.dragon.stage]) {
+      const interval = 45000 * scale * (shrineBuilt() ? 0.5 : 1);
+      if (!window.GS.dragonScaleAt) window.GS.dragonScaleAt = now + interval;
+      else if (now >= window.GS.dragonScaleAt) {
+        window.GS.dragonScaleAt = now + interval;
+        const drg = area.buildings.find(bb => bb.type === "dragon");
+        if (drg) {
+          const c = buildingCenterPx(drg);
+          const near = area.ground.filter(g => g.item === "dragon_scale" &&
+            Math.hypot(g.x - c.x, g.y - c.y) <= 6 * CELL).length;
+          if (near < 5) {
+            dropGround(areaKey, "dragon_scale", 1, c.x + rand(-60, 60), c.y + 90);
+            changed = true;
+          }
+        }
       }
     }
 
@@ -1497,7 +1543,7 @@ window.ENGINE = {
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
-  questProgress, claimQuest, buffActive,
+  questProgress, claimQuest, buffActive, prestigeFactor, shrineBuilt, ascend,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

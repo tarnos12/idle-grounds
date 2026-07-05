@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=21" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
@@ -83,6 +83,21 @@
     </div>
   </div>
 
+  <!-- Ascension Gate ending -->
+  <div id="ascend-modal" class="modal hidden">
+    <div class="modal-box ascend-box">
+      <div class="dragon-ico">⛩️</div>
+      <h2>The Ascension Gate stands complete</h2>
+      <p>Talisman, star steel and dragon scale hum as one. The path beyond the
+        grounds opens — step through, and begin again as something greater.</p>
+      <p id="ascend-count"></p>
+      <div class="ascend-row">
+        <button id="ascend-go" class="build-card">☯ Ascend</button>
+        <button id="ascend-later" class="build-card">Keep playing</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Win modal -->
   <div id="win-modal" class="modal hidden">
     <div class="modal-box win-box">
@@ -92,10 +107,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=20"></script>
-  <script src="js/state.js?v=20"></script>
-  <script src="js/engine.js?v=20"></script>
-  <script src="js/ui.js?v=20"></script>
-  <script src="js/main.js?v=20"></script>
+  <script src="js/data.js?v=21"></script>
+  <script src="js/state.js?v=21"></script>
+  <script src="js/engine.js?v=21"></script>
+  <script src="js/ui.js?v=21"></script>
+  <script src="js/main.js?v=21"></script>
 </body>
 </html>

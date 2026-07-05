@@ -82,7 +82,15 @@ seeded so every line visibly runs from the first minute.
    blessing, 60s +30s/Dragon Affinity lvl, new pill replaces); ✅ Star
    Anvil (star steel); ✅ firestone (rare from mine ore/veins, top fuel);
    ✅ Beast Bait -> Spirit Boar (8hp, beast bones).
-5. Talisman Atelier, treasures, Dragon Shrine, Ascension Gate + prestige.
+5. ✅ Talisman Atelier (paper+spirit jade+elixir -> talisman); ✅ Dragon
+   Scales shed by the awakened dragon (45s, cap-5 pile, 2x with a
+   shrine); ✅ Dragon Shrine (+60s blessings); ✅ Ascension Gate
+   (3 talisman + 3 star steel + 3 scale) -> ASCEND: reset, keep +8%
+   permanent global speed per ascension (tutorial skipped on reruns).
+
+THE FULL ROADMAP IS IMPLEMENTED. Next frontiers are new design work:
+disciples (NPC helpers wearing Robes), more regions, deeper prestige,
+sprite art (see wishlist below).
 
 ## Building sprite wishlist (assets/buildings/<file>)
 

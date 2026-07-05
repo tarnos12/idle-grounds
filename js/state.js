@@ -54,6 +54,10 @@ function makeInitialState() {
     won: false,
     // Active dragon-pill blessing: { kind: <pill item id>, until: ts }.
     buff: null,
+    // Prestige: completed Ascensions grant +8% global speed each (kept
+    // across the reset). ascendPrompt shows the Ascension Gate dialog.
+    ascensions: 0,
+    ascendPrompt: false,
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
     quest: { idx: 0, hidden: false },
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0,
@@ -107,6 +111,8 @@ function loadState() {
     fresh.starterPlaced = !!s.starterPlaced;
     if (s.buff && Number.isFinite(s.buff.until) && window.DATA.DRAGON_BUFFS[s.buff.kind])
       fresh.buff = s.buff;
+    fresh.ascensions = Number.isFinite(s.ascensions) ? s.ascensions : 0;
+    fresh.ascendPrompt = !!s.ascendPrompt;
     // merge stats/quest onto defaults so counters added later start at 0
     if (s.stats) Object.assign(fresh.stats, s.stats);
     if (s.quest) Object.assign(fresh.quest, s.quest);
@@ -200,5 +206,5 @@ function loadState() {
 
 function clearSave() { saveDisabled = true; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
-window.SAVE = { saveState, loadState, clearSave, KEY: SAVE_KEY };
+window.SAVE = { saveState, loadState, clearSave, fresh: makeInitialState, KEY: SAVE_KEY };
 window.GS = loadState() || makeInitialState();

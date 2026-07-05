@@ -25,6 +25,7 @@ const ITEM_NAMES = {
   firestone: "Firestone", beast_bone: "Beast Bone", star_steel: "Star Steel",
   ember_pill: "Ember Pill", verdant_pill: "Verdant Pill",
   swiftwind_pill: "Swiftwind Pill", stoneheart_pill: "Stoneheart Pill",
+  talisman: "Talisman", dragon_scale: "Dragon Scale",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -43,6 +44,7 @@ const ITEM_ICONS = {
   firestone: "🌋", beast_bone: "🦴", star_steel: "⚔️",
   ember_pill: "🔴", verdant_pill: "🟢",
   swiftwind_pill: "🟡", stoneheart_pill: "🟣",
+  talisman: "🧧", dragon_scale: "🔶",
 };
 
 // Burner fuel values in burn-milliseconds (a batch consumes its own
@@ -316,6 +318,19 @@ const BUILDINGS = {
                recipes: [
                  { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
                ] },
+  // ---- Phase-5 endgame ----
+  talisman_atelier:{ name: "Talisman Atelier", icon: "🖌️", cost: { plank: 6, jade: 2 }, unlocked: true,
+               recipes: [
+                 { name: "Talisman", inputs: { paper: 2, spirit_jade: 1, qi_elixir: 1 }, output: "talisman", outputQty: 1, timeMs: 10000 },
+               ] },
+  // Dragon Shrine: honours the awakened dragon — blessings last +60s and
+  // it sheds Dragon Scales twice as often while one stands.
+  dragon_shrine:{ name: "Dragon Shrine", icon: "🐲", cost: { brick: 10, cloth: 8, jade: 3 }, unlocked: true,
+               shrine: true },
+  // Ascension Gate: the final monument. Building it offers ASCENSION —
+  // reset the grounds, keep a permanent +8% global speed per ascension.
+  ascension_gate:{ name: "Ascension Gate", icon: "⛩️", size: { w: 5, h: 5 }, unlocked: true,
+               gate: true, cost: { talisman: 3, star_steel: 3, dragon_scale: 3 } },
   charcoal_pit:{ name: "Charcoal Pit", icon: "🕳️", cost: { stone: 6, clay: 4 }, unlocked: true,
                recipes: [
                  { name: "Charcoal", inputs: { wood: 2 }, output: "charcoal", outputQty: 1, timeMs: 4000 },

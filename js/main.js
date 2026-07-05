@@ -22,6 +22,12 @@
   document.getElementById("dragon-continue").onclick = () => window.UI.dismissDragonDialog();
   document.getElementById("help-btn").onclick = () => window.UI.openHelp();
   document.getElementById("help-close").onclick = () => window.UI.closeHelp();
+  document.getElementById("ascend-go").onclick = () => {
+    if (confirm("Ascend and begin the grounds anew? (+8% permanent global speed)")) E.ascend();
+  };
+  document.getElementById("ascend-later").onclick = () => {
+    window.GS.ascendPrompt = false; window.UI.renderPlay();
+  };
 
   window.UI.wireInput();
   window.UI.render();

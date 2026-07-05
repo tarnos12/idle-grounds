@@ -332,7 +332,8 @@ function renderTopBar() {
   const key = regionAtCamCentre();
   const a = key ? DD.AREAS[key] : null;
   $("#area-name").innerHTML = (a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds")
-    + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "");
+    + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "")
+    + ((window.GS.ascensions || 0) > 0 ? ` <span class="sprint-tag">☯${window.GS.ascensions}</span>` : "");
   $("#hand-count").textContent = `${E.handTotal()}/${E.handCap()}`;
   // active dragon-pill blessing with a live countdown
   const buff = window.GS.buff, bp = $("#buff-pill");
@@ -1195,7 +1196,9 @@ function openHelp() {
   if (dr >= 3) S.push(["🪴 Herb Garden",
     "Grows Spirit Herbs around itself on land — the cultivation herb."]);
   if (dr >= 4) S.push(["🐲 The Awakened Dragon",
-    "It watches over the grounds now. More to come…"]);
+    "It watches over the grounds and sheds Dragon Scales 🔶 beside itself (faster with a Dragon Shrine, which also lengthens blessings)."]);
+  if (dr >= 4) S.push(["⛩️ Ascension",
+    "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate. Completing it offers ASCENSION: reset the grounds, keep +8% permanent global speed per ascension (☯ in the bottom bar)."]);
   if (u.farm || u.mine || u.fishing) S.push(["🗺️ Regions",
     "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron & jade; Fishing: fish, algae & spring water). Unlock borders with wood."]);
   else S.push(["🗺️ Regions",
@@ -1206,6 +1209,19 @@ function openHelp() {
   $("#help-modal").classList.remove("hidden");
 }
 function closeHelp() { $("#help-modal").classList.add("hidden"); }
+
+// ---- ascension gate dialog -----------------------------------
+// Completing (or clicking) the built Gate offers the ending: ascend and
+// keep +8% global speed per ascension, or keep playing this run.
+function syncAscendModal() {
+  const modal = $("#ascend-modal");
+  if (!modal) return;
+  const show = !!window.GS.ascendPrompt;
+  if (show) $("#ascend-count").textContent =
+    `You have ascended ${window.GS.ascensions || 0} time${(window.GS.ascensions || 0) === 1 ? "" : "s"}. ` +
+    `Ascending now grants a permanent +8% speed to everything — and begins the grounds anew.`;
+  modal.classList.toggle("hidden", !show);
+}
 
 // ---- dragon story dialog ------------------------------------
 // A stage-up stores its line in GS.dragon.dialog; the modal shows until the
@@ -1234,6 +1250,7 @@ function render() {
   renderBuildMenu();
   renderHandCursor();
   syncDragonDialog();
+  syncAscendModal();
   renderQuestPanel();
   if (upgradesOpen) drawTree();
 }
@@ -1243,6 +1260,7 @@ function renderPlay() {
   requestGridPaint();
   renderHandCursor();
   syncDragonDialog();
+  syncAscendModal();
   renderQuestPanel();
 }
 window.renderPlay = renderPlay;
@@ -1328,6 +1346,10 @@ function onMouseDown(e) {
     const sh = E.buildingAt(p.region, p.lrow, p.lcol);
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
+    // the built Ascension Gate re-offers the ending
+    if (sh && sh.built && DD.BUILDINGS[sh.type].gate) {
+      window.GS.ascendPrompt = true; syncAscendModal(); return;
+    }
     // converters open their recipe picker; lanterns their link editor
     if (sh && sh.built && DD.BUILDINGS[sh.type].recipes) { openRecipeMenu(p.region, sh); return; }
     if (sh && sh.built && DD.BUILDINGS[sh.type].lantern) { openLinkMenu(p.region, sh); return; }
