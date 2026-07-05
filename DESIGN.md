@@ -90,9 +90,10 @@ seeded so every line visibly runs from the first minute.
 
 THE FULL ROADMAP IS IMPLEMENTED, plus DISCIPLES (post-roadmap):
 Meditation Pavilion recruits disciples with Robes and feeds them Spirit
-Buns to cultivate Spirit Essence passively (a peaceful essence source;
-gives the Loom robe + Mill bun chains a purpose). Next frontiers: more
-regions, deeper prestige, sprite art (see wishlist below).
+Buns (or Spirit Wine, worth 3x — closing the Brewery loop) to cultivate
+Spirit Essence passively. Disciple Mastery tree node (+2 cap/level).
+Gives the Loom robe + Mill bun + Brewery wine chains a purpose. Next
+frontiers: more regions, deeper prestige, sprite art (see wishlist).
 
 ## Building sprite wishlist (assets/buildings/<file>)
 

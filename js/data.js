@@ -346,6 +346,9 @@ const BUILDINGS = {
   // buns by hand or wisp; the Recruit button in its panel spends a Robe.
   meditation_pavilion: { name: "Meditation Pavilion", icon: "🧘", cost: { plank: 6, cloth: 4 }, unlocked: true,
                roster: { cap: 3, recruit: "robe", food: "spirit_buns", foodCap: 20,
+                         // disciples eat any of these (value = cycles it fuels);
+                         // Spirit Wine is the Brewery's premium food
+                         foodValues: { spirit_buns: 1, spirit_wine: 3 },
                          produce: "spirit_essence", produceMs: 6000 } },
   // Converter buildings carry a `smelt` recipe: right-click feed the inputs
   // (same feeding rule as ghosts); each complete set queues one batch, the
@@ -438,8 +441,11 @@ const UPGRADE_TREE = [
     desc: "Lanterns send more often and wisps fly faster.", links: ["affinity"],
     costs: [{ wood: 40, spirit_stone: 1 }, { spirit_stone: 3, plank: 8 }, { spirit_stone: 6, brick: 8 }] },
   { id: "affinity", icon: "🐲", name: "Dragon Affinity", x: -300, y: 190, area: "center", type: "affinity",
-    desc: "Dragon-pill blessings last +30s per level.", links: [],
+    desc: "Dragon-pill blessings last +30s per level.", links: ["disciples"],
     costs: [{ qi_elixir: 2, wood: 40 }, { spirit_stone: 3, qi_elixir: 3 }, { spirit_jade: 1, qi_elixir: 5 }] },
+  { id: "disciples", icon: "🧘", name: "Disciple Mastery", x: -230, y: 300, area: "center", type: "discipleCap",
+    desc: "+2 disciple capacity per Meditation Pavilion, per level.", links: [],
+    costs: [{ robe: 2, spirit_stone: 2 }, { spirit_stone: 4, spirit_buns: 20 }, { spirit_jade: 2, robe: 5 }] },
   // east — centre economy, drifting to fishing
   { id: "spd_c",  icon: "⏱️", name: "Regrow Speed",    x: 150,  y: -35,  area: "center",  type: "speed",
     desc: "Center bushes respawn faster.", links: ["auto_c"],

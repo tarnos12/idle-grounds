@@ -678,13 +678,27 @@ function initLogistics(b) {
   if (cfg.roster) { b.disciples = b.disciples || 0; b.buns = b.buns || 0; b.nextCultivate = 0; }
 }
 
+// A pavilion's disciple capacity: base + the Disciple Mastery upgrade
+// (+2 per level, read from the Center tree — applies to every region).
+function rosterCap(b) {
+  const cfg = D.BUILDINGS[b.type].roster;
+  return cfg.cap + 2 * (window.GS.areas.center.upgrades.discipleCap || 0);
+}
+// How many cultivation cycles a food item fuels for this building (0 = not
+// accepted). Falls back to the single `food` string for older configs.
+function foodValue(b, item) {
+  const cfg = D.BUILDINGS[b.type].roster;
+  if (cfg.foodValues) return cfg.foodValues[item] || 0;
+  return item === cfg.food ? 1 : 0;
+}
+
 // Recruit a disciple into a Meditation Pavilion: spends one Robe from the
 // hand (up to the pavilion's cap). Returns true on success.
 function recruitDisciple(areaKey, id) {
   const b = buildingById(areaKey, id);
   const cfg = b && D.BUILDINGS[b.type].roster;
   if (!cfg || !b.built) return false;
-  if ((b.disciples || 0) >= cfg.cap) return false;
+  if ((b.disciples || 0) >= rosterCap(b)) return false;
   if (handCount(cfg.recruit) <= 0) return false;
   handTake(cfg.recruit, 1);
   b.disciples = (b.disciples || 0) + 1;
@@ -791,7 +805,7 @@ function endpointAccepts(b, item) {
   if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
   if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
   if (cfg.stoker) return D.FUEL[item] != null && gatherTotal(b) < cfg.stoker.cap;
-  if (cfg.roster) return item === cfg.roster.food && (b.buns || 0) < cfg.roster.foodCap;
+  if (cfg.roster) return foodValue(b, item) > 0 && (b.buns || 0) < cfg.roster.foodCap;
   if (cfg.recipes) {
     const rec = recipeOf(b);
     // burners drink fuel items straight into their gauge
@@ -838,7 +852,7 @@ function endpointGive(b, item) {
     if (st) st.qty++; else b.inv.push({ item, qty: 1 });
     return true;
   }
-  if (cfg.roster) { b.buns = (b.buns || 0) + 1; return true; }
+  if (cfg.roster) { b.buns = Math.min(cfg.roster.foodCap, (b.buns || 0) + foodValue(b, item)); return true; }
   if (cfg.recipes) {
     if (cfg.fuel && D.FUEL[item] != null) {
       b.fuel = Math.min(D.FUEL_CAP, (b.fuel || 0) + D.FUEL[item]);
@@ -1025,12 +1039,16 @@ function dropFromHand(areaKey, x, y) {
       if (handCount(it) > 0 && endpointAccepts(b, it)) { handMoveToFront(it); return { reordered: it }; }
     return null;
   }
-  // Meditation Pavilion: right-click feeds Spirit Buns (the disciples' food).
+  // Meditation Pavilion: right-click feeds disciple food (Spirit Buns, or
+  // Spirit Wine which is worth more).
   if (b && b.built && D.BUILDINGS[b.type].roster) {
-    const food = D.BUILDINGS[b.type].roster.food;
     const first = window.GS.hand[0];
-    if (first && first.item === food && endpointGive(b, food)) { handTake(food, 1); return { fed: food }; }
-    if (handCount(food) > 0 && endpointAccepts(b, food)) { handMoveToFront(food); return { reordered: food }; }
+    if (first && foodValue(b, first.item) > 0 && endpointGive(b, first.item)) {
+      handTake(first.item, 1); return { fed: first.item };
+    }
+    const foods = D.BUILDINGS[b.type].roster.foodValues || { [D.BUILDINGS[b.type].roster.food]: 1 };
+    for (const it of Object.keys(foods))
+      if (handCount(it) > 0 && endpointAccepts(b, it)) { handMoveToFront(it); return { reordered: it }; }
     return null;
   }
   // Converter buildings (the Forge): feed recipe inputs into the stock —
@@ -1115,6 +1133,7 @@ function upgradeLevel(areaKey, type) {
   if (type === "aoe") return { lvl: up.aoe || 0, max: 3 };
   if (type === "wispRate") return { lvl: up.wispRate || 0, max: 3 };
   if (type === "affinity") return { lvl: up.affinity || 0, max: 3 };
+  if (type === "discipleCap") return { lvl: up.discipleCap || 0, max: 3 };
   return { lvl: 0, max: 0 };
 }
 
@@ -1133,6 +1152,7 @@ function applyUpgrade(areaKey, type) {
   else if (type === "aoe") up.aoe = (up.aoe || 0) + 1;
   else if (type === "wispRate") up.wispRate = (up.wispRate || 0) + 1;
   else if (type === "affinity") up.affinity = (up.affinity || 0) + 1;
+  else if (type === "discipleCap") up.discipleCap = (up.discipleCap || 0) + 1;
   else if (type === "hand") { window.GS.handLevel = (window.GS.handLevel || 0) + 1; window.GS.handCap += 5; }
 }
 
@@ -1587,7 +1607,7 @@ window.ENGINE = {
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
-  questProgress, claimQuest, buffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple,
+  questProgress, claimQuest, buffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

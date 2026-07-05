@@ -24,7 +24,7 @@ function makeAreaState() {
     // quarry = fewer clicks per stone; enemyCap/damage/aoe = combat branch.
     // paid = incremental upgrade funding.
     upgrades: { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
-                enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, affinity: 0, paid: {} },
+                enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, affinity: 0, discipleCap: 0, paid: {} },
   };
 }
 
@@ -98,7 +98,7 @@ function loadState() {
       Object.assign(fresh.areas[k], s.areas[k]);
       fresh.areas[k].upgrades = Object.assign(
         { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
-          enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, affinity: 0, paid: {} },
+          enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, affinity: 0, discipleCap: 0, paid: {} },
         s.areas[k].upgrades || {});
     }
     if (Array.isArray(s.hand)) fresh.hand = s.hand;
