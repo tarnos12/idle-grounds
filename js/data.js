@@ -251,7 +251,7 @@ const BUILDINGS = {
   // (building ids); every `rateMs` it services ONE link, round-robin in the
   // order they were added, sending 1 item the target accepts.
   wisp_lantern: { name: "Wisp Lantern", icon: "🏮", size: { w: 1, h: 1 }, anyZone: true,
-               cost: { wood: 5, stone: 5 }, unlocked: true, lantern: { rateMs: 1000, speed: 120 } },
+               cost: { wood: 5, stone: 5 }, unlocked: true, lantern: { rateMs: 1000, speed: 170 } },
   // Warding Seal: a pass-through buffer locked to ONE item type — wisps
   // simply never bring it anything else, so lines stay pure.
   warding_seal: { name: "Warding Seal", icon: "🈯", size: { w: 1, h: 1 }, anyZone: true,

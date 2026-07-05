@@ -740,6 +740,17 @@ function endpointGive(b, item) {
   }
   return false;
 }
+// Where is wisp `w` right now? Pure function of time: departure point +
+// constant speed toward the (static) target centre. frac >= 1 = arrived.
+function wispPos(areaKey, w, now) {
+  const dst = buildingById(areaKey, w.toId);
+  if (!dst) return { x: w.x, y: w.y, frac: 1 };
+  const t = buildingCenterPx(dst);
+  const D = Math.hypot(t.x - w.x0, t.y - w.y0);
+  const frac = D ? Math.min(1, ((now - w.t0) / 1000) * (w.sp || 170) / D) : 1;
+  return { x: w.x0 + (t.x - w.x0) * frac, y: w.y0 + (t.y - w.y0) * frac, frac };
+}
+
 // Wire a new link onto a lantern (also the hook for the future link UI).
 function addLink(areaKey, lanternId, fromId, toId) {
   const lb = buildingById(areaKey, lanternId);
@@ -1156,8 +1167,10 @@ function gameTick() {
           if (!item) continue;
           endpointTake(src, item);
           const sc = buildingCenterPx(src);
-          area.wisps.push({ id: area.nextWispId++, x: sc.x, y: sc.y, item, toId: l.to,
-                            sp: (bCfg.lantern.speed || 120) / 10 });
+          // parametric flight: position is derived from departure time, so
+          // rendering is silky at any framerate regardless of tick rate
+          area.wisps.push({ id: area.nextWispId++, x0: sc.x, y0: sc.y, x: sc.x, y: sc.y,
+                            item, toId: l.to, t0: now, sp: bCfg.lantern.speed || 170 });
           b.connIdx = (b.connIdx + k + 1) % b.links.length;
           b.nextSend = now + (bCfg.lantern.rateMs || 1000);
           changed = true;
@@ -1166,20 +1179,19 @@ function gameTick() {
         if (now >= (b.nextSend || 0)) b.nextSend = now + 250;   // idle: retry soon
       }
     }
-    // Wisps carry their cargo to the link target. (Steady flight doesn't set
-    // `changed` — the UI animates visible wisps itself.)
+    // Wisps carry their cargo to the link target. Flight is time-parametric
+    // (see wispPos) — the tick only records positions and handles arrivals.
     if (area.wisps && area.wisps.length) {
       const done = new Set();
       for (const w of area.wisps) {
         const dst = buildingById(areaKey, w.toId);
         if (!dst || !dst.built) { dropGround(areaKey, w.item, 1, w.x, w.y); done.add(w.id); changed = true; continue; }
-        const t = buildingCenterPx(dst);
-        const dx = t.x - w.x, dy = t.y - w.y, d = Math.hypot(dx, dy);
-        const step = w.sp || 12;
-        if (d <= step) {
-          if (!endpointGive(dst, w.item)) dropGround(areaKey, w.item, 1, t.x, t.y + 24);
+        const p = wispPos(areaKey, w, now);
+        w.x = p.x; w.y = p.y;               // persisted fallback position
+        if (p.frac >= 1) {
+          if (!endpointGive(dst, w.item)) dropGround(areaKey, w.item, 1, p.x, p.y + 24);
           done.add(w.id); changed = true;
-        } else { w.x += (dx / d) * step; w.y += (dy / d) * step; }
+        }
       }
       if (done.size) area.wisps = area.wisps.filter(w => !done.has(w.id));
     }
@@ -1200,7 +1212,7 @@ function gameTick() {
         });
         changed = true;
       }
-      const step = ecfg.speed / 10;                 // px per 100ms tick
+      const step = ecfg.speed / 20;                 // px per 50ms tick
       for (const en of area.enemies) {
         const dx = en.tx - en.x, dy = en.ty - en.y, dd = Math.hypot(dx, dy);
         if (dd < step || Math.random() < 0.01) { en.tx = rand(x0, x1); en.ty = rand(y0, y1); }
@@ -1285,6 +1297,7 @@ window.ENGINE = {
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, smeltCfg, smeltRemaining,
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, setupStarterNetwork,
+  wispPos,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

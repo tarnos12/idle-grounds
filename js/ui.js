@@ -696,10 +696,13 @@ function drawRegionItems(key, ox, oy, view, s, X, Y) {
     if (!seen(g.x + ox - 16, g.y + oy - 16, 32, 32)) continue;
     drawItemIcon(g.item, X(ox + g.x), Y(oy + g.y), 20 * s);
   }
-  // wisps in flight: a soft glow carrying its item icon
+  // wisps in flight: a soft glow carrying its item icon. Position is
+  // computed from time-of-departure (wispPos) — smooth at any framerate.
+  const nowW = Date.now();
   for (const w of st.wisps || []) {
-    if (!seen(w.x + ox - 16, w.y + oy - 24, 32, 48)) continue;
-    const wx = X(ox + w.x), wy = Y(oy + w.y);
+    const p = E.wispPos(key, w, nowW);
+    if (!seen(p.x + ox - 16, p.y + oy - 24, 32, 48)) continue;
+    const wx = X(ox + p.x), wy = Y(oy + p.y);
     ctx.fillStyle = "rgba(74,222,128,.30)";
     ctx.beginPath(); ctx.arc(wx, wy, 7 * s, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#eafff2";

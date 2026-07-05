@@ -35,7 +35,7 @@
   setInterval(() => {
     const changed = E.gameTick();
     if (changed || window.UI.needsLiveRepaint()) window.UI.renderPlay();
-  }, 100);
+  }, 50);
   // Automation: harvest on behalf of the player every second.
   setInterval(() => { if (E.automationTick() > 0) window.UI.renderPlay(); }, 1000);
 })();

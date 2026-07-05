@@ -131,6 +131,12 @@ function loadState() {
         Number.isFinite(en.x) && Number.isFinite(en.y) && Number.isFinite(en.hp) && en.hp > 0);
       a.wisps = (a.wisps || []).filter(w =>
         LIVE.has(w.item) && Number.isFinite(w.x) && Number.isFinite(w.y));
+      for (const w of a.wisps) {
+        // older step-based wisps lack flight parameters: restart the flight
+        // from where they were (px/s speeds are >= 50; per-tick ones aren't)
+        if (!Number.isFinite(w.t0)) { w.x0 = w.x; w.y0 = w.y; w.t0 = Date.now(); }
+        if (!Number.isFinite(w.sp) || w.sp < 50) w.sp = 170;
+      }
       for (const b of a.buildings || []) {
         // logistics state: scrub dead items from gathering buffers and links
         if (b.inv) b.inv = b.inv.filter(st => LIVE.has(st.item) && st.qty > 0);
