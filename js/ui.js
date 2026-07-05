@@ -60,11 +60,16 @@ const FIELD_TINT = {
 // ---- item icon art (assets/icons/<key>.png, 16px pixel art) ---------
 // Loaded lazily; anything missing keeps its emoji, so new items work before
 // art exists. Pixel art is drawn with image smoothing OFF (crisp scaling).
+// The artifact bundle (tools/build-artifact.js) inlines the PNGs into
+// window.ICON_DATA data URIs — the artifact CSP blocks file requests.
 const ICON_IMGS = {};
+function iconSrc(key) {
+  return (window.ICON_DATA && window.ICON_DATA[key]) || `assets/icons/${key}.png`;
+}
 for (const key of Object.keys(DD.ITEM_ICONS)) {
   const img = new Image();
   img.onload = () => { ICON_IMGS[key] = img; if (window.requestRender) window.requestRender(); };
-  img.src = `assets/icons/${key}.png`;
+  img.src = iconSrc(key);
 }
 // Draw an item icon centred at (cx, cy), px square, on the world canvas.
 function drawItemIcon(key, cx, cy, px) {
@@ -103,7 +108,7 @@ function drawNeedsLine(entries, cx, cy, px, prefix) {
 // icon exists, emoji otherwise.
 function iconHTML(key) {
   return ICON_IMGS[key]
-    ? `<img class="item-ico" src="assets/icons/${key}.png" alt="${E.itemName(key)}">`
+    ? `<img class="item-ico" src="${iconSrc(key)}" alt="${E.itemName(key)}">`
     : E.itemIcon(key);
 }
 
