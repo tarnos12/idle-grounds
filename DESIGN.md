@@ -34,8 +34,8 @@ The Altar stays purely the upgrade shrine — infusion is its own building.
 **Endgame (2):** Ascension Gate (final monument: talisman + star steel +
 dragon scale; prestige hook), Dragon Shrine (dragon scales, longer buffs).
 
-**Dragon pills** (Pill Furnace; fed to the dragon → global buff, 60s base,
-upgradeable to ~3 min via a Dragon Affinity node; new pill replaces active):
+**Dragon pills ✅** (Pill Furnace; fed to the dragon → global buff, 60s base,
++30s per Dragon Affinity level; new pill replaces active):
 Ember (elixir+firestone → smelters 2×), Verdant (elixir+herb → regrow 2×),
 Swiftwind (elixir+cotton → wisps 2×), Stoneheart (elixir+spirit stone →
 double mining drops).
@@ -78,7 +78,10 @@ seeded so every line visibly runs from the first minute.
 3. ✅ Loom/Cauldron/Mill/Brewery/Jade Carver/Charcoal Pit; ✅ fuel system
    (burners: Forge+Kiln, FUEL wood 10s / bamboo 6s / charcoal 40s, cap 60s,
    batch consumes its duration); ✅ Furnace Spirit; ✅ renames.
-4. Pill Furnace + dragon pill buffs; Star Anvil; beast bait → tier-2 beast.
+4. ✅ Pill Furnace + 4 dragon pills (fed to the dragon -> timed global
+   blessing, 60s +30s/Dragon Affinity lvl, new pill replaces); ✅ Star
+   Anvil (star steel); ✅ firestone (rare from mine ore/veins, top fuel);
+   ✅ Beast Bait -> Spirit Boar (8hp, beast bones).
 5. Talisman Atelier, treasures, Dragon Shrine, Ascension Gate + prestige.
 
 ## Building sprite wishlist (assets/buildings/<file>)

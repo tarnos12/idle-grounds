@@ -320,6 +320,8 @@ function animActive() {
     // the dragon's floating stage text needs repaints until it fades
     if (key === "center" && unlocked && window.GS.dragon.msgUntil > now) return true;
   }
+  // blessing countdown in the top bar ticks every second
+  if (window.GS.buff && window.GS.buff.until > now) return true;
   return false;
 }
 // Tick gate: repaint on "idle" ticks only when something animated is visible.
@@ -332,6 +334,12 @@ function renderTopBar() {
   $("#area-name").innerHTML = (a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds")
     + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "");
   $("#hand-count").textContent = `${E.handTotal()}/${E.handCap()}`;
+  // active dragon-pill blessing with a live countdown
+  const buff = window.GS.buff, bp = $("#buff-pill");
+  if (buff && buff.until > Date.now() && DD.DRAGON_BUFFS[buff.kind]) {
+    bp.classList.remove("hidden");
+    bp.innerHTML = `${iconHTML(buff.kind)} ${DD.DRAGON_BUFFS[buff.kind].name} ${Math.ceil((buff.until - Date.now()) / 1000)}s`;
+  } else bp.classList.add("hidden");
   $("#build-btn").classList.toggle("on", window.GS.build.open);
   $("#demolish-btn").classList.toggle("on", demolishMode);
   $("#debug-btn").classList.toggle("on", debugShow);
@@ -638,9 +646,9 @@ function drawRegionEnemies(key, ox, oy, now, s, X, Y, cfg, st, seen) {
     ctx.translate(X(ex), Y(ey));
     if (sq) ctx.scale(sq.sx, sq.sy);
     ctx.fillStyle = C.text;
-    ctx.font = `${26 * s}px ${EMOJI_FONT}`;
+    ctx.font = `${(en.kind === "boss" ? 36 : 26) * s}px ${EMOJI_FONT}`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(ecfg.sprite, 0, 0);
+    ctx.fillText(en.sprite || ecfg.sprite, 0, 0);
     ctx.restore();
     // hp pips above the beast
     const n = en.maxHp, px0 = X(ex) - ((n - 1) * 10 * s) / 2;
@@ -1175,7 +1183,9 @@ function openHelp() {
   S.push(["🐉 The Sleeping Dragon",
     "Feed it each stage's tribute (right-click) and it teaches new recipes. Its current wish is written on it."]);
   S.push(["🦊 Fox Spirits",
-    "They prowl the red corner. Click to strike (hold to auto-attack); they drop Spirit Essence. The tree's combat branch adds damage, more foxes and an AoE."]);
+    "They prowl the red corner. Click to strike (hold to auto-attack); they drop Spirit Essence. The tree's combat branch adds damage, more foxes and an AoE. RIGHT-click Beast Bait 🪱 (Cauldron) inside their zone to lure a Spirit Boar 🐗 — tough, but the only Beast Bone source."]);
+  S.push(["🫕 Dragon pills",
+    "The Pill Furnace refines Qi Elixirs into four pills. Right-click one onto the dragon and it exhales a timed blessing (60s base, longer with Dragon Affinity): Ember = burners 2×, Verdant = regrow 2×, Swiftwind = wisps 2×, Stoneheart = double mining drops. A new pill replaces the active one."]);
   S.push(["🏮 Wisp network",
     "Gathering Stones 🧿 vacuum ground items. Wisp Lanterns ferry them: click a lantern to edit its links (source → target, served in order, one per beat). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw."]);
   if (dr >= 1) S.push(["🔥 Forge & smelting",

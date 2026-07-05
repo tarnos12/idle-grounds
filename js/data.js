@@ -22,6 +22,9 @@ const ITEM_NAMES = {
   flour: "Rice Flour", spirit_buns: "Spirit Buns", spirit_wine: "Spirit Wine",
   qi_elixir: "Qi Elixir", vitality_pill: "Vitality Pill", beast_bait: "Beast Bait",
   charcoal: "Charcoal", jade: "Jade",
+  firestone: "Firestone", beast_bone: "Beast Bone", star_steel: "Star Steel",
+  ember_pill: "Ember Pill", verdant_pill: "Verdant Pill",
+  swiftwind_pill: "Swiftwind Pill", stoneheart_pill: "Stoneheart Pill",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -37,12 +40,25 @@ const ITEM_ICONS = {
   flour: "🍚", spirit_buns: "🥟", spirit_wine: "🍶",
   qi_elixir: "🧪", vitality_pill: "💊", beast_bait: "🪱",
   charcoal: "⚫", jade: "💚",
+  firestone: "🌋", beast_bone: "🦴", star_steel: "⚔️",
+  ember_pill: "🔴", verdant_pill: "🟢",
+  swiftwind_pill: "🟡", stoneheart_pill: "🟣",
 };
 
 // Burner fuel values in burn-milliseconds (a batch consumes its own
 // duration). Fed to any `fuel: true` building or a Furnace Spirit.
-const FUEL = { wood: 10000, bamboo: 6000, charcoal: 40000 };
+const FUEL = { wood: 10000, bamboo: 6000, charcoal: 40000, firestone: 120000 };
 const FUEL_CAP = 60000;   // max burn-ms a burner holds
+
+// Dragon pills: feed one to the dragon (right-click) for a timed GLOBAL
+// buff — 60s base, +30s per Dragon Affinity level; a new pill replaces
+// the active one. Effects are wired in the engine by pill id.
+const DRAGON_BUFFS = {
+  ember_pill:      { name: "Ember Blessing",   desc: "Burners work twice as fast." },
+  verdant_pill:    { name: "Verdant Blessing", desc: "Nodes regrow twice as fast." },
+  swiftwind_pill:  { name: "Swiftwind Blessing", desc: "Wisps fly and send twice as fast." },
+  stoneheart_pill: { name: "Stoneheart Blessing", desc: "Mining and quarry drops doubled." },
+};
 
 // One sprite per area's resource (tiers are gone — single type each).
 const TIER_SPRITES = {
@@ -109,7 +125,11 @@ const AREAS = {
     // few hits to slay, and drop Spirit Essence. `cap` is the BASE cap — the
     // enemyCap/damage/aoe upgrades in the tree raise it and boost combat.
     enemies: { zone: "cornerTR", name: "Fox Spirit", sprite: "🦊", cap: 1, hp: 3,
-               speed: 30, respawnMs: 6000, attackMs: 400, drops: [d("spirit_essence", 1, 2)] },
+               speed: 30, respawnMs: 6000, attackMs: 400, drops: [d("spirit_essence", 1, 2)],
+               // right-click Beast Bait inside the zone to lure this tier-2
+               // beast — tough, slow, and the only Beast Bone source
+               baitSpawn: { name: "Spirit Boar", sprite: "🐗", hp: 8, speed: 18,
+                            drops: [d("beast_bone", 1, 2), d("spirit_essence", 1)] } },
   },
   farm: {
     name: "Farm", icon: "🌱", verb: "Harvest", actionIcon: "🌾",
@@ -136,10 +156,12 @@ const AREAS = {
     base: "stone", noBuild: "centre",
     speedLabel: "Mining Speed", timerLabel: "Respawn",
     spawners: [
-      { kind: "ore", zone: "centre", sizes: [1, 2], target: 10, interaction: "break", useTiers: true, swingMs: 450 },
+      { kind: "ore", zone: "centre", sizes: [1, 2], target: 10, interaction: "break", useTiers: true, swingMs: 450,
+        rareDrop: { item: "firestone", chance: 0.05 } },
       // iron veins: rarer, tougher rocks scattered among the stone
       { kind: "ironvein", zone: "centre", sizes: [2], target: 2, interaction: "break",
-        swingMs: 500, sprite: "⚙️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)] },
+        swingMs: 500, sprite: "⚙️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)],
+        rareDrop: { item: "firestone", chance: 0.15 } },
     ],
     tiers: [
       { name: "Stone", hits: 2, drops: [d("stone", 3), d("clay", 1)], timer: 10 },
@@ -280,6 +302,20 @@ const BUILDINGS = {
                recipes: [
                  { name: "Jade", inputs: { jade_shard: 3 }, output: "jade", outputQty: 1, timeMs: 6000 },
                ] },
+  // ---- Phase-4 T3 producers (both burners) ----
+  pill_furnace:{ name: "Pill Furnace", icon: "🫕", cost: { brick: 6, iron_bar: 4 }, unlocked: true,
+               fuel: true,
+               recipes: [
+                 { name: "Ember Pill", inputs: { qi_elixir: 1, firestone: 1 }, output: "ember_pill", outputQty: 1, timeMs: 9000 },
+                 { name: "Verdant Pill", inputs: { qi_elixir: 1, spirit_herb: 1 }, output: "verdant_pill", outputQty: 1, timeMs: 9000 },
+                 { name: "Swiftwind Pill", inputs: { qi_elixir: 1, cotton: 1 }, output: "swiftwind_pill", outputQty: 1, timeMs: 9000 },
+                 { name: "Stoneheart Pill", inputs: { qi_elixir: 1, spirit_stone: 1 }, output: "stoneheart_pill", outputQty: 1, timeMs: 9000 },
+               ] },
+  star_anvil:{ name: "Star Anvil", icon: "⚒️", cost: { stone: 10, iron_bar: 6 }, unlocked: true,
+               fuel: true,
+               recipes: [
+                 { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
+               ] },
   charcoal_pit:{ name: "Charcoal Pit", icon: "🕳️", cost: { stone: 6, clay: 4 }, unlocked: true,
                recipes: [
                  { name: "Charcoal", inputs: { wood: 2 }, output: "charcoal", outputQty: 1, timeMs: 4000 },
@@ -377,8 +413,11 @@ const UPGRADE_TREE = [
     desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m", "foe_cap", "wisps"],
     costs: [{ wood: 10 }, { wood: 25, leaves: 10 }, { cotton: 15, wood: 40 }] },
   { id: "wisps",  icon: "🏮", name: "Wisp Haste",      x: -170, y: 115,  area: "center",  type: "wispRate",
-    desc: "Lanterns send more often and wisps fly faster.", links: [],
+    desc: "Lanterns send more often and wisps fly faster.", links: ["affinity"],
     costs: [{ wood: 40, spirit_stone: 1 }, { spirit_stone: 3, plank: 8 }, { spirit_stone: 6, brick: 8 }] },
+  { id: "affinity", icon: "🐲", name: "Dragon Affinity", x: -300, y: 190, area: "center", type: "affinity",
+    desc: "Dragon-pill blessings last +30s per level.", links: [],
+    costs: [{ qi_elixir: 2, wood: 40 }, { spirit_stone: 3, qi_elixir: 3 }, { spirit_jade: 1, qi_elixir: 5 }] },
   // east — centre economy, drifting to fishing
   { id: "spd_c",  icon: "⏱️", name: "Regrow Speed",    x: 150,  y: -35,  area: "center",  type: "speed",
     desc: "Center bushes respawn faster.", links: ["auto_c"],
@@ -490,6 +529,6 @@ const TEST = {
 
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
-  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP,
+  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP,
   UPGRADE_TREE, QUESTS, HAND_CAP, TEST,
 };

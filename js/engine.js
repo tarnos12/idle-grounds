@@ -111,6 +111,12 @@ function withdrawFromBuilding(b, n) {
 }
 function scaled(n) { return Math.max(1, Math.ceil(D.TEST.ENABLED ? n * D.TEST.costScale : n)); }
 
+// Is the given dragon-pill blessing active right now?
+function buffActive(kind) {
+  const b = window.GS.buff;
+  return !!(b && b.kind === kind && b.until > Date.now());
+}
+
 // ---- Timers / tier rolling ----------------------------------
 
 function effectiveTimer(areaKey, tierIndex) {
@@ -215,7 +221,7 @@ function spawnFromSpawner(areaKey, sp) {
       tier, hitsLeft: useTiers ? (tierDef.hits || 1) : (sp.hits || 1),
       regrowSec: useTiers ? tierDef.timer : (sp.regrow || 10),
       swingMs: sp.swingMs || 350, sprite: sp.sprite || null,
-      perHit: sp.perHit || null, drops: sp.drops || null,
+      perHit: sp.perHit || null, drops: sp.drops || null, rareDrop: sp.rareDrop || null,
       surfaceUntil: sp.interaction === "surface" ? Date.now() + (D.AREAS[areaKey].surfaceWindow || 3) * 1000 : 0,
       autoFlash: 0,
     };
@@ -396,7 +402,8 @@ function depleteNode(areaKey, node) {
   if (i >= 0) area.nodes.splice(i, 1);
   const speed = window.GS.areas[areaKey].upgrades.speed;
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
-  const delay = (node.regrowSec || 10) * Math.pow(0.8, speed) * scale * 1000;
+  const buffFac = buffActive("verdant_pill") ? 0.5 : 1;   // Verdant Blessing
+  const delay = (node.regrowSec || 10) * Math.pow(0.8, speed) * scale * 1000 * buffFac;
   area.spawnQueue.push({ at: Date.now() + delay, kind: node.spawnerKind });
 }
 
@@ -412,10 +419,10 @@ function dropGround(areaKey, item, qty, x, y) {
 
 function rollAmount(spec) { return spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1)); }
 
-function grantDropsGround(areaKey, node, specs) {
+function grantDropsGround(areaKey, node, specs, mult) {
   const c = nodeCenterPx(node);
   for (const spec of specs || []) {
-    const amt = rollAmount(spec);
+    const amt = rollAmount(spec) * (mult || 1);
     if (amt > 0) { dropGround(areaKey, spec.item, amt, c.x, c.y); window.GS.stats.totalGathered += amt; }
   }
 }
@@ -546,7 +553,8 @@ function harvestNode(areaKey, nodeId, isAuto) {
     if (isAuto) node.autoFlash = Date.now() + flashMs;
     if (node.clicks >= (node.clicksPerDrop || 5)) {
       node.clicks = 0;
-      const amt = node.dropMin ? rand(node.dropMin, node.dropMax || node.dropMin) : 1;
+      let amt = node.dropMin ? rand(node.dropMin, node.dropMax || node.dropMin) : 1;
+      if (buffActive("stoneheart_pill")) amt *= 2;   // Stoneheart Blessing
       const c = nodeCenterPx(node);
       dropGround(areaKey, node.dropItem || "stone", amt, c.x, c.y);
       window.GS.stats.totalGathered += amt;
@@ -579,7 +587,13 @@ function harvestNode(areaKey, nodeId, isAuto) {
     node.hitsLeft--;
     if (isAuto) node.autoFlash = Date.now() + flashMs;
     if (node.hitsLeft > 0) return true;               // nothing until it cracks
-    grantDropsGround(areaKey, node, specs.drops);
+    grantDropsGround(areaKey, node, specs.drops, buffActive("stoneheart_pill") ? 2 : 1);
+    // rare finds on the final crack (firestone in ore / iron veins)
+    if (node.rareDrop && Math.random() < node.rareDrop.chance) {
+      const c = nodeCenterPx(node);
+      dropGround(areaKey, node.rareDrop.item, 1, c.x, c.y);
+      window.GS.stats.totalGathered += 1;
+    }
     depleteNode(areaKey, node);
     return true;
   }
@@ -907,6 +921,21 @@ function feedNeeds(rem, paid) {
 
 function dropFromHand(areaKey, x, y) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
+  // Beast Bait INSIDE the enemy zone always lures (even over a formation
+  // that would otherwise catch the drop): a tier-2 beast appears there.
+  const firstB = window.GS.hand[0];
+  const eCfg = D.AREAS[areaKey].enemies;
+  if (firstB && firstB.item === "beast_bait" && eCfg && eCfg.baitSpawn) {
+    const z = zoneRects(eCfg.zone)[0];
+    if (row >= z.r0 && row <= z.r1 && col >= z.c0 && col <= z.c1) {
+      handTake("beast_bait", 1);
+      const bs = eCfg.baitSpawn;
+      const area2 = window.GS.areas[areaKey];
+      area2.enemies.push({ id: area2.nextEnemyId++, x, y, hp: bs.hp, maxHp: bs.hp,
+        tx: x, ty: y, hitAt: 0, kind: "boss", sprite: bs.sprite, spd: bs.speed });
+      return { fed: "beast_bait" };
+    }
+  }
   const b = buildingAt(areaKey, row, col);
   // Center building: feed the selected upgrade job (multi-resource).
   if (b && b.built && b.type === "center") {
@@ -921,7 +950,15 @@ function dropFromHand(areaKey, x, y) {
   }
   // The Sleeping Dragon: feed its current stage's tribute; when sated it
   // advances a stage (unlocking recipes) and murmurs its stage text.
+  // Dragon PILLS (any stage, even awakened): it exhales a timed blessing.
   if (b && b.built && b.type === "dragon") {
+    const first0 = window.GS.hand[0];
+    if (first0 && D.DRAGON_BUFFS[first0.item]) {
+      handTake(first0.item, 1);
+      const dur = 60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0);
+      window.GS.buff = { kind: first0.item, until: Date.now() + dur };
+      return { fed: first0.item };
+    }
     if (!dragonStage()) return null;
     const dr = window.GS.dragon;
     const res = feedNeeds(dragonRemaining(), dr.paid);
@@ -1021,6 +1058,7 @@ function upgradeLevel(areaKey, type) {
   if (type === "damage") return { lvl: up.damage || 0, max: 3 };
   if (type === "aoe") return { lvl: up.aoe || 0, max: 3 };
   if (type === "wispRate") return { lvl: up.wispRate || 0, max: 3 };
+  if (type === "affinity") return { lvl: up.affinity || 0, max: 3 };
   return { lvl: 0, max: 0 };
 }
 
@@ -1038,6 +1076,7 @@ function applyUpgrade(areaKey, type) {
   else if (type === "damage") up.damage = (up.damage || 0) + 1;
   else if (type === "aoe") up.aoe = (up.aoe || 0) + 1;
   else if (type === "wispRate") up.wispRate = (up.wispRate || 0) + 1;
+  else if (type === "affinity") up.affinity = (up.affinity || 0) + 1;
   else if (type === "hand") { window.GS.handLevel = (window.GS.handLevel || 0) + 1; window.GS.handCap += 5; }
 }
 
@@ -1223,7 +1262,9 @@ function gameTick() {
         changed = true;
       }
       if (!b.smeltDoneAt && canStartBatch(b)) {
-        const cost = scfg.timeMs * scale;
+        let cost = scfg.timeMs * scale;
+        // Ember Blessing: burners work twice as fast (and burn half the fuel)
+        if (D.BUILDINGS[b.type].fuel && buffActive("ember_pill")) cost *= 0.5;
         // burners spend fuel equal to the batch duration; no fuel = no work
         if (D.BUILDINGS[b.type].fuel) {
           if ((b.fuel || 0) < cost) continue;
@@ -1262,6 +1303,7 @@ function gameTick() {
       // The Wisp Haste upgrade quickens the beat and the wisps themselves.
       if (bCfg.lantern && (b.links || []).length && now >= (b.nextSend || 0)) {
         const haste = area.upgrades.wispRate || 0;
+        const wind = buffActive("swiftwind_pill") ? 0.5 : 1;   // Swiftwind Blessing
         for (let k = 0; k < b.links.length; k++) {
           const l = b.links[(b.connIdx + k) % b.links.length];
           const src = buildingById(areaKey, l.from), dst = buildingById(areaKey, l.to);
@@ -1275,9 +1317,9 @@ function gameTick() {
           // fromId lets a refused delivery fly its cargo back home.
           area.wisps.push({ id: area.nextWispId++, x0: sc.x, y0: sc.y, x: sc.x, y: sc.y,
                             item, toId: l.to, fromId: l.from, t0: now,
-                            sp: (bCfg.lantern.speed || 170) * (1 + 0.25 * haste) });
+                            sp: (bCfg.lantern.speed || 170) * (1 + 0.25 * haste) / wind });
           b.connIdx = (b.connIdx + k + 1) % b.links.length;
-          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste);
+          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste) * wind;
           changed = true;
           break;
         }
@@ -1336,15 +1378,16 @@ function gameTick() {
       const x0 = (z.c0 + 1) * CELL, x1 = z.c1 * CELL;
       const y0 = (z.r0 + 1) * CELL, y1 = z.r1 * CELL;
       const cap = ecfg.cap + (area.upgrades.enemyCap || 0);   // Spirit Call upgrade
-      if (area.enemies.length < cap && now >= (area.enemyRespawnAt || 0)) {
+      // baited beasts don't count toward the regular spawn cap
+      if (area.enemies.filter(e => e.kind !== "boss").length < cap && now >= (area.enemyRespawnAt || 0)) {
         area.enemies.push({
           id: area.nextEnemyId++, x: rand(x0, x1), y: rand(y0, y1),
           hp: ecfg.hp, maxHp: ecfg.hp, tx: rand(x0, x1), ty: rand(y0, y1), hitAt: 0,
         });
         changed = true;
       }
-      const step = ecfg.speed / 20;                 // px per 50ms tick
       for (const en of area.enemies) {
+        const step = (en.spd || ecfg.speed) / 20;   // px per 50ms tick
         const dx = en.tx - en.x, dy = en.ty - en.y, dd = Math.hypot(dx, dy);
         if (dd < step || Math.random() < 0.01) { en.tx = rand(x0, x1); en.ty = rand(y0, y1); }
         else { en.x += (dx / dd) * step; en.y += (dy / dd) * step; }
@@ -1374,13 +1417,18 @@ function damageEnemy(areaKey, en, dmg) {
   const i = area.enemies.indexOf(en);
   if (i >= 0) area.enemies.splice(i, 1);
   const ecfg = D.AREAS[areaKey].enemies;
-  for (const spec of ecfg.drops || []) {
+  // baited tier-2 beasts carry their own loot table and don't touch the
+  // regular respawn clock
+  const drops = en.kind === "boss" && ecfg.baitSpawn ? ecfg.baitSpawn.drops : ecfg.drops;
+  for (const spec of drops || []) {
     const amt = rollAmount(spec);
     if (amt > 0) { dropGround(areaKey, spec.item, amt, en.x, en.y); window.GS.stats.totalGathered += amt; }
   }
-  const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
-  area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
-  window.GS.stats.foxKills = (window.GS.stats.foxKills || 0) + 1;
+  if (en.kind !== "boss") {
+    const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+    area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
+    window.GS.stats.foxKills = (window.GS.stats.foxKills || 0) + 1;
+  }
 }
 
 // ---- Tutorial quests -----------------------------------------
@@ -1449,7 +1497,7 @@ window.ENGINE = {
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
-  questProgress, claimQuest,
+  questProgress, claimQuest, buffActive,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

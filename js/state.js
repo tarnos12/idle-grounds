@@ -24,7 +24,7 @@ function makeAreaState() {
     // quarry = fewer clicks per stone; enemyCap/damage/aoe = combat branch.
     // paid = incremental upgrade funding.
     upgrades: { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
-                enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, paid: {} },
+                enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, affinity: 0, paid: {} },
   };
 }
 
@@ -52,6 +52,8 @@ function makeInitialState() {
     dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null },
     starterPlaced: false,   // the pre-wired wisp demo network (built once)
     won: false,
+    // Active dragon-pill blessing: { kind: <pill item id>, until: ts }.
+    buff: null,
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
     quest: { idx: 0, hidden: false },
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0,
@@ -92,7 +94,7 @@ function loadState() {
       Object.assign(fresh.areas[k], s.areas[k]);
       fresh.areas[k].upgrades = Object.assign(
         { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
-          enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, paid: {} },
+          enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, affinity: 0, paid: {} },
         s.areas[k].upgrades || {});
     }
     if (Array.isArray(s.hand)) fresh.hand = s.hand;
@@ -103,6 +105,8 @@ function loadState() {
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
     fresh.won = !!s.won;
     fresh.starterPlaced = !!s.starterPlaced;
+    if (s.buff && Number.isFinite(s.buff.until) && window.DATA.DRAGON_BUFFS[s.buff.kind])
+      fresh.buff = s.buff;
     // merge stats/quest onto defaults so counters added later start at 0
     if (s.stats) Object.assign(fresh.stats, s.stats);
     if (s.quest) Object.assign(fresh.quest, s.quest);

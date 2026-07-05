@@ -256,6 +256,13 @@ body {
 .rm-title { font-size: 13px; font-weight: 800; color: var(--muted); margin-right: 6px; white-space: nowrap; }
 .bc-tag { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; }
 
+/* active dragon-pill blessing in the bottom bar */
+.buff-pill {
+  background: rgba(168,85,247,.18); border: 1px solid #a855f7; color: var(--text);
+  border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 800; white-space: nowrap;
+}
+.buff-pill.hidden { display: none; }
+
 /* ---- Tutorial quest panel ---- */
 #quest-panel {
   position: fixed; top: 14px; right: 14px; width: 250px; z-index: 120;
