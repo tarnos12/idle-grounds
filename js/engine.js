@@ -116,6 +116,11 @@ function buffActive(kind) {
   const b = window.GS.buff;
   return !!(b && b.kind === kind && b.until > Date.now());
 }
+// Is the Vitality Pill combat buff (Martial Vigor) active?
+function combatBuffActive() {
+  const b = window.GS.combatBuff;
+  return !!(b && b.until > Date.now());
+}
 
 // Prestige: each completed Ascension shaves 8% off every duration
 // (regrowth, batches, lantern beats). Compounds multiplicatively.
@@ -980,6 +985,13 @@ function feedNeeds(rem, paid) {
 
 function dropFromHand(areaKey, x, y) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
+  // Vitality Pill in the front hand slot is TAKEN (never dropped): it grants
+  // the Martial Vigor combat buff. Right-click it anywhere to quaff.
+  if (window.GS.hand[0] && window.GS.hand[0].item === D.VITALITY.item) {
+    handTake(D.VITALITY.item, 1);
+    window.GS.combatBuff = { until: Date.now() + D.VITALITY.ms };
+    return { used: D.VITALITY.item };
+  }
   // Beast Bait INSIDE the enemy zone always lures (even over a formation
   // that would otherwise catch the drop): a tier-2 beast appears there.
   const firstB = window.GS.hand[0];
@@ -1530,8 +1542,9 @@ function damageEnemy(areaKey, en, dmg) {
   // baited tier-2 beasts carry their own loot table and don't touch the
   // regular respawn clock
   const drops = en.kind === "boss" && ecfg.baitSpawn ? ecfg.baitSpawn.drops : ecfg.drops;
+  const loot = combatBuffActive() ? D.VITALITY.lootMult : 1;   // Martial Vigor
   for (const spec of drops || []) {
-    const amt = rollAmount(spec);
+    const amt = rollAmount(spec) * loot;
     if (amt > 0) { dropGround(areaKey, spec.item, amt, en.x, en.y); window.GS.stats.totalGathered += amt; }
   }
   if (en.kind !== "boss") {
@@ -1567,7 +1580,7 @@ function attackEnemy(areaKey, id) {
   const target = area.enemies.find(en => en.id === id);
   if (!target) return false;
   const up = area.upgrades;
-  const dmg = 1 + (up.damage || 0);
+  const dmg = 1 + (up.damage || 0) + (combatBuffActive() ? D.VITALITY.bonusDamage : 0);
   const R = (up.aoe || 0) * 1.5 * CELL;
   const hit = R > 0
     ? area.enemies.filter(en => en === target || Math.hypot(en.x - target.x, en.y - target.y) <= R)
@@ -1607,7 +1620,7 @@ window.ENGINE = {
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
-  questProgress, claimQuest, buffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
+  questProgress, claimQuest, buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

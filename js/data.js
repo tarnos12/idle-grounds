@@ -62,6 +62,10 @@ const DRAGON_BUFFS = {
   stoneheart_pill: { name: "Stoneheart Blessing", desc: "Mining and quarry drops doubled." },
 };
 
+// Vitality Pill: a self-taken combat consumable (right-click it in hand).
+// Grants Martial Vigor — bonus attack damage and doubled beast loot.
+const VITALITY = { item: "vitality_pill", name: "Martial Vigor", ms: 45000, bonusDamage: 2, lootMult: 2 };
+
 // One sprite per area's resource (tiers are gone — single type each).
 const TIER_SPRITES = {
   center:  ["🌳"],
@@ -305,7 +309,7 @@ const BUILDINGS = {
                  { name: "Jade", inputs: { jade_shard: 3 }, output: "jade", outputQty: 1, timeMs: 6000 },
                ] },
   // ---- Phase-4 T3 producers (both burners) ----
-  pill_furnace:{ name: "Pill Furnace", icon: "🫕", cost: { brick: 6, iron_bar: 4 }, unlocked: true,
+  pill_furnace:{ name: "Pill Furnace", icon: "🫕", cost: { brick: 6, iron_bar: 4, tools: 2 }, unlocked: true,
                fuel: true,
                recipes: [
                  { name: "Ember Pill", inputs: { qi_elixir: 1, firestone: 1 }, output: "ember_pill", outputQty: 1, timeMs: 9000 },
@@ -313,13 +317,13 @@ const BUILDINGS = {
                  { name: "Swiftwind Pill", inputs: { qi_elixir: 1, cotton: 1 }, output: "swiftwind_pill", outputQty: 1, timeMs: 9000 },
                  { name: "Stoneheart Pill", inputs: { qi_elixir: 1, spirit_stone: 1 }, output: "stoneheart_pill", outputQty: 1, timeMs: 9000 },
                ] },
-  star_anvil:{ name: "Star Anvil", icon: "⚒️", cost: { stone: 10, iron_bar: 6 }, unlocked: true,
+  star_anvil:{ name: "Star Anvil", icon: "⚒️", cost: { iron_bar: 6, tools: 3, glass: 2 }, unlocked: true,
                fuel: true,
                recipes: [
                  { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
                ] },
   // ---- Phase-5 endgame ----
-  talisman_atelier:{ name: "Talisman Atelier", icon: "🖌️", cost: { plank: 6, jade: 2 }, unlocked: true,
+  talisman_atelier:{ name: "Talisman Atelier", icon: "🖌️", cost: { plank: 6, jade: 2, glass: 2 }, unlocked: true,
                recipes: [
                  { name: "Talisman", inputs: { paper: 2, spirit_jade: 1, qi_elixir: 1 }, output: "talisman", outputQty: 1, timeMs: 10000 },
                ] },
@@ -344,7 +348,7 @@ const BUILDINGS = {
   // Spirit Essence while fed Spirit Buns — a peaceful essence source and the
   // sink that gives the Loom (robe) and Mill (bun) chains a purpose. Feed it
   // buns by hand or wisp; the Recruit button in its panel spends a Robe.
-  meditation_pavilion: { name: "Meditation Pavilion", icon: "🧘", cost: { plank: 6, cloth: 4 }, unlocked: true,
+  meditation_pavilion: { name: "Meditation Pavilion", icon: "🧘", cost: { plank: 6, cloth: 4, rope: 2 }, unlocked: true,
                roster: { cap: 3, recruit: "robe", food: "spirit_buns", foodCap: 20,
                          // disciples eat any of these (value = cycles it fuels);
                          // Spirit Wine is the Brewery's premium food
@@ -560,6 +564,6 @@ const TEST = {
 
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
-  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP,
+  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP,
   UPGRADE_TREE, QUESTS, HAND_CAP, TEST,
 };

@@ -54,6 +54,8 @@ function makeInitialState() {
     won: false,
     // Active dragon-pill blessing: { kind: <pill item id>, until: ts }.
     buff: null,
+    // Active Vitality Pill combat buff (Martial Vigor): { until: ts }.
+    combatBuff: null,
     // Prestige: completed Ascensions grant +8% global speed each (kept
     // across the reset). ascendPrompt shows the Ascension Gate dialog.
     ascensions: 0,
@@ -111,6 +113,7 @@ function loadState() {
     fresh.starterPlaced = !!s.starterPlaced;
     if (s.buff && Number.isFinite(s.buff.until) && window.DATA.DRAGON_BUFFS[s.buff.kind])
       fresh.buff = s.buff;
+    if (s.combatBuff && Number.isFinite(s.combatBuff.until)) fresh.combatBuff = s.combatBuff;
     fresh.ascensions = Number.isFinite(s.ascensions) ? s.ascensions : 0;
     fresh.ascendPrompt = !!s.ascendPrompt;
     // merge stats/quest onto defaults so counters added later start at 0

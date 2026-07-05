@@ -320,8 +320,9 @@ function animActive() {
     // the dragon's floating stage text needs repaints until it fades
     if (key === "center" && unlocked && window.GS.dragon.msgUntil > now) return true;
   }
-  // blessing countdown in the top bar ticks every second
+  // buff countdowns in the top bar tick every second
   if (window.GS.buff && window.GS.buff.until > now) return true;
+  if (window.GS.combatBuff && window.GS.combatBuff.until > now) return true;
   return false;
 }
 // Tick gate: repaint on "idle" ticks only when something animated is visible.
@@ -335,12 +336,15 @@ function renderTopBar() {
     + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "")
     + ((window.GS.ascensions || 0) > 0 ? ` <span class="sprint-tag">☯${window.GS.ascensions}</span>` : "");
   $("#hand-count").textContent = `${E.handTotal()}/${E.handCap()}`;
-  // active dragon-pill blessing with a live countdown
-  const buff = window.GS.buff, bp = $("#buff-pill");
-  if (buff && buff.until > Date.now() && DD.DRAGON_BUFFS[buff.kind]) {
-    bp.classList.remove("hidden");
-    bp.innerHTML = `${iconHTML(buff.kind)} ${DD.DRAGON_BUFFS[buff.kind].name} ${Math.ceil((buff.until - Date.now()) / 1000)}s`;
-  } else bp.classList.add("hidden");
+  // active buffs with live countdowns: dragon blessing + Martial Vigor
+  const now = Date.now(), bp = $("#buff-pill"), buff = window.GS.buff, cb = window.GS.combatBuff;
+  const parts = [];
+  if (buff && buff.until > now && DD.DRAGON_BUFFS[buff.kind])
+    parts.push(`${iconHTML(buff.kind)} ${DD.DRAGON_BUFFS[buff.kind].name} ${Math.ceil((buff.until - now) / 1000)}s`);
+  if (cb && cb.until > now)
+    parts.push(`${iconHTML(DD.VITALITY.item)} ${DD.VITALITY.name} ${Math.ceil((cb.until - now) / 1000)}s`);
+  if (parts.length) { bp.classList.remove("hidden"); bp.innerHTML = parts.join(" &nbsp; "); }
+  else bp.classList.add("hidden");
   $("#build-btn").classList.toggle("on", window.GS.build.open);
   $("#demolish-btn").classList.toggle("on", demolishMode);
   $("#debug-btn").classList.toggle("on", debugShow);
@@ -1225,7 +1229,7 @@ function openHelp() {
   S.push(["🐉 The Sleeping Dragon",
     "Feed it each stage's tribute (right-click) and it teaches new recipes. Its current wish is written on it."]);
   S.push(["🦊 Fox Spirits",
-    "They prowl the red corner. Click to strike (hold to auto-attack); they drop Spirit Essence. The tree's combat branch adds damage, more foxes and an AoE. RIGHT-click Beast Bait 🪱 (Cauldron) inside their zone to lure a Spirit Boar 🐗 — tough, but the only Beast Bone source."]);
+    "They prowl the red corner. Click to strike (hold to auto-attack); they drop Spirit Essence. The tree's combat branch adds damage, more foxes and an AoE. RIGHT-click Beast Bait 🪱 (Cauldron) inside their zone to lure a Spirit Boar 🐗 — tough, but the only Beast Bone source. Right-click a Vitality Pill 💊 (Cauldron) in hand to quaff it for Martial Vigor: +2 attack and doubled beast loot for a while."]);
   S.push(["🫕 Dragon pills",
     "The Pill Furnace refines Qi Elixirs into four pills. Right-click one onto the dragon and it exhales a timed blessing (60s base, longer with Dragon Affinity): Ember = burners 2×, Verdant = regrow 2×, Swiftwind = wisps 2×, Stoneheart = double mining drops. A new pill replaces the active one."]);
   S.push(["🏮 Wisp network",
