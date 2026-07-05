@@ -5,15 +5,30 @@
 
 ## ▶ NEXT SESSION: start here
 
-READ DESIGN.md FIRST — the agreed economy/building/logistics plan lives
-there (with done-markers and roadmap phases). Wisp logistics + the starter
-network are LIVE (see "Last session summary"); next per its roadmap:
-1. **Link-editing UI** — lanterns are pre-wired only; players can't create
-   or edit links yet (engine hook exists: `ENGINE.addLink`).
-2. Phase-3 buildings (Loom/Cauldron/Mill/Brewery/Jade Carver/Charcoal Pit)
-   + the fuel system; then pills/combat T3/endgame per DESIGN.md.
-3. Backlog: post-awakening content (GS.won unused), offline catch-up,
-   feedback polish.
+READ DESIGN.md FIRST — the full economy/building/logistics plan with
+done-markers. **The entire roadmap (phases 1-5) is implemented, plus
+disciples and full item-sink coverage.** Current asset version: ?v=24.
+
+Everything designed is live: gathering, dragon story (4 stages ->
+awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
+economy, wisp logistics (gatherers/lanterns/seals/furnace-spirit) with a
+link-editor UI and fuel system, dragon pills + timed blessings, disciples
+(Meditation Pavilion), and the Ascension prestige loop.
+
+Remaining directions are NEW design scope — confirm with the user before
+picking:
+1. **Deeper prestige** — an ascension-point shop for permanent perks
+   (currently ascension only grants a flat +8% global speed).
+2. **More regions** — the map has room; each could add unique resources.
+3. **Sprite art pass** — swap emoji for sheet art per the DESIGN.md
+   wishlist (item icons already use assets/icons/*.png with emoji
+   fallback; buildings/nodes/enemies are still emoji).
+4. Polish: offline/idle catch-up on load, particles/floating-+N feedback,
+   a balance pass with DATA.TEST.ENABLED=false.
+
+**Every git commit MUST update this file** (this pointer + the Last
+session summary below) so a fresh session knows the state; bump the ?v=
+asset version on any code change too.
 
 ## Session setup
 
@@ -218,23 +233,25 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
-Wisp logistics + starter network: 6 new items (plank, brick, paper,
-bamboo, jade_shard, spirit_stone — pixel icons extracted); rare drops
-(quarry/stone field -> jade shards, Spirit Tree -> bamboo); new producers
-Kiln (2 clay+1 wood -> brick), Paper Mill (1 bamboo+2 wood -> paper),
-Infusion Array (3 stone+1 essence -> spirit stone) + Workbench now makes
-planks (3 wood). Logistics buildings (1x1, anyZone=wild-land ok):
-Gathering Stone (vacuum radius 10, buffer 20), Warding Seal (typed
-pass-through cap 5; right-click tunes it to the held item), Wisp Lantern
-(links list, ONE link serviced per 1s beat round-robin in added order;
-wisps fly cargo ~120px/s, refuse -> drop on ground). Endpoint acceptance:
-seals/storehouses by type, converters by remaining recipe inputs + queue
-cap. Left-click withdraws from any buffer building; demolition severs
-links + refunds buffers; storehouse lock keeps type when empty.
-setupStarterNetwork() (GS.starterPlaced flag) auto-builds the wired demo
-on fresh saves and seeds the sources. VERIFIED headless end-to-end:
-gather -> seal -> producers, jade/bamboo filtered to typed storehouses,
-wood fanned round-robin to 4 consumers, spirit stones + brick crafted
-hands-free, zero stuck wisps, no draw errors. NOTE: headless tabs
-throttle setInterval to 1/s — drive E.gameTick() manually to fast-forward
-when testing. Assets ?v=13. DESIGN.md added (full approved plan).
+Closed the last dead-end item loops (?v=24): Tools/Glass/Rope became
+advanced build MATERIALS gating T3 buildings behind their T2 producers
+(Pill Furnace needs tools, Star Anvil tools+glass, Talisman Atelier glass,
+Meditation Pavilion rope); Vitality Pill became a combat consumable —
+right-click it in the front hand slot to quaff (never dropped) for Martial
+Vigor (+2 attack, 2x fox/boar loot, 45s), shown as a live bottom-bar badge
+beside any dragon blessing. Now every produced item has a consumer.
+
+Recent history (newest first): trade-good sinks (v24) · disciple capacity
+tree node + Spirit Wine as premium disciple food (v23) · Disciples /
+Meditation Pavilion cultivating essence from robes+buns (v22) · phase-5
+finale: Talisman Atelier, Dragon Scales, Dragon Shrine, Ascension Gate +
+prestige (v21) · phase-4: Pill Furnace, 4 dragon pills & blessings, Star
+Anvil, firestone, Spirit Boar (v20) · phase-3: 6 producers + fuel system +
+Furnace Spirit + Wisp Haste + rice/koi/spring-water renames (v19) · recipe
+picker (v16), link editor (v17), tutorial quests + Help modal (v18).
+
+Testing note: headless preview tabs throttle setInterval to ~1/s — drive
+E.gameTick() manually to fast-forward, and exercise real click paths via
+synthetic MouseEvents on #world-viewport after a mousemove (the handlers
+gate on cursor.over). All features above were verified this way (engine
+math + real UI clicks) with zero console/draw errors.
