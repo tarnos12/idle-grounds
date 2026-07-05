@@ -88,9 +88,11 @@ seeded so every line visibly runs from the first minute.
    (3 talisman + 3 star steel + 3 scale) -> ASCEND: reset, keep +8%
    permanent global speed per ascension (tutorial skipped on reruns).
 
-THE FULL ROADMAP IS IMPLEMENTED. Next frontiers are new design work:
-disciples (NPC helpers wearing Robes), more regions, deeper prestige,
-sprite art (see wishlist below).
+THE FULL ROADMAP IS IMPLEMENTED, plus DISCIPLES (post-roadmap):
+Meditation Pavilion recruits disciples with Robes and feeds them Spirit
+Buns to cultivate Spirit Essence passively (a peaceful essence source;
+gives the Loom robe + Mill bun chains a purpose). Next frontiers: more
+regions, deeper prestige, sprite art (see wishlist below).
 
 ## Building sprite wishlist (assets/buildings/<file>)
 

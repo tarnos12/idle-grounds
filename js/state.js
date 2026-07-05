@@ -62,7 +62,7 @@ function makeInitialState() {
     quest: { idx: 0, hidden: false },
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0,
              foxKills: 0, buildingsBuilt: 0, upgradesApplied: 0,
-             linksAdded: 0, recipeSwitches: 0 },
+             linksAdded: 0, recipeSwitches: 0, disciplesRecruited: 0 },
   };
 }
 
@@ -164,6 +164,11 @@ function loadState() {
       for (const b of a.buildings || []) {
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
+        // meditation pavilion: keep disciple/bun counters finite
+        if (window.DATA.BUILDINGS[b.type].roster) {
+          if (!Number.isFinite(b.disciples) || b.disciples < 0) b.disciples = 0;
+          if (!Number.isFinite(b.buns) || b.buns < 0) b.buns = 0;
+        }
         // converter state: clamp the active recipe index, scrub dead input
         // items, sanitise counters. The old queue/smeltPaid format converts
         // into the input stock.

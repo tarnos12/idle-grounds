@@ -236,11 +236,11 @@ body {
 .bc-cost { font-size: 11px; color: var(--gold); }
 
 /* ---- Recipe picker (converter buildings) + lantern link editor ---- */
-#recipe-menu, #link-menu {
+#recipe-menu, #link-menu, #roster-menu {
   flex: 0 0 auto; background: var(--bg-2); border-top: 1px solid var(--line);
   padding: 10px 14px; display: flex; gap: 10px; overflow-x: auto; align-items: center;
 }
-#recipe-menu.hidden, #link-menu.hidden { display: none; }
+#recipe-menu.hidden, #link-menu.hidden, #roster-menu.hidden { display: none; }
 .link-row {
   display: flex; align-items: center; gap: 6px; white-space: nowrap;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;

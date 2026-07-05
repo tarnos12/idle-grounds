@@ -340,6 +340,13 @@ const BUILDINGS = {
   furnace_spirit: { name: "Furnace Spirit", icon: "🕯️", size: { w: 1, h: 1 }, anyZone: true,
                cost: { stone: 4, spirit_essence: 2 }, unlocked: true,
                stoker: { radius: 3, cap: 20 } },
+  // Meditation Pavilion: recruit Disciples (each costs a Robe) who cultivate
+  // Spirit Essence while fed Spirit Buns — a peaceful essence source and the
+  // sink that gives the Loom (robe) and Mill (bun) chains a purpose. Feed it
+  // buns by hand or wisp; the Recruit button in its panel spends a Robe.
+  meditation_pavilion: { name: "Meditation Pavilion", icon: "🧘", cost: { plank: 6, cloth: 4 }, unlocked: true,
+               roster: { cap: 3, recruit: "robe", food: "spirit_buns", foodCap: 20,
+                         produce: "spirit_essence", produceMs: 6000 } },
   // Converter buildings carry a `smelt` recipe: right-click feed the inputs
   // (same feeding rule as ghosts); each complete set queues one batch, the
   // building works through the queue on a timer and drops the output on the
@@ -526,6 +533,9 @@ const QUESTS = [
       const u = window.GS.world.unlocked;
       return { cur: (u.farm || u.mine || u.fishing) ? 1 : 0, need: 1 };
     } },
+  { id: "cultivate", icon: "🧘", name: "Gather disciples",
+    desc: "Build a Meditation Pavilion, weave a Robe at the Loom, then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
+    goal: () => ({ cur: window.GS.stats.disciplesRecruited || 0, need: 1 }) },
 ];
 
 // How many ready nodes each automation level harvests per tick.

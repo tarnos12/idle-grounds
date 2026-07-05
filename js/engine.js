@@ -673,8 +673,23 @@ function canPlaceBuilding(areaKey, row, col, type) {
 // Per-type mutable fields for logistics buildings.
 function initLogistics(b) {
   const cfg = D.BUILDINGS[b.type];
-  if (cfg.gather && !b.inv) b.inv = [];
+  if ((cfg.gather || cfg.stoker) && !b.inv) b.inv = [];
   if (cfg.lantern) { b.links = b.links || []; b.connIdx = b.connIdx || 0; b.nextSend = 0; }
+  if (cfg.roster) { b.disciples = b.disciples || 0; b.buns = b.buns || 0; b.nextCultivate = 0; }
+}
+
+// Recruit a disciple into a Meditation Pavilion: spends one Robe from the
+// hand (up to the pavilion's cap). Returns true on success.
+function recruitDisciple(areaKey, id) {
+  const b = buildingById(areaKey, id);
+  const cfg = b && D.BUILDINGS[b.type].roster;
+  if (!cfg || !b.built) return false;
+  if ((b.disciples || 0) >= cfg.cap) return false;
+  if (handCount(cfg.recruit) <= 0) return false;
+  handTake(cfg.recruit, 1);
+  b.disciples = (b.disciples || 0) + 1;
+  window.GS.stats.disciplesRecruited = (window.GS.stats.disciplesRecruited || 0) + 1;
+  return true;
 }
 
 function placeBuilding(areaKey, type, row, col) {
@@ -776,6 +791,7 @@ function endpointAccepts(b, item) {
   if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
   if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
   if (cfg.stoker) return D.FUEL[item] != null && gatherTotal(b) < cfg.stoker.cap;
+  if (cfg.roster) return item === cfg.roster.food && (b.buns || 0) < cfg.roster.foodCap;
   if (cfg.recipes) {
     const rec = recipeOf(b);
     // burners drink fuel items straight into their gauge
@@ -822,6 +838,7 @@ function endpointGive(b, item) {
     if (st) st.qty++; else b.inv.push({ item, qty: 1 });
     return true;
   }
+  if (cfg.roster) { b.buns = (b.buns || 0) + 1; return true; }
   if (cfg.recipes) {
     if (cfg.fuel && D.FUEL[item] != null) {
       b.fuel = Math.min(D.FUEL_CAP, (b.fuel || 0) + D.FUEL[item]);
@@ -869,7 +886,7 @@ function canBeLinkSource(b) {
 function canBeLinkTarget(b) {
   if (!b || !b.built) return false;
   const cfg = D.BUILDINGS[b.type];
-  return !!(cfg.gather || cfg.stoker || cfg.seal || b.type === "storehouse" || cfg.recipes);
+  return !!(cfg.gather || cfg.stoker || cfg.seal || b.type === "storehouse" || cfg.recipes || cfg.roster);
 }
 
 // Remaining resources a ghost still needs: { item: qty }.
@@ -914,6 +931,11 @@ function demolishBuilding(areaKey, buildingId) {
       if (b.smeltDoneAt > 0 && rec)
         for (const [item, qty] of Object.entries(rec.inputs))
           dropGround(areaKey, item, qty, x, y);
+    }
+    // a pavilion refunds its disciples (as Robes) and any unfed buns
+    if (cfg.roster) {
+      if (b.disciples > 0) dropGround(areaKey, cfg.roster.recruit, b.disciples, x, y);
+      if (b.buns > 0) dropGround(areaKey, cfg.roster.food, b.buns, x, y);
     }
   } else {
     for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y);
@@ -1001,6 +1023,14 @@ function dropFromHand(areaKey, x, y) {
     if (first && endpointGive(b, first.item)) { handTake(first.item, 1); return { fed: first.item }; }
     for (const it of Object.keys(D.FUEL))
       if (handCount(it) > 0 && endpointAccepts(b, it)) { handMoveToFront(it); return { reordered: it }; }
+    return null;
+  }
+  // Meditation Pavilion: right-click feeds Spirit Buns (the disciples' food).
+  if (b && b.built && D.BUILDINGS[b.type].roster) {
+    const food = D.BUILDINGS[b.type].roster.food;
+    const first = window.GS.hand[0];
+    if (first && first.item === food && endpointGive(b, food)) { handTake(food, 1); return { fed: food }; }
+    if (handCount(food) > 0 && endpointAccepts(b, food)) { handMoveToFront(food); return { reordered: food }; }
     return null;
   }
   // Converter buildings (the Forge): feed recipe inputs into the stock —
@@ -1368,6 +1398,20 @@ function gameTick() {
           changed = true;
         }
       }
+      // Meditation Pavilions: fed disciples cultivate essence each cycle,
+      // eating one Spirit Bun per essence produced. Out of buns -> idle.
+      if (bCfg.roster && (b.disciples || 0) > 0) {
+        if (now >= (b.nextCultivate || 0)) {
+          b.nextCultivate = now + bCfg.roster.produceMs * scale * prestigeFactor();
+          const worked = Math.min(b.disciples, b.buns || 0);
+          if (worked > 0) {
+            b.buns -= worked;
+            const c = buildingCenterPx(b);
+            dropGround(areaKey, bCfg.roster.produce, worked, c.x + rand(-40, 40), (b.row + buildingSize(b.type).h) * CELL + 12);
+            changed = true;
+          }
+        }
+      }
     }
     // Wisps carry their cargo to the link target. Flight is time-parametric
     // (see wispPos) — the tick only records positions and handles arrivals.
@@ -1543,7 +1587,7 @@ window.ENGINE = {
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
-  questProgress, claimQuest, buffActive, prestigeFactor, shrineBuilt, ascend,
+  questProgress, claimQuest, buffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

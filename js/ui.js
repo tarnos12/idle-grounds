@@ -616,6 +616,17 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       }
       ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`; ctx.textBaseline = "middle";
       ctx.fillText(b.item ? `${E.itemName(b.item)} ×${b.qty}` : "empty", cxp, Y(by + bh * 0.78));
+    } else if (b.built && bCfg.roster) {
+      // pavilion: icon + disciple count, and a thin bun-stock bar
+      ctx.fillStyle = C.text;
+      ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.34));
+      ctx.fillStyle = C.text; ctx.font = `700 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillText(`👤 ${b.disciples || 0}/${bCfg.roster.cap}`, cxp, Y(by + bh * 0.62));
+      const fw = bw * 0.7 * s, fx0 = X(bx + bw * 0.15), fy0 = Y(by + bh * 0.8);
+      ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.fillRect(fx0, fy0, fw, 4 * s);
+      ctx.fillStyle = (b.buns || 0) > 0 ? C.accent : C.danger;
+      ctx.fillRect(fx0, fy0, fw * clamp((b.buns || 0) / bCfg.roster.foodCap, 0, 1), 4 * s);
     } else {
       ctx.fillStyle = C.text;
       ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
@@ -1075,6 +1086,34 @@ function renderRecipeMenu() {
   });
 }
 
+// ---- meditation pavilion roster ------------------------------
+// Left-click a pavilion -> this panel: disciple count, bun stock and a
+// Recruit button that spends one Robe from the hand.
+let rosterFor = null;   // { area, id } while open
+function openRoster(areaKey, b) { rosterFor = { area: areaKey, id: b.id }; renderRoster(); }
+function closeRoster() { rosterFor = null; $("#roster-menu").classList.add("hidden"); }
+function renderRoster() {
+  const bar = $("#roster-menu");
+  if (!rosterFor) { bar.classList.add("hidden"); return; }
+  const b = E.buildingById(rosterFor.area, rosterFor.id);
+  const cfg = b && DD.BUILDINGS[b.type].roster;
+  if (!b || !b.built || !cfg) { closeRoster(); return; }
+  bar.classList.remove("hidden");
+  const haveRobe = E.handCount(cfg.recruit) > 0;
+  const full = (b.disciples || 0) >= cfg.cap;
+  bar.innerHTML =
+    `<div class="rm-title">🧘 Meditation Pavilion</div>` +
+    `<div class="link-row">👤 Disciples ${b.disciples || 0}/${cfg.cap}` +
+    `&nbsp;&nbsp;${iconHTML(cfg.food)} ${b.buns || 0}/${cfg.foodCap}</div>` +
+    `<div class="rm-hint">Each cultivates ${iconHTML(cfg.produce)} while fed ${iconHTML(cfg.food)} (1 bun each).</div>`;
+  const btn = el("button", "build-card", `<span class="bc-name">➕ Recruit</span>` +
+    `<span class="bc-cost">1 ${iconHTML(cfg.recruit)}</span>`);
+  btn.disabled = full || !haveRobe;
+  btn.title = full ? "Pavilion is full" : !haveRobe ? "Carry a Robe to recruit" : "";
+  btn.onclick = () => { if (E.recruitDisciple(rosterFor.area, rosterFor.id)) { renderRoster(); render(); } };
+  bar.appendChild(btn);
+}
+
 // ---- wisp-lantern link editor --------------------------------
 // Left-click a lantern -> panel lists its links (removable) and "Add link"
 // starts a two-click pick: SOURCE building on the map, then TARGET.
@@ -1189,6 +1228,8 @@ function openHelp() {
     "The Pill Furnace refines Qi Elixirs into four pills. Right-click one onto the dragon and it exhales a timed blessing (60s base, longer with Dragon Affinity): Ember = burners 2×, Verdant = regrow 2×, Swiftwind = wisps 2×, Stoneheart = double mining drops. A new pill replaces the active one."]);
   S.push(["🏮 Wisp network",
     "Gathering Stones 🧿 vacuum ground items. Wisp Lanterns ferry them: click a lantern to edit its links (source → target, served in order, one per beat). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw."]);
+  S.push(["🧘 Disciples",
+    "Build a Meditation Pavilion, then click it and Recruit disciples (each costs a Robe 🥋 from the Loom). Feed the pavilion Spirit Buns 🥟 (Mill) by hand or wisp — while fed, each disciple cultivates Spirit Essence ✨. A peaceful alternative to fighting foxes."]);
   if (dr >= 1) S.push(["🔥 Forge & smelting",
     "The dragon taught you the Forge: feed it iron ore + wood (wisps or hand) and it smelts Iron Bars from its stock automatically."]);
   if (dr >= 2) S.push(["🪸 Algae Farm",
@@ -1350,11 +1391,14 @@ function onMouseDown(e) {
     if (sh && sh.built && DD.BUILDINGS[sh.type].gate) {
       window.GS.ascendPrompt = true; syncAscendModal(); return;
     }
-    // converters open their recipe picker; lanterns their link editor
+    // converters open their recipe picker; lanterns their link editor;
+    // pavilions their disciple roster
     if (sh && sh.built && DD.BUILDINGS[sh.type].recipes) { openRecipeMenu(p.region, sh); return; }
     if (sh && sh.built && DD.BUILDINGS[sh.type].lantern) { openLinkMenu(p.region, sh); return; }
+    if (sh && sh.built && DD.BUILDINGS[sh.type].roster) { openRoster(p.region, sh); return; }
     if (recipeMenuFor) { closeRecipeMenu(); }   // clicking elsewhere closes them
     if (linkMode) { closeLinkMenu(); }
+    if (rosterFor) { closeRoster(); }
     // left-click/hold a buffer building (storehouse / seal / gatherer) to
     // withdraw its contents into the hand
     if (sh && sh.built && (sh.type === "storehouse" ||
@@ -1438,6 +1482,7 @@ function onKeyDown(e) {
   if (e.key === "Escape") {
     if (upgradesOpen) { toggleUpgrades(false); return; }
     if (recipeMenuFor) { closeRecipeMenu(); return; }
+    if (rosterFor) { closeRoster(); return; }
     if (linkMode) {
       // picking backs out to the menu; a second Esc closes it
       if (linkMode.picking) { linkMode.picking = null; linkMode.srcId = null; renderLinkMenu(); requestGridPaint(); }
