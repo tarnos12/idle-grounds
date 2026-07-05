@@ -98,7 +98,7 @@ function takeFromStorehouse(sh, n) {
 function withdrawFromBuilding(b, n) {
   const cfg = D.BUILDINGS[b.type];
   if (b.type === "storehouse" || cfg.seal) return takeFromStorehouse(b, n);
-  if (cfg.gather) {
+  if (cfg.gather || cfg.stoker) {
     let took = 0;
     while (took < (n || 1) && handSpace() > 0 && (b.inv || []).length) {
       const st = b.inv[0];
@@ -738,8 +738,11 @@ function endpointAccepts(b, item) {
   if (cfg.seal) return !!b.item && b.item === item && (b.qty || 0) < (cfg.seal.cap || 5);
   if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
   if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
+  if (cfg.stoker) return D.FUEL[item] != null && gatherTotal(b) < cfg.stoker.cap;
   if (cfg.recipes) {
     const rec = recipeOf(b);
+    // burners drink fuel items straight into their gauge
+    if (cfg.fuel && D.FUEL[item] != null) return (b.fuel || 0) < D.FUEL_CAP;
     if (!rec || rec.inputs[item] == null) return false;
     b.stock = b.stock || {};
     return (b.stock[item] || 0) < (rec.stockCap || 20);
@@ -749,7 +752,7 @@ function endpointAccepts(b, item) {
 // Which item can `src` supply that `dst` accepts? (null = nothing to send)
 function pickTransfer(src, dst) {
   const sCfg = D.BUILDINGS[src.type];
-  if (sCfg.gather) {
+  if (sCfg.gather || sCfg.stoker) {
     const st = (src.inv || []).find(s => s.qty > 0 && endpointAccepts(dst, s.item));
     return st ? st.item : null;
   }
@@ -759,7 +762,7 @@ function pickTransfer(src, dst) {
 }
 function endpointTake(b, item) {
   const cfg = D.BUILDINGS[b.type];
-  if (cfg.gather) {
+  if (cfg.gather || cfg.stoker) {
     const st = (b.inv || []).find(s => s.item === item);
     if (!st || st.qty <= 0) return false;
     st.qty--; if (st.qty <= 0) b.inv = b.inv.filter(s => s !== st);
@@ -777,12 +780,16 @@ function endpointGive(b, item) {
   if (!endpointAccepts(b, item)) return false;
   const cfg = D.BUILDINGS[b.type];
   if (cfg.seal || b.type === "storehouse") { if (!b.item) b.item = item; b.qty = (b.qty || 0) + 1; return true; }
-  if (cfg.gather) {
+  if (cfg.gather || cfg.stoker) {
     const st = (b.inv = b.inv || []).find(s => s.item === item);
     if (st) st.qty++; else b.inv.push({ item, qty: 1 });
     return true;
   }
   if (cfg.recipes) {
+    if (cfg.fuel && D.FUEL[item] != null) {
+      b.fuel = Math.min(D.FUEL_CAP, (b.fuel || 0) + D.FUEL[item]);
+      return true;
+    }
     b.stock = b.stock || {};
     b.stock[item] = (b.stock[item] || 0) + 1;
     return true;
@@ -820,12 +827,12 @@ function removeLink(areaKey, lanternId, index) {
 function canBeLinkSource(b) {
   if (!b || !b.built) return false;
   const cfg = D.BUILDINGS[b.type];
-  return !!(cfg.gather || cfg.seal || b.type === "storehouse");
+  return !!(cfg.gather || cfg.stoker || cfg.seal || b.type === "storehouse");
 }
 function canBeLinkTarget(b) {
   if (!b || !b.built) return false;
   const cfg = D.BUILDINGS[b.type];
-  return !!(cfg.gather || cfg.seal || b.type === "storehouse" || cfg.recipes);
+  return !!(cfg.gather || cfg.stoker || cfg.seal || b.type === "storehouse" || cfg.recipes);
 }
 
 // Remaining resources a ghost still needs: { item: qty }.
@@ -927,11 +934,33 @@ function dropFromHand(areaKey, x, y) {
     }
     return res;
   }
+  // Furnace Spirit: right-click feeds it fuel items for its stoking buffer.
+  if (b && b.built && D.BUILDINGS[b.type].stoker) {
+    const first = window.GS.hand[0];
+    if (first && endpointGive(b, first.item)) { handTake(first.item, 1); return { fed: first.item }; }
+    for (const it of Object.keys(D.FUEL))
+      if (handCount(it) > 0 && endpointAccepts(b, it)) { handMoveToFront(it); return { reordered: it }; }
+    return null;
+  }
   // Converter buildings (the Forge): feed recipe inputs into the stock —
   // up to the per-item cap; batches start themselves from the stock.
+  // Burners take fuel items (front stack first) straight into their gauge.
   if (b && b.built && recipeOf(b)) {
     b.stock = b.stock || {};
-    return feedNeeds(smeltSpace(b), b.stock);
+    const bCfg = D.BUILDINGS[b.type];
+    const first = window.GS.hand[0];
+    if (bCfg.fuel && first && D.FUEL[first.item] != null && (b.fuel || 0) < D.FUEL_CAP) {
+      handTake(first.item, 1);
+      b.fuel = Math.min(D.FUEL_CAP, (b.fuel || 0) + D.FUEL[first.item]);
+      return { fed: first.item };
+    }
+    const res = feedNeeds(smeltSpace(b), b.stock);
+    if (res) return res;
+    // nothing the recipe needs — bring carried fuel forward instead
+    if (bCfg.fuel && (b.fuel || 0) < D.FUEL_CAP)
+      for (const it of Object.keys(D.FUEL))
+        if (handCount(it) > 0) { handMoveToFront(it); return { reordered: it }; }
+    return null;
   }
   // Warding Seal: right-click TUNES it to the front hand item (consumes
   // nothing) — from then on wisps only route that item through it.
@@ -991,6 +1020,7 @@ function upgradeLevel(areaKey, type) {
   if (type === "enemyCap") return { lvl: up.enemyCap || 0, max: 3 };
   if (type === "damage") return { lvl: up.damage || 0, max: 3 };
   if (type === "aoe") return { lvl: up.aoe || 0, max: 3 };
+  if (type === "wispRate") return { lvl: up.wispRate || 0, max: 3 };
   return { lvl: 0, max: 0 };
 }
 
@@ -1007,6 +1037,7 @@ function applyUpgrade(areaKey, type) {
   else if (type === "enemyCap") up.enemyCap = (up.enemyCap || 0) + 1;
   else if (type === "damage") up.damage = (up.damage || 0) + 1;
   else if (type === "aoe") up.aoe = (up.aoe || 0) + 1;
+  else if (type === "wispRate") up.wispRate = (up.wispRate || 0) + 1;
   else if (type === "hand") { window.GS.handLevel = (window.GS.handLevel || 0) + 1; window.GS.handCap += 5; }
 }
 
@@ -1192,8 +1223,14 @@ function gameTick() {
         changed = true;
       }
       if (!b.smeltDoneAt && canStartBatch(b)) {
+        const cost = scfg.timeMs * scale;
+        // burners spend fuel equal to the batch duration; no fuel = no work
+        if (D.BUILDINGS[b.type].fuel) {
+          if ((b.fuel || 0) < cost) continue;
+          b.fuel -= cost;
+        }
         for (const [it, q] of Object.entries(scfg.inputs)) b.stock[it] -= q;
-        b.smeltDoneAt = now + scfg.timeMs * scale;
+        b.smeltDoneAt = now + cost;
         changed = true;
       }
     }
@@ -1222,7 +1259,9 @@ function gameTick() {
         if (taken.size) area.ground = area.ground.filter(g => !taken.has(g.id));
       }
       // Wisp Lanterns service ONE link per beat, round-robin in added order.
+      // The Wisp Haste upgrade quickens the beat and the wisps themselves.
       if (bCfg.lantern && (b.links || []).length && now >= (b.nextSend || 0)) {
+        const haste = area.upgrades.wispRate || 0;
         for (let k = 0; k < b.links.length; k++) {
           const l = b.links[(b.connIdx + k) % b.links.length];
           const src = buildingById(areaKey, l.from), dst = buildingById(areaKey, l.to);
@@ -1236,13 +1275,30 @@ function gameTick() {
           // fromId lets a refused delivery fly its cargo back home.
           area.wisps.push({ id: area.nextWispId++, x0: sc.x, y0: sc.y, x: sc.x, y: sc.y,
                             item, toId: l.to, fromId: l.from, t0: now,
-                            sp: bCfg.lantern.speed || 170 });
+                            sp: (bCfg.lantern.speed || 170) * (1 + 0.25 * haste) });
           b.connIdx = (b.connIdx + k + 1) % b.links.length;
-          b.nextSend = now + (bCfg.lantern.rateMs || 1000);
+          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste);
           changed = true;
           break;
         }
         if (now >= (b.nextSend || 0)) b.nextSend = now + 250;   // idle: retry soon
+      }
+      // Furnace Spirits stoke low burners within their radius from their
+      // own fuel buffer (best fuel first).
+      if (bCfg.stoker) {
+        const c = buildingCenterPx(b);
+        const R = bCfg.stoker.radius * CELL;
+        for (const t of area.buildings) {
+          if (!t.built || !D.BUILDINGS[t.type].fuel) continue;
+          if ((t.fuel || 0) >= 20000) continue;
+          const tc = buildingCenterPx(t);
+          if (Math.hypot(tc.x - c.x, tc.y - c.y) > R + 1.5 * CELL) continue;
+          const st = (b.inv || []).slice().sort((s1, s2) => D.FUEL[s2.item] - D.FUEL[s1.item])[0];
+          if (!st) break;
+          st.qty--; if (st.qty <= 0) b.inv = b.inv.filter(s => s !== st);
+          t.fuel = Math.min(D.FUEL_CAP, (t.fuel || 0) + D.FUEL[st.item]);
+          changed = true;
+        }
       }
     }
     // Wisps carry their cargo to the link target. Flight is time-parametric

@@ -24,7 +24,7 @@ function makeAreaState() {
     // quarry = fewer clicks per stone; enemyCap/damage/aoe = combat branch.
     // paid = incremental upgrade funding.
     upgrades: { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
-                enemyCap: 0, damage: 0, aoe: 0, paid: {} },
+                enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, paid: {} },
   };
 }
 
@@ -92,7 +92,7 @@ function loadState() {
       Object.assign(fresh.areas[k], s.areas[k]);
       fresh.areas[k].upgrades = Object.assign(
         { maxTier: 1, speed: 0, harvestSpeed: 0, automation: 0, quarry: 0,
-          enemyCap: 0, damage: 0, aoe: 0, paid: {} },
+          enemyCap: 0, damage: 0, aoe: 0, wispRate: 0, paid: {} },
         s.areas[k].upgrades || {});
     }
     if (Array.isArray(s.hand)) fresh.hand = s.hand;
@@ -172,6 +172,14 @@ function loadState() {
           delete b.queue;
           for (const it of Object.keys(b.stock)) if (!LIVE.has(it)) delete b.stock[it];
           if (!Number.isFinite(b.smeltDoneAt) || b.smeltDoneAt < 0) b.smeltDoneAt = 0;
+          // burners: recipes no longer take wood — stocked wood becomes fuel
+          if (window.DATA.BUILDINGS[b.type].fuel) {
+            if (!Number.isFinite(b.fuel) || b.fuel < 0) b.fuel = 0;
+            if (b.stock.wood > 0) {
+              b.fuel = Math.min(window.DATA.FUEL_CAP, b.fuel + b.stock.wood * window.DATA.FUEL.wood);
+              delete b.stock.wood;
+            }
+          }
         }
       }
       if (a.upgrades) a.upgrades.maxTier = 1;    // tier upgrades are gone

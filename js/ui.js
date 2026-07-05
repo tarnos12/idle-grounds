@@ -556,14 +556,14 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.fillStyle = "#e9d5ff"; ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
         ctx.fillText(dr.msg, cxp, Y(by - 12));
       }
-    } else if (b.built && (bCfg.gather || bCfg.lantern || bCfg.seal)) {
+    } else if (b.built && (bCfg.gather || bCfg.lantern || bCfg.seal || bCfg.stoker)) {
       // compact 1x1 wisp-logistics formations: icon + a tiny status badge
       ctx.fillStyle = C.text;
       ctx.font = `${20 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
       ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.5));
       if (bCfg.seal && b.item) drawItemIcon(b.item, cxp, Y(by - 8), 13 * s);
       ctx.fillStyle = C.gold; ctx.font = `800 ${9 * s}px ${TEXT_FONT}`;
-      const badge = bCfg.gather ? String(E.gatherTotal(b))
+      const badge = (bCfg.gather || bCfg.stoker) ? String(E.gatherTotal(b))
         : bCfg.seal ? String(b.qty || 0)
         : `${(b.links || []).length}⛓`;
       ctx.fillText(badge, cxp, Y(by + bh + 8));
@@ -578,6 +578,13 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
       ctx.fillText(bCfg.name + (bCfg.recipes.length > 1 && rec ? ` · ${rec.name}` : ""),
         cxp, Y(by + bh * 0.56));
+      // burners: thin orange fuel gauge (red when empty)
+      if (bCfg.fuel) {
+        const fw = bw * 0.7 * s, fx0 = X(bx + bw * 0.15), fy0 = Y(by + bh * 0.63);
+        ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.fillRect(fx0, fy0, fw, 3 * s);
+        ctx.fillStyle = (b.fuel || 0) > 0 ? "#fb923c" : "#ef4444";
+        ctx.fillRect(fx0, fy0, fw * clamp((b.fuel || 0) / DD.FUEL_CAP, 0, 1), 3 * s);
+      }
       const now2 = Date.now();
       if (b.smeltDoneAt > now2 && rec) {
         const total = rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1);
@@ -1161,6 +1168,8 @@ function openHelp() {
     "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown bottom-right). RIGHT-click drops items / feeds buildings; the front stack feeds first."]);
   S.push(["🏗️ Buildings",
     "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input."]);
+  S.push(["🔥 Fuel",
+    "Burners (Kiln, Forge…) show an orange fuel gauge — feed them wood, bamboo or charcoal (charcoal burns 4× longer, from the Charcoal Pit). A Furnace Spirit 🕯️ stokes every burner within 3 cells from its own stash."]);
   S.push(["🏛️ Altar upgrades",
     "Click the Altar to open the upgrade tree. Select a node, then right-click-feed the Altar the cost shown on it. Switching refunds what you fed."]);
   S.push(["🐉 The Sleeping Dragon",

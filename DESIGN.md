@@ -40,7 +40,7 @@ Ember (elixir+firestone → smelters 2×), Verdant (elixir+herb → regrow 2×),
 Swiftwind (elixir+cotton → wisps 2×), Stoneheart (elixir+spirit stone →
 double mining drops).
 
-**Fuel (planned):** Forge/Kiln/Star Anvil/Pill Furnace burn fuel from a
+**Fuel ✅ (implemented):** Forge/Kiln/Star Anvil/Pill Furnace burn fuel from a
 gauge — wood 1×, charcoal 4×, firestone 12×; recipes then drop wood as an
 input. The Furnace Spirit logistics building auto-stokes burners in ~3 cells.
 
@@ -74,9 +74,10 @@ seeded so every line visibly runs from the first minute.
 ## Roadmap phases
 
 1. ✅ Logistics core + starter network + Kiln/Paper Mill/Infusion Array.
-2. ✅ Link-editing UI. Still open: lantern rate/wisp upgrades in the tree.
-3. Loom, Cauldron, Mill, Brewery, Jade Carver, Charcoal Pit + fuel system
-   + Furnace Spirit; renames (rice/koi/spring water).
+2. ✅ Link-editing UI + Wisp Haste tree node (beat -15%%/lvl, speed +25%%/lvl).
+3. ✅ Loom/Cauldron/Mill/Brewery/Jade Carver/Charcoal Pit; ✅ fuel system
+   (burners: Forge+Kiln, FUEL wood 10s / bamboo 6s / charcoal 40s, cap 60s,
+   batch consumes its duration); ✅ Furnace Spirit; ✅ renames.
 4. Pill Furnace + dragon pill buffs; Star Anvil; beast bait → tier-2 beast.
 5. Talisman Atelier, treasures, Dragon Shrine, Ascension Gate + prestige.
 

@@ -6,16 +6,22 @@
 // The ONLY items that exist in the game. Anything else found in an old
 // save is scrubbed on load (see loadState). Unknown keys fall back to a
 // title-cased name / 📦 icon.
+// (keys are stable ids — wheat/fish/water renamed to Rice/Koi/Spring Water
+// for the cultivation flavour without touching saves)
 const ITEM_NAMES = {
   wood: "Wood", leaves: "Leaves",
-  wheat: "Wheat", cotton: "Cotton",
+  wheat: "Rice", cotton: "Cotton",
   stone: "Stone", clay: "Clay", sand: "Sand", iron_ore: "Iron Ore",
   iron_bar: "Iron Bar",
-  fish: "Fish", algae: "Algae", water: "Water",
+  fish: "Koi", algae: "Algae", water: "Spring Water",
   spirit_essence: "Spirit Essence", spirit_herb: "Spirit Herb",
   bamboo: "Bamboo", jade_shard: "Jade Shard",
   plank: "Plank", brick: "Brick", paper: "Paper", spirit_stone: "Spirit Stone",
   tools: "Tools", glass: "Glass", spirit_jade: "Spirit Jade",
+  cloth: "Cloth", rope: "Rope", robe: "Robe",
+  flour: "Rice Flour", spirit_buns: "Spirit Buns", spirit_wine: "Spirit Wine",
+  qi_elixir: "Qi Elixir", vitality_pill: "Vitality Pill", beast_bait: "Beast Bait",
+  charcoal: "Charcoal", jade: "Jade",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -27,7 +33,16 @@ const ITEM_ICONS = {
   bamboo: "🎍", jade_shard: "🟢",
   plank: "🟫", brick: "🧱", paper: "📜", spirit_stone: "🔮",
   tools: "⛏️", glass: "🧊", spirit_jade: "🟩",
+  cloth: "🧶", rope: "🪢", robe: "🥋",
+  flour: "🍚", spirit_buns: "🥟", spirit_wine: "🍶",
+  qi_elixir: "🧪", vitality_pill: "💊", beast_bait: "🪱",
+  charcoal: "⚫", jade: "💚",
 };
+
+// Burner fuel values in burn-milliseconds (a batch consumes its own
+// duration). Fed to any `fuel: true` building or a Furnace Spirit.
+const FUEL = { wood: 10000, bamboo: 6000, charcoal: 40000 };
+const FUEL_CAP = 60000;   // max burn-ms a burner holds
 
 // One sprite per area's resource (tiers are gone — single type each).
 const TIER_SPRITES = {
@@ -113,7 +128,7 @@ const AREAS = {
       { kind: "sand", zone: "midLeft", item: "sand", intervalMs: 1500, cap: 10 },
     ],
     tiers: [
-      { name: "Wheat", drops: [d("wheat", 2, 3)], timer: 20 },
+      { name: "Rice", drops: [d("wheat", 2, 3)], timer: 20 },
     ],
   },
   mine: {
@@ -152,7 +167,7 @@ const AREAS = {
       { kind: "water", zone: "springField", item: "water", intervalMs: 2000, cap: 10 },
     ],
     tiers: [
-      { name: "Minnow", drops: [d("fish", 1, 2)], timer: 12 },
+      { name: "Koi", drops: [d("fish", 1, 2)], timer: 12 },
     ],
   },
 };
@@ -223,9 +238,10 @@ const BUILDINGS = {
                  { name: "Tools", inputs: { plank: 2, iron_bar: 1 }, output: "tools", outputQty: 1, timeMs: 6000 },
                ] },
   kiln:      { name: "Kiln",      icon: "🏺", cost: { wood: 10, clay: 5 },  unlocked: true,
+               fuel: true,
                recipes: [
-                 { name: "Brick", inputs: { clay: 2, wood: 1 }, output: "brick", outputQty: 1, timeMs: 5000 },
-                 { name: "Glass", inputs: { sand: 2, wood: 1 }, output: "glass", outputQty: 1, timeMs: 6000 },
+                 { name: "Brick", inputs: { clay: 2 }, output: "brick", outputQty: 1, timeMs: 5000 },
+                 { name: "Glass", inputs: { sand: 2 }, output: "glass", outputQty: 1, timeMs: 6000 },
                ] },
   paper_mill:{ name: "Paper Mill", icon: "📜", cost: { wood: 10, stone: 5 }, unlocked: true,
                recipes: [
@@ -236,15 +252,54 @@ const BUILDINGS = {
   infusion_array: { name: "Infusion Array", icon: "🔮", cost: { stone: 10, spirit_essence: 5 }, unlocked: true,
                recipes: [
                  { name: "Spirit Stone", inputs: { stone: 3, spirit_essence: 1 }, output: "spirit_stone", outputQty: 1, timeMs: 8000 },
-                 { name: "Spirit Jade", inputs: { jade_shard: 3, spirit_essence: 2 }, output: "spirit_jade", outputQty: 1, timeMs: 9000 },
+                 { name: "Spirit Jade", inputs: { jade: 1, spirit_essence: 2 }, output: "spirit_jade", outputQty: 1, timeMs: 9000 },
                ] },
+  // ---- Phase-3 producers ----
+  loom:      { name: "Loom",      icon: "🧵", cost: { wood: 10, plank: 4 }, unlocked: true,
+               recipes: [
+                 { name: "Cloth", inputs: { cotton: 3 }, output: "cloth", outputQty: 1, timeMs: 5000 },
+                 { name: "Rope", inputs: { cotton: 2, algae: 2 }, output: "rope", outputQty: 1, timeMs: 5000 },
+                 { name: "Robe", inputs: { cloth: 2, spirit_herb: 1 }, output: "robe", outputQty: 1, timeMs: 8000 },
+               ] },
+  mill:      { name: "Mill",      icon: "🌾", cost: { wood: 8, stone: 6 }, unlocked: true,
+               recipes: [
+                 { name: "Rice Flour", inputs: { wheat: 2 }, output: "flour", outputQty: 1, timeMs: 4000 },
+                 { name: "Spirit Buns", inputs: { flour: 2, water: 1 }, output: "spirit_buns", outputQty: 1, timeMs: 6000 },
+               ] },
+  brewery:   { name: "Brewery",   icon: "🍶", cost: { wood: 8, clay: 6 }, unlocked: true,
+               recipes: [
+                 { name: "Spirit Wine", inputs: { wheat: 2, water: 2, leaves: 1 }, output: "spirit_wine", outputQty: 1, timeMs: 8000 },
+               ] },
+  cauldron:  { name: "Cauldron",  icon: "⚗️", cost: { stone: 8, iron_bar: 2 }, unlocked: true,
+               recipes: [
+                 { name: "Qi Elixir", inputs: { spirit_herb: 1, water: 2, spirit_essence: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
+                 { name: "Vitality Pill", inputs: { fish: 1, spirit_herb: 1, water: 1 }, output: "vitality_pill", outputQty: 1, timeMs: 7000 },
+                 { name: "Beast Bait", inputs: { fish: 2, algae: 2 }, output: "beast_bait", outputQty: 1, timeMs: 6000 },
+               ] },
+  jade_carver:{ name: "Jade Carver", icon: "🗿", cost: { wood: 6, stone: 8 }, unlocked: true,
+               recipes: [
+                 { name: "Jade", inputs: { jade_shard: 3 }, output: "jade", outputQty: 1, timeMs: 6000 },
+               ] },
+  charcoal_pit:{ name: "Charcoal Pit", icon: "🕳️", cost: { stone: 6, clay: 4 }, unlocked: true,
+               recipes: [
+                 { name: "Charcoal", inputs: { wood: 2 }, output: "charcoal", outputQty: 1, timeMs: 4000 },
+               ] },
+  // Furnace Spirit: a little shrine that auto-stokes fuel into any burner
+  // within `radius` cells, from its own fuel-item buffer (wisp-suppliable).
+  furnace_spirit: { name: "Furnace Spirit", icon: "🕯️", size: { w: 1, h: 1 }, anyZone: true,
+               cost: { stone: 4, spirit_essence: 2 }, unlocked: true,
+               stoker: { radius: 3, cap: 20 } },
   // Converter buildings carry a `smelt` recipe: right-click feed the inputs
   // (same feeding rule as ghosts); each complete set queues one batch, the
   // building works through the queue on a timer and drops the output on the
   // ground beside itself. Reuse this pattern for the Workbench etc.
+  // `fuel: true` buildings burn from a fuel gauge (see FUEL) instead of
+  // taking wood in their recipes — feed them wood/bamboo/charcoal directly
+  // or let a Furnace Spirit stoke them.
   forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1,
+               fuel: true,
                recipes: [
-                 { name: "Iron Bar", inputs: { iron_ore: 2, wood: 1 }, output: "iron_bar", outputQty: 1, timeMs: 6000 },
+                 { name: "Iron Bar", inputs: { iron_ore: 2 }, output: "iron_bar", outputQty: 1, timeMs: 6000 },
                ] },
   storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 }, cap: 200,  unlocked: true },
   // Algae Farm: can ONLY be placed in the water (fishing's centre zone);
@@ -319,8 +374,11 @@ const WORLD = {
 // ------------------------------------------------------------------
 const UPGRADE_TREE = [
   { id: "hand",   icon: "✋", name: "Hand Size",       x: 0,    y: 0,    area: "center",  type: "hand",
-    desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m", "foe_cap"],
+    desc: "+5 carry capacity per level.", links: ["spd_c", "act_c", "spd_f", "spd_m", "foe_cap", "wisps"],
     costs: [{ wood: 10 }, { wood: 25, leaves: 10 }, { cotton: 15, wood: 40 }] },
+  { id: "wisps",  icon: "🏮", name: "Wisp Haste",      x: -170, y: 115,  area: "center",  type: "wispRate",
+    desc: "Lanterns send more often and wisps fly faster.", links: [],
+    costs: [{ wood: 40, spirit_stone: 1 }, { spirit_stone: 3, plank: 8 }, { spirit_stone: 6, brick: 8 }] },
   // east — centre economy, drifting to fishing
   { id: "spd_c",  icon: "⏱️", name: "Regrow Speed",    x: 150,  y: -35,  area: "center",  type: "speed",
     desc: "Center bushes respawn faster.", links: ["auto_c"],
@@ -432,6 +490,6 @@ const TEST = {
 
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
-  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, WORLD, AUTOMATION_CLICKS,
+  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP,
   UPGRADE_TREE, QUESTS, HAND_CAP, TEST,
 };
