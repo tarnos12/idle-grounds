@@ -233,6 +233,12 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
+Added **CLAUDE.md** (auto-loaded each session) codifying the user's
+workflow rules: commit+push after every task, update HANDOFF on every
+commit, bump `?v=`, keep DESIGN current, always share the localhost link,
+sync git first, verify headless before committing — plus the architecture
+conventions. No game-code change in that commit.
+
 Closed the last dead-end item loops (?v=24): Tools/Glass/Rope became
 advanced build MATERIALS gating T3 buildings behind their T2 producers
 (Pill Furnace needs tools, Star Anvil tools+glass, Talisman Atelier glass,
