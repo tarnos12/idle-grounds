@@ -15,6 +15,7 @@ const ITEM_NAMES = {
   spirit_essence: "Spirit Essence", spirit_herb: "Spirit Herb",
   bamboo: "Bamboo", jade_shard: "Jade Shard",
   plank: "Plank", brick: "Brick", paper: "Paper", spirit_stone: "Spirit Stone",
+  tools: "Tools", glass: "Glass", spirit_jade: "Spirit Jade",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -25,6 +26,7 @@ const ITEM_ICONS = {
   spirit_essence: "✨", spirit_herb: "🌱",
   bamboo: "🎍", jade_shard: "🟢",
   plank: "🟫", brick: "🧱", paper: "📜", spirit_stone: "🔮",
+  tools: "⛏️", glass: "🧊", spirit_jade: "🟩",
 };
 
 // One sprite per area's resource (tiers are gone — single type each).
@@ -211,27 +213,39 @@ const BUILDINGS = {
   // The Sleeping Dragon: pre-placed in the Center's top-left corner. Feed it
   // each stage's tribute (see DRAGON_STAGES) and it unlocks new recipes.
   dragon:    { name: "Sleeping Dragon", icon: "🐉", cost: {}, size: { w: 5, h: 5 }, unlocked: false, indestructible: true },
+  // Converters carry a `recipes` LIST — left-click the building to pick the
+  // active one (switching drops the held stock on the ground). Feeding fills
+  // the input stock (per-item cap `stockCap`, default 20); batches start
+  // themselves whenever the stock covers the active recipe.
   workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true,
-               smelt: { inputs: { wood: 3 }, output: "plank", outputQty: 1,
-                        timeMs: 4000, stockCap: 20 } },
+               recipes: [
+                 { name: "Plank", inputs: { wood: 3 }, output: "plank", outputQty: 1, timeMs: 4000 },
+                 { name: "Tools", inputs: { plank: 2, iron_bar: 1 }, output: "tools", outputQty: 1, timeMs: 6000 },
+               ] },
   kiln:      { name: "Kiln",      icon: "🏺", cost: { wood: 10, clay: 5 },  unlocked: true,
-               smelt: { inputs: { clay: 2, wood: 1 }, output: "brick", outputQty: 1,
-                        timeMs: 5000, stockCap: 20 } },
+               recipes: [
+                 { name: "Brick", inputs: { clay: 2, wood: 1 }, output: "brick", outputQty: 1, timeMs: 5000 },
+                 { name: "Glass", inputs: { sand: 2, wood: 1 }, output: "glass", outputQty: 1, timeMs: 6000 },
+               ] },
   paper_mill:{ name: "Paper Mill", icon: "📜", cost: { wood: 10, stone: 5 }, unlocked: true,
-               smelt: { inputs: { bamboo: 1, wood: 2 }, output: "paper", outputQty: 1,
-                        timeMs: 5000, stockCap: 20 } },
-  // Infusion Array: a formation circle that imbues mundane stone with fox
-  // essence — the Spirit Stone source (premium late-game currency).
+               recipes: [
+                 { name: "Paper", inputs: { bamboo: 1, wood: 2 }, output: "paper", outputQty: 1, timeMs: 5000 },
+               ] },
+  // Infusion Array: a formation circle that imbues mundane materials with
+  // fox essence — spirit stones (premium currency) and spirit jade.
   infusion_array: { name: "Infusion Array", icon: "🔮", cost: { stone: 10, spirit_essence: 5 }, unlocked: true,
-               smelt: { inputs: { stone: 3, spirit_essence: 1 }, output: "spirit_stone", outputQty: 1,
-                        timeMs: 8000, stockCap: 20 } },
+               recipes: [
+                 { name: "Spirit Stone", inputs: { stone: 3, spirit_essence: 1 }, output: "spirit_stone", outputQty: 1, timeMs: 8000 },
+                 { name: "Spirit Jade", inputs: { jade_shard: 3, spirit_essence: 2 }, output: "spirit_jade", outputQty: 1, timeMs: 9000 },
+               ] },
   // Converter buildings carry a `smelt` recipe: right-click feed the inputs
   // (same feeding rule as ghosts); each complete set queues one batch, the
   // building works through the queue on a timer and drops the output on the
   // ground beside itself. Reuse this pattern for the Workbench etc.
   forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1,
-               smelt: { inputs: { iron_ore: 2, wood: 1 }, output: "iron_bar", outputQty: 1,
-                        timeMs: 6000, stockCap: 20 } },
+               recipes: [
+                 { name: "Iron Bar", inputs: { iron_ore: 2, wood: 1 }, output: "iron_bar", outputQty: 1, timeMs: 6000 },
+               ] },
   storehouse:{ name: "Storehouse",icon: "📦", cost: { wood: 12 }, cap: 200,  unlocked: true },
   // Algae Farm: can ONLY be placed in the water (fishing's centre zone);
   // passively grows algae around itself.

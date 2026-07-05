@@ -235,6 +235,15 @@ body {
 .bc-name { font-size: 13px; font-weight: 700; }
 .bc-cost { font-size: 11px; color: var(--gold); }
 
+/* ---- Recipe picker (converter buildings) ---- */
+#recipe-menu {
+  flex: 0 0 auto; background: var(--bg-2); border-top: 1px solid var(--line);
+  padding: 10px 14px; display: flex; gap: 10px; overflow-x: auto; align-items: center;
+}
+#recipe-menu.hidden { display: none; }
+.rm-title { font-size: 13px; font-weight: 800; color: var(--muted); margin-right: 6px; white-space: nowrap; }
+.bc-tag { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; }
+
 /* ---- Modals ---- */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .modal.hidden { display: none; }

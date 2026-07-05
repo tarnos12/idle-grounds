@@ -547,17 +547,20 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         : bCfg.seal ? String(b.qty || 0)
         : `${(b.links || []).length}⛓`;
       ctx.fillText(badge, cxp, Y(by + bh + 8));
-    } else if (b.built && bCfg.smelt) {
-      // converter (Forge): icon + name, a progress bar while a batch works,
-      // and the input STOCK it holds (or what the next batch still needs)
+    } else if (b.built && bCfg.recipes) {
+      // converter (Forge): icon + name (· active recipe when it has several),
+      // a progress bar while a batch works, and the input STOCK it holds
+      // (or what the next batch still needs)
+      const rec = E.recipeOf(b);
       ctx.fillStyle = C.text;
       ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
       ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.32));
       ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
-      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.56));
+      ctx.fillText(bCfg.name + (bCfg.recipes.length > 1 && rec ? ` · ${rec.name}` : ""),
+        cxp, Y(by + bh * 0.56));
       const now2 = Date.now();
-      if (b.smeltDoneAt > now2) {
-        const total = bCfg.smelt.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1);
+      if (b.smeltDoneAt > now2 && rec) {
+        const total = rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1);
         const frac = clamp(1 - (b.smeltDoneAt - now2) / total, 0, 1);
         const pw = bw * 0.7 * s, px0 = X(bx + bw * 0.15), py0 = Y(by + bh * 0.7);
         ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 4 * s);
@@ -999,6 +1002,43 @@ function toggleDemolish(force) {
   render();
 }
 
+// ---- converter recipe menu ----------------------------------
+// Left-clicking a converter opens this picker. Choosing a DIFFERENT recipe
+// drops everything the building holds on the ground first (engine rule).
+let recipeMenuFor = null;   // { area, id } while open
+function openRecipeMenu(areaKey, b) {
+  recipeMenuFor = { area: areaKey, id: b.id };
+  renderRecipeMenu();
+}
+function closeRecipeMenu() {
+  recipeMenuFor = null;
+  $("#recipe-menu").classList.add("hidden");
+}
+function renderRecipeMenu() {
+  const bar = $("#recipe-menu");
+  if (!recipeMenuFor) { bar.classList.add("hidden"); return; }
+  const b = E.buildingById(recipeMenuFor.area, recipeMenuFor.id);
+  const recipes = b && DD.BUILDINGS[b.type].recipes;
+  if (!b || !b.built || !recipes) { closeRecipeMenu(); return; }
+  bar.classList.remove("hidden");
+  bar.innerHTML = `<div class="rm-title">${DD.BUILDINGS[b.type].icon} ${DD.BUILDINGS[b.type].name} — recipes</div>`;
+  recipes.forEach((r, i) => {
+    const inputs = Object.entries(r.inputs).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" + ");
+    const active = (b.recipe || 0) === i;
+    const card = el("button", "build-card" + (active ? " active" : ""));
+    card.innerHTML = `<span class="bc-ico">${iconHTML(r.output)}</span>` +
+      `<span class="bc-name">${r.name}</span>` +
+      `<span class="bc-cost">${inputs} → ${r.outputQty || 1} ${iconHTML(r.output)}</span>` +
+      (active ? `<span class="bc-tag">active</span>` : "");
+    card.onclick = () => {
+      E.setRecipe(recipeMenuFor.area, recipeMenuFor.id, i);
+      closeRecipeMenu();
+      render();
+    };
+    bar.appendChild(card);
+  });
+}
+
 // ---- dragon story dialog ------------------------------------
 // A stage-up stores its line in GS.dragon.dialog; the modal shows until the
 // player continues. Sync is idempotent — called from both render paths.
@@ -1104,6 +1144,9 @@ function onMouseDown(e) {
     const sh = E.buildingAt(p.region, p.lrow, p.lcol);
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
+    // converters open their recipe picker
+    if (sh && sh.built && DD.BUILDINGS[sh.type].recipes) { openRecipeMenu(p.region, sh); return; }
+    if (recipeMenuFor) { closeRecipeMenu(); }   // clicking elsewhere closes it
     // left-click/hold a buffer building (storehouse / seal / gatherer) to
     // withdraw its contents into the hand
     if (sh && sh.built && (sh.type === "storehouse" ||
@@ -1186,6 +1229,7 @@ function onKeyDown(e) {
   }
   if (e.key === "Escape") {
     if (upgradesOpen) { toggleUpgrades(false); return; }
+    if (recipeMenuFor) { closeRecipeMenu(); return; }
     window.GS.build.placing = null; demolishMode = false; render();
   }
 }

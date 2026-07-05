@@ -147,10 +147,12 @@ function loadState() {
       for (const b of a.buildings || []) {
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
-        // converter (Forge) state: scrub dead input items, sanitise counters.
-        // The old queue/smeltPaid format converts into the input stock.
-        const smeltDef = window.DATA.BUILDINGS[b.type].smelt;
-        if (smeltDef) {
+        // converter state: clamp the active recipe index, scrub dead input
+        // items, sanitise counters. The old queue/smeltPaid format converts
+        // into the input stock.
+        const recipes = window.DATA.BUILDINGS[b.type].recipes;
+        if (recipes) {
+          if (!Number.isFinite(b.recipe) || b.recipe < 0 || b.recipe >= recipes.length) b.recipe = 0;
           b.stock = b.stock || {};
           if (b.smeltPaid) {
             for (const [it, q] of Object.entries(b.smeltPaid))
@@ -158,7 +160,7 @@ function loadState() {
             delete b.smeltPaid;
           }
           if (Number.isFinite(b.queue) && b.queue > 0)
-            for (const [it, q] of Object.entries(smeltDef.inputs))
+            for (const [it, q] of Object.entries(recipes[b.recipe].inputs))
               b.stock[it] = (b.stock[it] || 0) + q * b.queue;
           delete b.queue;
           for (const it of Object.keys(b.stock)) if (!LIVE.has(it)) delete b.stock[it];

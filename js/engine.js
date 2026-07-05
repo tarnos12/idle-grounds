@@ -654,7 +654,31 @@ function placeBuilding(areaKey, type, row, col) {
 // A `smelt` config turns fed inputs into queued batches; gameTick works
 // through the queue on a timer and drops the output beside the building.
 
-function smeltCfg(type) { return (D.BUILDINGS[type] && D.BUILDINGS[type].smelt) || null; }
+// Converters carry a `recipes` list; `b.recipe` indexes the ACTIVE one.
+function recipeOf(b) {
+  const list = D.BUILDINGS[b.type] && D.BUILDINGS[b.type].recipes;
+  return (list && list[b.recipe || 0]) || null;
+}
+// Switch a converter's active recipe. Everything it holds — the input
+// stock AND the batch in progress — drops on the ground first.
+function setRecipe(areaKey, buildingId, idx) {
+  const b = buildingById(areaKey, buildingId);
+  const list = b && D.BUILDINGS[b.type].recipes;
+  if (!list || idx < 0 || idx >= list.length) return false;
+  if ((b.recipe || 0) === idx) return true;
+  const s = buildingSize(b.type);
+  const x = (b.col + s.w / 2) * CELL, y = (b.row + s.h / 2) * CELL;
+  for (const [item, qty] of Object.entries(b.stock || {}))
+    if (qty > 0) dropGround(areaKey, item, qty, x, y);
+  if (b.smeltDoneAt > 0) {
+    const old = recipeOf(b);
+    if (old) for (const [item, qty] of Object.entries(old.inputs)) dropGround(areaKey, item, qty, x, y);
+  }
+  b.stock = {};
+  b.smeltDoneAt = 0;
+  b.recipe = idx;
+  return true;
+}
 
 // Converters hold an INPUT STOCK per item (cap `stockCap`, default 20).
 // Batches start automatically whenever the stock covers the recipe; feeding
@@ -662,7 +686,7 @@ function smeltCfg(type) { return (D.BUILDINGS[type] && D.BUILDINGS[type].smelt) 
 
 // Inputs the NEXT batch still needs beyond current stock: { item: qty }.
 function smeltRemaining(b) {
-  const cfg = smeltCfg(b.type);
+  const cfg = recipeOf(b);
   if (!cfg) return {};
   b.stock = b.stock || {};
   const rem = {};
@@ -674,7 +698,7 @@ function smeltRemaining(b) {
 }
 // Free stock space per input item (feeding stops at the cap): { item: qty }.
 function smeltSpace(b) {
-  const cfg = smeltCfg(b.type);
+  const cfg = recipeOf(b);
   if (!cfg) return {};
   b.stock = b.stock || {};
   const cap = cfg.stockCap || 20;
@@ -686,7 +710,7 @@ function smeltSpace(b) {
   return space;
 }
 function canStartBatch(b) {
-  const cfg = smeltCfg(b.type);
+  const cfg = recipeOf(b);
   if (!cfg) return false;
   b.stock = b.stock || {};
   return Object.entries(cfg.inputs).every(([it, q]) => (b.stock[it] || 0) >= q);
@@ -713,10 +737,11 @@ function endpointAccepts(b, item) {
   if (cfg.seal) return !!b.item && b.item === item && (b.qty || 0) < (cfg.seal.cap || 5);
   if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
   if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
-  if (cfg.smelt) {
-    if (cfg.smelt.inputs[item] == null) return false;
+  if (cfg.recipes) {
+    const rec = recipeOf(b);
+    if (!rec || rec.inputs[item] == null) return false;
     b.stock = b.stock || {};
-    return (b.stock[item] || 0) < (cfg.smelt.stockCap || 20);
+    return (b.stock[item] || 0) < (rec.stockCap || 20);
   }
   return false;
 }
@@ -756,7 +781,7 @@ function endpointGive(b, item) {
     if (st) st.qty++; else b.inv.push({ item, qty: 1 });
     return true;
   }
-  if (cfg.smelt) {
+  if (cfg.recipes) {
     b.stock = b.stock || {};
     b.stock[item] = (b.stock[item] || 0) + 1;
     return true;
@@ -818,11 +843,12 @@ function demolishBuilding(areaKey, buildingId) {
     if ((b.type === "storehouse" || cfg.seal) && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y);
     for (const st of b.inv || []) if (st.qty > 0) dropGround(areaKey, st.item, st.qty, x, y);
     // a converter refunds its whole input stock plus the batch in progress
-    if (cfg.smelt) {
+    if (cfg.recipes) {
       for (const [item, qty] of Object.entries(b.stock || {}))
         if (qty > 0) dropGround(areaKey, item, qty, x, y);
-      if (b.smeltDoneAt > 0)
-        for (const [item, qty] of Object.entries(cfg.smelt.inputs))
+      const rec = recipeOf(b);
+      if (b.smeltDoneAt > 0 && rec)
+        for (const [item, qty] of Object.entries(rec.inputs))
           dropGround(areaKey, item, qty, x, y);
     }
   } else {
@@ -883,7 +909,7 @@ function dropFromHand(areaKey, x, y) {
   }
   // Converter buildings (the Forge): feed recipe inputs into the stock —
   // up to the per-item cap; batches start themselves from the stock.
-  if (b && b.built && smeltCfg(b.type)) {
+  if (b && b.built && recipeOf(b)) {
     b.stock = b.stock || {};
     return feedNeeds(smeltSpace(b), b.stock);
   }
@@ -1130,7 +1156,7 @@ function gameTick() {
     // output beside the building), then start the next straight from the
     // input stock whenever it covers the recipe.
     for (const b of area.buildings) {
-      const scfg = b.built && smeltCfg(b.type);
+      const scfg = b.built && recipeOf(b);
       if (!scfg) continue;
       if (b.smeltDoneAt && now >= b.smeltDoneAt) {
         const bs = buildingSize(b.type);
@@ -1320,7 +1346,7 @@ window.ENGINE = {
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
   dropGround, grantDropsGround, settleGround, pickupNear, suctionStep, pushOutOfColliders,
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
-  buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, smeltCfg, smeltRemaining,
+  buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, recipeOf, setRecipe, smeltRemaining,
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
