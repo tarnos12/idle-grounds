@@ -32,11 +32,16 @@ asset version on any code change too.
 
 ## Session setup
 
-- **FIRST, before ANY work: sync with git.** `git fetch origin`, pull the
-  working branch, and check `origin/master` too — new commits can appear
-  from the user or from OTHER Claude sessions (local and cloud sessions
-  share this repo). If master is ahead, bring those commits into the
-  working branch before touching anything.
+- **FIRST, before ANY work: sync with git.** `git fetch origin`, and
+  branch off the LATEST `origin/master` — new commits arrive from the user
+  and from OTHER Claude sessions (local + cloud share this repo). `master`
+  is always the source of truth; never start from a stale base.
+- **Branch policy (agreed 2026-07-05).** Work on a `feature/<kebab-desc>`
+  branch named for the feature (e.g. `feature/fast-hold-ramp`), not on
+  `master` directly and not on old `claude/…` branches. When the task is
+  DONE: merge the branch into `master`, push `master`, and delete the
+  feature branch (local + `origin`). Finished work must never be left
+  stranded on a branch. (See CLAUDE.md rule #1.)
 - **Division of labour (agreed 2026-07-04):**
   - **Cloud sessions** develop, test headless, push — and when the user
     asks to test, they give the ARTIFACT link, never localhost (a cloud
@@ -52,9 +57,9 @@ asset version on any code change too.
   - **Local sessions** (user's PC, `C:\Work\Marrow Tap Projects\Farm
     Prototype Claude`) own localhost: pull latest, run `node server.js`
     (backgrounded), give http://localhost:5174.
-- Merge the working `claude/...` branch into `master` only when the user
-  asks — but note the user sometimes fast-forwards master themselves;
-  check where master points instead of assuming.
+  Cloud sessions still merge their `feature/…` branch into `master` when
+  done (per the branch policy above) — the artifact link is just how they
+  let the user *test*, separate from where code lands.
 
 ## What this is
 
@@ -233,10 +238,20 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
-Added `.claude/rules/personal-workflow.md` — the user's global workflow
-rules, committed so cloud/remote sessions load them (a global
-`~/.claude/settings.json` SessionStart hook now auto-seeds this file into
-any git repo the user works in; canonical copy:
+Hold actions now reach max speed in **0.2s** (?v=25): the right-hold
+drop/feed ramp went from "4/s for a full second, then 4→20/s over the next
+second" to a straight 4→20/s over the first 0.2s; the left-hold storehouse
+withdraw likewise ramps 1→5/s in 0.2s instead of 3s. One-line change in
+`ui.js` startLoop, verified in real Chromium (≈19 drops/sec of holding vs
+≈5 before). Also switched the team to a **feature-branch workflow** (see
+CLAUDE.md rule #1 / Session setup): work lands on `feature/…` branches that
+merge to `master` when done; the old `claude/idle-grounds-setup-pracof`
+branch was retired.
+
+Prior session — added `.claude/rules/personal-workflow.md` — the user's
+global workflow rules, committed so cloud/remote sessions load them (a
+global `~/.claude/settings.json` SessionStart hook now auto-seeds this file
+into any git repo the user works in; canonical copy:
 github.com/tarnos12/claude-rules). No game-code change in that commit.
 
 Added **CLAUDE.md** (auto-loaded each session) codifying the user's

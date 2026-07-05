@@ -11,9 +11,15 @@ vanilla HTML/CSS/JS — no build step, no dependencies.
 
 ## Workflow rules (the user's preferences — follow these every time)
 
-1. **Commit + push after every completed task.** Don't let work pile up
-   uncommitted. One task = one focused commit on `master`, pushed to
-   `origin` (github.com/tarnos12/idle-grounds).
+1. **Feature-branch workflow (agreed 2026-07-05).** Do NOT commit straight
+   to `master`. For each task, branch off the latest `master` with a name
+   describing the feature — `feature/<short-kebab-desc>` (e.g.
+   `feature/fast-hold-ramp`, `feature/disciple-pavilion`). Commit + push
+   after every completed task; **when the task is done, merge the branch
+   into `master` and push `master`**, then delete the feature branch (local
+   + `origin`). Never leave finished work stranded on a branch — `master`
+   is the single source of truth every session (local + cloud) syncs from.
+   Old `claude/…`-prefixed branches are retired; use `feature/…` names.
 2. **Every commit MUST update HANDOFF.md** in the same commit — refresh both
    the "▶ NEXT SESSION: start here" pointer and the "Last session summary".
    A stale handoff misdirects the next session. (Note: the `▶` heading char
@@ -22,8 +28,11 @@ vanilla HTML/CSS/JS — no build step, no dependencies.
    6 references) — the server sends `no-store` but the version tag is the
    reliable cache-bust. Keep it in step with what HANDOFF records.
 4. **Update DESIGN.md** when scope/roadmap changes (mark items ✅, add plans).
-5. **Always share the game link** — include `http://localhost:5174` in the
-   reply after any change or server start.
+5. **Always share the game link** after a change. WHICH link depends on
+   where the session runs (see HANDOFF "Division of labour"): **local
+   sessions** give `http://localhost:5174`; **cloud sessions** rebuild the
+   Artifact (`node tools/build-artifact.js …`) and give the fixed Artifact
+   URL — a cloud container's localhost is unreachable from the browser.
 6. **Sync with git before starting** — `git fetch`, check `origin/master`;
    other Claude sessions (local + cloud) share this repo.
 7. **Verify before committing.** Prefer headless checks via the preview tools
