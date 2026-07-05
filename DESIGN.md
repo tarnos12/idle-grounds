@@ -78,3 +78,33 @@ seeded so every line visibly runs from the first minute.
    + Furnace Spirit; renames (rice/koi/spring water).
 4. Pill Furnace + dragon pill buffs; Star Anvil; beast bait → tier-2 beast.
 5. Talisman Atelier, treasures, Dragon Shrine, Ascension Gate + prestige.
+
+## Building sprite wishlist (assets/buildings/<file>)
+
+PNG + transparency; native sizes assume 16 px/cell (clean multiples OK;
+16x16 pieces can be scaled chunky). Missing files keep their emoji.
+
+| Filename | Footprint | Native px | Depicts | Priority |
+|---|---|---|---|---|
+| storehouse.png | 3x2 | 48x32 | wooden chest | now |
+| workbench.png | 3x2 | 48x32 | crafting bench | now |
+| forge.png | 3x2 | 48x32 | smithy furnace | now |
+| kiln.png | 3x2 | 48x32 | pottery kiln | now |
+| paper_mill.png | 3x2 | 48x32 | mill / scribe hut | now |
+| infusion_array.png | 3x2 | 48x32 | glowing formation circle | now |
+| gathering_stone.png | 1x1 | 16x16 | runed magnet-stone | now |
+| wisp_lantern.png | 1x1 | 16x16 | paper lantern | now |
+| warding_seal.png | 1x1 | 16x16 | talisman on a post | now |
+| altar.png | 5x5 | 80x80 | stone upgrade shrine | now |
+| dragon_sleeping.png | 5x5 | 80x80 | curled sleeping dragon | now |
+| dragon_awake.png | 5x5 | 80x80 | awake dragon, gold accents | now |
+| algae_farm.png | 3x2 | 48x32 | floating rack in water | unlockable |
+| herb_garden.png | 3x2 | 48x32 | planter beds | unlockable |
+| spirit_tree.png | 4x4 fixture | 64x80 | grand glowing tree | fixture |
+| quarry_rock.png | 2x2 fixture | 32x32 | big boulder | fixture |
+| spring.png | 2x2 fixture | 32x32 | water spring | fixture |
+| fox_spirit.png | enemy | 16-24 sq | fox spirit | creature |
+| wisp.png | carrier | 8-16 sq | glowing soul orb | creature |
+| loom.png / cauldron.png / mill.png / brewery.png / jade_carver.png / charcoal_pit.png | 3x2 | 48x32 | phase-3 producers | future |
+| star_anvil.png / pill_furnace.png / talisman_atelier.png | 3x2 | 48x32 | T3 producers | future |
+| ascension_gate.png / dragon_shrine.png | 5x5 | 80x80 | endgame monuments | endgame |
