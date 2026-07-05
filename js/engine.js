@@ -799,13 +799,31 @@ function wispPos(areaKey, w, now) {
   return { x: w.x0 + (t.x - w.x0) * frac, y: w.y0 + (t.y - w.y0) * frac, frac };
 }
 
-// Wire a new link onto a lantern (also the hook for the future link UI).
+// Wire a new link onto a lantern.
 function addLink(areaKey, lanternId, fromId, toId) {
   const lb = buildingById(areaKey, lanternId);
   if (!lb || !D.BUILDINGS[lb.type].lantern) return false;
   lb.links = lb.links || [];
   lb.links.push({ from: fromId, to: toId });
   return true;
+}
+function removeLink(areaKey, lanternId, index) {
+  const lb = buildingById(areaKey, lanternId);
+  if (!lb || !lb.links || index < 0 || index >= lb.links.length) return false;
+  lb.links.splice(index, 1);
+  if (lb.connIdx >= lb.links.length) lb.connIdx = 0;
+  return true;
+}
+// What may anchor a link: sources hold withdrawable stock; targets accept.
+function canBeLinkSource(b) {
+  if (!b || !b.built) return false;
+  const cfg = D.BUILDINGS[b.type];
+  return !!(cfg.gather || cfg.seal || b.type === "storehouse");
+}
+function canBeLinkTarget(b) {
+  if (!b || !b.built) return false;
+  const cfg = D.BUILDINGS[b.type];
+  return !!(cfg.gather || cfg.seal || b.type === "storehouse" || cfg.recipes);
 }
 
 // Remaining resources a ghost still needs: { item: qty }.
@@ -1347,7 +1365,8 @@ window.ENGINE = {
   dropGround, grantDropsGround, settleGround, pickupNear, suctionStep, pushOutOfColliders,
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, recipeOf, setRecipe, smeltRemaining,
-  buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, setupStarterNetwork,
+  buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
+  canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,

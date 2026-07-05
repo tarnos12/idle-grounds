@@ -59,8 +59,10 @@ If the target refuses on arrival (e.g. the player hand-filled it
 mid-flight) the wisp flies the cargo BACK to its source (red glow),
 dropping it only if home is gone or full too.
 Left-click any buffer building withdraws into the hand. Demolition severs
-links and refunds buffers. Still missing: an in-game UI to create/edit
-links (engine hook: `ENGINE.addLink`), rate/speed upgrades, Furnace Spirit.
+links and refunds buffers. Link editor ✅: left-click a lantern -> panel lists links (removable),
+"Add link" = click a source building then a target on the map (rubber-band
+line, invalid picks ignored, Esc backs out). Still missing: lantern
+rate/wisp-speed upgrades, Furnace Spirit.
 
 **Starter network ✅:** fresh saves auto-build a wired demo (flag
 `GS.starterPlaced`): gatherers at quarry/spirit tree/clay field/fox zone;
@@ -72,8 +74,7 @@ seeded so every line visibly runs from the first minute.
 ## Roadmap phases
 
 1. ✅ Logistics core + starter network + Kiln/Paper Mill/Infusion Array.
-2. Link-editing UI (click lantern → pick source → pick target); lantern
-   rate/wisp upgrades in the tree.
+2. ✅ Link-editing UI. Still open: lantern rate/wisp upgrades in the tree.
 3. Loom, Cauldron, Mill, Brewery, Jade Carver, Charcoal Pit + fuel system
    + Furnace Spirit; renames (rice/koi/spring water).
 4. Pill Furnace + dragon pill buffs; Star Anvil; beast bait → tier-2 beast.

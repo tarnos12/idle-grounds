@@ -406,6 +406,23 @@ function drawWorldInner() {
   for (const v of visible) if (v.unlocked) drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
   for (const v of visible) if (v.unlocked) drawRegionItems(v.key, v.ox, v.oy, view, s, X, Y);
 
+  // link picking: rubber-band line from the chosen source to the cursor
+  if (linkMode && linkMode.picking === "target" && linkMode.srcId && cursor.over &&
+      cursor.region === linkMode.area) {
+    const src = E.buildingById(linkMode.area, linkMode.srcId);
+    if (src) {
+      const o = regionPx(linkMode.area);
+      const sc = E.buildingCenterPx(src);
+      ctx.strokeStyle = "rgba(251,191,36,.8)"; ctx.lineWidth = 2;
+      ctx.setLineDash([8, 6]);
+      ctx.beginPath();
+      ctx.moveTo(X(o.x + sc.x), Y(o.y + sc.y));
+      ctx.lineTo(X(o.x + cursor.lx), Y(o.y + cursor.ly));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
   // placement preview (only in an unlocked region)
   if (window.GS.build.placing && cursor.over && cursor.region) {
     const B = E.buildingSize(window.GS.build.placing);
@@ -466,10 +483,13 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
   if (phase === "treesOnly") { drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlocked, seen); return; }
 
   // wisp-lantern links: faint dashed threads under everything else
-  ctx.strokeStyle = "rgba(251,191,36,.22)"; ctx.lineWidth = Math.max(1, 1.5 * s);
+  // (the lantern being edited gets its threads highlighted)
+  ctx.lineWidth = Math.max(1, 1.5 * s);
   ctx.setLineDash([6 * s, 6 * s]);
   for (const b of st.buildings) {
     if (!b.links || !b.links.length) continue;
+    const editing = linkMode && linkMode.area === key && linkMode.id === b.id;
+    ctx.strokeStyle = editing ? "rgba(251,191,36,.65)" : "rgba(251,191,36,.22)";
     for (const l of b.links) {
       const f = st.buildings.find(x => x.id === l.from), t = st.buildings.find(x => x.id === l.to);
       if (!f || !t) continue;
@@ -1039,6 +1059,54 @@ function renderRecipeMenu() {
   });
 }
 
+// ---- wisp-lantern link editor --------------------------------
+// Left-click a lantern -> panel lists its links (removable) and "Add link"
+// starts a two-click pick: SOURCE building on the map, then TARGET.
+let linkMode = null;   // { area, id, picking: null|"source"|"target", srcId }
+function bLabel(b) {
+  const cfg = DD.BUILDINGS[b.type];
+  const typed = (cfg.seal || b.type === "storehouse") && b.item ? ` ${iconHTML(b.item)}` : "";
+  return `${cfg.icon} ${cfg.name}${typed}`;
+}
+function openLinkMenu(areaKey, b) {
+  linkMode = { area: areaKey, id: b.id, picking: null, srcId: null };
+  renderLinkMenu();
+  requestGridPaint();
+}
+function closeLinkMenu() {
+  linkMode = null;
+  $("#link-menu").classList.add("hidden");
+  requestGridPaint();
+}
+function renderLinkMenu() {
+  const bar = $("#link-menu");
+  if (!linkMode) { bar.classList.add("hidden"); return; }
+  const lan = E.buildingById(linkMode.area, linkMode.id);
+  if (!lan || !lan.built) { closeLinkMenu(); return; }
+  bar.classList.remove("hidden");
+  bar.innerHTML = `<div class="rm-title">🏮 Wisp Lantern — links run in order, one per beat</div>`;
+  (lan.links || []).forEach((l, i) => {
+    const f = E.buildingById(linkMode.area, l.from), t = E.buildingById(linkMode.area, l.to);
+    const row = el("div", "link-row",
+      `<span class="lr-n">${i + 1}.</span> ${f ? bLabel(f) : "?"} <span class="lr-arr">→</span> ${t ? bLabel(t) : "?"}`);
+    const x = el("button", "lr-x", "✕");
+    x.title = "Remove this link";
+    x.onclick = () => { E.removeLink(linkMode.area, linkMode.id, i); renderLinkMenu(); render(); };
+    row.appendChild(x);
+    bar.appendChild(row);
+  });
+  if (linkMode.picking) {
+    const src = linkMode.srcId ? E.buildingById(linkMode.area, linkMode.srcId) : null;
+    bar.appendChild(el("div", "rm-hint", linkMode.picking === "source"
+      ? "Click the SOURCE building on the map (gatherer / seal / storehouse)… Esc cancels"
+      : `${src ? bLabel(src) : "?"} → click the TARGET building… Esc cancels`));
+  } else {
+    const add = el("button", "build-card", `<span class="bc-name">➕ Add link</span>`);
+    add.onclick = () => { linkMode.picking = "source"; linkMode.srcId = null; renderLinkMenu(); };
+    bar.appendChild(add);
+  }
+}
+
 // ---- dragon story dialog ------------------------------------
 // A stage-up stores its line in GS.dragon.dialog; the modal shows until the
 // player continues. Sync is idempotent — called from both render paths.
@@ -1089,7 +1157,8 @@ function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   syncCursor(e);
   renderHandCursor();
-  if (window.GS.build.placing && cursor.over) requestGridPaint(); // move the preview
+  if ((window.GS.build.placing || (linkMode && linkMode.picking)) && cursor.over)
+    requestGridPaint();   // move the placement preview / link rubber-band
 }
 
 function onMouseDown(e) {
@@ -1131,6 +1200,19 @@ function onMouseDown(e) {
   }
 
   if (active) {
+    // link picking captures ALL world clicks until done/cancelled
+    if (linkMode && linkMode.picking) {
+      const bAt = p.region === linkMode.area ? E.buildingAt(p.region, p.lrow, p.lcol) : null;
+      if (bAt && linkMode.picking === "source" && E.canBeLinkSource(bAt)) {
+        linkMode.srcId = bAt.id; linkMode.picking = "target";
+        renderLinkMenu(); requestGridPaint();
+      } else if (bAt && linkMode.picking === "target" && E.canBeLinkTarget(bAt) && bAt.id !== linkMode.srcId) {
+        E.addLink(linkMode.area, linkMode.id, linkMode.srcId, bAt.id);
+        linkMode.picking = null; linkMode.srcId = null;
+        renderLinkMenu(); render();
+      }
+      return;
+    }
     // enemies are struck before anything else under the cursor
     const en = E.enemyAt(p.region, p.lx, p.ly);
     if (en) {
@@ -1144,9 +1226,11 @@ function onMouseDown(e) {
     const sh = E.buildingAt(p.region, p.lrow, p.lcol);
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
-    // converters open their recipe picker
+    // converters open their recipe picker; lanterns their link editor
     if (sh && sh.built && DD.BUILDINGS[sh.type].recipes) { openRecipeMenu(p.region, sh); return; }
-    if (recipeMenuFor) { closeRecipeMenu(); }   // clicking elsewhere closes it
+    if (sh && sh.built && DD.BUILDINGS[sh.type].lantern) { openLinkMenu(p.region, sh); return; }
+    if (recipeMenuFor) { closeRecipeMenu(); }   // clicking elsewhere closes them
+    if (linkMode) { closeLinkMenu(); }
     // left-click/hold a buffer building (storehouse / seal / gatherer) to
     // withdraw its contents into the hand
     if (sh && sh.built && (sh.type === "storehouse" ||
@@ -1230,6 +1314,12 @@ function onKeyDown(e) {
   if (e.key === "Escape") {
     if (upgradesOpen) { toggleUpgrades(false); return; }
     if (recipeMenuFor) { closeRecipeMenu(); return; }
+    if (linkMode) {
+      // picking backs out to the menu; a second Esc closes it
+      if (linkMode.picking) { linkMode.picking = null; linkMode.srcId = null; renderLinkMenu(); requestGridPaint(); }
+      else closeLinkMenu();
+      return;
+    }
     window.GS.build.placing = null; demolishMode = false; render();
   }
 }
