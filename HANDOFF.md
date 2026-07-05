@@ -233,6 +233,12 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
+Added `.claude/rules/personal-workflow.md` — the user's global workflow
+rules, committed so cloud/remote sessions load them (a global
+`~/.claude/settings.json` SessionStart hook now auto-seeds this file into
+any git repo the user works in; canonical copy:
+github.com/tarnos12/claude-rules). No game-code change in that commit.
+
 Added **CLAUDE.md** (auto-loaded each session) codifying the user's
 workflow rules: commit+push after every task, update HANDOFF on every
 commit, bump `?v=`, keep DESIGN current, always share the localhost link,
