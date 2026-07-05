@@ -256,6 +256,40 @@ body {
 .rm-title { font-size: 13px; font-weight: 800; color: var(--muted); margin-right: 6px; white-space: nowrap; }
 .bc-tag { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; }
 
+/* ---- Tutorial quest panel ---- */
+#quest-panel {
+  position: fixed; top: 14px; right: 14px; width: 250px; z-index: 120;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; box-shadow: 0 4px 18px rgba(0,0,0,.35);
+}
+#quest-panel.mini { width: auto; padding: 0; background: none; border: none; box-shadow: none; }
+#quest-chip {
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 10px;
+  font-size: 18px; padding: 6px 10px; cursor: pointer; color: var(--text);
+}
+.qp-head { display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 6px; }
+.qp-head button { background: none; border: none; color: var(--muted); font-size: 16px;
+  font-weight: 800; cursor: pointer; padding: 0 4px; }
+.qp-name { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+.qp-desc { font-size: 12px; color: var(--muted); line-height: 1.45; margin-bottom: 8px; }
+.qp-bar { height: 6px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.qp-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .2s; }
+.qp-row { display: flex; justify-content: space-between; align-items: center; }
+.qp-prog { font-size: 12px; font-weight: 800; color: var(--gold); }
+#quest-claim {
+  background: var(--accent-dk); color: #fff; border: 1px solid var(--accent);
+  border-radius: 8px; padding: 5px 14px; font-weight: 800; cursor: pointer;
+}
+#quest-claim:disabled { background: var(--panel); color: var(--muted); border-color: var(--line); cursor: default; }
+.qp-done { font-size: 13px; font-weight: 700; text-align: center; line-height: 1.6; padding: 6px 0; }
+
+/* ---- Help modal ---- */
+.help-box { width: min(640px, 94vw); }
+.hp-sec { margin-bottom: 12px; }
+.hp-t { font-size: 14px; font-weight: 800; margin-bottom: 3px; }
+.hp-d { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
 /* ---- Modals ---- */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .modal.hidden { display: none; }

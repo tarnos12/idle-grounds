@@ -20,6 +20,8 @@
     if (confirm("Reset ALL progress and start over?")) { window.SAVE.clearSave(); location.reload(); }
   };
   document.getElementById("dragon-continue").onclick = () => window.UI.dismissDragonDialog();
+  document.getElementById("help-btn").onclick = () => window.UI.openHelp();
+  document.getElementById("help-close").onclick = () => window.UI.closeHelp();
 
   window.UI.wireInput();
   window.UI.render();

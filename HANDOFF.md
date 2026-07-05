@@ -175,6 +175,18 @@ icons). Fixes that must stay:
 5. LAYERED painter: all grounds → locked stacks+veils → unlocked objects →
    item icons on top (a later region can never cover an earlier one's sprites).
 
+## Tutorial & quests
+
+- **Quest panel** (top-right, collapsible to a chip): sequential chain in
+  DATA.QUESTS — each goal() reads LIVE state (hand counts, dragon stage,
+  stats.foxKills/buildingsBuilt/upgradesApplied/linksAdded/recipeSwitches/
+  totalCrafted, region unlocks), so pre-completed things are instantly
+  claimable. Claim advances GS.quest.idx. Stat hooks live in engine.js at
+  the relevant actions.
+- **Help modal** (bottom-bar button): sections are built on open and
+  gated by unlock state (Forge lesson needs dragon stage 1, Algae Farm 2,
+  Herb Garden 3, awakened 4; region tips once any region is unlocked).
+
 ## Testing knobs & debug
 
 - `DATA.TEST`: `ENABLED`, `timeScale 0.2`, `costScale 0.5` (dragon tribute

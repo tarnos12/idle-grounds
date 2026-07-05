@@ -677,6 +677,7 @@ function setRecipe(areaKey, buildingId, idx) {
   b.stock = {};
   b.smeltDoneAt = 0;
   b.recipe = idx;
+  window.GS.stats.recipeSwitches = (window.GS.stats.recipeSwitches || 0) + 1;
   return true;
 }
 
@@ -805,6 +806,7 @@ function addLink(areaKey, lanternId, fromId, toId) {
   if (!lb || !D.BUILDINGS[lb.type].lantern) return false;
   lb.links = lb.links || [];
   lb.links.push({ from: fromId, to: toId });
+  window.GS.stats.linksAdded = (window.GS.stats.linksAdded || 0) + 1;
   return true;
 }
 function removeLink(areaKey, lanternId, index) {
@@ -950,7 +952,10 @@ function dropFromHand(areaKey, x, y) {
   if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
   if (b && !b.built) {
     const res = feedNeeds(buildingNeeds(b), b.paid);
-    if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) b.built = true;
+    if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) {
+      b.built = true;
+      window.GS.stats.buildingsBuilt = (window.GS.stats.buildingsBuilt || 0) + 1;
+    }
     return res ? Object.assign(res, { building: b.id }) : null;
   }
   const item = handTakeFirst();
@@ -993,6 +998,7 @@ function upgradeLevel(areaKey, type) {
 
 function applyUpgrade(areaKey, type) {
   const up = window.GS.areas[areaKey].upgrades;
+  window.GS.stats.upgradesApplied = (window.GS.stats.upgradesApplied || 0) + 1;
   if (type === "tier") up.maxTier++;
   else if (type === "speed") up.speed++;
   else if (type === "harvestSpeed") up.harvestSpeed++;
@@ -1318,6 +1324,25 @@ function damageEnemy(areaKey, en, dmg) {
   }
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
+  window.GS.stats.foxKills = (window.GS.stats.foxKills || 0) + 1;
+}
+
+// ---- Tutorial quests -----------------------------------------
+
+// Live progress of quest `i` — goals read current state, so anything the
+// player already achieved counts immediately.
+function questProgress(i) {
+  const q = D.QUESTS[i];
+  if (!q) return null;
+  const p = q.goal();
+  return { cur: Math.min(p.cur, p.need), need: p.need, done: p.cur >= p.need };
+}
+function claimQuest() {
+  const gq = window.GS.quest;
+  const p = questProgress(gq.idx);
+  if (!p || !p.done) return false;
+  gq.idx++;
+  return true;
 }
 
 // One strike on the targeted enemy. Damage scales with the Spirit Blade
@@ -1368,6 +1393,7 @@ window.ENGINE = {
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
+  questProgress, claimQuest,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

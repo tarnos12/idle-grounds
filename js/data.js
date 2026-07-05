@@ -373,6 +373,49 @@ const UPGRADE_TREE = [
     costs: [{ spirit_essence: 12, water: 10 }, { spirit_essence: 25, iron_bar: 5 }, { spirit_essence: 50, iron_bar: 12 }] },
 ];
 
+// ------------------------------------------------------------------
+// Tutorial QUESTS — a sequential chain shown in the side panel. Each
+// `goal()` reads LIVE state, so anything the player already did counts
+// immediately (the Claim button lights up as soon as cur >= need).
+// Later quests only appear after earlier ones are claimed, so nothing
+// references content the player hasn't seen yet.
+// ------------------------------------------------------------------
+const QUESTS = [
+  { id: "wood", icon: "🪵", name: "First timber",
+    desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand.",
+    goal: () => ({ cur: window.ENGINE.handCount("wood"), need: 5 }) },
+  { id: "leaves", icon: "🍃", name: "Bush whacker",
+    desc: "Chop the small bushes 🌿 around the Altar and collect 5 leaves.",
+    goal: () => ({ cur: window.ENGINE.handCount("leaves"), need: 5 }) },
+  { id: "dragon1", icon: "🐉", name: "Wake the sleeper",
+    desc: "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click it to feed its tribute until it stirs.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 1 ? 1 : 0, need: 1 }) },
+  { id: "fox", icon: "🦊", name: "Fox hunt",
+    desc: "A Fox Spirit prowls the red zone (top-right corner). Click it until it falls — hold left-click to auto-attack. It drops Spirit Essence.",
+    goal: () => ({ cur: window.GS.stats.foxKills || 0, need: 1 }) },
+  { id: "build", icon: "🔨", name: "Raise a building",
+    desc: "Press B, place a Storehouse ghost somewhere open, then RIGHT-click it while carrying the wood it asks for.",
+    goal: () => ({ cur: window.GS.stats.buildingsBuilt || 0, need: 1 }) },
+  { id: "upgrade", icon: "🏛️", name: "First insight",
+    desc: "Click the Altar to open the upgrade tree, pick an upgrade, then RIGHT-click-feed the Altar the cost it shows.",
+    goal: () => ({ cur: window.GS.stats.upgradesApplied || 0, need: 1 }) },
+  { id: "link", icon: "🏮", name: "Wisp wrangler",
+    desc: "Wisps already ferry items along the dashed threads. Click a Wisp Lantern, press ➕ Add link, then click a source (🧿/📦) and a target building.",
+    goal: () => ({ cur: window.GS.stats.linksAdded || 0, need: 1 }) },
+  { id: "recipe", icon: "🏺", name: "Change of plans",
+    desc: "Click the Kiln and switch its recipe. (Anything it held drops on the ground — that's normal.)",
+    goal: () => ({ cur: window.GS.stats.recipeSwitches || 0, need: 1 }) },
+  { id: "craft", icon: "⚙️", name: "Production line",
+    desc: "Let your buildings craft 5 items in total (planks, bricks, spirit stones…). Keep the wisps fed!",
+    goal: () => ({ cur: window.GS.stats.totalCrafted || 0, need: 5 }) },
+  { id: "explore", icon: "🔓", name: "Beyond the woods",
+    desc: "Carry enough wood to a glowing border button and unlock a neighbouring region (Farm, Mine or Fishing).",
+    goal: () => {
+      const u = window.GS.world.unlocked;
+      return { cur: (u.farm || u.mine || u.fishing) ? 1 : 0, need: 1 };
+    } },
+];
+
 // How many ready nodes each automation level harvests per tick.
 const AUTOMATION_CLICKS = { 1: 1, 2: 2, 3: Infinity };
 
@@ -390,5 +433,5 @@ const TEST = {
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
   AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, WORLD, AUTOMATION_CLICKS,
-  UPGRADE_TREE, HAND_CAP, TEST,
+  UPGRADE_TREE, QUESTS, HAND_CAP, TEST,
 };

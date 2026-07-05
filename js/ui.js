@@ -1107,6 +1107,87 @@ function renderLinkMenu() {
   }
 }
 
+// ---- tutorial quest panel ------------------------------------
+// The side panel shows ONE quest at a time; goals read live state so
+// already-done things are instantly claimable. Rebuilt only when the
+// quest index / progress / collapsed state actually changes.
+let lastQuestKey = "";
+function renderQuestPanel() {
+  const panel = $("#quest-panel");
+  const gq = window.GS.quest;
+  const i = gq.idx, total = DD.QUESTS.length;
+  const p = i < total ? E.questProgress(i) : null;
+  const key = `${gq.hidden}|${i}|${p ? p.cur + "/" + p.need + "/" + p.done : "end"}`;
+  if (key === lastQuestKey) return;
+  lastQuestKey = key;
+
+  if (gq.hidden) {
+    panel.className = "mini";
+    panel.innerHTML = `<button id="quest-chip" title="Show quests">📜${p && p.done ? "❗" : ""}</button>`;
+    $("#quest-chip").onclick = () => { gq.hidden = false; renderQuestPanel(); };
+    return;
+  }
+  panel.className = "";
+  if (i >= total) {
+    panel.innerHTML = `<div class="qp-head"><span>📜 Quests</span>` +
+      `<button id="quest-min" title="Collapse">–</button></div>` +
+      `<div class="qp-done">🎉 All quests complete!<br>The grounds are yours, cultivator.</div>`;
+    $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
+    return;
+  }
+  const q = DD.QUESTS[i];
+  panel.innerHTML =
+    `<div class="qp-head"><span>📜 Quest ${i + 1}/${total}</span>` +
+    `<button id="quest-min" title="Collapse">–</button></div>` +
+    `<div class="qp-name">${q.icon} ${q.name}</div>` +
+    `<div class="qp-desc">${q.desc}</div>` +
+    `<div class="qp-bar"><div class="qp-fill" style="width:${Math.round(100 * p.cur / p.need)}%"></div></div>` +
+    `<div class="qp-row"><span class="qp-prog">${p.cur}/${p.need}</span>` +
+    `<button id="quest-claim" ${p.done ? "" : "disabled"}>${p.done ? "Claim ✔" : "Claim"}</button></div>`;
+  $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
+  $("#quest-claim").onclick = () => { if (E.claimQuest()) renderQuestPanel(); };
+}
+
+// ---- help / tutorial modal -----------------------------------
+// Sections appear only once their content actually exists in the run
+// (no Forge lesson before the dragon teaches the Forge, etc).
+function openHelp() {
+  const dr = window.GS.dragon.stage || 0;
+  const u = window.GS.world.unlocked;
+  const S = [];
+  S.push(["🕹️ Controls",
+    "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Esc cancels/closes."]);
+  S.push(["✋ Gathering & the hand",
+    "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown bottom-right). RIGHT-click drops items / feeds buildings; the front stack feeds first."]);
+  S.push(["🏗️ Buildings",
+    "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input."]);
+  S.push(["🏛️ Altar upgrades",
+    "Click the Altar to open the upgrade tree. Select a node, then right-click-feed the Altar the cost shown on it. Switching refunds what you fed."]);
+  S.push(["🐉 The Sleeping Dragon",
+    "Feed it each stage's tribute (right-click) and it teaches new recipes. Its current wish is written on it."]);
+  S.push(["🦊 Fox Spirits",
+    "They prowl the red corner. Click to strike (hold to auto-attack); they drop Spirit Essence. The tree's combat branch adds damage, more foxes and an AoE."]);
+  S.push(["🏮 Wisp network",
+    "Gathering Stones 🧿 vacuum ground items. Wisp Lanterns ferry them: click a lantern to edit its links (source → target, served in order, one per beat). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw."]);
+  if (dr >= 1) S.push(["🔥 Forge & smelting",
+    "The dragon taught you the Forge: feed it iron ore + wood (wisps or hand) and it smelts Iron Bars from its stock automatically."]);
+  if (dr >= 2) S.push(["🪸 Algae Farm",
+    "Places ONLY in the fishing waters; passively grows algae around itself."]);
+  if (dr >= 3) S.push(["🪴 Herb Garden",
+    "Grows Spirit Herbs around itself on land — the cultivation herb."]);
+  if (dr >= 4) S.push(["🐲 The Awakened Dragon",
+    "It watches over the grounds now. More to come…"]);
+  if (u.farm || u.mine || u.fishing) S.push(["🗺️ Regions",
+    "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron & jade; Fishing: fish, algae & spring water). Unlock borders with wood."]);
+  else S.push(["🗺️ Regions",
+    "Locked regions wait beyond the borders — gather wood and pay at a glowing 🔓 border button to expand."]);
+
+  $("#help-body").innerHTML = S.map(([t, d]) =>
+    `<div class="hp-sec"><div class="hp-t">${t}</div><div class="hp-d">${d}</div></div>`).join("");
+  $("#help-modal").classList.remove("hidden");
+}
+function closeHelp() { $("#help-modal").classList.add("hidden"); }
+
 // ---- dragon story dialog ------------------------------------
 // A stage-up stores its line in GS.dragon.dialog; the modal shows until the
 // player continues. Sync is idempotent — called from both render paths.
@@ -1134,6 +1215,7 @@ function render() {
   renderBuildMenu();
   renderHandCursor();
   syncDragonDialog();
+  renderQuestPanel();
   if (upgradesOpen) drawTree();
 }
 // Tick / hold-loop render — canvas + fast HUD only.
@@ -1142,6 +1224,7 @@ function renderPlay() {
   requestGridPaint();
   renderHandCursor();
   syncDragonDialog();
+  renderQuestPanel();
 }
 window.renderPlay = renderPlay;
 
@@ -1410,5 +1493,5 @@ function wireInput() {
 
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
-  dismissDragonDialog,
+  dismissDragonDialog, openHelp, closeHelp,
   _draw: () => drawWorld() };   // test hook

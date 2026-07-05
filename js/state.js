@@ -52,7 +52,11 @@ function makeInitialState() {
     dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null },
     starterPlaced: false,   // the pre-wired wisp demo network (built once)
     won: false,
-    stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0 },
+    // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
+    quest: { idx: 0, hidden: false },
+    stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0,
+             foxKills: 0, buildingsBuilt: 0, upgradesApplied: 0,
+             linksAdded: 0, recipeSwitches: 0 },
   };
 }
 
@@ -99,7 +103,10 @@ function loadState() {
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
     fresh.won = !!s.won;
     fresh.starterPlaced = !!s.starterPlaced;
-    if (s.stats) fresh.stats = s.stats;
+    // merge stats/quest onto defaults so counters added later start at 0
+    if (s.stats) Object.assign(fresh.stats, s.stats);
+    if (s.quest) Object.assign(fresh.quest, s.quest);
+    fresh.quest.idx = Math.max(0, Math.min(fresh.quest.idx || 0, window.DATA.QUESTS.length));
 
     // ---- migration: scrub content that no longer exists in the game ----
     // (old saves may hold removed node kinds, tiers and item types)
