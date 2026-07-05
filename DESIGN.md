@@ -61,8 +61,8 @@ dropping it only if home is gone or full too.
 Left-click any buffer building withdraws into the hand. Demolition severs
 links and refunds buffers. Link editor ✅: left-click a lantern -> panel lists links (removable),
 "Add link" = click a source building then a target on the map (rubber-band
-line, invalid picks ignored, Esc backs out). Still missing: lantern
-rate/wisp-speed upgrades, Furnace Spirit.
+line, invalid picks ignored, Esc backs out). Wisp Haste tree node ✅
+(beat ×0.85 and wisp speed +25% per level); Furnace Spirit ✅.
 
 **Starter network ✅:** fresh saves auto-build a wired demo (flag
 `GS.starterPlaced`): gatherers at quarry/spirit tree/clay field/fox zone;
@@ -74,7 +74,7 @@ seeded so every line visibly runs from the first minute.
 ## Roadmap phases
 
 1. ✅ Logistics core + starter network + Kiln/Paper Mill/Infusion Array.
-2. ✅ Link-editing UI + Wisp Haste tree node (beat -15%%/lvl, speed +25%%/lvl).
+2. ✅ Link-editing UI + Wisp Haste tree node (beat -15%/lvl, speed +25%/lvl).
 3. ✅ Loom/Cauldron/Mill/Brewery/Jade Carver/Charcoal Pit; ✅ fuel system
    (burners: Forge+Kiln, FUEL wood 10s / bamboo 6s / charcoal 40s, cap 60s,
    batch consumes its duration); ✅ Furnace Spirit; ✅ renames.
