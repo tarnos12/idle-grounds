@@ -8,6 +8,8 @@
   // Populate EVERY region at boot — locked ones are visible on the map (the
   // camera just can't pan into them until they're unlocked at their border).
   for (const key of Object.keys(window.DATA.AREAS)) E.initArea(key);
+  // Fresh saves get the pre-wired wisp starter network (built once).
+  E.setupStarterNetwork();
 
   document.getElementById("upgrades-close").onclick = () => window.UI.toggleUpgrades(false);
   document.getElementById("tree-debug-btn").onclick = () => window.UI.toggleTreeDebug();

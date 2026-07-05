@@ -14,10 +14,12 @@ function makeAreaState() {
     genTimers: [],    // next-spawn time per generator
     enemies: [],      // roaming beasts       {id,x,y,hp,maxHp,tx,ty,hitAt}
     enemyRespawnAt: 0,
+    wisps: [],        // items in flight      {id,x,y,item,toId}
     nextNodeId: 1,
     nextGroundId: 1,
     nextBuildId: 1,
     nextEnemyId: 1,
+    nextWispId: 1,
     // speed = regrow/growth; harvestSpeed = swing/chop/mine/hold rate;
     // quarry = fewer clicks per stone; enemyCap/damage/aoe = combat branch.
     // paid = incremental upgrade funding.
@@ -48,6 +50,7 @@ function makeInitialState() {
     // (unlocks recipes). msg/msgUntil float its stage text briefly; dialog
     // holds the story line for the modal until the player dismisses it.
     dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null },
+    starterPlaced: false,   // the pre-wired wisp demo network (built once)
     won: false,
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0 },
   };
@@ -95,6 +98,7 @@ function loadState() {
     if (s.dragon) fresh.dragon = Object.assign({ stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null }, s.dragon);
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
     fresh.won = !!s.won;
+    fresh.starterPlaced = !!s.starterPlaced;
     if (s.stats) fresh.stats = s.stats;
 
     // ---- migration: scrub content that no longer exists in the game ----
@@ -125,6 +129,15 @@ function loadState() {
       a.ground = (a.ground || []).filter(g => LIVE.has(g.item) && Number.isFinite(g.x) && Number.isFinite(g.y));
       a.enemies = (a.enemies || []).filter(en =>
         Number.isFinite(en.x) && Number.isFinite(en.y) && Number.isFinite(en.hp) && en.hp > 0);
+      a.wisps = (a.wisps || []).filter(w =>
+        LIVE.has(w.item) && Number.isFinite(w.x) && Number.isFinite(w.y));
+      for (const b of a.buildings || []) {
+        // logistics state: scrub dead items from gathering buffers and links
+        if (b.inv) b.inv = b.inv.filter(st => LIVE.has(st.item) && st.qty > 0);
+        if (b.links) b.links = b.links.filter(l =>
+          (a.buildings || []).some(x => x.id === l.from) &&
+          (a.buildings || []).some(x => x.id === l.to));
+      }
       for (const b of a.buildings || []) {
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];

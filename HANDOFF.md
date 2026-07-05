@@ -5,16 +5,15 @@
 
 ## ▶ NEXT SESSION: start here
 
-Dragon stages 3+4 and the story-dialog UI are DONE (see "Last session
-summary"). Next up, in rough priority order (confirm with the user first):
-1. **Workbench function**: it builds but does nothing. Reuse the Forge's
-   `smelt` converter config in `BUILDINGS` (rename the concept if it grows
-   beyond smelting) — e.g. wood + iron bars → tools; Spirit Herbs are now
-   available as a crafting input too (elixirs?).
-2. **Post-awakening content**: the dragon awakening sets `GS.won` but
-   nothing consumes it yet (the old #win-modal is unused) — a stats screen,
-   a prestige loop, or the dragon granting a passive blessing.
-3. Offline/idle catch-up on load; feedback polish (particles, +N floaters).
+READ DESIGN.md FIRST — the agreed economy/building/logistics plan lives
+there (with done-markers and roadmap phases). Wisp logistics + the starter
+network are LIVE (see "Last session summary"); next per its roadmap:
+1. **Link-editing UI** — lanterns are pre-wired only; players can't create
+   or edit links yet (engine hook exists: `ENGINE.addLink`).
+2. Phase-3 buildings (Loom/Cauldron/Mill/Brewery/Jade Carver/Charcoal Pit)
+   + the fuel system; then pills/combat T3/endgame per DESIGN.md.
+3. Backlog: post-awakening content (GS.won unused), offline catch-up,
+   feedback polish.
 
 ## Session setup
 
@@ -207,14 +206,23 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
-Dragon stages 3+4 + story dialog: **spirit_herb 🌱** item; **Herb Garden 🪴**
-building (dragon stage 3, cost 10🪵+5💧+5🧱, land placement, `gen` grows
-spirit herbs nearby, cap 6). Stage 3's tribute (8🧲+15🪸+10💧) now teaches
-it with proper story text. **Stage 4** (20🌱+15✨+5🧲) AWAKENS the dragon:
-sprite 🐲, gold border, "watches over the grounds", refuses further food,
-sets `GS.won` (unused so far). **Story dialog UI**: stage-ups set
-`GS.dragon.dialog`; `syncDragonDialog()` (called from both render paths)
-shows #dragon-modal until Continue clears it (persists across reloads
-mid-dialog). Verified headless: full stage 0→4 walk, catalog unlocks per
-stage, modal show/dismiss via the real render path, herb generation capped,
-no draw errors. Assets bumped to `?v=11`.
+Wisp logistics + starter network: 6 new items (plank, brick, paper,
+bamboo, jade_shard, spirit_stone — pixel icons extracted); rare drops
+(quarry/stone field -> jade shards, Spirit Tree -> bamboo); new producers
+Kiln (2 clay+1 wood -> brick), Paper Mill (1 bamboo+2 wood -> paper),
+Infusion Array (3 stone+1 essence -> spirit stone) + Workbench now makes
+planks (3 wood). Logistics buildings (1x1, anyZone=wild-land ok):
+Gathering Stone (vacuum radius 10, buffer 20), Warding Seal (typed
+pass-through cap 5; right-click tunes it to the held item), Wisp Lantern
+(links list, ONE link serviced per 1s beat round-robin in added order;
+wisps fly cargo ~120px/s, refuse -> drop on ground). Endpoint acceptance:
+seals/storehouses by type, converters by remaining recipe inputs + queue
+cap. Left-click withdraws from any buffer building; demolition severs
+links + refunds buffers; storehouse lock keeps type when empty.
+setupStarterNetwork() (GS.starterPlaced flag) auto-builds the wired demo
+on fresh saves and seeds the sources. VERIFIED headless end-to-end:
+gather -> seal -> producers, jade/bamboo filtered to typed storehouses,
+wood fanned round-robin to 4 consumers, spirit stones + brick crafted
+hands-free, zero stuck wisps, no draw errors. NOTE: headless tabs
+throttle setInterval to 1/s — drive E.gameTick() manually to fast-forward
+when testing. Assets ?v=13. DESIGN.md added (full approved plan).

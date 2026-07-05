@@ -13,6 +13,8 @@ const ITEM_NAMES = {
   iron_bar: "Iron Bar",
   fish: "Fish", algae: "Algae", water: "Water",
   spirit_essence: "Spirit Essence", spirit_herb: "Spirit Herb",
+  bamboo: "Bamboo", jade_shard: "Jade Shard",
+  plank: "Plank", brick: "Brick", paper: "Paper", spirit_stone: "Spirit Stone",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -21,6 +23,8 @@ const ITEM_ICONS = {
   iron_bar: "🧲",
   fish: "🐟", algae: "🪸", water: "💧",
   spirit_essence: "✨", spirit_herb: "🌱",
+  bamboo: "🎍", jade_shard: "🟢",
+  plank: "🟫", brick: "🧱", paper: "📜", spirit_stone: "🔮",
 };
 
 // One sprite per area's resource (tiers are gone — single type each).
@@ -66,12 +70,14 @@ const AREAS = {
       // hold auto-clicks at 1/s) — and it ALSO produces stone passively
       // (see the generator below)
       { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 1000,
-        sprite: "⛰️", clicksPerDrop: 5, drop: "stone" },
+        sprite: "⛰️", clicksPerDrop: 5, drop: "stone",
+        rareDrop: { item: "jade_shard", chance: 0.12 } },
       // the Spirit Tree: ONE great tree centred in the top band — the only
       // wood source in the Center. Works like the rock but has NO passive
       // production: it only gives while you click / hold on it.
       { kind: "spirittree", zone: "midTop", size: 4, interaction: "quarry", swingMs: 1000,
-        sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3 },
+        sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3,
+        rareDrop: { item: "bamboo", chance: 0.12 } },
     ],
     generators: [
       // clay ground: a small field centred in the bottom-right corner
@@ -79,7 +85,8 @@ const AREAS = {
       // passive stone production: silently tops the ground AROUND the rock up
       // to 10 stones (only counts stones lying in the quarry field); the
       // "quarry" upgrade speeds it up
-      { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry" },
+      { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry",
+        rareDrop: { item: "jade_shard", chance: 0.08 } },
     ],
     // Fox Spirits haunt the top-right corner: they wander their zone, take a
     // few hits to slay, and drop Spirit Essence. `cap` is the BASE cap — the
@@ -204,7 +211,20 @@ const BUILDINGS = {
   // The Sleeping Dragon: pre-placed in the Center's top-left corner. Feed it
   // each stage's tribute (see DRAGON_STAGES) and it unlocks new recipes.
   dragon:    { name: "Sleeping Dragon", icon: "🐉", cost: {}, size: { w: 5, h: 5 }, unlocked: false, indestructible: true },
-  workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true },
+  workbench: { name: "Workbench", icon: "🛠️", cost: { wood: 8 },            unlocked: true,
+               smelt: { inputs: { wood: 3 }, output: "plank", outputQty: 1,
+                        timeMs: 4000, queueCap: 5 } },
+  kiln:      { name: "Kiln",      icon: "🏺", cost: { wood: 10, clay: 5 },  unlocked: true,
+               smelt: { inputs: { clay: 2, wood: 1 }, output: "brick", outputQty: 1,
+                        timeMs: 5000, queueCap: 5 } },
+  paper_mill:{ name: "Paper Mill", icon: "📜", cost: { wood: 10, stone: 5 }, unlocked: true,
+               smelt: { inputs: { bamboo: 1, wood: 2 }, output: "paper", outputQty: 1,
+                        timeMs: 5000, queueCap: 5 } },
+  // Infusion Array: a formation circle that imbues mundane stone with fox
+  // essence — the Spirit Stone source (premium late-game currency).
+  infusion_array: { name: "Infusion Array", icon: "🔮", cost: { stone: 10, spirit_essence: 5 }, unlocked: true,
+               smelt: { inputs: { stone: 3, spirit_essence: 1 }, output: "spirit_stone", outputQty: 1,
+                        timeMs: 8000, queueCap: 5 } },
   // Converter buildings carry a `smelt` recipe: right-click feed the inputs
   // (same feeding rule as ghosts); each complete set queues one batch, the
   // building works through the queue on a timer and drops the output on the
@@ -221,6 +241,21 @@ const BUILDINGS = {
   // (the cultivation herbs) around itself, on land.
   herb_garden:{ name: "Herb Garden", icon: "🪴", cost: { wood: 10, water: 5, clay: 5 }, unlocked: false,
                 stageUnlock: 3, gen: { item: "spirit_herb", intervalMs: 5000, cap: 6 } },
+
+  // ---- Wisp logistics (small 1x1 formations; may sit on wild land) ----
+  // Gathering Stone: vacuums ground items within `radius` cells into its
+  // buffer (capacity `cap` total across types).
+  gathering_stone: { name: "Gathering Stone", icon: "🧿", size: { w: 1, h: 1 }, anyZone: true,
+               cost: { stone: 5 }, unlocked: true, gather: { radius: 8, cap: 20 } },
+  // Wisp Lantern: hosts worker wisps. Holds a LIST of links {from,to}
+  // (building ids); every `rateMs` it services ONE link, round-robin in the
+  // order they were added, sending 1 item the target accepts.
+  wisp_lantern: { name: "Wisp Lantern", icon: "🏮", size: { w: 1, h: 1 }, anyZone: true,
+               cost: { wood: 5, stone: 5 }, unlocked: true, lantern: { rateMs: 1000, speed: 120 } },
+  // Warding Seal: a pass-through buffer locked to ONE item type — wisps
+  // simply never bring it anything else, so lines stay pure.
+  warding_seal: { name: "Warding Seal", icon: "🈯", size: { w: 1, h: 1 }, anyZone: true,
+               cost: { wood: 3, stone: 3 }, unlocked: true, seal: { cap: 5 } },
 };
 
 // The Dragon's feeding milestones. Each stage lists the tribute it wants

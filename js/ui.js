@@ -305,6 +305,11 @@ function animActive() {
       const ex = en.x + p.x, ey = en.y + p.y;
       if (ex > l && ex < r && ey > t && ey < b) return true;
     }
+    // wisps in flight animate whenever one is on screen
+    if (unlocked) for (const w of window.GS.areas[key].wisps || []) {
+      const wx = w.x + p.x, wy = w.y + p.y;
+      if (wx > l && wx < r && wy > t && wy < b) return true;
+    }
     // a smelting converter's progress bar animates while it's on screen
     if (unlocked) for (const bd of window.GS.areas[key].buildings) {
       if (!bd.built || !(DD.BUILDINGS[bd.type].smelt) || !(bd.smeltDoneAt > now)) continue;
@@ -403,7 +408,7 @@ function drawWorldInner() {
 
   // placement preview (only in an unlocked region)
   if (window.GS.build.placing && cursor.over && cursor.region) {
-    const B = G.building;
+    const B = E.buildingSize(window.GS.build.placing);
     const ok = E.isAreaUnlocked(cursor.region) &&
       E.canPlaceBuilding(cursor.region, cursor.lrow, cursor.lcol, window.GS.build.placing);
     const p = regionPx(cursor.region);
@@ -460,6 +465,25 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
 
   if (phase === "treesOnly") { drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlocked, seen); return; }
 
+  // wisp-lantern links: faint dashed threads under everything else
+  ctx.strokeStyle = "rgba(251,191,36,.22)"; ctx.lineWidth = Math.max(1, 1.5 * s);
+  ctx.setLineDash([6 * s, 6 * s]);
+  for (const b of st.buildings) {
+    if (!b.links || !b.links.length) continue;
+    for (const l of b.links) {
+      const f = st.buildings.find(x => x.id === l.from), t = st.buildings.find(x => x.id === l.to);
+      if (!f || !t) continue;
+      const fc = E.buildingCenterPx(f), tc = E.buildingCenterPx(t);
+      if (!seen(Math.min(fc.x, tc.x) + ox, Math.min(fc.y, tc.y) + oy,
+                Math.abs(fc.x - tc.x) + 1, Math.abs(fc.y - tc.y) + 1)) continue;
+      ctx.beginPath();
+      ctx.moveTo(X(ox + fc.x), Y(oy + fc.y));
+      ctx.lineTo(X(ox + tc.x), Y(oy + tc.y));
+      ctx.stroke();
+    }
+  }
+  ctx.setLineDash([]);
+
   // buildings (ghosts + built)
   for (const b of st.buildings) {
     const bs = E.buildingSize(b.type);
@@ -512,6 +536,17 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.fillStyle = "#e9d5ff"; ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
         ctx.fillText(dr.msg, cxp, Y(by - 12));
       }
+    } else if (b.built && (bCfg.gather || bCfg.lantern || bCfg.seal)) {
+      // compact 1x1 wisp-logistics formations: icon + a tiny status badge
+      ctx.fillStyle = C.text;
+      ctx.font = `${20 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.5));
+      if (bCfg.seal && b.item) drawItemIcon(b.item, cxp, Y(by - 8), 13 * s);
+      ctx.fillStyle = C.gold; ctx.font = `800 ${9 * s}px ${TEXT_FONT}`;
+      const badge = bCfg.gather ? String(E.gatherTotal(b))
+        : bCfg.seal ? String(b.qty || 0)
+        : `${(b.links || []).length}⛓`;
+      ctx.fillText(badge, cxp, Y(by + bh + 8));
     } else if (b.built && bCfg.smelt) {
       // converter (Forge): icon + queue count, then a progress bar while a
       // batch smelts, else the inputs the next batch still needs
@@ -660,6 +695,16 @@ function drawRegionItems(key, ox, oy, view, s, X, Y) {
   for (const g of st.ground) {
     if (!seen(g.x + ox - 16, g.y + oy - 16, 32, 32)) continue;
     drawItemIcon(g.item, X(ox + g.x), Y(oy + g.y), 20 * s);
+  }
+  // wisps in flight: a soft glow carrying its item icon
+  for (const w of st.wisps || []) {
+    if (!seen(w.x + ox - 16, w.y + oy - 24, 32, 48)) continue;
+    const wx = X(ox + w.x), wy = Y(oy + w.y);
+    ctx.fillStyle = "rgba(74,222,128,.30)";
+    ctx.beginPath(); ctx.arc(wx, wy, 7 * s, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#eafff2";
+    ctx.beginPath(); ctx.arc(wx, wy, 2.5 * s, 0, Math.PI * 2); ctx.fill();
+    drawItemIcon(w.item, wx, wy - 12 * s, 14 * s);
   }
 }
 
@@ -1054,10 +1099,12 @@ function onMouseDown(e) {
     const sh = E.buildingAt(p.region, p.lrow, p.lcol);
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
-    // left-click/hold a storehouse to withdraw its contents
-    if (sh && sh.built && sh.type === "storehouse") {
+    // left-click/hold a buffer building (storehouse / seal / gatherer) to
+    // withdraw its contents into the hand
+    if (sh && sh.built && (sh.type === "storehouse" ||
+        DD.BUILDINGS[sh.type].seal || DD.BUILDINGS[sh.type].gather)) {
       leftHeld = true; withdrawSH = sh;
-      E.takeFromStorehouse(sh, 1);      // a click takes one; holding accelerates
+      E.withdrawFromBuilding(sh, 1);    // a click takes one; holding accelerates
       withdrawStart = Date.now(); lastWithdraw = withdrawStart;
       startLoop(); renderPlay();
       return;
@@ -1161,7 +1208,7 @@ function startLoop() {
       const elapsed = Date.now() - withdrawStart;
       const rate = 1 + Math.min(elapsed / 3000, 1) * 4;   // 1 .. 5 items per second
       if (Date.now() - lastWithdraw >= 1000 / rate) {
-        if (E.takeFromStorehouse(withdrawSH, 1) > 0) dirty = true;
+        if (E.withdrawFromBuilding(withdrawSH, 1) > 0) dirty = true;
         lastWithdraw = Date.now();
       }
     }

@@ -88,8 +88,26 @@ function takeFromStorehouse(sh, n) {
   if (take <= 0) return 0;
   const item = sh.item;
   handAdd(item, take); sh.qty -= take;
-  if (sh.qty <= 0) sh.item = null;
+  // `lock` keeps the container typed even when empty (warding seals and the
+  // starter's rare-find storehouses stay tuned to their item)
+  if (sh.qty <= 0 && !sh.lock) sh.item = null;
   return take;
+}
+
+// Left-click withdraw for any buffer building (storehouse / seal / gatherer).
+function withdrawFromBuilding(b, n) {
+  const cfg = D.BUILDINGS[b.type];
+  if (b.type === "storehouse" || cfg.seal) return takeFromStorehouse(b, n);
+  if (cfg.gather) {
+    let took = 0;
+    while (took < (n || 1) && handSpace() > 0 && (b.inv || []).length) {
+      const st = b.inv[0];
+      if (handAdd(st.item, 1) > 0) { st.qty--; took++; if (st.qty <= 0) b.inv.shift(); }
+      else break;
+    }
+    return took;
+  }
+  return 0;
 }
 function scaled(n) { return Math.max(1, Math.ceil(D.TEST.ENABLED ? n * D.TEST.costScale : n)); }
 
@@ -217,7 +235,7 @@ function placeFixture(areaKey, fx) {
     id: area.nextNodeId++, row, col, size: fx.size, kind: fx.kind, interaction: fx.interaction,
     fixed: true, tier: 1, deco: fx.interaction === "none",   // inert fixtures are pure scenery
     clicks: 0, clicksPerDrop: fx.clicksPerDrop, dropItem: fx.drop,
-    dropMin: fx.dropMin, dropMax: fx.dropMax,
+    dropMin: fx.dropMin, dropMax: fx.dropMax, rareDrop: fx.rareDrop || null,
     swingMs: fx.swingMs || 1000, sprite: fx.sprite || "⛰️", autoFlash: 0,
   });
 }
@@ -303,6 +321,71 @@ function initArea(areaKey) {
     }
   }
   area.genTimers = (cfg.generators || []).map(() => 0);
+}
+
+// ---- Starter wisp network (fresh saves) -----------------------
+// Auto-builds a small pre-wired demo so the logistics are alive from the
+// first minute: collectors at the stone/wood/clay/fox sources, seals
+// filtering the rare finds off to typed storehouses, and lanterns fanning
+// wood out to four consumers round-robin.
+
+// Nearest legal placement to an anchor cell (ring-scan outward).
+function findSpot(areaKey, type, r0, c0) {
+  for (let rad = 0; rad < 14; rad++)
+    for (let dr = -rad; dr <= rad; dr++)
+      for (let dc = -rad; dc <= rad; dc++) {
+        if (Math.max(Math.abs(dr), Math.abs(dc)) !== rad) continue;
+        if (canPlaceBuilding(areaKey, r0 + dr, c0 + dc, type)) return { r: r0 + dr, c: c0 + dc };
+      }
+  return null;
+}
+function placeBuilt(areaKey, type, r0, c0, extra) {
+  const area = window.GS.areas[areaKey];
+  const spot = findSpot(areaKey, type, r0, c0);
+  if (!spot) return null;
+  const b = Object.assign({ id: area.nextBuildId++, type, row: spot.r, col: spot.c,
+    paid: {}, built: true, item: null, qty: 0 }, extra || {});
+  initLogistics(b);
+  area.buildings.push(b);
+  return b;
+}
+function setupStarterNetwork() {
+  if (window.GS.starterPlaced) return false;
+  const A = "center";
+  // producers in the open band south of the Altar
+  const forge = placeBuilt(A, "forge", 52, 26);
+  const bench = placeBuilt(A, "workbench", 52, 31);
+  const mill  = placeBuilt(A, "paper_mill", 52, 36);
+  const kiln  = placeBuilt(A, "kiln", 52, 41);
+  const array = placeBuilt(A, "infusion_array", 52, 46);
+  // typed storehouses for the rare finds
+  const shJade   = placeBuilt(A, "storehouse", 56, 28, { item: "jade_shard", lock: true });
+  const shBamboo = placeBuilt(A, "storehouse", 56, 34, { item: "bamboo", lock: true });
+  // collectors at each source
+  const gsStone = placeBuilt(A, "gathering_stone", 62, 18);
+  const gsWood  = placeBuilt(A, "gathering_stone", 16, 33);
+  const gsClay  = placeBuilt(A, "gathering_stone", 62, 56);
+  const gsFox   = placeBuilt(A, "gathering_stone", 12, 62);
+  // seals keep the main lines pure
+  const sealStone = placeBuilt(A, "warding_seal", 58, 22, { item: "stone", lock: true });
+  const sealWood  = placeBuilt(A, "warding_seal", 30, 36, { item: "wood", lock: true });
+  // lanterns + links (link order = round-robin send order)
+  const L = (lb, from, to) => { if (lb && from && to) lb.links.push({ from: from.id, to: to.id }); };
+  const lanQ = placeBuilt(A, "wisp_lantern", 60, 20);
+  L(lanQ, gsStone, sealStone); L(lanQ, sealStone, array); L(lanQ, gsStone, shJade);
+  const lanT = placeBuilt(A, "wisp_lantern", 22, 36);
+  L(lanT, gsWood, sealWood);
+  L(lanT, sealWood, forge); L(lanT, sealWood, bench); L(lanT, sealWood, mill); L(lanT, sealWood, kiln);
+  L(lanT, gsWood, shBamboo);
+  const lanM = placeBuilt(A, "wisp_lantern", 44, 52);
+  L(lanM, gsClay, kiln); L(lanM, gsFox, array);
+  // seed the sources so every line visibly runs from the first minute
+  const seed = (item, n, r, c) => dropGround(A, item, n, (c + 0.5) * CELL, (r + 0.5) * CELL);
+  seed("stone", 8, 62, 12); seed("jade_shard", 2, 61, 13);
+  seed("wood", 8, 15, 37);  seed("bamboo", 2, 16, 38);
+  seed("clay", 6, 62, 62);  seed("spirit_essence", 4, 12, 64);
+  window.GS.starterPlaced = true;
+  return true;
 }
 
 // Remove a relocating node and queue a replacement from its spawner.
@@ -466,6 +549,11 @@ function harvestNode(areaKey, nodeId, isAuto) {
       const c = nodeCenterPx(node);
       dropGround(areaKey, node.dropItem || "stone", amt, c.x, c.y);
       window.GS.stats.totalGathered += amt;
+      // rare finds: jade shards in the rock, bamboo shoots at the tree…
+      if (node.rareDrop && Math.random() < node.rareDrop.chance) {
+        dropGround(areaKey, node.rareDrop.item, 1, c.x, c.y);
+        window.GS.stats.totalGathered += 1;
+      }
     }
     return true;
   }
@@ -527,19 +615,28 @@ function cellInZone(zoneKey, r, c) {
 }
 
 function canPlaceBuilding(areaKey, row, col, type) {
-  const B = D.GRID.building;
+  const bCfg = (type && D.BUILDINGS[type]) || {};
+  const B = bCfg.size || D.GRID.building;
   if (row < 0 || col < 0 || row + B.h > D.GRID.cells || col + B.w > D.GRID.cells) return false;
-  const water = type && D.BUILDINGS[type] && D.BUILDINGS[type].waterOnly;
-  if (water && areaKey !== "fishing") return false;   // water buildings live in the fishing waters
+  if (bCfg.waterOnly && areaKey !== "fishing") return false;   // water buildings live in the fishing waters
   const occ = occupiedCells(areaKey);
   for (let r = row; r < row + B.h; r++)
     for (let c = col; c < col + B.w; c++) {
       // waterOnly buildings INVERT the rule: every cell must be in the water
-      // (fishing's centre zone); everything else avoids the wild land.
-      if (water ? !cellInZone("centre", r, c) : inNoBuild(areaKey, r, c)) return false;
+      // (fishing's centre zone). anyZone formations (wisp logistics) may sit
+      // on wild land. Everything else avoids the noBuild zones.
+      if (bCfg.waterOnly ? !cellInZone("centre", r, c)
+        : (!bCfg.anyZone && inNoBuild(areaKey, r, c))) return false;
       if (occ.has(r + "," + c)) return false;
     }
   return true;
+}
+
+// Per-type mutable fields for logistics buildings.
+function initLogistics(b) {
+  const cfg = D.BUILDINGS[b.type];
+  if (cfg.gather && !b.inv) b.inv = [];
+  if (cfg.lantern) { b.links = b.links || []; b.connIdx = b.connIdx || 0; b.nextSend = 0; }
 }
 
 function placeBuilding(areaKey, type, row, col) {
@@ -547,6 +644,7 @@ function placeBuilding(areaKey, type, row, col) {
   if (!canPlaceBuilding(areaKey, row, col, type)) return null;
   const area = window.GS.areas[areaKey];
   const b = { id: area.nextBuildId++, type, row, col, paid: {}, built: false, item: null, qty: 0 };
+  initLogistics(b);
   area.buildings.push(b);
   return b;
 }
@@ -568,6 +666,87 @@ function smeltRemaining(b) {
     if (r > 0) rem[item] = r;
   }
   return rem;
+}
+
+// ---- Wisp logistics ------------------------------------------
+// Endpoints are buildings: gathering stones (mixed buffer), warding seals
+// (typed pass-through), storehouses (typed buffer) and converters (inputs).
+// Wisp Lanterns hold links {from,to}; each beat services ONE link round-robin.
+
+function buildingById(areaKey, id) {
+  return window.GS.areas[areaKey].buildings.find(b => b.id === id) || null;
+}
+function buildingCenterPx(b) {
+  const s = buildingSize(b.type);
+  return { x: (b.col + s.w / 2) * CELL, y: (b.row + s.h / 2) * CELL };
+}
+function gatherTotal(b) { return (b.inv || []).reduce((s, x) => s + x.qty, 0); }
+
+// Will `b` accept one `item` right now?
+function endpointAccepts(b, item) {
+  if (!b || !b.built) return false;
+  const cfg = D.BUILDINGS[b.type];
+  if (cfg.seal) return !!b.item && b.item === item && (b.qty || 0) < (cfg.seal.cap || 5);
+  if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
+  if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
+  if (cfg.smelt) {
+    const pending = (b.queue || 0) + (b.smeltDoneAt > Date.now() ? 1 : 0);
+    if (pending >= (cfg.smelt.queueCap || 5)) return false;
+    return (smeltRemaining(b)[item] || 0) > 0;
+  }
+  return false;
+}
+// Which item can `src` supply that `dst` accepts? (null = nothing to send)
+function pickTransfer(src, dst) {
+  const sCfg = D.BUILDINGS[src.type];
+  if (sCfg.gather) {
+    const st = (src.inv || []).find(s => s.qty > 0 && endpointAccepts(dst, s.item));
+    return st ? st.item : null;
+  }
+  if (sCfg.seal || src.type === "storehouse")
+    return src.item && (src.qty || 0) > 0 && endpointAccepts(dst, src.item) ? src.item : null;
+  return null;
+}
+function endpointTake(b, item) {
+  const cfg = D.BUILDINGS[b.type];
+  if (cfg.gather) {
+    const st = (b.inv || []).find(s => s.item === item);
+    if (!st || st.qty <= 0) return false;
+    st.qty--; if (st.qty <= 0) b.inv = b.inv.filter(s => s !== st);
+    return true;
+  }
+  if (cfg.seal || b.type === "storehouse") {
+    if (b.item !== item || (b.qty || 0) <= 0) return false;
+    b.qty--; if (b.qty <= 0 && !b.lock) b.item = null;
+    return true;
+  }
+  return false;
+}
+// Deliver one `item` into `b`. False -> the carrier drops it on the ground.
+function endpointGive(b, item) {
+  if (!endpointAccepts(b, item)) return false;
+  const cfg = D.BUILDINGS[b.type];
+  if (cfg.seal || b.type === "storehouse") { if (!b.item) b.item = item; b.qty = (b.qty || 0) + 1; return true; }
+  if (cfg.gather) {
+    const st = (b.inv = b.inv || []).find(s => s.item === item);
+    if (st) st.qty++; else b.inv.push({ item, qty: 1 });
+    return true;
+  }
+  if (cfg.smelt) {
+    b.smeltPaid = b.smeltPaid || {};
+    b.smeltPaid[item] = (b.smeltPaid[item] || 0) + 1;
+    if (!Object.keys(smeltRemaining(b)).length) { b.queue = (b.queue || 0) + 1; b.smeltPaid = {}; }
+    return true;
+  }
+  return false;
+}
+// Wire a new link onto a lantern (also the hook for the future link UI).
+function addLink(areaKey, lanternId, fromId, toId) {
+  const lb = buildingById(areaKey, lanternId);
+  if (!lb || !D.BUILDINGS[lb.type].lantern) return false;
+  lb.links = lb.links || [];
+  lb.links.push({ from: fromId, to: toId });
+  return true;
 }
 
 // Remaining resources a ghost still needs: { item: qty }.
@@ -602,7 +781,8 @@ function demolishBuilding(areaKey, buildingId) {
   const x = (b.col + s.w / 2) * CELL, y = (b.row + s.h / 2) * CELL;
   if (b.built) {
     for (const [item, qty] of Object.entries(cfg.cost)) dropGround(areaKey, item, qty, x, y);
-    if (b.type === "storehouse" && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y);
+    if ((b.type === "storehouse" || cfg.seal) && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y);
+    for (const st of b.inv || []) if (st.qty > 0) dropGround(areaKey, st.item, st.qty, x, y);
     // a converter refunds every batch not yet delivered (queued + in-progress)
     // plus whatever was partially fed toward the next one
     if (cfg.smelt) {
@@ -616,6 +796,9 @@ function demolishBuilding(areaKey, buildingId) {
     for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y);
   }
   area.buildings.splice(i, 1);
+  // sever any wisp links that referenced the demolished endpoint
+  for (const lb of area.buildings)
+    if (lb.links) lb.links = lb.links.filter(l => l.from !== b.id && l.to !== b.id);
   return true;
 }
 
@@ -678,6 +861,22 @@ function dropFromHand(areaKey, x, y) {
       b.smeltPaid = {};
     }
     return res;
+  }
+  // Warding Seal: right-click TUNES it to the front hand item (consumes
+  // nothing) — from then on wisps only route that item through it.
+  if (b && b.built && D.BUILDINGS[b.type].seal) {
+    const first = window.GS.hand[0];
+    if (!first) return null;
+    if (b.item !== first.item) { b.item = first.item; b.qty = 0; b.lock = true; }
+    return { configured: first.item };
+  }
+  // Gathering Stone: right-click deposits the front item into its buffer.
+  if (b && b.built && D.BUILDINGS[b.type].gather) {
+    const first = window.GS.hand[0];
+    if (!first) return null;
+    if (!endpointGive(b, first.item)) return null;
+    handTake(first.item, 1);
+    return { fed: first.item };
   }
   if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
   if (b && !b.built) {
@@ -879,6 +1078,9 @@ function gameTick() {
         g.x >= fx0 && g.x <= fx1 && g.y >= fy0 && g.y <= fy1).length;
       if (inField >= gen.cap) return;
       dropGround(areaKey, gen.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
+      // generators can also surface rare finds (uncapped, chance-gated)
+      if (gen.rareDrop && Math.random() < gen.rareDrop.chance)
+        dropGround(areaKey, gen.rareDrop.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
       changed = true;
     });
 
@@ -919,6 +1121,67 @@ function gameTick() {
         b.smeltDoneAt = now + scfg.timeMs * scale;
         changed = true;
       }
+    }
+
+    // ---- Wisp logistics ------------------------------------------
+    for (const b of area.buildings) {
+      if (!b.built) continue;
+      const bCfg = D.BUILDINGS[b.type];
+      // Gathering Stones vacuum nearby ground items into their buffer.
+      if (bCfg.gather && gatherTotal(b) < bCfg.gather.cap) {
+        const c = buildingCenterPx(b);
+        const R = bCfg.gather.radius * CELL;
+        const taken = new Set();
+        for (const g of area.ground) {
+          const dx = c.x - g.x, dy = c.y - g.y, d = Math.hypot(dx, dy);
+          if (d > R) continue;
+          if (d <= 22) {
+            if (gatherTotal(b) < bCfg.gather.cap && endpointGive(b, g.item)) { taken.add(g.id); changed = true; }
+            continue;
+          }
+          const pull = 2 + (1 - d / R) * 4;
+          g.x += (dx / d) * Math.min(pull, d);
+          g.y += (dy / d) * Math.min(pull, d);
+          changed = true;
+        }
+        if (taken.size) area.ground = area.ground.filter(g => !taken.has(g.id));
+      }
+      // Wisp Lanterns service ONE link per beat, round-robin in added order.
+      if (bCfg.lantern && (b.links || []).length && now >= (b.nextSend || 0)) {
+        for (let k = 0; k < b.links.length; k++) {
+          const l = b.links[(b.connIdx + k) % b.links.length];
+          const src = buildingById(areaKey, l.from), dst = buildingById(areaKey, l.to);
+          if (!src || !dst || !src.built) continue;
+          const item = pickTransfer(src, dst);
+          if (!item) continue;
+          endpointTake(src, item);
+          const sc = buildingCenterPx(src);
+          area.wisps.push({ id: area.nextWispId++, x: sc.x, y: sc.y, item, toId: l.to,
+                            sp: (bCfg.lantern.speed || 120) / 10 });
+          b.connIdx = (b.connIdx + k + 1) % b.links.length;
+          b.nextSend = now + (bCfg.lantern.rateMs || 1000);
+          changed = true;
+          break;
+        }
+        if (now >= (b.nextSend || 0)) b.nextSend = now + 250;   // idle: retry soon
+      }
+    }
+    // Wisps carry their cargo to the link target. (Steady flight doesn't set
+    // `changed` — the UI animates visible wisps itself.)
+    if (area.wisps && area.wisps.length) {
+      const done = new Set();
+      for (const w of area.wisps) {
+        const dst = buildingById(areaKey, w.toId);
+        if (!dst || !dst.built) { dropGround(areaKey, w.item, 1, w.x, w.y); done.add(w.id); changed = true; continue; }
+        const t = buildingCenterPx(dst);
+        const dx = t.x - w.x, dy = t.y - w.y, d = Math.hypot(dx, dy);
+        const step = w.sp || 12;
+        if (d <= step) {
+          if (!endpointGive(dst, w.item)) dropGround(areaKey, w.item, 1, t.x, t.y + 24);
+          done.add(w.id); changed = true;
+        } else { w.x += (dx / d) * step; w.y += (dy / d) * step; }
+      }
+      if (done.size) area.wisps = area.wisps.filter(w => !done.has(w.id));
     }
 
     // Enemies: spawn up to the cap, then wander between random waypoints
@@ -1021,6 +1284,7 @@ window.ENGINE = {
   dropGround, grantDropsGround, settleGround, pickupNear, suctionStep, pushOutOfColliders,
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, smeltCfg, smeltRemaining,
+  buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, setupStarterNetwork,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,
