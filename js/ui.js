@@ -82,6 +82,88 @@ function drawItemIcon(key, cx, cy, px) {
   ctx.fillText(E.itemIcon(key), cx, cy);
   ctx.restore();
 }
+// ---- feedback juice: floating "+N" numbers + spark bursts ----------
+// Purely cosmetic, UI-only (no game state, nothing saved). Positions are in
+// WORLD px; drawFX renders them on top of everything and culls the dead.
+const floaters = [];   // { x, y, item, text, color, t0, ttl }
+const sparks = [];     // { x, y, vx, vy, r, color, t0, ttl }
+const FLOATER_CAP = 60, SPARK_CAP = 240;
+// gold for prized loot (essence/scales/pills), steel for metals, else green
+function fxColor(item) {
+  if (/essence|scale|pill|elixir|talisman|jade/.test(item)) return C.gold;
+  if (/iron|steel|star|tools|glass/.test(item)) return "#cbd5e1";
+  return C.accent;
+}
+function inViewWorld(wx, wy) {
+  const m = CELL;
+  return wx > cam.x - m && wx < cam.x + VIEW_W + m && wy > cam.y - m && wy < cam.y + VIEW_H + m;
+}
+function addFloater(wx, wy, text, color, item) {
+  if (floaters.length >= FLOATER_CAP) floaters.shift();
+  floaters.push({ x: wx, y: wy, item: item || null, text, color: color || C.accent, t0: Date.now(), ttl: 850 });
+}
+function addBurst(wx, wy, color, n) {
+  for (let i = 0; i < n && sparks.length < SPARK_CAP; i++) {
+    const a = Math.random() * Math.PI * 2, sp = 30 + Math.random() * 70;
+    sparks.push({ x: wx, y: wy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 30,
+      r: 1.5 + Math.random() * 2, color, t0: Date.now(), ttl: 380 + Math.random() * 260 });
+  }
+}
+function fxActive() { return floaters.length > 0 || sparks.length > 0; }
+// Called at the end of drawWorldInner (X/Y map world px -> screen px).
+function drawFX(now, X, Y, s) {
+  for (const sp of sparks) {                    // sparks first (under the numbers)
+    const age = now - sp.t0, k = age / sp.ttl, tsec = age / 1000;
+    const px = X(sp.x + sp.vx * tsec), py = Y(sp.y + sp.vy * tsec + 90 * tsec * tsec);
+    ctx.globalAlpha = Math.max(0, 1 - k);
+    ctx.fillStyle = sp.color;
+    ctx.beginPath(); ctx.arc(px, py, Math.max(0.5, sp.r * s * (1 - k * 0.4)), 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  for (const f of floaters) {
+    const age = now - f.t0, k = age / f.ttl;
+    const alpha = k < 0.12 ? k / 0.12 : 1 - (k - 0.12) / 0.88;
+    const sx = X(f.x), sy = Y(f.y - k * 30);    // drift upward over its life
+    ctx.globalAlpha = Math.max(0, alpha);
+    const isz = 15 * s;
+    if (f.item) drawItemIcon(f.item, sx, sy, isz);
+    ctx.fillStyle = f.color;
+    ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
+    ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 3 * s;
+    ctx.fillText(f.text, sx + isz * 0.62, sy);
+    ctx.shadowBlur = 0;
+  }
+  ctx.globalAlpha = 1;
+  for (let i = floaters.length - 1; i >= 0; i--) if (now - floaters[i].t0 >= floaters[i].ttl) floaters.splice(i, 1);
+  for (let i = sparks.length - 1; i >= 0; i--) if (now - sparks[i].t0 >= sparks[i].ttl) sparks.splice(i, 1);
+}
+// Engine drop hook: float a "+N" (and a sparkle for prized loot) at any drop
+// that lands on screen. Detached during offline catch-up (see engine).
+window.onGroundDrop = function (areaKey, item, qty, x, y) {
+  if (!E.isAreaUnlocked(areaKey)) return;
+  const p = regionPx(areaKey);
+  const wx = p.x + x, wy = p.y + y;
+  if (!inViewWorld(wx, wy)) return;
+  const col = fxColor(item);
+  addFloater(wx, wy - 6, "+" + qty, col, item);
+  if (col === C.gold) addBurst(wx, wy, col, 8);   // prized loot pops
+  requestGridPaint();
+};
+// Player-driven pickup pop at the cursor (green "+N"), plus a light sparkle.
+function fxPickup(region, lx, ly, n) {
+  if (n <= 0) return;
+  const p = regionPx(region);
+  const wx = p.x + lx, wy = p.y + ly;
+  addFloater(wx, wy - 8, "+" + n, C.accent);
+  addBurst(wx, wy, C.accent, 5);
+}
+// A small spark burst on a landed harvest/attack swing at a node/point.
+function fxSwing(region, lx, ly) {
+  const p = regionPx(region);
+  addBurst(p.x + lx, p.y + ly, "rgba(226,232,240,.9)", 4);
+}
+
 // Draw a "qty ICON  qty ICON…" needs list centred at (cx, cy); the caller
 // sets fillStyle. Optional prefix text ("Feed:") leads the line.
 function drawNeedsLine(entries, cx, cy, px, prefix) {
@@ -328,6 +410,7 @@ function animActive() {
   // buff countdowns in the top bar tick every second
   if (window.GS.buff && window.GS.buff.until > now) return true;
   if (window.GS.combatBuff && window.GS.combatBuff.until > now) return true;
+  if (fxActive()) return true;   // floating +N numbers / spark bursts in flight
   return false;
 }
 // Tick gate: repaint on "idle" ticks only when something animated is visible.
@@ -454,6 +537,9 @@ function drawWorldInner() {
     ctx.fillRect(px, py, B.w * CELL * s, B.h * CELL * s);
     ctx.strokeRect(px, py, B.w * CELL * s, B.h * CELL * s);
   }
+
+  // feedback juice on the very top (floating +N numbers, spark bursts)
+  if (fxActive()) drawFX(now, X, Y, s);
 }
 
 // LAYER 1 — flat ground: region tint, zone tints, frame.
@@ -1418,6 +1504,7 @@ function onMouseDown(e) {
       const t = Date.now();
       if (t - lastClickAt >= CLICK_COOLDOWN) { E.attackEnemy(p.region, en.id); lastClickAt = t; }
       else en.hitAt = t;   // too fast to count — still flinch
+      fxSwing(p.region, en.x, en.y);   // strike spark
       leftHeld = true; attackHeld = true; lastSwing = t;
       startLoop(); renderPlay();
       return;
@@ -1452,6 +1539,7 @@ function onMouseDown(e) {
       const t = Date.now();
       if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(p.region, node.id, false); lastClickAt = t; }
       else node.hitAt = t;   // too fast to count as damage — still show the hit
+      fxSwing(p.region, p.lx, p.ly);   // swing spark at the hit
       leftHeld = true; harvestHeld = true; lastSwing = t;
       startLoop(); renderPlay();
       return;
@@ -1459,7 +1547,8 @@ function onMouseDown(e) {
     const itemsNear = window.GS.areas[p.region].ground.some(g => Math.hypot(g.x - p.lx, g.y - p.ly) <= PICKUP_R);
     if (itemsNear) {
       leftHeld = true; pickupMode = true;
-      E.suctionStep(p.region, p.lx, p.ly, PICKUP_R);   // starts the pull; loop continues it
+      const s0 = E.suctionStep(p.region, p.lx, p.ly, PICKUP_R);   // starts the pull; loop continues it
+      fxPickup(p.region, p.lx, p.ly, s0.picked);
       startLoop(); renderPlay();
       return;
     }
@@ -1548,13 +1637,14 @@ function startLoop() {
       // gravity suction: items in range drift to the cursor, collect on arrival
       const s = E.suctionStep(rg, cursor.lx, cursor.ly, PICKUP_R);
       if (s.moved > 0 || s.picked > 0) dirty = true;
+      if (s.picked > 0) fxPickup(rg, cursor.lx, cursor.ly, s.picked);
     }
     if (leftHeld && withdrawSH) {
       // withdraw rate ramps 1/s -> 5/s over the first 0.2s of the hold
       const elapsed = Date.now() - withdrawStart;
       const rate = 1 + Math.min(elapsed / 200, 1) * 4;   // 1 .. 5 items per second
       if (Date.now() - lastWithdraw >= 1000 / rate) {
-        if (E.withdrawFromBuilding(withdrawSH, 1) > 0) dirty = true;
+        if (E.withdrawFromBuilding(withdrawSH, 1) > 0) { dirty = true; fxPickup(rg || cursor.region, cursor.lx, cursor.ly, 1); }
         lastWithdraw = Date.now();
       }
     }
@@ -1564,14 +1654,14 @@ function startLoop() {
       const ecfg = DD.AREAS[rg].enemies;
       if (ecfg && Date.now() - lastSwing >= (ecfg.attackMs || 400)) {
         const en = E.enemyAt(rg, cursor.lx, cursor.ly);
-        if (en) { E.attackEnemy(rg, en.id); lastSwing = Date.now(); dirty = true; }
+        if (en) { E.attackEnemy(rg, en.id); fxSwing(rg, en.x, en.y); lastSwing = Date.now(); dirty = true; }
       }
     }
     // hold-left over a node auto-swings at that node's own harvest rate
     if (harvestHeld && cursor.over && rg) {
       const n = nodeAtCell(rg, cursor.lrow, cursor.lcol);
       if (n && !n.deco && Date.now() - lastSwing >= E.harvestInterval(rg, n)) {
-        E.harvestNode(rg, n.id, true); lastSwing = Date.now(); dirty = true;
+        E.harvestNode(rg, n.id, true); fxSwing(rg, cursor.lx, cursor.ly); lastSwing = Date.now(); dirty = true;
       }
     }
     if (rightHeld && cursor.over && rg) {

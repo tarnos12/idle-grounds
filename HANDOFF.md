@@ -7,8 +7,8 @@
 
 READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
-disciples, full item-sink coverage, and offline/idle catch-up.** Current
-asset version: ?v=27.
+disciples, full item-sink coverage, offline/idle catch-up, and feedback
+juice (floating +N numbers / spark bursts).** Current asset version: ?v=28.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -24,8 +24,8 @@ picking:
 3. **Sprite art pass** — swap emoji for sheet art per the DESIGN.md
    wishlist (item icons already use assets/icons/*.png with emoji
    fallback; buildings/nodes/enemies are still emoji).
-4. Polish: particles/floating-+N feedback, a balance pass with
-   DATA.TEST.ENABLED=false. (Offline/idle catch-up is DONE — see below.)
+4. Polish: a balance pass with DATA.TEST.ENABLED=false; maybe SFX.
+   (Offline catch-up AND feedback juice are DONE — see below.)
 
 **Every git commit MUST update this file** (this pointer + the Last
 session summary below) so a fresh session knows the state; bump the ?v=
@@ -238,6 +238,21 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Feedback juice (?v=28).** Purely-cosmetic FX layer in `ui.js` (no game
+state, nothing saved): floating **"+N" numbers** with the item icon and
+**spark bursts**. Kept in world px; `drawFX` renders on top in
+`drawWorldInner` and culls the dead; `fxActive()` is folded into
+`animActive()` so paints keep coming while FX are in flight. Sources:
+`engine.dropGround` now calls an optional `window.onGroundDrop(area,item,
+qty,x,y)` hook → the UI floats a "+N" for any on-screen drop (harvest
+yields, converter output, disciple essence, fox loot), with a gold sparkle
+for prized loot (essence/scales/pills/jade); player pickups pop a green
+"+N" at the cursor; harvest/attack swings throw a small spark. On-screen &
+count-capped (60 floaters / 240 sparks). The hook is DETACHED during
+offline catch-up so a fast-forward never queues a blizzard. Verified in
+Chromium: real harvest-hold makes `needsLiveRepaint` true with lit pixels,
+no draw/page errors.
 
 **Offline / idle catch-up (?v=27).** The tab standing closed no longer
 wastes time. `state.js` stamps `lastSeen` into every save; on load

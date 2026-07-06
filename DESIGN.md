@@ -103,6 +103,11 @@ clock over the real gameTick/automationTick; capped 8h, bounded compute)
 and a "Welcome back" modal lists the gains. Only cap-bounded passive output
 accrues (generators, queued converters, wisps, disciples, automation).
 
+✅ Feedback juice (post-roadmap): cosmetic-only floating "+N" numbers and
+spark bursts (ui.js FX layer; engine dropGround exposes a window.onGroundDrop
+hook). Fires on harvest yields, crafts, loot, pickups and swings; gold
+sparkle for prized loot; suppressed during offline catch-up.
+
 Next frontiers: more regions, deeper prestige, sprite art (see wishlist).
 
 ## Building sprite wishlist (assets/buildings/<file>)
