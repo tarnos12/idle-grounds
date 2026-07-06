@@ -443,6 +443,9 @@ function dropGround(areaKey, item, qty, x, y) {
     const jx = clampPx(x + rand(-16, 16)), jy = clampPx(y + rand(-16, 16));
     area.ground.push({ id: area.nextGroundId++, item, x: jx, y: jy });
   }
+  // Feedback juice: the UI hooks this to float a "+N" at the drop. Detached
+  // during offline catch-up so a fast-forward doesn't queue a blizzard.
+  if (window.onGroundDrop) window.onGroundDrop(areaKey, item, qty, x, y);
 }
 
 function rollAmount(spec) { return spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1)); }
@@ -1654,8 +1657,10 @@ function runOfflineCatchup() {
   elapsed = Math.min(elapsed, OFFLINE_CAP_MS);
   const step = Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS));
   const before = countHeldItems();
+  const sink = window.onGroundDrop;             // silence "+N" floaters during the sim
   let virt = last, sinceAuto = 0;
   try {
+    window.onGroundDrop = null;
     Date.now = () => virt;                      // drive every timer off the virtual clock
     for (; virt < last + elapsed; virt += step) {
       gameTick();
@@ -1664,6 +1669,7 @@ function runOfflineCatchup() {
     }
   } finally {
     Date.now = realNow;                         // ALWAYS restore, even if a tick throws
+    window.onGroundDrop = sink;
   }
   const after = countHeldItems();
   const gained = {};
