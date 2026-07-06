@@ -1292,6 +1292,33 @@ function dismissDragonDialog() {
   render();   // catalog may have gained a freshly-taught building
 }
 
+// ---- offline / idle catch-up summary ------------------------
+// Format an elapsed span as "2h 13m", "13m", or "45s".
+function fmtAway(ms) {
+  const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m`;
+  return `${s}s`;
+}
+// Show the "Welcome back" modal with what accrued while the tab was closed.
+// `summary` is engine.runOfflineCatchup()'s return, or null (shows nothing).
+function showOfflineSummary(summary) {
+  if (!summary) return;
+  const gains = Object.entries(summary.gained || {}).sort((a, b) => b[1] - a[1]);
+  $("#welcome-away").textContent =
+    `You were away ${fmtAway(summary.elapsedMs)}. The grounds kept working:`;
+  const box = $("#welcome-gains");
+  if (gains.length) {
+    box.innerHTML = gains.map(([it, q]) =>
+      `<span class="wg-item">${iconHTML(it)} <b>+${q}</b> ${E.itemName(it)}</span>`).join("");
+  } else {
+    box.innerHTML = `<span class="wg-none">Nothing new was produced — set up generators, ` +
+      `converters or disciples to gather while you're gone.</span>`;
+  }
+  $("#welcome-modal").classList.remove("hidden");
+}
+function dismissWelcome() { $("#welcome-modal").classList.add("hidden"); }
+
 // ---- master render ------------------------------------------
 // Full render — repaints the canvas AND rebuilds event-driven DOM UI
 // (unlock buttons, build menu). Use on discrete events, not ticks.
@@ -1588,5 +1615,5 @@ function wireInput() {
 
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
-  dismissDragonDialog, openHelp, closeHelp,
+  dismissDragonDialog, openHelp, closeHelp, showOfflineSummary, dismissWelcome,
   _draw: () => drawWorld() };   // test hook

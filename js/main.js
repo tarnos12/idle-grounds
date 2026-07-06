@@ -28,9 +28,16 @@
   document.getElementById("ascend-later").onclick = () => {
     window.GS.ascendPrompt = false; window.UI.renderPlay();
   };
+  document.getElementById("welcome-close").onclick = () => window.UI.dismissWelcome();
+
+  // Offline / idle catch-up: replay the passive economy for the time the tab
+  // was closed, then show the "Welcome back" summary. Runs once, after the
+  // world is primed but before the live loops start.
+  const offline = window.ENGINE.runOfflineCatchup();
 
   window.UI.wireInput();
   window.UI.render();
+  window.UI.showOfflineSummary(offline);
 
   // Autosave: every 5s and on tab close. (state.js loads it back on boot.)
   setInterval(() => window.SAVE.saveState(), 5000);

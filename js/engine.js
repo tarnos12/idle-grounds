@@ -1608,8 +1608,75 @@ function automationTick() {
   return harvested;
 }
 
+// ---- Offline / idle catch-up --------------------------------
+// While the tab was closed the world stood still. On reload we replay the
+// PASSIVE economy for the gap by fast-forwarding a virtual clock through the
+// real gameTick/automationTick — so every producer (generators, converters,
+// wisps, disciples, automation) stays authoritative and can't drift from a
+// parallel formula. Everything offline can make is naturally bounded (field
+// caps, converter stock + fuel, disciple buns, building buffers), so this
+// can't run away. Bounded compute too: a very long absence just widens the
+// simulated step (generator intervals are >=1.5s, so a sub-second step stays
+// faithful). Returns { elapsedMs, gained:{item:qty} } or null if the gap was
+// too short to bother (a plain reload).
+const OFFLINE_CAP_MS = 8 * 3600 * 1000;   // credit at most 8h away
+const OFFLINE_MAX_TICKS = 45000;          // ~1s worst-case compute on load
+const OFFLINE_MIN_MS = 5000;              // ignore reloads / trivial gaps
+
+// Total units of each item that exist as loot or stock ANYWHERE — ground,
+// wisps in flight, and every building store (storehouse qty, gatherer/stoker
+// buffers, converter input stock, pavilion buns). Used to diff before/after.
+function countHeldItems() {
+  const tally = {};
+  const add = (it, q) => { if (it && q > 0) tally[it] = (tally[it] || 0) + q; };
+  for (const areaKey of Object.keys(D.AREAS)) {
+    const area = window.GS.areas[areaKey];
+    if (!area) continue;
+    for (const g of area.ground) add(g.item, 1);
+    for (const w of area.wisps || []) add(w.item, 1);
+    for (const b of area.buildings) {
+      if (b.item) add(b.item, b.qty || 0);                        // storehouse
+      for (const s of b.inv || []) add(s.item, s.qty);            // gatherer/stoker buffer
+      for (const it of Object.keys(b.stock || {})) add(it, b.stock[it]);  // converter stock
+      if (b.buns) add("spirit_bun", b.buns);                      // pavilion food
+    }
+  }
+  return tally;
+}
+
+function runOfflineCatchup() {
+  const realNow = Date.now;
+  const now = realNow();
+  const last = window.GS.lastSeen;
+  if (!Number.isFinite(last)) return null;      // pre-feature save: skip
+  let elapsed = now - last;
+  if (elapsed <= OFFLINE_MIN_MS) return null;   // just a reload
+  elapsed = Math.min(elapsed, OFFLINE_CAP_MS);
+  const step = Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS));
+  const before = countHeldItems();
+  let virt = last, sinceAuto = 0;
+  try {
+    Date.now = () => virt;                      // drive every timer off the virtual clock
+    for (; virt < last + elapsed; virt += step) {
+      gameTick();
+      sinceAuto += step;
+      if (sinceAuto >= 1000) { automationTick(); sinceAuto -= 1000; }
+    }
+  } finally {
+    Date.now = realNow;                         // ALWAYS restore, even if a tick throws
+  }
+  const after = countHeldItems();
+  const gained = {};
+  for (const it of Object.keys(after)) {
+    const d = after[it] - (before[it] || 0);
+    if (d > 0) gained[it] = d;
+  }
+  return { elapsedMs: elapsed, gained };
+}
+
 window.ENGINE = {
   itemName, itemIcon,
+  countHeldItems, runOfflineCatchup,
   handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
   depositToStorehouse, takeFromStorehouse,
   effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,

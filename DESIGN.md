@@ -95,8 +95,15 @@ Spirit Essence passively. Disciple Mastery tree node (+2 cap/level).
 Gives the Loom robe + Mill bun + Brewery wine chains a purpose. Tools/Glass/Rope are now advanced build materials (Pill Furnace needs
 tools, Star Anvil tools+glass, Talisman Atelier glass, Pavilion rope);
 Vitality Pill is a combat consumable (quaff -> Martial Vigor: +2 attack
-& 2x beast loot, 45s). Every produced item now has a consumer. Next
-frontiers: more regions, deeper prestige, sprite art (see wishlist).
+& 2x beast loot, 45s). Every produced item now has a consumer.
+
+✅ Offline / idle catch-up (post-roadmap): a closed tab keeps producing.
+On load the engine replays the passive economy for the away-time (virtual
+clock over the real gameTick/automationTick; capped 8h, bounded compute)
+and a "Welcome back" modal lists the gains. Only cap-bounded passive output
+accrues (generators, queued converters, wisps, disciples, automation).
+
+Next frontiers: more regions, deeper prestige, sprite art (see wishlist).
 
 ## Building sprite wishlist (assets/buildings/<file>)
 
