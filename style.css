@@ -392,6 +392,16 @@ img.item-ico { width: 1.2em; height: 1.2em; image-rendering: pixelated; vertical
 .ascend-box p { font-size: 14px; color: var(--muted); line-height: 1.55; margin: 6px 10px; }
 .ascend-row { display: flex; gap: 12px; justify-content: center; margin-top: 14px; }
 
+.welcome-box { text-align: center; border-color: var(--accent); box-shadow: 0 0 40px rgba(74,222,128,.22); }
+.welcome-box .dragon-ico { font-size: 52px; margin: 4px 0 8px; }
+.welcome-box h2 { margin: 0 0 6px; }
+.welcome-box #welcome-away { font-size: 15px; color: var(--muted); margin: 0 6px 14px; }
+#welcome-gains { display: flex; flex-wrap: wrap; gap: 8px 14px; justify-content: center; margin: 0 4px 18px; max-height: 40vh; overflow-y: auto; }
+.wg-item { font-size: 15px; display: inline-flex; align-items: center; gap: 4px; }
+.wg-item b { color: var(--accent); }
+.wg-none { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 8px; }
+.welcome-box .build-card { margin: 0 auto; }
+
 .win-box { text-align: center; }
 .win-box h1 { margin: 6px 0; font-size: 26px; }
 #win-stats { display: flex; flex-direction: column; gap: 8px; margin: 18px 0; font-size: 16px; }

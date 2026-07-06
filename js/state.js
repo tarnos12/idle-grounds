@@ -62,6 +62,9 @@ function makeInitialState() {
     ascendPrompt: false,
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
     quest: { idx: 0, hidden: false },
+    // Wall-clock of the last save — offline catch-up (engine) replays the
+    // passive economy for the gap since this on the next load.
+    lastSeen: Date.now(),
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0,
              foxKills: 0, buildingsBuilt: 0, upgradesApplied: 0,
              linksAdded: 0, recipeSwitches: 0, disciplesRecruited: 0 },
@@ -81,6 +84,7 @@ function saveState() {
   try {
     const s = JSON.parse(JSON.stringify(window.GS));
     s.build = { open: false, placing: null };   // never persist UI mode
+    s.lastSeen = Date.now();                     // for offline catch-up on reload
     localStorage.setItem(SAVE_KEY, JSON.stringify(s));
     return true;
   } catch (e) { return false; }
@@ -116,6 +120,8 @@ function loadState() {
     if (s.combatBuff && Number.isFinite(s.combatBuff.until)) fresh.combatBuff = s.combatBuff;
     fresh.ascensions = Number.isFinite(s.ascensions) ? s.ascensions : 0;
     fresh.ascendPrompt = !!s.ascendPrompt;
+    // null on pre-catch-up saves -> engine skips offline sim (no false credit)
+    fresh.lastSeen = Number.isFinite(s.lastSeen) ? s.lastSeen : null;
     // merge stats/quest onto defaults so counters added later start at 0
     if (s.stats) Object.assign(fresh.stats, s.stats);
     if (s.quest) Object.assign(fresh.quest, s.quest);

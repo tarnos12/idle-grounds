@@ -7,7 +7,8 @@
 
 READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
-disciples and full item-sink coverage.** Current asset version: ?v=24.
+disciples, full item-sink coverage, and offline/idle catch-up.** Current
+asset version: ?v=27.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -23,8 +24,8 @@ picking:
 3. **Sprite art pass** — swap emoji for sheet art per the DESIGN.md
    wishlist (item icons already use assets/icons/*.png with emoji
    fallback; buildings/nodes/enemies are still emoji).
-4. Polish: offline/idle catch-up on load, particles/floating-+N feedback,
-   a balance pass with DATA.TEST.ENABLED=false.
+4. Polish: particles/floating-+N feedback, a balance pass with
+   DATA.TEST.ENABLED=false. (Offline/idle catch-up is DONE — see below.)
 
 **Every git commit MUST update this file** (this pointer + the Last
 session summary below) so a fresh session knows the state; bump the ?v=
@@ -238,7 +239,23 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
-Hold actions now reach max speed in **0.2s** (?v=25): the right-hold
+**Offline / idle catch-up (?v=27).** The tab standing closed no longer
+wastes time. `state.js` stamps `lastSeen` into every save; on load
+`engine.runOfflineCatchup()` replays the passive economy for the gap by
+overriding `Date.now` to a virtual clock and fast-forwarding the REAL
+`gameTick`/`automationTick` (so generators, converters, wisps, disciples
+and automation stay authoritative — no parallel math to drift). Bounded:
+elapsed capped at 8h, tick count capped (~1s worst-case compute; step
+widens for long absences but stays under the ≥1.5s generator intervals),
+gaps <5s ignored (plain reloads). Everything offline can produce is already
+cap-limited (fields, converter stock+fuel, disciple buns), so it can't run
+away. A "Welcome back" modal (`#welcome-modal`, `UI.showOfflineSummary`)
+lists what accrued. `Date.now` is restored in a `finally` even if a tick
+throws. Verified in Chromium: 2h away → 548ms sim, clock restored, gains
+shown, no errors. Migration-safe: pre-feature saves have `lastSeen: null`
+→ sim skipped (no false credit).
+
+Prior — hold actions reach max speed in **0.2s** (?v=25): the right-hold
 drop/feed ramp went from "4/s for a full second, then 4→20/s over the next
 second" to a straight 4→20/s over the first 0.2s; the left-hold storehouse
 withdraw likewise ramps 1→5/s in 0.2s instead of 3s. One-line change in
