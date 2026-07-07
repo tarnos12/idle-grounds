@@ -108,7 +108,14 @@ spark bursts (ui.js FX layer; engine dropGround exposes a window.onGroundDrop
 hook). Fires on harvest yields, crafts, loot, pickups and swings; gold
 sparkle for prized loot; suppressed during offline catch-up.
 
-Next frontiers: more regions, deeper prestige, sprite art (see wishlist).
+✅ Deeper prestige — Ascension Shrine (post-roadmap): ascending grants
+Ascension Points (1 + unlocked regions beyond Center); a perk shop (☯ pill)
+spends them on permanent perks that persist across resets — Eternal Haste
+(global speed), Master's Hall (disciple cap), Long Slumber (offline hours),
+Fleet Hands (carry capacity). Perks in js/data.js PERKS; add more by wiring
+one point in engine.js each.
+
+Next frontiers: more regions, sprite art (see wishlist), more perks.
 
 ## Building sprite wishlist (assets/buildings/<file>)
 

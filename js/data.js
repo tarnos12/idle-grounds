@@ -554,6 +554,23 @@ const AUTOMATION_CLICKS = { 1: 1, 2: 2, 3: Infinity };
 const HAND_CAP = 20;   // max items carried in-hand at once
 
 // ------------------------------------------------------------------
+// Prestige perks (the Ascension Shrine). Each Ascension grants Ascension
+// Points (AP); AP buy PERMANENT perk levels that persist across every
+// future reset. `cost[i]` is the AP price of level i+1. Effects are wired
+// in engine.js (perkLevel/perkBonus).
+// ------------------------------------------------------------------
+const PERKS = [
+  { id: "haste",   name: "Eternal Haste",  icon: "⚡", max: 5, cost: [1, 2, 3, 5, 8],
+    desc: "-5% to every duration in the world (regrow, batches, wisp beats). Compounds with your +8%/ascension." },
+  { id: "hall",    name: "Master's Hall",  icon: "🏯", max: 5, cost: [1, 2, 3, 4, 6],
+    desc: "+1 disciple capacity at every Meditation Pavilion, per level." },
+  { id: "slumber", name: "Long Slumber",   icon: "🌙", max: 4, cost: [1, 2, 4, 6],
+    desc: "+2h to the offline catch-up window per level (base 8h)." },
+  { id: "hands",   name: "Fleet Hands",    icon: "🤲", max: 5, cost: [1, 2, 3, 4, 6],
+    desc: "+5 permanent carrying capacity per level (on top of Hand Size)." },
+];
+
+// ------------------------------------------------------------------
 // TESTING CONVENIENCES — flip ENABLED to false to restore GDD balance.
 // ------------------------------------------------------------------
 const TEST = {
@@ -565,5 +582,5 @@ const TEST = {
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
   AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP,
-  UPGRADE_TREE, QUESTS, HAND_CAP, TEST,
+  UPGRADE_TREE, QUESTS, HAND_CAP, PERKS, TEST,
 };

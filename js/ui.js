@@ -433,6 +433,17 @@ function renderTopBar() {
     parts.push(`${iconHTML(DD.VITALITY.item)} ${DD.VITALITY.name} ${Math.ceil((cb.until - now) / 1000)}s`);
   if (parts.length) { bp.classList.remove("hidden"); bp.innerHTML = parts.join(" &nbsp; "); }
   else bp.classList.add("hidden");
+  // Ascension Shrine pill: appears once you've ascended (or hold AP); shows
+  // spendable Ascension Points and pulses when something is affordable.
+  const pb = $("#perk-btn"), ap = window.GS.ascendPoints || 0;
+  const showPerks = (window.GS.ascensions || 0) > 0 || ap > 0;
+  pb.classList.toggle("hidden", !showPerks);
+  if (showPerks) {
+    $("#perk-ap").textContent = ap;
+    pb.classList.toggle("has-ap", DD.PERKS.some(p => {
+      const c = E.perkCost(p.id); return c != null && ap >= c;
+    }));
+  }
   $("#build-btn").classList.toggle("on", window.GS.build.open);
   $("#demolish-btn").classList.toggle("on", demolishMode);
   $("#debug-btn").classList.toggle("on", debugShow);
@@ -1357,9 +1368,39 @@ function syncAscendModal() {
   const show = !!window.GS.ascendPrompt;
   if (show) $("#ascend-count").textContent =
     `You have ascended ${window.GS.ascensions || 0} time${(window.GS.ascensions || 0) === 1 ? "" : "s"}. ` +
-    `Ascending now grants a permanent +8% speed to everything — and begins the grounds anew.`;
+    `Ascending now grants +8% permanent speed AND ${E.ascendReward()} Ascension Point` +
+    `${E.ascendReward() === 1 ? "" : "s"} to spend at the Shrine — then begins the grounds anew.`;
   modal.classList.toggle("hidden", !show);
 }
+
+// ---- Ascension Shrine (prestige perk shop) -------------------
+// Spend Ascension Points (earned by ascending) on permanent perks that
+// persist through every future reset.
+function renderPerkShop() {
+  const ap = window.GS.ascendPoints || 0;
+  $("#perk-ap-line").innerHTML = `<b>${ap}</b> Ascension Point${ap === 1 ? "" : "s"} to spend` +
+    ` &nbsp;·&nbsp; ${window.GS.ascensions || 0} ascension${(window.GS.ascensions || 0) === 1 ? "" : "s"}`;
+  const list = $("#perk-list");
+  list.innerHTML = "";
+  for (const perk of DD.PERKS) {
+    const lvl = E.perkLevel(perk.id), cost = E.perkCost(perk.id);
+    const maxed = cost == null, afford = !maxed && ap >= cost;
+    const card = el("div", "perk-card" + (maxed ? " maxed" : afford ? " afford" : ""));
+    card.innerHTML =
+      `<div class="pk-ico">${perk.icon}</div>` +
+      `<div class="pk-body"><div class="pk-name">${perk.name} ` +
+        `<span class="pk-lv">${lvl}/${perk.max}</span></div>` +
+        `<div class="pk-desc">${perk.desc}</div></div>` +
+      `<button class="pk-buy build-card"${afford ? "" : " disabled"}>` +
+        (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
+    if (!maxed && afford) card.querySelector(".pk-buy").onclick = () => {
+      if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); }
+    };
+    list.appendChild(card);
+  }
+}
+function openPerkShop() { renderPerkShop(); $("#perk-modal").classList.remove("hidden"); }
+function closePerkShop() { $("#perk-modal").classList.add("hidden"); }
 
 // ---- dragon story dialog ------------------------------------
 // A stage-up stores its line in GS.dragon.dialog; the modal shows until the
@@ -1706,4 +1747,5 @@ function wireInput() {
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
   dismissDragonDialog, openHelp, closeHelp, showOfflineSummary, dismissWelcome,
+  openPerkShop, closePerkShop,
   _draw: () => drawWorld() };   // test hook

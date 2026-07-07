@@ -29,6 +29,8 @@
     window.GS.ascendPrompt = false; window.UI.renderPlay();
   };
   document.getElementById("welcome-close").onclick = () => window.UI.dismissWelcome();
+  document.getElementById("perk-btn").onclick = () => window.UI.openPerkShop();
+  document.getElementById("perk-close").onclick = () => window.UI.closePerkShop();
 
   // Offline / idle catch-up: replay the passive economy for the time the tab
   // was closed, then show the "Welcome back" summary. Runs once, after the

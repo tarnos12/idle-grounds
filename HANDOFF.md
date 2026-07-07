@@ -7,8 +7,9 @@
 
 READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
-disciples, full item-sink coverage, offline/idle catch-up, and feedback
-juice (floating +N numbers / spark bursts).** Current asset version: ?v=28.
+disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
+and deeper prestige (Ascension Shrine perk shop).** Current asset version:
+?v=29.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -18,14 +19,15 @@ link-editor UI and fuel system, dragon pills + timed blessings, disciples
 
 Remaining directions are NEW design scope — confirm with the user before
 picking:
-1. **Deeper prestige** — an ascension-point shop for permanent perks
-   (currently ascension only grants a flat +8% global speed).
-2. **More regions** — the map has room; each could add unique resources.
-3. **Sprite art pass** — swap emoji for sheet art per the DESIGN.md
+1. **More regions** — the map has room; each could add unique resources.
+2. **Sprite art pass** — swap emoji for sheet art per the DESIGN.md
    wishlist (item icons already use assets/icons/*.png with emoji
    fallback; buildings/nodes/enemies are still emoji).
+3. **More prestige perks** — the Ascension Shrine (js/data.js `PERKS`) has
+   4 perks; add more (yield %, wisp haste, combat, cheaper unlocks…) — each
+   needs one wiring point in engine.js like the existing ones.
 4. Polish: a balance pass with DATA.TEST.ENABLED=false; maybe SFX.
-   (Offline catch-up AND feedback juice are DONE — see below.)
+   (Offline catch-up, feedback juice AND deeper prestige are DONE — below.)
 
 **Every git commit MUST update this file** (this pointer + the Last
 session summary below) so a fresh session knows the state; bump the ?v=
@@ -238,6 +240,21 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Deeper prestige — Ascension Shrine (?v=29).** Ascending now grants
+**Ascension Points** (AP: `1 + unlocked regions beyond Center`, so 1–4/run)
+on top of the +8% speed, spent in a perk shop on **permanent** upgrades
+that persist across every reset. Perks (`DATA.PERKS`, wired in engine):
+Eternal Haste (−5%/lvl to all durations, via `prestigeFactor`), Master's
+Hall (+1 disciple cap/lvl, via `rosterCap`), Long Slumber (+2h offline
+window/lvl, via `offlineCapMs`), Fleet Hands (+5 hand cap/lvl, live + on
+fresh runs). State: `GS.ascendPoints` + `GS.perks{id:lvl}`, saved and
+migrated (levels clamped to config max, unknown ids dropped, carried
+through `ascend()`). UI: a gold ☯ top-bar pill (shows AP, glows when
+something's affordable) opens `#perk-modal` (`UI.openPerkShop`). Engine
+helpers: `perkLevel/perkCost/buyPerk/ascendReward/offlineCapMs`. Verified
+headless (19 checks: buy/effects/max/ascension-carry/save-migrate) AND in
+Chromium (pill → open → buy → live update → close, no errors).
 
 **Feedback juice (?v=28).** Purely-cosmetic FX layer in `ui.js` (no game
 state, nothing saved): floating **"+N" numbers** with the item icon and
