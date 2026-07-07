@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=33.
+?v=34.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,25 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Spirit Grove region — built by an in-session agent team (?v=34).** A new
+pannable region at world grid **(0,1)** (bottom-left, below the Farm),
+unlocked for **12 rice + 12 wood**. It **completes the 3x2 map** — the last
+void corner is filled, so every grid cell is now a real region. A gathering
+region with **no new items**: herb bushes spawn **Spirit Herb** and bamboo
+stalks spawn **Bamboo**, two previously-scarce mid-game inputs (Spirit Herb
+feeds Robe/Qi Elixir/Vitality/Verdant Pill; Bamboo feeds Paper and is a
+fuel), relieving two supply bottlenecks. Region logic stays generic over
+`WORLD.regions`/`AREAS`, so **no engine change**. Files: `js/data.js`
+(AREAS.grove with herbbush/bamboostalk spawners, TIER_SPRITES, WORLD region
++ unlockCost + wiring), `js/state.js` (`world.unlocked.grove:false` default),
+`js/ui.js` (grove region colour) + a new **`.edge-arrow.down-left`** unlock-
+button position in `style.css`, `?v=34`. **Workflow:** manager + three
+worktree subagents (data/state, docs, test); manager owned the coupled
+ui/css integration and merged on the default branch. Verified headless
+(grove loads with 160 herbbush+bamboostalk nodes, unlock for the scaled
+cost, spirit_herb/bamboo drops) + a Chromium render of the (0,1) region and
+its bottom-left unlock button, no draw errors.
 
 **Volcano region — built by an in-session agent team (?v=33).** A new
 pannable region at world grid **(2,1)** (bottom-right, below the Mine),

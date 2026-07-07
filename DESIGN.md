@@ -130,7 +130,15 @@ yields **Obsidian** (new item) from obsidian rocks and **Firestone**
 **Obsidian Glass** (1 obsidian → 2 glass — obsidian is volcanic glass),
 giving the region an immediate sink into the existing glass economy.
 
-Next frontiers: sprite art (see wishlist), more perks, more regions.
+✅ Spirit Grove region (post-roadmap): a new pannable region at world grid
+(0,1) — bottom-left, directly below the Farm — unlocked for 12 rice + 12
+wood. It **completes the 3x2 map** (no more void corners). A gathering
+region: herb bushes yield **Spirit Herb** and bamboo stalks yield **Bamboo**
+— both existing, previously-scarce mid-game inputs (Spirit Herb feeds
+Robe/Qi Elixir/Vitality/Verdant Pill; Bamboo feeds Paper and doubles as a
+fuel), so it relieves two bottlenecks with **no new items**.
+
+Next frontiers: sprite art (see wishlist), more perks.
 
 ## Building sprite wishlist (assets/buildings/<file>)
 

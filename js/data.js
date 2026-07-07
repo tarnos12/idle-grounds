@@ -76,6 +76,7 @@ const TIER_SPRITES = {
   mine:    ["🪨"],
   fishing: ["🐟"],
   volcano: ["🌋"],
+  grove:   ["🎋"],
 };
 
 // d(item, min, max) -> drop spec. max defaults to min (fixed amount).
@@ -213,6 +214,19 @@ const AREAS = {
         swingMs: 600, sprite: "🌋", hits: 4, regrow: 20, drops: [d("firestone", 1, 1)] },
     ],
     tiers: [ { name: "Obsidian", hits: 3, drops: [d("obsidian", 1, 2)], timer: 14 } ],
+  },
+  grove: {
+    name: "Spirit Grove", icon: "🎋", verb: "Gather", actionIcon: "🌿",
+    base: "spirit_herb", noBuild: "centre",
+    speedLabel: "Regrow Speed", timerLabel: "Regrow",
+    spawners: [
+      { kind: "herbbush", zone: "centre", sizes: [1], target: 10, interaction: "chop",
+        swingMs: 350, sprite: "🌿", hits: 2, regrow: 16,
+        perHit: [d("spirit_herb", 1)], drops: [d("spirit_herb", 1, 2)] },
+      { kind: "bamboostalk", zone: "centre", sizes: [1, 2], target: 6, interaction: "break",
+        swingMs: 400, sprite: "🎋", hits: 3, regrow: 18, drops: [d("bamboo", 1, 2)] },
+    ],
+    tiers: [ { name: "Spirit Herb", hits: 2, drops: [d("spirit_herb", 1, 2)], timer: 16 } ],
   },
 };
 
@@ -433,16 +447,18 @@ const WORLD = {
     mine:    { rx: 2, ry: 0 },   // right of centre
     fishing: { rx: 1, ry: 1 },   // below centre
     volcano: { rx: 2, ry: 1 },   // below the mine
+    grove:   { rx: 0, ry: 1 },   // below the farm
   },
   cols: 3, rows: 2,              // region-grid extents (bottom corners = void)
   // which viewport edge hosts a locked region's unlock button
-  unlockSide: { farm: "left", mine: "right", fishing: "down", volcano: "up" },
+  unlockSide: { farm: "left", mine: "right", fishing: "down", volcano: "up", grove: "down-left" },
   // resource cost to open each region (paid from hand, so <= hand cap).
   unlockCost: {
     farm:    { wood: 10 },
     mine:    { wood: 16 },
     fishing: { wood: 20 },
     volcano: { iron_bar: 3 },
+    grove:   { wheat: 12, wood: 12 },
   },
 };
 

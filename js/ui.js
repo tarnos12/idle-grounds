@@ -41,7 +41,7 @@ const C = {
   void: "#161b16", gridLine: "rgba(255,255,255,.05)",
   text: "#e6edf3", muted: "#94a3b8", accent: "#4ade80", accentDk: "#22a35a",
   gold: "#fbbf24", danger: "#f87171", line: "#3c4651", panel: "#2b333c", panel2: "#37414d",
-  region: { center: "#25351f", farm: "#3a3318", mine: "#2c2c33", fishing: "#16323b", volcano: "#3a1c17" },
+  region: { center: "#25351f", farm: "#3a3318", mine: "#2c2c33", fishing: "#16323b", volcano: "#3a1c17", grove: "#1e3a2b" },
   zone: "rgba(74,222,128,.05)", zoneEdge: "rgba(74,222,128,.18)",
   frame: "rgba(74,222,128,.30)",
   built: "rgba(60,70,80,.95)", ghost: "rgba(74,222,128,.10)",
