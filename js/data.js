@@ -603,6 +603,10 @@ const PERKS = [
     desc: "+2h to the offline catch-up window per level (base 8h)." },
   { id: "hands",   name: "Fleet Hands",    icon: "🤲", max: 5, cost: [1, 2, 3, 4, 6],
     desc: "+5 permanent carrying capacity per level (on top of Hand Size)." },
+  { id: "frugal",  name: "Frugal Frontier", icon: "🧭", max: 3, cost: [2, 4, 6],
+    desc: "Region unlock costs -20% per level." },
+  { id: "ember",   name: "Ember Heart",     icon: "🔥", max: 4, cost: [2, 3, 5, 7],
+    desc: "Burners consume fuel 15% slower per level." },
 ];
 
 // ------------------------------------------------------------------

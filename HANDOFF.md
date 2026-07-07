@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=34.
+?v=35.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,18 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Prestige perks + awakening reward (?v=35, agent team).** Two new Ascension
+Shrine perks in `DATA.PERKS`: **Frugal Frontier** (region unlock costs
+−20%/level, max 3 — wired in engine `areaUnlockCost`) and **Ember Heart**
+(burners consume fuel 15% slower/level, max 4 — wired in `burnFuel`), each a
+pure passive multiplier via `perkLevel` (no `buyPerk` change). **Awakening
+blessing:** fully awakening the dragon (`GS.won`) now grants a permanent
+~11% global speed boost, folded into `prestigeFactor()` (`×0.9` when won),
+so finishing the dragon story finally pays off mechanically. Built as an
+agent team (data+engine slice, test slice); verified headless (6 perks;
+Frugal drops mine unlock 8→6 wood at lvl 2; prestigeFactor ×0.9 on win) and
+`node --check`. (Stats panel lands next at ?v=36.)
 
 **Spirit Grove region — built by an in-session agent team (?v=34).** A new
 pannable region at world grid **(0,1)** (bottom-left, below the Farm),

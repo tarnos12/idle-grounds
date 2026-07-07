@@ -153,7 +153,8 @@ function offlineCapMs() { return (8 + 2 * perkLevel("slumber")) * 3600 * 1000; }
 // (regrowth, batches, lantern beats). Compounds multiplicatively, and the
 // Eternal Haste perk shaves a further 5% per level.
 function prestigeFactor() {
-  return Math.pow(0.92, window.GS.ascensions || 0) * Math.pow(0.95, perkLevel("haste"));
+  // Awakened dragon's blessing: a permanent ~11% global speedup.
+  return Math.pow(0.92, window.GS.ascensions || 0) * Math.pow(0.95, perkLevel("haste")) * (window.GS.won ? 0.9 : 1);
 }
 
 // Is a Dragon Shrine standing anywhere? (blessings +60s, scales 2x rate)
@@ -1317,7 +1318,8 @@ function areaUnlockCost(areaKey) {
   const base = D.WORLD.unlockCost[areaKey];
   if (!base) return null;
   const out = {};
-  for (const [item, qty] of Object.entries(base)) out[item] = scaled(qty);
+  const frugal = Math.pow(0.8, perkLevel("frugal"));   // -20% per level
+  for (const [item, qty] of Object.entries(base)) out[item] = Math.max(1, Math.ceil(scaled(qty) * frugal));
   return out;
 }
 
@@ -1437,7 +1439,7 @@ function gameTick() {
       // (silent — the UI animates on-screen burners via animActive).
       if (D.BUILDINGS[b.type].fuel) {
         if (b.smeltDoneAt && now < b.smeltDoneAt) {
-          burnFuel(b, now - (b.fuelBurnAt || now));
+          burnFuel(b, (now - (b.fuelBurnAt || now)) * Math.pow(0.85, perkLevel("ember")));
         }
         b.fuelBurnAt = now;   // keep current so idle time never burns a backlog
       }
