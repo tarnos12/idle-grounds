@@ -207,13 +207,27 @@ function loadState() {
           delete b.queue;
           for (const it of Object.keys(b.stock)) if (!LIVE.has(it)) delete b.stock[it];
           if (!Number.isFinite(b.smeltDoneAt) || b.smeltDoneAt < 0) b.smeltDoneAt = 0;
-          // burners: recipes no longer take wood — stocked wood becomes fuel
+          // burners now hold a VISIBLE fuel queue (b.fuelQ) instead of a
+          // scalar gauge. Convert any legacy scalar `b.fuel` (+ stocked wood,
+          // which recipes no longer take) into wood fuel items.
           if (window.DATA.BUILDINGS[b.type].fuel) {
-            if (!Number.isFinite(b.fuel) || b.fuel < 0) b.fuel = 0;
-            if (b.stock.wood > 0) {
-              b.fuel = Math.min(window.DATA.FUEL_CAP, b.fuel + b.stock.wood * window.DATA.FUEL.wood);
-              delete b.stock.wood;
+            const F = window.DATA.FUEL, SLOTS = window.DATA.FUEL_SLOTS;
+            let ms = (Number.isFinite(b.fuel) && b.fuel > 0) ? b.fuel : 0;
+            if (b.stock.wood > 0) { ms += b.stock.wood * F.wood; delete b.stock.wood; }
+            delete b.fuel;
+            let q = Array.isArray(b.fuelQ)
+              ? b.fuelQ.filter(f => f && F[f.item] != null && Number.isFinite(f.rem) && f.rem > 0)
+                       .map(f => ({ item: f.item, rem: f.rem, total: F[f.item] }))
+              : [];
+            if (!q.length && ms > 0) {
+              // pack legacy ms into as few slots as possible (biggest unit first)
+              const units = ["firestone", "charcoal", "wood"].filter(u => F[u]).sort((a, c) => F[c] - F[a]);
+              for (const u of units)
+                while (ms >= F[u] && q.length < SLOTS) { q.push({ item: u, rem: F[u], total: F[u] }); ms -= F[u]; }
+              if (ms > 0 && q.length < SLOTS) q.push({ item: "wood", rem: Math.min(ms, F.wood), total: F.wood });
             }
+            b.fuelQ = q.slice(0, SLOTS);
+            if (!Number.isFinite(b.fuelBurnAt)) b.fuelBurnAt = 0;
           }
         }
       }

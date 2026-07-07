@@ -115,6 +115,14 @@ spends them on permanent perks that persist across resets — Eternal Haste
 Fleet Hands (carry capacity). Perks in js/data.js PERKS; add more by wiring
 one point in engine.js each.
 
+✅ Converter UI overhaul (post-roadmap): burners show a visible 2x2 fuel
+rack (FIFO — fed at the front, burned from the back right-to-left, "No fuel"
+label when empty); every converter's face shows centred input icons
+(have/need), a result icon with the crafts the current stock can still make
+(fuel ignored), and a 1-cell progress bar. Recipe picker is an icon-grid
+popup with a bottom-right hover detail. Fuel is a machine resource, not a
+recipe input.
+
 Next frontiers: more regions, sprite art (see wishlist), more perks.
 
 ## Building sprite wishlist (assets/buildings/<file>)

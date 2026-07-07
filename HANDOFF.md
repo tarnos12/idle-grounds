@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=30.
+?v=31.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,26 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Visible fuel racks + converter crafting face (?v=31).** Burners
+(Forge/Kiln/Star Anvil/Pill Furnace) replaced their invisible scalar
+`b.fuel` gauge with a **visible FIFO queue** `b.fuelQ=[{item,rem,total}]`:
+fuel is ADDED at the front, BURNED from the back (oldest finishes first),
+max `DATA.FUEL_SLOTS` (4). Engine helpers `fuelQueue/fuelTotal/fuelSpace/
+addFuelItem/burnFuel`; a batch needs `fuelTotal>=cost` to start and burns
+1:1 with elapsed time while running (gameTick, silent — animated on-screen
+via animActive). Fuel is NOT a recipe input (iron bars need no wood). Wisp
+delivery + Furnace Spirit stoking now push into the queue. On the map: a
+**2x2 fuel rack** drawn left of the building (`drawFuelRack`) — items in
+slots, the back one burning right-to-left (clip on rem/total), "No fuel"
+label centred above when empty. The building face (`drawConverterFace`) is
+now centred (fuel rack excluded): a row of input icons (top-left = in
+stock, bottom-right = need/craft), a result icon (bottom-right =
+`craftsPossible`, fuel ignored), and a 1-cell centred progress bar. Also:
+the Altar shows "Select an upgrade" when no job is picked. Saves migrate
+(legacy scalar fuel + stray stocked wood → queue, biggest-unit packing).
+Verified: 20 engine checks + screenshots (rack, face have/need/crafts,
+altar text), no draw errors.
 
 **Recipe picker redesign (?v=30).** The converter recipe menu
 (`#recipe-menu`, `renderRecipeMenu` in ui.js) is now a floating popup: a

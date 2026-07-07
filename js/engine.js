@@ -769,6 +769,32 @@ function recipeOf(b) {
   const list = D.BUILDINGS[b.type] && D.BUILDINGS[b.type].recipes;
   return (list && list[b.recipe || 0]) || null;
 }
+
+// ---- Burner fuel: a visible FIFO queue of discrete fuel items -------
+// b.fuelQ = [{ item, rem, total }] — newest at index 0 (front), oldest at
+// the END (back). Fuel is ADDED at the front and BURNED from the back, so
+// the item put in first finishes first. Max D.FUEL_SLOTS items (the 2x2
+// rack). fuelBurnAt marks the last time we charged burn against the batch.
+function fuelQueue(b) { return (b.fuelQ = b.fuelQ || []); }
+function fuelTotal(b) { return fuelQueue(b).reduce((s, f) => s + f.rem, 0); }
+function fuelSpace(b) { return D.FUEL_SLOTS - fuelQueue(b).length; }
+// Add one fuel item at the front. Returns true if the rack had room.
+function addFuelItem(b, item) {
+  if (D.FUEL[item] == null || fuelSpace(b) <= 0) return false;
+  fuelQueue(b).unshift({ item, rem: D.FUEL[item], total: D.FUEL[item] });
+  return true;
+}
+// Burn `ms` from the back (oldest) items, popping spent ones so the next
+// one only starts once the current finishes.
+function burnFuel(b, ms) {
+  const q = fuelQueue(b);
+  while (ms > 0 && q.length) {
+    const back = q[q.length - 1];
+    const take = Math.min(ms, back.rem);
+    back.rem -= take; ms -= take;
+    if (back.rem <= 0.5) q.pop();
+  }
+}
 // Switch a converter's active recipe. Everything it holds — the input
 // stock AND the batch in progress — drops on the ground first.
 function setRecipe(areaKey, buildingId, idx) {
@@ -826,6 +852,16 @@ function canStartBatch(b) {
   b.stock = b.stock || {};
   return Object.entries(cfg.inputs).every(([it, q]) => (b.stock[it] || 0) >= q);
 }
+// How many batches the CURRENT stock could make if no more is fed (fuel is
+// deliberately ignored — it answers "what will these materials yield").
+function craftsPossible(b) {
+  const cfg = recipeOf(b);
+  if (!cfg) return 0;
+  b.stock = b.stock || {};
+  let n = Infinity;
+  for (const [it, q] of Object.entries(cfg.inputs)) n = Math.min(n, Math.floor((b.stock[it] || 0) / q));
+  return Number.isFinite(n) ? n : 0;
+}
 
 // ---- Wisp logistics ------------------------------------------
 // Endpoints are buildings: gathering stones (mixed buffer), warding seals
@@ -852,8 +888,8 @@ function endpointAccepts(b, item) {
   if (cfg.roster) return foodValue(b, item) > 0 && (b.buns || 0) < cfg.roster.foodCap;
   if (cfg.recipes) {
     const rec = recipeOf(b);
-    // burners drink fuel items straight into their gauge
-    if (cfg.fuel && D.FUEL[item] != null) return (b.fuel || 0) < D.FUEL_CAP;
+    // burners drink fuel items into their visible rack (max FUEL_SLOTS)
+    if (cfg.fuel && D.FUEL[item] != null) return fuelSpace(b) > 0;
     if (!rec || rec.inputs[item] == null) return false;
     b.stock = b.stock || {};
     return (b.stock[item] || 0) < (rec.stockCap || 20);
@@ -898,10 +934,7 @@ function endpointGive(b, item) {
   }
   if (cfg.roster) { b.buns = Math.min(cfg.roster.foodCap, (b.buns || 0) + foodValue(b, item)); return true; }
   if (cfg.recipes) {
-    if (cfg.fuel && D.FUEL[item] != null) {
-      b.fuel = Math.min(D.FUEL_CAP, (b.fuel || 0) + D.FUEL[item]);
-      return true;
-    }
+    if (cfg.fuel && D.FUEL[item] != null) return addFuelItem(b, item);
     b.stock = b.stock || {};
     b.stock[item] = (b.stock[item] || 0) + 1;
     return true;
@@ -1109,15 +1142,15 @@ function dropFromHand(areaKey, x, y) {
     b.stock = b.stock || {};
     const bCfg = D.BUILDINGS[b.type];
     const first = window.GS.hand[0];
-    if (bCfg.fuel && first && D.FUEL[first.item] != null && (b.fuel || 0) < D.FUEL_CAP) {
+    if (bCfg.fuel && first && D.FUEL[first.item] != null && fuelSpace(b) > 0) {
       handTake(first.item, 1);
-      b.fuel = Math.min(D.FUEL_CAP, (b.fuel || 0) + D.FUEL[first.item]);
+      addFuelItem(b, first.item);
       return { fed: first.item };
     }
     const res = feedNeeds(smeltSpace(b), b.stock);
     if (res) return res;
     // nothing the recipe needs — bring carried fuel forward instead
-    if (bCfg.fuel && (b.fuel || 0) < D.FUEL_CAP)
+    if (bCfg.fuel && fuelSpace(b) > 0)
       for (const it of Object.keys(D.FUEL))
         if (handCount(it) > 0) { handMoveToFront(it); return { reordered: it }; }
     return null;
@@ -1392,14 +1425,21 @@ function gameTick() {
         let cost = scfg.timeMs * scale * prestigeFactor();
         // Ember Blessing: burners work twice as fast (and burn half the fuel)
         if (D.BUILDINGS[b.type].fuel && buffActive("ember_pill")) cost *= 0.5;
-        // burners spend fuel equal to the batch duration; no fuel = no work
-        if (D.BUILDINGS[b.type].fuel) {
-          if ((b.fuel || 0) < cost) continue;
-          b.fuel -= cost;
-        }
+        // burners need enough fuel to see the whole batch through; it's spent
+        // gradually below (matching the burn animation), not up front.
+        if (D.BUILDINGS[b.type].fuel && fuelTotal(b) < cost) continue;
         for (const [it, q] of Object.entries(scfg.inputs)) b.stock[it] -= q;
         b.smeltDoneAt = now + cost;
+        b.fuelBurnAt = now;
         changed = true;
+      }
+      // Burn fuel from the back of the rack in real time while a batch runs
+      // (silent — the UI animates on-screen burners via animActive).
+      if (D.BUILDINGS[b.type].fuel) {
+        if (b.smeltDoneAt && now < b.smeltDoneAt) {
+          burnFuel(b, now - (b.fuelBurnAt || now));
+        }
+        b.fuelBurnAt = now;   // keep current so idle time never burns a backlog
       }
     }
 
@@ -1459,13 +1499,13 @@ function gameTick() {
         const R = bCfg.stoker.radius * CELL;
         for (const t of area.buildings) {
           if (!t.built || !D.BUILDINGS[t.type].fuel) continue;
-          if ((t.fuel || 0) >= 20000) continue;
+          if (fuelSpace(t) <= 0) continue;   // rack full
           const tc = buildingCenterPx(t);
           if (Math.hypot(tc.x - c.x, tc.y - c.y) > R + 1.5 * CELL) continue;
           const st = (b.inv || []).slice().sort((s1, s2) => D.FUEL[s2.item] - D.FUEL[s1.item])[0];
           if (!st) break;
           st.qty--; if (st.qty <= 0) b.inv = b.inv.filter(s => s !== st);
-          t.fuel = Math.min(D.FUEL_CAP, (t.fuel || 0) + D.FUEL[st.item]);
+          addFuelItem(t, st.item);
           changed = true;
         }
       }
@@ -1726,6 +1766,7 @@ window.ENGINE = {
   dropGround, grantDropsGround, settleGround, pickupNear, suctionStep, pushOutOfColliders,
   buildingCatalog, buildingSize, buildingFootprint, canPlaceBuilding, placeBuilding,
   buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, recipeOf, setRecipe, smeltRemaining,
+  fuelQueue, fuelTotal, fuelSpace, craftsPossible,
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
