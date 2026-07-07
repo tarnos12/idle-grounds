@@ -1166,31 +1166,49 @@ function openRecipeMenu(areaKey, b) {
 function closeRecipeMenu() {
   recipeMenuFor = null;
   $("#recipe-menu").classList.add("hidden");
+  hideRecipeInfo();
 }
+// The recipe picker: a "Recipes" title over a 3x3 icon grid (one icon per
+// existing recipe). Hovering an icon opens the detail popup bottom-right.
 function renderRecipeMenu() {
   const bar = $("#recipe-menu");
-  if (!recipeMenuFor) { bar.classList.add("hidden"); return; }
+  if (!recipeMenuFor) { bar.classList.add("hidden"); hideRecipeInfo(); return; }
   const b = E.buildingById(recipeMenuFor.area, recipeMenuFor.id);
   const recipes = b && DD.BUILDINGS[b.type].recipes;
   if (!b || !b.built || !recipes) { closeRecipeMenu(); return; }
   bar.classList.remove("hidden");
-  bar.innerHTML = `<div class="rm-title">${DD.BUILDINGS[b.type].icon} ${DD.BUILDINGS[b.type].name} — recipes</div>`;
+  bar.innerHTML = `<div class="rm-head">Recipes</div><div class="rm-grid"></div>`;
+  const grid = bar.querySelector(".rm-grid");
+  const active = b.recipe || 0;
   recipes.forEach((r, i) => {
-    const inputs = Object.entries(r.inputs).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" + ");
-    const active = (b.recipe || 0) === i;
-    const card = el("button", "build-card" + (active ? " active" : ""));
-    card.innerHTML = `<span class="bc-ico">${iconHTML(r.output)}</span>` +
-      `<span class="bc-name">${r.name}</span>` +
-      `<span class="bc-cost">${inputs} → ${r.outputQty || 1} ${iconHTML(r.output)}</span>` +
-      (active ? `<span class="bc-tag">active</span>` : "");
-    card.onclick = () => {
+    const cell = el("button", "rm-cell" + (i === active ? " active" : ""));
+    cell.innerHTML = iconHTML(r.output);
+    cell.onmouseenter = () => showRecipeInfo(r);
+    cell.onmouseleave = () => hideRecipeInfo();
+    cell.onclick = () => {
       E.setRecipe(recipeMenuFor.area, recipeMenuFor.id, i);
       closeRecipeMenu();
       render();
     };
-    bar.appendChild(card);
+    grid.appendChild(cell);
   });
 }
+// Detail popup (bottom-right): output icon, name, then each required item on
+// its own row — icon with a count badge (bottom-right) + the item name.
+function showRecipeInfo(r) {
+  const info = $("#recipe-info");
+  const reqs = Object.entries(r.inputs).map(([it, q]) =>
+    `<div class="ri-req">` +
+      `<span class="ri-ico">${iconHTML(it)}<span class="ri-badge">${q}</span></span>` +
+      `<span class="ri-name">${E.itemName(it)}</span>` +
+    `</div>`).join("");
+  info.innerHTML =
+    `<div class="ri-out">${iconHTML(r.output)}</div>` +
+    `<div class="ri-title">${r.name}</div>` +
+    `<div class="ri-reqs">${reqs}</div>`;
+  info.classList.remove("hidden");
+}
+function hideRecipeInfo() { $("#recipe-info").classList.add("hidden"); }
 
 // ---- meditation pavilion roster ------------------------------
 // Left-click a pavilion -> this panel: disciple count, bun stock and a
@@ -1748,4 +1766,5 @@ window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
   dismissDragonDialog, openHelp, closeHelp, showOfflineSummary, dismissWelcome,
   openPerkShop, closePerkShop,
-  _draw: () => drawWorld() };   // test hook
+  _draw: () => drawWorld(),   // test hook
+  _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)) };  // test hook

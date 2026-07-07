@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=29.
+?v=30.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,17 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Recipe picker redesign (?v=30).** The converter recipe menu
+(`#recipe-menu`, `renderRecipeMenu` in ui.js) is now a floating popup: a
+"Recipes" title over a 3-column icon grid (one `.rm-cell` per existing
+recipe, showing just the output icon; active one gold-outlined). Hovering a
+cell opens `#recipe-info` bottom-right — output icon, recipe name, then each
+required input as a row: item icon with a count badge on its lower-right +
+the item name. Click selects (unchanged `setRecipe`). CSS split so
+`#link-menu`/`#roster-menu` keep the old docked-bar look. Test hook
+`UI._openRecipe(area,id)`. Verified in Chromium (grid cells, hover detail,
+badges "2"/"1", bottom-right placement, select+close) + screenshot.
 
 **Deeper prestige — Ascension Shrine (?v=29).** Ascending now grants
 **Ascension Points** (AP: `1 + unlocked regions beyond Center`, so 1–4/run)

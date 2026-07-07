@@ -265,11 +265,54 @@ body {
 .bc-cost { font-size: 11px; color: var(--gold); }
 
 /* ---- Recipe picker (converter buildings) + lantern link editor ---- */
-#recipe-menu, #link-menu, #roster-menu {
+#link-menu, #roster-menu {
   flex: 0 0 auto; background: var(--bg-2); border-top: 1px solid var(--line);
   padding: 10px 14px; display: flex; gap: 10px; overflow-x: auto; align-items: center;
 }
-#recipe-menu.hidden, #link-menu.hidden, #roster-menu.hidden { display: none; }
+#link-menu.hidden, #roster-menu.hidden { display: none; }
+
+/* Recipe picker: floating popup — "Recipes" title over a 3x3 icon grid */
+#recipe-menu {
+  position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 130;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px;
+  padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+#recipe-menu.hidden { display: none; }
+.rm-head { font-size: 14px; font-weight: 800; text-align: center; margin-bottom: 10px; }
+.rm-grid { display: grid; grid-template-columns: repeat(3, 58px); grid-auto-rows: 58px; gap: 8px; }
+.rm-cell {
+  display: flex; align-items: center; justify-content: center; padding: 0;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  cursor: pointer; font-size: 30px;
+}
+.rm-cell:hover { background: var(--panel-2); border-color: var(--accent); }
+.rm-cell.active { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(251,191,36,.3); }
+.rm-cell img.item-ico { width: 32px; height: 32px; }
+
+/* Recipe detail popup (bottom-right on hover) */
+#recipe-info {
+  position: fixed; right: 16px; bottom: 92px; z-index: 131; width: 224px; pointer-events: none;
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 12px;
+  padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.5);
+}
+#recipe-info.hidden { display: none; }
+.ri-out { font-size: 42px; line-height: 1; text-align: center; }
+.ri-out img.item-ico { width: 42px; height: 42px; }
+.ri-title { font-size: 16px; font-weight: 800; text-align: center; margin: 6px 0 12px; }
+.ri-reqs { display: flex; flex-direction: column; gap: 9px; }
+.ri-req { display: flex; align-items: center; gap: 10px; }
+.ri-ico {
+  position: relative; flex: 0 0 auto; width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.ri-ico img.item-ico { width: 26px; height: 26px; }
+.ri-badge {
+  position: absolute; right: -5px; bottom: -5px; min-width: 15px; height: 15px; padding: 0 3px;
+  background: var(--gold); color: #16130a; border-radius: 8px;
+  font-size: 10px; font-weight: 800; line-height: 15px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.ri-name { font-size: 13px; color: var(--text); }
 .link-row {
   display: flex; align-items: center; gap: 6px; white-space: nowrap;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
