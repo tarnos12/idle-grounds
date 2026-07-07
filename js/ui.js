@@ -397,9 +397,10 @@ function animActive() {
       const wx = w.x + p.x, wy = w.y + p.y;
       if (wx > l && wx < r && wy > t && wy < b) return true;
     }
-    // a smelting converter's progress bar animates while it's on screen
+    // a working converter's progress bar (and a burner's fuel burn) animate
+    // while it's on screen
     if (unlocked) for (const bd of window.GS.areas[key].buildings) {
-      if (!bd.built || !(DD.BUILDINGS[bd.type].smelt) || !(bd.smeltDoneAt > now)) continue;
+      if (!bd.built || !(DD.BUILDINGS[bd.type].recipes) || !(bd.smeltDoneAt > now)) continue;
       const bs = E.buildingSize(bd.type);
       const bx = bd.col * CELL + p.x, by = bd.row * CELL + p.y;
       if (bx < r && bx + bs.w * CELL > l && by < b && by + bs.h * CELL > t) return true;
@@ -587,6 +588,95 @@ function drawRegionGround(key, ox, oy, view, s, X, Y) {
   ctx.strokeRect(X(ox), Y(oy), PLAY_W * s, PLAY_W * s);
 }
 
+// A small corner count next to an icon (dark-shadowed for legibility).
+function drawCornerCount(px, py, text, color, align, s) {
+  ctx.font = `800 ${9.5 * s}px ${TEXT_FONT}`;
+  ctx.textAlign = align; ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3 * s;
+  ctx.fillStyle = color; ctx.fillText(text, px, py);
+  ctx.shadowBlur = 0;
+}
+
+// Converter face (centred on the building, fuel rack excluded): a row of
+// input icons (top-left = in stock, bottom-right = needed per craft), the
+// result icon (bottom-right = batches the current stock can still make,
+// fuel ignored), and a 1-cell progress bar — all horizontally centred.
+function drawConverterFace(b, bx, by, bw, bh, s, X, Y, now) {
+  const rec = E.recipeOf(b);
+  if (!rec) return;
+  const cxW = bx + bw / 2;
+  // inputs row
+  const inputs = Object.entries(rec.inputs);
+  const ipx = 16 * s, gapW = 22;
+  const startW = cxW - (inputs.length - 1) * gapW / 2;
+  const iy = Y(by + bh * 0.30);
+  inputs.forEach(([it, need], i) => {
+    const sx = X(startW + i * gapW), have = (b.stock && b.stock[it]) || 0;
+    drawItemIcon(it, sx, iy, ipx);
+    drawCornerCount(sx - ipx / 2, iy - ipx / 2, String(have), have >= need ? C.accent : C.danger, "left", s);
+    drawCornerCount(sx + ipx / 2, iy + ipx / 2, String(need), C.gold, "right", s);
+  });
+  // result icon + predicted crafts
+  const rpx = 19 * s, rx = X(cxW), ry = Y(by + bh * 0.60);
+  drawItemIcon(rec.output, rx, ry, rpx);
+  drawCornerCount(rx + rpx / 2, ry + rpx / 2, String(E.craftsPossible(b)), C.gold, "right", s);
+  // 1-cell-wide progress bar, centred
+  const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(by + bh * 0.85);
+  const frac = (b.smeltDoneAt > now)
+    ? clamp(1 - (b.smeltDoneAt - now) / (rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1)), 0, 1) : 0;
+  ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 4 * s);
+  ctx.fillStyle = C.gold; ctx.fillRect(px0, py0, pw * frac, 4 * s);
+}
+
+// A burner's 2x2 fuel rack, drawn immediately LEFT of the building (touching
+// it). New fuel sits at the front, the back (oldest) item burns down right-
+// to-left. When empty, a "No fuel" label floats centred above the rack.
+const FUEL_CELLS = [[0, 0], [0, 1], [1, 0], [1, 1]];   // fill order: oldest -> newest
+function drawFuelRack(b, ox, oy, s, X, Y) {
+  const q = E.fuelQueue(b);
+  const rackX0 = (b.col - 2) * CELL + ox, rackY0 = b.row * CELL + oy;
+  const rackW = 2 * CELL, rackH = 2 * CELL;
+  // panel + border (reads as a furnace hopper bolted to the machine)
+  ctx.fillStyle = "rgba(40,28,18,.85)";
+  ctx.fillRect(X(rackX0), Y(rackY0), rackW * s, rackH * s);
+  ctx.strokeStyle = "rgba(251,146,60,.55)"; ctx.lineWidth = Math.max(1, 1.5 * s);
+  ctx.strokeRect(X(rackX0), Y(rackY0), rackW * s, rackH * s);
+  // slot dividers
+  ctx.strokeStyle = "rgba(255,255,255,.08)";
+  ctx.beginPath();
+  ctx.moveTo(X(rackX0 + CELL), Y(rackY0)); ctx.lineTo(X(rackX0 + CELL), Y(rackY0 + rackH));
+  ctx.moveTo(X(rackX0), Y(rackY0 + CELL)); ctx.lineTo(X(rackX0 + rackW), Y(rackY0 + CELL));
+  ctx.stroke();
+  // fuel items: oldest (burning) first into the fill order
+  const ipx = 22 * s;
+  for (let i = 0; i < q.length && i < FUEL_CELLS.length; i++) {
+    const f = q[q.length - 1 - i];              // oldest -> newest
+    const [cr, cc] = FUEL_CELLS[i];
+    const cx = X(rackX0 + (cc + 0.5) * CELL), cy = Y(rackY0 + (cr + 0.5) * CELL);
+    const burning = i === 0;                     // the back item is the one alight
+    if (burning) {
+      ctx.globalAlpha = 0.22; drawItemIcon(f.item, cx, cy, ipx); ctx.globalAlpha = 1;   // ghost of the whole item
+      const frac = clamp(f.rem / f.total, 0, 1);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(cx - ipx / 2, cy - ipx / 2, ipx * frac, ipx);   // keep the LEFT part (burns right->left)
+      ctx.clip();
+      drawItemIcon(f.item, cx, cy, ipx);
+      ctx.restore();
+    } else {
+      drawItemIcon(f.item, cx, cy, ipx);
+    }
+  }
+  // missing-fuel label, centred above the rack
+  if (E.fuelTotal(b) <= 0) {
+    ctx.fillStyle = C.danger; ctx.font = `800 ${10 * s}px ${TEXT_FONT}`;
+    ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+    ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = 3 * s;
+    ctx.fillText("No fuel", X(rackX0 + rackW / 2), Y(rackY0) - 4 * s);
+    ctx.shadowBlur = 0;
+  }
+}
+
 // LAYER 2 — objects: buildings and resource nodes.
 // phase: "all" | "noTrees" (skip tree nodes) | "treesOnly" (only tree nodes)
 function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
@@ -649,6 +739,10 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       if (job) {
         ctx.fillStyle = C.gold;
         drawNeedsLine(Object.entries(E.jobRemaining(job)), cxp, Y(by + bh * 0.86), 20 * s);
+      } else {
+        ctx.fillStyle = C.muted; ctx.font = `700 ${16 * s}px ${TEXT_FONT}`;
+        ctx.textBaseline = "middle"; ctx.textAlign = "center";
+        ctx.fillText("Select an upgrade", cxp, Y(by + bh * 0.86));
       }
     } else if (b.built && isDragon) {
       const st = E.dragonStage();
@@ -683,36 +777,11 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         : `${(b.links || []).length}⛓`;
       ctx.fillText(badge, cxp, Y(by + bh + 8));
     } else if (b.built && bCfg.recipes) {
-      // converter (Forge): icon + name (· active recipe when it has several),
-      // a progress bar while a batch works, and the input STOCK it holds
-      // (or what the next batch still needs)
-      const rec = E.recipeOf(b);
-      ctx.fillStyle = C.text;
-      ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
-      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.32));
-      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
-      ctx.fillText(bCfg.name + (bCfg.recipes.length > 1 && rec ? ` · ${rec.name}` : ""),
-        cxp, Y(by + bh * 0.56));
-      // burners: thin orange fuel gauge (red when empty)
-      if (bCfg.fuel) {
-        const fw = bw * 0.7 * s, fx0 = X(bx + bw * 0.15), fy0 = Y(by + bh * 0.63);
-        ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.fillRect(fx0, fy0, fw, 3 * s);
-        ctx.fillStyle = (b.fuel || 0) > 0 ? "#fb923c" : "#ef4444";
-        ctx.fillRect(fx0, fy0, fw * clamp((b.fuel || 0) / DD.FUEL_CAP, 0, 1), 3 * s);
-      }
-      const now2 = Date.now();
-      if (b.smeltDoneAt > now2 && rec) {
-        const total = rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1);
-        const frac = clamp(1 - (b.smeltDoneAt - now2) / total, 0, 1);
-        const pw = bw * 0.7 * s, px0 = X(bx + bw * 0.15), py0 = Y(by + bh * 0.7);
-        ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 4 * s);
-        ctx.fillStyle = C.gold; ctx.fillRect(px0, py0, pw * frac, 4 * s);
-      }
-      const stockEntries = Object.entries(b.stock || {}).filter(([, q]) => q > 0);
-      ctx.fillStyle = C.gold;
-      if (stockEntries.length) drawNeedsLine(stockEntries, cxp, Y(by + bh * 0.88), 10 * s);
-      else if (b.smeltDoneAt <= now2)
-        drawNeedsLine(Object.entries(E.smeltRemaining(b)), cxp, Y(by + bh * 0.88), 10 * s, "Feed:");
+      // converter: centred input icons (have / need) + result icon (+ crafts
+      // the stock can still make) + a 1-cell progress bar; burners also get a
+      // 2x2 fuel rack to their left (drawn separately below).
+      drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
+      if (bCfg.fuel) drawFuelRack(b, ox, oy, s, X, Y);
     } else if (b.built && b.type === "storehouse") {
       if (b.item) drawItemIcon(b.item, cxp, Y(by + bh * 0.4), 26 * s);
       else {

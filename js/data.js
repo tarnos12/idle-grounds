@@ -50,7 +50,8 @@ const ITEM_ICONS = {
 // Burner fuel values in burn-milliseconds (a batch consumes its own
 // duration). Fed to any `fuel: true` building or a Furnace Spirit.
 const FUEL = { wood: 10000, bamboo: 6000, charcoal: 40000, firestone: 120000 };
-const FUEL_CAP = 60000;   // max burn-ms a burner holds
+const FUEL_CAP = 60000;   // (legacy) old scalar burn-ms cap; superseded by slots
+const FUEL_SLOTS = 4;     // a burner's visible 2x2 fuel rack holds 4 items
 
 // Dragon pills: feed one to the dragon (right-click) for a timed GLOBAL
 // buff — 60s base, +30s per Dragon Affinity level; a new pill replaces
@@ -581,6 +582,6 @@ const TEST = {
 
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
-  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP,
+  AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP, FUEL_SLOTS,
   UPGRADE_TREE, QUESTS, HAND_CAP, PERKS, TEST,
 };
