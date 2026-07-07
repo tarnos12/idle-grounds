@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=31" />
+  <link rel="stylesheet" href="style.css?v=32" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
@@ -50,6 +50,9 @@
 
   <!-- Hand cursor overlay (follows the mouse, shows what you carry) -->
   <div id="hand-cursor" class="hidden"></div>
+
+  <!-- Hovered building's name (bottom-centre of the screen) -->
+  <div id="hover-name" class="hidden"></div>
 
   <!-- Instant tooltip for the upgrade tree -->
   <div id="utip" class="hidden"></div>
@@ -136,10 +139,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=31"></script>
-  <script src="js/state.js?v=31"></script>
-  <script src="js/engine.js?v=31"></script>
-  <script src="js/ui.js?v=31"></script>
-  <script src="js/main.js?v=31"></script>
+  <script src="js/data.js?v=32"></script>
+  <script src="js/state.js?v=32"></script>
+  <script src="js/engine.js?v=32"></script>
+  <script src="js/ui.js?v=32"></script>
+  <script src="js/main.js?v=32"></script>
 </body>
 </html>

@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=31.
+?v=32.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,24 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Bigger buildings + furnace fuel-area layout + hover names (?v=32).**
+`GRID.building` default footprint is now **3x3** (was 3x2 — "a bit larger,
+at least 3 tall"); **burners (Forge/Kiln/Pill Furnace/Star Anvil) are 3x4**
+(explicit `size` in data.js) with the **top 3x2 as the fuel area** (now
+`FUEL_SLOTS=6`, a 3-col×2-row grid, oldest burns right-to-left, "No fuel"
+above) and the crafting face in the **bottom 3x2** (the fuel area doesn't
+shift the centre). `drawConverterFace`/`drawFuelRack` now take an explicit
+content rect. The **recipe picker floats above the clicked building**
+(`positionRecipeMenu`, clamped on screen; CSS no longer pins it bottom-
+centre). **Hovering any built building shows its name** as plain text at
+the bottom-centre (`#hover-name`, `updateHoverName` in onMouseMove).
+Placement/starter-network already validate against each building's real
+size, so the resize caused **zero footprint overlaps** (verified: 18
+starter buildings, 0 overlaps). Test hooks `UI._lookAt`, `UI._openRecipe`.
+Verified in Chromium (sizes, no overlaps, forge 3x4 screenshot with fuel
+top + crafting bottom, recipe menu above building, hover "Forge"), no
+draw errors.
 
 **Visible fuel racks + converter crafting face (?v=31).** Burners
 (Forge/Kiln/Star Anvil/Pill Furnace) replaced their invisible scalar

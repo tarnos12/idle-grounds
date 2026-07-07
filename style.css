@@ -271,9 +271,10 @@ body {
 }
 #link-menu.hidden, #roster-menu.hidden { display: none; }
 
-/* Recipe picker: floating popup — "Recipes" title over a 3x3 icon grid */
+/* Recipe picker: floating popup — "Recipes" title over a 3x3 icon grid.
+   Positioned by JS just above the selected building (left/top set inline). */
 #recipe-menu {
-  position: fixed; left: 50%; bottom: 92px; transform: translateX(-50%); z-index: 130;
+  position: fixed; z-index: 130; transform: translate(-50%, -100%);
   background: var(--bg-2); border: 1px solid var(--line); border-radius: 14px;
   padding: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.5);
 }
@@ -313,6 +314,14 @@ body {
   font-variant-numeric: tabular-nums;
 }
 .ri-name { font-size: 13px; color: var(--text); }
+
+/* Hovered building name — plain text, bottom-centre of the screen */
+#hover-name {
+  position: fixed; left: 50%; bottom: 76px; transform: translateX(-50%); z-index: 90;
+  pointer-events: none; font-size: 16px; font-weight: 800; color: var(--text);
+  text-shadow: 0 1px 4px rgba(0,0,0,.9);
+}
+#hover-name.hidden { display: none; }
 .link-row {
   display: flex; align-items: center; gap: 6px; white-space: nowrap;
   background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
