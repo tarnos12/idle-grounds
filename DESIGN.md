@@ -123,7 +123,14 @@ label when empty); every converter's face shows centred input icons
 popup with a bottom-right hover detail. Fuel is a machine resource, not a
 recipe input.
 
-Next frontiers: more regions, sprite art (see wishlist), more perks.
+✅ Volcano region (post-roadmap): a new pannable region at world grid (2,1)
+— bottom-right, directly below the Mine — unlocked for 3 iron bars. It
+yields **Obsidian** (new item) from obsidian rocks and **Firestone**
+(existing premium fuel) from fire veins. Obsidian feeds a new Kiln recipe
+**Obsidian Glass** (1 obsidian → 2 glass — obsidian is volcanic glass),
+giving the region an immediate sink into the existing glass economy.
+
+Next frontiers: sprite art (see wishlist), more perks, more regions.
 
 ## Building sprite wishlist (assets/buildings/<file>)
 

@@ -26,6 +26,7 @@ const ITEM_NAMES = {
   ember_pill: "Ember Pill", verdant_pill: "Verdant Pill",
   swiftwind_pill: "Swiftwind Pill", stoneheart_pill: "Stoneheart Pill",
   talisman: "Talisman", dragon_scale: "Dragon Scale",
+  obsidian: "Obsidian",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -45,6 +46,7 @@ const ITEM_ICONS = {
   ember_pill: "🔴", verdant_pill: "🟢",
   swiftwind_pill: "🟡", stoneheart_pill: "🟣",
   talisman: "🧧", dragon_scale: "🔶",
+  obsidian: "🔲",
 };
 
 // Burner fuel values in burn-milliseconds (a batch consumes its own
@@ -73,6 +75,7 @@ const TIER_SPRITES = {
   farm:    ["🌾"],
   mine:    ["🪨"],
   fishing: ["🐟"],
+  volcano: ["🌋"],
 };
 
 // d(item, min, max) -> drop spec. max defaults to min (fixed amount).
@@ -199,6 +202,18 @@ const AREAS = {
       { name: "Koi", drops: [d("fish", 1, 2)], timer: 12 },
     ],
   },
+  volcano: {
+    name: "Volcano", icon: "🌋", verb: "Mine", actionIcon: "⛏️",
+    base: "obsidian", noBuild: "centre",
+    speedLabel: "Cooling Speed", timerLabel: "Reform",
+    spawners: [
+      { kind: "obsidian", zone: "centre", sizes: [1, 2], target: 8, interaction: "break",
+        swingMs: 500, sprite: "⬛", hits: 3, regrow: 14, drops: [d("obsidian", 1, 2)] },
+      { kind: "firevein", zone: "centre", sizes: [2], target: 2, interaction: "break",
+        swingMs: 600, sprite: "🌋", hits: 4, regrow: 20, drops: [d("firestone", 1, 1)] },
+    ],
+    tiers: [ { name: "Obsidian", hits: 3, drops: [d("obsidian", 1, 2)], timer: 14 } ],
+  },
 };
 
 // ------------------------------------------------------------------
@@ -271,6 +286,7 @@ const BUILDINGS = {
                recipes: [
                  { name: "Brick", inputs: { clay: 2 }, output: "brick", outputQty: 1, timeMs: 5000 },
                  { name: "Glass", inputs: { sand: 2 }, output: "glass", outputQty: 1, timeMs: 6000 },
+                 { name: "Obsidian Glass", inputs: { obsidian: 1 }, output: "glass", outputQty: 2, timeMs: 5000 },
                ] },
   paper_mill:{ name: "Paper Mill", icon: "📜", cost: { wood: 10, stone: 5 }, unlocked: true,
                recipes: [
@@ -416,15 +432,17 @@ const WORLD = {
     center:  { rx: 1, ry: 0 },
     mine:    { rx: 2, ry: 0 },   // right of centre
     fishing: { rx: 1, ry: 1 },   // below centre
+    volcano: { rx: 2, ry: 1 },   // below the mine
   },
   cols: 3, rows: 2,              // region-grid extents (bottom corners = void)
   // which viewport edge hosts a locked region's unlock button
-  unlockSide: { farm: "left", mine: "right", fishing: "down" },
+  unlockSide: { farm: "left", mine: "right", fishing: "down", volcano: "up" },
   // resource cost to open each region (paid from hand, so <= hand cap).
   unlockCost: {
     farm:    { wood: 10 },
     mine:    { wood: 16 },
     fishing: { wood: 20 },
+    volcano: { iron_bar: 3 },
   },
 };
 

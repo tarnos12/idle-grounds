@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=32.
+?v=33.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,25 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Volcano region — built by an in-session agent team (?v=33).** A new
+pannable region at world grid **(2,1)** (bottom-right, below the Mine),
+unlocked for **3 iron bars** (`unlockSide: "up"`, the free edge; it fills a
+previously-void corner). Adds one new item **Obsidian** (from obsidian
+rocks, a `break` node) and re-uses **Firestone** (premium fuel, from fire
+veins); a new **Kiln** recipe **Obsidian Glass** (1 obsidian → 2 glass —
+obsidian being volcanic glass) sinks obsidian into the existing glass chain.
+Region logic is fully generic over `WORLD.regions`/`AREAS`, so **no engine
+change** was needed. Files: `js/data.js` (obsidian item + icon, AREAS.volcano
+with obsidian/firevein spawners, TIER_SPRITES, WORLD region/unlockSide/
+unlockCost, Kiln recipe), `js/state.js` (`world.unlocked.volcano:false`
+default — loadState already merges saved unlocked over defaults), `js/ui.js`
+(volcano region colour), `?v=33`. **Workflow:** ran as a manager + three
+worktree-isolated subagents (data/state slice, docs slice, test slice); the
+manager owned the coupled `ui.js`/integration and merged serially. Verified
+headless (region loads with 100 obsidian+firevein nodes, unlock for the
+scaled iron-bar cost, Kiln obsidian→glass batch) and a Chromium render of
+the (2,1) region, no draw errors.
 
 **Bigger buildings + furnace fuel-area layout + hover names (?v=32).**
 `GRID.building` default footprint is now **3x3** (was 3x2 — "a bit larger,
