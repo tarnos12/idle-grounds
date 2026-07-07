@@ -51,7 +51,7 @@ const ITEM_ICONS = {
 // duration). Fed to any `fuel: true` building or a Furnace Spirit.
 const FUEL = { wood: 10000, bamboo: 6000, charcoal: 40000, firestone: 120000 };
 const FUEL_CAP = 60000;   // (legacy) old scalar burn-ms cap; superseded by slots
-const FUEL_SLOTS = 4;     // a burner's visible 2x2 fuel rack holds 4 items
+const FUEL_SLOTS = 6;     // a burner's fuel area is a 3x2 grid (6 items)
 
 // Dragon pills: feed one to the dragon (right-click) for a timed GLOBAL
 // buff — 60s base, +30s per Dragon Affinity level; a new pill replaces
@@ -211,7 +211,7 @@ const GRID = {
   cells: 75,          // 75 x 75 PLAYABLE cells per area (~10x the old 24x24 area)
   margin: 10,         // inert border cells around the whole map
   gap: 5,             // inert void cells separating adjacent regions
-  building: { w: 3, h: 2 },   // every building occupies a 3-wide x 2-tall block
+  building: { w: 3, h: 3 },   // default footprint (burners override to 3x4)
 };
 
 // Named zone rectangles (inclusive cell bounds), a 3x3 division of the play
@@ -267,7 +267,7 @@ const BUILDINGS = {
                  { name: "Tools", inputs: { plank: 2, iron_bar: 1 }, output: "tools", outputQty: 1, timeMs: 6000 },
                ] },
   kiln:      { name: "Kiln",      icon: "🏺", cost: { wood: 10, clay: 5 },  unlocked: true,
-               fuel: true,
+               fuel: true, size: { w: 3, h: 4 },
                recipes: [
                  { name: "Brick", inputs: { clay: 2 }, output: "brick", outputQty: 1, timeMs: 5000 },
                  { name: "Glass", inputs: { sand: 2 }, output: "glass", outputQty: 1, timeMs: 6000 },
@@ -311,7 +311,7 @@ const BUILDINGS = {
                ] },
   // ---- Phase-4 T3 producers (both burners) ----
   pill_furnace:{ name: "Pill Furnace", icon: "🫕", cost: { brick: 6, iron_bar: 4, tools: 2 }, unlocked: true,
-               fuel: true,
+               fuel: true, size: { w: 3, h: 4 },
                recipes: [
                  { name: "Ember Pill", inputs: { qi_elixir: 1, firestone: 1 }, output: "ember_pill", outputQty: 1, timeMs: 9000 },
                  { name: "Verdant Pill", inputs: { qi_elixir: 1, spirit_herb: 1 }, output: "verdant_pill", outputQty: 1, timeMs: 9000 },
@@ -319,7 +319,7 @@ const BUILDINGS = {
                  { name: "Stoneheart Pill", inputs: { qi_elixir: 1, spirit_stone: 1 }, output: "stoneheart_pill", outputQty: 1, timeMs: 9000 },
                ] },
   star_anvil:{ name: "Star Anvil", icon: "⚒️", cost: { iron_bar: 6, tools: 3, glass: 2 }, unlocked: true,
-               fuel: true,
+               fuel: true, size: { w: 3, h: 4 },
                recipes: [
                  { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
                ] },
@@ -363,7 +363,7 @@ const BUILDINGS = {
   // taking wood in their recipes — feed them wood/bamboo/charcoal directly
   // or let a Furnace Spirit stoke them.
   forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1,
-               fuel: true,
+               fuel: true, size: { w: 3, h: 4 },
                recipes: [
                  { name: "Iron Bar", inputs: { iron_ore: 2 }, output: "iron_bar", outputQty: 1, timeMs: 6000 },
                ] },

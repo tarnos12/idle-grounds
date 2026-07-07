@@ -597,19 +597,19 @@ function drawCornerCount(px, py, text, color, align, s) {
   ctx.shadowBlur = 0;
 }
 
-// Converter face (centred on the building, fuel rack excluded): a row of
-// input icons (top-left = in stock, bottom-right = needed per craft), the
-// result icon (bottom-right = batches the current stock can still make,
-// fuel ignored), and a 1-cell progress bar — all horizontally centred.
-function drawConverterFace(b, bx, by, bw, bh, s, X, Y, now) {
+// Converter face, centred inside a content rect (world px: fx0,fy0,fw,fh —
+// for a burner this is the BOTTOM 3x2, else the whole building; the fuel area
+// never shifts the centre). Rows: input icons (top-left = in stock,
+// bottom-right = needed per craft), the result icon (bottom-right = batches
+// the current stock can still make, fuel ignored), a 1-cell progress bar.
+function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
   const rec = E.recipeOf(b);
   if (!rec) return;
-  const cxW = bx + bw / 2;
-  // inputs row
+  const cxW = fx0 + fw / 2;
   const inputs = Object.entries(rec.inputs);
-  const ipx = 16 * s, gapW = 22;
+  const ipx = 18 * s, gapW = 24;
   const startW = cxW - (inputs.length - 1) * gapW / 2;
-  const iy = Y(by + bh * 0.30);
+  const iy = Y(fy0 + fh * 0.26);
   inputs.forEach(([it, need], i) => {
     const sx = X(startW + i * gapW), have = (b.stock && b.stock[it]) || 0;
     drawItemIcon(it, sx, iy, ipx);
@@ -617,45 +617,41 @@ function drawConverterFace(b, bx, by, bw, bh, s, X, Y, now) {
     drawCornerCount(sx + ipx / 2, iy + ipx / 2, String(need), C.gold, "right", s);
   });
   // result icon + predicted crafts
-  const rpx = 19 * s, rx = X(cxW), ry = Y(by + bh * 0.60);
+  const rpx = 22 * s, rx = X(cxW), ry = Y(fy0 + fh * 0.60);
   drawItemIcon(rec.output, rx, ry, rpx);
   drawCornerCount(rx + rpx / 2, ry + rpx / 2, String(E.craftsPossible(b)), C.gold, "right", s);
   // 1-cell-wide progress bar, centred
-  const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(by + bh * 0.85);
+  const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(fy0 + fh * 0.87);
   const frac = (b.smeltDoneAt > now)
     ? clamp(1 - (b.smeltDoneAt - now) / (rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1)), 0, 1) : 0;
   ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 4 * s);
   ctx.fillStyle = C.gold; ctx.fillRect(px0, py0, pw * frac, 4 * s);
 }
 
-// A burner's 2x2 fuel rack, drawn immediately LEFT of the building (touching
-// it). New fuel sits at the front, the back (oldest) item burns down right-
-// to-left. When empty, a "No fuel" label floats centred above the rack.
-const FUEL_CELLS = [[0, 0], [0, 1], [1, 0], [1, 1]];   // fill order: oldest -> newest
-function drawFuelRack(b, ox, oy, s, X, Y) {
+// A burner's fuel area: the TOP 3x2 of its footprint (world px fx0,fy0,fw,
+// fh=2 cells). A 3-col x 2-row grid of 6 slots — new fuel enters at the front,
+// the back (oldest) item burns down right-to-left. "No fuel" floats above
+// when empty.
+const FUEL_CELLS = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]];  // oldest -> newest
+function drawFuelRack(b, fx0, fy0, fw, fh, s, X, Y) {
   const q = E.fuelQueue(b);
-  const rackX0 = (b.col - 2) * CELL + ox, rackY0 = b.row * CELL + oy;
-  const rackW = 2 * CELL, rackH = 2 * CELL;
-  // panel + border (reads as a furnace hopper bolted to the machine)
-  ctx.fillStyle = "rgba(40,28,18,.85)";
-  ctx.fillRect(X(rackX0), Y(rackY0), rackW * s, rackH * s);
-  ctx.strokeStyle = "rgba(251,146,60,.55)"; ctx.lineWidth = Math.max(1, 1.5 * s);
-  ctx.strokeRect(X(rackX0), Y(rackY0), rackW * s, rackH * s);
-  // slot dividers
-  ctx.strokeStyle = "rgba(255,255,255,.08)";
-  ctx.beginPath();
-  ctx.moveTo(X(rackX0 + CELL), Y(rackY0)); ctx.lineTo(X(rackX0 + CELL), Y(rackY0 + rackH));
-  ctx.moveTo(X(rackX0), Y(rackY0 + CELL)); ctx.lineTo(X(rackX0 + rackW), Y(rackY0 + CELL));
+  const cols = 3, rows = 2, cw = fw / cols, ch = fh / rows;
+  // hopper panel + border, set apart from the crafting half below
+  ctx.fillStyle = "rgba(40,28,18,.82)";
+  ctx.fillRect(X(fx0), Y(fy0), fw * s, fh * s);
+  ctx.strokeStyle = "rgba(251,146,60,.5)"; ctx.lineWidth = Math.max(1, 1.2 * s);
+  ctx.strokeRect(X(fx0), Y(fy0), fw * s, fh * s);
+  ctx.strokeStyle = "rgba(255,255,255,.07)"; ctx.beginPath();
+  for (let c = 1; c < cols; c++) { ctx.moveTo(X(fx0 + c * cw), Y(fy0)); ctx.lineTo(X(fx0 + c * cw), Y(fy0 + fh)); }
+  ctx.moveTo(X(fx0), Y(fy0 + ch)); ctx.lineTo(X(fx0 + fw), Y(fy0 + ch));
   ctx.stroke();
-  // fuel items: oldest (burning) first into the fill order
-  const ipx = 22 * s;
+  const ipx = Math.min(cw, ch) * 0.8 * s;
   for (let i = 0; i < q.length && i < FUEL_CELLS.length; i++) {
-    const f = q[q.length - 1 - i];              // oldest -> newest
+    const f = q[q.length - 1 - i];               // oldest -> newest
     const [cr, cc] = FUEL_CELLS[i];
-    const cx = X(rackX0 + (cc + 0.5) * CELL), cy = Y(rackY0 + (cr + 0.5) * CELL);
-    const burning = i === 0;                     // the back item is the one alight
-    if (burning) {
-      ctx.globalAlpha = 0.22; drawItemIcon(f.item, cx, cy, ipx); ctx.globalAlpha = 1;   // ghost of the whole item
+    const cx = X(fx0 + (cc + 0.5) * cw), cy = Y(fy0 + (cr + 0.5) * ch);
+    if (i === 0) {                               // the back item is the one alight
+      ctx.globalAlpha = 0.22; drawItemIcon(f.item, cx, cy, ipx); ctx.globalAlpha = 1;
       const frac = clamp(f.rem / f.total, 0, 1);
       ctx.save();
       ctx.beginPath();
@@ -667,12 +663,11 @@ function drawFuelRack(b, ox, oy, s, X, Y) {
       drawItemIcon(f.item, cx, cy, ipx);
     }
   }
-  // missing-fuel label, centred above the rack
   if (E.fuelTotal(b) <= 0) {
     ctx.fillStyle = C.danger; ctx.font = `800 ${10 * s}px ${TEXT_FONT}`;
     ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
     ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = 3 * s;
-    ctx.fillText("No fuel", X(rackX0 + rackW / 2), Y(rackY0) - 4 * s);
+    ctx.fillText("No fuel", X(fx0 + fw / 2), Y(fy0) - 4 * s);
     ctx.shadowBlur = 0;
   }
 }
@@ -777,11 +772,16 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         : `${(b.links || []).length}⛓`;
       ctx.fillText(badge, cxp, Y(by + bh + 8));
     } else if (b.built && bCfg.recipes) {
-      // converter: centred input icons (have / need) + result icon (+ crafts
-      // the stock can still make) + a 1-cell progress bar; burners also get a
-      // 2x2 fuel rack to their left (drawn separately below).
-      drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
-      if (bCfg.fuel) drawFuelRack(b, ox, oy, s, X, Y);
+      // converter face (centred): input icons (have/need) + result icon (+
+      // crafts the stock can still make) + a 1-cell progress bar. Burners
+      // reserve the TOP 3x2 of their 3x4 footprint as the fuel area and put
+      // the crafting face in the BOTTOM 3x2.
+      if (bCfg.fuel) {
+        drawFuelRack(b, bx, by, bw, 2 * CELL, s, X, Y);
+        drawConverterFace(b, bx, by + 2 * CELL, bw, bh - 2 * CELL, s, X, Y, now);
+      } else {
+        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
+      }
     } else if (b.built && b.type === "storehouse") {
       if (b.item) drawItemIcon(b.item, cxp, Y(by + bh * 0.4), 26 * s);
       else {
@@ -1261,6 +1261,20 @@ function renderRecipeMenu() {
     };
     grid.appendChild(cell);
   });
+  positionRecipeMenu(bar, b);
+}
+// Float the picker just above the selected building (clamped on screen).
+function positionRecipeMenu(bar, b) {
+  const size = E.buildingSize(b.type);
+  const p = regionPx(recipeMenuFor.area);
+  const worldX = p.x + (b.col + size.w / 2) * CELL, worldTop = p.y + b.row * CELL;
+  const r = cvs.getBoundingClientRect();
+  const sx = r.left + (worldX - cam.x) * viewScale, sy = r.top + (worldTop - cam.y) * viewScale;
+  const hw = bar.offsetWidth / 2, h = bar.offsetHeight;
+  const left = clamp(sx, hw + 8, window.innerWidth - hw - 8);
+  const top = Math.max(h + 10, sy - 12);   // sits above the building; keeps its top on screen
+  bar.style.left = left + "px";
+  bar.style.top = top + "px";
 }
 // Detail popup (bottom-right): output icon, name, then each required item on
 // its own row — icon with a count badge (bottom-right) + the item name.
@@ -1570,8 +1584,17 @@ function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   syncCursor(e);
   renderHandCursor();
+  updateHoverName();
   if ((window.GS.build.placing || (linkMode && linkMode.picking)) && cursor.over)
     requestGridPaint();   // move the placement preview / link rubber-band
+}
+// Show the hovered building's name as plain text at the bottom-centre.
+function updateHoverName() {
+  const label = $("#hover-name");
+  const b = cursor.over && cursor.region && E.isAreaUnlocked(cursor.region)
+    ? E.buildingAt(cursor.region, cursor.lrow, cursor.lcol) : null;
+  if (b && b.built) { label.textContent = DD.BUILDINGS[b.type].name; label.classList.remove("hidden"); }
+  else label.classList.add("hidden");
 }
 
 function onMouseDown(e) {
@@ -1836,4 +1859,9 @@ window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   dismissDragonDialog, openHelp, closeHelp, showOfflineSummary, dismissWelcome,
   openPerkShop, closePerkShop,
   _draw: () => drawWorld(),   // test hook
-  _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)) };  // test hook
+  _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook
+  _lookAt: (area, row, col) => {                                              // test hook
+    const p = regionPx(area);
+    cam.x = p.x + col * CELL - VIEW_W / 2; cam.y = p.y + row * CELL - VIEW_H / 2;
+    clampCam(); requestGridPaint();
+  } };
