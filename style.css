@@ -379,6 +379,13 @@ body {
 .hp-t { font-size: 14px; font-weight: 800; margin-bottom: 3px; }
 .hp-d { font-size: 13px; color: var(--muted); line-height: 1.5; }
 
+/* ---- Stats modal ---- */
+.stats-box { width: min(440px, 92vw); }
+.st-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+.st-row:last-child { border-bottom: none; }
+.st-label { font-size: 13px; color: var(--muted); }
+.st-val { font-size: 14px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; }
+
 /* ---- Modals ---- */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .modal.hidden { display: none; }

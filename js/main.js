@@ -22,6 +22,8 @@
   document.getElementById("dragon-continue").onclick = () => window.UI.dismissDragonDialog();
   document.getElementById("help-btn").onclick = () => window.UI.openHelp();
   document.getElementById("help-close").onclick = () => window.UI.closeHelp();
+  document.getElementById("stats-btn").onclick = () => window.UI.openStats();
+  document.getElementById("stats-close").onclick = () => window.UI.closeStats();
   document.getElementById("ascend-go").onclick = () => {
     if (confirm("Ascend and begin the grounds anew? (+8% permanent global speed)")) E.ascend();
   };

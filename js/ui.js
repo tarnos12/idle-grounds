@@ -1460,6 +1460,36 @@ function openHelp() {
 }
 function closeHelp() { $("#help-modal").classList.add("hidden"); }
 
+// ---- lifetime stats modal -----------------------------------
+// A plain two-column list of the player's running totals from window.GS.
+function openStats() {
+  const G = window.GS, st = G.stats || {};
+  const rows = [];
+  const add = (label, val) => { if (val !== undefined) rows.push([label, val]); };
+  if (st.started !== undefined) add("Playtime", fmtAway(Date.now() - st.started));
+  add("Total gathered", st.totalGathered);
+  add("Total crafted", st.totalCrafted);
+  add("Fox spirits slain", st.foxKills);
+  add("Buildings built", st.buildingsBuilt);
+  add("Upgrades applied", st.upgradesApplied);
+  add("Disciples recruited", st.disciplesRecruited);
+  add("Wisp links added", st.linksAdded);
+  add("Recipe switches", st.recipeSwitches);
+  add("Ascensions", G.ascensions);
+  add("Ascension Points", G.ascendPoints);
+  if (G.world && G.world.unlocked) {
+    const unlocked = Object.values(G.world.unlocked).filter(Boolean).length;
+    const total = Object.keys(window.DATA.WORLD.regions).length;
+    add("Regions unlocked", `${unlocked} / ${total}`);
+  }
+  add("Carry capacity", G.handCap);
+  $("#stats-body").innerHTML = rows.map(([label, val]) =>
+    `<div class="st-row"><span class="st-label">${label}</span>` +
+    `<span class="st-val">${val}</span></div>`).join("");
+  $("#stats-modal").classList.remove("hidden");
+}
+function closeStats() { $("#stats-modal").classList.add("hidden"); }
+
 // ---- ascension gate dialog -----------------------------------
 // Completing (or clicking) the built Gate offers the ending: ascend and
 // keep +8% global speed per ascension, or keep playing this run.
@@ -1856,7 +1886,7 @@ function wireInput() {
 
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
-  dismissDragonDialog, openHelp, closeHelp, showOfflineSummary, dismissWelcome,
+  dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, dismissWelcome,
   openPerkShop, closePerkShop,
   _draw: () => drawWorld(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook

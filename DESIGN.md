@@ -138,6 +138,16 @@ region: herb bushes yield **Spirit Herb** and bamboo stalks yield **Bamboo**
 Robe/Qi Elixir/Vitality/Verdant Pill; Bamboo feeds Paper and doubles as a
 fuel), so it relieves two bottlenecks with **no new items**.
 
+✅ Depth & QoL batch (post-roadmap): two new Ascension Shrine perks —
+**Frugal Frontier** (region unlock costs −20%/level, max 3) and **Ember
+Heart** (burners consume fuel 15% slower/level, max 4) — each wired at one
+engine point (areaUnlockCost / burnFuel). **Awakening blessing:** fully
+awakening the Sleeping Dragon (GS.won) now grants a permanent ~11% global
+speed boost (folded into prestigeFactor), so finishing the dragon story
+finally pays off. **📊 Stats panel:** a top-bar button opens a modal of
+lifetime stats (playtime, totals, fox kills, buildings, upgrades, disciples,
+wisp links, recipe switches, ascensions + points, regions unlocked, carry).
+
 Next frontiers: sprite art (see wishlist), more perks.
 
 ## Building sprite wishlist (assets/buildings/<file>)

@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=35.
+?v=36.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,16 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Stats panel (?v=36, agent team).** A "📊 Stats" top-bar button opens
+`#stats-modal` (index.html) listing lifetime stats — playtime, totals
+gathered/crafted, fox kills, buildings built, upgrades applied, disciples,
+wisp links, recipe switches, ascensions + points, regions unlocked (N/6),
+carry capacity — via `openStats`/`closeStats` in ui.js (reuses `fmtAway`
+for playtime), wired in main.js, styled `.stats-box`/`.st-row` in style.css.
+Cosmetic read-only overlay, no game-state/save change. Built as the
+stats-panel slice of the parallel batch; verified in Chromium (13 rows,
+opens/closes, no errors).
 
 **Prestige perks + awakening reward (?v=35, agent team).** Two new Ascension
 Shrine perks in `DATA.PERKS`: **Frugal Frontier** (region unlock costs
