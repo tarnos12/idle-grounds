@@ -60,6 +60,35 @@ body {
 #demolish-btn.on { background: #7f2d2d; border-color: var(--danger); color: #fff; }
 #reset-btn { color: var(--danger); }
 #reset-btn:hover { background: #3a2626; }
+/* Ascension Shrine pill (prestige perks) */
+#perk-btn {
+  background: var(--panel); color: var(--gold); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer; font-size: 14px; font-weight: 800;
+}
+#perk-btn:hover { background: var(--panel-2); }
+#perk-btn.hidden { display: none; }
+#perk-btn.has-ap { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(251,191,36,.25); }
+#perk-ap { font-variant-numeric: tabular-nums; }
+
+/* ---- Ascension Shrine (perk shop) ---- */
+.perk-box { width: min(560px, 94vw); }
+#perk-ap-line { font-size: 15px; color: var(--muted); margin: 2px 2px 14px; }
+#perk-ap-line b { color: var(--gold); font-size: 18px; }
+#perk-list { display: flex; flex-direction: column; gap: 10px; }
+.perk-card {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+}
+.perk-card.afford { border-color: var(--gold); }
+.perk-card.maxed { opacity: .6; }
+.pk-ico { font-size: 30px; line-height: 1; flex: 0 0 auto; width: 40px; text-align: center; }
+.pk-body { flex: 1 1 auto; min-width: 0; }
+.pk-name { font-weight: 800; font-size: 15px; }
+.pk-lv { color: var(--gold); font-weight: 800; font-size: 13px; margin-left: 4px; }
+.pk-desc { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+.pk-buy { flex: 0 0 auto; min-width: 64px; font-weight: 800; }
+.pk-buy:disabled { opacity: .4; cursor: default; }
+.perk-card.afford .pk-buy { border-color: var(--gold); color: var(--gold); }
 
 /* ---- Main / viewport ---- */
 #main { flex: 1 1 auto; display: flex; min-height: 0; }

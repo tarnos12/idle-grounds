@@ -122,9 +122,39 @@ function combatBuffActive() {
   return !!(b && b.until > Date.now());
 }
 
+// ---- Prestige perks (Ascension Shrine) ----------------------
+// Permanent, AP-bought upgrades that persist across every reset.
+function perkLevel(id) { return (window.GS.perks && window.GS.perks[id]) || 0; }
+function perkDef(id) { return D.PERKS.find(p => p.id === id) || null; }
+// AP price of the NEXT level, or null when maxed / unknown.
+function perkCost(id) {
+  const def = perkDef(id); if (!def) return null;
+  const lvl = perkLevel(id);
+  return lvl >= def.max ? null : def.cost[lvl];
+}
+// Buy one level if affordable and not maxed. Returns true on success.
+function buyPerk(id) {
+  const cost = perkCost(id);
+  if (cost == null || (window.GS.ascendPoints || 0) < cost) return false;
+  window.GS.ascendPoints -= cost;
+  window.GS.perks[id] = perkLevel(id) + 1;
+  if (id === "hands") window.GS.handCap += 5;    // apply Fleet Hands live
+  return true;
+}
+// AP earned by ascending NOW: 1 base + 1 per unlocked region beyond Center.
+function ascendReward() {
+  const regions = Object.values(window.GS.world.unlocked).filter(Boolean).length;
+  return 1 + Math.max(0, regions - 1);
+}
+// The offline catch-up window, extended +2h per Long Slumber level.
+function offlineCapMs() { return (8 + 2 * perkLevel("slumber")) * 3600 * 1000; }
+
 // Prestige: each completed Ascension shaves 8% off every duration
-// (regrowth, batches, lantern beats). Compounds multiplicatively.
-function prestigeFactor() { return Math.pow(0.92, window.GS.ascensions || 0); }
+// (regrowth, batches, lantern beats). Compounds multiplicatively, and the
+// Eternal Haste perk shaves a further 5% per level.
+function prestigeFactor() {
+  return Math.pow(0.92, window.GS.ascensions || 0) * Math.pow(0.95, perkLevel("haste"));
+}
 
 // Is a Dragon Shrine standing anywhere? (blessings +60s, scales 2x rate)
 function shrineBuilt() {
@@ -137,8 +167,13 @@ function shrineBuilt() {
 // spare veterans the tutorial). Saves, then reboots into the fresh run.
 function ascend() {
   const asc = (window.GS.ascensions || 0) + 1;
+  const pts = (window.GS.ascendPoints || 0) + ascendReward();
+  const perks = window.GS.perks || {};
   const fresh = window.SAVE.fresh();
   fresh.ascensions = asc;
+  fresh.ascendPoints = pts;            // AP + perks survive the reset
+  fresh.perks = perks;
+  fresh.handCap = D.HAND_CAP + 5 * (perks.hands || 0);   // re-apply Fleet Hands
   fresh.quest.idx = D.QUESTS.length;   // veterans skip the tutorial chain
   window.GS = fresh;
   window.SAVE.saveState();
@@ -690,7 +725,8 @@ function initLogistics(b) {
 // (+2 per level, read from the Center tree — applies to every region).
 function rosterCap(b) {
   const cfg = D.BUILDINGS[b.type].roster;
-  return cfg.cap + 2 * (window.GS.areas.center.upgrades.discipleCap || 0);
+  return cfg.cap + 2 * (window.GS.areas.center.upgrades.discipleCap || 0)
+    + perkLevel("hall");   // Master's Hall prestige perk
 }
 // How many cultivation cycles a food item fuels for this building (0 = not
 // accepted). Falls back to the single `food` string for older configs.
@@ -1622,9 +1658,9 @@ function automationTick() {
 // simulated step (generator intervals are >=1.5s, so a sub-second step stays
 // faithful). Returns { elapsedMs, gained:{item:qty} } or null if the gap was
 // too short to bother (a plain reload).
-const OFFLINE_CAP_MS = 8 * 3600 * 1000;   // credit at most 8h away
 const OFFLINE_MAX_TICKS = 45000;          // ~1s worst-case compute on load
 const OFFLINE_MIN_MS = 5000;              // ignore reloads / trivial gaps
+// (the max window is offlineCapMs(): 8h + 2h per Long Slumber perk level)
 
 // Total units of each item that exist as loot or stock ANYWHERE — ground,
 // wisps in flight, and every building store (storehouse qty, gatherer/stoker
@@ -1654,7 +1690,7 @@ function runOfflineCatchup() {
   if (!Number.isFinite(last)) return null;      // pre-feature save: skip
   let elapsed = now - last;
   if (elapsed <= OFFLINE_MIN_MS) return null;   // just a reload
-  elapsed = Math.min(elapsed, OFFLINE_CAP_MS);
+  elapsed = Math.min(elapsed, offlineCapMs());
   const step = Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS));
   const before = countHeldItems();
   const sink = window.onGroundDrop;             // silence "+N" floaters during the sim
@@ -1694,6 +1730,7 @@ window.ENGINE = {
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
   questProgress, claimQuest, buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
+  perkLevel, perkDef, perkCost, buyPerk, ascendReward,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

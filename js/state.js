@@ -60,6 +60,9 @@ function makeInitialState() {
     // across the reset). ascendPrompt shows the Ascension Gate dialog.
     ascensions: 0,
     ascendPrompt: false,
+    // Prestige currency + permanent perks (persist across every Ascension).
+    ascendPoints: 0,
+    perks: {},              // { perkId: level }
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
     quest: { idx: 0, hidden: false },
     // Wall-clock of the last save — offline catch-up (engine) replays the
@@ -120,6 +123,14 @@ function loadState() {
     if (s.combatBuff && Number.isFinite(s.combatBuff.until)) fresh.combatBuff = s.combatBuff;
     fresh.ascensions = Number.isFinite(s.ascensions) ? s.ascensions : 0;
     fresh.ascendPrompt = !!s.ascendPrompt;
+    // prestige currency + perks: carry, clamping each perk to its config max
+    fresh.ascendPoints = Number.isFinite(s.ascendPoints) ? s.ascendPoints : 0;
+    fresh.perks = {};
+    if (s.perks && typeof s.perks === "object")
+      for (const perk of window.DATA.PERKS) {
+        const lvl = s.perks[perk.id];
+        if (Number.isFinite(lvl) && lvl > 0) fresh.perks[perk.id] = Math.min(lvl, perk.max);
+      }
     // null on pre-catch-up saves -> engine skips offline sim (no false credit)
     fresh.lastSeen = Number.isFinite(s.lastSeen) ? s.lastSeen : null;
     // merge stats/quest onto defaults so counters added later start at 0

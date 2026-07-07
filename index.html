@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=28" />
+  <link rel="stylesheet" href="style.css?v=29" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
@@ -37,6 +37,7 @@
       <div class="area-pill">📍 <span id="area-name">Forest</span></div>
       <div class="hand-pill">✋ <span id="hand-count">0/20</span></div>
       <div class="buff-pill hidden" id="buff-pill"></div>
+      <button id="perk-btn" class="hidden" title="Ascension Shrine — spend Ascension Points on permanent perks">☯ <span id="perk-ap">0</span></button>
       <button id="help-btn" title="How to play">❓ Help</button>
       <button id="build-btn">🔨 Build</button>
       <button id="demolish-btn" title="Destroy a building (refunds its resources)">🗑 Demolish</button>
@@ -101,6 +102,18 @@
     </div>
   </div>
 
+  <!-- Ascension Shrine: spend Ascension Points on permanent prestige perks -->
+  <div id="perk-modal" class="modal hidden">
+    <div class="modal-box perk-box">
+      <div class="modal-head">
+        <h2>☯ Ascension Shrine</h2>
+        <button id="perk-close" class="close-btn">✕</button>
+      </div>
+      <p id="perk-ap-line"></p>
+      <div id="perk-list"></div>
+    </div>
+  </div>
+
   <!-- Offline / idle catch-up summary (shown on load after time away) -->
   <div id="welcome-modal" class="modal hidden">
     <div class="modal-box welcome-box">
@@ -121,10 +134,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=28"></script>
-  <script src="js/state.js?v=28"></script>
-  <script src="js/engine.js?v=28"></script>
-  <script src="js/ui.js?v=28"></script>
-  <script src="js/main.js?v=28"></script>
+  <script src="js/data.js?v=29"></script>
+  <script src="js/state.js?v=29"></script>
+  <script src="js/engine.js?v=29"></script>
+  <script src="js/ui.js?v=29"></script>
+  <script src="js/main.js?v=29"></script>
 </body>
 </html>
