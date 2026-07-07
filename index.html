@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=29" />
+  <link rel="stylesheet" href="style.css?v=30" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
@@ -21,8 +21,10 @@
   <!-- Build menu (toggled by the Build button / B key) -->
   <div id="build-menu" class="hidden"></div>
 
-  <!-- Converter recipe picker (left-click a converter building) -->
+  <!-- Converter recipe picker (left-click a converter building): a popup with
+       a "Recipes" title + 3x3 icon grid; #recipe-info is the hover detail -->
   <div id="recipe-menu" class="hidden"></div>
+  <div id="recipe-info" class="hidden"></div>
 
   <!-- Wisp lantern link editor (left-click a lantern) -->
   <div id="link-menu" class="hidden"></div>
@@ -134,10 +136,10 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=29"></script>
-  <script src="js/state.js?v=29"></script>
-  <script src="js/engine.js?v=29"></script>
-  <script src="js/ui.js?v=29"></script>
-  <script src="js/main.js?v=29"></script>
+  <script src="js/data.js?v=30"></script>
+  <script src="js/state.js?v=30"></script>
+  <script src="js/engine.js?v=30"></script>
+  <script src="js/ui.js?v=30"></script>
+  <script src="js/main.js?v=30"></script>
 </body>
 </html>
