@@ -889,9 +889,12 @@ function endpointAccepts(b, item) {
   if (cfg.roster) return foodValue(b, item) > 0 && (b.buns || 0) < cfg.roster.foodCap;
   if (cfg.recipes) {
     const rec = recipeOf(b);
-    // burners drink fuel items into their visible rack (max FUEL_SLOTS)
-    if (cfg.fuel && D.FUEL[item] != null) return fuelSpace(b) > 0;
-    if (!rec || rec.inputs[item] == null) return false;
+    const isInput = rec && rec.inputs[item] != null;
+    // burners drink fuel items into their visible rack (max FUEL_SLOTS) —
+    // UNLESS the item is also an ingredient of the current recipe (e.g.
+    // firestone in Ember Pill / Star Steel), which must reach recipe stock.
+    if (cfg.fuel && D.FUEL[item] != null && !isInput) return fuelSpace(b) > 0;
+    if (!isInput) return false;
     b.stock = b.stock || {};
     return (b.stock[item] || 0) < (rec.stockCap || 20);
   }
@@ -1142,8 +1145,13 @@ function dropFromHand(areaKey, x, y) {
   if (b && b.built && recipeOf(b)) {
     b.stock = b.stock || {};
     const bCfg = D.BUILDINGS[b.type];
+    const rec = recipeOf(b);
     const first = window.GS.hand[0];
-    if (bCfg.fuel && first && D.FUEL[first.item] != null && fuelSpace(b) > 0) {
+    // A fuel item that is ALSO the current recipe's ingredient (firestone in
+    // Ember Pill / Star Steel) is fed as an ingredient, not burnt — otherwise
+    // fall through to feedNeeds below so it lands in recipe stock.
+    const firstIsInput = first && rec && rec.inputs[first.item] != null;
+    if (bCfg.fuel && first && D.FUEL[first.item] != null && !firstIsInput && fuelSpace(b) > 0) {
       handTake(first.item, 1);
       addFuelItem(b, first.item);
       return { fed: first.item };
@@ -1677,7 +1685,10 @@ function automationTick() {
     const level = window.GS.areas[areaKey].upgrades.automation;
     if (level <= 0) continue;
     const budget = D.AUTOMATION_CLICKS[level] + perkLevel("autoboost");
-    const nodes = window.GS.areas[areaKey].nodes.filter(n => !n.deco).sort((a, b) => b.tier - a.tier);
+    // Only regrowing field nodes are automated — fixtures (Spirit Tree,
+    // quarry rock, spring) give solely to a manual click/hold, never a bot.
+    const nodes = window.GS.areas[areaKey].nodes
+      .filter(n => !n.deco && !n.fixed).sort((a, b) => b.tier - a.tier);
     let clicks = 0;
     for (const node of nodes) {
       if (clicks >= budget) break;
@@ -1719,7 +1730,7 @@ function countHeldItems() {
       if (b.item) add(b.item, b.qty || 0);                        // storehouse
       for (const s of b.inv || []) add(s.item, s.qty);            // gatherer/stoker buffer
       for (const it of Object.keys(b.stock || {})) add(it, b.stock[it]);  // converter stock
-      if (b.buns) add("spirit_bun", b.buns);                      // pavilion food
+      if (b.buns) add("spirit_buns", b.buns);                     // pavilion food
     }
   }
   return tally;

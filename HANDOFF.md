@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=39.
+?v=40.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,24 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Bug-audit fixes (?v=40, agent audit + manual fixes).** A read-only audit
+agent surfaced four real defects; all fixed and headless-tested (13/13):
+1. **HIGH — firestone was uncraftable as an ingredient.** firestone is both a
+   fuel AND an input for Ember Pill (Pill Furnace) and Star Steel (Star Anvil).
+   Burner feeding short-circuited every firestone into the fuel rack, so those
+   recipes (and thus the Ascension Gate, which needs Star Steel) could never
+   start via wisp or normal hand-feed. `endpointAccepts` and `dropFromHand`
+   now route a fuel item that is ALSO the current recipe's ingredient into the
+   recipe stock instead of burning it; pure fuels (wood) still go to the rack.
+2. **MEDIUM — Automation mined fixtures.** `automationTick` auto-harvested the
+   Spirit Tree / quarry rock / spring (uncapped, non-depleting) instead of the
+   regrowing field nodes it's meant to. Now filters out `n.fixed` fixtures.
+3. **LOW — offline bun tally used a phantom key** (`spirit_bun` vs the real
+   `spirit_buns`) in `countHeldItems`. Fixed.
+4. **LOW — converter progress bar** ignored `prestigeFactor()` and the Ember
+   blessing in its denominator, so it lagged after any ascension. Now matches
+   the real batch duration.
 
 **Victory overlay + Help refresh (?v=39, agent team).** When the Sleeping
 Dragon fully awakens (`GS.won`), a one-time `#ending-modal` overlay now fires

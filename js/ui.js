@@ -622,8 +622,11 @@ function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
   drawCornerCount(rx + rpx / 2, ry + rpx / 2, String(E.craftsPossible(b)), C.gold, "right", s);
   // 1-cell-wide progress bar, centred
   const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(fy0 + fh * 0.87);
-  const frac = (b.smeltDoneAt > now)
-    ? clamp(1 - (b.smeltDoneAt - now) / (rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1)), 0, 1) : 0;
+  // Denominator MUST match the real batch duration (engine canStartBatch):
+  // timeMs * testScale * prestigeFactor * (Ember blessing on a burner ? 0.5).
+  let dur = rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1) * E.prestigeFactor();
+  if (DD.BUILDINGS[b.type].fuel && E.buffActive("ember_pill")) dur *= 0.5;
+  const frac = (b.smeltDoneAt > now) ? clamp(1 - (b.smeltDoneAt - now) / dur, 0, 1) : 0;
   ctx.fillStyle = "rgba(255,255,255,.15)"; ctx.fillRect(px0, py0, pw, 4 * s);
   ctx.fillStyle = C.gold; ctx.fillRect(px0, py0, pw * frac, 4 * s);
 }
