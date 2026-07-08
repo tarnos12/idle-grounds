@@ -63,6 +63,8 @@ function makeInitialState() {
     // Prestige currency + permanent perks (persist across every Ascension).
     ascendPoints: 0,
     perks: {},              // { perkId: level }
+    // First-run onboarding: show the intro once (existing saves count as seen).
+    introSeen: false,
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
     quest: { idx: 0, hidden: false },
     // Wall-clock of the last save — offline catch-up (engine) replays the
@@ -123,6 +125,8 @@ function loadState() {
     if (s.combatBuff && Number.isFinite(s.combatBuff.until)) fresh.combatBuff = s.combatBuff;
     fresh.ascensions = Number.isFinite(s.ascensions) ? s.ascensions : 0;
     fresh.ascendPrompt = !!s.ascendPrompt;
+    // any existing save counts as introSeen unless it explicitly stored false
+    fresh.introSeen = s.introSeen !== false;
     // prestige currency + perks: carry, clamping each perk to its config max
     fresh.ascendPoints = Number.isFinite(s.ascendPoints) ? s.ascendPoints : 0;
     fresh.perks = {};

@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=43" />
+  <link rel="stylesheet" href="style.css?v=44" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
   <main id="main">
     <section id="area-panel">
       <div id="world-viewport">
-        <canvas id="game-canvas"></canvas>
+        <canvas id="game-canvas" role="img" aria-label="Game world — canvas view of your grounds: buildings, resources and creatures. Use the Help button for controls."></canvas>
         <div id="arrows"></div>
       </div>
     </section>
@@ -39,10 +39,12 @@
       <div class="area-pill">📍 <span id="area-name">Forest</span></div>
       <div class="hand-pill">✋ <span id="hand-count">0/20</span></div>
       <div class="buff-pill hidden" id="buff-pill"></div>
-      <button id="perk-btn" class="hidden" title="Ascension Shrine — spend Ascension Points on permanent perks">☯ <span id="perk-ap">0</span></button>
-      <button id="mute-btn" title="Mute / unmute sound">🔊</button>
+      <button id="perk-btn" class="hidden" title="Ascension Shrine — spend Ascension Points on permanent perks" aria-label="Ascension Shrine">☯ <span id="perk-ap">0</span></button>
+      <button id="mute-btn" title="Mute / unmute sound" aria-label="Mute sound">🔊</button>
       <button id="help-btn" title="How to play">❓ Help</button>
       <button id="stats-btn" title="Your progress so far">📊 Stats</button>
+      <button id="zoom-out" class="zoom-btn" aria-label="Zoom out">−</button>
+      <button id="zoom-in" class="zoom-btn" aria-label="Zoom in">+</button>
       <button id="build-btn">🔨 Build</button>
       <button id="demolish-btn" title="Destroy a building (refunds its resources)">🗑 Demolish</button>
       <button id="debug-btn">🐞 Debug</button>
@@ -60,14 +62,14 @@
   <div id="utip" class="hidden"></div>
 
   <!-- Upgrade tree (opened by clicking the Altar) -->
-  <div id="upgrades-modal" class="modal hidden">
-    <div class="modal-box upgrades-box">
+  <div id="upgrades-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="upgrades-title">
+    <div class="modal-box upgrades-box" tabindex="-1">
       <div class="modal-head">
-        <h2>🏛️ Altar — Upgrades</h2>
+        <h2 id="upgrades-title">🏛️ Altar — Upgrades</h2>
         <button id="tree-debug-btn" title="Reveal hidden upgrades (debug)">🐞 Debug</button>
-        <button id="upgrades-close" class="close-btn">✕</button>
+        <button id="upgrades-close" class="close-btn" aria-label="Close">✕</button>
       </div>
-      <div id="upgrades-body"><canvas id="tree-canvas"></canvas></div>
+      <div id="upgrades-body"><canvas id="tree-canvas" role="img" aria-label="Upgrade tree — hover a node for details, click to purchase (mouse only)."></canvas></div>
     </div>
   </div>
 
@@ -75,30 +77,30 @@
   <div id="quest-panel"></div>
 
   <!-- Help / tutorial modal (sections gated by what's unlocked) -->
-  <div id="help-modal" class="modal hidden">
-    <div class="modal-box help-box">
+  <div id="help-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="modal-box help-box" tabindex="-1">
       <div class="modal-head">
-        <h2>❓ How to play</h2>
-        <button id="help-close" class="close-btn">✕</button>
+        <h2 id="help-title">❓ How to play</h2>
+        <button id="help-close" class="close-btn" aria-label="Close">✕</button>
       </div>
       <div id="help-body"></div>
     </div>
   </div>
 
   <!-- Lifetime stats modal -->
-  <div id="stats-modal" class="modal hidden">
-    <div class="modal-box stats-box">
+  <div id="stats-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+    <div class="modal-box stats-box" tabindex="-1">
       <div class="modal-head">
-        <h2>📊 Stats</h2>
-        <button id="stats-close" class="close-btn">✕</button>
+        <h2 id="stats-title">📊 Stats</h2>
+        <button id="stats-close" class="close-btn" aria-label="Close">✕</button>
       </div>
       <div id="stats-body"></div>
     </div>
   </div>
 
   <!-- Dragon story dialog (stage-ups) -->
-  <div id="dragon-modal" class="modal hidden">
-    <div class="modal-box dragon-box">
+  <div id="dragon-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Dragon awakening">
+    <div class="modal-box dragon-box" tabindex="-1">
       <div class="dragon-ico">🐉</div>
       <p id="dragon-text"></p>
       <button id="dragon-continue" class="build-card">Continue ▶</button>
@@ -106,10 +108,10 @@
   </div>
 
   <!-- Ascension Gate ending -->
-  <div id="ascend-modal" class="modal hidden">
-    <div class="modal-box ascend-box">
+  <div id="ascend-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ascend-title">
+    <div class="modal-box ascend-box" tabindex="-1">
       <div class="dragon-ico">⛩️</div>
-      <h2>The Ascension Gate stands complete</h2>
+      <h2 id="ascend-title">The Ascension Gate stands complete</h2>
       <p>Talisman, star steel and dragon scale hum as one. The path beyond the
         grounds opens — step through, and begin again as something greater.</p>
       <p id="ascend-count"></p>
@@ -121,11 +123,11 @@
   </div>
 
   <!-- Ascension Shrine: spend Ascension Points on permanent prestige perks -->
-  <div id="perk-modal" class="modal hidden">
-    <div class="modal-box perk-box">
+  <div id="perk-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="perk-title">
+    <div class="modal-box perk-box" tabindex="-1">
       <div class="modal-head">
-        <h2>☯ Ascension Shrine</h2>
-        <button id="perk-close" class="close-btn">✕</button>
+        <h2 id="perk-title">☯ Ascension Shrine</h2>
+        <button id="perk-close" class="close-btn" aria-label="Close">✕</button>
       </div>
       <p id="perk-ap-line"></p>
       <div id="perk-list"></div>
@@ -133,10 +135,10 @@
   </div>
 
   <!-- Offline / idle catch-up summary (shown on load after time away) -->
-  <div id="welcome-modal" class="modal hidden">
-    <div class="modal-box welcome-box">
+  <div id="welcome-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="welcome-title">
+    <div class="modal-box welcome-box" tabindex="-1">
       <div class="dragon-ico">🌙</div>
-      <h2>Welcome back</h2>
+      <h2 id="welcome-title">Welcome back</h2>
       <p id="welcome-away"></p>
       <div id="welcome-gains"></div>
       <button id="welcome-close" class="build-card">Continue ▶</button>
@@ -144,10 +146,10 @@
   </div>
 
   <!-- Ending: the Sleeping Dragon fully awakens (GS.won) -->
-  <div id="ending-modal" class="modal hidden">
-    <div class="modal-box ending-box">
+  <div id="ending-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ending-title">
+    <div class="modal-box ending-box" tabindex="-1">
       <div class="dragon-ico">🐲</div>
-      <h1>The Dragon Awakens</h1>
+      <h1 id="ending-title">The Dragon Awakens</h1>
       <p>The grounds are complete. The Sleeping Dragon stirs, unfurls, and rises
         to watch over all you have raised. In gratitude it grants a permanent
         blessing — the whole world quickens by roughly 11%, forever.</p>
@@ -157,19 +159,19 @@
   </div>
 
   <!-- Win modal -->
-  <div id="win-modal" class="modal hidden">
-    <div class="modal-box win-box">
-      <h1>🌍 The Worldstone is Forged!</h1>
+  <div id="win-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="win-title">
+    <div class="modal-box win-box" tabindex="-1">
+      <h1 id="win-title">🌍 The Worldstone is Forged!</h1>
       <div id="win-stats"></div>
       <button id="win-continue" class="build-card">Continue ▶</button>
     </div>
   </div>
 
-  <script src="js/data.js?v=43"></script>
-  <script src="js/state.js?v=43"></script>
-  <script src="js/audio.js?v=43"></script>
-  <script src="js/engine.js?v=43"></script>
-  <script src="js/ui.js?v=43"></script>
-  <script src="js/main.js?v=43"></script>
+  <script src="js/data.js?v=44"></script>
+  <script src="js/state.js?v=44"></script>
+  <script src="js/audio.js?v=44"></script>
+  <script src="js/engine.js?v=44"></script>
+  <script src="js/ui.js?v=44"></script>
+  <script src="js/main.js?v=44"></script>
 </body>
 </html>

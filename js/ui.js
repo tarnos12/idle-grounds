@@ -211,6 +211,8 @@ let leftHeld = false, rightHeld = false, pickupMode = false, harvestHeld = false
 let withdrawSH = null;    // storehouse being vacuumed with left-hold
 let withdrawStart = 0, lastWithdraw = 0;
 let holdStart = 0, lastDrop = 0, lastSwing = 0, loopRunning = false;
+let lastErrBuzz = 0;      // throttle the held right-click rejection buzz
+let lastWithdrawErr = 0;  // throttle the empty-withdraw rejection buzz
 const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
 let lastClickAt = 0;
 
@@ -980,7 +982,7 @@ function renderUnlockButtons() {
     const btn = el("button", `edge-arrow ${side} locked` + (E.canAfford(cost) ? "" : " cant"));
     btn.innerHTML = `<span class="arr">🔓</span>` +
       `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span>`;
-    btn.onclick = () => { if (E.unlockArea(key)) { clampCam(); render(); } };
+    btn.onclick = () => { if (E.unlockArea(key)) { clampCam(); render(); } else if (window.AUDIO) window.AUDIO.play("error"); };
     wrap.appendChild(btn);
   }
 }
@@ -1274,6 +1276,7 @@ function renderRecipeMenu() {
   recipes.forEach((r, i) => {
     const cell = el("button", "rm-cell" + (i === active ? " active" : ""));
     cell.innerHTML = iconHTML(r.output);
+    cell.setAttribute("aria-label", r.name);
     cell.onmouseenter = () => showRecipeInfo(r);
     cell.onmouseleave = () => hideRecipeInfo();
     cell.onclick = () => {
@@ -1378,6 +1381,7 @@ function renderLinkMenu() {
       `<span class="lr-n">${i + 1}.</span> ${f ? bLabel(f) : "?"} <span class="lr-arr">→</span> ${t ? bLabel(t) : "?"}`);
     const x = el("button", "lr-x", "✕");
     x.title = "Remove this link";
+    x.setAttribute("aria-label", "Remove this link");
     x.onclick = () => { E.removeLink(linkMode.area, linkMode.id, i); renderLinkMenu(); render(); };
     row.appendChild(x);
     bar.appendChild(row);
@@ -1411,6 +1415,7 @@ function renderQuestPanel() {
   if (gq.hidden) {
     panel.className = "mini";
     panel.innerHTML = `<button id="quest-chip" title="Show quests">📜${p && p.done ? "❗" : ""}</button>`;
+    $("#quest-chip").setAttribute("aria-label", "Show quests");
     $("#quest-chip").onclick = () => { gq.hidden = false; renderQuestPanel(); };
     return;
   }
@@ -1418,7 +1423,8 @@ function renderQuestPanel() {
   if (i >= total) {
     panel.innerHTML = `<div class="qp-head"><span>📜 Quests</span>` +
       `<button id="quest-min" title="Collapse">–</button></div>` +
-      `<div class="qp-done">🎉 All quests complete!<br>The grounds are yours, cultivator.</div>`;
+      `<div class="qp-done">🎉 Tutorial complete!<br>Now cultivate on — feed the Sleeping Dragon 🐉 through its stages to fully awaken it, then raise the Ascension Gate ⛩️ to ascend.</div>`;
+    $("#quest-min").setAttribute("aria-label", "Collapse quest panel");
     $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
     return;
   }
@@ -1558,9 +1564,14 @@ function renderPerkShop() {
         `<div class="pk-desc">${perk.desc}</div></div>` +
       `<button class="pk-buy build-card"${afford ? "" : " disabled"}>` +
         (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
-    if (!maxed && afford) card.querySelector(".pk-buy").onclick = () => {
+    const buyBtn = card.querySelector(".pk-buy");
+    if (!maxed && afford) buyBtn.onclick = () => {
       if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); }
     };
+    else if (!maxed) {   // unaffordable: disabled button swallows clicks in Firefox — buzz on the card
+      buyBtn.style.pointerEvents = "none";
+      card.onclick = () => { if (window.AUDIO) window.AUDIO.play("error"); };
+    }
     list.appendChild(card);
   }
 }
@@ -1693,7 +1704,8 @@ function onMouseDown(e) {
     if (window.GS.build.placing || demolishMode) { window.GS.build.placing = null; demolishMode = false; render(); return; }
     if (!active) return;
     rightHeld = true; holdStart = Date.now();
-    E.dropFromHand(p.region, p.lx, p.ly);  // ground drop, ghost feed, or storehouse deposit
+    const r = E.dropFromHand(p.region, p.lx, p.ly);  // ground drop, ghost feed, or storehouse deposit
+    if (r === null) { if (window.AUDIO) window.AUDIO.play("error"); addFloater(p.lx, p.ly, "✗", C.danger); }
     lastDrop = holdStart;                  // next drop waits a full interval
     startLoop(); renderPlay();
     return;
@@ -1704,7 +1716,7 @@ function onMouseDown(e) {
   if (window.GS.build.placing) {
     if (active && E.placeBuilding(p.region, window.GS.build.placing, p.lrow, p.lcol)) {
       if (!e.shiftKey) window.GS.build.placing = null; // shift = place several
-    }
+    } else if (window.AUDIO) window.AUDIO.play("error"); // refused placement
     render();
     return;
   }
@@ -1717,6 +1729,13 @@ function onMouseDown(e) {
     }
     demolishMode = false;
     render();
+    return;
+  }
+
+  // clicking a real but still-locked region: nudge toward the unlock border
+  if (!active && p.region && !E.isAreaUnlocked(p.region)) {
+    if (window.AUDIO) window.AUDIO.play("error");
+    addFloater(p.lx, p.ly, "🔒 Unlock this border first", C.danger);
     return;
   }
 
@@ -1765,7 +1784,9 @@ function onMouseDown(e) {
     if (sh && sh.built && (sh.type === "storehouse" ||
         DD.BUILDINGS[sh.type].seal || DD.BUILDINGS[sh.type].gather)) {
       leftHeld = true; withdrawSH = sh;
-      E.withdrawFromBuilding(sh, 1);    // a click takes one; holding accelerates
+      if (E.withdrawFromBuilding(sh, 1) === 0 && Date.now() - lastWithdrawErr >= 500) {  // nothing to take
+        if (window.AUDIO) window.AUDIO.play("error"); lastWithdrawErr = Date.now();
+      }
       withdrawStart = Date.now(); lastWithdraw = withdrawStart;
       startLoop(); renderPlay();
       return;
@@ -1852,6 +1873,14 @@ function onKeyDown(e) {
       else closeLinkMenu();
       return;
     }
+    // dismiss any open modal overlay (skip the one-time #win-modal)
+    if (!$("#dragon-modal").classList.contains("hidden")) { dismissDragonDialog(); return; }
+    if (!$("#ascend-modal").classList.contains("hidden")) { window.GS.ascendPrompt = false; renderPlay(); return; }
+    if (!$("#perk-modal").classList.contains("hidden")) { closePerkShop(); return; }
+    if (!$("#stats-modal").classList.contains("hidden")) { closeStats(); return; }
+    if (!$("#help-modal").classList.contains("hidden")) { closeHelp(); return; }
+    if (!$("#welcome-modal").classList.contains("hidden")) { dismissWelcome(); return; }
+    if (!$("#ending-modal").classList.contains("hidden")) { dismissEnding(); return; }
     window.GS.build.placing = null; demolishMode = false; render();
   }
 }
@@ -1859,7 +1888,7 @@ function onKeyUp(e) { keys.delete(e.key.toLowerCase()); }
 
 function onMouseUp(e) {
   if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; attackHeld = false; withdrawSH = null; }
-  if (e.button === 2) rightHeld = false;
+  if (e.button === 2) { rightHeld = false; lastErrBuzz = 0; } // next held right-click buzzes once again
 }
 
 // while a mouse button is held, keep vacuuming / drip-dropping
@@ -1882,6 +1911,9 @@ function startLoop() {
       const rate = 1 + Math.min(elapsed / 200, 1) * 4;   // 1 .. 5 items per second
       if (Date.now() - lastWithdraw >= 1000 / rate) {
         if (E.withdrawFromBuilding(withdrawSH, 1) > 0) { dirty = true; if (rg) fxPickup(rg, cursor.lx, cursor.ly, 1); }
+        else if (Date.now() - lastWithdrawErr >= 500) {   // emptied: buzz once
+          if (window.AUDIO) window.AUDIO.play("error"); lastWithdrawErr = Date.now();
+        }
         lastWithdraw = Date.now();
       }
     }
@@ -1905,7 +1937,12 @@ function startLoop() {
       // near-instant spin-up: ramp 4 -> 20/s over the first 0.2s of the hold
       const elapsed = Date.now() - holdStart;
       const rate = 4 + Math.min(elapsed / 200, 1) * 16;
-      if (Date.now() - lastDrop >= 1000 / rate) { E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true; }
+      if (Date.now() - lastDrop >= 1000 / rate) {
+        const r = E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true;
+        if (r === null && Date.now() - lastErrBuzz >= 400) {   // hand empty / nothing accepts: buzz once
+          if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = Date.now();
+        }
+      }
     }
     if (dirty) renderPlay();
     if (leftHeld || rightHeld) requestAnimationFrame(step);
@@ -1932,6 +1969,12 @@ function wireInput() {
   const vp = $("#world-viewport");
   vp.addEventListener("mousedown", onMouseDown);
   vp.addEventListener("wheel", onWheel, { passive: false });
+  // on-screen zoom buttons nudge the SAME smooth-zoom target the wheel uses.
+  // higher zoomTarget = wider view = zoomed OUT, so zoom-IN lowers it.
+  const zNudge = (d) => { zoomTarget = clamp(zoomTarget + d, 1, 3);
+    if (!zoomAnimRunning) { zoomAnimRunning = true; requestAnimationFrame(zoomStep); } };
+  const zin = document.getElementById("zoom-in"); if (zin) zin.onclick = () => zNudge(-0.25);
+  const zout = document.getElementById("zoom-out"); if (zout) zout.onclick = () => zNudge(0.25);
   vp.addEventListener("contextmenu", e => e.preventDefault());
   tcvs.addEventListener("mousemove", onTreeMove);
   tcvs.addEventListener("click", onTreeClick);

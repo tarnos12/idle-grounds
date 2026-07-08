@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=43.
+?v=44.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -243,6 +243,35 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Workflow-driven UX / a11y / touch pass (?v=44, dynamic-workflow orchestration).**
+Same planner→fan-out→verify→fix loop across onboarding, feedback, touch, and
+DOM/CSS accessibility. Workflow #1 = 4 dimensions (onboarding, feedback, touch
+via Opus; a11y-dom via Sonnet) → Opus verify tagging safe-to-apply vs
+real-but-big + behavior-risk. Of 28 findings (2 refuted), 22 were safe; I
+applied ~20 (dropped "hide Debug/Reset" since the dev uses them, and folded the
+help-nudge into the intro). Shipped via 3 disjoint-file worktree agents:
+- **Onboarding:** one-time first-run intro (reuses #welcome-modal; premise +
+  goal + controls) gated on a new `introSeen` flag (existing saves migrate to
+  true, so only genuinely new players see it); quest-completion now points to
+  the dragon→Ascension-Gate endgame; quest 1 teaches WASD/wheel.
+- **Feedback:** the previously-dead AUDIO "error" sound + a ✗/🔒 floater now
+  fire on every silent rejection — empty-hand/wrong-item/full-building
+  right-click (throttled on hold), locked-region click, refused build
+  placement, unaffordable unlock/perk, empty withdraw.
+- **A11y:** Esc closes ALL modals; aria-labels on emoji/✕ buttons + recipe
+  cells + link-remove + quest chips; role="dialog"/aria-modal/aria-labelledby
+  + tabindex on every modal; :focus-visible ring; prefers-reduced-motion
+  disables the node bob/hit CSS animations; canvas text alternatives;
+  maxed-button contrast bumped to AA.
+- **Touch (safe slice):** on-screen +/- zoom buttons shown only on coarse-
+  pointer devices (desktop unchanged); wired to the same smooth-zoom the wheel
+  uses (zoom-in lowers zoomTarget = zooms in).
+Verified: engine suites pass; browser confirms fresh-save intro shows once
+(dismiss+reload → gone), all aria present, Esc closes modals, zoom buttons
+work, no page errors. DEFERRED to the user (real-but-big, all touch): no
+touch input path at all, no touch pan, no touch feed/drop, full pinch/gesture
+system — i.e. genuine mobile support is a separate medium-large feature.
 
 **Workflow-driven performance pass (?v=43, dynamic-workflow orchestration).**
 Same planner→fan-out→verify→fix loop, aimed at the 50ms tick + rAF render

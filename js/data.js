@@ -546,7 +546,7 @@ const UPGRADE_TREE = [
 // ------------------------------------------------------------------
 const QUESTS = [
   { id: "wood", icon: "🪵", name: "First timber",
-    desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand.",
+    desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.)",
     goal: () => ({ cur: window.ENGINE.handCount("wood"), need: 5 }) },
   { id: "leaves", icon: "🍃", name: "Bush whacker",
     desc: "Chop the small bushes 🌿 around the Altar and collect 5 leaves.",

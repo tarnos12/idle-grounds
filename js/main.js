@@ -30,7 +30,9 @@
   document.getElementById("ascend-later").onclick = () => {
     window.GS.ascendPrompt = false; window.UI.renderPlay();
   };
-  document.getElementById("welcome-close").onclick = () => window.UI.dismissWelcome();
+  document.getElementById("welcome-close").onclick = () => {
+    window.UI.dismissWelcome(); window.GS.introSeen = true; window.SAVE.saveState();
+  };
   document.getElementById("ending-continue").onclick = () => window.UI.dismissEnding();
   document.getElementById("perk-btn").onclick = () => window.UI.openPerkShop();
   document.getElementById("perk-close").onclick = () => window.UI.closePerkShop();
@@ -41,7 +43,11 @@
   // before audio plays, so resume the context on the first pointer/key press.
   window.onSfx = (name) => window.AUDIO.play(name);
   const muteBtn = document.getElementById("mute-btn");
-  const paintMute = () => { muteBtn.textContent = window.AUDIO.isMuted() ? "🔇" : "🔊"; };
+  const paintMute = () => {
+    const muted = window.AUDIO.isMuted();
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    muteBtn.setAttribute("aria-label", muted ? "Unmute sound" : "Mute sound");
+  };
   paintMute();
   muteBtn.onclick = () => { window.AUDIO.setMuted(!window.AUDIO.isMuted()); paintMute(); if (!window.AUDIO.isMuted()) window.AUDIO.play("click"); };
   const unlockAudio = () => { window.AUDIO.resume(); };
@@ -55,6 +61,18 @@
 
   window.UI.wireInput();
   window.UI.render();
+  // First run: reuse the #welcome-modal DOM for a one-time intro. Only when
+  // there's no offline summary, so the two never collide on the same load.
+  if (!window.GS.introSeen && !offline) {
+    const wm = document.getElementById("welcome-modal");
+    document.querySelector("#welcome-modal .dragon-ico").textContent = "🌱";
+    document.querySelector("#welcome-modal h2").textContent = "Welcome to Idle Grounds";
+    document.getElementById("welcome-away").textContent =
+      "These are your cultivation grounds — tend them and awaken the Sleeping Dragon 🐉.";
+    document.getElementById("welcome-gains").innerHTML =
+      "<span class=\"wg-none\">Follow the 📜 Quests panel (top-right) for what to do next, and open ❓ Help anytime. Left-click to gather · right-click to feed buildings · WASD to look around.</span>";
+    wm.classList.remove("hidden");
+  }
   window.UI.showOfflineSummary(offline);
 
   // Autosave: every 5s and on tab close. (state.js loads it back on boot.)
