@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=44.
+?v=45.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -243,6 +243,14 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Fuel rack shape → 3x2 (?v=45).** The burner fuel rack is now a 3-wide ×
+2-tall grid (was 2-wide × 3-tall), still on the LEFT of the footprint and
+still holding 6. Changed `FUEL_CELLS` to a 3-col×2-row layout, `drawFuelRack`
+cols=3/rows=2, and the burner draw call to `bx - 3*CELL, by + 1.5*CELL,
+3*CELL, 2*CELL` (vertically centred on the 5-tall footprint). Verified in
+Firefox: the 6 fuel items fill a 3×2 grid. (Center-map 2× buildable lands
+next — grid grows with corners held ~fixed; starter network re-tuned.)
 
 **Workflow-driven UX / a11y / touch pass (?v=44, dynamic-workflow orchestration).**
 Same planner→fan-out→verify→fix loop across onboarding, feedback, touch, and

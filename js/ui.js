@@ -653,10 +653,10 @@ function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
 // fh=2 cells). A 3-col x 2-row grid of 6 slots — new fuel enters at the front,
 // the back (oldest) item burns down right-to-left. "No fuel" floats above
 // when empty.
-const FUEL_CELLS = [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [2, 1]];  // 2 cols x 3 rows, oldest -> newest
+const FUEL_CELLS = [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]];  // 3 cols x 2 rows, oldest -> newest
 function drawFuelRack(b, fx0, fy0, fw, fh, s, X, Y) {
   const q = E.fuelQueue(b);
-  const cols = 2, rows = 3, cw = fw / cols, ch = fh / rows;
+  const cols = 3, rows = 2, cw = fw / cols, ch = fh / rows;
   // hopper panel + border, set apart from the crafting half below
   ctx.fillStyle = "rgba(40,28,18,.82)";
   ctx.fillRect(X(fx0), Y(fy0), fw * s, fh * s);
@@ -797,11 +797,11 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       // converter face (centred): input icons (have/need) + result icon (+
       // crafts the stock can still make) + a 1-cell progress bar. Burners
       // fill their whole 3x5 footprint with the crafting face and hang a
-      // 2x3 fuel rack outside the footprint on the LEFT (purely visual).
+      // 3x2 fuel rack outside the footprint on the LEFT (purely visual).
       if (bCfg.fuel) {
         drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
-        // fuel rack outside the footprint on the LEFT (2 cols x 3 rows, centred vertically)
-        drawFuelRack(b, bx - 2 * CELL, by + CELL, 2 * CELL, 3 * CELL, s, X, Y);
+        // fuel rack outside the footprint on the LEFT (3 cols x 2 rows, centred vertically)
+        drawFuelRack(b, bx - 3 * CELL, by + 1.5 * CELL, 3 * CELL, 2 * CELL, s, X, Y);
       } else {
         drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
       }
