@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=45.
+?v=46.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -243,6 +243,25 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Map grown ~2x buildable, corners held at 25x25 (?v=46).** GRID.cells
+75 → 93 and `_T` decoupled from region size (fixed 25), so the 4 corner
+blocks stay 25×25 while the buildable middle bands grow: center buildable
+2500 → 5074 cells (2.03×). Applies to ALL regions uniformly (one shared
+grid); mine/fishing/volcano/grove spawner counts scale via areaScale (now
+15) but their centre zones grew ~3×, so node density actually DROPS
+slightly. `setupStarterNetwork` fully re-tuned to the new fixture spots
+(altar auto-centres at 44,44; quarry ~79,11; tree ~10,44; fox ~12,80; clay
+76-84) — all 18 starter buildings place, collectors within gather radius of
+their sources (7.1/6.0/7.0/0.0 cells). NEW MIGRATION: saves now carry a
+`gridCells` stamp; loading a save from a different grid re-rolls nodes /
+spawnQueue / enemies (fixtures & fields land in the CURRENT zones) while
+KEEPING buildings (grid only ever grew, so all coords stay in-bounds) —
+note an old save's starter network keeps its old positions (demolish
+refunds 100% if re-placement is wanted); a Reset shows the pristine new
+layout. Verified: 29/29 geometry+starter suite, 7/7 regrid-migration suite,
+all prior regression suites, browser boot clean, building placeable deep in
+the new southern band.
 
 **Fuel rack shape → 3x2 (?v=45).** The burner fuel rack is now a 3-wide ×
 2-tall grid (was 2-wide × 3-tall), still on the LEFT of the footprint and

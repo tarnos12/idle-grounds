@@ -353,7 +353,7 @@ function initArea(areaKey) {
     const s = buildingSize("center");
     area.buildings.push({
       id: area.nextBuildId++, type: "center",
-      row: (D.GRID.cells - s.h) / 2, col: (D.GRID.cells - s.w) / 2,   // 75-5 -> 35: exact centre
+      row: (D.GRID.cells - s.h) / 2, col: (D.GRID.cells - s.w) / 2,   // (93-5)/2 -> 44: exact centre
       paid: {}, built: true, item: null, qty: 0,
     });
   }
@@ -423,39 +423,42 @@ function placeBuilt(areaKey, type, r0, c0, extra) {
 function setupStarterNetwork() {
   if (window.GS.starterPlaced) return false;
   const A = "center";
-  // producers in the open band south of the Altar
-  const forge = placeBuilt(A, "forge", 52, 26);
-  const bench = placeBuilt(A, "workbench", 52, 31);
-  const mill  = placeBuilt(A, "paper_mill", 52, 36);
-  const kiln  = placeBuilt(A, "kiln", 52, 41);
-  const array = placeBuilt(A, "infusion_array", 52, 46);
+  // Coords tuned to the N=93,T=25 layout: Altar auto-centres at rows/cols
+  // 44-48; quarry rock ~(79,11), spirit tree ~(10,44), fox corner ~(12,80),
+  // clay field ~rows/cols 76-84.
+  // producers in the open band south of the Altar (centre zone rows 25-67)
+  const forge = placeBuilt(A, "forge", 55, 30);
+  const bench = placeBuilt(A, "workbench", 55, 36);
+  const mill  = placeBuilt(A, "paper_mill", 55, 42);
+  const kiln  = placeBuilt(A, "kiln", 55, 48);
+  const array = placeBuilt(A, "infusion_array", 55, 54);
   // typed storehouses for the rare finds — placed NEAR their source
   // (just outside the wild-land corners, beside the quarry / below the tree)
-  const shJade   = placeBuilt(A, "storehouse", 60, 26, { item: "jade_shard", lock: true });
-  const shBamboo = placeBuilt(A, "storehouse", 26, 36, { item: "bamboo", lock: true });
-  // collectors at each source
-  const gsStone = placeBuilt(A, "gathering_stone", 62, 18);
-  const gsWood  = placeBuilt(A, "gathering_stone", 16, 33);
-  const gsClay  = placeBuilt(A, "gathering_stone", 62, 56);
-  const gsFox   = placeBuilt(A, "gathering_stone", 12, 62);
+  const shJade   = placeBuilt(A, "storehouse", 78, 27, { item: "jade_shard", lock: true });
+  const shBamboo = placeBuilt(A, "storehouse", 26, 44, { item: "bamboo", lock: true });
+  // collectors at each source (anyZone, so they sit on the wild land)
+  const gsStone = placeBuilt(A, "gathering_stone", 80, 18);
+  const gsWood  = placeBuilt(A, "gathering_stone", 16, 44);
+  const gsClay  = placeBuilt(A, "gathering_stone", 80, 73);
+  const gsFox   = placeBuilt(A, "gathering_stone", 12, 80);
   // seals keep the main lines pure
-  const sealStone = placeBuilt(A, "warding_seal", 58, 22, { item: "stone", lock: true });
-  const sealWood  = placeBuilt(A, "warding_seal", 30, 36, { item: "wood", lock: true });
+  const sealStone = placeBuilt(A, "warding_seal", 74, 22, { item: "stone", lock: true });
+  const sealWood  = placeBuilt(A, "warding_seal", 30, 44, { item: "wood", lock: true });
   // lanterns + links (link order = round-robin send order)
   const L = (lb, from, to) => { if (lb && from && to) lb.links.push({ from: from.id, to: to.id }); };
-  const lanQ = placeBuilt(A, "wisp_lantern", 60, 20);
+  const lanQ = placeBuilt(A, "wisp_lantern", 76, 20);
   L(lanQ, gsStone, sealStone); L(lanQ, sealStone, array); L(lanQ, gsStone, shJade);
-  const lanT = placeBuilt(A, "wisp_lantern", 22, 36);
+  const lanT = placeBuilt(A, "wisp_lantern", 22, 44);
   L(lanT, gsWood, sealWood);
   L(lanT, sealWood, forge); L(lanT, sealWood, bench); L(lanT, sealWood, mill); L(lanT, sealWood, kiln);
   L(lanT, gsWood, shBamboo);
-  const lanM = placeBuilt(A, "wisp_lantern", 44, 52);
+  const lanM = placeBuilt(A, "wisp_lantern", 52, 58);
   L(lanM, gsClay, kiln); L(lanM, gsFox, array);
   // seed the sources so every line visibly runs from the first minute
   const seed = (item, n, r, c) => dropGround(A, item, n, (c + 0.5) * CELL, (r + 0.5) * CELL);
-  seed("stone", 8, 62, 12); seed("jade_shard", 2, 61, 13);
-  seed("wood", 8, 15, 37);  seed("bamboo", 2, 16, 38);
-  seed("clay", 6, 62, 62);  seed("spirit_essence", 4, 12, 64);
+  seed("stone", 8, 80, 14); seed("jade_shard", 2, 79, 15);
+  seed("wood", 8, 15, 45);  seed("bamboo", 2, 16, 46);
+  seed("clay", 6, 80, 80);  seed("spirit_essence", 4, 12, 82);
   window.GS.starterPlaced = true;
   return true;
 }

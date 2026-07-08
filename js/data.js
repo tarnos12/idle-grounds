@@ -237,7 +237,7 @@ const AREAS = {
 // ------------------------------------------------------------------
 const GRID = {
   cell: 32,           // px per cell
-  cells: 75,          // 75 x 75 PLAYABLE cells per area (~10x the old 24x24 area)
+  cells: 93,          // 93 x 93 PLAYABLE cells/area — grown to ~2x buildable middle; corners held at 25x25 (see _T)
   margin: 10,         // inert border cells around the whole map
   gap: 5,             // inert void cells separating adjacent regions
   building: { w: 3, h: 3 },   // default footprint (burners override to 3x4)
@@ -247,7 +247,9 @@ const GRID = {
 // grid (each block ~1/3 of the side) so they scale with GRID.cells.
 // Resource nodes spawn ONLY in an area's spawn zone; buildings may go
 // anywhere EXCEPT a noBuild zone (the reserved wild land).
-const _N = GRID.cells, _T = Math.floor(GRID.cells / 3);
+// corner blocks fixed at 25x25, DECOUPLED from _N: growing GRID.cells now
+// enlarges only the buildable middle bands (corners stay the same size).
+const _N = GRID.cells, _T = 25;
 const _TL = { r0: 0, c0: 0, r1: _T - 1, c1: _T - 1 };
 const _TR = { r0: 0, c0: _N - _T, r1: _T - 1, c1: _N - 1 };
 const _BL = { r0: _N - _T, c0: 0, r1: _N - 1, c1: _T - 1 };

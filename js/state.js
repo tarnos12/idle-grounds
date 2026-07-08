@@ -65,6 +65,9 @@ function makeInitialState() {
     perks: {},              // { perkId: level }
     // First-run onboarding: show the intro once (existing saves count as seen).
     introSeen: false,
+    // Grid geometry stamp — a save from a different GRID.cells re-rolls its
+    // map layout on load (see the migration in loadState).
+    gridCells: window.DATA.GRID.cells,
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
     quest: { idx: 0, hidden: false },
     // Wall-clock of the last save — offline catch-up (engine) replays the
@@ -145,8 +148,14 @@ function loadState() {
     // ---- migration: scrub content that no longer exists in the game ----
     // (old saves may hold removed node kinds, tiers and item types)
     const LIVE = new Set(Object.keys(window.DATA.ITEM_NAMES));
+    // geometry migration: a save from a different grid size keeps its
+    // buildings (in-bounds — the grid only ever grew) but re-rolls nodes,
+    // pending respawns and enemies so fixtures/fields/foxes land in the
+    // CURRENT zones rather than the old layout's spots.
+    const regrid = s.gridCells !== window.DATA.GRID.cells;
     for (const k of Object.keys(fresh.areas)) {
       const a = fresh.areas[k];
+      if (regrid) { a.nodes = []; a.spawnQueue = []; a.enemies = []; a.genTimers = []; }
       const cfg = window.DATA.AREAS[k];
       const spKinds = new Set((cfg.spawners || []).map(sp => sp.kind));
       const fxKinds = new Set((cfg.fixtures || []).map(fx => fx.kind));
