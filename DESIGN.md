@@ -148,6 +148,16 @@ finally pays off. **📊 Stats panel:** a top-bar button opens a modal of
 lifetime stats (playtime, totals, fox kills, buildings, upgrades, disciples,
 wisp links, recipe switches, ascensions + points, regions unlocked, carry).
 
+✅ Furnace layout + 2 perks (post-roadmap): the four fuel burners (Forge,
+Kiln, Pill Furnace, Star Anvil) grew **3x4 → 3x5**, and their fuel slots
+moved off the top of the footprint into a **2-col × 3-row, 6-slot rack
+drawn on the LEFT, outside the footprint** (visual only, not collision) —
+so the crafting face now fills the whole 3x5 building. Two new Ascension
+Shrine perks: **Ascendant Insight** (+1 Ascension Point per ascension per
+level, max 3 — wired in engine `ascendReward`) and **Keen Automation**
+(automation harvests +1 extra node/tick per level, max 3 — wired in
+`automationTick`).
+
 Next frontiers: sprite art (see wishlist), more perks.
 
 ## Building sprite wishlist (assets/buildings/<file>)

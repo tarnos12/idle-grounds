@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=36.
+?v=37.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,22 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Furnace layout + 2 perks (?v=37, agent team).** The four fuel burners —
+Forge, Kiln, Pill Furnace, Star Anvil — resized **3x4 → 3x5**, and their
+fuel rack moved from the top of the footprint to a **2-col × 3-row, 6-slot
+rack drawn on the LEFT side, outside the footprint** (visual only — NOT part
+of collision), so the crafting face now fills the full 3x5 building
+(`drawFuelRack` grid is now 2×3; the burner draw branch draws the face over
+the full footprint + the rack at `bx-2*CELL, by+CELL`). Two new
+`DATA.PERKS`: **Ascendant Insight** (+1 Ascension Point per ascension per
+level, max 3 — engine `ascendReward`) and **Keen Automation** (automation
+harvests +1 extra node/tick per level, max 3 — engine `automationTick`),
+each a pure passive via `perkLevel`. Built by an in-session agent team
+(furnace slice, perks slice, docs, test); manager integrated on `master`.
+Verified: 17-check headless run (burners 3x5, 8 perks, ascendReward +2 at
+apgain L2, automationTick 3 = base 1 + autoboost 2) + a Chromium screenshot
+of a forge with the left fuel rack, no draw errors.
 
 **Stats panel (?v=36, agent team).** A "📊 Stats" top-bar button opens
 `#stats-modal` (index.html) listing lifetime stats — playtime, totals

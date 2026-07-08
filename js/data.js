@@ -296,7 +296,7 @@ const BUILDINGS = {
                  { name: "Tools", inputs: { plank: 2, iron_bar: 1 }, output: "tools", outputQty: 1, timeMs: 6000 },
                ] },
   kiln:      { name: "Kiln",      icon: "🏺", cost: { wood: 10, clay: 5 },  unlocked: true,
-               fuel: true, size: { w: 3, h: 4 },
+               fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Brick", inputs: { clay: 2 }, output: "brick", outputQty: 1, timeMs: 5000 },
                  { name: "Glass", inputs: { sand: 2 }, output: "glass", outputQty: 1, timeMs: 6000 },
@@ -341,7 +341,7 @@ const BUILDINGS = {
                ] },
   // ---- Phase-4 T3 producers (both burners) ----
   pill_furnace:{ name: "Pill Furnace", icon: "🫕", cost: { brick: 6, iron_bar: 4, tools: 2 }, unlocked: true,
-               fuel: true, size: { w: 3, h: 4 },
+               fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Ember Pill", inputs: { qi_elixir: 1, firestone: 1 }, output: "ember_pill", outputQty: 1, timeMs: 9000 },
                  { name: "Verdant Pill", inputs: { qi_elixir: 1, spirit_herb: 1 }, output: "verdant_pill", outputQty: 1, timeMs: 9000 },
@@ -349,7 +349,7 @@ const BUILDINGS = {
                  { name: "Stoneheart Pill", inputs: { qi_elixir: 1, spirit_stone: 1 }, output: "stoneheart_pill", outputQty: 1, timeMs: 9000 },
                ] },
   star_anvil:{ name: "Star Anvil", icon: "⚒️", cost: { iron_bar: 6, tools: 3, glass: 2 }, unlocked: true,
-               fuel: true, size: { w: 3, h: 4 },
+               fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
                ] },
@@ -393,7 +393,7 @@ const BUILDINGS = {
   // taking wood in their recipes — feed them wood/bamboo/charcoal directly
   // or let a Furnace Spirit stoke them.
   forge:     { name: "Forge",     icon: "🔥", cost: { wood: 5, stone: 10 }, unlocked: false, stageUnlock: 1,
-               fuel: true, size: { w: 3, h: 4 },
+               fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Iron Bar", inputs: { iron_ore: 2 }, output: "iron_bar", outputQty: 1, timeMs: 6000 },
                ] },
@@ -607,6 +607,10 @@ const PERKS = [
     desc: "Region unlock costs -20% per level." },
   { id: "ember",   name: "Ember Heart",     icon: "🔥", max: 4, cost: [2, 3, 5, 7],
     desc: "Burners consume fuel 15% slower per level." },
+  { id: "apgain",    name: "Ascendant Insight", icon: "🌟", max: 3, cost: [3, 5, 8],
+    desc: "+1 Ascension Point per ascension per level." },
+  { id: "autoboost", name: "Keen Automation",   icon: "⚙️", max: 3, cost: [3, 5, 8],
+    desc: "Automation harvests +1 extra node per tick per level." },
 ];
 
 // ------------------------------------------------------------------

@@ -144,7 +144,7 @@ function buyPerk(id) {
 // AP earned by ascending NOW: 1 base + 1 per unlocked region beyond Center.
 function ascendReward() {
   const regions = Object.values(window.GS.world.unlocked).filter(Boolean).length;
-  return 1 + Math.max(0, regions - 1);
+  return 1 + Math.max(0, regions - 1) + perkLevel("apgain");
 }
 // The offline catch-up window, extended +2h per Long Slumber level.
 function offlineCapMs() { return (8 + 2 * perkLevel("slumber")) * 3600 * 1000; }
@@ -1676,7 +1676,7 @@ function automationTick() {
     if (!isAreaUnlocked(areaKey)) continue;
     const level = window.GS.areas[areaKey].upgrades.automation;
     if (level <= 0) continue;
-    const budget = D.AUTOMATION_CLICKS[level];
+    const budget = D.AUTOMATION_CLICKS[level] + perkLevel("autoboost");
     const nodes = window.GS.areas[areaKey].nodes.filter(n => !n.deco).sort((a, b) => b.tier - a.tier);
     let clicks = 0;
     for (const node of nodes) {
