@@ -888,7 +888,7 @@ function endpointAccepts(b, item) {
   if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
   if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
   if (cfg.stoker) return D.FUEL[item] != null && gatherTotal(b) < cfg.stoker.cap;
-  if (cfg.roster) return foodValue(b, item) > 0 && (b.buns || 0) < cfg.roster.foodCap;
+  if (cfg.roster) return foodValue(b, item) > 0 && (cfg.roster.foodCap - (b.buns || 0)) >= foodValue(b, item);
   if (cfg.recipes) {
     const rec = recipeOf(b);
     const isInput = rec && rec.inputs[item] != null;
@@ -1029,10 +1029,10 @@ function demolishBuilding(areaKey, buildingId) {
         for (const [item, qty] of Object.entries(rec.inputs))
           dropGround(areaKey, item, qty, x, y);
     }
-    // a pavilion refunds its disciples (as Robes) and any unfed buns
+    // a pavilion refunds its disciples (as Robes); cultivation cycles are
+    // consumed, not stored — no refund (like fuel).
     if (cfg.roster) {
       if (b.disciples > 0) dropGround(areaKey, cfg.roster.recruit, b.disciples, x, y);
-      if (b.buns > 0) dropGround(areaKey, cfg.roster.food, b.buns, x, y);
     }
   } else {
     for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y);
@@ -1582,6 +1582,9 @@ function gameTick() {
           id: area.nextEnemyId++, x: rand(x0, x1), y: rand(y0, y1),
           hp: ecfg.hp, maxHp: ecfg.hp, tx: rand(x0, x1), ty: rand(y0, y1), hitAt: 0,
         });
+        // each replacement waits a full interval — advance the shared timer on
+        // spawn too (not only on kill) or multi-empty slots refill every tick
+        area.enemyRespawnAt = now + (ecfg.respawnMs || 5000) * scale;
         changed = true;
       }
       for (const en of area.enemies) {
@@ -1739,7 +1742,6 @@ function countHeldItems() {
       if (b.item) add(b.item, b.qty || 0);                        // storehouse
       for (const s of b.inv || []) add(s.item, s.qty);            // gatherer/stoker buffer
       for (const it of Object.keys(b.stock || {})) add(it, b.stock[it]);  // converter stock
-      if (b.buns) add("spirit_buns", b.buns);                     // pavilion food
     }
   }
   return tally;

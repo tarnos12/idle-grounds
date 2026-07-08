@@ -152,7 +152,7 @@ window.onGroundDrop = function (areaKey, item, qty, x, y) {
 };
 // Player-driven pickup pop at the cursor (green "+N"), plus a light sparkle.
 function fxPickup(region, lx, ly, n) {
-  if (n <= 0) return;
+  if (n <= 0 || !region || !DD.WORLD.regions[region]) return;   // no region = nothing to paint (guard the void)
   const p = regionPx(region);
   const wx = p.x + lx, wy = p.y + ly;
   addFloater(wx, wy - 8, "+" + n, C.accent);
@@ -1234,6 +1234,7 @@ function toggleDemolish(force) {
 // drops everything the building holds on the ground first (engine rule).
 let recipeMenuFor = null;   // { area, id } while open
 function openRecipeMenu(areaKey, b) {
+  closeLinkMenu(); closeRoster();   // one building panel at a time
   recipeMenuFor = { area: areaKey, id: b.id };
   renderRecipeMenu();
 }
@@ -1302,7 +1303,7 @@ function hideRecipeInfo() { $("#recipe-info").classList.add("hidden"); }
 // Left-click a pavilion -> this panel: disciple count, bun stock and a
 // Recruit button that spends one Robe from the hand.
 let rosterFor = null;   // { area, id } while open
-function openRoster(areaKey, b) { rosterFor = { area: areaKey, id: b.id }; renderRoster(); }
+function openRoster(areaKey, b) { closeRecipeMenu(); closeLinkMenu(); rosterFor = { area: areaKey, id: b.id }; renderRoster(); }
 function closeRoster() { rosterFor = null; $("#roster-menu").classList.add("hidden"); }
 function renderRoster() {
   const bar = $("#roster-menu");
@@ -1338,6 +1339,7 @@ function bLabel(b) {
   return `${cfg.icon} ${cfg.name}${typed}`;
 }
 function openLinkMenu(areaKey, b) {
+  closeRecipeMenu(); closeRoster();   // one building panel at a time
   linkMode = { area: areaKey, id: b.id, picking: null, srcId: null };
   renderLinkMenu();
   requestGridPaint();
@@ -1849,6 +1851,7 @@ function startLoop() {
   if (loopRunning) return;
   loopRunning = true;
   const step = () => {
+   try {
     let dirty = false;
     const rg = cursor.region && E.isAreaUnlocked(cursor.region) ? cursor.region : null;
     if (leftHeld && pickupMode && cursor.over && rg) {
@@ -1862,7 +1865,7 @@ function startLoop() {
       const elapsed = Date.now() - withdrawStart;
       const rate = 1 + Math.min(elapsed / 200, 1) * 4;   // 1 .. 5 items per second
       if (Date.now() - lastWithdraw >= 1000 / rate) {
-        if (E.withdrawFromBuilding(withdrawSH, 1) > 0) { dirty = true; fxPickup(rg || cursor.region, cursor.lx, cursor.ly, 1); }
+        if (E.withdrawFromBuilding(withdrawSH, 1) > 0) { dirty = true; if (rg) fxPickup(rg, cursor.lx, cursor.ly, 1); }
         lastWithdraw = Date.now();
       }
     }
@@ -1891,6 +1894,12 @@ function startLoop() {
     if (dirty) renderPlay();
     if (leftHeld || rightHeld) requestAnimationFrame(step);
     else loopRunning = false;
+   } catch (err) {
+    // a rendering hiccup must never permanently wedge input: reset the loop
+    // flag (a later startLoop can revive it) and don't reschedule on throw
+    loopRunning = false;
+    console.error("hold-loop step failed", err);
+   }
   };
   requestAnimationFrame(step);
 }

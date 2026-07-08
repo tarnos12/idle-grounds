@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=41.
+?v=42.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -243,6 +243,34 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Workflow-driven hardening pass (?v=42, dynamic-workflow orchestration).**
+A 2-workflow, model-tiered pass (planner/orchestrator/reviewer in the main
+loop; Opus for hard logic, Sonnet for mechanical): Workflow #1 = 6 review
+dimensions → adversarial Opus verify (refuted 1 false positive via git
+history, confirmed 7). Workflow #2 = 3 worktree-isolated fix agents with
+disjoint file ownership. Shipped fixes:
+- **HIGH (ui.js):** the withdraw hold-loop threw `fxPickup(null,…)` when the
+  cursor sat over the inter-region void, wedging `loopRunning=true` and killing
+  ALL hold/auto interactions (harvest, pickup, attack, drip-drop, withdraw)
+  until reload. Fixed at the root (only paint FX when a real region exists),
+  hardened `fxPickup` to no-op on a null/unknown region, and wrapped the rAF
+  step in try/catch so no future hiccup can permanently wedge input.
+- **MED (engine.js):** Meditation Pavilion `b.buns` is an abstract cultivation
+  -cycle counter, not a Spirit Buns inventory — demolish minted Buns from
+  cycles (laundering wine 3:1) and `countHeldItems` mis-tallied them. Now:
+  accept-gate requires room for a food's full value (no wasted wine), demolish
+  refunds no cycles (consumed like fuel), tally ignores cycles.
+- **LOW (engine.js):** enemy zone refilled to cap instantly after a multi-kill
+  — respawn timer now advances on each spawn, not only on kill.
+- **LOW (ui.js):** opening a building menu (recipe/link/roster) now closes the
+  other two.
+- **LOW (data.js):** grove unlock cost 24 → 20 (≤ base hand cap, honouring the
+  stated invariant for real balance).
+- **DOC (DESIGN.md):** added done-markers for v39/40/41; un-marked the shipped
+  rice/koi/spring-water renames + bamboo second source.
+Verified headless (engine 12/12, perks, audit suite) + browser (menu close,
+fxPickup guard, clean boot).
 
 **Procedural SFX + mute toggle (?v=41, agent audio + manual wiring).** New
 `js/audio.js` = `window.AUDIO`, a tiny WebAudio synth (lazy context on first

@@ -458,7 +458,7 @@ const WORLD = {
     mine:    { wood: 16 },
     fishing: { wood: 20 },
     volcano: { iron_bar: 3 },
-    grove:   { wheat: 12, wood: 12 },
+    grove:   { wheat: 12, wood: 8 },
   },
 };
 

@@ -6,9 +6,10 @@ the roadmap. Max 3 resource types per cost/recipe, everywhere.
 ## Resource tiers
 
 **Gathered (raw):** wood, leaves, stone, clay, bamboo* (rare from Spirit
-Tree ✅), rice (rename of wheat, pending), cotton, sand, iron ore,
+Tree ✅; also common from bamboo stalks in the Spirit Grove ✅), rice
+(rename of wheat ✅), cotton, sand, iron ore,
 jade shard* (rare from quarry/stone field ✅), firestone*, koi (rename of
-fish, pending), algae, spring water (rename, pending), spirit herb,
+fish ✅), algae, spring water (rename ✅), spirit herb,
 spirit essence, beast bone* (from tier-2 beasts, lured with Beast Bait).
 
 **Refined (T2):** ✅ iron bar (Forge), ✅ plank (Workbench), ✅ brick (Kiln),
@@ -157,6 +158,19 @@ Shrine perks: **Ascendant Insight** (+1 Ascension Point per ascension per
 level, max 3 — wired in engine `ascendReward`) and **Keen Automation**
 (automation harvests +1 extra node/tick per level, max 3 — wired in
 `automationTick`).
+
+✅ Victory/ending overlay (post-roadmap): fully awakening the Sleeping
+Dragon now shows a dedicated ending modal (`#ending-modal`, driven by
+`maybeShowEnding`) instead of just the passive speed blessing.
+
+✅ Bug-audit fixes (post-roadmap): firestone now routes correctly as fuel
+vs. recipe ingredient, automation no longer harvests fixtures (Spirit
+Tree/quarry rock/spring), spirit_buns has its own offline-tally key, and
+the converter progress bar is prestige-aware.
+
+✅ Procedural WebAudio SFX (post-roadmap): `js/audio.js` (`window.AUDIO`)
+generates 13 sounds procedurally via a `window.onSfx` hook, plus a mute
+toggle.
 
 Next frontiers: sprite art (see wishlist), more perks.
 
