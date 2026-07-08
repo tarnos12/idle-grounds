@@ -167,6 +167,7 @@ function shrineBuilt() {
 // The Ascension itself: reset the grounds, keep the prestige counter (and
 // spare veterans the tutorial). Saves, then reboots into the fresh run.
 function ascend() {
+  if (window.onSfx) window.onSfx("ascend");
   const asc = (window.GS.ascensions || 0) + 1;
   const pts = (window.GS.ascendPoints || 0) + ascendReward();
   const perks = window.GS.perks || {};
@@ -602,6 +603,7 @@ function pickupNear(areaKey, x, y, radius) {
 function harvestNode(areaKey, nodeId, isAuto) {
   const node = nodeById(areaKey, nodeId);
   if (!node || node.deco) return false;   // decorative nodes can't be interacted with
+  if (!isAuto && window.onSfx) window.onSfx("harvest", areaKey);   // player swing feedback
 
   // AUTO badge should stay solid while auto-mining: last longer than the gap
   // between auto-swings (and the 1s automation tick).
@@ -1115,6 +1117,7 @@ function dropFromHand(areaKey, x, y) {
       dr.stage++; dr.paid = {};
       dr.msg = st.text; dr.msgUntil = Date.now() + 8000;
       dr.dialog = st.text;   // story dialog box (persists until dismissed)
+      if (window.onSfx) window.onSfx("dragon", areaKey);
       if (!dragonStage()) window.GS.won = true;   // final stage: it AWAKENS
     }
     return res;
@@ -1186,6 +1189,7 @@ function dropFromHand(areaKey, x, y) {
     if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) {
       b.built = true;
       window.GS.stats.buildingsBuilt = (window.GS.stats.buildingsBuilt || 0) + 1;
+      if (window.onSfx) window.onSfx("build", areaKey);
       // completing the Ascension Gate offers the ending
       if (D.BUILDINGS[b.type].gate) window.GS.ascendPrompt = true;
     }
@@ -1235,6 +1239,7 @@ function upgradeLevel(areaKey, type) {
 function applyUpgrade(areaKey, type) {
   const up = window.GS.areas[areaKey].upgrades;
   window.GS.stats.upgradesApplied = (window.GS.stats.upgradesApplied || 0) + 1;
+  if (window.onSfx) window.onSfx("upgrade", areaKey);
   if (type === "tier") up.maxTier++;
   else if (type === "speed") up.speed++;
   else if (type === "harvestSpeed") up.harvestSpeed++;
@@ -1340,6 +1345,7 @@ function unlockArea(areaKey) {
   const cost = areaUnlockCost(areaKey);
   if (!cost || !spend(cost)) return false;
   window.GS.world.unlocked[areaKey] = true;
+  if (window.onSfx) window.onSfx("unlock", areaKey);
   // Refresh stale surfaced fish so they don't all dive the instant it opens.
   const cfg = D.AREAS[areaKey];
   for (const n of window.GS.areas[areaKey].nodes)
@@ -1428,6 +1434,7 @@ function gameTick() {
         const qty = scfg.outputQty || 1;
         dropGround(areaKey, scfg.output, qty, bx, by);
         window.GS.stats.totalCrafted += qty;
+        if (window.onSfx) window.onSfx("craft", areaKey);
         b.smeltDoneAt = 0;
         changed = true;
       }
@@ -1627,6 +1634,7 @@ function damageEnemy(areaKey, en, dmg) {
   if (en.hp > 0) return;
   const i = area.enemies.indexOf(en);
   if (i >= 0) area.enemies.splice(i, 1);
+  if (window.onSfx) window.onSfx("kill", areaKey);
   const ecfg = D.AREAS[areaKey].enemies;
   // baited tier-2 beasts carry their own loot table and don't touch the
   // regular respawn clock
@@ -1668,6 +1676,7 @@ function attackEnemy(areaKey, id) {
   const area = window.GS.areas[areaKey];
   const target = area.enemies.find(en => en.id === id);
   if (!target) return false;
+  if (window.onSfx) window.onSfx("hit", areaKey);
   const up = area.upgrades;
   const dmg = 1 + (up.damage || 0) + (combatBuffActive() ? D.VITALITY.bonusDamage : 0) + perkLevel("fury");
   const R = (up.aoe || 0) * 1.5 * CELL;
@@ -1747,9 +1756,11 @@ function runOfflineCatchup() {
   const step = Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS));
   const before = countHeldItems();
   const sink = window.onGroundDrop;             // silence "+N" floaters during the sim
+  const sfxSink = window.onSfx;                 // and mute SFX for the whole replay
   let virt = last, sinceAuto = 0;
   try {
     window.onGroundDrop = null;
+    window.onSfx = null;
     Date.now = () => virt;                      // drive every timer off the virtual clock
     for (; virt < last + elapsed; virt += step) {
       gameTick();
@@ -1759,6 +1770,7 @@ function runOfflineCatchup() {
   } finally {
     Date.now = realNow;                         // ALWAYS restore, even if a tick throws
     window.onGroundDrop = sink;
+    window.onSfx = sfxSink;
   }
   const after = countHeldItems();
   const gained = {};

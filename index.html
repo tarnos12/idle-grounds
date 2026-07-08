@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=40" />
+  <link rel="stylesheet" href="style.css?v=41" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
@@ -40,6 +40,7 @@
       <div class="hand-pill">✋ <span id="hand-count">0/20</span></div>
       <div class="buff-pill hidden" id="buff-pill"></div>
       <button id="perk-btn" class="hidden" title="Ascension Shrine — spend Ascension Points on permanent perks">☯ <span id="perk-ap">0</span></button>
+      <button id="mute-btn" title="Mute / unmute sound">🔊</button>
       <button id="help-btn" title="How to play">❓ Help</button>
       <button id="stats-btn" title="Your progress so far">📊 Stats</button>
       <button id="build-btn">🔨 Build</button>
@@ -164,10 +165,11 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=40"></script>
-  <script src="js/state.js?v=40"></script>
-  <script src="js/engine.js?v=40"></script>
-  <script src="js/ui.js?v=40"></script>
-  <script src="js/main.js?v=40"></script>
+  <script src="js/data.js?v=41"></script>
+  <script src="js/state.js?v=41"></script>
+  <script src="js/audio.js?v=41"></script>
+  <script src="js/engine.js?v=41"></script>
+  <script src="js/ui.js?v=41"></script>
+  <script src="js/main.js?v=41"></script>
 </body>
 </html>

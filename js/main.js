@@ -35,6 +35,19 @@
   document.getElementById("perk-btn").onclick = () => window.UI.openPerkShop();
   document.getElementById("perk-close").onclick = () => window.UI.closePerkShop();
 
+  // Sound: the engine fires window.onSfx(name) at authoritative events (craft,
+  // build, upgrade, unlock, hit, kill, dragon, ascend, harvest); route them to
+  // the synth. A mute toggle persists via AUDIO; browsers need a user gesture
+  // before audio plays, so resume the context on the first pointer/key press.
+  window.onSfx = (name) => window.AUDIO.play(name);
+  const muteBtn = document.getElementById("mute-btn");
+  const paintMute = () => { muteBtn.textContent = window.AUDIO.isMuted() ? "🔇" : "🔊"; };
+  paintMute();
+  muteBtn.onclick = () => { window.AUDIO.setMuted(!window.AUDIO.isMuted()); paintMute(); if (!window.AUDIO.isMuted()) window.AUDIO.play("click"); };
+  const unlockAudio = () => { window.AUDIO.resume(); };
+  window.addEventListener("pointerdown", unlockAudio, { once: true });
+  window.addEventListener("keydown", unlockAudio, { once: true });
+
   // Offline / idle catch-up: replay the passive economy for the time the tab
   // was closed, then show the "Welcome back" summary. Runs once, after the
   // world is primed but before the live loops start.

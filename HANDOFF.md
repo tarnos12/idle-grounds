@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=40.
+?v=41.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -26,8 +26,11 @@ picking:
 3. **More prestige perks** — the Ascension Shrine (js/data.js `PERKS`) has
    4 perks; add more (yield %, wisp haste, combat, cheaper unlocks…) — each
    needs one wiring point in engine.js like the existing ones.
-4. Polish: a balance pass with DATA.TEST.ENABLED=false; maybe SFX.
-   (Offline catch-up, feedback juice AND deeper prestige are DONE — below.)
+4. Polish: SFX are DONE (procedural WebAudio synth, ?v=41). Balance is
+   deliberately left in FAST TEST MODE (DATA.TEST.ENABLED=true) — the user
+   chose to keep quick play while iterating (2026-07-08); a real GDD-balance
+   pass (ENABLED=false) is a future toggle when they're ready to ship slow.
+   (Offline catch-up, feedback juice, deeper prestige AND sound are DONE.)
 
 **Every git commit MUST update this file** (this pointer + the Last
 session summary below) so a fresh session knows the state; bump the ?v=
@@ -240,6 +243,20 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Procedural SFX + mute toggle (?v=41, agent audio + manual wiring).** New
+`js/audio.js` = `window.AUDIO`, a tiny WebAudio synth (lazy context on first
+gesture, ~0.18 master gain, oscillator+envelope voices, NO assets so the CSP
+artifact still works). 13 soft chime-like sounds: harvest, pickup, swing,
+craft, build, upgrade, unlock, hit, kill, dragon, ascend, error, click. The
+ENGINE stays DOM-free and fires a new optional `window.onSfx(name)` hook at
+authoritative events (mirroring the existing `window.onGroundDrop` pattern);
+main.js installs `onSfx = n => AUDIO.play(n)`, resumes the context on first
+pointer/key, and wires a 🔊/🔇 mute button (persisted to `ig_muted`, default
+on). onSfx is detached during offline catch-up so the replay is silent.
+Harvest fires only on player swings (`!isAuto`), so automation is silent.
+Browser-verified: events route to the synth, mute toggles+persists, all 13
+sounds play without throwing, no page errors; perks + audit tests still green.
 
 **Bug-audit fixes (?v=40, agent audit + manual fixes).** A read-only audit
 agent surfaced four real defects; all fixed and headless-tested (13/13):

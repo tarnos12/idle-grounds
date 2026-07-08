@@ -157,6 +157,7 @@ function fxPickup(region, lx, ly, n) {
   const wx = p.x + lx, wy = p.y + ly;
   addFloater(wx, wy - 8, "+" + n, C.accent);
   addBurst(wx, wy, C.accent, 5);
+  if (window.AUDIO) window.AUDIO.play("pickup");
 }
 // A small spark burst on a landed harvest/attack swing at a node/point.
 function fxSwing(region, lx, ly) {
