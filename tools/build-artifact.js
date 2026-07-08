@@ -38,7 +38,7 @@ if (fs.existsSync(iconDir))
 const iconScript = `<script>window.ICON_DATA = ${JSON.stringify(icons)};</script>`;
 
 // same order as index.html — classic scripts sharing one global scope
-const files = ["data.js", "state.js", "engine.js", "ui.js", "main.js"];
+const files = ["data.js", "state.js", "audio.js", "engine.js", "ui.js", "main.js"];
 const scripts = files.map(f => {
   const src = fs.readFileSync(path.join(root, "js", f), "utf8");
   if (src.includes("</script")) throw new Error(`${f} contains "</script" — would break inlining`);
