@@ -1440,8 +1440,14 @@ function openHelp() {
     "Gathering Stones 🧿 vacuum ground items. Wisp Lanterns ferry them: click a lantern to edit its links (source → target, served in order, one per beat). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw."]);
   S.push(["🧘 Disciples",
     "Build a Meditation Pavilion, then click it and Recruit disciples (each costs a Robe 🥋 from the Loom). Feed the pavilion Spirit Buns 🥟 (Mill) or Spirit Wine 🍶 (Brewery, worth 3×) by hand or wisp — while fed, each disciple cultivates Spirit Essence ✨. Disciple Mastery in the upgrade tree raises the cap."]);
+  S.push(["🔥 Burner fuel racks",
+    "Every burner has a FUEL RACK on its LEFT — feed coal or wood there (right-click) and it keeps the fire lit. Fuel is separate from ingredients: recipes never consume the fuel you rack, only the burn gauge does."]);
   if (dr >= 1) S.push(["🔥 Forge & smelting",
     "The dragon taught you the Forge: feed it iron ore + wood (wisps or hand) and it smelts Iron Bars from its stock automatically."]);
+  if (u.volcano) S.push(["🌋 Volcano",
+    "A molten region yielding Obsidian and Firestone. Unlock its border by paying Iron Bars — the deep heat rewards those who have already mastered smelting."]);
+  if (u.grove) S.push(["🎋 Spirit Grove",
+    "A serene region growing Spirit Herb and Bamboo — cultivation reagents and a fast-burning fuel/building material."]);
   if (dr >= 2) S.push(["🪸 Algae Farm",
     "Places ONLY in the fishing waters; passively grows algae around itself."]);
   if (dr >= 3) S.push(["🪴 Herb Garden",
@@ -1450,10 +1456,15 @@ function openHelp() {
     "It watches over the grounds and sheds Dragon Scales 🔶 beside itself (faster with a Dragon Shrine, which also lengthens blessings)."]);
   if (dr >= 4) S.push(["⛩️ Ascension",
     "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate. Completing it offers ASCENSION: reset the grounds, keep +8% permanent global speed per ascension (☯ in the bottom bar)."]);
+  if ((window.GS.ascensions || 0) > 0 || (window.GS.ascendPoints || 0) > 0)
+    S.push(["☯ Ascension Shrine",
+      "Each ascension grants Ascension Points. Open the Shrine (the ☯ button in the bottom bar) to spend them on permanent perks that persist through every future reset."]);
   if (u.farm || u.mine || u.fishing) S.push(["🗺️ Regions",
     "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron & jade; Fishing: fish, algae & spring water). Unlock borders with wood."]);
   else S.push(["🗺️ Regions",
     "Locked regions wait beyond the borders — gather wood and pay at a glowing 🔓 border button to expand."]);
+  S.push(["📊 Stats",
+    "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, ascensions and more."]);
 
   $("#help-body").innerHTML = S.map(([t, d]) =>
     `<div class="hp-sec"><div class="hp-t">${t}</div><div class="hp-d">${d}</div></div>`).join("");
@@ -1578,6 +1589,26 @@ function showOfflineSummary(summary) {
 }
 function dismissWelcome() { $("#welcome-modal").classList.add("hidden"); }
 
+// ---- ending overlay -----------------------------------------
+// When the Sleeping Dragon fully awakens (GS.won) show a one-time victory
+// overlay. `endingShown` guards it to once per page load — no persisted flag.
+let endingShown = false;
+function maybeShowEnding() {
+  if (!window.GS.won || endingShown) return;
+  endingShown = true;
+  const G = window.GS, st = G.stats || {};
+  const rows = [];
+  const add = (label, val) => { if (val !== undefined) rows.push([label, val]); };
+  add("Ascensions", G.ascensions);
+  add("Total crafted", st.totalCrafted);
+  if (st.started !== undefined) add("Playtime", fmtAway(Date.now() - st.started));
+  $("#ending-stats").innerHTML = rows.map(([label, val]) =>
+    `<div class="st-row"><span class="st-label">${label}</span>` +
+    `<span class="st-val">${val}</span></div>`).join("");
+  $("#ending-modal").classList.remove("hidden");
+}
+function dismissEnding() { $("#ending-modal").classList.add("hidden"); }
+
 // ---- master render ------------------------------------------
 // Full render — repaints the canvas AND rebuilds event-driven DOM UI
 // (unlock buttons, build menu). Use on discrete events, not ticks.
@@ -1600,6 +1631,7 @@ function renderPlay() {
   syncDragonDialog();
   syncAscendModal();
   renderQuestPanel();
+  maybeShowEnding();
 }
 window.renderPlay = renderPlay;
 
@@ -1888,7 +1920,7 @@ function wireInput() {
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
   dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, dismissWelcome,
-  openPerkShop, closePerkShop,
+  dismissEnding, openPerkShop, closePerkShop,
   _draw: () => drawWorld(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook
   _lookAt: (area, row, col) => {                                              // test hook

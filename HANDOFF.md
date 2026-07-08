@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=38.
+?v=39.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,17 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Victory overlay + Help refresh (?v=39, agent team).** When the Sleeping
+Dragon fully awakens (`GS.won`), a one-time `#ending-modal` overlay now fires
+from `renderPlay()` via `maybeShowEnding()` — 🐲 "The Dragon Awakens", a
+congratulatory line about the permanent ~11% global-speed blessing, and a
+couple of highlight stats (ascensions, total crafted, playtime). The
+`endingShown` module flag makes it show once per page load (no persisted
+state). The Help modal gained sections for burner fuel racks, the Volcano
+and Spirit Grove regions, the Ascension Shrine, and the Stats panel.
+Browser-verified: modal shows, dismisses, stays hidden on re-render; all 5
+new Help sections render; the 3-perks headless test passes 19/19.
 
 **3 more prestige perks (?v=38, agent team).** Shop 8 → 11: **Deep Roots**
 (nodes respawn 10% faster/level — engine `depleteNode` respawn delay),

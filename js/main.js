@@ -31,6 +31,7 @@
     window.GS.ascendPrompt = false; window.UI.renderPlay();
   };
   document.getElementById("welcome-close").onclick = () => window.UI.dismissWelcome();
+  document.getElementById("ending-continue").onclick = () => window.UI.dismissEnding();
   document.getElementById("perk-btn").onclick = () => window.UI.openPerkShop();
   document.getElementById("perk-close").onclick = () => window.UI.closePerkShop();
 
