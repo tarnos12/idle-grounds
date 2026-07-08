@@ -467,7 +467,7 @@ function depleteNode(areaKey, node) {
   const speed = window.GS.areas[areaKey].upgrades.speed;
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   const buffFac = buffActive("verdant_pill") ? 0.5 : 1;   // Verdant Blessing
-  const delay = (node.regrowSec || 10) * Math.pow(0.8, speed) * scale * 1000 * buffFac * prestigeFactor();
+  const delay = (node.regrowSec || 10) * Math.pow(0.8, speed) * scale * 1000 * buffFac * prestigeFactor() * Math.pow(0.9, perkLevel("regrow"));
   area.spawnQueue.push({ at: Date.now() + delay, kind: node.spawnerKind });
 }
 
@@ -1488,7 +1488,7 @@ function gameTick() {
                             item, toId: l.to, fromId: l.from, t0: now,
                             sp: (bCfg.lantern.speed || 170) * (1 + 0.25 * haste) / wind });
           b.connIdx = (b.connIdx + k + 1) % b.links.length;
-          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste) * wind * prestigeFactor();
+          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste) * wind * prestigeFactor() * Math.pow(0.9, perkLevel("gale"));
           changed = true;
           break;
         }
@@ -1661,7 +1661,7 @@ function attackEnemy(areaKey, id) {
   const target = area.enemies.find(en => en.id === id);
   if (!target) return false;
   const up = area.upgrades;
-  const dmg = 1 + (up.damage || 0) + (combatBuffActive() ? D.VITALITY.bonusDamage : 0);
+  const dmg = 1 + (up.damage || 0) + (combatBuffActive() ? D.VITALITY.bonusDamage : 0) + perkLevel("fury");
   const R = (up.aoe || 0) * 1.5 * CELL;
   const hit = R > 0
     ? area.enemies.filter(en => en === target || Math.hypot(en.x - target.x, en.y - target.y) <= R)

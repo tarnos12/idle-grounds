@@ -611,6 +611,12 @@ const PERKS = [
     desc: "+1 Ascension Point per ascension per level." },
   { id: "autoboost", name: "Keen Automation",   icon: "⚙️", max: 3, cost: [3, 5, 8],
     desc: "Automation harvests +1 extra node per tick per level." },
+  { id: "regrow", name: "Deep Roots",  icon: "🌿", max: 3, cost: [2, 4, 6],
+    desc: "Nodes respawn 10% faster per level." },
+  { id: "gale",   name: "Wisp Gale",   icon: "🌀", max: 3, cost: [2, 4, 6],
+    desc: "Wisp lanterns send 10% faster per level." },
+  { id: "fury",   name: "Battle Fury", icon: "⚔️", max: 3, cost: [2, 4, 6],
+    desc: "+1 damage to beasts per strike per level." },
 ];
 
 // ------------------------------------------------------------------

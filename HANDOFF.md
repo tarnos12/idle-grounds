@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=37.
+?v=38.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -240,6 +240,14 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**3 more prestige perks (?v=38, agent team).** Shop 8 → 11: **Deep Roots**
+(nodes respawn 10% faster/level — engine `depleteNode` respawn delay),
+**Wisp Gale** (lanterns send 10% faster/level — lantern `nextSend`), and
+**Battle Fury** (+1 beast damage per strike/level — `attackEnemy` dmg), each
+a pure passive via `perkLevel` (no `buyPerk` change). Perks slice of a
+parallel "finishing polish" batch; verified headless. (Ending overlay +
+Help refresh land next at ?v=39.)
 
 **Furnace layout + 2 perks (?v=37, agent team).** The four fuel burners —
 Forge, Kiln, Pill Furnace, Star Anvil — resized **3x4 → 3x5**, and their
