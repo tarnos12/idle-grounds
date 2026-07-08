@@ -1479,7 +1479,7 @@ function gameTick() {
           const pull = 2 + (1 - d / R) * 4;
           g.x += (dx / d) * Math.min(pull, d);
           g.y += (dy / d) * Math.min(pull, d);
-          changed = true;
+          // Nudge is visual-only: on-screen pulls repaint via animActive(); off-screen movement needs no repaint (matches enemy/wisp movement).
         }
         if (taken.size) area.ground = area.ground.filter(g => !taken.has(g.id));
       }

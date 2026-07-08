@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=42.
+?v=43.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -243,6 +243,26 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Workflow-driven performance pass (?v=43, dynamic-workflow orchestration).**
+Same planner→fan-out→verify→fix loop, aimed at the 50ms tick + rAF render
+hot paths. Workflow #1 = 4 perf dimensions (tick-cost, render-hotpath,
+alloc-gc via Opus; dom-thrash via Sonnet) → Opus verify tagging each with
+perf-impact + behavior-risk. Of 12 findings (0 refuted), only 2 were
+safe-to-apply clear wins; the other 10 were negligible-impact micro-opts held
+back on purpose (regression surface > benefit). Applied:
+- **Off-screen gathering-stone repaint (engine.js + ui.js):** the Gathering
+  Stone vacuum set `changed=true` on every item-nudge, forcing the heavy
+  `renderPlay()` at 20/s even when the stone was off-screen. Now the nudge is
+  visual-only (consumption still flags `changed`); `animActive()` gained an
+  on-screen-gather-pull check (viewport-culled, early-out) so visible pulls
+  still animate at 60fps. Browser-verified: on-screen pull animates,
+  off-screen gameTick returns changed=false (no forced repaint).
+- **Wisp-link render (ui.js):** replaced two per-link O(buildings) `find()`
+  scans with a per-region id→building Map (O(1), byte-identical output).
+The codebase was already well-optimized — this pass confirmed that and
+removed the one genuine constant-repaint offender. Engine suites + browser
+all green.
 
 **Workflow-driven hardening pass (?v=42, dynamic-workflow orchestration).**
 A 2-workflow, model-tiered pass (planner/orchestrator/reviewer in the main

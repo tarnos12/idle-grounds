@@ -406,6 +406,21 @@ function animActive() {
       const bx = bd.col * CELL + p.x, by = bd.row * CELL + p.y;
       if (bx < r && bx + bs.w * CELL > l && by < b && by + bs.h * CELL > t) return true;
     }
+    // an on-screen gathering stone with a live pull needs repaints so ground
+    // items keep sliding in even after the engine stops flagging changed
+    if (unlocked) for (const bd of window.GS.areas[key].buildings) {
+      const g = DD.BUILDINGS[bd.type].gather;
+      if (!bd.built || !g) continue;
+      const bs = E.buildingSize(bd.type);
+      const bx = bd.col * CELL + p.x, by = bd.row * CELL + p.y;
+      if (!(bx < r && bx + bs.w * CELL > l && by < b && by + bs.h * CELL > t)) continue;  // cull stone first
+      if ((bd.inv || []).reduce((s, x) => s + x.qty, 0) >= g.cap) continue;   // full: no pulls
+      const c = E.buildingCenterPx(bd), R = g.radius * CELL;
+      for (const gi of window.GS.areas[key].ground) {
+        const d = Math.hypot(c.x - gi.x, c.y - gi.y);
+        if (d > 22 && d <= R) return true;   // early-out on first in-ring item
+      }
+    }
     // the dragon's floating stage text needs repaints until it fades
     if (key === "center" && unlocked && window.GS.dragon.msgUntil > now) return true;
   }
@@ -690,12 +705,13 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
   // (the lantern being edited gets its threads highlighted)
   ctx.lineWidth = Math.max(1, 1.5 * s);
   ctx.setLineDash([6 * s, 6 * s]);
+  const byId = new Map(st.buildings.map(b => [b.id, b]));   // O(1) endpoint lookup
   for (const b of st.buildings) {
     if (!b.links || !b.links.length) continue;
     const editing = linkMode && linkMode.area === key && linkMode.id === b.id;
     ctx.strokeStyle = editing ? "rgba(251,191,36,.65)" : "rgba(251,191,36,.22)";
     for (const l of b.links) {
-      const f = st.buildings.find(x => x.id === l.from), t = st.buildings.find(x => x.id === l.to);
+      const f = byId.get(l.from), t = byId.get(l.to);
       if (!f || !t) continue;
       const fc = E.buildingCenterPx(f), tc = E.buildingCenterPx(t);
       if (!seen(Math.min(fc.x, tc.x) + ox, Math.min(fc.y, tc.y) + oy,
