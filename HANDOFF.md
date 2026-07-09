@@ -244,6 +244,17 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
+**Model-usage policy (?v=47, doc-only).** New rule in
+`.claude/rules/personal-workflow.md` ("Model usage & cost"): the main loop
+is planner/orchestrator/reviewer ONLY; delegate mechanical work tiered by
+difficulty (Opus = subtle logic + engine-logic verification; Sonnet =
+mechanical edits/tests/docs + doc-finding verification; Haiku = chores:
+run suites, screenshots, bumps). Verify fan-outs must be tiered (all-Opus
+verify passes are the biggest waste). After every finished piece of work,
+give the user a model-usage review (models used, per-task subagent token
+counts, what to tier down next time). Mirror the section into the
+canonical claude-rules RULES.md when that repo is in scope.
+
 **GitHub Pages prep (?v=47, no code change).** Repo is Pages-ready: all
 asset paths are relative (verified — works from the /idle-grounds/
 subpath), `.nojekyll` added so Pages serves files raw. The two

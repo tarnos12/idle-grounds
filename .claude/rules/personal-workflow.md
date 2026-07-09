@@ -38,3 +38,32 @@ when they conflict.
   changes; don't narrate every step.
 - For multi-part tasks, do the whole thing rather than stopping for permission
   on each reversible step.
+
+## Model usage & cost (added 2026-07-09)
+
+- **The main loop (Fable, or whatever the session runs) is the
+  planner/orchestrator/reviewer ONLY.** It reads results, makes judgment
+  calls, integrates, commits, and talks to me. It must NOT hand-write
+  test scripts, doc updates, screenshots drivers, data cross-checks, or
+  other mechanical work — delegate those.
+- **Tier delegated work by difficulty, not by habit:**
+  - **Opus** — subtle logic edits (engine/save-migration/race conditions),
+    adversarial verification of engine-logic findings, anything where a
+    wrong answer ships a bug.
+  - **Sonnet** — mechanical code edits from a clear contract, test-script
+    authoring, doc/HANDOFF/DESIGN updates, data cross-checks, verification
+    of doc/markup/mechanical findings.
+  - **Haiku** — chores: run test suites and report output, take a
+    screenshot with a provided script, version bumps, grep-style lookups.
+- **Verification fan-outs must be tiered too**: Opus verifiers only for
+  engine-logic findings; Sonnet verifiers for doc/aria/data/markup
+  findings. (An all-Opus verify pass is the single biggest token waste.)
+- **Exception — don't cargo-cult delegation:** if briefing an agent costs
+  more than doing it (a 1-2 line edit, a single obvious command), the main
+  loop just does it inline.
+- **After every finished piece of work, report a model-usage review**:
+  which model did what, subagent token counts per task (they're in each
+  task result), and what should be tiered down next time.
+
+<!-- Mirror this section into the canonical claude-rules RULES.md so all
+     repos pick it up. -->
