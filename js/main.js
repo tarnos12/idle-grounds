@@ -37,6 +37,13 @@
   document.getElementById("perk-btn").onclick = () => window.UI.openPerkShop();
   document.getElementById("perk-close").onclick = () => window.UI.closePerkShop();
 
+  // Version badge: number in the bottom bar, what-changed note as tooltip.
+  const vc = document.getElementById("version-chip");
+  if (vc && window.DATA.VERSION) {
+    vc.textContent = "v" + window.DATA.VERSION.num;
+    vc.title = window.DATA.VERSION.desc;
+  }
+
   // Sound: the engine fires window.onSfx(name) at authoritative events (craft,
   // build, upgrade, unlock, hit, kill, dragon, ascend, harvest); route them to
   // the synth. A mute toggle persists via AUDIO; browsers need a user gesture

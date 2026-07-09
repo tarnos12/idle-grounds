@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=46.
+?v=47.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -243,6 +243,21 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Rack to top-left + rack/building item collision + version badge (?v=47).**
+Three user requests in one pass: (1) the burner fuel rack (3 wide x 2 tall)
+now hangs flush with the building's TOP edge on the left (was vertically
+centred) — one-line change in ui.js's burner draw branch. (2)
+`pushOutOfColliders` now also pushes ground items out of a BUILT burner's
+fuel-rack rect (mirrors drawFuelRack's placement; ghosts excluded since no
+rack is drawn) — items can no longer slide under racks or footprints.
+(3) NEW in-game version badge: `DATA.VERSION = { num, desc }` in data.js
+feeds a small "vN" chip beside the brand in the bottom bar; hover shows the
+one-line what-changed note. CLAUDE.md rule 3 now says to update
+DATA.VERSION together with every ?v= bump. Verified: 6/6 rack-collision
+suite (incl. below-rack spot untouched = top-alignment proof), all prior
+suites green, screenshot confirms rack at top-left, items pushed clear,
+v47 chip visible.
 
 **Map grown ~2x buildable, corners held at 25x25 (?v=46).** GRID.cells
 75 → 93 and `_T` decoupled from region size (fixed 25), so the 4 corner

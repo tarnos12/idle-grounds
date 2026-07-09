@@ -800,8 +800,8 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       // 3x2 fuel rack outside the footprint on the LEFT (purely visual).
       if (bCfg.fuel) {
         drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
-        // fuel rack outside the footprint on the LEFT (3 cols x 2 rows, centred vertically)
-        drawFuelRack(b, bx - 3 * CELL, by + 1.5 * CELL, 3 * CELL, 2 * CELL, s, X, Y);
+        // fuel rack outside the footprint on the LEFT, flush with the TOP edge
+        drawFuelRack(b, bx - 3 * CELL, by, 3 * CELL, 2 * CELL, s, X, Y);
       } else {
         drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
       }

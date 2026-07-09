@@ -630,8 +630,16 @@ const TEST = {
   costScale: 0.5,    // arrow-unlock / upgrade cost multiplier
 };
 
+// In-game version badge (bottom bar). Keep `num` in step with the ?v=N
+// asset version in index.html on every code change; `desc` is a one-line
+// note of what that version changed (shown as the badge's tooltip).
+const VERSION = {
+  num: 47,
+  desc: "Fuel rack now sits at the burner's top-left; racks & buildings push ground items out of the way; in-game version badge.",
+};
+
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
   AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP, FUEL_SLOTS,
-  UPGRADE_TREE, QUESTS, HAND_CAP, PERKS, TEST,
+  UPGRADE_TREE, QUESTS, HAND_CAP, PERKS, TEST, VERSION,
 };

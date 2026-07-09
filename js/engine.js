@@ -540,6 +540,11 @@ function pushOutOfColliders(areaKey) {
   for (const b of area.buildings) {
     const s = buildingSize(b.type);
     rects.push({ x0: b.col * CELL, y0: b.row * CELL, x1: (b.col + s.w) * CELL, y1: (b.row + s.h) * CELL });
+    // a built burner's 3x2 fuel rack hangs LEFT of the footprint, flush with
+    // the top edge (mirrors drawFuelRack's placement in ui.js) — items must
+    // not slide underneath it either
+    if (b.built && D.BUILDINGS[b.type].fuel)
+      rects.push({ x0: (b.col - 3) * CELL, y0: b.row * CELL, x1: b.col * CELL, y1: (b.row + 2) * CELL });
   }
   for (const n of area.nodes)
     if (n.fixed) rects.push({ x0: n.col * CELL, y0: n.row * CELL, x1: (n.col + n.size) * CELL, y1: (n.row + n.size) * CELL });

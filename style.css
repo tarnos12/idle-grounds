@@ -45,6 +45,10 @@ body {
   padding: 8px 14px; background: var(--bg-2); border-top: 1px solid var(--line); flex: 0 0 auto;
 }
 .brand { font-size: 17px; font-weight: 800; }
+/* version badge: hover it for what changed in this version */
+#version-chip { font-size: 11px; font-weight: 700; color: var(--muted);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 2px 6px; margin-left: 6px; vertical-align: 2px; cursor: help; }
 .top-right { display: flex; align-items: center; gap: 10px; }
 .area-pill, .hand-pill {
   background: var(--panel); border: 1px solid var(--line);

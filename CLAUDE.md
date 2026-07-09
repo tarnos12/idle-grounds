@@ -26,7 +26,9 @@ vanilla HTML/CSS/JS — no build step, no dependencies.
    can defeat a regex replace — edit that line with an exact string.)
 3. **Bump the `?v=N` asset version** in `index.html` on any code change (all
    6 references) — the server sends `no-store` but the version tag is the
-   reliable cache-bust. Keep it in step with what HANDOFF records.
+   reliable cache-bust. Keep it in step with what HANDOFF records. ALSO
+   update `DATA.VERSION` in `js/data.js` (same number + a one-line "what
+   changed" desc) — it feeds the in-game version badge in the bottom bar.
 4. **Update DESIGN.md** when scope/roadmap changes (mark items ✅, add plans).
 5. **Always share the game link** after a change. WHICH link depends on
    where the session runs (see HANDOFF "Division of labour"): **local
