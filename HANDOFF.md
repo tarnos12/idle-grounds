@@ -244,6 +244,16 @@ icons). Fixes that must stay:
 
 ## Last session summary
 
+**GitHub Pages prep (?v=47, no code change).** Repo is Pages-ready: all
+asset paths are relative (verified — works from the /idle-grounds/
+subpath), `.nojekyll` added so Pages serves files raw. The two
+account-level switches (repo visibility -> public, Settings -> Pages ->
+Deploy from branch `master` `/ (root)`) can't be flipped from a cloud
+session (proxy blocks the GitHub API; MCP has no such endpoint) — the
+user does those two clicks. Once enabled the game auto-deploys on every
+push to master at https://tarnos12.github.io/idle-grounds/ — that link
+can replace the Artifact link for testing.
+
 **Rack to top-left + rack/building item collision + version badge (?v=47).**
 Three user requests in one pass: (1) the burner fuel rack (3 wide x 2 tall)
 now hangs flush with the building's TOP edge on the left (was vertically
