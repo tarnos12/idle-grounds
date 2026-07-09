@@ -1112,8 +1112,8 @@ function dropFromHand(areaKey, x, y) {
     const first0 = window.GS.hand[0];
     if (first0 && D.DRAGON_BUFFS[first0.item]) {
       handTake(first0.item, 1);
-      const dur = 60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0)
-        + (shrineBuilt() ? 60000 : 0);   // a Dragon Shrine honours the blessing
+      const dur = (60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0)
+        + (shrineBuilt() ? 60000 : 0)) * Math.pow(1.2, perkLevel("bless"));   // Dragon Shrine + Heaven's Favor perk
       window.GS.buff = { kind: first0.item, until: Date.now() + dur };
       return { fed: first0.item };
     }
@@ -1397,7 +1397,7 @@ function gameTick() {
       if (now < (area.genTimers[gi] || 0)) return;
       // some generators speed up with an upgrade (e.g. quarry stone output)
       const upLvl = gen.upgrade ? (area.upgrades[gen.upgrade] || 0) : 0;
-      area.genTimers[gi] = now + gen.intervalMs * scale * Math.pow(0.8, upLvl);
+      area.genTimers[gi] = now + gen.intervalMs * scale * Math.pow(0.8, upLvl) * Math.pow(0.9, perkLevel("bounty"));
       // the cap counts only items lying INSIDE this generator's field —
       // items mined/carried elsewhere don't block passive production
       const z = zoneRects(gen.zone)[0];

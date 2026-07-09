@@ -40,7 +40,7 @@ function makeInitialState() {
     world: {
       // One continuous map; regions are visible but the camera can't pan into
       // a region until it's unlocked at its border button.
-      unlocked: { center: true, farm: false, mine: false, fishing: false, volcano: false, grove: false },
+      unlocked: { center: true, farm: false, mine: false, fishing: false, volcano: false, grove: false, celestial: false },
     },
     build: { open: false, placing: null },  // build menu state (transient)
     // The Center building's active upgrade project:

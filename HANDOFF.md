@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=47.
+?v=48.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -20,6 +20,8 @@ link-editor UI and fuel system, dragon pills + timed blessings, disciples
 Remaining directions are NEW design scope — confirm with the user before
 picking:
 1. **More regions** — the map has room; each could add unique resources.
+   (One is now done: Celestial Peak, ?v=48 — see Last session summary. More
+   still fit south/east of it.)
 2. **Sprite art pass** — swap emoji for sheet art per the DESIGN.md
    wishlist (item icons already use assets/icons/*.png with emoji
    fallback; buildings/nodes/enemies are still emoji).
@@ -243,6 +245,26 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Celestial Peak region (?v=48, tiered agent team).** New late-game region
+☁️ at `WORLD.regions.celestial` (`rx:1, ry:2`, bordering Fishing's bottom,
+`unlockSide: "down"`, cost `spirit_stone:6 + jade:3 + glass:3`). Two new
+resources: star fragment ☄️ (break the `starrock` spawner) and moonpetal
+💮 (chop the `moonshrub` spawner). Two new alternate T3 recipes so the late
+economy doesn't bottleneck on beast_bone supply: Star Anvil's "Astral
+Steel" (star_fragment+iron_bar → star_steel, no beast_bone) and Cauldron's
+"Moon Elixir" (moonpetal+water → qi_elixir). Two new Ascension Shrine
+perks: **bless** (dragon-pill blessing duration x1.2/lvl, hooked into the
+existing dragon-pill dur calc) and **bounty** (generator interval
+x0.9/lvl, hooked into `gameTick`'s `genTimers` line). ONE state.js word:
+`world.unlocked.celestial: false`. Camera/unlock needed zero engine
+changes beyond `WORLD.rows` 2→3 — the region-grid/pan logic was already
+generic. Built by a tiered agent team (mechanical data/engine edits +
+docs/tests delegated, not hand-rolled by the orchestrator). Verified
+headless (Node vm sandbox exercising geometry, node counts, unlock/afford
+math, recipe alternates, perk wiring, save round-trip) and in the browser
+(pan to the new region, unlock it, harvest both spawners, craft both
+alternate recipes, buy both perks).
 
 **Model-usage policy (?v=47, doc-only).** New rule in
 `.claude/rules/personal-workflow.md` ("Model usage & cost"): the main loop

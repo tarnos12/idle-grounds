@@ -10,7 +10,9 @@ Tree ✅; also common from bamboo stalks in the Spirit Grove ✅), rice
 (rename of wheat ✅), cotton, sand, iron ore,
 jade shard* (rare from quarry/stone field ✅), firestone*, koi (rename of
 fish ✅), algae, spring water (rename ✅), spirit herb,
-spirit essence, beast bone* (from tier-2 beasts, lured with Beast Bait).
+spirit essence, beast bone* (from tier-2 beasts, lured with Beast Bait),
+star fragment* (break starrock in Celestial Peak ✅), moonpetal (chop
+moonshrub in Celestial Peak ✅).
 
 **Refined (T2):** ✅ iron bar (Forge), ✅ plank (Workbench), ✅ brick (Kiln),
 ✅ paper (Paper Mill: bamboo+wood for now, bamboo+water later),
@@ -171,6 +173,20 @@ the converter progress bar is prestige-aware.
 ✅ Procedural WebAudio SFX (post-roadmap): `js/audio.js` (`window.AUDIO`)
 generates 13 sounds procedurally via a `window.onSfx` hook, plus a mute
 toggle.
+
+✅ Celestial Peak region (post-roadmap): a new late-game region ☁️ at
+`WORLD.regions.celestial` (`rx:1, ry:2`, below Fishing — `WORLD.rows` grew
+2→3, `unlockSide.celestial: "down"`, cost `spirit_stone:6 + jade:3 +
+glass:3`). Two new resources: **star fragment** ☄️ (break the `starrock`
+spawner, target 8, 3 hits, 1-2/drop, 5% rare firestone) and **moonpetal**
+💮 (chop the `moonshrub` spawner, target 10, 2 hits, 1/hit). Two new
+alternate late-game recipes so the T3 chains don't dead-end on beast-bone
+supply: Star Anvil's "Astral Steel" (`star_fragment:3 + iron_bar:2` →
+star_steel, 9s, no beast_bone) and Cauldron's "Moon Elixir"
+(`moonpetal:2 + water:1` → qi_elixir, 8s). Two new Ascension Shrine perks (js/data.js `PERKS`): **bless** (dragon-pill
+blessing duration x1.2 per level, max 3 — wired into the dragon-pill
+duration calc in `dropFromHand`) and **bounty** (generator interval x0.9
+per level, max 3 — wired into `gameTick`'s `genTimers` line).
 
 Next frontiers: sprite art (see wishlist), more perks.
 

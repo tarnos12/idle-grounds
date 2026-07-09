@@ -27,6 +27,7 @@ const ITEM_NAMES = {
   swiftwind_pill: "Swiftwind Pill", stoneheart_pill: "Stoneheart Pill",
   talisman: "Talisman", dragon_scale: "Dragon Scale",
   obsidian: "Obsidian",
+  star_fragment: "Star Fragment", moonpetal: "Moonpetal",
 };
 const ITEM_ICONS = {
   wood: "🪵", leaves: "🍃",
@@ -47,6 +48,7 @@ const ITEM_ICONS = {
   swiftwind_pill: "🟡", stoneheart_pill: "🟣",
   talisman: "🧧", dragon_scale: "🔶",
   obsidian: "🔲",
+  star_fragment: "☄️", moonpetal: "💮",
 };
 
 // Burner fuel values in burn-milliseconds (a batch consumes its own
@@ -77,6 +79,7 @@ const TIER_SPRITES = {
   fishing: ["🐟"],
   volcano: ["🌋"],
   grove:   ["🎋"],
+  celestial: ["☄️"],
 };
 
 // d(item, min, max) -> drop spec. max defaults to min (fixed amount).
@@ -228,6 +231,23 @@ const AREAS = {
     ],
     tiers: [ { name: "Spirit Herb", hits: 2, drops: [d("spirit_herb", 1, 2)], timer: 16 } ],
   },
+  celestial: {
+    name: "Celestial Peak", icon: "☁️", verb: "Gather", actionIcon: "✨",
+    base: "star_fragment", noBuild: "centre",
+    speedLabel: "Reform Speed", timerLabel: "Reform",
+    spawners: [
+      // fallen starmetal rocks — break, mirrors volcano obsidian; rare firestone
+      // feeds the Star Anvil burner that smelts them
+      { kind: "starrock", zone: "centre", sizes: [1, 2], target: 8, interaction: "break",
+        swingMs: 550, sprite: "☄️", hits: 3, regrow: 16, drops: [d("star_fragment", 1, 2)],
+        rareDrop: { item: "firestone", chance: 0.05 } },
+      // moon-blooming spirit flowers — chop, mirrors grove herbbush
+      { kind: "moonshrub", zone: "centre", sizes: [1], target: 10, interaction: "chop",
+        swingMs: 350, sprite: "💮", hits: 2, regrow: 18,
+        perHit: [d("moonpetal", 1)], drops: [d("moonpetal", 1, 2)] },
+    ],
+    tiers: [ { name: "Star Fragment", hits: 3, drops: [d("star_fragment", 1, 2)], timer: 16 } ],
+  },
 };
 
 // ------------------------------------------------------------------
@@ -336,6 +356,7 @@ const BUILDINGS = {
                  { name: "Qi Elixir", inputs: { spirit_herb: 1, water: 2, spirit_essence: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
                  { name: "Vitality Pill", inputs: { fish: 1, spirit_herb: 1, water: 1 }, output: "vitality_pill", outputQty: 1, timeMs: 7000 },
                  { name: "Beast Bait", inputs: { fish: 2, algae: 2 }, output: "beast_bait", outputQty: 1, timeMs: 6000 },
+                 { name: "Moon Elixir", inputs: { moonpetal: 2, water: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
                ] },
   jade_carver:{ name: "Jade Carver", icon: "🗿", cost: { wood: 6, stone: 8 }, unlocked: true,
                recipes: [
@@ -354,6 +375,7 @@ const BUILDINGS = {
                fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
+                 { name: "Astral Steel", inputs: { star_fragment: 3, iron_bar: 2 }, output: "star_steel", outputQty: 1, timeMs: 9000 },
                ] },
   // ---- Phase-5 endgame ----
   talisman_atelier:{ name: "Talisman Atelier", icon: "🖌️", cost: { plank: 6, jade: 2, glass: 2 }, unlocked: true,
@@ -450,10 +472,11 @@ const WORLD = {
     fishing: { rx: 1, ry: 1 },   // below centre
     volcano: { rx: 2, ry: 1 },   // below the mine
     grove:   { rx: 0, ry: 1 },   // below the farm
+    celestial: { rx: 1, ry: 2 },
   },
-  cols: 3, rows: 2,              // region-grid extents (bottom corners = void)
+  cols: 3, rows: 3,              // region-grid extents (bottom corners = void)
   // which viewport edge hosts a locked region's unlock button
-  unlockSide: { farm: "left", mine: "right", fishing: "down", volcano: "up", grove: "down-left" },
+  unlockSide: { farm: "left", mine: "right", fishing: "down", volcano: "up", grove: "down-left", celestial: "down" },
   // resource cost to open each region (paid from hand, so <= hand cap).
   unlockCost: {
     farm:    { wood: 10 },
@@ -461,6 +484,7 @@ const WORLD = {
     fishing: { wood: 20 },
     volcano: { iron_bar: 3 },
     grove:   { wheat: 12, wood: 8 },
+    celestial: { spirit_stone: 6, jade: 3, glass: 3 },
   },
 };
 
@@ -619,6 +643,10 @@ const PERKS = [
     desc: "Wisp lanterns send 10% faster per level." },
   { id: "fury",   name: "Battle Fury", icon: "⚔️", max: 3, cost: [2, 4, 6],
     desc: "+1 damage to beasts per strike per level." },
+  { id: "bless",  name: "Heaven's Favor", icon: "🌠", max: 3, cost: [2, 4, 6],
+    desc: "Dragon-pill blessings last +20% longer per level." },
+  { id: "bounty", name: "Astral Bounty",  icon: "☄️", max: 3, cost: [2, 4, 6],
+    desc: "Passive fields (clay, stone, sand, spring water) well up 10% faster per level." },
 ];
 
 // ------------------------------------------------------------------
@@ -634,8 +662,8 @@ const TEST = {
 // asset version in index.html on every code change; `desc` is a one-line
 // note of what that version changed (shown as the badge's tooltip).
 const VERSION = {
-  num: 47,
-  desc: "Fuel rack now sits at the burner's top-left; racks & buildings push ground items out of the way; in-game version badge.",
+  num: 48,
+  desc: "New region: Celestial Peak ☁️ (below Fishing) — star fragments & moonpetals, alternate Star Steel and Qi Elixir recipes, and two new Shrine perks (Heaven's Favor, Astral Bounty).",
 };
 
 window.DATA = {
