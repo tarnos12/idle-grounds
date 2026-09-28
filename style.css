@@ -522,6 +522,27 @@ img.item-ico { width: 1.2em; height: 1.2em; image-rendering: pixelated; vertical
 .wg-item b { color: var(--accent); }
 .wg-none { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 8px; }
 .welcome-box .build-card { margin: 0 auto; }
+.welcome-box .build-card.hidden { display: none; }
+/* async offline catch-up: progress bar + Skip (long absences only) */
+#welcome-progress { margin: 0 12px 16px; }
+#welcome-progress.hidden { display: none; }
+.wp-bar { height: 12px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+.wp-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent-dk), var(--accent)); }
+.wp-label { font-size: 14px; color: var(--muted); margin: 8px 0 10px; }
+.wp-skip { font: inherit; font-size: 13px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 4px 12px; cursor: pointer; }
+.wp-skip:hover { color: var(--text); border-color: var(--muted); }
+/* "why it stopped" rows under the gains (long absences) */
+#welcome-why { text-align: left; margin: -6px 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+#welcome-why:empty { display: none; }
+.ww-head { font-size: 13px; font-weight: 700; color: var(--gold); }
+.ww-row { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.ww-row b { color: var(--text); font-weight: 600; }
+/* short-absence welcome-back line: top-centre, fades out on its own */
+#offline-toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 210; pointer-events: none;
+  background: var(--bg-2); border: 1px solid var(--accent-dk); border-radius: 10px; padding: 8px 16px;
+  font-size: 14px; color: var(--text); box-shadow: 0 4px 18px rgba(0,0,0,.4); transition: opacity .6s; opacity: 1; }
+#offline-toast.fade { opacity: 0; }
+#offline-toast.hidden { display: none; }
 
 .win-box { text-align: center; }
 .win-box h1 { margin: 6px 0; font-size: 26px; }

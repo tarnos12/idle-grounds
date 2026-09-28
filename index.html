@@ -140,10 +140,19 @@
       <div class="dragon-ico">🌙</div>
       <h2 id="welcome-title">Welcome back</h2>
       <p id="welcome-away"></p>
+      <div id="welcome-progress" class="hidden">
+        <div class="wp-bar"><div class="wp-fill"></div></div>
+        <div class="wp-label" aria-live="polite">Catching up… 0%</div>
+        <button id="welcome-skip" class="wp-skip">Skip</button>
+      </div>
       <div id="welcome-gains"></div>
+      <div id="welcome-why"></div>
       <button id="welcome-close" class="build-card">Continue ▶</button>
     </div>
   </div>
+
+  <!-- Short-absence welcome-back line (90s–10min away): fades out on its own -->
+  <div id="offline-toast" class="hidden" role="status" aria-live="polite"></div>
 
   <!-- Ending: the Sleeping Dragon fully awakens (GS.won) -->
   <div id="ending-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ending-title">
