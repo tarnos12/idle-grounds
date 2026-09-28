@@ -100,7 +100,11 @@ function saveState() {
   try {
     const s = JSON.parse(JSON.stringify(window.GS, transientReplacer));
     s.build = { open: false, placing: null };   // never persist UI mode
-    s.lastSeen = Date.now();                     // for offline catch-up on reload
+    // for offline catch-up on reload — mid-replay (a tab closed while the
+    // catch-up is still running) stamp the resume point instead, so the
+    // unsimulated remainder replays next load rather than being lost
+    const resume = window.ENGINE && window.ENGINE.offlineResumeAt ? window.ENGINE.offlineResumeAt() : null;
+    s.lastSeen = Number.isFinite(resume) ? resume : Date.now();
     localStorage.setItem(SAVE_KEY, JSON.stringify(s));
     return true;
   } catch (e) { return false; }

@@ -1743,13 +1743,102 @@ function fmtAway(ms) {
   if (m > 0) return `${m}m`;
   return `${s}s`;
 }
-// Show the "Welcome back" modal with what accrued while the tab was closed.
-// `summary` is engine.runOfflineCatchup()'s return, or null (shows nothing).
+// Put the #welcome-modal into its "welcome back" shape (the first-run intro
+// reuses the same DOM with other text/icon).
+function welcomeShape() {
+  $("#welcome-modal .dragon-ico").textContent = "🌙";
+  $("#welcome-modal h2").textContent = "Welcome back";
+  $("#welcome-gains").innerHTML = "";
+  $("#welcome-why").innerHTML = "";
+}
+// Long absence: the replay runs in slices (main.js) — show the modal with a
+// progress bar and a Skip button. Skip is honest: the remaining away-time is
+// forfeited, not credited. Continue stays hidden until the summary is in.
+function showOfflineProgress(job, onSkip) {
+  welcomeShape();
+  $("#welcome-away").textContent = `You were away ${fmtAway(job.awayMs)}. Catching up on what the grounds made…`;
+  $("#welcome-progress").classList.remove("hidden");
+  $("#welcome-close").classList.add("hidden");
+  const skip = $("#welcome-skip");
+  skip.disabled = false;
+  skip.onclick = () => { skip.disabled = true; skip.textContent = "Stopping…"; if (onSkip) onSkip(); };
+  updateOfflineProgress(job);
+  $("#welcome-modal").classList.remove("hidden");
+}
+// Called between replay slices (never during one), so Date.now is real here.
+function updateOfflineProgress(job) {
+  const f = E.offlineProgress(job);
+  const pct = Math.floor(f * 100);
+  $("#welcome-progress .wp-fill").style.width = pct + "%";
+  $("#welcome-progress .wp-label").textContent = `Catching up… ${pct}%`;
+  const skip = $("#welcome-skip");
+  if (!skip.disabled) {
+    const left = Math.max(0, job.end - job.virt);
+    skip.textContent = `Skip — forfeit the last ${fmtAway(left)}`;
+  }
+}
+
+// "Why it stopped" rows: plain-language reasons passive output capped out,
+// each with the fix. `stalls` comes from engine offlineStalls().
+function stallRowsHTML(summary) {
+  const rows = [];
+  const area = k => (DD.AREAS[k] && DD.AREAS[k].name) || k;
+  const names = s => (s.names || []).join(", ");
+  if (summary.plateauMs)
+    rows.push(`Output levelled off after about <b>${fmtAway(summary.plateauMs)}</b> — the rest of the time added little.`);
+  const full = (summary.stalls || []).filter(s => s.kind === "ground").map(s => area(s.areaKey));
+  if (full.length)
+    rows.push(`The ground is full in <b>${full.join(", ")}</b> — new drops pushed out the oldest. Gathering Stones feeding Storehouses keep it clear.`);
+  for (const s of summary.stalls || []) {
+    if (s.kind === "nofuel")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${s.count > 1 ? s.count + " burners" : "a burner"} (${names(s)}) ran out of fuel — a Furnace Spirit keeps racks stoked.`);
+    else if (s.kind === "nobuns")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${names(s)} ran out of food, so the disciples stopped cultivating — link food to it.`);
+    else if (s.kind === "stonefull")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${s.count} ${s.count > 1 ? "Gathering Stones are" : "Gathering Stone is"} full — link a Wisp Lantern to haul from ${s.count > 1 ? "them" : "it"}.`);
+  }
+  if (!rows.length) return "";
+  return `<div class="ww-head">Why it stopped</div>` + rows.map(r => `<div class="ww-row">${r}</div>`).join("");
+}
+
+// Short absence (90s–10min): no modal, just a line that fades on its own.
+let toastTimer = 0;
+function showOfflineToast(text) {
+  const t = $("#offline-toast");
+  if (!t) return;
+  t.textContent = text;
+  t.classList.remove("hidden", "fade");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.classList.add("fade");
+    toastTimer = setTimeout(() => t.classList.add("hidden"), 700);
+  }, 5000);
+}
+
+// Welcome-back, tiered by how long the tab was closed. `summary` is the
+// engine's finishOfflineCatchup()/runOfflineCatchup() result, or null
+// (a plain reload < 90s: shows nothing).
+//   < 10 min  a toast: "Welcome back — +N items while away"
+//   >= 10 min the modal: gains, what was skipped, and "why it stopped" rows
 function showOfflineSummary(summary) {
   if (!summary) return;
   const gains = Object.entries(summary.gained || {}).sort((a, b) => b[1] - a[1]);
-  $("#welcome-away").textContent =
-    `You were away ${fmtAway(summary.elapsedMs)}. The grounds kept working:`;
+  const away = summary.awayMs !== undefined ? summary.awayMs : summary.elapsedMs;
+  if (away < E.OFFLINE_MODAL_MS) {
+    const n = gains.reduce((s, [, q]) => s + q, 0);
+    if (n > 0) showOfflineToast(`Welcome back — +${n} item${n === 1 ? "" : "s"} while away`);
+    return;
+  }
+  welcomeShape();
+  $("#welcome-progress").classList.add("hidden");
+  $("#welcome-close").classList.remove("hidden");
+  let line = `You were away ${fmtAway(away)}`;
+  if (summary.elapsedMs < away - 1000)   // beyond the offline window (8h + Long Slumber)
+    line += ` — the grounds work for up to ${fmtAway(summary.elapsedMs)} while you're gone`;
+  line += summary.skippedMs > 0
+    ? `. You skipped the catch-up after ${fmtAway(summary.simulatedMs)}; the rest was forfeited:`
+    : ". The grounds kept working:";
+  $("#welcome-away").textContent = line;
   const box = $("#welcome-gains");
   if (gains.length) {
     box.innerHTML = gains.map(([it, q]) =>
@@ -1758,9 +1847,15 @@ function showOfflineSummary(summary) {
     box.innerHTML = `<span class="wg-none">Nothing new was produced — set up generators, ` +
       `converters or disciples to gather while you're gone.</span>`;
   }
+  $("#welcome-why").innerHTML = stallRowsHTML(summary);
   $("#welcome-modal").classList.remove("hidden");
 }
-function dismissWelcome() { $("#welcome-modal").classList.add("hidden"); }
+// The modal can't be dismissed (Esc) while a replay is still running —
+// the world behind it isn't live yet.
+function dismissWelcome() {
+  if (E.offlineActive && E.offlineActive()) return;
+  $("#welcome-modal").classList.add("hidden");
+}
 
 // ---- ending overlay -----------------------------------------
 // When the Sleeping Dragon fully awakens (GS.won) show a one-time victory
@@ -2192,7 +2287,7 @@ function wireInput() {
 
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
-  dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, dismissWelcome,
+  dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, showOfflineProgress, updateOfflineProgress, dismissWelcome,
   dismissEnding, openPerkShop, closePerkShop,
   _draw: () => drawWorld(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook

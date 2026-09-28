@@ -232,18 +232,60 @@ function buildingSize(type) {
 }
 
 // Set of "r,c" cells occupied by live nodes and placed buildings.
+// Memoized per area — respawns call this on every placement attempt (a hot
+// path, worst during offline replay with automation). Change detection is a
+// signature: every add bumps nextNodeId/nextBuildId, every remove shrinks a
+// list (or replaces it via filter), and nothing moves a node/building in
+// place — so (array identity, length, next id) for both lists is exact. Any
+// mismatch rebuilds from scratch. The two hot mutations (a spawner placing a
+// node, depleteNode removing one) instead patch the cache in place via
+// occNodeAdded/occNodeRemoved, with per-cell counts so an overlap (old
+// saves) can never free a cell another object still covers. The returned
+// Set is SHARED and read-only: copy it (`new Set(...)`) before adding cells.
+const occCache = new WeakMap();           // area object -> { sig..., set, cnt } (transient, never saved)
+function occFresh(area, h) {
+  return !!h && h.nodes === area.nodes && h.nLen === area.nodes.length && h.nId === area.nextNodeId &&
+    h.blds === area.buildings && h.bLen === area.buildings.length && h.bId === area.nextBuildId;
+}
+function occCells(r0, c0, h, w, fn) {
+  for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) fn(r + "," + c);
+}
 function occupiedCells(areaKey) {
-  const set = new Set();
   const area = window.GS.areas[areaKey];
-  for (const n of area.nodes)
-    for (let r = n.row; r < n.row + n.size; r++)
-      for (let c = n.col; c < n.col + n.size; c++) set.add(r + "," + c);
+  const hit = occCache.get(area);
+  if (occFresh(area, hit)) return hit.set;
+  const set = new Set(), cnt = new Map();
+  const inc = k => { cnt.set(k, (cnt.get(k) || 0) + 1); set.add(k); };
+  for (const n of area.nodes) occCells(n.row, n.col, n.size, n.size, inc);
   for (const b of area.buildings) {
     const s = buildingSize(b.type);
-    for (let r = b.row; r < b.row + s.h; r++)
-      for (let c = b.col; c < b.col + s.w; c++) set.add(r + "," + c);
+    occCells(b.row, b.col, s.h, s.w, inc);
   }
+  occCache.set(area, { nodes: area.nodes, nLen: area.nodes.length, nId: area.nextNodeId,
+    blds: area.buildings, bLen: area.buildings.length, bId: area.nextBuildId, set, cnt });
   return set;
+}
+// `node` was just pushed onto area.nodes (taking id nextNodeId-1). Patch the
+// cache only if it was fresh right before that push; otherwise leave it
+// stale for a full rebuild.
+function occNodeAdded(area, node) {
+  const h = occCache.get(area);
+  if (!h || h.nodes !== area.nodes || h.nLen !== area.nodes.length - 1 || h.nId !== node.id ||
+      area.nextNodeId !== node.id + 1 || h.blds !== area.buildings || h.bLen !== area.buildings.length ||
+      h.bId !== area.nextBuildId) return;
+  occCells(node.row, node.col, node.size, node.size, k => { h.cnt.set(k, (h.cnt.get(k) || 0) + 1); h.set.add(k); });
+  h.nLen = area.nodes.length; h.nId = area.nextNodeId;
+}
+// `node` was just spliced out of area.nodes; `wasFresh` = occFresh() taken
+// right before the splice.
+function occNodeRemoved(area, node, wasFresh) {
+  if (!wasFresh) return;
+  const h = occCache.get(area);
+  occCells(node.row, node.col, node.size, node.size, k => {
+    const n = (h.cnt.get(k) || 0) - 1;
+    if (n > 0) h.cnt.set(k, n); else { h.cnt.delete(k); h.set.delete(k); }
+  });
+  h.nLen = area.nodes.length;
 }
 
 function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
@@ -300,6 +342,7 @@ function spawnFromSpawner(areaKey, sp) {
       autoFlash: 0,
     };
     area.nodes.push(node);
+    occNodeAdded(area, node);           // patch the occupancy memo in place
     return node;
   }
   return null; // zone was full
@@ -331,7 +374,7 @@ function areaScale() { return Math.max(1, Math.round((D.GRID.cells / 24) ** 2));
 // the centre of the map.
 function placeDecoRing(areaKey, rect, sprite) {
   const area = window.GS.areas[areaKey];
-  const occ = occupiedCells(areaKey);
+  const occ = new Set(occupiedCells(areaKey));   // private copy: grown below as the ring is placed
   const N = D.GRID.cells;
   const cx = (rect.c0 + rect.c1 + 1) / 2, cy = (rect.r0 + rect.r1 + 1) / 2;
   const aim = Math.atan2(N / 2 - cy, N / 2 - cx);   // direction toward the map centre
@@ -486,7 +529,11 @@ function setupStarterNetwork() {
 function depleteNode(areaKey, node) {
   const area = window.GS.areas[areaKey];
   const i = area.nodes.indexOf(node);
-  if (i >= 0) area.nodes.splice(i, 1);
+  if (i >= 0) {
+    const fresh = occFresh(area, occCache.get(area));
+    area.nodes.splice(i, 1);
+    occNodeRemoved(area, node, fresh);  // patch the occupancy memo in place
+  }
   const speed = window.GS.areas[areaKey].upgrades.speed;
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   const buffFac = buffActive("verdant_pill") ? 0.5 : 1;   // Verdant Blessing
@@ -1924,9 +1971,13 @@ function gameTick() {
     }
 
     // Separate overlapping ground items (gravity-like repulsion), and keep
-    // them out of solid footprints (buildings, the quarry stone).
-    if (area.ground.length > 1 && settleGround(areaKey) > 0) changed = true;
-    if (pushOutOfColliders(areaKey) > 0) changed = true;
+    // them out of solid footprints (buildings, the quarry stone). Skipped
+    // during offline replay (pure presentation, ~half the replay's cost;
+    // yield is unchanged) — settleAfterReplay() tidies up once at the end.
+    if (!offlineSim) {
+      if (area.ground.length > 1 && settleGround(areaKey) > 0) changed = true;
+      if (pushOutOfColliders(areaKey) > 0) changed = true;
+    }
   }
   return changed;
 }
@@ -2037,14 +2088,24 @@ function automationTick() {
 // real gameTick/automationTick — so every producer (generators, converters,
 // wisps, disciples, automation) stays authoritative and can't drift from a
 // parallel formula. Everything offline can make is naturally bounded (field
-// caps, converter stock + fuel, disciple buns, building buffers), so this
-// can't run away. Bounded compute too: a very long absence just widens the
-// simulated step (generator intervals are >=1.5s, so a sub-second step stays
-// faithful). Returns { elapsedMs, gained:{item:qty} } or null if the gap was
-// too short to bother (a plain reload).
-const OFFLINE_MAX_TICKS = 45000;          // ~1s worst-case compute on load
+// caps, converter stock + fuel, disciple buns, building buffers, the ground
+// cap), so this can't run away. The tick count is bounded too: a very long
+// absence widens the simulated step past 250ms. That is an approximation —
+// engine timers fire at most once per tick, and under TEST timeScale some
+// generators tick every ~300ms — but passive output saturates within
+// minutes, so it costs little. Compute is NOT ~1s: a saturated 1h gap is
+// seconds of work, so the replay is SLICED (begin/step/finish) and the boot
+// runs long gaps asynchronously behind a progress bar (main.js).
+// runOfflineCatchup() is the one-shot synchronous form (short gaps, tests).
+const OFFLINE_MAX_TICKS = 45000;          // tick-count ceiling (the step widens beyond it)
 const OFFLINE_MIN_MS = 90000;             // < 90s away = a reload, no catch-up / welcome-back
+const OFFLINE_MODAL_MS = 10 * 60 * 1000;  // >= 10 min: async replay + progress + full summary
 // (the max window is offlineCapMs(): 8h + 2h per Long Slumber perk level)
+
+// True only INSIDE a replay slice: gameTick skips the ground physics. Module
+// scope (not GS) so it is never saved; a slice always clears it in `finally`.
+let offlineSim = false;
+let offlineJob = null;                    // the replay in progress (transient), or null
 
 // Total units of each item that exist as loot or stock ANYWHERE — ground,
 // wisps in flight, and every building store (storehouse qty, gatherer/stoker
@@ -2065,48 +2126,182 @@ function countHeldItems() {
   }
   return tally;
 }
+function heldTotal(t) { let n = 0; for (const k in t) n += t[k]; return n; }
 
-function runOfflineCatchup() {
-  const realNow = Date.now;
-  const now = realNow();
+// Why passive output stops: read at the end of a replay so the welcome-back
+// summary can teach the player how to make offline time pay better. Returns
+// [{ kind, areaKey, count, names }] — kind: "ground" (loose items near the
+// per-region cap: new drops push out the oldest), "nofuel" (a burner holding
+// a full batch of inputs but too little fuel), "nobuns" (a pavilion with
+// disciples and no food), "stonefull" (Gathering Stone buffers full with
+// nothing hauling them away).
+function offlineStalls() {
+  const out = [];
+  const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+  for (const areaKey of Object.keys(D.AREAS)) {
+    if (!isAreaUnlocked(areaKey)) continue;
+    const area = window.GS.areas[areaKey];
+    if (area.ground.length >= GROUND_CAP * 0.95) out.push({ kind: "ground", areaKey, count: area.ground.length });
+    const nofuel = [], nobuns = [], full = [];
+    for (const b of area.buildings) {
+      if (!b.built) continue;
+      const cfg = D.BUILDINGS[b.type];
+      if (!cfg) continue;
+      const rec = recipeOf(b);
+      if (cfg.fuel && rec && !b.smeltDoneAt && canStartBatch(b)) {
+        let cost = rec.timeMs * scale * prestigeFactor();   // mirrors gameTick's batch start
+        if (buffActive("ember_pill")) cost *= 0.5;
+        if (fuelTotal(b) < cost) nofuel.push(cfg.name);
+      }
+      if (cfg.roster && (b.disciples || 0) > 0 && (b.buns || 0) <= 0) nobuns.push(cfg.name);
+      if (cfg.gather && gatherTotal(b) >= cfg.gather.cap) full.push(cfg.name);
+    }
+    if (nofuel.length) out.push({ kind: "nofuel", areaKey, count: nofuel.length, names: [...new Set(nofuel)] });
+    if (nobuns.length) out.push({ kind: "nobuns", areaKey, count: nobuns.length, names: [...new Set(nobuns)] });
+    if (full.length) out.push({ kind: "stonefull", areaKey, count: full.length, names: [...new Set(full)] });
+  }
+  return out;
+}
+
+// Start a replay for the gap since GS.lastSeen. Returns a job, or null when
+// there is nothing to replay (pre-feature save, or a plain reload < 90s).
+// job.virt is the virtual clock, advanced by stepOfflineCatchup to job.end.
+function beginOfflineCatchup() {
+  const now = Date.now();
   const last = window.GS.lastSeen;
   if (!Number.isFinite(last)) return null;      // pre-feature save: skip
-  let elapsed = now - last;
-  if (elapsed <= OFFLINE_MIN_MS) return null;   // just a reload
-  elapsed = Math.min(elapsed, offlineCapMs());
-  const step = Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS));
-  const before = countHeldItems();
+  const awayMs = now - last;
+  if (awayMs <= OFFLINE_MIN_MS) return null;    // just a reload
+  const elapsed = Math.min(awayMs, offlineCapMs());
+  const job = {
+    start: last, end: last + elapsed, virt: last, sinceAuto: 0,
+    step: Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS)),
+    awayMs, elapsedMs: elapsed,
+    before: countHeldItems(), samples: [],      // samples: [simMs, heldTotal] ~once per sim-minute
+    stop: false, done: false, summary: null,
+  };
+  job.samples.push([0, heldTotal(job.before)]);
+  offlineJob = job;
+  return job;
+}
+
+// Run replay ticks for up to `budgetMs` of WALL time (Infinity = to the
+// end). Date.now is virtual only inside this call — restored before it
+// returns (even on a throw), so UI code between slices sees the real clock.
+// Returns true once nothing is left to run (end reached, or skipped); then
+// call finishOfflineCatchup(job).
+function stepOfflineCatchup(job, budgetMs) {
+  if (!job || job.done || job.stop || job.virt >= job.end) return true;
+  const realNow = Date.now;
+  const t0 = realNow();
   const sink = window.onGroundDrop;             // silence "+N" floaters during the sim
   const sfxSink = window.onSfx;                 // and mute SFX for the whole replay
-  let virt = last, sinceAuto = 0;
   try {
     window.onGroundDrop = null;
     window.onSfx = null;
+    offlineSim = true;                          // skip ground physics during replay
     offlineReplay = true;                       // no live craft-rate stamps
-    Date.now = () => virt;                      // drive every timer off the virtual clock
-    for (; virt < last + elapsed; virt += step) {
+    Date.now = () => job.virt;                  // drive every timer off the virtual clock
+    while (job.virt < job.end) {
       gameTick();
-      sinceAuto += step;
-      if (sinceAuto >= 1000) { automationTick(); sinceAuto -= 1000; }
+      job.sinceAuto += job.step;
+      if (job.sinceAuto >= 1000) { automationTick(); job.sinceAuto -= 1000; }
+      job.virt += job.step;
+      const sim = job.virt - job.start;
+      if (sim - job.samples[job.samples.length - 1][0] >= 60000)
+        job.samples.push([sim, heldTotal(countHeldItems())]);
+      if (realNow() - t0 >= budgetMs) break;
     }
   } finally {
     Date.now = realNow;                         // ALWAYS restore, even if a tick throws
+    offlineSim = false;
     offlineReplay = false;
     window.onGroundDrop = sink;
     window.onSfx = sfxSink;
   }
+  return job.virt >= job.end;
+}
+
+// Stop a running replay early. The unsimulated remainder is FORFEITED (the
+// summary reports it as skippedMs); the next save stamps the real clock.
+function skipOfflineCatchup(job) { if (job && !job.done) job.stop = true; }
+
+// Fraction of the replay done (0..1) — drives the progress bar.
+function offlineProgress(job) {
+  if (!job) return 1;
+  return Math.max(0, Math.min(1, (job.virt - job.start) / Math.max(1, job.end - job.start)));
+}
+
+// The lastSeen a save should stamp while a replay is unfinished (a mid-
+// replay tab close): shifted back so the NEXT load's gap = the unsimulated
+// remainder + however long the tab then stays closed. (Uncapped, this is
+// the virtual position plus the wall time spent replaying; a capped-away
+// excess stays forfeited.) null = no replay running: stamp the real clock.
+function offlineResumeAt() {
+  const j = offlineJob;
+  if (!j || j.done || j.stop) return null;
+  return Date.now() - Math.max(0, j.end - j.virt);
+}
+function offlineActive() { return !!(offlineJob && !offlineJob.done); }
+
+// A few settle + collider passes per region so ground items that piled up
+// during the physics-free replay end in valid spots (the live tick keeps
+// spreading them afterwards).
+function settleAfterReplay() {
+  for (const areaKey of Object.keys(D.AREAS)) {
+    if (!isAreaUnlocked(areaKey)) continue;
+    const area = window.GS.areas[areaKey];
+    for (let k = 0; k < 6 && area.ground.length > 1; k++) if (settleGround(areaKey) === 0) break;
+    for (let k = 0; k < 2; k++) if (pushOutOfColliders(areaKey) === 0) break;
+  }
+}
+
+// Close out a replay: tidy the ground, diff held items, find the stalls.
+// Returns { awayMs, elapsedMs, simulatedMs, skippedMs, gained:{item:qty},
+// stalls:[...], plateauMs } — plateauMs = sim time at which held items first
+// reached 99% of the final total, when that was well before the end (null
+// otherwise): "output levelled off after ~X".
+function finishOfflineCatchup(job) {
+  if (!job) return null;
+  if (job.done) return job.summary;
+  job.done = true;
+  if (offlineJob === job) offlineJob = null;
+  settleAfterReplay();
   const after = countHeldItems();
   const gained = {};
   for (const it of Object.keys(after)) {
-    const d = after[it] - (before[it] || 0);
+    const d = after[it] - (job.before[it] || 0);
     if (d > 0) gained[it] = d;
   }
-  return { elapsedMs: elapsed, gained };
+  const simulatedMs = Math.min(job.virt, job.end) - job.start;
+  const total0 = job.samples[0][1], total1 = heldTotal(after);
+  let plateauMs = null;
+  if (total1 > total0) {
+    const s = job.samples.find(([, n]) => n >= total0 + (total1 - total0) * 0.99);
+    if (s && s[0] >= 60000 && s[0] < simulatedMs * 0.8) plateauMs = s[0];
+  }
+  job.summary = {
+    awayMs: job.awayMs, elapsedMs: job.elapsedMs, simulatedMs,
+    skippedMs: Math.max(0, job.elapsedMs - simulatedMs),
+    gained, stalls: offlineStalls(), plateauMs,
+  };
+  return job.summary;
+}
+
+// Synchronous one-shot replay (short gaps, tests). Returns the summary, or
+// null if the gap was too short to bother (a plain reload).
+function runOfflineCatchup() {
+  const job = beginOfflineCatchup();
+  if (!job) return null;
+  try { stepOfflineCatchup(job, Infinity); }
+  finally { finishOfflineCatchup(job); }
+  return job.summary;
 }
 
 window.ENGINE = {
   itemName, itemIcon,
-  countHeldItems, runOfflineCatchup,
+  countHeldItems, runOfflineCatchup, beginOfflineCatchup, stepOfflineCatchup, finishOfflineCatchup,
+  skipOfflineCatchup, offlineProgress, offlineResumeAt, offlineActive, offlineStalls, OFFLINE_MODAL_MS,
   handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
   depositToStorehouse, takeFromStorehouse,
   effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
