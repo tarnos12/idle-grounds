@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=49.
+?v=50.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -245,6 +245,23 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Designer playtest: 12 objective fixes (?v=50).** A designer playthrough
+surfaced twelve concrete faults; all fixed minimally and behavior-true.
+Unlock buttons are now adjacency-gated (Fishing had been hidden under
+Celestial) and pulse gold live when affordable (`.edge-arrow.afford`).
+Rejection floaters now appear at the correct world coords, and the wheel
+scrolls the build/link strips. Right-clicking the fuel rack feeds the
+burner. The ending overlay persists a new `endingSeen` flag (migrated from
+`won`, so past winners aren't re-shown it) and waits for the dragon's
+speech to finish. Dragon pills auto-move to the front of the hand on drop
+(`{reordered}` first, then `{fed}`). The starter clay/stone gathering
+stones were repositioned so their radius really covers the whole field.
+Hand-full feedback (`.hand-pill.warn` amber / `.full` red). Welcome-back
+summary threshold raised to 90s. Awakened dragon shows its name on hover,
+and the active buff has a tooltip. New tests/test-design-fixes.js covers
+the engine-testable parts (endingSeen, pill front-move, starter coverage,
+offline gate): `node tests/test-design-fixes.js`.
 
 **Crash-class perf fix + tests now live IN THE REPO (?v=49).** From the
 real-balance audit's worst finding: `settleGround()` was an unbounded

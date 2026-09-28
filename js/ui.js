@@ -213,6 +213,13 @@ let withdrawStart = 0, lastWithdraw = 0;
 let holdStart = 0, lastDrop = 0, lastSwing = 0, loopRunning = false;
 let lastErrBuzz = 0;      // throttle the held right-click rejection buzz
 let lastWithdrawErr = 0;  // throttle the empty-withdraw rejection buzz
+let lastFullBuzz = 0;     // throttle the "Hand full" pickup floater + buzz
+function handFullNudge(region, lx, ly) {
+  if (Date.now() - lastFullBuzz < 900) return;
+  lastFullBuzz = Date.now();
+  if (window.AUDIO) window.AUDIO.play("error");
+  const rp = regionPx(region); addFloater(rp.x + lx, rp.y + ly - 8, "Hand full", C.danger);
+}
 const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
 let lastClickAt = 0;
 
@@ -442,12 +449,20 @@ function renderTopBar() {
   $("#area-name").innerHTML = (a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds")
     + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "")
     + ((window.GS.ascensions || 0) > 0 ? ` <span class="sprint-tag">☯${window.GS.ascensions}</span>` : "");
-  $("#hand-count").textContent = `${E.handTotal()}/${E.handCap()}`;
+  const hTot = E.handTotal(), hCap = E.handCap(), hp = $("#hand-count");
+  hp.textContent = `${hTot}/${hCap}`;
+  const pill = hp.closest(".hand-pill") || hp;   // warn near cap, full at cap
+  pill.classList.toggle("full", hTot >= hCap);
+  pill.classList.toggle("warn", hTot < hCap && hTot >= hCap * 0.9);
   // active buffs with live countdowns: dragon blessing + Martial Vigor
   const now = Date.now(), bp = $("#buff-pill"), buff = window.GS.buff, cb = window.GS.combatBuff;
   const parts = [];
-  if (buff && buff.until > now && DD.DRAGON_BUFFS[buff.kind])
+  let tip = "";
+  if (buff && buff.until > now && DD.DRAGON_BUFFS[buff.kind]) {
     parts.push(`${iconHTML(buff.kind)} ${DD.DRAGON_BUFFS[buff.kind].name} ${Math.ceil((buff.until - now) / 1000)}s`);
+    tip = DD.DRAGON_BUFFS[buff.kind].desc || "";
+  }
+  bp.title = tip;
   if (cb && cb.until > now)
     parts.push(`${iconHTML(DD.VITALITY.item)} ${DD.VITALITY.name} ${Math.ceil((cb.until - now) / 1000)}s`);
   if (parts.length) { bp.classList.remove("hidden"); bp.innerHTML = parts.join(" &nbsp; "); }
@@ -972,18 +987,34 @@ function drawRegionVeil(ox, oy, s, X, Y) {
 }
 
 // Edge buttons for LOCKED neighbour regions (DOM overlay — event-driven UI).
+// Only regions 4-adjacent (region grid) to an UNLOCKED one get a button, so
+// the frontier grows as you expand (and side-anchored buttons never stack).
+function unlockFrontier(key) {
+  const R = DD.WORLD.regions, r = R[key];
+  return !!r && Object.keys(R).some(k => E.isAreaUnlocked(k) &&
+    Math.abs(R[k].rx - r.rx) + Math.abs(R[k].ry - r.ry) === 1);
+}
 function renderUnlockButtons() {
   const wrap = $("#arrows");
   wrap.innerHTML = "";
   for (const [key, side] of Object.entries(DD.WORLD.unlockSide)) {
-    if (E.isAreaUnlocked(key)) continue;
+    if (E.isAreaUnlocked(key) || !unlockFrontier(key)) continue;
     const cost = E.areaUnlockCost(key);
     const label = Object.entries(cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
-    const btn = el("button", `edge-arrow ${side} locked` + (E.canAfford(cost) ? "" : " cant"));
+    const ok = E.canAfford(cost);
+    const btn = el("button", `edge-arrow ${side} locked` + (ok ? " afford" : " cant"));
+    btn.dataset.area = key;
     btn.innerHTML = `<span class="arr">🔓</span>` +
       `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span>`;
     btn.onclick = () => { if (E.unlockArea(key)) { clampCam(); render(); } else if (window.AUDIO) window.AUDIO.play("error"); };
     wrap.appendChild(btn);
+  }
+}
+// Tick refresh: re-evaluate each unlock button's affordability in place.
+function refreshUnlockAfford() {
+  for (const btn of $("#arrows").querySelectorAll("button[data-area]")) {
+    const ok = E.canAfford(E.areaUnlockCost(btn.dataset.area));
+    btn.classList.toggle("cant", !ok); btn.classList.toggle("afford", ok);
   }
 }
 
@@ -1624,10 +1655,12 @@ function dismissWelcome() { $("#welcome-modal").classList.add("hidden"); }
 
 // ---- ending overlay -----------------------------------------
 // When the Sleeping Dragon fully awakens (GS.won) show a one-time victory
-// overlay. `endingShown` guards it to once per page load — no persisted flag.
+// overlay once the awakening speech is dismissed. GS.endingSeen persists it;
+// `endingShown` is an extra once-per-page-load guard.
 let endingShown = false;
 function maybeShowEnding() {
-  if (!window.GS.won || endingShown) return;
+  const G0 = window.GS;
+  if (!G0.won || G0.endingSeen || (G0.dragon && G0.dragon.dialog) || endingShown) return;
   endingShown = true;
   const G = window.GS, st = G.stats || {};
   const rows = [];
@@ -1640,7 +1673,11 @@ function maybeShowEnding() {
     `<span class="st-val">${val}</span></div>`).join("");
   $("#ending-modal").classList.remove("hidden");
 }
-function dismissEnding() { $("#ending-modal").classList.add("hidden"); }
+function dismissEnding() {
+  $("#ending-modal").classList.add("hidden");
+  window.GS.endingSeen = true;
+  if (window.SAVE) window.SAVE.saveState();
+}
 
 // ---- master render ------------------------------------------
 // Full render — repaints the canvas AND rebuilds event-driven DOM UI
@@ -1664,7 +1701,26 @@ function renderPlay() {
   syncDragonDialog();
   syncAscendModal();
   renderQuestPanel();
+  refreshUnlockAfford();
+  // keep an open roster/link panel's numbers live — rebuilt only when its
+  // content changed (a 50ms rebuild would swap buttons mid-click)
+  const ps = panelSig();
+  if (ps !== lastPanelSig) { lastPanelSig = ps; if (rosterFor) renderRoster(); if (linkMode) renderLinkMenu(); }
   maybeShowEnding();
+}
+let lastPanelSig = "";
+function panelSig() {
+  let s = "";
+  if (rosterFor) {
+    const b = E.buildingById(rosterFor.area, rosterFor.id), cfg = b && DD.BUILDINGS[b.type].roster;
+    s += b && cfg ? `r${b.id}|${b.built}|${b.disciples || 0}|${b.buns || 0}|${E.rosterCap(b)}|${E.handCount(cfg.recruit) > 0}` : "r-";
+  }
+  if (linkMode) {
+    const A = linkMode.area, lan = E.buildingById(A, linkMode.id), it = id => { const x = E.buildingById(A, id); return x ? x.type + (x.item || "") : "?"; };
+    s += lan ? `l${lan.id}|${lan.built}|${linkMode.picking}|${linkMode.srcId}|` +
+      (lan.links || []).map(l => `${it(l.from)}>${it(l.to)}`).join(",") : "l-";
+  }
+  return s;
 }
 window.renderPlay = renderPlay;
 
@@ -1687,10 +1743,29 @@ function onMouseMove(e) {
 // Show the hovered building's name as plain text at the bottom-centre.
 function updateHoverName() {
   const label = $("#hover-name");
+  if (recipeMenuFor || linkMode || rosterFor) { label.classList.add("hidden"); return; }   // panels own that strip
   const b = cursor.over && cursor.region && E.isAreaUnlocked(cursor.region)
     ? E.buildingAt(cursor.region, cursor.lrow, cursor.lcol) : null;
-  if (b && b.built) { label.textContent = DD.BUILDINGS[b.type].name; label.classList.remove("hidden"); }
+  if (b && b.built) {
+    label.textContent = b.type === "dragon" && window.GS.won ? "Awakened Dragon" : DD.BUILDINGS[b.type].name;
+    label.classList.remove("hidden");
+  }
   else label.classList.add("hidden");
+}
+
+// A right-click on a built burner's 3x2 fuel rack (outside the footprint on
+// its LEFT, top-aligned) feeds the burner: redirect to the footprint centre.
+function rackRedirect(region, lx, ly) {
+  const row = Math.floor(ly / CELL), col = Math.floor(lx / CELL);
+  if (E.buildingAt(region, row, col)) return { x: lx, y: ly };   // a real building wins
+  for (const b of window.GS.areas[region].buildings) {
+    if (!b.built || !DD.BUILDINGS[b.type].fuel) continue;
+    if (row >= b.row && row <= b.row + 1 && col >= b.col - 3 && col <= b.col - 1) {
+      const s = E.buildingSize(b.type);
+      return { x: (b.col + s.w / 2) * CELL, y: (b.row + s.h / 2) * CELL };
+    }
+  }
+  return { x: lx, y: ly };
 }
 
 function onMouseDown(e) {
@@ -1704,8 +1779,12 @@ function onMouseDown(e) {
     if (window.GS.build.placing || demolishMode) { window.GS.build.placing = null; demolishMode = false; render(); return; }
     if (!active) return;
     rightHeld = true; holdStart = Date.now();
-    const r = E.dropFromHand(p.region, p.lx, p.ly);  // ground drop, ghost feed, or storehouse deposit
-    if (r === null) { if (window.AUDIO) window.AUDIO.play("error"); addFloater(p.lx, p.ly, "✗", C.danger); }
+    const d = rackRedirect(p.region, p.lx, p.ly);
+    const r = E.dropFromHand(p.region, d.x, d.y);  // ground drop, ghost feed, or storehouse deposit
+    if (r === null) {
+      if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = holdStart;
+      const rp = regionPx(p.region); addFloater(rp.x + p.lx, rp.y + p.ly, "✗", C.danger);
+    }
     lastDrop = holdStart;                  // next drop waits a full interval
     startLoop(); renderPlay();
     return;
@@ -1735,7 +1814,8 @@ function onMouseDown(e) {
   // clicking a real but still-locked region: nudge toward the unlock border
   if (!active && p.region && !E.isAreaUnlocked(p.region)) {
     if (window.AUDIO) window.AUDIO.play("error");
-    addFloater(p.lx, p.ly, "🔒 Unlock this border first", C.danger);
+    const rp = regionPx(p.region);
+    addFloater(rp.x + p.lx, rp.y + p.ly, "🔒 Unlock this border first", C.danger);
     return;
   }
 
@@ -1804,6 +1884,7 @@ function onMouseDown(e) {
     const itemsNear = window.GS.areas[p.region].ground.some(g => Math.hypot(g.x - p.lx, g.y - p.ly) <= PICKUP_R);
     if (itemsNear) {
       leftHeld = true; pickupMode = true;
+      if (E.handSpace() <= 0) handFullNudge(p.region, p.lx, p.ly);   // vacuum can't take more
       const s0 = E.suctionStep(p.region, p.lx, p.ly, PICKUP_R);   // starts the pull; loop continues it
       fxPickup(p.region, p.lx, p.ly, s0.picked);
       startLoop(); renderPlay();
@@ -1904,6 +1985,10 @@ function startLoop() {
       const s = E.suctionStep(rg, cursor.lx, cursor.ly, PICKUP_R);
       if (s.moved > 0 || s.picked > 0) dirty = true;
       if (s.picked > 0) fxPickup(rg, cursor.lx, cursor.ly, s.picked);
+      else if (E.handSpace() <= 0 && Date.now() - lastFullBuzz >= 900 &&
+          window.GS.areas[rg].ground.some(g => Math.hypot(g.x - cursor.lx, g.y - cursor.ly) <= PICKUP_R)) {
+        handFullNudge(rg, cursor.lx, cursor.ly); dirty = true;
+      }
     }
     if (leftHeld && withdrawSH) {
       // withdraw rate ramps 1/s -> 5/s over the first 0.2s of the hold
@@ -1938,9 +2023,11 @@ function startLoop() {
       const elapsed = Date.now() - holdStart;
       const rate = 4 + Math.min(elapsed / 200, 1) * 16;
       if (Date.now() - lastDrop >= 1000 / rate) {
-        const r = E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true;
+        const d = rackRedirect(rg, cursor.lx, cursor.ly);
+        const r = E.dropFromHand(rg, d.x, d.y); lastDrop = Date.now(); dirty = true;
         if (r === null && Date.now() - lastErrBuzz >= 400) {   // hand empty / nothing accepts: buzz once
           if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = Date.now();
+          const rp = regionPx(rg); addFloater(rp.x + cursor.lx, rp.y + cursor.ly, "✗", C.danger);
         }
       }
     }
@@ -1976,6 +2063,11 @@ function wireInput() {
   const zin = document.getElementById("zoom-in"); if (zin) zin.onclick = () => zNudge(-0.25);
   const zout = document.getElementById("zoom-out"); if (zout) zout.onclick = () => zNudge(0.25);
   vp.addEventListener("contextmenu", e => e.preventDefault());
+  // the horizontal strips (build / link / roster) scroll sideways on the wheel
+  for (const id of ["#build-menu", "#link-menu", "#roster-menu"]) {
+    const strip = $(id);
+    if (strip) strip.addEventListener("wheel", e => { e.preventDefault(); strip.scrollLeft += (e.deltaY || e.deltaX); }, { passive: false });
+  }
   tcvs.addEventListener("mousemove", onTreeMove);
   tcvs.addEventListener("click", onTreeClick);
   tcvs.addEventListener("mouseleave", () => { treeHoverId = null; hideTip(); if (upgradesOpen) drawTree(); });

@@ -65,6 +65,7 @@ function makeInitialState() {
     perks: {},              // { perkId: level }
     // First-run onboarding: show the intro once (existing saves count as seen).
     introSeen: false,
+    endingSeen: false,           // the awakening ending card has been shown (persisted)
     // Grid geometry stamp — a save from a different GRID.cells re-rolls its
     // map layout on load (see the migration in loadState).
     gridCells: window.DATA.GRID.cells,
@@ -130,6 +131,8 @@ function loadState() {
     fresh.ascendPrompt = !!s.ascendPrompt;
     // any existing save counts as introSeen unless it explicitly stored false
     fresh.introSeen = s.introSeen !== false;
+    // players who already won never get the ending card re-shown
+    fresh.endingSeen = s.endingSeen !== undefined ? !!s.endingSeen : !!s.won;
     // prestige currency + perks: carry, clamping each perk to its config max
     fresh.ascendPoints = Number.isFinite(s.ascendPoints) ? s.ascendPoints : 0;
     fresh.perks = {};

@@ -662,8 +662,8 @@ const TEST = {
 // asset version in index.html on every code change; `desc` is a one-line
 // note of what that version changed (shown as the badge's tooltip).
 const VERSION = {
-  num: 49,
-  desc: "Perf/crash fix: ground items cap at 600/area and settling uses spatial buckets — saves with automation now load fast after any absence.",
+  num: 50,
+  desc: "Designer playtest fixes: unlock buttons appear only at reachable borders (Fishing was hidden under Celestial) and pulse when affordable, fuel-rack right-click feeds the burner, menus wheel-scroll, ending card shows once after the dragon speech, pills auto-front, starter clay/stone lines actually cover their fields, hand-full feedback.",
 };
 
 window.DATA = {

@@ -436,10 +436,15 @@ function setupStarterNetwork() {
   // (just outside the wild-land corners, beside the quarry / below the tree)
   const shJade   = placeBuilt(A, "storehouse", 78, 27, { item: "jade_shard", lock: true });
   const shBamboo = placeBuilt(A, "storehouse", 26, 44, { item: "bamboo", lock: true });
-  // collectors at each source (anyZone, so they sit on the wild land)
-  const gsStone = placeBuilt(A, "gathering_stone", 80, 18);
+  // collectors at each source (anyZone, so they sit on the wild land).
+  // Stone + clay stones sit IN their 9x9 fields (rows 76-84; quarry cols 8-16,
+  // clay cols 76-84) so the radius-8 vacuum reaches every field cell — else
+  // the in-field generator cap fills and the line starves. Max field-corner
+  // distance from the 1x1 stone's centre: clay (80,80) 4.5*sqrt2 = 6.36;
+  // stone (80,13) — beside the rock at 79-80,11-12 — hypot(4.5,5.5) = 7.11.
+  const gsStone = placeBuilt(A, "gathering_stone", 80, 13);
   const gsWood  = placeBuilt(A, "gathering_stone", 16, 44);
-  const gsClay  = placeBuilt(A, "gathering_stone", 80, 73);
+  const gsClay  = placeBuilt(A, "gathering_stone", 80, 80);
   const gsFox   = placeBuilt(A, "gathering_stone", 12, 80);
   // seals keep the main lines pure
   const sealStone = placeBuilt(A, "warding_seal", 74, 22, { item: "stone", lock: true });
@@ -1155,7 +1160,11 @@ function dropFromHand(areaKey, x, y) {
       window.GS.buff = { kind: first0.item, until: Date.now() + dur };
       return { fed: first0.item };
     }
-    if (!dragonStage()) return null;
+    // a pill deeper in the hand: bring it to the front (the NEXT click feeds
+    // it) — always once awakened, else only when no tribute is carried
+    const pill = window.GS.hand.find(h => D.DRAGON_BUFFS[h.item]);
+    const pillFront = () => { handMoveToFront(pill.item); return { reordered: pill.item }; };
+    if (!dragonStage()) return pill ? pillFront() : null;
     const dr = window.GS.dragon;
     const res = feedNeeds(dragonRemaining(), dr.paid);
     if (res && res.fed && !Object.keys(dragonRemaining()).length) {
@@ -1166,7 +1175,7 @@ function dropFromHand(areaKey, x, y) {
       if (window.onSfx) window.onSfx("dragon", areaKey);
       if (!dragonStage()) window.GS.won = true;   // final stage: it AWAKENS
     }
-    return res;
+    return res || (pill ? pillFront() : null);
   }
   // Furnace Spirit: right-click feeds it fuel items for its stoking buffer.
   if (b && b.built && D.BUILDINGS[b.type].stoker) {
@@ -1770,7 +1779,7 @@ function automationTick() {
 // faithful). Returns { elapsedMs, gained:{item:qty} } or null if the gap was
 // too short to bother (a plain reload).
 const OFFLINE_MAX_TICKS = 45000;          // ~1s worst-case compute on load
-const OFFLINE_MIN_MS = 5000;              // ignore reloads / trivial gaps
+const OFFLINE_MIN_MS = 90000;             // < 90s away = a reload, no catch-up / welcome-back
 // (the max window is offlineCapMs(): 8h + 2h per Long Slumber perk level)
 
 // Total units of each item that exist as loot or stock ANYWHERE — ground,
