@@ -564,3 +564,34 @@ button:focus-visible, .build-card:focus-visible, .close-btn:focus-visible, .pk-b
 @media (prefers-reduced-motion: reduce) {
   .node.surface .sprite, .node.hit .sprite, .edge-arrow.afford { animation: none; }
 }
+
+/* ---- v52 guidance: progressive build menu + quest spine + milestone tracker ---- */
+#build-btn { position: relative; }
+#build-btn.has-new::after {            /* newly revealed buildings not yet listed */
+  content: ""; position: absolute; top: 3px; right: 3px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px rgba(251,191,36,.3);
+}
+#build-menu .build-card { position: relative; }
+#build-menu .build-card.cant { opacity: .62; }
+#build-menu .build-card.cant .bc-cost { color: var(--muted); }
+#build-menu .build-card.afford { border-color: rgba(74,222,128,.55); }
+#build-menu .build-card.target { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(251,191,36,.28); opacity: 1; }
+.bc-empty { font-size: 13px; color: var(--muted); padding: 10px 4px; }
+.bc-tgt { position: absolute; top: 3px; left: 5px; font-size: 12px; }
+.bc-new { position: absolute; top: 3px; right: 5px; font-size: 10px; font-weight: 800; line-height: 1;
+  color: #16130a; background: var(--gold); border-radius: 999px; padding: 2px 6px; }
+#quest-panel { max-height: calc(100vh - 120px); overflow-y: auto; }
+.qp-unlocks { font-size: 12px; color: var(--muted); margin: -2px 0 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.qp-unl { color: var(--gold); font-weight: 800; font-size: 14px; }
+.qp-next { font-size: 12px; color: var(--muted); opacity: .6; margin-top: 6px; }
+.qp-ms { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 7px; }
+.qp-ms-head { font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 4px; }
+.qp-ms .qp-name { font-size: 13px; }
+.qp-ms .qp-desc { margin-bottom: 4px; }
+.ms-need { font-size: 12px; line-height: 1.45; margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+.ms-need.ok b { color: var(--accent); }
+.ms-src { color: var(--muted); }
+.ms-step { font-size: 12px; line-height: 1.45; margin: 4px 0 2px; }
+.ms-path { color: var(--muted); }
+.ms-line { font-size: 12px; line-height: 1.45; margin: 2px 0 6px; color: var(--muted); }
+.ms-line.gold { color: var(--gold); font-weight: 800; }

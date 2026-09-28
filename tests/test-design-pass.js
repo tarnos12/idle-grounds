@@ -124,7 +124,7 @@ try {
   {
     const s = boot(); initAll(s);
     const Q = s.DATA.QUESTS;
-    check("QUESTS length grew by 2 (11 -> 13)", Q.length === 13, String(Q.length));
+    check("QUESTS length === 14 (v52 spine: dragon stages folded in, recipe/craft dropped)", Q.length === 14, String(Q.length));
     const ids = Q.map(q => q.id);
     check("quest ids unique", new Set(ids).size === ids.length, ids.join(","));
     const bad = [];
@@ -135,8 +135,9 @@ try {
       } catch (e) { bad.push(q.id + ":" + e.message); }
     });
     check("every quest goal() returns {cur,need} on a fresh state", bad.length === 0, bad.join(", ") || "ok");
-    const tail = ids.slice(-3).join(",");
-    check("last three quests: waters, weaver, cultivate", tail === "waters,weaver,cultivate", tail);
+    const tail = ids.slice(-2).join(",");
+    check("last two quests: weaver, cultivate (v52)", tail === "weaver,cultivate", tail);
+    check("waters quest still in the chain (v52)", ids.includes("waters"), ids.join(","));
   }
 } catch (e) {
   console.log("FAIL exception — " + (e && e.stack || e));
