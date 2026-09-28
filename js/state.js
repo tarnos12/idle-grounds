@@ -52,6 +52,7 @@ function makeInitialState() {
     dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null },
     starterPlaced: false,   // the pre-wired wisp demo network (built once)
     won: false,
+    dragonBlessed: false,   // the awakened dragon's permanent blessing survives ascension
     // Active dragon-pill blessing: { kind: <pill item id>, until: ts }.
     buff: null,
     // Active Vitality Pill combat buff (Martial Vigor): { until: ts }.
@@ -123,6 +124,7 @@ function loadState() {
     if (s.dragon) fresh.dragon = Object.assign({ stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null }, s.dragon);
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
     fresh.won = !!s.won;
+    fresh.dragonBlessed = s.dragonBlessed !== undefined ? !!s.dragonBlessed : !!s.won;
     fresh.starterPlaced = !!s.starterPlaced;
     if (s.buff && Number.isFinite(s.buff.until) && window.DATA.DRAGON_BUFFS[s.buff.kind])
       fresh.buff = s.buff;

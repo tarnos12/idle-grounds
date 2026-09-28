@@ -639,10 +639,23 @@ function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
   const rec = E.recipeOf(b);
   if (!rec) return;
   const cxW = fx0 + fw / 2;
+  // name label (icon + short name) along the top — emoji drawn separately in
+  // a bright fill (Firefox rule), the name muted; shrinks to fit the width.
+  const bc = DD.BUILDINGS[b.type], ly = Y(fy0 + 8);
+  let fpx = 9.5 * s;
+  ctx.font = `700 ${fpx}px ${TEXT_FONT}`;
+  const nameW = ctx.measureText(bc.name).width, maxW = (fw - 6) * s;
+  if (nameW + fpx * 1.3 > maxW) { fpx *= maxW / (nameW + fpx * 1.3); ctx.font = `700 ${fpx}px ${TEXT_FONT}`; }
+  const iw = fpx * 1.3, tw = ctx.measureText(bc.name).width, lx0 = X(cxW) - (iw + tw) / 2;
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.fillStyle = C.muted; ctx.fillText(bc.name, lx0 + iw, ly);
+  ctx.font = `${fpx}px ${EMOJI_FONT}`; ctx.fillStyle = C.text;
+  ctx.fillText(bc.icon, lx0, ly);
+  ctx.textAlign = "center";
   const inputs = Object.entries(rec.inputs);
   const ipx = 18 * s, gapW = 24;
   const startW = cxW - (inputs.length - 1) * gapW / 2;
-  const iy = Y(fy0 + fh * 0.26);
+  const iy = Y(fy0 + fh * 0.30);
   inputs.forEach(([it, need], i) => {
     const sx = X(startW + i * gapW), have = (b.stock && b.stock[it]) || 0;
     drawItemIcon(it, sx, iy, ipx);
@@ -1304,9 +1317,21 @@ function renderRecipeMenu() {
   bar.innerHTML = `<div class="rm-head">Recipes</div><div class="rm-grid"></div>`;
   const grid = bar.querySelector(".rm-grid");
   const active = b.recipe || 0;
+  // Same-output routes (Glass vs Obsidian Glass, Star vs Astral Steel): badge
+  // each with its distinguishing input — the first one no sibling shares.
+  const routeBadge = r => {
+    const sibs = recipes.filter(o => o !== r && o.output === r.output);
+    if (!sibs.length) return "";
+    const ins = Object.keys(r.inputs);
+    const it = ins.find(k => sibs.every(o => !(k in o.inputs))) || ins[0];
+    return it ? `<span class="rm-route" title="via ${E.itemName(it)}" style="position:absolute;right:2px;` +
+      `top:2px;font-size:14px;line-height:1;background:var(--bg-2);border-radius:5px;padding:1px">` +
+      `${iconHTML(it).replace('class="item-ico"', 'class="item-ico" style="width:14px;height:14px"')}</span>` : "";
+  };
   recipes.forEach((r, i) => {
     const cell = el("button", "rm-cell" + (i === active ? " active" : ""));
-    cell.innerHTML = iconHTML(r.output);
+    cell.innerHTML = iconHTML(r.output) + routeBadge(r);
+    cell.style.position = "relative";
     cell.setAttribute("aria-label", r.name);
     cell.onmouseenter = () => showRecipeInfo(r);
     cell.onmouseleave = () => hideRecipeInfo();
@@ -1332,8 +1357,8 @@ function positionRecipeMenu(bar, b) {
   bar.style.left = left + "px";
   bar.style.top = top + "px";
 }
-// Detail popup (bottom-right): output icon, name, then each required item on
-// its own row — icon with a count badge (bottom-right) + the item name.
+// Detail popup (beside the picker): output icon, name, the yield line, then
+// each required item on its own row — icon with a count badge + the name.
 function showRecipeInfo(r) {
   const info = $("#recipe-info");
   const reqs = Object.entries(r.inputs).map(([it, q]) =>
@@ -1341,11 +1366,25 @@ function showRecipeInfo(r) {
       `<span class="ri-ico">${iconHTML(it)}<span class="ri-badge">${q}</span></span>` +
       `<span class="ri-name">${E.itemName(it)}</span>` +
     `</div>`).join("");
+  // batch time at the CURRENT scale (test scale x prestige), in seconds
+  const secs = r.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1) * E.prestigeFactor() / 1000;
   info.innerHTML =
     `<div class="ri-out">${iconHTML(r.output)}</div>` +
     `<div class="ri-title">${r.name}</div>` +
+    `<div class="ri-yield" style="font-size:13px;font-weight:700;color:var(--gold);text-align:center;margin:-6px 0 12px">` +
+      `→ ${r.outputQty || 1}× ${iconHTML(r.output)} ${E.itemName(r.output)} · ${+secs.toFixed(1)}s</div>` +
     `<div class="ri-reqs">${reqs}</div>`;
   info.classList.remove("hidden");
+  // sit beside the picker (top-right of it), flipping left if off-screen
+  const mr = $("#recipe-menu").getBoundingClientRect();
+  if (mr.width) {
+    const w = info.offsetWidth, h = info.offsetHeight;
+    let left = mr.right + 8;
+    if (left + w > window.innerWidth - 8) left = Math.max(8, mr.left - 8 - w);
+    info.style.left = left + "px";
+    info.style.top = clamp(mr.top, 8, Math.max(8, window.innerHeight - h - 8)) + "px";
+    info.style.right = "auto"; info.style.bottom = "auto";
+  }
 }
 function hideRecipeInfo() { $("#recipe-info").classList.add("hidden"); }
 
@@ -1434,12 +1473,45 @@ function renderLinkMenu() {
 // already-done things are instantly claimable. Rebuilt only when the
 // quest index / progress / collapsed state actually changes.
 let lastQuestKey = "";
+// Post-tutorial milestone tracker: the NEXT goal is always visible —
+// dragon stage tribute -> raise the Ascension Gate -> ascend for +N AP.
+function milestoneHTML() {
+  const G0 = window.GS;
+  const needRow = rem => Object.entries(rem).map(([it, q]) => {
+    const have = E.handCount(it);
+    return `<span style="white-space:nowrap;margin:0 6px 0 0;color:${have >= q ? "var(--accent)" : "var(--text)"}">` +
+      `${iconHTML(it)} ${have}/${q}</span>`;
+  }).join(" ");
+  const st = E.dragonStage();
+  if (st) {
+    const n = G0.dragon.stage || 0, rem = E.dragonRemaining();
+    let paid = 0, all = 0;
+    for (const it of Object.keys(st.needs)) { const pd = G0.dragon.paid[it] || 0; paid += pd; all += pd + (rem[it] || 0); }
+    return `<div class="qp-name">🐉 Next: ${st.name || `Stage ${n + 1}/${DD.DRAGON_STAGES.length}`}</div>` +
+      `<div class="qp-desc">Feed the dragon (right-click). In hand / still needed:<br>${needRow(rem)}</div>` +
+      `<div class="qp-bar"><div class="qp-fill" style="width:${all ? Math.round(100 * paid / all) : 0}%"></div></div>`;
+  }
+  let gate = null;
+  for (const k of Object.keys(G0.areas))
+    for (const b of G0.areas[k].buildings) if (DD.BUILDINGS[b.type].gate && (!gate || b.built)) gate = b;
+  if (!gate || !gate.built) {
+    const gType = Object.keys(DD.BUILDINGS).find(t => DD.BUILDINGS[t].gate);
+    const rem = gate ? E.buildingNeeds(gate) : (gType ? DD.BUILDINGS[gType].cost : {});
+    return `<div class="qp-name">⛩️ Raise the Ascension Gate</div>` +
+      `<div class="qp-desc">${gate ? "Feed its ghost (right-click). In hand / still needed:" : "Place it from the build menu (B). In hand / cost:"}` +
+      `<br>${needRow(rem)}</div>`;
+  }
+  const n = E.ascendReward();
+  return `<div class="qp-name">☯ Ascend for +${n} AP</div>` +
+    `<div class="qp-desc">Click the Ascension Gate ⛩️ to ascend — more regions unlocked = more Ascension Points.</div>`;
+}
 function renderQuestPanel() {
   const panel = $("#quest-panel");
   const gq = window.GS.quest;
   const i = gq.idx, total = DD.QUESTS.length;
   const p = i < total ? E.questProgress(i) : null;
-  const key = `${gq.hidden}|${i}|${p ? p.cur + "/" + p.need + "/" + p.done : "end"}`;
+  const ms = i >= total && !gq.hidden ? milestoneHTML() : "";
+  const key = `${gq.hidden}|${i}|${p ? p.cur + "/" + p.need + "/" + p.done : "end"}|${ms}`;
   if (key === lastQuestKey) return;
   lastQuestKey = key;
 
@@ -1452,9 +1524,8 @@ function renderQuestPanel() {
   }
   panel.className = "";
   if (i >= total) {
-    panel.innerHTML = `<div class="qp-head"><span>📜 Quests</span>` +
-      `<button id="quest-min" title="Collapse">–</button></div>` +
-      `<div class="qp-done">🎉 Tutorial complete!<br>Now cultivate on — feed the Sleeping Dragon 🐉 through its stages to fully awaken it, then raise the Ascension Gate ⛩️ to ascend.</div>`;
+    panel.innerHTML = `<div class="qp-head"><span>🎯 Next milestone</span>` +
+      `<button id="quest-min" title="Collapse">–</button></div>` + ms;
     $("#quest-min").setAttribute("aria-label", "Collapse quest panel");
     $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
     return;
@@ -1568,43 +1639,81 @@ function syncAscendModal() {
   const modal = $("#ascend-modal");
   if (!modal) return;
   const show = !!window.GS.ascendPrompt;
-  if (show) $("#ascend-count").textContent =
-    `You have ascended ${window.GS.ascensions || 0} time${(window.GS.ascensions || 0) === 1 ? "" : "s"}. ` +
-    `Ascending now grants +8% permanent speed AND ${E.ascendReward()} Ascension Point` +
-    `${E.ascendReward() === 1 ? "" : "s"} to spend at the Shrine — then begins the grounds anew.`;
+  if (show) {
+    const G0 = window.GS, asc = G0.ascensions || 0, n = E.ascendReward();
+    // overall speed now vs after this ascension: 1/prestigeFactor with
+    // ascensions and ascensions+1 (the engine's own formula, bumped in place)
+    const now = 1 / E.prestigeFactor();
+    let next = now;
+    try { G0.ascensions = asc + 1; next = 1 / E.prestigeFactor(); } finally { G0.ascensions = asc; }
+    const cnt = $("#ascend-count");
+    cnt.innerHTML = `Ascending grants <b>${n} ☯</b> Ascension Point${n === 1 ? "" : "s"} and quickens the world: ` +
+      `overall speed <b>×${now.toFixed(2)} → ×${next.toFixed(2)}</b> faster. ` +
+      `(Ascended ${asc} time${asc === 1 ? "" : "s"} so far.)`;
+    if (!$("#ascend-keep")) {   // static KEEP / RESET summary, built once
+      const box = el("div", "", "");
+      box.id = "ascend-keep";
+      box.style.cssText = "display:flex;gap:10px;text-align:left;margin:8px 10px 0";
+      const col = (t, color, items) => `<div class="hp-sec" style="flex:1"><div class="hp-t" style="color:${color}">${t}</div>` +
+        `<div class="hp-d">${items.map(x => "• " + x).join("<br>")}</div></div>`;
+      box.innerHTML =
+        col("✔ Keep", "var(--accent)", ["Perks + Ascension Points", "Ascension speed", "Dragon's blessing", "Lifetime stats", "Know-how (tutorial skipped)"]) +
+        col("↺ Reset", "var(--danger)", ["Buildings & regions", "Resources", "Dragon stages", "Upgrades"]);
+      cnt.parentNode.insertBefore(box, cnt.nextSibling);
+    }
+  }
   modal.classList.toggle("hidden", !show);
 }
 
 // ---- Ascension Shrine (prestige perk shop) -------------------
 // Spend Ascension Points (earned by ascending) on permanent perks that
-// persist through every future reset.
+// persist through every future reset. Cards are grouped by role, with a few
+// flagged as good first picks (spending guidance at the first prestige).
+const PERK_GROUPS = [
+  ["Pace", ["haste", "regrow", "gale"]],
+  ["Economy", ["frugal", "ember", "bounty", "hands"]],
+  ["Combat", ["fury"]],
+  ["Meta", ["apgain", "hall", "autoboost", "slumber", "bless"]],
+];
+const PERK_FIRST_PICKS = ["apgain", "haste", "hands"];
 function renderPerkShop() {
   const ap = window.GS.ascendPoints || 0;
   $("#perk-ap-line").innerHTML = `<b>${ap}</b> Ascension Point${ap === 1 ? "" : "s"} to spend` +
     ` &nbsp;·&nbsp; ${window.GS.ascensions || 0} ascension${(window.GS.ascensions || 0) === 1 ? "" : "s"}`;
   const list = $("#perk-list");
   list.innerHTML = "";
-  for (const perk of DD.PERKS) {
-    const lvl = E.perkLevel(perk.id), cost = E.perkCost(perk.id);
-    const maxed = cost == null, afford = !maxed && ap >= cost;
-    const card = el("div", "perk-card" + (maxed ? " maxed" : afford ? " afford" : ""));
-    card.innerHTML =
-      `<div class="pk-ico">${perk.icon}</div>` +
-      `<div class="pk-body"><div class="pk-name">${perk.name} ` +
-        `<span class="pk-lv">${lvl}/${perk.max}</span></div>` +
-        `<div class="pk-desc">${perk.desc}</div></div>` +
-      `<button class="pk-buy build-card"${afford ? "" : " disabled"}>` +
-        (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
-    const buyBtn = card.querySelector(".pk-buy");
-    if (!maxed && afford) buyBtn.onclick = () => {
-      if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); }
-    };
-    else if (!maxed) {   // unaffordable: disabled button swallows clicks in Firefox — buzz on the card
-      buyBtn.style.pointerEvents = "none";
-      card.onclick = () => { if (window.AUDIO) window.AUDIO.play("error"); };
-    }
-    list.appendChild(card);
+  // grouped under small headers; unknown ids land in a trailing "Other"
+  const groupOf = id => PERK_GROUPS.find(g => g[1].includes(id));
+  const groups = PERK_GROUPS.map(g => [g[0], DD.PERKS.filter(p => groupOf(p.id) === g)])
+    .concat([["Other", DD.PERKS.filter(p => !groupOf(p.id))]]);
+  for (const [gName, perks] of groups) {
+    if (!perks.length) continue;
+    const h = list.appendChild(el("div", "perk-group", gName));
+    h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 2px -4px";
+    for (const perk of perks) list.appendChild(perkCard(perk, ap));
   }
+}
+function perkCard(perk, ap) {
+  const lvl = E.perkLevel(perk.id), cost = E.perkCost(perk.id);
+  const maxed = cost == null, afford = !maxed && ap >= cost;
+  const card = el("div", "perk-card" + (maxed ? " maxed" : afford ? " afford" : ""));
+  card.innerHTML =
+    `<div class="pk-ico">${perk.icon}</div>` +
+    `<div class="pk-body"><div class="pk-name">${perk.name} ` +
+      `<span class="pk-lv">${lvl}/${perk.max}</span>` +
+      (PERK_FIRST_PICKS.includes(perk.id) ? ` <span class="perk-pick">★ good first pick</span>` : "") + `</div>` +
+      `<div class="pk-desc">${perk.desc}</div></div>` +
+    `<button class="pk-buy build-card"${afford ? "" : " disabled"}>` +
+      (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
+  const buyBtn = card.querySelector(".pk-buy");
+  if (!maxed && afford) buyBtn.onclick = () => {
+    if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); }
+  };
+  else if (!maxed) {   // unaffordable: disabled button swallows clicks in Firefox — buzz on the card
+    buyBtn.style.pointerEvents = "none";
+    card.onclick = () => { if (window.AUDIO) window.AUDIO.play("error"); };
+  }
+  return card;
 }
 function openPerkShop() { renderPerkShop(); $("#perk-modal").classList.remove("hidden"); }
 function closePerkShop() { $("#perk-modal").classList.add("hidden"); }

@@ -134,6 +134,8 @@ const AREAS = {
       // "quarry" upgrade speeds it up
       { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry",
         rareDrop: { item: "jade_shard", chance: 0.08 } },
+      // wood's first idle source — the Spirit Tree stays manual-only
+      { kind: "wood", zone: "midTop", item: "wood", intervalMs: 3000, cap: 10 },
     ],
     // Fox Spirits haunt the top-right corner: they wander their zone, take a
     // few hits to slay, and drop Spirit Essence. `cap` is the BASE cap — the
@@ -435,7 +437,7 @@ const BUILDINGS = {
   // Gathering Stone: vacuums ground items within `radius` cells into its
   // buffer (capacity `cap` total across types).
   gathering_stone: { name: "Gathering Stone", icon: "🧿", size: { w: 1, h: 1 }, anyZone: true,
-               cost: { stone: 5 }, unlocked: true, gather: { radius: 8, cap: 20 } },
+               cost: { stone: 5 }, unlocked: true, gather: { radius: 8, cap: 60 } },   // cap 20 -> 60: a 20-item buffer choked on real-balance income
   // Wisp Lantern: hosts worker wisps. Holds a LIST of links {from,to}
   // (building ids); every `rateMs` it services ONE link, round-robin in the
   // order they were added, sending 1 item the target accepts.
@@ -444,7 +446,7 @@ const BUILDINGS = {
   // Warding Seal: a pass-through buffer locked to ONE item type — wisps
   // simply never bring it anything else, so lines stay pure.
   warding_seal: { name: "Warding Seal", icon: "🈯", size: { w: 1, h: 1 }, anyZone: true,
-               cost: { wood: 3, stone: 3 }, unlocked: true, seal: { cap: 5 } },
+               cost: { wood: 3, stone: 3 }, unlocked: true, seal: { cap: 20 } },   // cap 5 -> 20: pass-through lines stalled on a 5-item buffer
 };
 
 // The Dragon's feeding milestones. Each stage lists the tribute it wants
@@ -572,7 +574,7 @@ const UPGRADE_TREE = [
 // ------------------------------------------------------------------
 const QUESTS = [
   { id: "wood", icon: "🪵", name: "First timber",
-    desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.)",
+    desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.) Wisp stones may vacuum drops near the tree — withdraw from their buffers.",
     goal: () => ({ cur: window.ENGINE.handCount("wood"), need: 5 }) },
   { id: "leaves", icon: "🍃", name: "Bush whacker",
     desc: "Chop the small bushes 🌿 around the Altar and collect 5 leaves.",
@@ -593,7 +595,7 @@ const QUESTS = [
     desc: "Wisps already ferry items along the dashed threads. Click a Wisp Lantern, press ➕ Add link, then click a source (🧿/📦) and a target building.",
     goal: () => ({ cur: window.GS.stats.linksAdded || 0, need: 1 }) },
   { id: "recipe", icon: "🏺", name: "Change of plans",
-    desc: "Click the Kiln and switch its recipe. (Anything it held drops on the ground — that's normal.)",
+    desc: "Click the Kiln and switch its recipe to Glass, then feel free to switch back. (Anything it held drops on the ground — that's normal.)",
     goal: () => ({ cur: window.GS.stats.recipeSwitches || 0, need: 1 }) },
   { id: "craft", icon: "⚙️", name: "Production line",
     desc: "Let your buildings craft 5 items in total (planks, bricks, spirit stones…). Keep the wisps fed!",
@@ -604,13 +606,21 @@ const QUESTS = [
       const u = window.GS.world.unlocked;
       return { cur: (u.farm || u.mine || u.fishing) ? 1 : 0, need: 1 };
     } },
+  // split from one big final quest (evidence: players stalled on the Robe chain)
+  { id: "waters", icon: "🎣", name: "Unlock the waters",
+    desc: "Fishing is where Algae comes from — carry wood to the glowing border button and unlock Fishing.",
+    goal: () => ({ cur: window.GS.world.unlocked.fishing ? 1 : 0, need: 1 }) },
+  { id: "weaver", icon: "🪢", name: "Weaver's path",
+    desc: "Craft 2 Rope and 6 Cloth at the Loom and carry them in hand. Rope needs Algae (from Fishing); Cloth needs Cotton (from the Farm).",
+    goal: () => ({ cur: Math.min(window.ENGINE.handCount("rope"), 2) + Math.min(window.ENGINE.handCount("cloth"), 6), need: 8 }) },
   { id: "cultivate", icon: "🧘", name: "Gather disciples",
-    desc: "Build a Meditation Pavilion, weave a Robe at the Loom, then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
+    desc: "Build a Meditation Pavilion, weave a Robe at the Loom (it needs Spirit Herb — from the Spirit Grove or the Herb Garden), then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
     goal: () => ({ cur: window.GS.stats.disciplesRecruited || 0, need: 1 }) },
 ];
 
 // How many ready nodes each automation level harvests per tick.
-const AUTOMATION_CLICKS = { 1: 1, 2: 2, 3: Infinity };
+// (ladder not cliff — L3 was Infinity, ~158k items/h at real balance)
+const AUTOMATION_CLICKS = { 1: 2, 2: 6, 3: 20 };
 
 const HAND_CAP = 20;   // max items carried in-hand at once
 
@@ -662,8 +672,8 @@ const TEST = {
 // asset version in index.html on every code change; `desc` is a one-line
 // note of what that version changed (shown as the badge's tooltip).
 const VERSION = {
-  num: 50,
-  desc: "Designer playtest fixes: unlock buttons appear only at reachable borders (Fishing was hidden under Celestial) and pulse when affordable, fuel-rack right-click feeds the burner, menus wheel-scroll, ending card shows once after the dragon speech, pills auto-front, starter clay/stone lines actually cover their fields, hand-full feedback.",
+  num: 51,
+  desc: "EXPERIMENTAL design-pass branch: bigger ascension payoff (~15 AP + 18%/run, blessing & stats persist) with a pending-gain preview, automation ladder (2/6/20 clicks), wood trickle generator, live next-milestone tracker, labelled converters, recipe route badges, grouped perk shop, batch-set feeding.",
 };
 
 window.DATA = {

@@ -141,20 +141,25 @@ function buyPerk(id) {
   if (id === "hands") window.GS.handCap += 5;    // apply Fleet Hands live
   return true;
 }
-// AP earned by ascending NOW: 1 base + 1 per unlocked region beyond Center.
+// AP earned by ascending NOW: 3 base + 2 per unlocked region beyond Center
+// (~15 AP with all regions; sized so a first reset buys 2-3 perks — genre
+// 'first prestige must feel like a doubling').
 function ascendReward() {
   const regions = Object.values(window.GS.world.unlocked).filter(Boolean).length;
-  return 1 + Math.max(0, regions - 1) + perkLevel("apgain");
+  return 3 + 2 * Math.max(0, regions - 1) + perkLevel("apgain");
 }
 // The offline catch-up window, extended +2h per Long Slumber level.
 function offlineCapMs() { return (8 + 2 * perkLevel("slumber")) * 3600 * 1000; }
 
-// Prestige: each completed Ascension shaves 8% off every duration
-// (regrowth, batches, lantern beats). Compounds multiplicatively, and the
+// Prestige: each completed Ascension shaves 15% off every duration
+// (~18%/run faster; genre first-reset benchmarks are far above the old 8%)
+// — regrowth, batches, lantern beats. Compounds multiplicatively, and the
 // Eternal Haste perk shaves a further 5% per level.
 function prestigeFactor() {
-  // Awakened dragon's blessing: a permanent ~11% global speedup.
-  return Math.pow(0.92, window.GS.ascensions || 0) * Math.pow(0.95, perkLevel("haste")) * (window.GS.won ? 0.9 : 1);
+  // Awakened dragon's blessing: a permanent ~11% global speedup (survives
+  // ascension via GS.dragonBlessed).
+  return Math.pow(0.85, window.GS.ascensions || 0) * Math.pow(0.95, perkLevel("haste"))
+    * (window.GS.won || window.GS.dragonBlessed ? 0.9 : 1);
 }
 
 // Is a Dragon Shrine standing anywhere? (blessings +60s, scales 2x rate)
@@ -177,6 +182,10 @@ function ascend() {
   fresh.perks = perks;
   fresh.handCap = D.HAND_CAP + 5 * (perks.hands || 0);   // re-apply Fleet Hands
   fresh.quest.idx = D.QUESTS.length;   // veterans skip the tutorial chain
+  fresh.dragonBlessed = window.GS.dragonBlessed || window.GS.won;   // the "forever" blessing
+  fresh.stats = window.GS.stats;       // lifetime stats — wiping them reads as loss
+  fresh.introSeen = true;              // a veteran never re-sees the intro
+  fresh.endingSeen = window.GS.endingSeen;
   window.GS = fresh;
   window.SAVE.saveState();
   location.reload();
@@ -1111,6 +1120,25 @@ function feedNeeds(rem, paid) {
     if (handCount(item) > 0) { handMoveToFront(item); return { reordered: item }; }
   return null;
 }
+// Converter stock only: feed the carried input with the LOWEST stock/need
+// ratio (ties: front stack, then recipe order), so first clicks fill a whole
+// batch SET instead of front-filling one ingredient to its cap.
+function feedRatio(b, rec) {
+  const space = smeltSpace(b);
+  const first = window.GS.hand[0];
+  const order = first && space[first.item] ? [first.item] : [];
+  for (const it of Object.keys(space)) if (it !== order[0]) order.push(it);
+  let pick = null, best = Infinity;
+  for (const it of order) {
+    if (handCount(it) <= 0) continue;
+    const r = (b.stock[it] || 0) / Math.max(1, rec.inputs[it] || 0);
+    if (r < best) { best = r; pick = it; }
+  }
+  if (pick) handMoveToFront(pick);
+  return feedNeeds(space, b.stock);
+}
+// Buffs scale with the world clock: 60s test / 240s real.
+function buffScale() { return D.TEST.ENABLED ? 1 : 4; }
 
 function dropFromHand(areaKey, x, y) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
@@ -1118,7 +1146,7 @@ function dropFromHand(areaKey, x, y) {
   // the Martial Vigor combat buff. Right-click it anywhere to quaff.
   if (window.GS.hand[0] && window.GS.hand[0].item === D.VITALITY.item) {
     handTake(D.VITALITY.item, 1);
-    window.GS.combatBuff = { until: Date.now() + D.VITALITY.ms };
+    window.GS.combatBuff = { until: Date.now() + D.VITALITY.ms * buffScale() };
     return { used: D.VITALITY.item };
   }
   // Beast Bait INSIDE the enemy zone always lures (even over a formation
@@ -1156,7 +1184,7 @@ function dropFromHand(areaKey, x, y) {
     if (first0 && D.DRAGON_BUFFS[first0.item]) {
       handTake(first0.item, 1);
       const dur = (60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0)
-        + (shrineBuilt() ? 60000 : 0)) * Math.pow(1.2, perkLevel("bless"));   // Dragon Shrine + Heaven's Favor perk
+        + (shrineBuilt() ? 60000 : 0)) * Math.pow(1.2, perkLevel("bless")) * buffScale();   // Dragon Shrine + Heaven's Favor perk
       window.GS.buff = { kind: first0.item, until: Date.now() + dur };
       return { fed: first0.item };
     }
@@ -1173,7 +1201,7 @@ function dropFromHand(areaKey, x, y) {
       dr.msg = st.text; dr.msgUntil = Date.now() + 8000;
       dr.dialog = st.text;   // story dialog box (persists until dismissed)
       if (window.onSfx) window.onSfx("dragon", areaKey);
-      if (!dragonStage()) window.GS.won = true;   // final stage: it AWAKENS
+      if (!dragonStage()) window.GS.won = window.GS.dragonBlessed = true;   // final stage: it AWAKENS
     }
     return res || (pill ? pillFront() : null);
   }
@@ -1214,7 +1242,7 @@ function dropFromHand(areaKey, x, y) {
       addFuelItem(b, first.item);
       return { fed: first.item };
     }
-    const res = feedNeeds(smeltSpace(b), b.stock);
+    const res = feedRatio(b, rec);
     if (res) return res;
     // nothing the recipe needs — bring carried fuel forward instead
     if (bCfg.fuel && fuelSpace(b) > 0)

@@ -58,8 +58,9 @@ asset version on any code change too.
     `node tools/build-artifact.js <scratchpad>/idle-grounds.html`, then
     publish with the Artifact tool (favicon 🌍), REDEPLOYING TO THE SAME
     URL via the `url:` param:
-    https://claude.ai/code/artifact/69f9e3c1-fb9f-45f8-8927-80e5fd02eb67
-    — that's the user's bookmark; never mint a new URL. (Artifact
+    https://claude.ai/artifact/FxjCkJ6WdDt33nYntCBpJD
+    — that's the user's bookmark (the old artifact was deleted; this is the
+    new one); never mint a new URL. (Artifact
     sandbox: localStorage autosave / confirm() may be blocked — all call
     sites try/catch, the game still runs; mention it's a test build.)
   - **Local sessions** (user's PC, `C:\Work\Marrow Tap Projects\Farm
@@ -245,6 +246,27 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**feature/design-pass — EXPERIMENTAL evidence-driven design pass (?v=51, branch only).**
+Master stays at v50; this branch is for the user to test-drive before any merge.
+Evidence in one breath: genre first-prestige benchmarks (Cookie Clicker / AdCap /
+Melvor), automation ladders instead of cliffs, and an always-visible next goal,
+cross-checked against a real-balance audit and designer playtests.
+- data.js: AUTOMATION_CLICKS {1:2,2:6,3:20} (L3 was Infinity, ~158k items/h);
+  Center gets a passive wood generator on `midTop` (cap 10; Spirit Tree stays
+  manual-only); Gathering Stone buffer 20->60, Warding Seal 5->20 (recipe
+  `stockCap` default 20 left in engine.js — not touched here).
+- data.js QUESTS: last quest split into Unlock the waters (Fishing) / Weaver's
+  path (2 Rope + 6 Cloth, counted in hand) / Gather disciples (Robe needs Spirit
+  Herb); recipe quest says switch to Glass then feel free to switch back; wood
+  quest warns wisp stones may vacuum drops.
+- state.js: `dragonBlessed` (permanent blessing survives ascension), migrated
+  from `won` on old saves.
+- style.css: `.pk-group`, `.perk-pick` (★ good first pick chip), `.qp-needs`/`.qp-need`.
+- tests/test-design-pass.js: vm-sandbox suite for all of the above plus the
+  engine-side items (AP reward, prestige factor, ascend() carry-over, buff
+  duration scaling) owned by the engine/UI agents on this branch.
+- Version bump (?v=51 / DATA.VERSION) and merge are the orchestrator's job.
 
 **Designer playtest: 12 objective fixes (?v=50).** A designer playthrough
 surfaced twelve concrete faults; all fixed minimally and behavior-true.
