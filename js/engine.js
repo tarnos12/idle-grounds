@@ -477,12 +477,16 @@ function depleteNode(areaKey, node) {
 
 // ---- Ground items (never stack — one icon per item) ---------
 
+const GROUND_CAP = 600;                   // max loose ground items per area
+
 function dropGround(areaKey, item, qty, x, y) {
   const area = window.GS.areas[areaKey];
   for (let k = 0; k < qty; k++) {
     const jx = clampPx(x + rand(-16, 16)), jy = clampPx(y + rand(-16, 16));
     area.ground.push({ id: area.nextGroundId++, item, x: jx, y: jy });
   }
+  // overflow despawns oldest (array is push-ordered) — bounds render, settling and offline replay
+  if (area.ground.length > GROUND_CAP) area.ground.splice(0, area.ground.length - GROUND_CAP);
   // Feedback juice: the UI hooks this to float a "+N" at the drop. Detached
   // during offline catch-up so a fast-forward doesn't queue a blizzard.
   if (window.onGroundDrop) window.onGroundDrop(areaKey, item, qty, x, y);
@@ -510,23 +514,57 @@ function flushPending(areaKey, node) {
 
 // Push overlapping ground items apart so they don't sit on top of each other.
 // Returns how many pushes happened (0 = everything already settled).
+// 64px spatial buckets (MIN << 64): each item only tests its own + 8
+// neighbour buckets, j > i — same pair math as a full pairwise pass, but
+// O(n) on dense piles instead of O(n^2) every tick / offline replay step.
+// Bucket lists are reused typed-array linked lists (no per-tick garbage).
+const SETTLE_G = (PLAY_PX >> 6) + 1;                  // buckets per side
+const settleHead = new Int32Array(SETTLE_G * SETTLE_G);
+let settleNext = new Int32Array(1024), settleCell = new Int32Array(1024);
 function settleGround(areaKey) {
   const items = window.GS.areas[areaKey].ground;
-  const MIN = 18;
+  const MIN = 18, MIN2 = MIN * MIN + 1e-6;   // squared pre-check; hypot stays authoritative
+  const n = items.length;
+  if (n < 2) return 0;
+  if (settleNext.length < n) { settleNext = new Int32Array(n * 2); settleCell = new Int32Array(n * 2); }
+  const G = SETTLE_G, head = settleHead, next = settleNext, cellOf = settleCell;
+  head.fill(-1);
+  for (let i = n - 1; i >= 0; i--) {          // prepend in reverse: each list is index-ascending
+    let cx = items[i].x >> 6, cy = items[i].y >> 6;   // out-of-map/NaN clamp to edge buckets
+    cx = cx < 0 ? 0 : cx >= G ? G - 1 : cx;
+    cy = cy < 0 ? 0 : cy >= G ? G - 1 : cy;
+    const c = cx * G + cy;
+    cellOf[i] = c; next[i] = head[c]; head[c] = i;
+  }
   let moves = 0;
-  for (let i = 0; i < items.length; i++) {
-    for (let j = i + 1; j < items.length; j++) {
-      const a = items[i], b = items[j];
-      let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
-      if (d < 0.01) { dx = rand(-10, 10) || 1; dy = rand(-10, 10) || 1; d = Math.hypot(dx, dy); }
-      if (d < MIN) {
-        const push = (MIN - d) / 2, ux = dx / d, uy = dy / d;
-        a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
-        moves++;
+  for (let i = 0; i < n; i++) {
+    const a = items[i], cx = (cellOf[i] / G) | 0, cy = cellOf[i] - cx * G;
+    for (let nx = cx - 1; nx <= cx + 1; nx++) {
+      if (nx < 0 || nx >= G) continue;
+      for (let ny = cy - 1; ny <= cy + 1; ny++) {
+        if (ny < 0 || ny >= G) continue;
+        for (let j = head[nx * G + ny]; j !== -1; j = next[j]) {
+          if (j <= i) continue;
+          const b = items[j];
+          let dx = b.x - a.x, dy = b.y - a.y;
+          if (dx * dx + dy * dy > MIN2) continue;   // far pair: never pushed anyway
+          let d = Math.hypot(dx, dy);
+          if (d < 0.01) { dx = rand(-10, 10) || 1; dy = rand(-10, 10) || 1; d = Math.hypot(dx, dy); }
+          if (d < MIN) {
+            const push = (MIN - d) / 2, ux = dx / d, uy = dy / d;
+            a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
+            moves++;
+          }
+        }
       }
     }
   }
-  if (moves) for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
+  // same result as clamping every item; skips the in-range majority
+  const HI = PLAY_PX - 4;
+  if (moves) for (const it of items) {
+    if (it.x < 4 || it.x > HI) it.x = clampPx(it.x);
+    if (it.y < 4 || it.y > HI) it.y = clampPx(it.y);
+  }
   return moves;
 }
 

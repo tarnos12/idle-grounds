@@ -662,8 +662,8 @@ const TEST = {
 // asset version in index.html on every code change; `desc` is a one-line
 // note of what that version changed (shown as the badge's tooltip).
 const VERSION = {
-  num: 48,
-  desc: "New region: Celestial Peak ☁️ (below Fishing) — star fragments & moonpetals, alternate Star Steel and Qi Elixir recipes, and two new Shrine perks (Heaven's Favor, Astral Bounty).",
+  num: 49,
+  desc: "Perf/crash fix: ground items cap at 600/area and settling uses spatial buckets — saves with automation now load fast after any absence.",
 };
 
 window.DATA = {

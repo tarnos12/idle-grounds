@@ -9,7 +9,7 @@ READ DESIGN.md FIRST — the full economy/building/logistics plan with
 done-markers. **The entire roadmap (phases 1-5) is implemented, plus
 disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
 and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=48.
+?v=49.
 
 Everything designed is live: gathering, dragon story (4 stages ->
 awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
@@ -245,6 +245,19 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Crash-class perf fix + tests now live IN THE REPO (?v=49).** From the
+real-balance audit's worst finding: `settleGround()` was an unbounded
+O(n^2) pairwise pass every 50ms tick and `dropGround()` had no cap, so a
+save with automation became unloadable after ~20 min away (offline replay
+grew ~cubically; a 1h probe never returned). Now: 64px spatial buckets
+(typed-array lists, zero per-tick garbage, bit-identical output on sparse
+ground — 300/300 random trials matched) + a 600-item/area ground cap that
+despawns oldest. Measured: the 0.1h repro 28.6s -> 0.96s; a 1h absence
+loads in ~11s; 8h at automation L3 in ~54s. Regression suite:
+**tests/test-ground-settle.js — NOTE: tests now live in `tests/` in the
+repo** (scratchpad suites die with each cloud container; author all new
+suites into tests/ from now on). Run: `node tests/<file> .`.
 
 **Celestial Peak region (?v=48, tiered agent team).** New late-game region
 ☁️ at `WORLD.regions.celestial` (`rx:1, ry:2`, bordering Fishing's bottom,
