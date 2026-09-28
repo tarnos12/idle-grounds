@@ -71,7 +71,17 @@ function makeInitialState() {
     // map layout on load (see the migration in loadState).
     gridCells: window.DATA.GRID.cells,
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
-    quest: { idx: 0, hidden: false },
+    // chain = which QUESTS layout idx indexes (DATA.QUEST_CHAIN) — an older
+    // chain's idx is remapped by quest id on load.
+    quest: { idx: 0, hidden: false, chain: window.DATA.QUEST_CHAIN },
+    // Progressive build-menu reveal (see DATA.REVEAL): types the PLAYER has
+    // built (owning one keeps it revealed), and per-type "seen" level for
+    // the 'new' badges — 1 = listed in an opened menu (clears the Build
+    // button dot), 2 = hovered (clears the card badge).
+    builtTypes: {},
+    buildSeen: {},
+    pavilionSeeded: false,  // the first Meditation Pavilion came stocked with buns
+    perkShopSeen: false,    // the Ascension Shrine was opened this run (tracker hint)
     // Wall-clock of the last save — offline catch-up (engine) replays the
     // passive economy for the gap since this on the next load.
     lastSeen: Date.now(),
@@ -147,8 +157,34 @@ function loadState() {
     fresh.lastSeen = Number.isFinite(s.lastSeen) ? s.lastSeen : null;
     // merge stats/quest onto defaults so counters added later start at 0
     if (s.stats) Object.assign(fresh.stats, s.stats);
+    // quest idx indexes the chain it was saved under: an older chain (no
+    // stamp = the v51 13-quest list) is remapped by quest id
+    const legacyChain = !s.quest || s.quest.chain !== window.DATA.QUEST_CHAIN;
     if (s.quest) Object.assign(fresh.quest, s.quest);
-    fresh.quest.idx = Math.max(0, Math.min(fresh.quest.idx || 0, window.DATA.QUESTS.length));
+    fresh.quest.chain = window.DATA.QUEST_CHAIN;
+    const qIdx0 = Number.isFinite(fresh.quest.idx) ? fresh.quest.idx : 0;
+    fresh.quest.idx = legacyChain ? remapLegacyQuestIdx(qIdx0)
+      : Math.max(0, Math.min(qIdx0, window.DATA.QUESTS.length));
+    // build-menu reveal: pre-v52 saves saw every card, so nothing badges as
+    // 'new' and every type they already placed stays revealed
+    const B = window.DATA.BUILDINGS;
+    fresh.builtTypes = {}; fresh.buildSeen = {};
+    if (s.builtTypes && typeof s.builtTypes === "object") {
+      for (const t of Object.keys(s.builtTypes)) if (B[t] && s.builtTypes[t]) fresh.builtTypes[t] = true;
+    } else {
+      for (const k of Object.keys(s.areas || {}))
+        for (const b of (s.areas[k] && s.areas[k].buildings) || []) if (b && B[b.type]) fresh.builtTypes[b.type] = true;
+    }
+    if (s.buildSeen && typeof s.buildSeen === "object") {
+      for (const t of Object.keys(s.buildSeen))
+        if (B[t] && Number.isFinite(s.buildSeen[t]) && s.buildSeen[t] > 0) fresh.buildSeen[t] = Math.min(2, s.buildSeen[t]);
+    } else for (const t of Object.keys(B)) fresh.buildSeen[t] = 2;
+    // pavilion bun seed is once: a save that already has a built pavilion
+    // (or recruited disciples) never gets it
+    fresh.pavilionSeeded = s.pavilionSeeded !== undefined ? !!s.pavilionSeeded
+      : (fresh.stats.disciplesRecruited || 0) > 0 || Object.keys(s.areas || {}).some(k =>
+          ((s.areas[k] && s.areas[k].buildings) || []).some(b => b && b.built && B[b.type] && B[b.type].roster));
+    fresh.perkShopSeen = !!s.perkShopSeen;
 
     // ---- migration: scrub content that no longer exists in the game ----
     // (old saves may hold removed node kinds, tiers and item types)
@@ -261,7 +297,22 @@ function loadState() {
   } catch (e) { return null; }
 }
 
+// v51's 13-quest chain, in order: a pre-v52 idx means "quests [0, idx)
+// claimed". Map to the new chain as the slot just after the LATEST claimed
+// quest that still exists — never back past a completed quest (inserted new
+// quests before it are skipped); a finished chain stays finished.
+const QUEST_IDS_V51 = ["wood", "leaves", "dragon1", "fox", "build", "upgrade", "link",
+  "recipe", "craft", "explore", "waters", "weaver", "cultivate"];
+function remapLegacyQuestIdx(oldIdx) {
+  const ids = window.DATA.QUESTS.map(q => q.id);
+  const o = Math.max(0, Math.min(Math.floor(oldIdx) || 0, QUEST_IDS_V51.length));
+  if (o >= QUEST_IDS_V51.length) return ids.length;
+  let idx = 0;
+  for (let i = 0; i < o; i++) { const j = ids.indexOf(QUEST_IDS_V51[i]); if (j >= 0) idx = Math.max(idx, j + 1); }
+  return Math.min(idx, ids.length);
+}
+
 function clearSave() { saveDisabled = true; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
-window.SAVE = { saveState, loadState, clearSave, fresh: makeInitialState, KEY: SAVE_KEY };
+window.SAVE = { saveState, loadState, clearSave, fresh: makeInitialState, KEY: SAVE_KEY, remapLegacyQuestIdx };
 window.GS = loadState() || makeInitialState();

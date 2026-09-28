@@ -437,6 +437,7 @@ function animActive() {
   if (window.GS.buff && window.GS.buff.until > now) return true;
   if (window.GS.combatBuff && window.GS.combatBuff.until > now) return true;
   if (fxActive()) return true;   // floating +N numbers / spark bursts in flight
+  if (questRingOnScreen()) return true;   // the quest target ring pulses while visible
   return false;
 }
 // Tick gate: repaint on "idle" ticks only when something animated is visible.
@@ -551,6 +552,7 @@ function drawWorldInner() {
   }
   for (const v of visible) if (v.unlocked) drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
   for (const v of visible) if (v.unlocked) drawRegionItems(v.key, v.ox, v.oy, view, s, X, Y);
+  drawQuestRing(now, X, Y, s);   // the active quest's world target
 
   // link picking: rubber-band line from the chosen source to the cursor
   if (linkMode && linkMode.picking === "target" && linkMode.srcId && cursor.over &&
@@ -1045,16 +1047,69 @@ function renderHandCursor() {
 }
 
 // ---- build menu ---------------------------------------------
+// Reveal-filtered catalog (DATA.REVEAL via ENGINE.buildingCatalog). Order:
+// the current quest/milestone target, then 'new' cards, then what the hand
+// can pay for, then the rest. A reveal that reshuffles an OPEN menu locks
+// card clicks for 400 ms so the layout shift can't eat a click (Trimps'
+// lockOnUnlock). Rebuilt on discrete events only (render / a reveal).
+let buildCatSig = "", buildMenuWasOpen = false, buildClickLockUntil = 0;
+function buildCatalogSig() {   // cheap per-tick check (no catalog objects built)
+  let sig = "";
+  for (const t in DD.BUILDINGS) if (E.isBuildingUnlocked(t)) sig += t + ",";
+  return sig;
+}
+// What a card makes (recipe outputs) or does — its tooltip.
+function buildRole(id, b) {
+  if (b.recipes) return "Makes " + [...new Set(b.recipes.map(r => E.itemName(r.output)))].join(", ");
+  if (b.gather) return `Vacuums loose items within ${b.gather.radius} cells into its buffer`;
+  if (b.lantern) return "Hosts wisps that ferry items along its links";
+  if (b.seal) return "Pass-through buffer locked to one item type";
+  if (b.stoker) return `Stokes fuel into burners within ${b.stoker.radius} cells`;
+  if (b.roster) return `Disciples cultivate ${E.itemName(b.roster.produce)} (they eat ${E.itemName(b.roster.food)})`;
+  if (b.gen) return `Grows ${E.itemName(b.gen.item)} around itself` + (b.waterOnly ? " (water only)" : "");
+  if (b.shrine) return "Longer dragon blessings, more Dragon Scales";
+  if (b.gate) return "The final monument — Ascend from here";
+  if (id === "storehouse") return `Stores up to ${b.cap} of one item type`;
+  return "";
+}
+function syncBuildDot() {
+  const btn = $("#build-btn");
+  if (btn) btn.classList.toggle("has-new", !window.GS.build.open && E.buildMenuHasNew());
+}
 function renderBuildMenu() {
   const bar = $("#build-menu");
-  bar.classList.toggle("hidden", !window.GS.build.open);
-  if (!window.GS.build.open) return;
+  const open = !!window.GS.build.open;
+  const sig = buildCatalogSig();
+  if (open && buildMenuWasOpen && sig !== buildCatSig) buildClickLockUntil = Date.now() + 400;
+  buildCatSig = sig; buildMenuWasOpen = open;
+  syncBuildDot();
+  bar.classList.toggle("hidden", !open);
+  if (!open) return;
   bar.innerHTML = "";
-  for (const b of E.buildingCatalog()) {
+  const targets = buildTargets();
+  const cards = E.buildingCatalog().map((b, i) => ({ b, i, tgt: targets.includes(b.id),
+    isNew: E.isBuildingNew(b.id), afford: E.canAfford(b.cost) }));
+  const rank = c => c.tgt ? 0 : c.isNew ? 1 : c.afford ? 2 : 3;
+  cards.sort((a, c) => rank(a) - rank(c) || a.i - c.i);
+  if (!cards.length)   // minute 0: the quest chain reveals the first card
+    bar.appendChild(el("div", "bc-empty", "Nothing to build yet — follow the 📜 quests to unlock buildings."));
+  for (const { b, tgt, isNew, afford } of cards) {
     const cost = Object.entries(b.cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
-    const card = el("button", "build-card" + (window.GS.build.placing === b.id ? " active" : ""));
-    card.innerHTML = `<span class="bc-ico">${b.icon}</span><span class="bc-name">${b.name}</span><span class="bc-cost">${cost}</span>`;
-    card.onclick = () => { window.GS.build.placing = b.id; window.GS.build.open = false; render(); };
+    const card = el("button", "build-card " + (afford ? "afford" : "cant") +
+      (tgt ? " target" : "") + (window.GS.build.placing === b.id ? " active" : ""));
+    card.title = `${b.name} — ${buildRole(b.id, b)}` + (tgt ? " (your current goal)" : "");
+    card.innerHTML = `<span class="bc-ico">${b.icon}</span><span class="bc-name">${b.name}</span><span class="bc-cost">${cost}</span>` +
+      (tgt ? `<span class="bc-tgt" aria-hidden="true">🎯</span>` : "") +
+      (isNew ? `<span class="bc-new">new</span>` : "");
+    card.onmouseenter = () => {
+      if (!E.isBuildingNew(b.id)) return;
+      E.markBuildSeen(b.id);
+      const nb = card.querySelector(".bc-new"); if (nb) nb.remove();
+    };
+    card.onclick = () => {
+      if (Date.now() < buildClickLockUntil) return;   // the menu just reshuffled
+      window.GS.build.placing = b.id; window.GS.build.open = false; render();
+    };
     bar.appendChild(card);
   }
 }
@@ -1282,8 +1337,9 @@ function toggleDebug(force) {
 }
 function toggleBuild(force) {
   window.GS.build.open = force != null ? force : !window.GS.build.open;
-  if (window.GS.build.open) { window.GS.build.placing = null; demolishMode = false; }
+  if (window.GS.build.open) { window.GS.build.placing = null; demolishMode = false; E.markBuildListed(); }
   render();
+  if (window.GS.build.open) $("#build-menu").scrollLeft = 0;   // always open at the first (target) card
 }
 function toggleDemolish(force) {
   demolishMode = force != null ? force : !demolishMode;
@@ -1470,47 +1526,143 @@ function renderLinkMenu() {
 
 // ---- tutorial quest panel ------------------------------------
 // The side panel shows ONE quest at a time; goals read live state so
-// already-done things are instantly claimable. Rebuilt only when the
-// quest index / progress / collapsed state actually changes.
+// already-done things are instantly claimable. Under it, from minute 0, a
+// compact 🎯 next-milestone block (the long goal, never hidden). Rebuilt
+// only when the key string (quest index / progress / milestone HTML /
+// collapsed state) actually changes — never a DOM rebuild per tick.
 let lastQuestKey = "";
-// Post-tutorial milestone tracker: the NEXT goal is always visible —
-// dragon stage tribute -> raise the Ascension Gate -> ascend for +N AP.
-function milestoneHTML() {
-  const G0 = window.GS;
-  const needRow = rem => Object.entries(rem).map(([it, q]) => {
+const srcHint = it => (DD.SOURCES && DD.SOURCES[it]) || "";
+// Any standing (built) building of this type, anywhere?
+function builtAnywhere(type) {
+  for (const k of Object.keys(window.GS.areas))
+    if (window.GS.areas[k].buildings.some(b => b.built && b.type === type)) return true;
+  return false;
+}
+// Named have/need rows with a one-line source hint per item.
+function needRows(rem) {
+  return Object.entries(rem).map(([it, q]) => {
     const have = E.handCount(it);
-    return `<span style="white-space:nowrap;margin:0 6px 0 0;color:${have >= q ? "var(--accent)" : "var(--text)"}">` +
-      `${iconHTML(it)} ${have}/${q}</span>`;
-  }).join(" ");
+    return `<div class="ms-need${have >= q ? " ok" : ""}">${iconHTML(it)} <b>${E.itemName(it)}</b> ${have}/${q}` +
+      (srcHint(it) ? ` <span class="ms-src">— ${srcHint(it)}</span>` : "") + `</div>`;
+  }).join("");
+}
+// First missing sub-step toward `item` by walking recipes -> buildings:
+// no producer standing -> "build a X (inputs)"; producer standing -> chase
+// the first input neither the hand nor its stock covers; raw -> source hint.
+function stepToward(item, path) {
+  path = path || [];
+  const prods = [];
+  for (const [type, bc] of Object.entries(DD.BUILDINGS))
+    for (const r of bc.recipes || []) if (r.output === item) prods.push({ type, r });
+  const head = path.length ? `<span class="ms-path">${path.map(E.itemName).join(" › ")} ›</span> ` : "";
+  const label = `${iconHTML(item)} <b>${E.itemName(item)}</b>`;
+  if (!prods.length || path.length >= 4) return { text: `${head}${label} ← ${srcHint(item) || "gather it"}` };
+  const pick = prods.find(p => builtAnywhere(p.type)) || prods.find(p => E.isBuildingUnlocked(p.type)) || prods[0];
+  const bc = DD.BUILDINGS[pick.type], ins = Object.keys(pick.r.inputs);
+  const insTxt = ins.map(E.itemName).join(" + ");
+  if (!builtAnywhere(pick.type))
+    return { text: `${head}${label} ← build a ${bc.name} (${insTxt})`, build: pick.type };
+  for (const it of ins) {
+    let have = E.handCount(it);
+    for (const k of Object.keys(window.GS.areas))
+      for (const b of window.GS.areas[k].buildings)
+        if (b.built && b.type === pick.type && b.recipe != null && bc.recipes[b.recipe] === pick.r) have += (b.stock && b.stock[it]) || 0;
+    if (have < pick.r.inputs[it]) return stepToward(it, path.concat(item));
+  }
+  return { text: `${head}${label} ← feed a ${bc.name}: ${insTxt}` };
+}
+// The next big goal, from minute 0: dragon tribute -> raise the Ascension
+// Gate (expanded into its first missing sub-step) -> ascend. Plus two side
+// lines: unspent AP (shop not opened this run) and hungry disciples.
+// Returns { html, build } (build = a building type the goal asks for).
+function milestoneInfo() {
+  const G0 = window.GS;
+  let html = "", build = null;
+  const ap = G0.ascendPoints || 0;
+  if (!G0.perkShopSeen && ap > 0) {
+    let cheapest = null;
+    for (const pk of DD.PERKS) { const c = E.perkCost(pk.id); if (c != null && (cheapest == null || c < cheapest)) cheapest = c; }
+    if (cheapest != null && ap >= cheapest)
+      html += `<div class="ms-line gold">☯ Spend ${ap} AP at the Ascension Shrine (top bar)</div>`;
+  }
   const st = E.dragonStage();
   if (st) {
     const n = G0.dragon.stage || 0, rem = E.dragonRemaining();
     let paid = 0, all = 0;
     for (const it of Object.keys(st.needs)) { const pd = G0.dragon.paid[it] || 0; paid += pd; all += pd + (rem[it] || 0); }
-    return `<div class="qp-name">🐉 Next: ${st.name || `Stage ${n + 1}/${DD.DRAGON_STAGES.length}`}</div>` +
-      `<div class="qp-desc">Feed the dragon (right-click). In hand / still needed:<br>${needRow(rem)}</div>` +
+    html += `<div class="qp-name">🐉 Dragon tribute ${n + 1}/${DD.DRAGON_STAGES.length}</div>` +
+      `<div class="qp-desc">Right-click the dragon to feed it. In hand / still needed:</div>${needRows(rem)}` +
       `<div class="qp-bar"><div class="qp-fill" style="width:${all ? Math.round(100 * paid / all) : 0}%"></div></div>`;
+  } else {
+    let gate = null;
+    for (const k of Object.keys(G0.areas))
+      for (const b of G0.areas[k].buildings) if (DD.BUILDINGS[b.type].gate && (!gate || b.built)) gate = b;
+    if (!gate || !gate.built) {
+      const gType = Object.keys(DD.BUILDINGS).find(t => DD.BUILDINGS[t].gate);
+      const rem = gate ? E.buildingNeeds(gate) : (gType ? DD.BUILDINGS[gType].cost : {});
+      const miss = Object.keys(rem).find(it => E.handCount(it) < rem[it]);
+      const step = miss ? stepToward(miss)
+        : { text: gate ? "Right-click the Gate ghost to feed it." : "Place it from the build menu (B)." };
+      if (!gate && !miss) build = gType;
+      else if (step.build) build = step.build;
+      html += `<div class="qp-name">⛩️ Raise the Ascension Gate</div>` +
+        `<div class="qp-desc">${gate ? "Feed its ghost (right-click). In hand / still needed:" : "Build it (B), then feed it. In hand / cost:"}</div>` +
+        needRows(rem) + `<div class="ms-step">Next step: ${step.text}</div>`;
+    } else {
+      html += `<div class="qp-name">☯ Ascend for +${E.ascendReward()} ☯</div>` +
+        `<div class="qp-desc">Click the Ascension Gate ⛩️ to ascend — more regions unlocked = more Ascension Points.</div>`;
+    }
   }
-  let gate = null;
-  for (const k of Object.keys(G0.areas))
-    for (const b of G0.areas[k].buildings) if (DD.BUILDINGS[b.type].gate && (!gate || b.built)) gate = b;
-  if (!gate || !gate.built) {
-    const gType = Object.keys(DD.BUILDINGS).find(t => DD.BUILDINGS[t].gate);
-    const rem = gate ? E.buildingNeeds(gate) : (gType ? DD.BUILDINGS[gType].cost : {});
-    return `<div class="qp-name">⛩️ Raise the Ascension Gate</div>` +
-      `<div class="qp-desc">${gate ? "Feed its ghost (right-click). In hand / still needed:" : "Place it from the build menu (B). In hand / cost:"}` +
-      `<br>${needRow(rem)}</div>`;
+  // disciples eat buns: the first pavilion's seed runs out — point at a Mill
+  if (!builtAnywhere("mill") && !builtAnywhere("brewery")) {
+    let hungry = false;
+    for (const k of Object.keys(G0.areas))
+      for (const b of G0.areas[k].buildings) if (b.built && DD.BUILDINGS[b.type].roster && (b.disciples || 0) > 0) hungry = true;
+    if (hungry) {
+      html += `<div class="ms-line">🥟 Disciples eat Spirit Buns — build a Mill (Rice Flour → Spirit Buns) or a Brewery (Spirit Wine) for more.</div>`;
+      if (!build) build = "mill";
+    }
   }
-  const n = E.ascendReward();
-  return `<div class="qp-name">☯ Ascend for +${n} AP</div>` +
-    `<div class="qp-desc">Click the Ascension Gate ⛩️ to ascend — more regions unlocked = more Ascension Points.</div>`;
+  return { html, build };
+}
+// Build-menu targets: what the active quest asks for (not yet built by the
+// player), then the milestone's building.
+function buildTargets() {
+  const out = [], gq = window.GS.quest, q = DD.QUESTS[gq.idx];
+  if (q && q.builds) {
+    const p = E.questProgress(gq.idx);
+    if (p && !p.done) for (const t of q.builds) if (!(window.GS.builtTypes || {})[t]) out.push(t);
+  }
+  const mb = milestoneInfo().build;
+  if (mb && !out.includes(mb)) out.push(mb);
+  return out;
+}
+// "Unlocks: <icons>" preview of a quest's reward (shown BEFORE claiming).
+function questRewardHTML(q) {
+  const r = q.reward;
+  if (!r) return "";
+  const parts = (r.reveal || []).filter(t => DD.BUILDINGS[t])
+    .map(t => `<span class="qp-unl" title="${DD.BUILDINGS[t].name}">${DD.BUILDINGS[t].icon}</span>`);
+  for (const [it, n] of Object.entries(r.items || {}))
+    parts.push(`<span class="qp-unl" title="${n} ${E.itemName(it)}">+${n} ${iconHTML(it)}</span>`);
+  return parts.length ? `<div class="qp-unlocks">Unlocks: ${parts.join(" ")}</div>` : "";
+}
+// Reward juice after a claim: hand-bound items float at the view centre
+// (what didn't fit already dropped beside the Altar with its own "+N").
+function questRewardFx(res) {
+  let dy = 0;
+  for (const [it, n] of Object.entries(res.toHand || {})) {
+    addFloater(cam.x + VIEW_W / 2, cam.y + VIEW_H * 0.35 + dy, `+${n} ${E.itemName(it)} → hand`, C.gold, it);
+    dy += 22;
+  }
+  if (dy) requestGridPaint();
 }
 function renderQuestPanel() {
   const panel = $("#quest-panel");
   const gq = window.GS.quest;
   const i = gq.idx, total = DD.QUESTS.length;
   const p = i < total ? E.questProgress(i) : null;
-  const ms = i >= total && !gq.hidden ? milestoneHTML() : "";
+  const ms = !gq.hidden ? milestoneInfo().html : "";
   const key = `${gq.hidden}|${i}|${p ? p.cur + "/" + p.need + "/" + p.done : "end"}|${ms}`;
   if (key === lastQuestKey) return;
   lastQuestKey = key;
@@ -1530,17 +1682,73 @@ function renderQuestPanel() {
     $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
     return;
   }
-  const q = DD.QUESTS[i];
+  const q = DD.QUESTS[i], nq = DD.QUESTS[i + 1];
   panel.innerHTML =
     `<div class="qp-head"><span>📜 Quest ${i + 1}/${total}</span>` +
     `<button id="quest-min" title="Collapse">–</button></div>` +
     `<div class="qp-name">${q.icon} ${q.name}</div>` +
     `<div class="qp-desc">${q.desc}</div>` +
+    questRewardHTML(q) +
     `<div class="qp-bar"><div class="qp-fill" style="width:${Math.round(100 * p.cur / p.need)}%"></div></div>` +
     `<div class="qp-row"><span class="qp-prog">${p.cur}/${p.need}</span>` +
-    `<button id="quest-claim" ${p.done ? "" : "disabled"}>${p.done ? "Claim ✔" : "Claim"}</button></div>`;
+    `<button id="quest-claim" ${p.done ? "" : "disabled"}>${p.done ? "Claim ✔" : "Claim"}</button></div>` +
+    (nq ? `<div class="qp-next">Next: ${nq.icon} ${nq.name}</div>` : "") +
+    (ms ? `<div class="qp-ms"><div class="qp-ms-head">🎯 Next milestone</div>${ms}</div>` : "");
   $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
-  $("#quest-claim").onclick = () => { if (E.claimQuest()) renderQuestPanel(); };
+  $("#quest-claim").onclick = () => {
+    const res = E.claimQuest();
+    if (res) { questRewardFx(res); render(); }   // full render: the claim may reveal build cards
+  };
+}
+
+// ---- quest target ring ---------------------------------------
+// The active quest may name a world object (DATA.QUESTS[].target); while
+// it's unclaimed-and-unfinished a soft gold ring pulses on it. It only
+// animates while on screen (animActive), so idle stays at 0 draws.
+function questTargetRect() {
+  const gq = window.GS.quest, q = DD.QUESTS[gq.idx];
+  if (!q || !q.target) return null;
+  const t = q.target, area = t.area || "center";
+  if (!DD.WORLD.regions[area] || !E.isAreaUnlocked(area)) return null;
+  const p = E.questProgress(gq.idx);
+  if (!p || p.done) return null;
+  const st = window.GS.areas[area], o = regionPx(area);
+  if (t.kind === "fixture") {
+    const n = st.nodes.find(nd => nd.fixed && nd.kind === t.id);
+    return n ? { x: o.x + n.col * CELL, y: o.y + n.row * CELL, w: n.size * CELL, h: n.size * CELL } : null;
+  }
+  if (t.kind === "enemyZone") {
+    const ez = DD.AREAS[area].enemies, z = ez && E.zoneRects(ez.zone)[0];
+    return z ? { x: o.x + z.c0 * CELL, y: o.y + z.r0 * CELL, w: (z.c1 - z.c0 + 1) * CELL, h: (z.r1 - z.r0 + 1) * CELL, zone: true } : null;
+  }
+  const type = t.kind === "dragon" ? "dragon" : t.kind === "altar" ? "center" : t.id;
+  const b = st.buildings.find(bd => bd.built && bd.type === type) || st.buildings.find(bd => bd.type === type);
+  if (!b) return null;
+  const bs = E.buildingSize(b.type);
+  return { x: o.x + b.col * CELL, y: o.y + b.row * CELL, w: bs.w * CELL, h: bs.h * CELL };
+}
+function questRingOnScreen() {
+  const r = questTargetRect();
+  return !!r && r.x < cam.x + VIEW_W && r.x + r.w > cam.x && r.y < cam.y + VIEW_H && r.y + r.h > cam.y;
+}
+function drawQuestRing(now, X, Y, s) {
+  if (!questRingOnScreen()) return;
+  const r = questTargetRect();
+  const k = 0.5 + 0.5 * Math.sin(now / 320);
+  ctx.save();
+  ctx.strokeStyle = `rgba(251,191,36,${(0.35 + 0.4 * k).toFixed(3)})`;
+  ctx.lineWidth = Math.max(2, 3 * s);
+  if (r.zone) {                               // a whole zone: pulsing dashed frame
+    ctx.setLineDash([10 * s, 8 * s]);
+    const in_ = 6 + 4 * k;
+    ctx.strokeRect(X(r.x + in_), Y(r.y + in_), (r.w - 2 * in_) * s, (r.h - 2 * in_) * s);
+  } else {
+    const rad = Math.max(r.w, r.h) * 0.62 + 6 + 6 * k;
+    ctx.beginPath();
+    ctx.arc(X(r.x + r.w / 2), Y(r.y + r.h / 2), rad * s, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // ---- help / tutorial modal -----------------------------------
@@ -1715,7 +1923,7 @@ function perkCard(perk, ap) {
   }
   return card;
 }
-function openPerkShop() { renderPerkShop(); $("#perk-modal").classList.remove("hidden"); }
+function openPerkShop() { window.GS.perkShopSeen = true; renderPerkShop(); $("#perk-modal").classList.remove("hidden"); }
 function closePerkShop() { $("#perk-modal").classList.add("hidden"); }
 
 // ---- dragon story dialog ------------------------------------
@@ -1810,6 +2018,7 @@ function renderPlay() {
   syncDragonDialog();
   syncAscendModal();
   renderQuestPanel();
+  if (buildCatalogSig() !== buildCatSig) renderBuildMenu();   // a reveal: new cards + Build-button dot
   refreshUnlockAfford();
   // keep an open roster/link panel's numbers live — rebuilt only when its
   // content changed (a 50ms rebuild would swap buttons mid-click)
@@ -2195,6 +2404,7 @@ window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, dismissWelcome,
   dismissEnding, openPerkShop, closePerkShop,
   _draw: () => drawWorld(),   // test hook
+  _questRing: () => questRingOnScreen(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook
   _lookAt: (area, row, col) => {                                              // test hook
     const p = regionPx(area);

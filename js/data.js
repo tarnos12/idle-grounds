@@ -571,52 +571,168 @@ const UPGRADE_TREE = [
 // immediately (the Claim button lights up as soon as cur >= need).
 // Later quests only appear after earlier ones are claimed, so nothing
 // references content the player hasn't seen yet.
+// v52 spine (14): the dragon stays in the chain (stages 1-3), each claim
+// previews what it unlocks (`reward.reveal` is DISPLAY only — REVEAL below
+// drives the build menu), `reward.items` land in the hand (else beside the
+// Altar). `builds` = buildings the quest asks for (build-menu target first);
+// `target` = world object the quest ring pulses on while it's active.
+// Saves index this array; QUEST_CHAIN bumps whenever the order changes so
+// loadState can remap an old index by quest id (see state.js).
 // ------------------------------------------------------------------
+const QUEST_CHAIN = 2;
 const QUESTS = [
   { id: "wood", icon: "🪵", name: "First timber",
-    desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.) Wisp stones may vacuum drops near the tree — withdraw from their buffers.",
-    goal: () => ({ cur: window.ENGINE.handCount("wood"), need: 5 }) },
+    desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.)",
+    goal: () => ({ cur: window.ENGINE.handCount("wood"), need: 5 }),
+    reward: { reveal: ["storehouse"] },
+    target: { area: "center", kind: "fixture", id: "spirittree" } },
   { id: "leaves", icon: "🍃", name: "Bush whacker",
     desc: "Chop the small bushes 🌿 around the Altar and collect 5 leaves.",
     goal: () => ({ cur: window.ENGINE.handCount("leaves"), need: 5 }) },
   { id: "dragon1", icon: "🐉", name: "Wake the sleeper",
-    desc: "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click it to feed its tribute until it stirs.",
-    goal: () => ({ cur: window.GS.dragon.stage >= 1 ? 1 : 0, need: 1 }) },
+    desc: "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click it to feed its tribute until it stirs — the dragon teaches you the Forge.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 1 ? 1 : 0, need: 1 }),
+    reward: { reveal: ["forge"] },
+    target: { area: "center", kind: "dragon" } },
   { id: "fox", icon: "🦊", name: "Fox hunt",
     desc: "A Fox Spirit prowls the red zone (top-right corner). Click it until it falls — hold left-click to auto-attack. It drops Spirit Essence.",
-    goal: () => ({ cur: window.GS.stats.foxKills || 0, need: 1 }) },
+    goal: () => ({ cur: window.GS.stats.foxKills || 0, need: 1 }),
+    reward: { reveal: ["infusion_array"] },
+    target: { area: "center", kind: "enemyZone" } },
   { id: "build", icon: "🔨", name: "Raise a building",
     desc: "Press B, place a Storehouse ghost somewhere open, then RIGHT-click it while carrying the wood it asks for.",
-    goal: () => ({ cur: window.GS.stats.buildingsBuilt || 0, need: 1 }) },
+    goal: () => ({ cur: window.GS.stats.buildingsBuilt || 0, need: 1 }),
+    builds: ["storehouse"],
+    reward: { reveal: ["gathering_stone", "wisp_lantern", "warding_seal", "workbench", "kiln", "paper_mill", "charcoal_pit"] } },
   { id: "upgrade", icon: "🏛️", name: "First insight",
     desc: "Click the Altar to open the upgrade tree, pick an upgrade, then RIGHT-click-feed the Altar the cost it shows.",
-    goal: () => ({ cur: window.GS.stats.upgradesApplied || 0, need: 1 }) },
+    goal: () => ({ cur: window.GS.stats.upgradesApplied || 0, need: 1 }),
+    reward: { items: { wood: 10 } },          // the next wood sweep (a region unlock) is on the house
+    target: { area: "center", kind: "altar" } },
   { id: "link", icon: "🏮", name: "Wisp wrangler",
     desc: "Wisps already ferry items along the dashed threads. Click a Wisp Lantern, press ➕ Add link, then click a source (🧿/📦) and a target building.",
-    goal: () => ({ cur: window.GS.stats.linksAdded || 0, need: 1 }) },
-  { id: "recipe", icon: "🏺", name: "Change of plans",
-    desc: "Click the Kiln and switch its recipe to Glass, then feel free to switch back. (Anything it held drops on the ground — that's normal.)",
-    goal: () => ({ cur: window.GS.stats.recipeSwitches || 0, need: 1 }) },
-  { id: "craft", icon: "⚙️", name: "Production line",
-    desc: "Let your buildings craft 5 items in total (planks, bricks, spirit stones…). Keep the wisps fed!",
-    goal: () => ({ cur: window.GS.stats.totalCrafted || 0, need: 5 }) },
+    goal: () => ({ cur: window.GS.stats.linksAdded || 0, need: 1 }),
+    reward: { reveal: ["furnace_spirit"] },
+    target: { area: "center", kind: "building", id: "wisp_lantern" } },
   { id: "explore", icon: "🔓", name: "Beyond the woods",
     desc: "Carry enough wood to a glowing border button and unlock a neighbouring region (Farm, Mine or Fishing).",
     goal: () => {
       const u = window.GS.world.unlocked;
       return { cur: (u.farm || u.mine || u.fishing) ? 1 : 0, need: 1 };
     } },
-  // split from one big final quest (evidence: players stalled on the Robe chain)
+  { id: "dragon2", icon: "🐉", name: "Stone & clay for the dragon",
+    desc: "The dragon's next tribute is stone and clay. The starter Gathering Stones 🧿 by the quarry rock and the clay field (bottom corners) collect both — LEFT-click (or hold) one to withdraw into your hand, then right-click the dragon.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 2 ? 1 : 0, need: 1 }),
+    reward: { reveal: ["algae_farm"], items: { wood: 8 } },   // toward the Mine's border
+    target: { area: "center", kind: "dragon" } },
+  { id: "iron", icon: "🧲", name: "Iron for the dragon",
+    desc: "Unlock the Mine, break ⛏ iron veins for Iron Ore, then build a Forge (B), feed it ore plus wood as fuel, and carry 4 Iron Bars.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 3 ? 4 : Math.min(window.ENGINE.handCount("iron_bar"), 4), need: 4 }),
+    builds: ["forge"] },
   { id: "waters", icon: "🎣", name: "Unlock the waters",
-    desc: "Fishing is where Algae comes from — carry wood to the glowing border button and unlock Fishing.",
-    goal: () => ({ cur: window.GS.world.unlocked.fishing ? 1 : 0, need: 1 }) },
+    desc: "Fishing is where Algae and Spring Water come from — carry wood to the glowing border button and unlock Fishing.",
+    goal: () => ({ cur: window.GS.world.unlocked.fishing ? 1 : 0, need: 1 }),
+    reward: { reveal: ["loom", "mill", "brewery"] } },
+  { id: "dragon3", icon: "🐉", name: "The dragon tastes iron",
+    desc: "Feed the dragon its third tribute — Iron Bars, Algae and Spring Water. The 🎯 milestone below lists what's still needed and where each comes from.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 3 ? 1 : 0, need: 1 }),
+    reward: { reveal: ["herb_garden", "pill_furnace", "star_anvil", "talisman_atelier"] },
+    target: { area: "center", kind: "dragon" } },
   { id: "weaver", icon: "🪢", name: "Weaver's path",
-    desc: "Craft 2 Rope and 6 Cloth at the Loom and carry them in hand. Rope needs Algae (from Fishing); Cloth needs Cotton (from the Farm).",
-    goal: () => ({ cur: Math.min(window.ENGINE.handCount("rope"), 2) + Math.min(window.ENGINE.handCount("cloth"), 6), need: 8 }) },
+    desc: "Build a Loom (B), then click the Loom and pick Rope (Cotton + Algae); switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth in hand. Cotton grows on the Farm — unlock it if you haven't.",
+    goal: () => ({ cur: Math.min(window.ENGINE.handCount("rope"), 2) + Math.min(window.ENGINE.handCount("cloth"), 6), need: 8 }),
+    builds: ["loom"],
+    reward: { reveal: ["meditation_pavilion"], items: { spirit_herb: 2 } },   // the Robe's herb, no Grove detour
+    target: { area: "center", kind: "building", id: "loom" } },
   { id: "cultivate", icon: "🧘", name: "Gather disciples",
-    desc: "Build a Meditation Pavilion, weave a Robe at the Loom (it needs Spirit Herb — from the Spirit Grove or the Herb Garden), then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
-    goal: () => ({ cur: window.GS.stats.disciplesRecruited || 0, need: 1 }) },
+    desc: "Build a Meditation Pavilion (your first comes stocked with Spirit Buns), weave a Robe at the Loom (Cloth + Spirit Herb), then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
+    goal: () => ({ cur: window.GS.stats.disciplesRecruited || 0, need: 1 }),
+    builds: ["meditation_pavilion", "loom"],
+    target: { area: "center", kind: "building", id: "meditation_pavilion" } },
 ];
+
+// Progressive reveal of the build menu: building type -> conditions, ANY
+// satisfied reveals it. {quest:id} = that quest claimed, {region:key} =
+// region unlocked, {stage:n} = dragon stage >= n. Owning one (built by
+// the player — GS.builtTypes) also reveals it. Veterans (ascended, or the
+// chain finished) skip quest/region conditions but NOT stage ones. Types
+// with a `stageUnlock` (forge/algae_farm/herb_garden) keep that gate; types
+// with neither stay hidden (Altar/Dragon).
+const REVEAL = {
+  storehouse:          [{ quest: "wood" }],
+  gathering_stone:     [{ quest: "build" }],
+  wisp_lantern:        [{ quest: "build" }],
+  warding_seal:        [{ quest: "build" }],
+  workbench:           [{ quest: "build" }],
+  kiln:                [{ quest: "build" }],
+  paper_mill:          [{ quest: "build" }],
+  charcoal_pit:        [{ quest: "build" }],
+  infusion_array:      [{ quest: "fox" }],
+  furnace_spirit:      [{ quest: "link" }],
+  loom:                [{ region: "farm" }, { quest: "waters" }],
+  mill:                [{ region: "farm" }, { quest: "waters" }],
+  brewery:             [{ region: "farm" }, { quest: "waters" }],
+  jade_carver:         [{ region: "mine" }],
+  cauldron:            [{ region: "mine" }],
+  meditation_pavilion: [{ quest: "weaver" }, { region: "grove" }],
+  pill_furnace:        [{ stage: 3 }],
+  star_anvil:          [{ stage: 3 }],
+  talisman_atelier:    [{ stage: 3 }],
+  dragon_shrine:       [{ stage: 4 }],
+  ascension_gate:      [{ stage: 4 }],
+};
+
+// One-line "where does this come from" hint per item (milestone tracker).
+// Every ITEM_NAMES key must have one (tested). No quantities — recipe
+// numbers get rebalanced, the route doesn't.
+const SOURCES = {
+  wood: "Spirit Tree 🌳 (Center, top) + fallen logs",
+  leaves: "chop bushes 🌿 around the Altar",
+  wheat: "Farm rice plots 🌾",
+  cotton: "Farm cotton patches ☁️",
+  stone: "quarry rock ⛰️ (bottom-left) · Mine rocks",
+  clay: "clay field (Center, bottom-right) · Mine rocks",
+  sand: "Farm sand band (left side)",
+  iron_ore: "Mine ⛏ iron veins",
+  iron_bar: "Mine ⛏ iron veins → Forge",
+  fish: "Fishing: click surfacing koi 🐟",
+  algae: "Fishing: click surfacing algae 🪸 · Algae Farm",
+  water: "Fishing spring ⛲ (top-left)",
+  spirit_essence: "slay Fox Spirits 🦊 (top-right) · disciples",
+  spirit_herb: "Spirit Grove bushes · Herb Garden",
+  bamboo: "Spirit Tree rare drop · Spirit Grove stalks",
+  jade_shard: "quarry rock rare drop",
+  plank: "Workbench ← Wood",
+  brick: "Kiln ← Clay",
+  paper: "Paper Mill ← Bamboo + Wood",
+  spirit_stone: "Infusion Array ← Stone + Spirit Essence",
+  tools: "Workbench ← Planks + Iron Bar",
+  glass: "Kiln ← Sand (Farm) or Obsidian",
+  spirit_jade: "Infusion Array ← Jade + Spirit Essence",
+  cloth: "Loom ← Cotton",
+  rope: "Loom ← Cotton + Algae",
+  robe: "Loom ← Cloth + Spirit Herb",
+  flour: "Mill ← Rice",
+  spirit_buns: "Mill ← Rice Flour + Spring Water",
+  spirit_wine: "Brewery ← Rice + Spring Water + Leaves",
+  qi_elixir: "Cauldron ← Spirit Herb + Water + Essence",
+  vitality_pill: "Cauldron ← Koi + Spirit Herb + Water",
+  beast_bait: "Cauldron ← Koi + Algae",
+  charcoal: "Charcoal Pit ← Wood",
+  jade: "Jade Carver ← Jade Shards",
+  firestone: "Volcano fire veins · rare in the Mine",
+  beast_bone: "Spirit Boar 🐗 (lure one with Beast Bait)",
+  star_steel: "Star Anvil ← Iron Bars + Firestone + Beast Bone",
+  ember_pill: "Pill Furnace ← Qi Elixir + Firestone",
+  verdant_pill: "Pill Furnace ← Qi Elixir + Spirit Herb",
+  swiftwind_pill: "Pill Furnace ← Qi Elixir + Cotton",
+  stoneheart_pill: "Pill Furnace ← Qi Elixir + Spirit Stone",
+  talisman: "Talisman Atelier ← Paper + Spirit Jade + Qi Elixir",
+  dragon_scale: "shed by the awakened dragon 🐉",
+  obsidian: "Volcano obsidian rocks",
+  star_fragment: "Celestial Peak star rocks ☄️",
+  moonpetal: "Celestial Peak moon shrubs 💮",
+};
 
 // How many ready nodes each automation level harvests per tick.
 // (ladder not cliff — L3 was Infinity, ~158k items/h at real balance)
@@ -679,5 +795,5 @@ const VERSION = {
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
   AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP, FUEL_SLOTS,
-  UPGRADE_TREE, QUESTS, HAND_CAP, PERKS, TEST, VERSION,
+  UPGRADE_TREE, QUESTS, QUEST_CHAIN, REVEAL, SOURCES, HAND_CAP, PERKS, TEST, VERSION,
 };

@@ -735,11 +735,51 @@ function harvestNode(areaKey, nodeId, isAuto) {
 
 // ---- Buildings ----------------------------------------------
 
-// Unlocked outright, or taught by the Sleeping Dragon (stageUnlock).
+// Progressive reveal (DATA.REVEAL): a type with reveal conditions shows
+// once ANY is met, or once the player has built one. Taught-by-dragon types
+// keep their stageUnlock gate; anything else falls back to `unlocked`.
+function isVeteran() {
+  return (window.GS.ascensions || 0) > 0 || (window.GS.quest.idx || 0) >= D.QUESTS.length;
+}
+function questClaimed(id) {
+  const j = D.QUESTS.findIndex(q => q.id === id);
+  return j >= 0 && (window.GS.quest.idx || 0) > j;
+}
+function revealCondMet(c, vet) {
+  if (c.stage != null) return (window.GS.dragon.stage || 0) >= c.stage;
+  if (c.quest != null) return vet || questClaimed(c.quest);
+  if (c.region != null) return vet || !!window.GS.world.unlocked[c.region];
+  return false;
+}
 function isBuildingUnlocked(type) {
   const b = D.BUILDINGS[type];
   if (!b) return false;
-  return !!b.unlocked || (b.stageUnlock != null && (window.GS.dragon.stage || 0) >= b.stageUnlock);
+  if (b.stageUnlock != null) return (window.GS.dragon.stage || 0) >= b.stageUnlock;
+  const conds = D.REVEAL && D.REVEAL[type];
+  if (!conds) return !!b.unlocked;
+  if (window.GS.builtTypes && window.GS.builtTypes[type]) return true;
+  const vet = isVeteran();
+  return conds.some(c => revealCondMet(c, vet));
+}
+// 'new' badge: revealed but never hovered in the build menu (veterans have
+// seen it all before — no badges).
+function isBuildingNew(type) {
+  if ((window.GS.ascensions || 0) > 0) return false;
+  return isBuildingUnlocked(type) && ((window.GS.buildSeen || {})[type] || 0) < 2;
+}
+function markBuildSeen(type) {
+  const seen = window.GS.buildSeen = window.GS.buildSeen || {};
+  if (D.BUILDINGS[type]) seen[type] = 2;
+}
+// Build-button dot: something revealed that no opened menu has listed yet.
+function buildMenuHasNew() {
+  if ((window.GS.ascensions || 0) > 0) return false;
+  const seen = window.GS.buildSeen || {};
+  return Object.keys(D.BUILDINGS).some(t => (seen[t] || 0) < 1 && isBuildingUnlocked(t));
+}
+function markBuildListed() {
+  const seen = window.GS.buildSeen = window.GS.buildSeen || {};
+  for (const t of Object.keys(D.BUILDINGS)) if (!seen[t] && isBuildingUnlocked(t)) seen[t] = 1;
 }
 
 function buildingCatalog() {
@@ -1272,6 +1312,14 @@ function dropFromHand(areaKey, x, y) {
     if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) {
       b.built = true;
       window.GS.stats.buildingsBuilt = (window.GS.stats.buildingsBuilt || 0) + 1;
+      (window.GS.builtTypes = window.GS.builtTypes || {})[b.type] = true;   // owning one keeps it revealed
+      // the FIRST Meditation Pavilion comes stocked with Spirit Buns so the
+      // tutorial's disciple visibly cultivates before a Mill exists
+      const ros = D.BUILDINGS[b.type].roster;
+      if (ros && !window.GS.pavilionSeeded) {
+        window.GS.pavilionSeeded = true;
+        b.buns = Math.min(ros.foodCap || 10, 10);
+      }
       if (window.onSfx) window.onSfx("build", areaKey);
       // completing the Ascension Gate offers the ending
       if (D.BUILDINGS[b.type].gate) window.GS.ascendPrompt = true;
@@ -1747,12 +1795,32 @@ function questProgress(i) {
   const p = q.goal();
   return { cur: Math.min(p.cur, p.need), need: p.need, done: p.cur >= p.need };
 }
+// Claim the active quest: advance the chain and pay its item reward into
+// the hand (what doesn't fit drops beside the Altar). Returns false, or
+// { id, toHand:{item:qty}, dropped:{item:qty}, at:{area,x,y}|null } so the
+// UI can float the reward.
 function claimQuest() {
   const gq = window.GS.quest;
   const p = questProgress(gq.idx);
   if (!p || !p.done) return false;
+  const q = D.QUESTS[gq.idx];
   gq.idx++;
-  return true;
+  const out = { id: q.id, toHand: {}, dropped: {}, at: null };
+  const items = (q.reward && q.reward.items) || {};
+  for (const [it, qty] of Object.entries(items)) {
+    if (!D.ITEM_NAMES[it] || !(qty > 0)) continue;
+    const got = handAdd(it, qty);
+    if (got > 0) out.toHand[it] = got;
+    if (qty - got > 0) {
+      const altar = window.GS.areas.center.buildings.find(b => b.type === "center");
+      const c = altar ? buildingCenterPx(altar) : { x: PLAY_PX / 2, y: PLAY_PX / 2 };
+      const y = altar ? (altar.row + buildingSize(altar.type).h) * CELL + 14 : c.y;
+      dropGround("center", it, qty - got, c.x, y);
+      out.dropped[it] = qty - got;
+      out.at = { area: "center", x: c.x, y };
+    }
+  }
+  return out;
 }
 
 // One strike on the targeted enemy. Damage scales with the Spirit Blade
@@ -1880,7 +1948,8 @@ window.ENGINE = {
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
-  questProgress, claimQuest, buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
+  questProgress, claimQuest, isBuildingNew, markBuildSeen, buildMenuHasNew, markBuildListed, isVeteran,
+  buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
   perkLevel, perkDef, perkCost, buyPerk, ascendReward,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
