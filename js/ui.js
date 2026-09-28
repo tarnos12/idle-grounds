@@ -448,7 +448,8 @@ function renderTopBar() {
   const a = key ? DD.AREAS[key] : null;
   $("#area-name").innerHTML = (a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds")
     + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "")
-    + ((window.GS.ascensions || 0) > 0 ? ` <span class="sprint-tag">☯${window.GS.ascensions}</span>` : "");
+    + ((window.GS.ascensions || 0) > 0 ? ` <span class="sprint-tag">☯${window.GS.ascensions}</span>` : "")
+    + vowChipHTML();
   const hTot = E.handTotal(), hCap = E.handCap(), hp = $("#hand-count");
   hp.textContent = `${hTot}/${hCap}`;
   const pill = hp.closest(".hand-pill") || hp;   // warn near cap, full at cap
@@ -467,10 +468,11 @@ function renderTopBar() {
     parts.push(`${iconHTML(DD.VITALITY.item)} ${DD.VITALITY.name} ${Math.ceil((cb.until - now) / 1000)}s`);
   if (parts.length) { bp.classList.remove("hidden"); bp.innerHTML = parts.join(" &nbsp; "); }
   else bp.classList.add("hidden");
-  // Ascension Shrine pill: appears once you've ascended (or hold AP); shows
-  // spendable Ascension Points and pulses when something is affordable.
+  // Ascension Shrine pill: appears once you've ascended, hold AP, or have
+  // built the Gate (so the modal's "+N ☯" points at something you can see);
+  // shows spendable Ascension Points and pulses when something is affordable.
   const pb = $("#perk-btn"), ap = window.GS.ascendPoints || 0;
-  const showPerks = (window.GS.ascensions || 0) > 0 || ap > 0;
+  const showPerks = (window.GS.ascensions || 0) > 0 || ap > 0 || !!(E.builtGate && E.builtGate());
   pb.classList.toggle("hidden", !showPerks);
   if (showPerks) {
     $("#perk-ap").textContent = ap;
@@ -481,6 +483,15 @@ function renderTopBar() {
   $("#build-btn").classList.toggle("on", window.GS.build.open);
   $("#demolish-btn").classList.toggle("on", demolishMode);
   $("#debug-btn").classList.toggle("on", debugShow);
+}
+
+// Small bottom-bar chip naming this run's vows (icons; names in the tooltip).
+function vowChipHTML() {
+  const act = E.activeVows ? E.activeVows() : [];
+  if (!act.length) return "";
+  const vs = act.map(id => (DD.VOWS || []).find(v => v.id === id)).filter(Boolean);
+  return ` <span class="sprint-tag vow-chip" title="Vows this run: ${vs.map(v => v.name).join(", ")}">` +
+    `${vs.map(v => v.icon).join("")}</span>`;
 }
 
 // ---- world painter --------------------------------------------
@@ -1624,7 +1635,7 @@ function openStats() {
     const total = Object.keys(window.DATA.WORLD.regions).length;
     add("Regions unlocked", `${unlocked} / ${total}`);
   }
-  add("Carry capacity", G.handCap);
+  add("Carry capacity", E.handCap());
   $("#stats-body").innerHTML = rows.map(([label, val]) =>
     `<div class="st-row"><span class="st-label">${label}</span>` +
     `<span class="st-val">${val}</span></div>`).join("");
@@ -1634,22 +1645,56 @@ function closeStats() { $("#stats-modal").classList.add("hidden"); }
 
 // ---- ascension gate dialog -----------------------------------
 // Completing (or clicking) the built Gate offers the ending: ascend and
-// keep +8% global speed per ascension, or keep playing this run.
+// keep +20% world speed per ascension (additive), or keep playing this run.
+// After the first ascension it also offers VOWS for the next run.
+const vowPick = new Set();   // vow ids ticked for the NEXT run (UI-only)
+let ascendCountKey = "";
 function syncAscendModal() {
   const modal = $("#ascend-modal");
   if (!modal) return;
   const show = !!window.GS.ascendPrompt;
   if (show) {
     const G0 = window.GS, asc = G0.ascensions || 0, n = E.ascendReward();
-    // overall speed now vs after this ascension: 1/prestigeFactor with
-    // ascensions and ascensions+1 (the engine's own formula, bumped in place)
+    // world speed now vs after this ascension: 1/prestigeFactor — the
+    // engine's own formula (next = one more ascension + marks from kept vows)
     const now = 1 / E.prestigeFactor();
-    let next = now;
-    try { G0.ascensions = asc + 1; next = 1 / E.prestigeFactor(); } finally { G0.ascensions = asc; }
+    const next = E.nextPrestigeFactor ? 1 / E.nextPrestigeFactor() : now;
+    const g = E.builtGate ? E.builtGate() : null;
+    const off = g ? E.gateOfferings(g.areaKey, g.b) : null;
+    const kept = (E.activeVows ? E.activeVows() : []).map(id => (DD.VOWS || []).find(v => v.id === id)).filter(Boolean);
     const cnt = $("#ascend-count");
-    cnt.innerHTML = `Ascending grants <b>${n} ☯</b> Ascension Point${n === 1 ? "" : "s"} and quickens the world: ` +
-      `overall speed <b>×${now.toFixed(2)} → ×${next.toFixed(2)}</b> faster. ` +
-      `(Ascended ${asc} time${asc === 1 ? "" : "s"} so far.)`;
+    const html = `Ascending grants <b>${n} ☯</b> Ascension Point${n === 1 ? "" : "s"}.<br>` +
+      `World speed <b>×${now.toFixed(2)} → ×${next.toFixed(2)}</b> ` +
+      `(machines, nature, wisps, foxes and your own hands).` +
+      (off ? `<br>Offerings <b>${off.count}/${off.cap}</b> (+${off.count} ☯) — right-click spare ` +
+        `${iconHTML("talisman")} ${iconHTML("star_steel")} ${iconHTML("dragon_scale")} onto the Gate.` : "") +
+      (kept.length ? `<br>Vows kept this run: ${kept.map(v => v.icon + " " + v.name).join(", ")} — ` +
+        `AP ×${E.vowMult().toFixed(2)}.` : "") +
+      `<br>(Ascended ${asc} time${asc === 1 ? "" : "s"} so far.)`;
+    if (html !== ascendCountKey) { ascendCountKey = html; cnt.innerHTML = html; }
+    if (!$("#ascend-perks")) {   // "See perks": preview what AP buys
+      const pbtn = el("button", "build-card", "☯ See perks");
+      pbtn.id = "ascend-perks";
+      pbtn.onclick = () => openPerkShop();
+      const row = modal.querySelector(".ascend-row");
+      if (row) row.appendChild(pbtn);
+    }
+    if (asc >= 1 && DD.VOWS && !$("#ascend-vows")) {   // vow picker for the next run, built once
+      const vb = el("div", "hp-sec vow-box", "");
+      vb.id = "ascend-vows";
+      vb.style.cssText = "text-align:left;margin:8px 10px 0";
+      const done = (G0.vows && G0.vows.done) || {};
+      vb.innerHTML = `<div class="hp-t" style="color:var(--gold)">Vows for the next run (optional)</div>` +
+        `<div class="hp-d">A harder run pays more: AP ×${DD.VOW_MULT.slice(1).map(m => m.toFixed(2)).join(" / ×")} ` +
+        `for 1–4 vows kept to the next ascension. A vow's first completion leaves a permanent mark (timers ×0.96).</div>` +
+        DD.VOWS.map(v => `<label class="vow-row" style="display:flex;gap:8px;align-items:baseline;margin:4px 0;cursor:pointer;font-size:13px">` +
+          `<input type="checkbox" data-vow="${v.id}"${vowPick.has(v.id) ? " checked" : ""}>` +
+          `<span>${v.icon} <b>${v.name}</b> — ${v.desc}${(done[v.id] || 0) > 0 ? ` <span style="color:var(--accent)">✓ marked</span>` : ""}</span></label>`).join("");
+      for (const cb of vb.querySelectorAll("input[data-vow]"))
+        cb.onchange = () => { if (cb.checked) vowPick.add(cb.dataset.vow); else vowPick.delete(cb.dataset.vow); };
+      const rowEl = modal.querySelector(".ascend-row");
+      rowEl.parentNode.insertBefore(vb, rowEl);
+    }
     if (!$("#ascend-keep")) {   // static KEEP / RESET summary, built once
       const box = el("div", "", "");
       box.id = "ascend-keep";
@@ -1657,12 +1702,36 @@ function syncAscendModal() {
       const col = (t, color, items) => `<div class="hp-sec" style="flex:1"><div class="hp-t" style="color:${color}">${t}</div>` +
         `<div class="hp-d">${items.map(x => "• " + x).join("<br>")}</div></div>`;
       box.innerHTML =
-        col("✔ Keep", "var(--accent)", ["Perks + Ascension Points", "Ascension speed", "Dragon's blessing", "Lifetime stats", "Know-how (tutorial skipped)"]) +
+        col("✔ Keep", "var(--accent)", ["Perks + Ascension Points", "Ascension speed + vow marks", "Dragon's blessing", "Lifetime stats", "Know-how (tutorial skipped)"]) +
         col("↺ Reset", "var(--danger)", ["Buildings & regions", "Resources", "Dragon stages", "Upgrades"]);
       cnt.parentNode.insertBefore(box, cnt.nextSibling);
     }
   }
   modal.classList.toggle("hidden", !show);
+}
+// Vow ids ticked in the ascend modal (main.js passes them to ENGINE.ascend).
+function chosenVows() { return [...vowPick]; }
+
+// One-time "Ascension n complete" card on the first load of the new run
+// (GS.justAscended, set by ENGINE.ascend); dismissing clears it and saves.
+function showAscendedCard() {
+  const ja = window.GS.justAscended;
+  if (!ja || $("#ascended-modal")) return;
+  const vs = (E.activeVows ? E.activeVows() : []).map(id => (DD.VOWS || []).find(v => v.id === id)).filter(Boolean);
+  const m = el("div", "modal", "");
+  m.id = "ascended-modal";
+  m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "Ascension complete");
+  m.innerHTML = `<div class="modal-box ascend-box" tabindex="-1">` +
+    `<div class="dragon-ico">☯</div><h2>Ascension ${ja.n} complete</h2>` +
+    `<p><b>+${ja.ap} ☯</b> &nbsp;·&nbsp; world speed <b>×${ja.speedFrom.toFixed(2)} → ×${ja.speedTo.toFixed(2)}</b></p>` +
+    (vs.length ? `<p>Vows this run: ${vs.map(v => v.icon + " " + v.name).join(", ")}</p>` : "") +
+    `<p>Spend your Ascension Points at the Shrine before you begin.</p>` +
+    `<div class="ascend-row"><button id="ascended-shrine" class="build-card">☯ Open Shrine</button>` +
+    `<button id="ascended-close" class="build-card">Begin run ${ja.n + 1}</button></div></div>`;
+  document.body.appendChild(m);
+  const dismiss = () => { window.GS.justAscended = null; window.SAVE.saveState(); m.remove(); renderTopBar(); };
+  m.querySelector("#ascended-shrine").onclick = () => { dismiss(); openPerkShop(); };
+  m.querySelector("#ascended-close").onclick = dismiss;
 }
 
 // ---- Ascension Shrine (prestige perk shop) -------------------
@@ -1674,8 +1743,35 @@ const PERK_GROUPS = [
   ["Economy", ["frugal", "ember", "bounty", "hands"]],
   ["Combat", ["fury"]],
   ["Meta", ["apgain", "hall", "autoboost", "slumber", "bless"]],
+  ["Legacy", ["paths", "legacy"]],
 ];
-const PERK_FIRST_PICKS = ["apgain", "haste", "hands"];
+const PERK_FIRST_PICKS = ["haste", "hands", "paths"];
+// Effect value at a given level — cards show "now → next".
+const perkMul = v => `×${v.toFixed(2)}`;
+const PERK_FX = {   // [label, level -> value]
+  haste:     ["timers",       l => perkMul(Math.pow(0.95, l))],
+  hall:      ["disciples",    l => `+${l}`],
+  slumber:   ["offline",      l => `${8 + 2 * l}h`],
+  hands:     ["carry",        l => `+${5 * l}`],
+  frugal:    ["unlock cost",  l => perkMul(Math.pow(0.8, l))],
+  ember:     ["fuel use",     l => perkMul(Math.pow(0.85, l))],
+  apgain:    ["AP/ascension", l => `+${l}`],
+  autoboost: ["nodes/tick",   l => `+${l}`],
+  regrow:    ["regrow",       l => perkMul(Math.pow(0.9, l))],
+  gale:      ["lantern beat", l => perkMul(Math.pow(0.9, l))],
+  fury:      ["damage",       l => `+${l}`],
+  bless:     ["blessings",    l => perkMul(Math.pow(1.2, l))],
+  bounty:    ["fields",       l => perkMul(Math.pow(0.9, l))],
+  paths:     ["opens",        l => l ? ["Farm", "Mine", "Fishing"].slice(0, l).join(" + ") : "none"],
+  legacy:    ["auto L1",      l => l ? ["Center", "Farm", "Mine"].slice(0, l).join(" + ") : "none"],
+};
+function perkFxHTML(perk, lvl) {
+  const fx = PERK_FX[perk.id];
+  if (!fx) return "";
+  const [label, f] = fx;
+  return `<div class="pk-fx" style="font-size:12px;color:var(--accent);margin-top:2px">${label} ` +
+    (lvl >= perk.max ? `${f(lvl)} (max)` : `${f(lvl)} → ${f(lvl + 1)}`) + `</div>`;
+}
 function renderPerkShop() {
   const ap = window.GS.ascendPoints || 0;
   $("#perk-ap-line").innerHTML = `<b>${ap}</b> Ascension Point${ap === 1 ? "" : "s"} to spend` +
@@ -1702,7 +1798,7 @@ function perkCard(perk, ap) {
     `<div class="pk-body"><div class="pk-name">${perk.name} ` +
       `<span class="pk-lv">${lvl}/${perk.max}</span>` +
       (PERK_FIRST_PICKS.includes(perk.id) ? ` <span class="perk-pick">★ good first pick</span>` : "") + `</div>` +
-      `<div class="pk-desc">${perk.desc}</div></div>` +
+      `<div class="pk-desc">${perk.desc}</div>${perkFxHTML(perk, lvl)}</div>` +
     `<button class="pk-buy build-card"${afford ? "" : " disabled"}>` +
       (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
   const buyBtn = card.querySelector(".pk-buy");
@@ -2193,7 +2289,7 @@ function wireInput() {
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
   dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, dismissWelcome,
-  dismissEnding, openPerkShop, closePerkShop,
+  dismissEnding, openPerkShop, closePerkShop, chosenVows, showAscendedCard,
   _draw: () => drawWorld(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook
   _lookAt: (area, row, col) => {                                              // test hook

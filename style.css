@@ -88,7 +88,8 @@ body {
 
 /* ---- Ascension Shrine (perk shop) ---- */
 .perk-box { width: min(560px, 94vw); }
-#perk-ap-line { font-size: 15px; color: var(--muted); margin: 2px 2px 14px; }
+#perk-ap-line { font-size: 15px; color: var(--muted); margin: 2px 2px 14px;
+  position: sticky; top: -18px; z-index: 2; background: var(--bg-2); padding: 6px 0; }   /* stays in view while scrolling */
 #perk-ap-line b { color: var(--gold); font-size: 18px; }
 #perk-list { display: flex; flex-direction: column; gap: 10px; }
 .perk-card {

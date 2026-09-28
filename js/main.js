@@ -25,7 +25,8 @@
   document.getElementById("stats-btn").onclick = () => window.UI.openStats();
   document.getElementById("stats-close").onclick = () => window.UI.closeStats();
   document.getElementById("ascend-go").onclick = () => {
-    if (confirm("Ascend and begin the grounds anew? (+8% permanent global speed)")) E.ascend();
+    if (confirm("Ascend and begin the grounds anew? (+20% world speed per ascension, kept forever)"))
+      E.ascend(window.UI.chosenVows ? window.UI.chosenVows() : []);
   };
   document.getElementById("ascend-later").onclick = () => {
     window.GS.ascendPrompt = false; window.UI.renderPlay();
@@ -81,6 +82,7 @@
     wm.classList.remove("hidden");
   }
   window.UI.showOfflineSummary(offline);
+  if (window.UI.showAscendedCard) window.UI.showAscendedCard();   // one-time post-ascension card
 
   // Autosave: every 5s and on tab close. (state.js loads it back on boot.)
   setInterval(() => window.SAVE.saveState(), 5000);

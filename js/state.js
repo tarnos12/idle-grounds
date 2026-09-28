@@ -13,7 +13,7 @@ function makeAreaState() {
     spawnQueue: [],   // { at, kind } respawns pending per spawner
     genTimers: [],    // next-spawn time per generator
     enemies: [],      // roaming beasts       {id,x,y,hp,maxHp,tx,ty,hitAt}
-    enemyRespawnAt: 0,
+    enemyRespawns: [],  // per-slot fox respawn due-times (one per missing fox)
     wisps: [],        // items in flight      {id,x,y,item,toId}
     nextNodeId: 1,
     nextGroundId: 1,
@@ -57,13 +57,19 @@ function makeInitialState() {
     buff: null,
     // Active Vitality Pill combat buff (Martial Vigor): { until: ts }.
     combatBuff: null,
-    // Prestige: completed Ascensions grant +8% global speed each (kept
-    // across the reset). ascendPrompt shows the Ascension Gate dialog.
+    // Prestige: completed Ascensions grant +20% world speed each, additive
+    // (kept across the reset). ascendPrompt shows the Ascension Gate dialog.
     ascensions: 0,
     ascendPrompt: false,
     // Prestige currency + permanent perks (persist across every Ascension).
     ascendPoints: 0,
     perks: {},              // { perkId: level }
+    // Vows (challenge runs): active = this run's vow ids; done = { vowId:
+    // times completed } (a first completion is a permanent timer mark).
+    vows: { active: [], done: {} },
+    // Set by ascend(): { n, ap, speedFrom, speedTo } — the one-time
+    // "Ascension n complete" card on the next load; cleared on dismiss.
+    justAscended: null,
     // First-run onboarding: show the intro once (existing saves count as seen).
     introSeen: false,
     endingSeen: false,           // the awakening ending card has been shown (persisted)
@@ -137,6 +143,19 @@ function loadState() {
     fresh.endingSeen = s.endingSeen !== undefined ? !!s.endingSeen : !!s.won;
     // prestige currency + perks: carry, clamping each perk to its config max
     fresh.ascendPoints = Number.isFinite(s.ascendPoints) ? s.ascendPoints : 0;
+    // vows: keep only known ids (deduped), finite completion counts
+    const VOWIDS = new Set((window.DATA.VOWS || []).map(v => v.id));
+    const sv = (s.vows && typeof s.vows === "object") ? s.vows : {};
+    fresh.vows = {
+      active: Array.isArray(sv.active) ? sv.active.filter((id, i, arr) => VOWIDS.has(id) && arr.indexOf(id) === i) : [],
+      done: {},
+    };
+    if (sv.done && typeof sv.done === "object")
+      for (const id of Object.keys(sv.done))
+        if (VOWIDS.has(id) && Number.isFinite(sv.done[id]) && sv.done[id] > 0) fresh.vows.done[id] = Math.floor(sv.done[id]);
+    const ja = s.justAscended;
+    fresh.justAscended = (ja && Number.isFinite(ja.n) && Number.isFinite(ja.ap)
+      && Number.isFinite(ja.speedFrom) && Number.isFinite(ja.speedTo)) ? ja : null;
     fresh.perks = {};
     if (s.perks && typeof s.perks === "object")
       for (const perk of window.DATA.PERKS) {
@@ -160,7 +179,14 @@ function loadState() {
     const regrid = s.gridCells !== window.DATA.GRID.cells;
     for (const k of Object.keys(fresh.areas)) {
       const a = fresh.areas[k];
-      if (regrid) { a.nodes = []; a.spawnQueue = []; a.enemies = []; a.genTimers = []; }
+      // fox respawn went per-slot: the old shared enemyRespawnAt becomes one
+      // pending slot clock (the tick fills any other missing slot at once)
+      // (read the RAW save: the merge above already defaulted the field)
+      if (!Array.isArray(s.areas[k] && s.areas[k].enemyRespawns))
+        a.enemyRespawns = Number.isFinite(a.enemyRespawnAt) && a.enemyRespawnAt > 0 ? [a.enemyRespawnAt] : [];
+      a.enemyRespawns = a.enemyRespawns.filter(Number.isFinite);
+      delete a.enemyRespawnAt;
+      if (regrid) { a.nodes = []; a.spawnQueue = []; a.enemies = []; a.genTimers = []; a.enemyRespawns = []; }
       const cfg = window.DATA.AREAS[k];
       const spKinds = new Set((cfg.spawners || []).map(sp => sp.kind));
       const fxKinds = new Set((cfg.fixtures || []).map(fx => fx.kind));
@@ -202,6 +228,11 @@ function loadState() {
       for (const b of a.buildings || []) {
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
+        // Ascension Gate offerings: a finite count within the cap
+        if (window.DATA.BUILDINGS[b.type].gate && b.offerings !== undefined) {
+          const oc = window.DATA.GATE_OFFERINGS ? window.DATA.GATE_OFFERINGS.cap : 6;
+          b.offerings = Number.isFinite(b.offerings) ? Math.max(0, Math.min(oc, Math.floor(b.offerings))) : 0;
+        }
         // meditation pavilion: keep disciple/bun counters finite
         if (window.DATA.BUILDINGS[b.type].roster) {
           if (!Number.isFinite(b.disciples) || b.disciples < 0) b.disciples = 0;

@@ -70,10 +70,10 @@ try {
     const s = boot(); initAll(s);
     s.GS.ascensions = 1; s.GS.won = false; s.GS.dragonBlessed = false; s.GS.perks = {};
     const f1 = s.ENGINE.prestigeFactor();
-    check("prestigeFactor @ascensions=1 ~ 0.85", near(f1, 0.85, 0.005), f1.toFixed(4));
+    check("prestigeFactor @ascensions=1 ~ 1/1.2 = 0.8333 (v52: additive +20%/asc)", near(f1, 1 / 1.2, 0.005), f1.toFixed(4));
     s.GS.dragonBlessed = true;
     const f2 = s.ENGINE.prestigeFactor();
-    check("prestigeFactor @ascensions=1 + dragonBlessed ~ 0.765", near(f2, 0.765, 0.005), f2.toFixed(4));
+    check("prestigeFactor @ascensions=1 + dragonBlessed ~ 0.75", near(f2, 0.75, 0.005), f2.toFixed(4));
   }
 
   // (e) dragonBlessed migration --------------------------------------------

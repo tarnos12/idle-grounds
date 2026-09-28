@@ -389,7 +389,7 @@ const BUILDINGS = {
   dragon_shrine:{ name: "Dragon Shrine", icon: "🐲", cost: { brick: 10, cloth: 8, jade: 3 }, unlocked: true,
                shrine: true },
   // Ascension Gate: the final monument. Building it offers ASCENSION —
-  // reset the grounds, keep a permanent +8% global speed per ascension.
+  // reset the grounds, keep +20% world speed per ascension (additive).
   ascension_gate:{ name: "Ascension Gate", icon: "⛩️", size: { w: 5, h: 5 }, unlocked: true,
                gate: true, cost: { talisman: 3, star_steel: 3, dragon_scale: 3 } },
   charcoal_pit:{ name: "Charcoal Pit", icon: "🕳️", cost: { stone: 6, clay: 4 }, unlocked: true,
@@ -632,7 +632,7 @@ const HAND_CAP = 20;   // max items carried in-hand at once
 // ------------------------------------------------------------------
 const PERKS = [
   { id: "haste",   name: "Eternal Haste",  icon: "⚡", max: 5, cost: [1, 2, 3, 5, 8],
-    desc: "-5% to every duration in the world (regrow, batches, wisp beats). Compounds with your +8%/ascension." },
+    desc: "-5% to every timer in the world (regrow, batches, wisp beats, fields, foxes, your swings). Stacks with the +20% world speed per ascension." },
   { id: "hall",    name: "Master's Hall",  icon: "🏯", max: 5, cost: [1, 2, 3, 4, 6],
     desc: "+1 disciple capacity at every Meditation Pavilion, per level." },
   { id: "slumber", name: "Long Slumber",   icon: "🌙", max: 4, cost: [1, 2, 4, 6],
@@ -657,7 +657,30 @@ const PERKS = [
     desc: "Dragon-pill blessings last +20% longer per level." },
   { id: "bounty", name: "Astral Bounty",  icon: "☄️", max: 3, cost: [2, 4, 6],
     desc: "Passive fields (clay, stone, sand, spring water) well up 10% faster per level." },
+  // Legacy: head starts applied by ascend() to every fresh run
+  // (the genre's strongest prestige payoff is skipping the opening).
+  { id: "paths",  name: "Remembered Paths",  icon: "🗺️", max: 3, cost: [3, 6, 12],
+    desc: "Each run starts with the Farm already open; level 2 adds the Mine, level 3 Fishing." },
+  { id: "legacy", name: "Legacy Automation", icon: "🤖", max: 3, cost: [4, 8, 16],
+    desc: "Each run starts with Automation L1 in the Center; level 2 adds the Farm, level 3 the Mine (works once that region is open)." },
 ];
+
+// ------------------------------------------------------------------
+// Vows: opt-in challenge runs, chosen in the ascend modal (after the first
+// ascension) for the NEXT run. Ascending with vows active multiplies that
+// run's AP by VOW_MULT[count]; each vow's FIRST completion leaves a
+// permanent mark (x0.96 timers). Each is wired at one engine point.
+// ------------------------------------------------------------------
+const VOWS = [
+  { id: "burden",     name: "Vow of Burden",       icon: "🎒", desc: "Your hands carry half as much." },
+  { id: "coldhearth", name: "Vow of the Cold Hearth", icon: "🧊", desc: "Burners consume fuel twice as fast." },
+  { id: "restless",   name: "Vow of the Restless Dragon", icon: "🐉", desc: "Every dragon tribute is doubled." },
+  { id: "solitude",   name: "Vow of Solitude",     icon: "🕯️", desc: "The run starts without the starter wisp network." },
+];
+const VOW_MULT = [1, 1.15, 1.3, 1.5, 1.75];   // AP multiplier by active vow count
+
+// Offerings at the BUILT Ascension Gate: +1 AP each at ascension, capped.
+const GATE_OFFERINGS = { items: ["talisman", "star_steel", "dragon_scale"], cap: 6 };
 
 // ------------------------------------------------------------------
 // TESTING CONVENIENCES — flip ENABLED to false to restore GDD balance.
@@ -680,4 +703,5 @@ window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
   AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP, FUEL_SLOTS,
   UPGRADE_TREE, QUESTS, HAND_CAP, PERKS, TEST, VERSION,
+  VOWS, VOW_MULT, GATE_OFFERINGS,
 };
