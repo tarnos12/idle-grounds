@@ -215,11 +215,25 @@ let lastErrBuzz = 0;      // throttle the held right-click rejection buzz
 let lastWithdrawErr = 0;  // throttle the empty-withdraw rejection buzz
 let lastFullBuzz = 0;     // throttle the "Hand full" pickup floater + buzz
 function handFullNudge(region, lx, ly) {
-  if (Date.now() - lastFullBuzz < 900) return;
+  if (Date.now() - lastFullBuzz < 900) return false;
   lastFullBuzz = Date.now();
   if (window.AUDIO) window.AUDIO.play("error");
   const rp = regionPx(region); addFloater(rp.x + lx, rp.y + ly - 8, "Hand full", C.danger);
+  return true;
 }
+// Right-hold latch. A hold that BEGAN on a building (ghost, converter,
+// Altar, dragon, gate...) only ever feeds THAT building -- it never falls
+// through to ground drops -- and stops for good once the ghost completes or
+// the target refuses. A hold that began on open ground drops 1, then (after
+// GROUND_REPEAT_MS) repeats only until the FRONT stack runs out.
+let holdTarget = null;    // { region, id, wasBuilt } while a feed-hold is latched
+let holdDone = false;     // latched feed-hold finished: ignore the rest of it
+let holdFront = null;     // ground-hold: the front stack's item being dropped
+const GROUND_REPEAT_MS = 400;
+let suckFilter = null;    // left-hold vacuum type-lock (item key) or null = any
+const LOCK_R = G.cell * 0.75;   // a hold starting this close to an item locks to its type
+const EDGE_PICK_PX = 10;        // clicks this close to a building edge prefer vacuuming
+const fixtureHitAt = new Map(); // "region:id" -> last counted swing on a fixture
 const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
 let lastClickAt = 0;
 
@@ -2078,9 +2092,14 @@ function onMouseDown(e) {
     e.preventDefault();
     if (window.GS.build.placing || demolishMode) { window.GS.build.placing = null; demolishMode = false; render(); return; }
     if (!active) return;
-    rightHeld = true; holdStart = Date.now();
+    rightHeld = true; holdStart = Date.now(); holdDone = false;
     const d = rackRedirect(p.region, p.lx, p.ly);
-    const r = E.dropFromHand(p.region, d.x, d.y);  // ground drop, ghost feed, or storehouse deposit
+    const tb = E.buildingAt(p.region, Math.floor(d.y / CELL), Math.floor(d.x / CELL));
+    holdTarget = tb ? { region: p.region, id: tb.id, wasBuilt: !!tb.built } : null;
+    holdFront = !tb && window.GS.hand[0] ? window.GS.hand[0].item : null;
+    // ground drop, ghost feed, or storehouse deposit (a building never spills)
+    const r = E.dropFromHand(p.region, d.x, d.y, !!tb);
+    if (tb) holdDone = feedHoldEnded(r);
     if (r === null) {
       if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = holdStart;
       const rp = regionPx(p.region); addFloater(rp.x + p.lx, rp.y + p.ly, "✗", C.danger);
@@ -2144,7 +2163,10 @@ function onMouseDown(e) {
       startLoop(); renderPlay();
       return;
     }
-    const sh = E.buildingAt(p.region, p.lrow, p.lcol);
+    let sh = E.buildingAt(p.region, p.lrow, p.lcol);
+    // converter outputs settle hugging the building edge: a click right on
+    // the edge with loose items in reach vacuums them instead
+    if (sh && edgeDist(sh, p.lx, p.ly) <= EDGE_PICK_PX && groundNear(p.region, p.lx, p.ly, PICKUP_R, null)) sh = null;
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
     // the built Ascension Gate re-offers the ending
@@ -2174,23 +2196,62 @@ function onMouseDown(e) {
     const node = nodeAtCell(p.region, p.lrow, p.lcol);
     if (node && !node.deco) {   // decorative border trees are inert
       const t = Date.now();
-      if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(p.region, node.id, false); lastClickAt = t; }
+      // fixtures (Spirit Tree, quarry rock, spring) count one click per
+      // swing interval — spam-clicking can't outpace holding
+      const fk = p.region + ":" + node.id;
+      const fixReady = !node.fixed || t - (fixtureHitAt.get(fk) || 0) >= E.harvestInterval(p.region, node);
+      if (t - lastClickAt >= CLICK_COOLDOWN && fixReady) {
+        E.harvestNode(p.region, node.id, false); lastClickAt = t;
+        if (node.fixed) fixtureHitAt.set(fk, t);
+      }
       else node.hitAt = t;   // too fast to count as damage — still show the hit
       fxSwing(p.region, p.lx, p.ly);   // swing spark at the hit
       leftHeld = true; harvestHeld = true; lastSwing = t;
       startLoop(); renderPlay();
       return;
     }
-    const itemsNear = window.GS.areas[p.region].ground.some(g => Math.hypot(g.x - p.lx, g.y - p.ly) <= PICKUP_R);
-    if (itemsNear) {
+    if (groundNear(p.region, p.lx, p.ly, PICKUP_R, null)) {
       leftHeld = true; pickupMode = true;
+      // starting ON / right next to an item locks this hold to its type
+      const lock = nearestGround(p.region, p.lx, p.ly, LOCK_R);
+      suckFilter = lock ? lock.item : null;
       if (E.handSpace() <= 0) handFullNudge(p.region, p.lx, p.ly);   // vacuum can't take more
-      const s0 = E.suctionStep(p.region, p.lx, p.ly, PICKUP_R);   // starts the pull; loop continues it
+      const s0 = E.suctionStep(p.region, p.lx, p.ly, PICKUP_R, suckFilter);   // starts the pull; loop continues it
       fxPickup(p.region, p.lx, p.ly, s0.picked);
       startLoop(); renderPlay();
       return;
     }
   }
+}
+
+// Any ground item (of `item`, or any when null) within `r` of (lx,ly)?
+function groundNear(region, lx, ly, r, item) {
+  return window.GS.areas[region].ground.some(g =>
+    (!item || g.item === item) && Math.hypot(g.x - lx, g.y - ly) <= r);
+}
+// Closest ground item within `r`, or null.
+function nearestGround(region, lx, ly, r) {
+  let best = null, bd = r;
+  for (const g of window.GS.areas[region].ground) {
+    const d = Math.hypot(g.x - lx, g.y - ly);
+    if (d <= bd) { bd = d; best = g; }
+  }
+  return best;
+}
+// Distance (px) from a point inside building b to its nearest footprint edge.
+function edgeDist(b, lx, ly) {
+  const s = E.buildingSize(b.type), x0 = b.col * CELL, y0 = b.row * CELL;
+  return Math.min(lx - x0, x0 + s.w * CELL - lx, ly - y0, y0 + s.h * CELL - ly);
+}
+// A latched feed-hold ends when the target refused (null), a pill was
+// quaffed instead, or the ghost it began on has just been completed.
+function feedHoldEnded(r) {
+  if (!r || r.used) return true;
+  if (!holdTarget.wasBuilt) {
+    const b = E.buildingById(holdTarget.region, holdTarget.id);
+    if (!b || b.built) return true;
+  }
+  return false;
 }
 
 // ---- WASD camera pan ----------------------------------------
@@ -2228,6 +2289,12 @@ function onKeyDown(e) {
   }
   if (k === "shift" && !e.repeat) { sprint = !sprint; renderTopBar(); return; }  // sprint toggle (2x pan)
   if (k === "b") { toggleBuild(); return; }   // B toggles the build menu
+  // Q / E rotate the hand: Q sends the front stack to the back, E brings the
+  // back stack to the front
+  if ((k === "q" || k === "e") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (E.handRotate(k === "q" ? 1 : -1)) renderPlay();
+    return;
+  }
   if (e.key === "F9") {                       // self-diagnostic (rendering issues)
     e.preventDefault();
     const r = cvs.getBoundingClientRect();
@@ -2262,14 +2329,17 @@ function onKeyDown(e) {
     if (!$("#help-modal").classList.contains("hidden")) { closeHelp(); return; }
     if (!$("#welcome-modal").classList.contains("hidden")) { dismissWelcome(); return; }
     if (!$("#ending-modal").classList.contains("hidden")) { dismissEnding(); return; }
-    window.GS.build.placing = null; demolishMode = false; render();
+    // cancel placement / demolish and close the build strip (state + DOM)
+    window.GS.build.placing = null; window.GS.build.open = false; demolishMode = false; render();
   }
 }
 function onKeyUp(e) { keys.delete(e.key.toLowerCase()); }
 
 function onMouseUp(e) {
-  if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; attackHeld = false; withdrawSH = null; }
-  if (e.button === 2) { rightHeld = false; lastErrBuzz = 0; } // next held right-click buzzes once again
+  if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; attackHeld = false; withdrawSH = null; suckFilter = null; }
+  if (e.button === 2) {   // next held right-click buzzes once again
+    rightHeld = false; lastErrBuzz = 0; holdTarget = null; holdDone = false; holdFront = null;
+  }
 }
 
 // while a mouse button is held, keep vacuuming / drip-dropping
@@ -2282,11 +2352,11 @@ function startLoop() {
     const rg = cursor.region && E.isAreaUnlocked(cursor.region) ? cursor.region : null;
     if (leftHeld && pickupMode && cursor.over && rg) {
       // gravity suction: items in range drift to the cursor, collect on arrival
-      const s = E.suctionStep(rg, cursor.lx, cursor.ly, PICKUP_R);
+      const s = E.suctionStep(rg, cursor.lx, cursor.ly, PICKUP_R, suckFilter);
       if (s.moved > 0 || s.picked > 0) dirty = true;
       if (s.picked > 0) fxPickup(rg, cursor.lx, cursor.ly, s.picked);
       else if (E.handSpace() <= 0 && Date.now() - lastFullBuzz >= 900 &&
-          window.GS.areas[rg].ground.some(g => Math.hypot(g.x - cursor.lx, g.y - cursor.ly) <= PICKUP_R)) {
+          groundNear(rg, cursor.lx, cursor.ly, PICKUP_R, suckFilter)) {
         handFullNudge(rg, cursor.lx, cursor.ly); dirty = true;
       }
     }
@@ -2314,21 +2384,43 @@ function startLoop() {
     // hold-left over a node auto-swings at that node's own harvest rate
     if (harvestHeld && cursor.over && rg) {
       const n = nodeAtCell(rg, cursor.lrow, cursor.lcol);
-      if (n && !n.deco && Date.now() - lastSwing >= E.harvestInterval(rg, n)) {
-        E.harvestNode(rg, n.id, true); fxSwing(rg, cursor.lx, cursor.ly); lastSwing = Date.now(); dirty = true;
+      const iv = n && !n.deco ? E.harvestInterval(rg, n) : 0, fk = n ? rg + ":" + n.id : "";
+      if (n && !n.deco && Date.now() - lastSwing >= iv &&
+          (!n.fixed || Date.now() - (fixtureHitAt.get(fk) || 0) >= iv)) {
+        // a full hand stops the auto-swing (drops would only litter);
+        // a single click still harvests
+        if (E.handSpace() <= 0) { if (handFullNudge(rg, cursor.lx, cursor.ly)) dirty = true; }
+        else {
+          E.harvestNode(rg, n.id, true); fxSwing(rg, cursor.lx, cursor.ly); lastSwing = Date.now(); dirty = true;
+          if (n.fixed) fixtureHitAt.set(fk, lastSwing);
+        }
       }
     }
-    if (rightHeld && cursor.over && rg) {
-      // near-instant spin-up: ramp 4 -> 20/s over the first 0.2s of the hold
+    if (rightHeld && cursor.over && rg && holdTarget && !holdDone) {
+      // latched feed-hold: near-instant spin-up, ramp 4 -> 20/s over 0.2s;
+      // feeds only while the cursor is still on the building it began on
       const elapsed = Date.now() - holdStart;
       const rate = 4 + Math.min(elapsed / 200, 1) * 16;
-      if (Date.now() - lastDrop >= 1000 / rate) {
-        const d = rackRedirect(rg, cursor.lx, cursor.ly);
-        const r = E.dropFromHand(rg, d.x, d.y); lastDrop = Date.now(); dirty = true;
-        if (r === null && Date.now() - lastErrBuzz >= 400) {   // hand empty / nothing accepts: buzz once
+      const d = rackRedirect(rg, cursor.lx, cursor.ly);
+      const b = rg === holdTarget.region ? E.buildingAt(rg, Math.floor(d.y / CELL), Math.floor(d.x / CELL)) : null;
+      if (b && b.id === holdTarget.id && Date.now() - lastDrop >= 1000 / rate) {
+        const r = E.dropFromHand(rg, d.x, d.y, true); lastDrop = Date.now(); dirty = true;
+        holdDone = feedHoldEnded(r);
+        if (r === null && Date.now() - lastErrBuzz >= 400) {   // target refuses: buzz once
           if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = Date.now();
           const rp = regionPx(rg); addFloater(rp.x + cursor.lx, rp.y + cursor.ly, "✗", C.danger);
         }
+      }
+    } else if (rightHeld && cursor.over && rg && holdFront) {
+      // ground-hold: auto-repeat only after GROUND_REPEAT_MS, then ramp
+      // 4 -> 20/s; stops when the front stack runs out (release + hold
+      // again for the next stack). Paused while over a building.
+      const elapsed = Date.now() - holdStart - GROUND_REPEAT_MS;
+      const front = window.GS.hand[0];
+      if (!front || front.item !== holdFront) holdFront = null;
+      else if (elapsed >= 0 && Date.now() - lastDrop >= 1000 / (4 + Math.min(elapsed / 200, 1) * 16) &&
+          !E.buildingAt(rg, cursor.lrow, cursor.lcol)) {
+        E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true;
       }
     }
     if (dirty) renderPlay();
@@ -2376,6 +2468,8 @@ function wireInput() {
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
   window.addEventListener("resize", fitViewport);
+  const hpill = document.querySelector(".hand-pill");
+  if (hpill) hpill.title = "Carried items. Q: send the front stack to the back · E: bring the back stack to the front";
   recenterCamera();                     // start at the top-centre of the centre region
   fitViewport();
   requestAnimationFrame(fitViewport);   // re-fit once layout has settled
