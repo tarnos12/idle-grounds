@@ -45,6 +45,19 @@ function handMoveToFront(item) {
   return true;
 }
 
+// Rotate the hand's stacks (Q / E): dir +1 sends the FRONT stack to the
+// back, dir -1 brings the BACK stack to the front. Returns the new front
+// item, or null when the hand is empty. A 1-stack hand is a no-op.
+function handRotate(dir) {
+  const h = window.GS.hand;
+  if (!h.length) return null;
+  if (h.length > 1) {
+    if (dir < 0) h.unshift(h.pop());
+    else h.push(h.shift());
+  }
+  return h[0].item;
+}
+
 // Remove up to `n` of a specific item. Returns amount removed.
 function handTake(item, n) {
   const idx = window.GS.hand.findIndex(x => x.item === item);
@@ -619,12 +632,14 @@ function pushOutOfColliders(areaKey) {
 // Gravity suction while holding left: items within `radius` of the cursor
 // are pulled toward it (faster the closer they get); once they reach the
 // cursor they're collected as usual. Does nothing when the hand is full.
-function suctionStep(areaKey, x, y, radius) {
+// `itemFilter` (optional, null = any) type-locks the pull to one item key.
+function suctionStep(areaKey, x, y, radius, itemFilter) {
   if (handSpace() <= 0) return { moved: 0, picked: 0 };
   const area = window.GS.areas[areaKey];
   let moved = 0, picked = 0;
   const taken = new Set();
   for (const g of area.ground) {
+    if (itemFilter && g.item !== itemFilter) continue;   // type-locked hold
     const dx = x - g.x, dy = y - g.y, d = Math.hypot(dx, dy);
     if (d > radius) continue;
     if (d <= 12) {                                   // reached the cursor — collect
@@ -1140,7 +1155,9 @@ function feedRatio(b, rec) {
 // Buffs scale with the world clock: 60s test / 240s real.
 function buffScale() { return D.TEST.ENABLED ? 1 : 4; }
 
-function dropFromHand(areaKey, x, y) {
+// `noGround` (the latched right-hold on a feed target): return null instead
+// of falling through to a ground drop when nothing here accepts the item.
+function dropFromHand(areaKey, x, y, noGround) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
   // Vitality Pill in the front hand slot is TAKEN (never dropped): it grants
   // the Martial Vigor combat buff. Right-click it anywhere to quaff.
@@ -1278,6 +1295,7 @@ function dropFromHand(areaKey, x, y) {
     }
     return res ? Object.assign(res, { building: b.id }) : null;
   }
+  if (noGround) return null;
   const item = handTakeFirst();
   if (!item) return null;
   dropGround(areaKey, item, 1, x, y);
@@ -1869,7 +1887,7 @@ function runOfflineCatchup() {
 window.ENGINE = {
   itemName, itemIcon,
   countHeldItems, runOfflineCatchup,
-  handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
+  handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, handRotate, canAfford,
   depositToStorehouse, takeFromStorehouse,
   effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
