@@ -134,8 +134,9 @@ const AREAS = {
       // "quarry" upgrade speeds it up
       { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry",
         rareDrop: { item: "jade_shard", chance: 0.08 } },
-      // wood's first idle source — the Spirit Tree stays manual-only
-      { kind: "wood", zone: "midTop", item: "wood", intervalMs: 3000, cap: 10 },
+      // wood's first idle source — the Spirit Tree stays manual-only. A compact
+      // field around the starter wood Gathering Stone so its line really flows.
+      { kind: "wood", zone: "woodField", item: "wood", intervalMs: 3000, cap: 10 },
     ],
     // Fox Spirits haunt the top-right corner: they wander their zone, take a
     // few hits to slay, and drop Spirit Essence. `cap` is the BASE cap — the
@@ -160,8 +161,9 @@ const AREAS = {
         interaction: "instant", swingMs: 300, sprite: "☁️", regrow: 18, drops: [d("cotton", 1, 2)] },
     ],
     generators: [
-      // sand ground in the middle-left band auto-spawns sand (like centre's clay)
-      { kind: "sand", zone: "midLeft", item: "sand", intervalMs: 1500, cap: 10 },
+      // sand ground: a compact 9x9 field inside the middle-left band (like
+      // centre's clay) — one Gathering Stone can cover all of it
+      { kind: "sand", zone: "sandField", item: "sand", intervalMs: 1500, cap: 10 },
     ],
     tiers: [
       { name: "Rice", drops: [d("wheat", 2, 3)], timer: 20 },
@@ -295,6 +297,15 @@ const ZONES = {
   // water field around the spring, centred in the TL block (fishing region)
   springField:[(() => { const m = Math.floor((_T - 1) / 2), h = 4;
                         return { r0: m - h, c0: m - h, r1: m + h, c1: m + h }; })()],
+  // compact 9x9 wood field centred on the starter wood Gathering Stone at
+  // (16,44) in the Center's top band (rows 12-20, cols 40-48) — the whole
+  // 25x43 midTop band left the stone catching ~19% of the trickle
+  woodField:  [{ r0: 12, c0: 40, r1: 20, c1: 48 }],
+  // compact 9x9 sand field in the Farm's middle-left band (rows 42-50,
+  // cols 14-22): vertically centred, near the crop field's left edge (col 25),
+  // clear of plots — one Gathering Stone at (46,18) covers every cell
+  sandField:  [(() => { const m = Math.floor((_T + _N - _T - 1) / 2), c = 18, h = 4;
+                        return { r0: m - h, c0: c - h, r1: m + h, c1: c + h }; })()],
 };
 
 // Buildings the player can place. cost is paid by dropping resources into
