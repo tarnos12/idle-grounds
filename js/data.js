@@ -114,15 +114,15 @@ const AREAS = {
     ],
     fixtures: [
       // the quarry rock: manually minable WITHOUT limit (5 clicks -> 1 stone,
-      // hold auto-clicks at 1/s) — and it ALSO produces stone passively
+      // hold auto-clicks at ~3/s) — and it ALSO produces stone passively
       // (see the generator below)
-      { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 1000,
+      { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 350,
         sprite: "⛰️", clicksPerDrop: 5, drop: "stone",
         rareDrop: { item: "jade_shard", chance: 0.12 } },
       // the Spirit Tree: ONE great tree centred in the top band — the only
       // wood source in the Center. Works like the rock but has NO passive
       // production: it only gives while you click / hold on it.
-      { kind: "spirittree", zone: "midTop", size: 4, interaction: "quarry", swingMs: 1000,
+      { kind: "spirittree", zone: "midTop", size: 4, interaction: "quarry", swingMs: 350,
         sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3,
         rareDrop: { item: "bamboo", chance: 0.12 } },
     ],
@@ -180,6 +180,10 @@ const AREAS = {
       { kind: "ironvein", zone: "centre", sizes: [2], target: 2, interaction: "break",
         swingMs: 500, sprite: "⚙️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)],
         rareDrop: { item: "firestone", chance: 0.15 } },
+      // jade veins: the direct source of jade shards (the talisman chain's
+      // choke point) — tough, small target like the iron veins
+      { kind: "jadevein", zone: "centre", sizes: [2], target: 2, interaction: "break",
+        swingMs: 500, sprite: "🟢", hits: 3, regrow: 14, drops: [d("jade_shard", 1, 2)] },
     ],
     tiers: [
       { name: "Stone", hits: 2, drops: [d("stone", 3), d("clay", 1)], timer: 10 },
@@ -200,7 +204,7 @@ const AREAS = {
     fixtures: [
       // the spring: click/hold for water, and it wells up passively into the
       // field around it (see the generator)
-      { kind: "spring", zone: "cornerTL", size: 2, interaction: "quarry", swingMs: 1000,
+      { kind: "spring", zone: "cornerTL", size: 2, interaction: "quarry", swingMs: 350,
         sprite: "⛲", clicksPerDrop: 3, drop: "water" },
     ],
     generators: [
@@ -334,7 +338,7 @@ const BUILDINGS = {
                fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Brick", inputs: { clay: 2 }, output: "brick", outputQty: 1, timeMs: 5000 },
-                 { name: "Glass", inputs: { sand: 2 }, output: "glass", outputQty: 1, timeMs: 6000 },
+                 { name: "Glass", inputs: { sand: 3 }, output: "glass", outputQty: 2, timeMs: 5000 },
                  { name: "Obsidian Glass", inputs: { obsidian: 1 }, output: "glass", outputQty: 2, timeMs: 5000 },
                ] },
   paper_mill:{ name: "Paper Mill", icon: "📜", cost: { wood: 10, stone: 5 }, unlocked: true,
@@ -366,7 +370,7 @@ const BUILDINGS = {
                ] },
   cauldron:  { name: "Cauldron",  icon: "⚗️", cost: { stone: 8, iron_bar: 2 }, unlocked: true,
                recipes: [
-                 { name: "Qi Elixir", inputs: { spirit_herb: 1, water: 2, spirit_essence: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
+                 { name: "Qi Elixir", inputs: { spirit_herb: 1, water: 2, spirit_essence: 1 }, output: "qi_elixir", outputQty: 2, timeMs: 8000 },
                  { name: "Vitality Pill", inputs: { fish: 1, spirit_herb: 1, water: 1 }, output: "vitality_pill", outputQty: 1, timeMs: 7000 },
                  { name: "Beast Bait", inputs: { fish: 2, algae: 2 }, output: "beast_bait", outputQty: 1, timeMs: 6000 },
                  { name: "Moon Elixir", inputs: { moonpetal: 2, water: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
@@ -387,7 +391,7 @@ const BUILDINGS = {
   star_anvil:{ name: "Star Anvil", icon: "⚒️", cost: { iron_bar: 6, tools: 3, glass: 2 }, unlocked: true,
                fuel: true, size: { w: 3, h: 5 },
                recipes: [
-                 { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
+                 { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 2, timeMs: 10000 },
                  { name: "Astral Steel", inputs: { star_fragment: 3, iron_bar: 2 }, output: "star_steel", outputQty: 1, timeMs: 9000 },
                ] },
   // ---- Phase-5 endgame ----
@@ -397,7 +401,7 @@ const BUILDINGS = {
                ] },
   // Dragon Shrine: honours the awakened dragon — blessings last +60s and
   // it sheds Dragon Scales twice as often while one stands.
-  dragon_shrine:{ name: "Dragon Shrine", icon: "🐲", cost: { brick: 10, cloth: 8, jade: 3 }, unlocked: true,
+  dragon_shrine:{ name: "Dragon Shrine", icon: "🐲", cost: { brick: 10, cloth: 8, obsidian: 4 }, unlocked: true,
                shrine: true },
   // Ascension Gate: the final monument. Building it offers ASCENSION —
   // reset the grounds, keep +20% world speed per ascension (additive).
@@ -438,11 +442,11 @@ const BUILDINGS = {
   // Algae Farm: can ONLY be placed in the water (fishing's centre zone);
   // passively grows algae around itself.
   algae_farm:{ name: "Algae Farm", icon: "🪸", cost: { wood: 12, algae: 6 }, unlocked: false, stageUnlock: 2,
-               waterOnly: true, gen: { item: "algae", intervalMs: 4000, cap: 8 } },
+               waterOnly: true, gen: { item: "algae", intervalMs: 2000, cap: 24 } },
   // Herb Garden: taught at dragon stage 3 — passively grows Spirit Herbs
   // (the cultivation herbs) around itself, on land.
   herb_garden:{ name: "Herb Garden", icon: "🪴", cost: { wood: 10, water: 5, clay: 5 }, unlocked: false,
-                stageUnlock: 3, gen: { item: "spirit_herb", intervalMs: 5000, cap: 6 } },
+                stageUnlock: 3, gen: { item: "spirit_herb", intervalMs: 2500, cap: 24 } },
 
   // ---- Wisp logistics (small 1x1 formations; may sit on wild land) ----
   // Gathering Stone: vacuums ground items within `radius` cells into its
