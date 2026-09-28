@@ -16,8 +16,11 @@ function itemIcon(key) { return D.ITEM_ICONS[key] || "📦"; }
 // ---- The hand (cursor carry, ordered stacks, total <= HAND_CAP) ----
 
 function handTotal() { return window.GS.hand.reduce((s, x) => s + x.qty, 0); }
-function handCap() { return window.GS.handCap; }
-function handSpace() { return window.GS.handCap - handTotal(); }
+// Vow of Burden halves the carry capacity for its run.
+function handCap() {
+  return vowActive("burden") ? Math.max(1, Math.floor(window.GS.handCap / 2)) : window.GS.handCap;
+}
+function handSpace() { return handCap() - handTotal(); }
 function handCount(item) { const s = window.GS.hand.find(x => x.item === item); return s ? s.qty : 0; }
 
 // Add up to `qty`, capped by remaining space. Returns the amount added.
@@ -142,24 +145,63 @@ function buyPerk(id) {
   return true;
 }
 // AP earned by ascending NOW: 3 base + 2 per unlocked region beyond Center
-// (~15 AP with all regions; sized so a first reset buys 2-3 perks — genre
-// 'first prestige must feel like a doubling').
+// + Ascendant Insight + gate offerings (+1 each, capped), all x vowMult()
+// for the vows kept this run. (~15 AP with all regions; sized so a first
+// reset buys 2-3 perks. Offerings pay a marginal gain for playing on.)
 function ascendReward() {
   const regions = Object.values(window.GS.world.unlocked).filter(Boolean).length;
-  return 3 + 2 * Math.max(0, regions - 1) + perkLevel("apgain");
+  const g = builtGate();
+  const offerings = g ? gateOfferings(g.areaKey, g.b).count : 0;
+  return Math.round((3 + 2 * Math.max(0, regions - 1) + perkLevel("apgain") + offerings) * vowMult());
+}
+// The (first) BUILT Ascension Gate anywhere: { areaKey, b } or null.
+function builtGate() {
+  for (const k of Object.keys(window.GS.areas))
+    for (const b of window.GS.areas[k].buildings)
+      if (b.built && D.BUILDINGS[b.type] && D.BUILDINGS[b.type].gate) return { areaKey: k, b };
+  return null;
+}
+// Offerings laid at a built gate (talisman / star steel / dragon scale).
+function gateOfferings(areaKey, b) {
+  const cap = D.GATE_OFFERINGS.cap;
+  return { count: Math.max(0, Math.min(cap, (b && b.offerings) || 0)), cap };
+}
+
+// ---- Vows (opt-in challenge runs) ---------------------------
+// Chosen in the ascend modal for the NEXT run; kept vows multiply that
+// ascension's AP, and each vow's first completion leaves a permanent mark
+// (x0.96 timers, folded into prestigeFactor).
+function activeVows() { return (window.GS.vows && window.GS.vows.active) || []; }
+function vowActive(id) { return activeVows().includes(id); }
+function vowMult() { const n = activeVows().length; return D.VOW_MULT[Math.min(n, D.VOW_MULT.length - 1)]; }
+// Permanent marks: vows completed at least once (optionally counting the
+// currently-active ones as completed — the post-ascension preview).
+function vowMarks(includeActive) {
+  const done = (window.GS.vows && window.GS.vows.done) || {};
+  return D.VOWS.filter(v => (done[v.id] || 0) > 0 || (includeActive && vowActive(v.id))).length;
 }
 // The offline catch-up window, extended +2h per Long Slumber level.
 function offlineCapMs() { return (8 + 2 * perkLevel("slumber")) * 3600 * 1000; }
 
-// Prestige: each completed Ascension shaves 15% off every duration
-// (~18%/run faster; genre first-reset benchmarks are far above the old 8%)
-// — regrowth, batches, lantern beats. Compounds multiplicatively, and the
-// Eternal Haste perk shaves a further 5% per level.
-function prestigeFactor() {
+// Prestige: +20% world speed per completed Ascension, ADDITIVE (timers
+// x 1/(1 + 0.2*asc)) like the genre's per-point bonuses, not an uncapped
+// 0.85^n. Applies to the clocks players wait on: regrowth, batches, lantern
+// beats, pavilions, field generators, generator buildings, fox respawn,
+// dragon scales and manual swings. Eternal Haste x0.95/level, the dragon's
+// blessing x0.9, and each vow mark x0.96 multiply on top.
+// `o` optionally overrides { ascensions, marks } (ascension preview).
+function prestigeFactor(o) {
+  const asc = o && o.ascensions != null ? o.ascensions : (window.GS.ascensions || 0);
+  const marks = o && o.marks != null ? o.marks : vowMarks(false);
   // Awakened dragon's blessing: a permanent ~11% global speedup (survives
   // ascension via GS.dragonBlessed).
-  return Math.pow(0.85, window.GS.ascensions || 0) * Math.pow(0.95, perkLevel("haste"))
-    * (window.GS.won || window.GS.dragonBlessed ? 0.9 : 1);
+  return 1 / (1 + 0.2 * asc) * Math.pow(0.95, perkLevel("haste"))
+    * (window.GS.won || window.GS.dragonBlessed ? 0.9 : 1) * Math.pow(0.96, marks);
+}
+// The factor the NEXT run would have (one more ascension; active vows
+// counted as completed marks).
+function nextPrestigeFactor() {
+  return prestigeFactor({ ascensions: (window.GS.ascensions || 0) + 1, marks: vowMarks(true) });
 }
 
 // Is a Dragon Shrine standing anywhere? (blessings +60s, scales 2x rate)
@@ -170,12 +212,21 @@ function shrineBuilt() {
 }
 
 // The Ascension itself: reset the grounds, keep the prestige counter (and
-// spare veterans the tutorial). Saves, then reboots into the fresh run.
-function ascend() {
+// spare veterans the tutorial). `nextVows` = vow ids chosen for the NEW run
+// (only after the first ascension). Saves, then reboots into the fresh run.
+function ascend(nextVows) {
   if (window.onSfx) window.onSfx("ascend");
   const asc = (window.GS.ascensions || 0) + 1;
-  const pts = (window.GS.ascendPoints || 0) + ascendReward();
+  const reward = ascendReward();
+  const pts = (window.GS.ascendPoints || 0) + reward;
   const perks = window.GS.perks || {};
+  const speedFrom = 1 / prestigeFactor();
+  // vows kept this run are completed; the new run takes the chosen ones
+  const vows = { active: [], done: Object.assign({}, (window.GS.vows && window.GS.vows.done) || {}) };
+  for (const id of activeVows()) vows.done[id] = (vows.done[id] || 0) + 1;
+  if ((window.GS.ascensions || 0) >= 1 && Array.isArray(nextVows))
+    for (const id of nextVows)
+      if (D.VOWS.some(v => v.id === id) && !vows.active.includes(id)) vows.active.push(id);
   const fresh = window.SAVE.fresh();
   fresh.ascensions = asc;
   fresh.ascendPoints = pts;            // AP + perks survive the reset
@@ -186,7 +237,18 @@ function ascend() {
   fresh.stats = window.GS.stats;       // lifetime stats — wiping them reads as loss
   fresh.introSeen = true;              // a veteran never re-sees the intro
   fresh.endingSeen = window.GS.endingSeen;
+  fresh.vows = vows;
+  if (vows.active.includes("solitude")) fresh.starterPlaced = true;   // Vow of Solitude: no starter network
+  // Legacy perks: Remembered Paths opens Farm/Mine/Fishing; Legacy
+  // Automation sets Automation L1 in Center/Farm/Mine (the same tree
+  // upgrade buying the node gives; it works once the region is open).
+  ["farm", "mine", "fishing"].slice(0, perks.paths || 0).forEach(k => { fresh.world.unlocked[k] = true; });
+  ["center", "farm", "mine"].slice(0, perks.legacy || 0).forEach(k => {
+    const up = fresh.areas[k].upgrades; up.automation = Math.max(up.automation || 0, 1);
+  });
   window.GS = fresh;
+  // one-time "Ascension n complete" card on the next load
+  fresh.justAscended = { n: asc, ap: reward, speedFrom, speedTo: 1 / prestigeFactor() };
   window.SAVE.saveState();
   location.reload();
 }
@@ -201,10 +263,11 @@ function effectiveTimer(areaKey, tierIndex) {
 }
 
 // Delay between held auto-swings for a node, reduced 20% per harvestSpeed lvl.
+// Ascension speed applies too (floor 120ms — fixtures and swings alike).
 function harvestInterval(areaKey, node) {
   const base = (node && node.swingMs) || 350;
   const lvl = window.GS.areas[areaKey].upgrades.harvestSpeed || 0;
-  return base * Math.pow(0.8, lvl);
+  return Math.max(120, base * Math.pow(0.8, lvl) * prestigeFactor());
 }
 
 
@@ -993,6 +1056,7 @@ function addFuelItem(b, item) {
 // Burn `ms` from the back (oldest) items, popping spent ones so the next
 // one only starts once the current finishes.
 function burnFuel(b, ms) {
+  if (vowActive("coldhearth")) ms *= 2;   // Vow of the Cold Hearth
   const q = fuelQueue(b);
   while (ms > 0 && q.length) {
     const back = q[q.length - 1];
@@ -1525,6 +1589,21 @@ function dropFromHand(areaKey, x, y) {
     return { fed: first.item };
   }
   if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
+  // Built Ascension Gate: surplus talismans / star steel / dragon scales are
+  // laid as OFFERINGS (+1 AP each at ascension, capped). Anything else still
+  // drops on the ground as before.
+  if (b && b.built && D.BUILDINGS[b.type].gate) {
+    const off = gateOfferings(areaKey, b), items = D.GATE_OFFERINGS.items;
+    const first = window.GS.hand[0];
+    if (first && items.includes(first.item)) {
+      if (off.count >= off.cap) return null;   // full: don't waste it on the ground
+      handTake(first.item, 1);
+      b.offerings = off.count + 1;
+      return { fed: first.item };
+    }
+    if (off.count < off.cap)
+      for (const it of items) if (handCount(it) > 0) { handMoveToFront(it); return { reordered: it }; }
+  }
   if (b && !b.built) {
     const res = feedNeeds(buildingNeeds(b), b.paid);
     if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) {
@@ -1642,7 +1721,7 @@ function dragonRemaining() {
   if (!st) return {};
   const rem = {};
   for (const [item, qty] of Object.entries(st.needs)) {
-    const r = scaled(qty) - (window.GS.dragon.paid[item] || 0);
+    const r = scaled(qty) * (vowActive("restless") ? 2 : 1) - (window.GS.dragon.paid[item] || 0);   // Vow of the Restless Dragon
     if (r > 0) rem[item] = r;
   }
   return rem;
@@ -1730,7 +1809,7 @@ function gameTick() {
       if (now < (area.genTimers[gi] || 0)) return;
       // some generators speed up with an upgrade (e.g. quarry stone output)
       const upLvl = gen.upgrade ? (area.upgrades[gen.upgrade] || 0) : 0;
-      area.genTimers[gi] = now + gen.intervalMs * scale * Math.pow(0.8, upLvl) * Math.pow(0.9, perkLevel("bounty"));
+      area.genTimers[gi] = now + gen.intervalMs * scale * Math.pow(0.8, upLvl) * Math.pow(0.9, perkLevel("bounty")) * prestigeFactor();
       // the cap counts only items lying INSIDE this generator's field —
       // items mined/carried elsewhere don't block passive production
       const z = zoneRects(gen.zone)[0];
@@ -1752,7 +1831,7 @@ function gameTick() {
       const gcfg = b.built && D.BUILDINGS[b.type].gen;
       if (!gcfg) continue;
       if (now < (b.nextGen || 0)) continue;
-      b.nextGen = now + gcfg.intervalMs * scale;
+      b.nextGen = now + gcfg.intervalMs * scale * prestigeFactor();
       const bs = buildingSize(b.type);
       const bx = (b.col + bs.w / 2) * CELL, by = (b.row + bs.h / 2) * CELL;
       const R = 4 * CELL;
@@ -1931,15 +2010,22 @@ function gameTick() {
       const x0 = (z.c0 + 1) * CELL, x1 = z.c1 * CELL;
       const y0 = (z.r0 + 1) * CELL, y1 = z.r1 * CELL;
       const cap = ecfg.cap + (area.upgrades.enemyCap || 0);   // Spirit Call upgrade
-      // baited beasts don't count toward the regular spawn cap
-      if (area.enemies.filter(e => e.kind !== "boss").length < cap && now >= (area.enemyRespawnAt || 0)) {
+      // Per-slot respawn: every missing fox has its OWN clock (a kill queues
+      // one), so Spirit Call's extra slots add real throughput. A missing
+      // slot without a clock (fresh area / new Spirit Call level) fills now.
+      // Baited beasts don't count toward the regular spawn cap.
+      const missing = Math.max(0, cap - area.enemies.filter(e => e.kind !== "boss").length);
+      if (!Array.isArray(area.enemyRespawns)) area.enemyRespawns = [];
+      const rq = area.enemyRespawns;
+      if (rq.length > missing) { rq.sort((p, q) => p - q); rq.length = missing; }
+      while (rq.length < missing) rq.push(now);
+      for (let i = rq.length - 1; i >= 0; i--) {
+        if (rq[i] > now) continue;
+        rq.splice(i, 1);
         area.enemies.push({
           id: area.nextEnemyId++, x: rand(x0, x1), y: rand(y0, y1),
           hp: ecfg.hp, maxHp: ecfg.hp, tx: rand(x0, x1), ty: rand(y0, y1), hitAt: 0,
         });
-        // each replacement waits a full interval — advance the shared timer on
-        // spawn too (not only on kill) or multi-empty slots refill every tick
-        area.enemyRespawnAt = now + (ecfg.respawnMs || 5000) * scale;
         changed = true;
       }
       for (const en of area.enemies) {
@@ -1953,7 +2039,7 @@ function gameTick() {
     // The AWAKENED dragon sheds Dragon Scales beside itself now and then
     // (twice as often while a Dragon Shrine stands; small pile cap).
     if (areaKey === "center" && !D.DRAGON_STAGES[window.GS.dragon.stage]) {
-      const interval = 45000 * scale * (shrineBuilt() ? 0.5 : 1);
+      const interval = 45000 * scale * (shrineBuilt() ? 0.5 : 1) * prestigeFactor();
       if (!window.GS.dragonScaleAt) window.GS.dragonScaleAt = now + interval;
       else if (now >= window.GS.dragonScaleAt) {
         window.GS.dragonScaleAt = now + interval;
@@ -2008,7 +2094,9 @@ function damageEnemy(areaKey, en, dmg) {
   }
   if (en.kind !== "boss") {
     const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
-    area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
+    // this slot's own respawn clock (per-slot; see gameTick)
+    if (!Array.isArray(area.enemyRespawns)) area.enemyRespawns = [];
+    area.enemyRespawns.push(Date.now() + (ecfg.respawnMs || 5000) * scale * prestigeFactor());
     window.GS.stats.foxKills = (window.GS.stats.foxKills || 0) + 1;
   }
 }
@@ -2315,6 +2403,7 @@ window.ENGINE = {
   wispPos, endpointAccepts, endpointGive, smeltSpace,
   questProgress, claimQuest, buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
   perkLevel, perkDef, perkCost, buyPerk, ascendReward,
+  builtGate, gateOfferings, activeVows, vowActive, vowMult, vowMarks, nextPrestigeFactor, burnFuel,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,
