@@ -40,7 +40,7 @@ const PICKUP_R = G.cell * 2;   // gravity-field radius while holding left = 2 ce
 const C = {
   void: "#161b16", gridLine: "rgba(255,255,255,.05)",
   text: "#e6edf3", muted: "#94a3b8", accent: "#4ade80", accentDk: "#22a35a",
-  gold: "#fbbf24", danger: "#f87171", line: "#3c4651", panel: "#2b333c", panel2: "#37414d",
+  gold: "#fbbf24", amber: "#f59e0b", danger: "#f87171", line: "#3c4651", panel: "#2b333c", panel2: "#37414d",
   region: { center: "#25351f", farm: "#3a3318", mine: "#2c2c33", fishing: "#16323b", volcano: "#3a1c17", grove: "#1e3a2b", celestial: "#231d40" },
   zone: "rgba(74,222,128,.05)", zoneEdge: "rgba(74,222,128,.18)",
   frame: "rgba(74,222,128,.30)",
@@ -391,6 +391,7 @@ function requestGridPaint() {
   requestAnimationFrame(() => {
     drawQueued = false;
     drawWorld();
+    syncUnlockButtons();
     if (animActive()) requestGridPaint();
   });
 }
@@ -443,6 +444,13 @@ function animActive() {
         const d = Math.hypot(c.x - gi.x, c.y - gi.y);
         if (d > 22 && d <= R) return true;   // early-out on first in-ring item
       }
+    }
+    // the built Ascension Gate pulses while on screen
+    if (unlocked) for (const bd of window.GS.areas[key].buildings) {
+      if (!bd.built || !DD.BUILDINGS[bd.type].gate) continue;
+      const bs = E.buildingSize(bd.type);
+      const bx = bd.col * CELL + p.x, by = bd.row * CELL + p.y;
+      if (bx < r && bx + bs.w * CELL > l && by < b && by + bs.h * CELL > t) return true;
     }
     // the dragon's floating stage text needs repaints until it fades
     if (key === "center" && unlocked && window.GS.dragon.msgUntil > now) return true;
@@ -571,6 +579,7 @@ function drawWorldInner() {
   // then all item icons on the very top. A later-drawn region's background or
   // veil can never cover an earlier region's sprites this way.
   for (const v of visible) drawRegionGround(v.key, v.ox, v.oy, view, s, X, Y);
+  drawRadii(visible, s, X, Y);   // gather / stoke reach circles (under the sprites)
   for (const v of visible) if (!v.unlocked) {
     drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
     drawRegionVeil(v.ox, v.oy, s, X, Y);
@@ -578,6 +587,9 @@ function drawWorldInner() {
   for (const v of visible) if (v.unlocked) drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
   for (const v of visible) if (v.unlocked) drawRegionItems(v.key, v.ox, v.oy, view, s, X, Y);
   drawQuestRing(now, X, Y, s);   // the active quest's world target
+
+  // "Automation paused" marker at the top of each affected region
+  for (const v of visible) if (v.unlocked && window.GS.areas[v.key].autoPaused) drawAutoPaused(v.ox, v.oy, s, X, Y, vw);
 
   // link picking: rubber-band line from the chosen source to the cursor
   if (linkMode && linkMode.picking === "target" && linkMode.srcId && cursor.over &&
@@ -614,6 +626,71 @@ function drawWorldInner() {
   if (fxActive()) drawFX(now, X, Y, s);
 }
 
+// ---- reach circles: Gathering Stone (gather.radius) / Furnace Spirit (stoker.radius)
+// Translucent, drawn under the sprites. Shown for: the placement ghost, the
+// hovered building, and EVERY stone of the region while a lantern's link menu
+// is open (so the player can see what each stone will actually collect).
+function reachOf(cfg) {
+  return cfg.gather ? { r: cfg.gather.radius, rgb: "74,222,128" }
+    : cfg.stoker ? { r: cfg.stoker.radius, rgb: "251,146,60" } : null;
+}
+function hoverReachBuilding() {
+  if (!cursor.over || !cursor.region || !E.isAreaUnlocked(cursor.region)) return null;
+  const b = E.buildingAt(cursor.region, cursor.lrow, cursor.lcol);
+  return b && b.built && reachOf(DD.BUILDINGS[b.type]) ? b : null;
+}
+function drawRadiusCircle(cxPx, cyPx, reach, s, X, Y) {
+  ctx.beginPath();
+  ctx.arc(X(cxPx), Y(cyPx), reach.r * CELL * s, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${reach.rgb},.07)`; ctx.fill();
+  ctx.strokeStyle = `rgba(${reach.rgb},.5)`; ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 5]); ctx.stroke(); ctx.setLineDash([]);
+}
+function drawRadii(visible, s, X, Y) {
+  const hb = hoverReachBuilding();
+  for (const v of visible) {
+    if (!v.unlocked) continue;
+    const st = window.GS.areas[v.key];
+    const listAll = linkMode && linkMode.area === v.key;
+    for (const b of st.buildings) {
+      if (!b.built) continue;
+      const reach = reachOf(DD.BUILDINGS[b.type]);
+      if (!reach) continue;
+      if (!((listAll && DD.BUILDINGS[b.type].gather) || (hb === b))) continue;
+      const c = E.buildingCenterPx(b);
+      drawRadiusCircle(v.ox + c.x, v.oy + c.y, reach, s, X, Y);
+    }
+  }
+  // placement ghost of a stone / spirit
+  const pl = window.GS.build.placing;
+  if (pl && cursor.over && cursor.region && E.isAreaUnlocked(cursor.region)) {
+    const reach = reachOf(DD.BUILDINGS[pl]);
+    if (reach) {
+      const B = E.buildingSize(pl), p = regionPx(cursor.region);
+      drawRadiusCircle(p.x + (cursor.lcol + B.w / 2) * CELL, p.y + (cursor.lrow + B.h / 2) * CELL, reach, s, X, Y);
+    }
+  }
+}
+
+// Amber pill at the top of a region whose automation is paused (littered
+// ground): centred on the visible span of the region, clamped into the view.
+function drawAutoPaused(ox, oy, s, X, Y, vw) {
+  const l = Math.max(X(ox), 0), r = Math.min(X(ox + PLAY_W), vw);
+  if (r - l < 40) return;
+  const txt = "Automation paused \u2014 clear the ground";
+  const px = MIN_LABEL_PX + 1;
+  ctx.font = `800 ${px}px ${TEXT_FONT}`;
+  const tw = ctx.measureText(txt).width, w = tw + 18, h = px + 10;
+  const cx = clamp((l + r) / 2, w / 2 + 4, Math.max(w / 2 + 4, vw - w / 2 - 4));
+  const y = Math.max(Y(oy), 0) + 10;
+  ctx.fillStyle = "rgba(60,40,8,.92)"; ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(cx - w / 2, y, w, h, 8); else ctx.rect(cx - w / 2, y, w, h);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fde68a"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(txt, cx, y + h / 2 + 0.5);
+}
+
 // LAYER 1 — flat ground: region tint, zone tints, frame.
 function drawRegionGround(key, ox, oy, view, s, X, Y) {
   const cfg = DD.AREAS[key];
@@ -648,13 +725,87 @@ function drawRegionGround(key, ox, oy, view, s, X, Y) {
   ctx.strokeRect(X(ox), Y(oy), PLAY_W * s, PLAY_W * s);
 }
 
+// Readability floor: building labels / stock numbers never drop below 10 CSS
+// px at any zoom (viewScale `s` maps logical world px -> CSS px).
+const MIN_LABEL_PX = 10;
+function lblPx(size, s) { return Math.max(size * s, MIN_LABEL_PX); }
+
+// Greedy word-wrap to <= maxChars per line, <= maxLines lines ("…" if cut).
+function wrapLines(text, maxChars, maxLines) {
+  const lines = [];
+  let cur = "";
+  for (const w of String(text).split(/\s+/)) {
+    if (!w) continue;
+    const word = w.length > maxChars ? w.slice(0, maxChars - 1) + "…" : w;
+    if (!cur) cur = word;
+    else if ((cur + " " + word).length <= maxChars) cur += " " + word;
+    else { lines.push(cur); cur = word; }
+  }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    const last = lines[maxLines - 1];
+    lines[maxLines - 1] = (last.length >= maxChars ? last.slice(0, maxChars - 1) : last) + "…";
+  }
+  return lines;
+}
+// The dragon's world-space murmur: centred on cx, its LAST line ends at
+// baseY (screen px); kept inside the viewport horizontally.
+function drawDragonSpeech(msg, cx, baseY, s) {
+  const px = lblPx(14, s), lh = px * 1.2;
+  const lines = wrapLines(msg, 42, 3);
+  ctx.font = `800 ${px}px ${TEXT_FONT}`;
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  const vw = renderedW;
+  let wMax = 0;
+  for (const l of lines) wMax = Math.max(wMax, ctx.measureText(l).width);
+  const x = clamp(cx, wMax / 2 + 6, Math.max(wMax / 2 + 6, vw - wMax / 2 - 6));
+  ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3;
+  ctx.fillStyle = "#e9d5ff";
+  lines.forEach((l, i) => ctx.fillText(l, x, baseY - (lines.length - 1 - i) * lh));
+  ctx.shadowBlur = 0;
+}
+
 // A small corner count next to an icon (dark-shadowed for legibility).
 function drawCornerCount(px, py, text, color, align, s) {
-  ctx.font = `800 ${9.5 * s}px ${TEXT_FONT}`;
+  ctx.font = `800 ${lblPx(9.5, s)}px ${TEXT_FONT}`;
   ctx.textAlign = align; ctx.textBaseline = "middle";
   ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3 * s;
   ctx.fillStyle = color; ctx.fillText(text, px, py);
   ctx.shadowBlur = 0;
+}
+
+// One-line building status under the converter/pavilion result icon, from
+// ENGINE.buildingStatus (guarded — absent = nothing drawn): starved -> red
+// "Needs <icon>", nofuel -> red, full -> amber, working -> green + crafts/min.
+function statusFor(key, b) {
+  const st = E.buildingStatus ? E.buildingStatus(key, b) : null;
+  if (st) return st;
+  // fallback (no engine status): a fed-out pavilion still says what it needs
+  const r = DD.BUILDINGS[b.type].roster;
+  if (r && (b.disciples || 0) > 0 && (b.buns || 0) <= 0) return { state: "starved", item: r.food };
+  return null;
+}
+function drawStatusLine(key, b, cx, cy, s) {
+  const st = statusFor(key, b);
+  if (!st || st.state === "idle") return;
+  let text, color, icon = null;
+  if (st.state === "starved") { text = "Needs"; color = C.danger; icon = st.item || null; }
+  else if (st.state === "nofuel") { text = "No fuel"; color = C.danger; }
+  else if (st.state === "full") { text = "Queue full"; color = C.amber; }
+  else if (st.state === "working") {
+    const n = E.craftRate ? Math.round(E.craftRate(b)) : 0;
+    text = n > 0 ? `Working \u00b7 ${n}/min` : "Working"; color = C.accent;
+  } else return;
+  const px = lblPx(9, s), ipx = Math.round(px * 1.35);
+  ctx.font = `800 ${px}px ${TEXT_FONT}`;
+  ctx.textBaseline = "middle";
+  const tw = ctx.measureText(text).width, total = tw + (icon ? ipx + 3 : 0);
+  ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3;
+  ctx.fillStyle = color; ctx.textAlign = "left";
+  ctx.fillText(text, cx - total / 2, cy);
+  ctx.shadowBlur = 0;
+  if (icon) drawItemIcon(icon, cx - total / 2 + tw + 3 + ipx / 2, cy, ipx);
 }
 
 // Converter face, centred inside a content rect (world px: fx0,fy0,fw,fh —
@@ -662,7 +813,7 @@ function drawCornerCount(px, py, text, color, align, s) {
 // never shifts the centre). Rows: input icons (top-left = in stock,
 // bottom-right = needed per craft), the result icon (bottom-right = batches
 // the current stock can still make, fuel ignored), a 1-cell progress bar.
-function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
+function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now, key) {
   const rec = E.recipeOf(b);
   if (!rec) return;
   const cxW = fx0 + fw / 2;
@@ -690,11 +841,12 @@ function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
     drawCornerCount(sx + ipx / 2, iy + ipx / 2, String(need), C.gold, "right", s);
   });
   // result icon + predicted crafts
-  const rpx = 22 * s, rx = X(cxW), ry = Y(fy0 + fh * 0.60);
+  const rpx = 22 * s, rx = X(cxW), ry = Y(fy0 + fh * 0.55);
   drawItemIcon(rec.output, rx, ry, rpx);
   drawCornerCount(rx + rpx / 2, ry + rpx / 2, String(E.craftsPossible(b)), C.gold, "right", s);
+  drawStatusLine(key, b, X(cxW), Y(fy0 + fh * 0.755), s);
   // 1-cell-wide progress bar, centred
-  const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(fy0 + fh * 0.87);
+  const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(fy0 + fh * 0.9);
   // Denominator MUST match the real batch duration (engine canStartBatch):
   // timeMs * testScale * prestigeFactor * (Ember blessing on a burner ? 0.5).
   let dur = rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1) * E.prestigeFactor();
@@ -740,7 +892,7 @@ function drawFuelRack(b, fx0, fy0, fw, fh, s, X, Y) {
     }
   }
   if (E.fuelTotal(b) <= 0) {
-    ctx.fillStyle = C.danger; ctx.font = `800 ${10 * s}px ${TEXT_FONT}`;
+    ctx.fillStyle = C.danger; ctx.font = `800 ${lblPx(10, s)}px ${TEXT_FONT}`;
     ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
     ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = 3 * s;
     ctx.fillText("No fuel", X(fx0 + fw / 2), Y(fy0) - 4 * s);
@@ -812,7 +964,7 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.fillStyle = C.gold;
         drawNeedsLine(Object.entries(E.jobRemaining(job)), cxp, Y(by + bh * 0.86), 20 * s);
       } else {
-        ctx.fillStyle = C.muted; ctx.font = `700 ${16 * s}px ${TEXT_FONT}`;
+        ctx.fillStyle = C.muted; ctx.font = `700 ${lblPx(16, s)}px ${TEXT_FONT}`;
         ctx.textBaseline = "middle"; ctx.textAlign = "center";
         ctx.fillText("Select an upgrade", cxp, Y(by + bh * 0.86));
       }
@@ -826,39 +978,64 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.fillText(awake ? "Awakened Dragon" : bCfg.name, cxp, Y(by + bh * 0.64));
       if (st) {
         ctx.fillStyle = C.gold;
-        drawNeedsLine(Object.entries(E.dragonRemaining()), cxp, Y(by + bh * 0.84), 15 * s, "Feed:");
+        drawNeedsLine(Object.entries(E.dragonRemaining()), cxp, Y(by + bh * 0.84), lblPx(15, s), "Feed:");
       } else {
-        ctx.fillStyle = C.muted; ctx.font = `700 ${13 * s}px ${TEXT_FONT}`;
+        ctx.fillStyle = C.muted; ctx.font = `700 ${lblPx(13, s)}px ${TEXT_FONT}`;
         ctx.fillText("watches over the grounds", cxp, Y(by + bh * 0.84));
       }
-      // stage-up murmur floats above the dragon for a few seconds
+      // stage-up murmur floats above the dragon for a few seconds — wrapped to
+      // <=42 chars x 3 lines, and hidden while the dragon's dialog modal is up
       const dr = window.GS.dragon;
-      if (dr.msg && dr.msgUntil > Date.now()) {
-        ctx.fillStyle = "#e9d5ff"; ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
-        ctx.fillText(dr.msg, cxp, Y(by - 12));
-      }
+      if (dr.msg && dr.msgUntil > Date.now() && !dr.dialog) drawDragonSpeech(dr.msg, cxp, Y(by - 12), s);
     } else if (b.built && (bCfg.gather || bCfg.lantern || bCfg.seal || bCfg.stoker)) {
       // compact 1x1 wisp-logistics formations: icon + a tiny status badge
       ctx.fillStyle = C.text;
       ctx.font = `${20 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
       ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.5));
       if (bCfg.seal && b.item) drawItemIcon(b.item, cxp, Y(by - 8), 13 * s);
-      ctx.fillStyle = C.gold; ctx.font = `800 ${9 * s}px ${TEXT_FONT}`;
-      const badge = (bCfg.gather || bCfg.stoker) ? String(E.gatherTotal(b))
-        : bCfg.seal ? String(b.qty || 0)
+      const cap = bCfg.gather ? bCfg.gather.cap : bCfg.stoker ? bCfg.stoker.cap : bCfg.seal ? (bCfg.seal.cap || 5) : 0;
+      const qty = (bCfg.gather || bCfg.stoker) ? E.gatherTotal(b) : bCfg.seal ? (b.qty || 0) : 0;
+      const bpx = lblPx(9, s), badgeY = Y(by + bh) + 8 * s;
+      ctx.fillStyle = cap && qty >= cap ? C.danger : C.gold;
+      ctx.font = `800 ${bpx}px ${TEXT_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+      // stones/spirits read n/cap (red at cap); a seal shows its count (red when full)
+      const badge = (bCfg.gather || bCfg.stoker) ? `${qty}/${cap}`
+        : bCfg.seal ? String(qty)
         : `${(b.links || []).length}⛓`;
-      ctx.fillText(badge, cxp, Y(by + bh + 8));
+      ctx.fillText(badge, cxp, badgeY);
+      // a linked stone only collects what its targets use: show those items
+      const acc = bCfg.gather && E.stoneAccepts ? E.stoneAccepts(key, b) : null;
+      if (acc && acc.length) {
+        const ip = Math.round(bpx * 1.2), shown = acc.slice(0, 4);
+        const x0 = cxp - (shown.length - 1) * (ip + 1) / 2, iy = badgeY + bpx * 0.5 + ip * 0.5 + 1;
+        shown.forEach((it, i) => drawItemIcon(it, x0 + i * (ip + 1), iy, ip));
+      }
+    } else if (b.built && bCfg.gate) {
+      // the BUILT Ascension Gate: gold border + soft pulse + click-to-ascend
+      // subtitle, like the awakened dragon's treatment
+      const pulse = 0.5 + 0.5 * Math.sin(now / 500);
+      ctx.strokeStyle = C.gold; ctx.lineWidth = Math.max(2, (2.5 + pulse) * s / 0.7);
+      ctx.shadowColor = `rgba(251,191,36,${0.35 + 0.4 * pulse})`; ctx.shadowBlur = (6 + 8 * pulse) * s;
+      ctx.strokeRect(X(bx), Y(by), bw * s, bh * s);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = C.text; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+      ctx.font = `${56 * s}px ${EMOJI_FONT}`;
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.36));
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(16, s)}px ${TEXT_FONT}`;
+      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.64));
+      ctx.fillStyle = "#fde68a"; ctx.font = `700 ${lblPx(12, s)}px ${TEXT_FONT}`;
+      ctx.fillText(`Click to ascend \u00b7 +${E.ascendReward ? E.ascendReward() : 1} \u262f`, cxp, Y(by + bh * 0.84));
     } else if (b.built && bCfg.recipes) {
       // converter face (centred): input icons (have/need) + result icon (+
       // crafts the stock can still make) + a 1-cell progress bar. Burners
       // fill their whole 3x5 footprint with the crafting face and hang a
       // 3x2 fuel rack outside the footprint on the LEFT (purely visual).
       if (bCfg.fuel) {
-        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
+        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now, key);
         // fuel rack outside the footprint on the LEFT, flush with the TOP edge
         drawFuelRack(b, bx - 3 * CELL, by, 3 * CELL, 2 * CELL, s, X, Y);
       } else {
-        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
+        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now, key);
       }
     } else if (b.built && b.type === "storehouse") {
       if (b.item) drawItemIcon(b.item, cxp, Y(by + bh * 0.4), 26 * s);
@@ -867,16 +1044,18 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
         ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.4));
       }
-      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`; ctx.textBaseline = "middle";
+      ctx.fillStyle = b.item && b.qty >= (bCfg.cap || Infinity) ? C.danger : C.text;   // full -> red
+      ctx.font = `700 ${lblPx(10, s)}px ${TEXT_FONT}`; ctx.textBaseline = "middle";
       ctx.fillText(b.item ? `${E.itemName(b.item)} ×${b.qty}` : "empty", cxp, Y(by + bh * 0.78));
     } else if (b.built && bCfg.roster) {
       // pavilion: icon + disciple count, and a thin bun-stock bar
       ctx.fillStyle = C.text;
       ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
-      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.34));
-      ctx.fillStyle = C.text; ctx.font = `700 ${11 * s}px ${TEXT_FONT}`;
-      ctx.fillText(`👤 ${b.disciples || 0}/${E.rosterCap(b)}`, cxp, Y(by + bh * 0.62));
-      const fw = bw * 0.7 * s, fx0 = X(bx + bw * 0.15), fy0 = Y(by + bh * 0.8);
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.28));
+      ctx.fillStyle = C.text; ctx.font = `700 ${lblPx(11, s)}px ${TEXT_FONT}`;
+      ctx.fillText(`👤 ${b.disciples || 0}/${E.rosterCap(b)}`, cxp, Y(by + bh * 0.5));
+      drawStatusLine(key, b, cxp, Y(by + bh * 0.67), s);
+      const fw = bw * 0.7 * s, fx0 = X(bx + bw * 0.15), fy0 = Y(by + bh * 0.84);
       ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.fillRect(fx0, fy0, fw, 4 * s);
       ctx.fillStyle = (b.buns || 0) > 0 ? C.accent : C.danger;
       ctx.fillRect(fx0, fy0, fw * clamp((b.buns || 0) / bCfg.roster.foodCap, 0, 1), 4 * s);
@@ -886,11 +1065,11 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.globalAlpha = b.built ? 1 : 0.7;
       ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.38));
       ctx.globalAlpha = 1;
-      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.text; ctx.font = `700 ${lblPx(10, s)}px ${TEXT_FONT}`;
       ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.66));
       if (!b.built) {
         ctx.fillStyle = C.gold;
-        drawNeedsLine(Object.entries(E.buildingNeeds(b)), cxp, Y(by + bh * 0.86), 10 * s);
+        drawNeedsLine(Object.entries(E.buildingNeeds(b)), cxp, Y(by + bh * 0.86), lblPx(10, s));
       }
     }
   }
@@ -975,18 +1154,24 @@ function drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlock
     // overlays
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     if (debugShow && node.interaction === "quarry") {
-      ctx.fillStyle = C.gold; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(11, s)}px ${TEXT_FONT}`;
       ctx.fillText(`${node.clicks || 0}/${node.clicksPerDrop || 5}`, X(bx), Y(by - w - 6));
     } else if (debugShow && (node.interaction === "chop" || node.interaction === "break") && node.hitsLeft > 0) {
-      ctx.fillStyle = C.gold; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(11, s)}px ${TEXT_FONT}`;
       ctx.fillText(`${node.hitsLeft}`, X(bx), Y(by - w - 6));
     }
-    if (unlocked && node.interaction === "surface" && node.surfaceUntil) {
-      ctx.fillStyle = C.danger; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
-      ctx.fillText(`${Math.max(0, (node.surfaceUntil - now) / 1000).toFixed(1)}s`, X(bx), Y(by + 10));
+    // fishing countdown: only in the last second, or while hovered (a field of
+    // surfacing fish otherwise reads as a string of "2.4s 1.9s…")
+    if (unlocked && node.interaction === "surface" && node.surfaceUntil > now) {
+      const left = node.surfaceUntil - now;
+      const hov = cursor.over && cursor.region === key && nodeAtCell(key, cursor.lrow, cursor.lcol) === node;
+      if (left < 1000 || hov) {
+        ctx.fillStyle = C.danger; ctx.font = `800 ${lblPx(11, s)}px ${TEXT_FONT}`;
+        ctx.fillText(`${(left / 1000).toFixed(1)}s`, X(bx), Y(by + 10));
+      }
     }
     if (node.autoFlash > now) {
-      ctx.fillStyle = C.gold; ctx.font = `800 ${9 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(9, s)}px ${TEXT_FONT}`;
       ctx.fillText("AUTO", X(bx + w / 2), Y(by - w - 2));
     }
   }
@@ -1027,18 +1212,42 @@ function drawRegionVeil(ox, oy, s, X, Y) {
 }
 
 // Edge buttons for LOCKED neighbour regions (DOM overlay — event-driven UI).
-// Only regions 4-adjacent (region grid) to an UNLOCKED one get a button, so
-// the frontier grows as you expand (and side-anchored buttons never stack).
+// Only locked regions that BORDER the region under the camera centre get a
+// button, on the viewport side matching their true direction (region-grid
+// rx/ry delta), so a button never points the wrong way or hides distant stuff.
 function unlockFrontier(key) {
   const R = DD.WORLD.regions, r = R[key];
   return !!r && Object.keys(R).some(k => E.isAreaUnlocked(k) &&
     Math.abs(R[k].rx - r.rx) + Math.abs(R[k].ry - r.ry) === 1);
 }
+// Region the camera is looking at: under the centre, else the nearest one
+// (the centre can sit in a void gap while zoomed out).
+function cameraRegion() {
+  const k = regionAtCamCentre();
+  if (k) return k;
+  const cx = cam.x + VIEW_W / 2, cy = cam.y + VIEW_H / 2;
+  let best = null, bd = Infinity;
+  for (const key of Object.keys(DD.WORLD.regions)) {
+    const p = regionPx(key), d = Math.hypot(p.x + PLAY_W / 2 - cx, p.y + PLAY_W / 2 - cy);
+    if (d < bd) { bd = d; best = key; }
+  }
+  return best;
+}
+let unlockCentreKey = null;   // camera region the buttons were last built for
+function sideOf(from, to) {   // viewport side of `to` as seen from `from`
+  const R = DD.WORLD.regions, dx = R[to].rx - R[from].rx, dy = R[to].ry - R[from].ry;
+  if (Math.abs(dx) + Math.abs(dy) !== 1) return null;
+  return dx < 0 ? "left" : dx > 0 ? "right" : dy < 0 ? "up" : "down";
+}
 function renderUnlockButtons() {
   const wrap = $("#arrows");
   wrap.innerHTML = "";
-  for (const [key, side] of Object.entries(DD.WORLD.unlockSide)) {
+  unlockCentreKey = cameraRegion();
+  if (!unlockCentreKey) return;
+  for (const key of Object.keys(DD.WORLD.regions)) {
     if (E.isAreaUnlocked(key) || !unlockFrontier(key)) continue;
+    const side = sideOf(unlockCentreKey, key);
+    if (!side) continue;   // doesn't border the region we're looking at
     const cost = E.areaUnlockCost(key);
     const label = Object.entries(cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
     const ok = E.canAfford(cost);
@@ -1049,6 +1258,10 @@ function renderUnlockButtons() {
     btn.onclick = () => { if (E.unlockArea(key)) { clampCam(); render(); } else if (window.AUDIO) window.AUDIO.play("error"); };
     wrap.appendChild(btn);
   }
+}
+// Camera moved to another region: rebuild the buttons for its borders.
+function syncUnlockButtons() {
+  if (cameraRegion() !== unlockCentreKey) renderUnlockButtons();
 }
 // Tick refresh: re-evaluate each unlock button's affordability in place.
 function refreshUnlockAfford() {
@@ -1062,7 +1275,8 @@ function refreshUnlockAfford() {
 function renderHandCursor() {
   const hc = $("#hand-cursor");
   const hand = window.GS.hand;
-  if (!hand.length) { hc.classList.add("hidden"); return; }
+  // hidden while ANY modal is up: it would draw over dialog text / the tree
+  if (!hand.length || document.querySelector(".modal:not(.hidden)")) { hc.classList.add("hidden"); return; }
   hc.classList.remove("hidden");
   hc.style.left = cursor.cx + "px";
   hc.style.top = cursor.cy + "px";
@@ -1109,6 +1323,7 @@ function renderBuildMenu() {
   buildCatSig = sig; buildMenuWasOpen = open;
   syncBuildDot();
   bar.classList.toggle("hidden", !open);
+  updateHoverName();
   if (!open) return;
   bar.innerHTML = "";
   const targets = buildTargets();
@@ -1482,6 +1697,7 @@ function renderRoster() {
   const cfg = b && DD.BUILDINGS[b.type].roster;
   if (!b || !b.built || !cfg) { closeRoster(); return; }
   bar.classList.remove("hidden");
+  updateHoverName();
   const cap = E.rosterCap(b);
   const haveRobe = E.handCount(cfg.recruit) > 0;
   const full = (b.disciples || 0) >= cap;
@@ -1503,10 +1719,43 @@ function renderRoster() {
 // Left-click a lantern -> panel lists its links (removable) and "Add link"
 // starts a two-click pick: SOURCE building on the map, then TARGET.
 let linkMode = null;   // { area, id, picking: null|"source"|"target", srcId }
+// A Gathering Stone reads as its fullest buffer item + count (the count span
+// is refreshed in place, see refreshLinkCounts); every other building by name.
+function topBuffer(b) {
+  let top = null;
+  for (const x of b.inv || []) if (x.qty > 0 && (!top || x.qty > top.qty)) top = x;
+  return top;
+}
+function stoneCountText(b) {
+  const top = topBuffer(b);
+  return top ? `×${E.gatherTotal(b)}` : "(empty)";
+}
 function bLabel(b) {
   const cfg = DD.BUILDINGS[b.type];
+  if (cfg.gather) {
+    const top = topBuffer(b);
+    return `${cfg.icon} ${top ? iconHTML(top.item) : ""} <span class="lr-cnt" data-bid="${b.id}">${stoneCountText(b)}</span>`;
+  }
   const typed = (cfg.seal || b.type === "storehouse") && b.item ? ` ${iconHTML(b.item)}` : "";
   return `${cfg.icon} ${cfg.name}${typed}`;
+}
+// Live-update stone counts in an open link menu without rebuilding its buttons.
+function refreshLinkCounts() {
+  if (!linkMode) return;
+  for (const sp of $("#link-menu").querySelectorAll(".lr-cnt[data-bid]")) {
+    const b = E.buildingById(linkMode.area, Number(sp.dataset.bid));
+    if (b) sp.textContent = stoneCountText(b);
+  }
+}
+// Status dot colour for a link, from the engine's transient lk._stat
+// ({ sentAt, fail: 'empty'|'refused'|null }): red = target refused, amber =
+// source empty, green = sent within 3 s, grey = idle.
+function linkDot(lk) {
+  const st = lk._stat;
+  if (st && st.fail === "refused") return ["red", "Target refused the item"];
+  if (st && st.fail === "empty") return ["amber", "Source is empty"];
+  if (st && st.sentAt && Date.now() - st.sentAt < 3000) return ["green", "Sent an item just now"];
+  return ["grey", "Idle"];
 }
 function openLinkMenu(areaKey, b) {
   closeRecipeMenu(); closeRoster();   // one building panel at a time
@@ -1525,18 +1774,9 @@ function renderLinkMenu() {
   const lan = E.buildingById(linkMode.area, linkMode.id);
   if (!lan || !lan.built) { closeLinkMenu(); return; }
   bar.classList.remove("hidden");
+  updateHoverName();
   bar.innerHTML = `<div class="rm-title">🏮 Wisp Lantern — links run in order, one per beat</div>`;
-  (lan.links || []).forEach((l, i) => {
-    const f = E.buildingById(linkMode.area, l.from), t = E.buildingById(linkMode.area, l.to);
-    const row = el("div", "link-row",
-      `<span class="lr-n">${i + 1}.</span> ${f ? bLabel(f) : "?"} <span class="lr-arr">→</span> ${t ? bLabel(t) : "?"}`);
-    const x = el("button", "lr-x", "✕");
-    x.title = "Remove this link";
-    x.setAttribute("aria-label", "Remove this link");
-    x.onclick = () => { E.removeLink(linkMode.area, linkMode.id, i); renderLinkMenu(); render(); };
-    row.appendChild(x);
-    bar.appendChild(row);
-  });
+  // "Add link" (or the pick prompt) comes FIRST so wrapping/many rows can't push it off-screen
   if (linkMode.picking) {
     const src = linkMode.srcId ? E.buildingById(linkMode.area, linkMode.srcId) : null;
     bar.appendChild(el("div", "rm-hint", linkMode.picking === "source"
@@ -1544,9 +1784,23 @@ function renderLinkMenu() {
       : `${src ? bLabel(src) : "?"} → click the TARGET building… Esc cancels`));
   } else {
     const add = el("button", "build-card", `<span class="bc-name">➕ Add link</span>`);
-    add.onclick = () => { linkMode.picking = "source"; linkMode.srcId = null; renderLinkMenu(); };
+    add.onclick = () => { linkMode.picking = "source"; linkMode.srcId = null; linkMode.hint = false; renderLinkMenu(); };
     bar.appendChild(add);
   }
+  if (linkMode.hint) bar.appendChild(el("div", "rm-warn", "Wisps can't cross the void between regions"));
+  (lan.links || []).forEach((l, i) => {
+    const f = E.buildingById(linkMode.area, l.from), t = E.buildingById(linkMode.area, l.to);
+    const [dot, why] = linkDot(l);
+    const row = el("div", "link-row",
+      `<span class="lr-dot d-${dot}" title="${why}"></span><span class="lr-n">${i + 1}.</span> ${f ? bLabel(f) : "?"} <span class="lr-arr">→</span> ${t ? bLabel(t) : "?"}`);
+    row.querySelector(".lr-dot").setAttribute("aria-label", why);
+    const x = el("button", "lr-x", "✕");
+    x.title = "Remove this link";
+    x.setAttribute("aria-label", "Remove this link");
+    x.onclick = () => { E.removeLink(linkMode.area, linkMode.id, i); renderLinkMenu(); render(); };
+    row.appendChild(x);
+    bar.appendChild(row);
+  });
 }
 
 // ---- tutorial quest panel ------------------------------------
@@ -1784,13 +2038,13 @@ function openHelp() {
   const u = window.GS.world.unlocked;
   const S = [];
   S.push(["🕹️ Controls",
-    "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Esc cancels/closes."]);
+    "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Q / E rotate the stacks in your hand, Esc cancels/closes."]);
   S.push(["✋ Gathering & the hand",
-    "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown bottom-right). RIGHT-click drops items / feeds buildings; the front stack feeds first."]);
+    "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown bottom-right); if you START the hold on an item, only that item type is vacuumed. RIGHT-click drops items / feeds buildings; the front stack feeds first (Q / E change which stack is in front). Holding right-click keeps feeding but stops at the target: it never spills onto the ground once the building is full."]);
   S.push(["🏗️ Buildings",
-    "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input."]);
-  S.push(["🔥 Fuel",
-    "Burners (Kiln, Forge…) show an orange fuel gauge — feed them wood, bamboo or charcoal (charcoal burns 4× longer, from the Charcoal Pit). A Furnace Spirit 🕯️ stokes every burner within 3 cells from its own stash."]);
+    "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input, and show what they are doing under the result icon: Needs an input, No fuel, Queue full, or Working with crafts per minute."]);
+  S.push(["🔥 Fuel racks",
+    "Every burner (Kiln, Forge, Cauldron…) has one FUEL RACK on its LEFT: right-click wood, bamboo, charcoal or firestone into it (charcoal burns 4× longer than wood, firestone 12×). Fuel is separate from ingredients — recipes never consume it, only the burn does. A Furnace Spirit 🕯️ stokes every burner within its circle (3 cells) from its own stash; hover it to see the range."]);
   S.push(["🏛️ Altar upgrades",
     "Click the Altar to open the upgrade tree. Select a node, then right-click-feed the Altar the cost shown on it. Switching refunds what you fed."]);
   S.push(["🐉 The Sleeping Dragon",
@@ -1800,13 +2054,11 @@ function openHelp() {
   S.push(["🫕 Dragon pills",
     "The Pill Furnace refines Qi Elixirs into four pills. Right-click one onto the dragon and it exhales a timed blessing (60s base, longer with Dragon Affinity): Ember = burners 2×, Verdant = regrow 2×, Swiftwind = wisps 2×, Stoneheart = double mining drops. A new pill replaces the active one."]);
   S.push(["🏮 Wisp network",
-    "Gathering Stones 🧿 vacuum ground items. Wisp Lanterns ferry them: click a lantern to edit its links (source → target, served in order, one per beat). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw."]);
+    "Gathering Stones 🧿 vacuum ground items inside their circle (hover one, or open a lantern's link menu, to see it; it holds 20 and shows n/cap). Wisp Lanterns ferry items: click a lantern to edit its links (Add link → source → target, served in order, one per beat; a dot per link shows sent / source empty / target refused / idle). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw. Wisps cannot cross the void between regions: links stay within one region."]);
   S.push(["🧘 Disciples",
     "Build a Meditation Pavilion, then click it and Recruit disciples (each costs a Robe 🥋 from the Loom). Feed the pavilion Spirit Buns 🥟 (Mill) or Spirit Wine 🍶 (Brewery, worth 3×) by hand or wisp — while fed, each disciple cultivates Spirit Essence ✨. Disciple Mastery in the upgrade tree raises the cap."]);
-  S.push(["🔥 Burner fuel racks",
-    "Every burner has a FUEL RACK on its LEFT — feed coal or wood there (right-click) and it keeps the fire lit. Fuel is separate from ingredients: recipes never consume the fuel you rack, only the burn gauge does."]);
   if (dr >= 1) S.push(["🔥 Forge & smelting",
-    "The dragon taught you the Forge: feed it iron ore + wood (wisps or hand) and it smelts Iron Bars from its stock automatically."]);
+    "The dragon taught you the Forge: feed it iron ore (wisps or hand) and it smelts Iron Bars automatically. Wood, charcoal and firestone are its FUEL — they go on the rack, not into the recipe."]);
   if (u.volcano) S.push(["🌋 Volcano",
     "A molten region yielding Obsidian and Firestone. Unlock its border by paying Iron Bars — the deep heat rewards those who have already mastered smelting."]);
   if (u.grove) S.push(["🎋 Spirit Grove",
@@ -1817,15 +2069,20 @@ function openHelp() {
     "Grows Spirit Herbs around itself on land — the cultivation herb."]);
   if (dr >= 4) S.push(["🐲 The Awakened Dragon",
     "It watches over the grounds and sheds Dragon Scales 🔶 beside itself (faster with a Dragon Shrine, which also lengthens blessings)."]);
+  S.push(["🛠️ Troubleshooting logistics",
+    "<b>Stone full</b> (red n/cap): its buffer is clogged, often by byproducts. Link the stone to targets and it only collects what those targets use, so strays stay on the ground. " +
+    "<b>Low fuel</b>: a burner reading No fuel needs items on its left rack — or a Furnace Spirit in range with a stocked stash. " +
+    "<b>Nothing moves</b>: check the link dot (amber = source empty, red = target refused/full) and that both ends sit in the SAME region — wisps can't cross the void. " +
+    "<b>Littered ground</b>: when a region's floor is piled with items, automation pauses there (a marker shows at its top) until you clear the ground."]);
   if (dr >= 4) S.push(["⛩️ Ascension",
-    "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate. Completing it offers ASCENSION: reset the grounds, keep +8% permanent global speed per ascension (☯ in the bottom bar)."]);
+    "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate — the built gate glows gold; click it to ascend. Ascending resets the grounds and grants Ascension Points (AP: one per region unlocked, plus gate offerings) and +20% world speed per ascension (it adds up; ☯ in the bottom bar)."]);
   if ((window.GS.ascensions || 0) > 0 || (window.GS.ascendPoints || 0) > 0)
     S.push(["☯ Ascension Shrine",
-      "Each ascension grants Ascension Points. Open the Shrine (the ☯ button in the bottom bar) to spend them on permanent perks that persist through every future reset."]);
+      "Open the Shrine (the ☯ button in the bottom bar) to spend AP on permanent perks, grouped by Pace, Economy, Combat, Meta and Legacy — they persist through every future reset. After your first ascension you can also take Vows: optional restrictions for a run that pay out extra when you ascend."]);
   if (u.farm || u.mine || u.fishing) S.push(["🗺️ Regions",
-    "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron & jade; Fishing: fish, algae & spring water). Unlock borders with wood."]);
+    "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron ore; Fishing: fish, algae & spring water). Jade shards drop from the Center quarry rock and Mine jade veins. Unlock buttons appear on the side of the screen where the new region lies, only for regions bordering the one you're viewing."]);
   else S.push(["🗺️ Regions",
-    "Locked regions wait beyond the borders — gather wood and pay at a glowing 🔓 border button to expand."]);
+    "Locked regions wait beyond the borders — gather wood and pay at a glowing 🔓 button on the edge facing a region to expand."]);
   S.push(["📊 Stats",
     "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, ascensions and more."]);
 
@@ -2229,6 +2486,7 @@ function renderPlay() {
   // content changed (a 50ms rebuild would swap buttons mid-click)
   const ps = panelSig();
   if (ps !== lastPanelSig) { lastPanelSig = ps; if (rosterFor) renderRoster(); if (linkMode) renderLinkMenu(); }
+  else if (linkMode) refreshLinkCounts();
   maybeShowEnding();
 }
 let lastPanelSig = "";
@@ -2239,13 +2497,26 @@ function panelSig() {
     s += b && cfg ? `r${b.id}|${b.built}|${b.disciples || 0}|${b.buns || 0}|${E.rosterCap(b)}|${E.handCount(cfg.recruit) > 0}` : "r-";
   }
   if (linkMode) {
-    const A = linkMode.area, lan = E.buildingById(A, linkMode.id), it = id => { const x = E.buildingById(A, id); return x ? x.type + (x.item || "") : "?"; };
-    s += lan ? `l${lan.id}|${lan.built}|${linkMode.picking}|${linkMode.srcId}|` +
-      (lan.links || []).map(l => `${it(l.from)}>${it(l.to)}`).join(",") : "l-";
+    const A = linkMode.area, lan = E.buildingById(A, linkMode.id);
+    const it = id => { const x = E.buildingById(A, id); return x ? x.type + (x.item || "") + (topBuffer(x) ? topBuffer(x).item : "") : "?"; };
+    s += lan ? `l${lan.id}|${lan.built}|${linkMode.picking}|${linkMode.srcId}|${linkMode.hint ? 1 : 0}|` +
+      (lan.links || []).map(l => `${it(l.from)}>${it(l.to)}:${linkDot(l)[0]}`).join(",") : "l-";
   }
   return s;
 }
 window.renderPlay = renderPlay;
+// 1 s automation-tick hook (main.js): true when something only the slow tick
+// changes needs a repaint — the "automation paused" markers appearing/clearing,
+// or an open link menu's status dots (sent-within-3s ageing to grey).
+let lastPauseSig = "";
+function slowTickDirty() {
+  let sig = "";
+  for (const key of Object.keys(window.GS.areas)) if (window.GS.areas[key].autoPaused) sig += key + ",";
+  let dirty = false;
+  if (sig !== lastPauseSig) { lastPauseSig = sig; dirty = true; }
+  if (linkMode && panelSig() !== lastPanelSig) dirty = true;
+  return dirty;
+}
 
 // ---- mouse interaction --------------------------------------
 function syncCursor(e) {
@@ -2255,6 +2526,7 @@ function syncCursor(e) {
   const p = pointFromEvent(e);
   cursor.region = p.region; cursor.lx = p.lx; cursor.ly = p.ly; cursor.lrow = p.lrow; cursor.lcol = p.lcol;
 }
+let lastReachHover = 0;   // id of the stone/spirit whose reach circle is showing
 function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   syncCursor(e);
@@ -2262,11 +2534,16 @@ function onMouseMove(e) {
   updateHoverName();
   if ((window.GS.build.placing || (linkMode && linkMode.picking)) && cursor.over)
     requestGridPaint();   // move the placement preview / link rubber-band
+  else {
+    // hovering a Gathering Stone / Furnace Spirit shows its reach circle
+    const hb = hoverReachBuilding(), hk = hb ? hb.id : 0;
+    if (hk !== lastReachHover) { lastReachHover = hk; requestGridPaint(); }
+  }
 }
 // Show the hovered building's name as plain text at the bottom-centre.
 function updateHoverName() {
   const label = $("#hover-name");
-  if (recipeMenuFor || linkMode || rosterFor) { label.classList.add("hidden"); return; }   // panels own that strip
+  if (recipeMenuFor || linkMode || rosterFor || window.GS.build.open) { label.classList.add("hidden"); return; }   // panels own that strip
   const b = cursor.over && cursor.region && E.isAreaUnlocked(cursor.region)
     ? E.buildingAt(cursor.region, cursor.lrow, cursor.lcol) : null;
   if (b && b.built) {
@@ -2350,7 +2627,16 @@ function onMouseDown(e) {
   if (active) {
     // link picking captures ALL world clicks until done/cancelled
     if (linkMode && linkMode.picking) {
-      const bAt = p.region === linkMode.area ? E.buildingAt(p.region, p.lrow, p.lcol) : null;
+      if (p.region !== linkMode.area) {
+        // wisps only fly inside one region: say why the pick was ignored
+        if (!linkMode.hint) { linkMode.hint = true; renderLinkMenu(); }
+        if (window.AUDIO) window.AUDIO.play("error");
+        const rp = regionPx(p.region);
+        addFloater(rp.x + p.lx, rp.y + p.ly, "Wisps can't cross the void", C.danger);
+        return;
+      }
+      linkMode.hint = false;
+      const bAt = E.buildingAt(p.region, p.lrow, p.lcol);
       if (bAt && linkMode.picking === "source" && E.canBeLinkSource(bAt)) {
         linkMode.srcId = bAt.id; linkMode.picking = "target";
         renderLinkMenu(); requestGridPaint();
@@ -2667,7 +2953,7 @@ function wireInput() {
   // the horizontal strips (build / link / roster) scroll sideways on the wheel
   for (const id of ["#build-menu", "#link-menu", "#roster-menu"]) {
     const strip = $(id);
-    if (strip) strip.addEventListener("wheel", e => { e.preventDefault(); strip.scrollLeft += (e.deltaY || e.deltaX); }, { passive: false });
+    if (strip) strip.addEventListener("wheel", e => { e.preventDefault(); strip.scrollLeft += (e.deltaY || e.deltaX); strip.scrollTop += e.deltaY; }, { passive: false });
   }
   tcvs.addEventListener("mousemove", onTreeMove);
   tcvs.addEventListener("click", onTreeClick);
@@ -2688,6 +2974,7 @@ window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
   dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, showOfflineProgress, updateOfflineProgress, dismissWelcome,
   dismissEnding, openPerkShop, closePerkShop, chosenVows, showAscendedCard,
+  slowTickDirty,
   _draw: () => drawWorld(),   // test hook
   _questRing: () => questRingOnScreen(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook

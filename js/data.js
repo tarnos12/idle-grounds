@@ -178,7 +178,7 @@ const AREAS = {
         rareDrop: { item: "firestone", chance: 0.05 } },
       // iron veins: rarer, tougher rocks scattered among the stone
       { kind: "ironvein", zone: "centre", sizes: [2], target: 2, interaction: "break",
-        swingMs: 500, sprite: "⚙️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)],
+        swingMs: 500, sprite: "⛓️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)],
         rareDrop: { item: "firestone", chance: 0.15 } },
       // jade veins: the direct source of jade shards (the talisman chain's
       // choke point) — tough, small target like the iron veins

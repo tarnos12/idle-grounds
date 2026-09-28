@@ -250,7 +250,11 @@ body {
 .edge-arrow.down-left { bottom: 8px; left: 8px; }   /* Spirit Grove — bottom-left corner */
 .edge-arrow.locked { border-style: dashed; border-color: #6b561c; }
 .edge-arrow.locked .arr, .edge-arrow.locked .arr-label { color: var(--gold); }
-.edge-arrow.cant { opacity: .65; }
+/* low visual weight so a button never hides world objects; full on hover */
+.edge-arrow { opacity: .6; }
+.edge-arrow:hover, .edge-arrow:focus-visible { opacity: 1; }
+.edge-arrow.cant { opacity: .6; }
+.edge-arrow.cant:hover { opacity: 1; }
 .edge-arrow.disabled { opacity: .4; cursor: not-allowed; }
 .edge-arrow.disabled .arr { color: var(--muted); }
 /* affordable unlock: gentle gold pulse */
@@ -269,6 +273,12 @@ body {
   border-radius: 8px; padding: 2px 7px;
 }
 #hand-cursor.hidden { display: none; }
+/* the hand chip and the hover label never draw over a dialog / building panel */
+body:has(.modal:not(.hidden)) #hand-cursor { display: none; }
+body:has(.modal:not(.hidden)) #hover-name,
+body:has(#build-menu:not(.hidden)) #hover-name,
+body:has(#link-menu:not(.hidden)) #hover-name,
+body:has(#roster-menu:not(.hidden)) #hover-name { display: none; }
 .hc-stack {
   display: flex; align-items: center; gap: 1px;
   font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap;
@@ -300,6 +310,15 @@ body {
   padding: 10px 14px; display: flex; gap: 10px; overflow-x: auto; align-items: center;
 }
 #link-menu.hidden, #roster-menu.hidden { display: none; }
+/* link rows wrap onto more lines instead of running off-screen */
+#link-menu { flex-wrap: wrap; max-height: 40vh; overflow-y: auto; }
+#link-menu .rm-hint, #link-menu .rm-title { white-space: normal; }
+.rm-warn { font-size: 12px; font-weight: 800; color: var(--danger); }
+.lr-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; background: #64748b; }
+.lr-dot.d-green { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+.lr-dot.d-amber { background: #f59e0b; }
+.lr-dot.d-red   { background: var(--danger); }
+.lr-dot.d-grey  { background: #64748b; }
 
 /* Recipe picker: floating popup — "Recipes" title over a 3x3 icon grid.
    Positioned by JS just above the selected building (left/top set inline). */
