@@ -89,10 +89,16 @@ const SAVE_KEY = "idle-grounds-save-v1";
 // beforeunload autosave instantly re-writes the state we just wiped.
 let saveDisabled = false;
 
+// Transient runtime fields never reach a save: any "_"-prefixed key (e.g.
+// b._crafts, link._stat) plus the ground grace stamp and automation pause.
+function transientReplacer(k, v) {
+  return (k[0] === "_" || k === "manualAt" || k === "autoPaused") ? undefined : v;
+}
+
 function saveState() {
   if (saveDisabled) return false;
   try {
-    const s = JSON.parse(JSON.stringify(window.GS));
+    const s = JSON.parse(JSON.stringify(window.GS, transientReplacer));
     s.build = { open: false, placing: null };   // never persist UI mode
     s.lastSeen = Date.now();                     // for offline catch-up on reload
     localStorage.setItem(SAVE_KEY, JSON.stringify(s));
@@ -182,6 +188,10 @@ function loadState() {
         }
       }
       a.ground = (a.ground || []).filter(g => LIVE.has(g.item) && Number.isFinite(g.x) && Number.isFinite(g.y));
+      // ground tags: `crafted` (eviction-protected building product) is kept
+      // as a boolean; the player-drop grace stamp is transient — never loaded
+      for (const g of a.ground) { delete g.manualAt; if (g.crafted) g.crafted = true; else delete g.crafted; }
+      delete a.autoPaused;                       // transient automation pause flag
       a.enemies = (a.enemies || []).filter(en =>
         Number.isFinite(en.x) && Number.isFinite(en.y) && Number.isFinite(en.hp) && en.hp > 0);
       a.wisps = (a.wisps || []).filter(w =>

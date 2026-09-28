@@ -167,7 +167,9 @@ const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
   check("offline: returns a summary { elapsedMs, gained }", !!r && Number.isFinite(r.elapsedMs) && r.elapsedMs > 0 &&
     typeof r.gained === "object" && Object.keys(r.gained).length > 0,
     r ? "elapsedMs=" + r.elapsedMs + " items=" + Object.keys(r.gained).length : "null");
-  check("offline: every area ground <= 600", ground.every(n => n <= 600), "ground=" + JSON.stringify(ground));
+  // v52: 600 is the soft cap; eviction-protected (crafted/rare) items may
+  // push an area up to the 900 hard ceiling
+  check("offline: every area ground <= 900 (hard ceiling)", ground.every(n => n <= 900), "ground=" + JSON.stringify(ground));
 }
 
 console.log(fails ? `\n${fails} FAILED` : "\nALL PASS");
