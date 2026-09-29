@@ -2,6 +2,9 @@
 /* Regression: v52 slice C — hand & input feel (engine-testable parts).
    ENGINE.handRotate (Q / E), suctionStep's type-lock filter, and
    dropFromHand's `noGround` flag used by the latched right-hold.
+   Fix wave: consumables report `once` (one per press), the hold-chop's
+   `held` flag (no AUTO badge, keeps the sound), the node-grace refresh +
+   8s fixture grace, and static checks of the ui.js hold-loop wiring.
    Standalone vm sandbox — loads js/data.js, js/state.js, js/engine.js.
    Usage: node tests/test-v52-input.js [repoRoot]   (default /home/user/idle-grounds)
    Exits 1 on any FAIL. */
@@ -19,6 +22,19 @@ const check = (name, ok, info) => {
 
 function boot() {
   const s = {}; s.window = s; s.console = console; s.Date = Date; s.Math = Math; s.JSON = JSON;
+  s.location = { reload() {} };
+  s.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
+  vm.createContext(s);
+  vm.runInContext(fs.readFileSync(JS("data.js"), "utf8"), s, { filename: "data.js" });
+  for (const f of ["state.js", "engine.js"])
+    vm.runInContext(fs.readFileSync(JS(f), "utf8"), s, { filename: f });
+  s.onGroundDrop = null; s.onSfx = null;
+  return s;
+}
+// virtual-clock boot (Date.now() reads s.clock) for the grace-window checks
+function bootClock() {
+  const s = {}; s.window = s; s.console = console; s.Math = Math; s.JSON = JSON;
+  s.clock = 1.7e12; s.Date = { now: () => s.clock };
   s.location = { reload() {} };
   s.localStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };
   vm.createContext(s);
@@ -144,6 +160,143 @@ try {
         check("leftover stone stays in hand after completion (UI stops the hold there)", E.handCount("stone") === 5, handStr(s));
       } else check("could place a wood-only ghost for the feed check", false, type);
     } else console.log("SKIP ghost feed check — no single-wood-cost building in data");
+  }
+  // (d) consumables are one per press: dropFromHand reports `once` ----------
+  {
+    const s = boot(), E = s.ENGINE, D = s.DATA;
+    for (const k of Object.keys(D.AREAS)) E.initArea(k);
+    const area = s.GS.areas.center;
+    area.ground = [];
+    // Vitality Pill quaffed on open ground
+    let x = -1, y = -1;
+    for (let r = 2; r < 40 && x < 0; r++) for (let c = 2; c < 40; c++)
+      if (!E.buildingAt("center", r, c) && !area.nodes.some(n => r >= n.row && r < n.row + n.size && c >= n.col && c < n.col + n.size)) {
+        x = c * 32 + 16; y = r * 32 + 16; break;
+      }
+    setHand(s, [[D.VITALITY.item, 3], ["wood", 2]]);
+    const rv = E.dropFromHand("center", x, y);
+    check("Vitality Pill: used + once (ground-hold ends after one)", rv && rv.used && rv.once === true && E.handCount(D.VITALITY.item) === 2,
+      JSON.stringify(rv));
+    // a plain ground drop is NOT one-per-press
+    setHand(s, [["wood", 3]]);
+    const rw = E.dropFromHand("center", x, y);
+    check("plain wood drop has no once flag (ground-hold repeats)", rw && rw.dropped === "wood" && !rw.once, JSON.stringify(rw));
+    // Beast Bait inside the fox zone lures one boar and reports lured+once
+    const ecfg = D.AREAS.center.enemies;
+    const z = E.zoneRects(ecfg.zone)[0];
+    const bx = (z.c0 + 1) * 32 + 16, by = (z.r0 + 1) * 32 + 16;
+    setHand(s, [["beast_bait", 3]]);
+    const e0 = area.enemies.length;
+    const rb = E.dropFromHand("center", bx, by, true);
+    check("Beast Bait lure: lured + once, one boar, one bait", rb && rb.lured === true && rb.once === true &&
+      area.enemies.length === e0 + 1 && E.handCount("beast_bait") === 2, JSON.stringify(rb));
+    // a dragon pill fed to the dragon: one blessing per press
+    const pillKey = Object.keys(D.DRAGON_BUFFS)[0];
+    const dragon = area.buildings.find(b => b.type === "dragon");
+    if (dragon && pillKey) {
+      dragon.built = true;
+      const dc = E.buildingCenterPx(dragon);
+      setHand(s, [[pillKey, 4]]);
+      const rd = E.dropFromHand("center", dc.x, dc.y, true);
+      check("dragon pill: fed + once, one pill spent", rd && rd.fed === pillKey && rd.once === true && E.handCount(pillKey) === 3,
+        JSON.stringify(rd));
+      // a tribute item fed to the dragon is NOT one-per-press
+      const need = E.dragonRemaining ? Object.keys(E.dragonRemaining())[0] : null;
+      if (need) {
+        setHand(s, [[need, 2]]);
+        const rt = E.dropFromHand("center", dc.x, dc.y, true);
+        check("dragon tribute feed has no once flag", rt && rt.fed === need && !rt.once, JSON.stringify(rt));
+      }
+    } else check("dragon + dragon pill present in data", false);
+  }
+
+  // (e) harvestNode: isAuto (automation) vs held (player hold-chop) ----------
+  {
+    const s = boot(), E = s.ENGINE, D = s.DATA;
+    for (const k of Object.keys(D.AREAS)) E.initArea(k);
+    let sfx = 0; s.onSfx = k => { if (k === "harvest") sfx++; };
+    const a = s.GS.areas.center;
+    const mk = () => { const n = { id: a.nextNodeId++, row: 30, col: 30, size: 1, kind: "bush", interaction: "chop",
+      tier: 1, hitsLeft: 5, regrowSec: 10, swingMs: 400, perHit: [], drops: [], autoFlash: 0 }; a.nodes.push(n); return n; };
+    const n1 = mk();
+    E.harvestNode("center", n1.id, false, true);
+    check("held swing: harvest sound plays, no AUTO badge", sfx === 1 && !n1.autoFlash, `sfx=${sfx} autoFlash=${n1.autoFlash}`);
+    const n2 = mk();
+    E.harvestNode("center", n2.id, true);
+    check("isAuto swing: AUTO badge, silent", sfx === 1 && n2.autoFlash > 0, `sfx=${sfx} autoFlash=${n2.autoFlash}`);
+  }
+
+  // (f) manual grace: fixture drops 8s, re-armed while the player keeps swinging
+  {
+    const s = bootClock(), E = s.ENGINE, D = s.DATA;
+    for (const k of Object.keys(D.AREAS)) E.initArea(k);
+    s.GS.world.unlocked.mine = true;
+    const a = s.GS.areas.mine;
+    a.nodes = []; a.ground = []; a.buildings = []; a.spawnQueue = []; a.wisps = []; a.genTimers = [];
+    const gs = { id: a.nextBuildId++, type: "gathering_stone", row: 20, col: 20, paid: {}, built: true, item: null, qty: 0, inv: [] };
+    a.buildings.push(gs);
+    const run = ms => { for (let t = 0; t < ms; t += 50) { E.gameTick(); s.clock += 50; } };
+    const fx = { id: a.nextNodeId++, row: 20, col: 24, size: 1, kind: "rock", interaction: "quarry", fixed: true,
+      tier: 1, clicksPerDrop: 1, dropItem: "stone", swingMs: 400, autoFlash: 0 };
+    a.nodes.push(fx);
+    E.harvestNode("mine", fx.id, false);
+    const g1 = a.ground[0];
+    // park the drops between the stone and the rock: this checks the grace
+    // clock, not the collider exit (an item behind a fixed node, on the far
+    // side from a stone, is a separate ground-settle matter)
+    const park = () => { for (const g of a.ground) { g.x = 700; g.y = 656; } };
+    park();
+    check("fixture drop: grace stamped 8s (manualAt = now + 4000), tagged _src", g1 && g1.manualAt === s.clock + 4000 && g1._src === fx.id,
+      JSON.stringify(g1));
+    run(6000);
+    check("stone still ignores the fixture drop after 6s", E.gatherTotal(gs) === 0, "inv=" + E.gatherTotal(gs));
+    E.harvestNode("mine", fx.id, false, true);   // the player keeps holding on the rock
+    park();
+    check("a later held swing re-arms the earlier drop's grace", g1.manualAt === s.clock + 4000 && a.ground.length === 2,
+      `manualAt-clock=${g1.manualAt - s.clock} ground=${a.ground.length}`);
+    run(7000);
+    check("both drops still protected 7s after the last swing", E.gatherTotal(gs) === 0, "inv=" + E.gatherTotal(gs));
+    run(2500);
+    check("stone collects both once the 8s window from the last swing passes", E.gatherTotal(gs) === 2, "inv=" + E.gatherTotal(gs));
+    // a regular node: 4s grace, and swinging it doesn't re-arm OTHER nodes' drops
+    a.ground = [];
+    const n = { id: a.nextNodeId++, row: 22, col: 22, size: 1, kind: "ore", interaction: "instant", tier: 1, hitsLeft: 1,
+      regrowSec: 10, swingMs: 400, drops: [{ item: "stone", min: 1, max: 1 }], autoFlash: 0 };
+    a.nodes.push(n);
+    E.harvestNode("mine", n.id, false);
+    const g2 = a.ground[0];
+    check("regular node drop: 4s grace (manualAt = now)", g2 && g2.manualAt === s.clock && g2._src === n.id, JSON.stringify(g2));
+    s.clock += 1000;
+    E.harvestNode("mine", fx.id, false, true);
+    check("swinging a different node leaves this drop's grace alone", g2.manualAt === s.clock - 1000, String(g2.manualAt - s.clock));
+    // automation drops carry neither manualAt nor _src
+    a.ground = [];
+    const n3 = Object.assign({}, n, { id: a.nextNodeId++, hitsLeft: 1 });
+    a.nodes = [n3]; a.upgrades.automation = 1;
+    E.automationTick();
+    check("automation drops: no manualAt, no _src", a.ground.length >= 1 && a.ground.every(g => !g.manualAt && g._src == null),
+      JSON.stringify(a.ground));
+    // _src never reaches a save
+    a.ground = [{ id: 1, item: "stone", x: 10, y: 10, manualAt: 5, _src: 3 }];
+    const saved = JSON.parse(JSON.stringify(s.GS, s.transientReplacer));
+    check("save strips _src and manualAt", saved.areas.mine.ground[0]._src === undefined && saved.areas.mine.ground[0].manualAt === undefined,
+      JSON.stringify(saved.areas.mine.ground[0]));
+  }
+
+  // (g) ui.js wiring (static — the hold loop needs a DOM) --------------------
+  {
+    const ui = fs.readFileSync(JS("ui.js"), "utf8");
+    check("hold loop swings with held=true, not isAuto", /E\.harvestNode\(rg, n\.id, false, true\)/.test(ui) && !/E\.harvestNode\(rg, n\.id, true\)/.test(ui));
+    check("feedHoldEnded ends on r.once and on a dragon stage change",
+      /function feedHoldEnded[\s\S]{0,300}r\.once[\s\S]{0,200}GS\.dragon\.stage !== holdTarget\.stage/.test(ui));
+    check("ground-hold drop ends the hold on r.once", /dropFromHand\(rg, cursor\.lx, cursor\.ly\)[\s\S]{0,120}r && r\.once\) holdFront = null/.test(ui));
+    check("ground-hold pauses over a fuel rack (groundHoldBlocked via rackRedirect)",
+      /function groundHoldBlocked[\s\S]{0,200}rackRedirect/.test(ui) && /!groundHoldBlocked\(rg, cursor\.lx, cursor\.ly\)/.test(ui));
+    check("a visible modal ends a right-hold", /\.modal:not\(\.hidden\)"\)\) \{\s*holdDone = true; holdFront = null;/.test(ui));
+    check("edge redirect: >1x1, min(10px, 15%), item within 14px, hand space",
+      /function edgePickRedirect[\s\S]{0,500}s\.w <= 1 && s\.h <= 1[\s\S]{0,200}EDGE_PICK_FRAC[\s\S]{0,120}handSpace\(\) <= 0[\s\S]{0,80}EDGE_ITEM_PX/.test(ui));
+    check("hand chip: innerHTML guarded by a contents signature; mousemove only moves it",
+      /if \(sig === handChipSig\) return;/.test(ui) && /moveHandCursor\(\);\s*\/\/ position only/.test(ui));
   }
 } catch (err) {
   console.log("FAIL threw: " + (err && err.stack || err));
