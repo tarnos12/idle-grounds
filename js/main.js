@@ -83,7 +83,8 @@
   if (job && !longAway) {
     try { E.stepOfflineCatchup(job, Infinity); }
     catch (err) { console.error("offline catch-up failed", err); }   // still boot the game
-    offline = E.finishOfflineCatchup(job);
+    try { offline = E.finishOfflineCatchup(job); }
+    catch (err) { console.error("offline catch-up finish failed", err); }
   }
 
   window.UI.wireInput();
@@ -133,6 +134,7 @@
     const finish = () => {
       let summary = null;
       try { summary = E.finishOfflineCatchup(job); }
+      catch (err) { console.error("offline catch-up finish failed", err); }
       finally {
         window.UI.render();
         window.UI.showOfflineSummary(summary);
@@ -140,13 +142,21 @@
         startLive();
       }
     };
+    // A background tab throttles setTimeout (~1/s, or 1/min under Chrome's
+    // intensive throttling), so while hidden each slice runs ~500ms (nothing
+    // is painting) and yields through a MessageChannel, which isn't throttled.
+    const mc = typeof MessageChannel === "function" ? new MessageChannel() : null;
+    const yieldThen = (fn) => {
+      if (document.hidden && mc) { mc.port1.onmessage = () => fn(); mc.port2.postMessage(0); }
+      else setTimeout(fn, 0);
+    };
     const slice = () => {
       let done = true;
-      try { done = E.stepOfflineCatchup(job, 50); }
-      catch (err) { console.error("offline catch-up slice failed", err); }
+      try { done = E.stepOfflineCatchup(job, document.hidden ? 500 : 50); }
+      catch (err) { console.error("offline catch-up slice failed", err); }   // job.failed: the summary says so
       if (done) { finish(); return; }
       window.UI.updateOfflineProgress(job);
-      setTimeout(slice, 0);
+      yieldThen(slice);
     };
     setTimeout(slice, 0);   // let the modal paint first
   }

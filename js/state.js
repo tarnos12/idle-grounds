@@ -94,6 +94,10 @@ function makeInitialState() {
     // Wall-clock of the last save — offline catch-up (engine) replays the
     // passive economy for the gap since this on the next load.
     lastSeen: Date.now(),
+    // The ORIGINAL away start while an offline replay is unfinished (a tab
+    // closed mid-replay resumes it), so the resumed summary shows the real
+    // gap. null = no replay pending. Set/cleared by the engine.
+    offlineAwayFrom: null,
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0,
              foxKills: 0, buildingsBuilt: 0, upgradesApplied: 0,
              linksAdded: 0, recipeSwitches: 0, disciplesRecruited: 0 },
@@ -197,6 +201,9 @@ function loadState() {
       }
     // null on pre-catch-up saves -> engine skips offline sim (no false credit)
     fresh.lastSeen = Number.isFinite(s.lastSeen) ? s.lastSeen : null;
+    // original away start of an interrupted replay (older saves: none)
+    fresh.offlineAwayFrom = (Number.isFinite(s.offlineAwayFrom) && Number.isFinite(fresh.lastSeen)
+      && s.offlineAwayFrom < fresh.lastSeen) ? s.offlineAwayFrom : null;
     // merge stats/quest onto defaults so counters added later start at 0
     if (s.stats) Object.assign(fresh.stats, s.stats);
     // quest idx indexes the chain it was saved under: an older chain (no

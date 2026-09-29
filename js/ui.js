@@ -2367,10 +2367,13 @@ function welcomeShape() {
 }
 // Long absence: the replay runs in slices (main.js) — show the modal with a
 // progress bar and a Skip button. Skip is honest: the remaining away-time is
-// forfeited, not credited. Continue stays hidden until the summary is in.
+// forfeited, not credited (once output has levelled off it says so instead).
+// Continue stays hidden until the summary is in.
 function showOfflineProgress(job, onSkip) {
   welcomeShape();
-  $("#welcome-away").textContent = `You were away ${fmtAway(job.awayMs)}. Catching up on what the grounds made…`;
+  $("#welcome-away").textContent = job.resumed
+    ? `You were away ${fmtAway(job.awayMs)}. Finishing your interrupted catch-up…`
+    : `You were away ${fmtAway(job.awayMs)}. Catching up on what the grounds made…`;
   $("#welcome-progress").classList.remove("hidden");
   $("#welcome-close").classList.add("hidden");
   const skip = $("#welcome-skip");
@@ -2388,7 +2391,9 @@ function updateOfflineProgress(job) {
   const skip = $("#welcome-skip");
   if (!skip.disabled) {
     const left = Math.max(0, job.end - job.virt);
-    skip.textContent = `Skip — forfeit the last ${fmtAway(left)}`;
+    skip.textContent = E.offlineLevelled && E.offlineLevelled(job)
+      ? "Skip — output has levelled off"
+      : `Skip — forfeit the last ${fmtAway(left)}`;
   }
 }
 
@@ -2398,13 +2403,22 @@ function stallRowsHTML(summary) {
   const rows = [];
   const area = k => (DD.AREAS[k] && DD.AREAS[k].name) || k;
   const names = s => (s.names || []).join(", ");
-  if (summary.plateauMs)
+  if (summary.saturatedMs > 0)
+    rows.push(`Output levelled off after about <b>${fmtAway(summary.flatAtMs || 0)}</b> — saturated: nothing more would have been produced in the remaining ${fmtAway(Math.max(0, summary.elapsedMs - (summary.flatAtMs || 0)))}, so the catch-up stopped there (nothing was forfeited).`);
+  else if (summary.plateauMs)
     rows.push(`Output levelled off after about <b>${fmtAway(summary.plateauMs)}</b> — the rest of the time added little.`);
   const full = (summary.stalls || []).filter(s => s.kind === "ground").map(s => area(s.areaKey));
   if (full.length)
-    rows.push(`The ground is full in <b>${full.join(", ")}</b> — new drops pushed out the oldest. Gathering Stones feeding Storehouses keep it clear.`);
+    rows.push(`Ground full in <b>${full.join(", ")}</b>: the oldest loose raw items were cleared. Gathering Stones feeding Storehouses keep it clear.`);
+  const paused = (summary.stalls || []).filter(s => s.kind === "autopaused").map(s => area(s.areaKey));
+  if (paused.length)
+    rows.push(`Bots paused in <b>${paused.join(", ")}</b> — too many loose items on the ground. Gathering Stones + Storehouses clear it.`);
   for (const s of summary.stalls || []) {
-    if (s.kind === "nofuel")
+    if (s.kind === "autoskip")
+      rows.push(`<b>${area(s.areaKey)}</b>: bots skipped ${names(s)} — plenty already lay loose. Gathering Stones + Storehouses clear it.`);
+    else if (s.kind === "outfull")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${names(s)} stopped — ${s.count > 1 ? "their output piles are" : "its output pile is"} full. A Gathering Stone beside it hauls products away.`);
+    else if (s.kind === "nofuel")
       rows.push(`<b>${area(s.areaKey)}</b>: ${s.count > 1 ? s.count + " burners" : "a burner"} (${names(s)}) ran out of fuel — a Furnace Spirit keeps racks stoked.`);
     else if (s.kind === "nobuns")
       rows.push(`<b>${area(s.areaKey)}</b>: ${names(s)} ran out of food, so the disciples stopped cultivating — link food to it.`);
@@ -2435,7 +2449,16 @@ function showOfflineToast(text) {
 //   < 10 min  a toast: "Welcome back — +N items while away"
 //   >= 10 min the modal: gains, what was skipped, and "why it stopped" rows
 function showOfflineSummary(summary) {
-  if (!summary) return;
+  if (!summary) {
+    // no summary (should not happen for a started replay): never strand the
+    // progress bar — let the player close the modal
+    if (!$("#welcome-progress").classList.contains("hidden")) {
+      $("#welcome-progress").classList.add("hidden");
+      $("#welcome-close").classList.remove("hidden");
+      $("#welcome-away").textContent = "The catch-up couldn't finish — your grounds are as you left them.";
+    }
+    return;
+  }
   const gains = Object.entries(summary.gained || {}).sort((a, b) => b[1] - a[1]);
   const away = summary.awayMs !== undefined ? summary.awayMs : summary.elapsedMs;
   if (away < E.OFFLINE_MODAL_MS) {
@@ -2447,11 +2470,19 @@ function showOfflineSummary(summary) {
   $("#welcome-progress").classList.add("hidden");
   $("#welcome-close").classList.remove("hidden");
   let line = `You were away ${fmtAway(away)}`;
-  if (summary.elapsedMs < away - 1000)   // beyond the offline window (8h + Long Slumber)
-    line += ` — the grounds work for up to ${fmtAway(summary.elapsedMs)} while you're gone`;
-  line += summary.skippedMs > 0
-    ? `. You skipped the catch-up after ${fmtAway(summary.simulatedMs)}; the rest was forfeited:`
-    : ". The grounds kept working:";
+  const capped = summary.capped !== undefined ? summary.capped : summary.elapsedMs < away - 1000;
+  if (capped)   // beyond the offline window (8h + Long Slumber)
+    line += ` — the grounds work for up to ${fmtAway(summary.capMs || summary.elapsedMs)} while you're gone`;
+  if (summary.resumed) line += ` (your catch-up was interrupted and has now finished)`;
+  if (summary.failed)
+    line += `. The catch-up hit an error after ${fmtAway(summary.simulatedMs)} and stopped early — the rest couldn't be credited:`;
+  else if (summary.saturatedMs > 0)
+    line += ". The grounds kept working until everything was saturated:";
+  else if (summary.skippedMs > 0 && summary.levelled)
+    line += `. You skipped the catch-up after ${fmtAway(summary.simulatedMs)}; output had already levelled off, so little was lost:`;
+  else if (summary.skippedMs > 0)
+    line += `. You skipped the catch-up after ${fmtAway(summary.simulatedMs)}; the rest was forfeited:`;
+  else line += ". The grounds kept working:";
   $("#welcome-away").textContent = line;
   const box = $("#welcome-gains");
   if (gains.length) {
@@ -2821,6 +2852,7 @@ function onKeyDown(e) {
     if (!panRunning) { panRunning = true; requestAnimationFrame(panStep); }
     return;
   }
+  if (E.offlineActive && E.offlineActive()) return;   // offline replay running: only WASD panning
   if (k === "shift" && !e.repeat) { sprint = !sprint; renderTopBar(); return; }  // sprint toggle (2x pan)
   if (k === "b") { toggleBuild(); return; }   // B toggles the build menu
   // Q / E rotate the hand: Q sends the front stack to the back, E brings the

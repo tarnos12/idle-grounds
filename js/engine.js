@@ -2614,10 +2614,13 @@ function heldTotal(t) { let n = 0; for (const k in t) n += t[k]; return n; }
 // Why passive output stops: read at the end of a replay so the welcome-back
 // summary can teach the player how to make offline time pay better. Returns
 // [{ kind, areaKey, count, names }] — kind: "ground" (loose items near the
-// per-region cap: new drops push out the oldest), "nofuel" (a burner holding
-// a full batch of inputs but too little fuel), "nobuns" (a pavilion with
-// disciples and no food), "stonefull" (Gathering Stone buffers full with
-// nothing hauling them away).
+// per-region cap: the oldest loose raw items get cleared), "autopaused" (the
+// region's bots paused on a littered field), "autoskip" (bots skipped some
+// item types — area._autoSkip, set by automationTick), "nofuel" (a burner
+// holding a full batch of inputs but too little fuel), "outfull" (a
+// converter whose output pile is full), "nobuns" (a pavilion with disciples
+// and no food), "stonefull" (Gathering Stone buffers full with nothing
+// hauling them away).
 function offlineStalls() {
   const out = [];
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
@@ -2625,7 +2628,10 @@ function offlineStalls() {
     if (!isAreaUnlocked(areaKey)) continue;
     const area = window.GS.areas[areaKey];
     if (area.ground.length >= GROUND_CAP * 0.95) out.push({ kind: "ground", areaKey, count: area.ground.length });
-    const nofuel = [], nobuns = [], full = [];
+    if (area.autoPaused) out.push({ kind: "autopaused", areaKey, count: area.ground.length });
+    const skipped = autoSkipList(area._autoSkip);
+    if (skipped.length) out.push({ kind: "autoskip", areaKey, count: skipped.length, names: skipped.map(itemName) });
+    const nofuel = [], nobuns = [], full = [], outfull = [];
     for (const b of area.buildings) {
       if (!b.built) continue;
       const cfg = D.BUILDINGS[b.type];
@@ -2638,32 +2644,103 @@ function offlineStalls() {
       }
       if (cfg.roster && (b.disciples || 0) > 0 && (b.buns || 0) <= 0) nobuns.push(cfg.name);
       if (cfg.gather && gatherTotal(b) >= cfg.gather.cap) full.push(cfg.name);
+      if (cfg.recipes) {
+        const st = buildingStatus(areaKey, b);
+        if (st && st.state === "full" && /output pile/i.test(st.label || "")) outfull.push(cfg.name);
+      }
     }
     if (nofuel.length) out.push({ kind: "nofuel", areaKey, count: nofuel.length, names: [...new Set(nofuel)] });
+    if (outfull.length) out.push({ kind: "outfull", areaKey, count: outfull.length, names: [...new Set(outfull)] });
     if (nobuns.length) out.push({ kind: "nobuns", areaKey, count: nobuns.length, names: [...new Set(nobuns)] });
     if (full.length) out.push({ kind: "stonefull", areaKey, count: full.length, names: [...new Set(full)] });
   }
   return out;
 }
 
+// area._autoSkip (ground slice, transient) as a list of skipped item keys —
+// tolerant of an Array, a Set, or a { key: truthy } map; [] when absent.
+function autoSkipList(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === "string");
+  if (v instanceof Set) return [...v].filter(x => typeof x === "string");
+  if (typeof v === "object") return Object.keys(v).filter(k => v[k]);
+  return [];
+}
+
+// Plateau early stop: once the world's signature (held totals per item,
+// where they sit, and every building's status) has not changed for this
+// long of sim time — and no converter is mid-batch — nothing more would be
+// produced, so the replay stops and reports the rest as SATURATED (not
+// forfeited). Checked once per sim-minute.
+const OFFLINE_PLATEAU_MS = 15 * 60 * 1000;
+function offlineSignature(held) {
+  let active = false;
+  const parts = [];
+  for (const k of Object.keys(held).sort()) parts.push(k + ":" + held[k]);
+  for (const areaKey of Object.keys(D.AREAS)) {
+    if (!isAreaUnlocked(areaKey)) continue;
+    const area = window.GS.areas[areaKey];
+    parts.push("|" + areaKey + ":" + area.ground.length + "/" + (area.wisps || []).length +
+      (area.autoPaused ? "p" : "") + autoSkipList(area._autoSkip).join(","));
+    for (const b of area.buildings) {
+      if (!b.built) continue;
+      const cfg = D.BUILDINGS[b.type];
+      if (!cfg) continue;
+      const st = buildingStatus(areaKey, b);
+      if (cfg.recipes && (b.smeltDoneAt > 0 || (st && st.state === "working"))) active = true;
+      let hold = (b.qty || 0) + gatherTotal(b) + (b.buns || 0) + (b.disciples || 0);
+      for (const it of Object.keys(b.stock || {})) hold += b.stock[it] || 0;
+      parts.push(b.id + (st ? st.state : "-") + hold);
+    }
+  }
+  return { sig: parts.join(";"), active };
+}
+// Update the job's plateau streak at sim time `sim`; true = saturated.
+function offlinePlateauCheck(job, sim, held) {
+  const { sig, active } = offlineSignature(held);
+  if (active || job.flatSince === null || sig !== job.sig) {
+    job.sig = active ? null : sig;
+    job.flatSince = active ? null : sim;
+    return false;
+  }
+  return sim - job.flatSince >= OFFLINE_PLATEAU_MS;
+}
+// True while output has visibly levelled off (the current no-change streak
+// spans at least one sim-minute sample) — the Skip button's copy uses it.
+function offlineLevelled(job) {
+  return !!job && job.flatSince !== null && job.flatSince !== undefined &&
+    (job.virt - job.start) - job.flatSince >= 60000;
+}
+
 // Start a replay for the gap since GS.lastSeen. Returns a job, or null when
 // there is nothing to replay (pre-feature save, or a plain reload < 90s).
 // job.virt is the virtual clock, advanced by stepOfflineCatchup to job.end.
+// GS.offlineAwayFrom persists the ORIGINAL away start while a replay is
+// unfinished: a tab closed mid-replay saves lastSeen at the resume point, so
+// without it the resumed summary would show only the remainder as the gap.
 function beginOfflineCatchup() {
   const now = Date.now();
-  const last = window.GS.lastSeen;
+  const G = window.GS;
+  const last = G.lastSeen;
+  const af = G.offlineAwayFrom;
+  G.offlineAwayFrom = null;
   if (!Number.isFinite(last)) return null;      // pre-feature save: skip
-  const awayMs = now - last;
-  if (awayMs <= OFFLINE_MIN_MS) return null;    // just a reload
-  const elapsed = Math.min(awayMs, offlineCapMs());
+  const gap = now - last;
+  if (gap <= OFFLINE_MIN_MS) return null;       // just a reload
+  const resumed = Number.isFinite(af) && af < last;
+  const from = resumed ? af : last;
+  const elapsed = Math.min(gap, offlineCapMs());
   const job = {
     start: last, end: last + elapsed, virt: last, sinceAuto: 0,
     step: Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS)),
-    awayMs, elapsedMs: elapsed,
+    awayMs: now - from, elapsedMs: elapsed, capped: gap - elapsed > 1000, capMs: offlineCapMs(), resumed,
     before: countHeldItems(), samples: [],      // samples: [simMs, heldTotal] ~once per sim-minute
-    stop: false, done: false, summary: null,
+    sig: null, flatSince: null,                 // plateau streak (offlinePlateauCheck)
+    stop: false, done: false, saturated: false, failed: false, summary: null,
   };
   job.samples.push([0, heldTotal(job.before)]);
+  offlinePlateauCheck(job, 0, job.before);
+  G.offlineAwayFrom = from;                     // cleared by finishOfflineCatchup
   offlineJob = job;
   return job;
 }
@@ -2674,7 +2751,7 @@ function beginOfflineCatchup() {
 // Returns true once nothing is left to run (end reached, or skipped); then
 // call finishOfflineCatchup(job).
 function stepOfflineCatchup(job, budgetMs) {
-  if (!job || job.done || job.stop || job.virt >= job.end) return true;
+  if (!job || job.done || job.stop || job.saturated || job.virt >= job.end) return true;
   const realNow = Date.now;
   const t0 = realNow();
   const sink = window.onGroundDrop;             // silence "+N" floaters during the sim
@@ -2691,10 +2768,17 @@ function stepOfflineCatchup(job, budgetMs) {
       if (job.sinceAuto >= 1000) { automationTick(); job.sinceAuto -= 1000; }
       job.virt += job.step;
       const sim = job.virt - job.start;
-      if (sim - job.samples[job.samples.length - 1][0] >= 60000)
-        job.samples.push([sim, heldTotal(countHeldItems())]);
+      if (sim - job.samples[job.samples.length - 1][0] >= 60000) {
+        const held = countHeldItems();
+        job.samples.push([sim, heldTotal(held)]);
+        if (job.virt < job.end && offlinePlateauCheck(job, sim, held)) { job.saturated = true; break; }
+      }
       if (realNow() - t0 >= budgetMs) break;
     }
+  } catch (err) {
+    job.failed = true;                          // the summary says so; the rest is not credited
+    job.stop = true;
+    throw err;
   } finally {
     Date.now = realNow;                         // ALWAYS restore, even if a tick throws
     offlineSim = false;
@@ -2702,7 +2786,7 @@ function stepOfflineCatchup(job, budgetMs) {
     window.onGroundDrop = sink;
     window.onSfx = sfxSink;
   }
-  return job.virt >= job.end;
+  return job.virt >= job.end || job.saturated;
 }
 
 // Stop a running replay early. The unsimulated remainder is FORFEITED (the
@@ -2712,6 +2796,7 @@ function skipOfflineCatchup(job) { if (job && !job.done) job.stop = true; }
 // Fraction of the replay done (0..1) — drives the progress bar.
 function offlineProgress(job) {
   if (!job) return 1;
+  if (job.saturated) return 1;
   return Math.max(0, Math.min(1, (job.virt - job.start) / Math.max(1, job.end - job.start)));
 }
 
@@ -2722,7 +2807,7 @@ function offlineProgress(job) {
 // excess stays forfeited.) null = no replay running: stamp the real clock.
 function offlineResumeAt() {
   const j = offlineJob;
-  if (!j || j.done || j.stop) return null;
+  if (!j || j.done || j.stop || j.saturated) return null;
   return Date.now() - Math.max(0, j.end - j.virt);
 }
 function offlineActive() { return !!(offlineJob && !offlineJob.done); }
@@ -2744,30 +2829,47 @@ function settleAfterReplay() {
 // stalls:[...], plateauMs } — plateauMs = sim time at which held items first
 // reached 99% of the final total, when that was well before the end (null
 // otherwise): "output levelled off after ~X".
+// Also: saturatedMs (the remainder after a plateau early stop — nothing more
+// would have been produced; skippedMs is then 0), flatAtMs (sim time output
+// stopped changing, when saturated), levelled (a Skip came after output had
+// already levelled off), resumed (a replay a closed tab interrupted), capped
+// (the gap exceeded the offline window), failed (a tick threw: the rest was
+// not credited). Never throws — a broken tidy-up still yields a summary, so
+// the progress UI always closes.
 function finishOfflineCatchup(job) {
   if (!job) return null;
   if (job.done) return job.summary;
   job.done = true;
   if (offlineJob === job) offlineJob = null;
-  settleAfterReplay();
-  const after = countHeldItems();
-  const gained = {};
-  for (const it of Object.keys(after)) {
-    const d = after[it] - (job.before[it] || 0);
-    if (d > 0) gained[it] = d;
-  }
-  const simulatedMs = Math.min(job.virt, job.end) - job.start;
-  const total0 = job.samples[0][1], total1 = heldTotal(after);
-  let plateauMs = null;
-  if (total1 > total0) {
-    const s = job.samples.find(([, n]) => n >= total0 + (total1 - total0) * 0.99);
-    if (s && s[0] >= 60000 && s[0] < simulatedMs * 0.8) plateauMs = s[0];
-  }
-  job.summary = {
+  window.GS.offlineAwayFrom = null;
+  const simulatedMs = Math.max(0, Math.min(job.virt, job.end) - job.start);
+  const rest = Math.max(0, job.elapsedMs - simulatedMs);
+  const base = {
     awayMs: job.awayMs, elapsedMs: job.elapsedMs, simulatedMs,
-    skippedMs: Math.max(0, job.elapsedMs - simulatedMs),
-    gained, stalls: offlineStalls(), plateauMs,
+    skippedMs: job.saturated ? 0 : rest, saturatedMs: job.saturated ? rest : 0,
+    flatAtMs: job.saturated ? job.flatSince : null,
+    levelled: !job.saturated && !!job.stop && !job.failed && offlineLevelled(job),
+    resumed: !!job.resumed, capped: !!job.capped, capMs: job.capMs, failed: !!job.failed,
+    gained: {}, stalls: [], plateauMs: null,
   };
+  try {
+    settleAfterReplay();
+    const after = countHeldItems();
+    for (const it of Object.keys(after)) {
+      const d = after[it] - (job.before[it] || 0);
+      if (d > 0) base.gained[it] = d;
+    }
+    const total0 = job.samples[0][1], total1 = heldTotal(after);
+    if (total1 > total0) {
+      const s = job.samples.find(([, n]) => n >= total0 + (total1 - total0) * 0.99);
+      if (s && s[0] >= 60000 && (job.saturated || s[0] < simulatedMs * 0.8)) base.plateauMs = s[0];
+    }
+    base.stalls = offlineStalls();
+  } catch (err) {
+    base.failed = true;
+    if (typeof console !== "undefined") console.error("offline catch-up summary failed", err);
+  }
+  job.summary = base;
   return job.summary;
 }
 
@@ -2785,6 +2887,7 @@ window.ENGINE = {
   itemName, itemIcon,
   countHeldItems, runOfflineCatchup, beginOfflineCatchup, stepOfflineCatchup, finishOfflineCatchup,
   skipOfflineCatchup, offlineProgress, offlineResumeAt, offlineActive, offlineStalls, OFFLINE_MODAL_MS,
+  offlineLevelled, OFFLINE_PLATEAU_MS,
   handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, handRotate, canAfford,
   depositToStorehouse, takeFromStorehouse,
   effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
