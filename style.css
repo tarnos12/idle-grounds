@@ -247,6 +247,7 @@ body {
 .edge-arrow.down  { bottom: 8px; left: 50%; transform: translateX(-50%); }
 .edge-arrow.left  { left: 8px;   top: 50%;  transform: translateY(-50%); }
 .edge-arrow.right { right: 8px;  top: 50%;  transform: translateY(-50%); }
+.edge-arrow.here  { top: 50%;  left: 50%;  transform: translate(-50%, -50%); }   /* camera centre is inside this locked region */
 .edge-arrow.down-left { bottom: 8px; left: 8px; }   /* Spirit Grove — bottom-left corner */
 .edge-arrow.locked { border-style: dashed; border-color: #6b561c; }
 .edge-arrow.locked .arr, .edge-arrow.locked .arr-label { color: var(--gold); }

@@ -182,7 +182,7 @@ const AREAS = {
         rareDrop: { item: "firestone", chance: 0.15 } },
       // jade veins: the direct source of jade shards (the talisman chain's
       // choke point) — tough, small target like the iron veins
-      { kind: "jadevein", zone: "centre", sizes: [2], target: 2, interaction: "break",
+      { kind: "jadevein", zone: "centre", sizes: [2], target: 1, interaction: "break",
         swingMs: 500, sprite: "🟢", hits: 3, regrow: 14, drops: [d("jade_shard", 1, 2)] },
     ],
     tiers: [
@@ -373,7 +373,7 @@ const BUILDINGS = {
                  { name: "Qi Elixir", inputs: { spirit_herb: 1, water: 2, spirit_essence: 1 }, output: "qi_elixir", outputQty: 2, timeMs: 8000 },
                  { name: "Vitality Pill", inputs: { fish: 1, spirit_herb: 1, water: 1 }, output: "vitality_pill", outputQty: 1, timeMs: 7000 },
                  { name: "Beast Bait", inputs: { fish: 2, algae: 2 }, output: "beast_bait", outputQty: 1, timeMs: 6000 },
-                 { name: "Moon Elixir", inputs: { moonpetal: 2, water: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
+                 { name: "Moon Elixir", inputs: { moonpetal: 2, water: 1 }, output: "qi_elixir", outputQty: 2, timeMs: 8000 },
                ] },
   jade_carver:{ name: "Jade Carver", icon: "🗿", cost: { wood: 6, stone: 8 }, unlocked: true,
                recipes: [
@@ -392,7 +392,7 @@ const BUILDINGS = {
                fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 2, timeMs: 10000 },
-                 { name: "Astral Steel", inputs: { star_fragment: 3, iron_bar: 2 }, output: "star_steel", outputQty: 1, timeMs: 9000 },
+                 { name: "Astral Steel", inputs: { star_fragment: 3, iron_bar: 2 }, output: "star_steel", outputQty: 2, timeMs: 9000 },
                ] },
   // ---- Phase-5 endgame ----
   talisman_atelier:{ name: "Talisman Atelier", icon: "🖌️", cost: { plank: 6, jade: 2, glass: 2 }, unlocked: true,
@@ -787,7 +787,7 @@ const PERKS = [
   { id: "bless",  name: "Heaven's Favor", icon: "🌠", max: 3, cost: [2, 4, 6],
     desc: "Dragon-pill blessings last +20% longer per level." },
   { id: "bounty", name: "Astral Bounty",  icon: "☄️", max: 3, cost: [2, 4, 6],
-    desc: "Passive fields (clay, stone, sand, spring water) well up 10% faster per level." },
+    desc: "Passive fields (clay, stone, wood, sand, spring water) well up 10% faster per level." },
   // Legacy: head starts applied by ascend() to every fresh run
   // (the genre's strongest prestige payoff is skipping the opening).
   { id: "paths",  name: "Remembered Paths",  icon: "🗺️", max: 3, cost: [3, 6, 12],
