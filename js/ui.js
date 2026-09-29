@@ -232,7 +232,9 @@ let holdFront = null;     // ground-hold: the front stack's item being dropped
 const GROUND_REPEAT_MS = 400;
 let suckFilter = null;    // left-hold vacuum type-lock (item key) or null = any
 const LOCK_R = G.cell * 0.75;   // a hold starting this close to an item locks to its type
-const EDGE_PICK_PX = 10;        // clicks this close to a building edge prefer vacuuming
+const EDGE_PICK_PX = 10;        // clicks this close to a building edge prefer vacuuming...
+const EDGE_PICK_FRAC = 0.15;    // ...capped at 15% of the footprint's smaller side
+const EDGE_ITEM_PX = 14;        // ...and only with a loose item right at the click
 const fixtureHitAt = new Map(); // "region:id" -> last counted swing on a fixture
 const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
 let lastClickAt = 0;
@@ -1272,14 +1274,26 @@ function refreshUnlockAfford() {
 }
 
 // ---- hand cursor overlay ------------------------------------
+// The chip's markup is rebuilt only when the hand's contents (or an icon's
+// load state) change — re-creating the <img>s every render blanked them for
+// a frame; a mousemove only moves it (moveHandCursor).
+let handChipSig = null;
+function moveHandCursor() {
+  const hc = $("#hand-cursor");
+  hc.style.left = cursor.cx + "px";
+  hc.style.top = cursor.cy + "px";
+}
 function renderHandCursor() {
   const hc = $("#hand-cursor");
   const hand = window.GS.hand;
   // hidden while ANY modal is up: it would draw over dialog text / the tree
   if (!hand.length || document.querySelector(".modal:not(.hidden)")) { hc.classList.add("hidden"); return; }
   hc.classList.remove("hidden");
-  hc.style.left = cursor.cx + "px";
-  hc.style.top = cursor.cy + "px";
+  moveHandCursor();
+  let sig = "";
+  for (const s of hand) sig += s.item + ":" + s.qty + (ICON_IMGS[s.item] ? "i," : ",");
+  if (sig === handChipSig) return;
+  handChipSig = sig;
   hc.innerHTML = hand.map((s, i) =>
     `<span class="hc-stack${i === 0 ? " first" : ""}">${s.qty}<span class="hc-ico">${iconHTML(s.item)}</span></span>`
   ).join("");
@@ -2530,7 +2544,7 @@ let lastReachHover = 0;   // id of the stone/spirit whose reach circle is showin
 function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   syncCursor(e);
-  renderHandCursor();
+  moveHandCursor();   // position only — the chip's content changes via render
   updateHoverName();
   if ((window.GS.build.placing || (linkMode && linkMode.picking)) && cursor.over)
     requestGridPaint();   // move the placement preview / link rubber-band
@@ -2553,6 +2567,12 @@ function updateHoverName() {
   else label.classList.add("hidden");
 }
 
+// The ground-hold pauses over a building — or a burner's fuel rack, which
+// a right-click feeds (rackRedirect lands on the burner).
+function groundHoldBlocked(region, lx, ly) {
+  const d = rackRedirect(region, lx, ly);
+  return !!E.buildingAt(region, Math.floor(d.y / CELL), Math.floor(d.x / CELL));
+}
 // A right-click on a built burner's 3x2 fuel rack (outside the footprint on
 // its LEFT, top-aligned) feeds the burner: redirect to the footprint centre.
 function rackRedirect(region, lx, ly) {
@@ -2581,11 +2601,12 @@ function onMouseDown(e) {
     rightHeld = true; holdStart = Date.now(); holdDone = false;
     const d = rackRedirect(p.region, p.lx, p.ly);
     const tb = E.buildingAt(p.region, Math.floor(d.y / CELL), Math.floor(d.x / CELL));
-    holdTarget = tb ? { region: p.region, id: tb.id, wasBuilt: !!tb.built } : null;
+    holdTarget = tb ? { region: p.region, id: tb.id, wasBuilt: !!tb.built, stage: window.GS.dragon.stage } : null;
     holdFront = !tb && window.GS.hand[0] ? window.GS.hand[0].item : null;
     // ground drop, ghost feed, or storehouse deposit (a building never spills)
     const r = E.dropFromHand(p.region, d.x, d.y, !!tb);
     if (tb) holdDone = feedHoldEnded(r);
+    else if (r && r.once) holdFront = null;   // a quaffed pill / bait lure: one per press
     if (r === null) {
       if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = holdStart;
       const rp = regionPx(p.region); addFloater(rp.x + p.lx, rp.y + p.ly, "✗", C.danger);
@@ -2660,8 +2681,9 @@ function onMouseDown(e) {
     }
     let sh = E.buildingAt(p.region, p.lrow, p.lcol);
     // converter outputs settle hugging the building edge: a click right on
-    // the edge with loose items in reach vacuums them instead
-    if (sh && edgeDist(sh, p.lx, p.ly) <= EDGE_PICK_PX && groundNear(p.region, p.lx, p.ly, PICKUP_R, null)) sh = null;
+    // the edge of a multi-cell building, with a loose item right at the
+    // click and room in the hand, vacuums instead of opening the building
+    if (sh && edgePickRedirect(sh, p.region, p.lx, p.ly)) sh = null;
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
     // the built Ascension Gate re-offers the ending
@@ -2733,15 +2755,28 @@ function nearestGround(region, lx, ly, r) {
   }
   return best;
 }
+// Should a left-click at (lx,ly) on building b vacuum instead of opening it?
+// Only on buildings larger than 1x1, within min(10px, 15% of the smaller
+// side) of the edge, with a loose item within EDGE_ITEM_PX, and hand space.
+function edgePickRedirect(b, region, lx, ly) {
+  const s = E.buildingSize(b.type);
+  if (s.w <= 1 && s.h <= 1) return false;
+  if (edgeDist(b, lx, ly) > Math.min(EDGE_PICK_PX, EDGE_PICK_FRAC * Math.min(s.w, s.h) * CELL)) return false;
+  if (E.handSpace() <= 0) return false;
+  return groundNear(region, lx, ly, EDGE_ITEM_PX, null);
+}
 // Distance (px) from a point inside building b to its nearest footprint edge.
 function edgeDist(b, lx, ly) {
   const s = E.buildingSize(b.type), x0 = b.col * CELL, y0 = b.row * CELL;
   return Math.min(lx - x0, x0 + s.w * CELL - lx, ly - y0, y0 + s.h * CELL - ly);
 }
-// A latched feed-hold ends when the target refused (null), a pill was
-// quaffed instead, or the ghost it began on has just been completed.
+// A latched feed-hold ends when the target refused (null), a consumable was
+// used (a pill quaffed / fed to the dragon, a bait lure — r.once: one per
+// press), the dragon advanced a stage (its story modal is up), or the ghost
+// it began on has just been completed.
 function feedHoldEnded(r) {
-  if (!r || r.used) return true;
+  if (!r || r.used || r.once) return true;
+  if (window.GS.dragon.stage !== holdTarget.stage) return true;
   if (!holdTarget.wasBuilt) {
     const b = E.buildingById(holdTarget.region, holdTarget.id);
     if (!b || b.built) return true;
@@ -2886,10 +2921,14 @@ function startLoop() {
         // a single click still harvests
         if (E.handSpace() <= 0) { if (handFullNudge(rg, cursor.lx, cursor.ly)) dirty = true; }
         else {
-          E.harvestNode(rg, n.id, true); fxSwing(rg, cursor.lx, cursor.ly); lastSwing = Date.now(); dirty = true;
+          E.harvestNode(rg, n.id, false, true); fxSwing(rg, cursor.lx, cursor.ly); lastSwing = Date.now(); dirty = true;
           if (n.fixed) fixtureHitAt.set(fk, lastSwing);
         }
       }
+    }
+    // a modal popping up (dragon stage story, ending...) ends a right-hold
+    if (rightHeld && (holdTarget || holdFront) && !holdDone && document.querySelector(".modal:not(.hidden)")) {
+      holdDone = true; holdFront = null;
     }
     if (rightHeld && cursor.over && rg && holdTarget && !holdDone) {
       // latched feed-hold: near-instant spin-up, ramp 4 -> 20/s over 0.2s;
@@ -2914,8 +2953,9 @@ function startLoop() {
       const front = window.GS.hand[0];
       if (!front || front.item !== holdFront) holdFront = null;
       else if (elapsed >= 0 && Date.now() - lastDrop >= 1000 / (4 + Math.min(elapsed / 200, 1) * 16) &&
-          !E.buildingAt(rg, cursor.lrow, cursor.lcol)) {
-        E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true;
+          !groundHoldBlocked(rg, cursor.lx, cursor.ly)) {
+        const r = E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true;
+        if (r && r.once) holdFront = null;   // pill quaffed / beast lured: one per press
       }
     }
     if (dirty) renderPlay();

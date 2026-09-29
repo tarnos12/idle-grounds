@@ -622,6 +622,11 @@ function depleteNode(areaKey, node) {
 const GROUND_CAP = 600;                   // max loose ground items per area
 const GROUND_HARD_CAP = 900;              // ceiling when only protected items remain
 const MANUAL_GRACE_MS = 4000;             // Gathering Stones ignore a player's own drops this long (real ms)
+const FIXTURE_GRACE_MS = 8000;            // ...and a fixture's (Spirit Tree / quarry / spring) this long
+// Set by harvestNode while a PLAYER swing drops its yield: the node's id and
+// the grace to grant. Drops are tagged with it (transient _src) so a hold
+// that keeps swinging can re-arm the grace on that node's earlier drops.
+let manualSrc = null;
 
 // Eviction value class of a ground item: 0 = raw common (evicted first),
 // 1 = other raw gathered, 2 = protected (crafted/rare — never evicted while
@@ -678,11 +683,16 @@ function evictGround(area) {
 // "crafted" = a building's product — protected from ground-cap eviction.
 function dropGround(areaKey, item, qty, x, y, tag) {
   const area = window.GS.areas[areaKey];
-  const manualAt = tag === "manual" ? Date.now() : 0;
+  // manualAt = when the grace window STARTS counting; a fixture's drops are
+  // stamped (FIXTURE - MANUAL) ms ahead so the stones' one check
+  // (now - manualAt < MANUAL_GRACE_MS) holds them FIXTURE_GRACE_MS in all.
+  const src = tag === "manual" ? manualSrc : null;
+  const manualAt = tag === "manual" ? Date.now() + (src ? src.grace - MANUAL_GRACE_MS : 0) : 0;
   for (let k = 0; k < qty; k++) {
     const jx = clampPx(x + rand(-16, 16)), jy = clampPx(y + rand(-16, 16));
     const g = { id: area.nextGroundId++, item, x: jx, y: jy };
     if (manualAt) g.manualAt = manualAt;           // transient (stripped on save)
+    if (src) g._src = src.id;                      // transient: which node dropped it
     if (tag === "crafted") g.crafted = true;
     area.ground.push(g);
   }
@@ -854,16 +864,36 @@ function pickupNear(areaKey, x, y, radius) {
 // ---- Harvesting ---------------------------------------------
 
 // True only while automationTick harvests — its drops are NOT player drops.
-// (The UI's hold loop also passes isAuto=true for the AUTO badge, so isAuto
-// can't tell a bot from the player.)
+// (isAuto = the AUTO badge + silent swing, passed only by automationTick; the
+// UI's hold loop passes held=true instead.)
 let autoHarvesting = false;
 
+// A player swing on `node`: re-arm the stone grace on the drops this node
+// already made that still lie on the ground, so a long hold-chop doesn't lose
+// its early drops to a Gathering Stone — the window runs from the LAST swing.
+function refreshNodeGrace(area, node, grace) {
+  const at = Date.now() + grace - MANUAL_GRACE_MS;
+  for (const g of area.ground)
+    if (g._src === node.id && g.manualAt && g.manualAt < at) g.manualAt = at;
+}
+
 // Click a node. Behaviour depends on its `interaction`.
-function harvestNode(areaKey, nodeId, isAuto) {
+// isAuto: an automation swing (AUTO badge, no sound). held: the player's
+// hold-left auto-swing (sounds + grace like a click; no badge).
+function harvestNode(areaKey, nodeId, isAuto, held) {
   const node = nodeById(areaKey, nodeId);
   if (!node || node.deco) return false;   // decorative nodes can't be interacted with
   if (!isAuto && window.onSfx) window.onSfx("harvest", areaKey);   // player swing feedback
   const tag = autoHarvesting ? undefined : "manual";   // player drops get the stone grace window
+  if (tag === "manual") {
+    const grace = node.fixed ? FIXTURE_GRACE_MS : MANUAL_GRACE_MS;
+    refreshNodeGrace(window.GS.areas[areaKey], node, grace);
+    manualSrc = { id: node.id, grace };
+  }
+  try { return harvestSwing(areaKey, node, isAuto, tag); }
+  finally { manualSrc = null; }
+}
+function harvestSwing(areaKey, node, isAuto, tag) {
 
   // AUTO badge should stay solid while auto-mining: last longer than the gap
   // between auto-swings (and the 1s automation tick).
@@ -1532,7 +1562,7 @@ function dropFromHand(areaKey, x, y, noGround) {
   if (window.GS.hand[0] && window.GS.hand[0].item === D.VITALITY.item) {
     handTake(D.VITALITY.item, 1);
     window.GS.combatBuff = { until: Date.now() + D.VITALITY.ms * buffScale() };
-    return { used: D.VITALITY.item };
+    return { used: D.VITALITY.item, once: true };   // one pill per press
   }
   // Beast Bait INSIDE the enemy zone always lures (even over a formation
   // that would otherwise catch the drop): a tier-2 beast appears there.
@@ -1546,7 +1576,7 @@ function dropFromHand(areaKey, x, y, noGround) {
       const area2 = window.GS.areas[areaKey];
       area2.enemies.push({ id: area2.nextEnemyId++, x, y, hp: bs.hp, maxHp: bs.hp,
         tx: x, ty: y, hitAt: 0, kind: "boss", sprite: bs.sprite, spd: bs.speed });
-      return { fed: "beast_bait" };
+      return { fed: "beast_bait", lured: true, once: true };   // one lure per press
     }
   }
   const b = buildingAt(areaKey, row, col);
@@ -1571,7 +1601,7 @@ function dropFromHand(areaKey, x, y, noGround) {
       const dur = (60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0)
         + (shrineBuilt() ? 60000 : 0)) * Math.pow(1.2, perkLevel("bless")) * buffScale();   // Dragon Shrine + Heaven's Favor perk
       window.GS.buff = { kind: first0.item, until: Date.now() + dur };
-      return { fed: first0.item };
+      return { fed: first0.item, once: true };   // one blessing pill per press
     }
     // a pill deeper in the hand: bring it to the front (the NEXT click feeds
     // it) — always once awakened, else only when no tribute is carried
