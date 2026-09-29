@@ -123,15 +123,18 @@ function drawFX(now, X, Y, s) {
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
   for (const f of floaters) {
     const age = now - f.t0, k = age / f.ttl;
-    const alpha = k < 0.12 ? k / 0.12 : 1 - (k - 0.12) / 0.88;
+    const alpha = age < 400 ? Math.min(1, age / 60) : Math.max(0, 1 - (age - 400) / Math.max(1, f.ttl - 400));   // full alpha ~400 ms, then fade
     const sx = X(f.x), sy = Y(f.y - k * 30);    // drift upward over its life
     ctx.globalAlpha = Math.max(0, alpha);
     const isz = 15 * s;
     if (f.item) drawItemIcon(f.item, sx, sy, isz);
     ctx.fillStyle = f.color;
     ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
-    ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 3 * s;
-    ctx.fillText(f.text, sx + isz * 0.62, sy);
+    const tx = sx + isz * 0.62;
+    ctx.lineJoin = "round"; ctx.lineWidth = Math.max(2, 3.5 * s);
+    ctx.strokeStyle = "rgba(8,10,14,.85)"; ctx.strokeText(f.text, tx, sy);   // dark halo
+    ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 4 * s;
+    ctx.fillText(f.text, tx, sy);
     ctx.shadowBlur = 0;
   }
   ctx.globalAlpha = 1;
@@ -609,7 +612,7 @@ function drawWorldInner() {
   for (const v of visible) if (v.unlocked) drawRegionItems(v.key, v.ox, v.oy, view, s, X, Y);
   drawQuestRing(now, X, Y, s);   // the active quest's world target
 
-  // "Automation skipping <icons>" marker at the top of each affected region
+  // "Skipping <icons>" chip at the top-left of each affected region
   for (const v of visible) if (v.unlocked) drawAutoSkip(v.ox, v.oy, s, X, Y, vw, autoSkipOf(window.GS.areas[v.key]));
 
   // link picking: rubber-band line from the chosen source to the cursor
@@ -648,7 +651,12 @@ function drawWorldInner() {
       const fpx = MIN_LABEL_PX + 1;
       ctx.font = `800 ${fpx}px ${TEXT_FONT}`;
       const tw = ctx.measureText(why).width, w = tw + 12, h = fpx + 8;
-      const cx = px + B.w * CELL * s / 2, ty = py + B.h * CELL * s + 4;
+      // under the ghost; above it near the bottom edge; always inside the view
+      const vh = vw * VIEW_ASPECT;
+      const cx = clamp(px + B.w * CELL * s / 2, w / 2 + 4, Math.max(w / 2 + 4, vw - w / 2 - 4));
+      let ty = py + B.h * CELL * s + 4;
+      if (ty + h > vh - 4) ty = py - h - 4;
+      ty = clamp(ty, 4, Math.max(4, vh - h - 4));
       ctx.fillStyle = "rgba(40,10,10,.9)";
       ctx.beginPath();
       if (ctx.roundRect) ctx.roundRect(cx - w / 2, ty, w, h, 6); else ctx.rect(cx - w / 2, ty, w, h);
@@ -719,33 +727,36 @@ function autoSkipOf(area) {
   const a = area && area._autoSkip;
   return Array.isArray(a) && a.length ? a : [];
 }
-// Amber pill at the top of a region whose automation is skipping some items
-// (too many lying around): "Automation skipping [icons] \u2014 too many lying
-// around", centred on the visible span of the region, clamped into the view.
+// Gate offerings progress text: full -> "Offerings 6/6 — full (+6 ☯)", else the
+// per-type remainder "🧧 1/2 ⚔️ 2/2 🔶 0/2" (offered/cap per offering type).
+function offeringsHTML(off) {
+  if (off.count >= off.cap) return `Offerings ${off.count}/${off.cap} — full (+${off.count} ☯)`;
+  return `Offerings ${off.count}/${off.cap}: ` +
+    DD.GATE_OFFERINGS.items.map(it => `${iconHTML(it)} ${Math.min(off.perType, off.offered[it] || 0)}/${off.perType}`).join(" ");
+}
+// Compact amber chip at the region's top-left corner (kept off the middle of
+// the region, where building labels live) whose automation is skipping some
+// items because too many lie around: "Skipping [icons]". The help explains it.
 function drawAutoSkip(ox, oy, s, X, Y, vw, items) {
   if (!items.length) return;
   const l = Math.max(X(ox), 0), r = Math.min(X(ox + PLAY_W), vw);
   if (r - l < 40) return;
-  const t1 = "Automation skipping", t2 = "\u2014 too many lying around";
-  const px = MIN_LABEL_PX + 1, ipx = Math.round(px * 1.4), gap = 3, pad = 9;
-  const shown = items.slice(0, 5);
+  const t1 = "Skipping";
+  const px = MIN_LABEL_PX, ipx = Math.round(px * 1.4), gap = 3, pad = 6;
+  const shown = items.slice(0, 4);
   ctx.font = `800 ${px}px ${TEXT_FONT}`;
-  const w1 = ctx.measureText(t1).width, w2 = ctx.measureText(t2).width;
+  const w1 = ctx.measureText(t1).width;
   const iconsW = shown.length * ipx + (shown.length - 1) * gap;
-  const w = w1 + w2 + iconsW + gap * 4 + pad * 2, h = Math.max(px, ipx) + 10;
-  const cx = clamp((l + r) / 2, w / 2 + 4, Math.max(w / 2 + 4, vw - w / 2 - 4));
-  const y = Math.max(Y(oy), 0) + 10, x0 = cx - w / 2, my = y + h / 2;
+  const w = w1 + iconsW + gap * 2 + pad * 2, h = Math.max(px, ipx) + 6;
+  const x0 = l + 6, y = Math.max(Y(oy), 0) + 6, my = y + h / 2;
   ctx.fillStyle = "rgba(60,40,8,.92)"; ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5;
   ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(x0, y, w, h, 8); else ctx.rect(x0, y, w, h);
+  if (ctx.roundRect) ctx.roundRect(x0, y, w, h, 7); else ctx.rect(x0, y, w, h);
   ctx.fill(); ctx.stroke();
   ctx.fillStyle = "#fde68a"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
   let x = x0 + pad;
   ctx.fillText(t1, x, my + 0.5); x += w1 + gap * 2;
-  shown.forEach((it, i) => { drawItemIcon(it, x + ipx / 2, my, ipx); x += ipx + gap; });
-  x += gap;
-  ctx.fillStyle = "#fde68a"; ctx.font = `800 ${px}px ${TEXT_FONT}`;
-  ctx.fillText(t2, x, my + 0.5);
+  shown.forEach(it => { drawItemIcon(it, x + ipx / 2, my, ipx); x += ipx + gap; });
 }
 
 // LAYER 1 — flat ground: region tint, zone tints, frame.
@@ -1318,23 +1329,55 @@ function sideOf(from, to) {   // viewport side of `to` as seen from `from`
   if (Math.abs(dx) + Math.abs(dy) !== 1) return null;
   return dx < 0 ? "left" : dx > 0 ? "right" : dy < 0 ? "up" : "down";
 }
+// How the hand stands against a region's remaining unlock cost:
+// { state: "afford" (covers ALL of it) | "partial" (an installment only) | "cant",
+//   have, need } — have/need count items toward the remaining cost.
+function unlockPayState(key) {
+  const rem = E.unlockRemaining ? E.unlockRemaining(key) : E.areaUnlockCost(key);
+  if (!rem) return { state: "cant", have: 0, need: 0 };
+  let have = 0, need = 0;
+  for (const [it, q] of Object.entries(rem)) {
+    const s = window.GS.hand.find(x => x.item === it);
+    need += q; have += Math.min(q, s ? s.qty : 0);
+  }
+  const state = need > 0 && have >= need ? "afford" : have > 0 ? "partial" : "cant";
+  return { state, have, need };
+}
+function applyUnlockPayState(btn) {
+  const st = unlockPayState(btn.dataset.area);
+  btn.classList.toggle("afford", st.state === "afford");
+  btn.classList.toggle("partial", st.state === "partial");
+  btn.classList.toggle("cant", st.state === "cant");
+  const pay = btn.querySelector(".arr-pay");
+  if (pay) pay.textContent = st.state === "partial" ? `pay ${st.have}/${st.need}` : "";
+}
+// Pay what the hand holds toward a locked region (left- or right-click).
+function payUnlockButton(key) {
+  const res = E.unlockArea(key);
+  if (res === true) { clampCam(); render(); }
+  else if (res) renderUnlockButtons();   // installment paid: refresh the paid/needed label
+  else if (window.AUDIO) window.AUDIO.play("error");
+}
 function unlockButtonEl(key, side) {
   const cost = E.areaUnlockCost(key);
   // installments: show paid/needed per item once anything is paid
   const paid = E.unlockPaidOf ? E.unlockPaidOf(key) : {};
   const label = Object.entries(cost).map(([it, q]) =>
     paid[it] ? `${Math.min(paid[it], q)}/${q} ${iconHTML(it)}` : `${q} ${iconHTML(it)}`).join(" ");
-  const ok = E.canPayUnlock ? E.canPayUnlock(key) : E.canAfford(cost);
-  const btn = el("button", `edge-arrow ${side} locked` + (ok ? " afford" : " cant"));
+  const btn = el("button", `edge-arrow ${side} locked cant`);
   btn.dataset.area = key;
   btn.innerHTML = `<span class="arr">🔓</span>` +
-    `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span>`;
-  btn.onclick = () => {
-    const res = E.unlockArea(key);
-    if (res === true) { clampCam(); render(); }
-    else if (res) renderUnlockButtons();   // installment paid: refresh the paid/needed label
-    else if (window.AUDIO) window.AUDIO.play("error");
-  };
+    `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span><span class="arr-pay"></span>`;
+  applyUnlockPayState(btn);
+  btn.onclick = () => payUnlockButton(key);
+  // the button sits INSIDE #world-viewport: a mousedown must never reach the
+  // world handler (a right-click there would drop the hand's front stack on
+  // the ground). Right-click pays the same way left-click does.
+  btn.addEventListener("mousedown", e => {
+    e.stopPropagation();
+    if (e.button === 2) { e.preventDefault(); payUnlockButton(key); }
+  });
+  btn.addEventListener("contextmenu", e => { e.preventDefault(); e.stopPropagation(); });
   return btn;
 }
 function renderUnlockButtons() {
@@ -1369,12 +1412,18 @@ function positionUnlockButtons() {
   const vr = vp.getBoundingClientRect();
   const pr = panel && panel.getClientRects().length ? panel.getBoundingClientRect() : null;   // fixed => offsetParent is null, so test rects
   for (const b of btns) {
-    b.style.top = ""; b.style.transform = "";
+    b.style.top = ""; b.style.transform = ""; b.style.right = "";
     if (!pr || !pr.height) continue;
     const r = b.getBoundingClientRect();
     const overlapX = r.right > pr.left && r.left < pr.right;
     const overlapY = r.bottom > pr.top && r.top < pr.bottom;
     if (!(overlapX && overlapY)) continue;
+    // tiny viewport, right-hand button: slide it to the LEFT of the panel
+    // (keeps it vertically centred) when that still fits inside the viewport
+    if (b.classList.contains("right") && pr.left - 8 - r.width >= vr.left + 8) {
+      b.style.right = Math.max(8, vr.right - pr.left + 8) + "px";
+      continue;
+    }
     let top = pr.bottom + 10 - vr.top;                      // just below the panel
     top = Math.min(top, vr.height - r.height - 8);           // keep inside the viewport
     b.style.transform = "none";
@@ -1387,10 +1436,7 @@ function syncUnlockButtons() {
 }
 // Tick refresh: re-evaluate each unlock button's affordability in place.
 function refreshUnlockAfford() {
-  for (const btn of $("#arrows").querySelectorAll("button[data-area]")) {
-    const ok = E.canPayUnlock ? E.canPayUnlock(btn.dataset.area) : E.canAfford(E.areaUnlockCost(btn.dataset.area));
-    btn.classList.toggle("cant", !ok); btn.classList.toggle("afford", ok);
-  }
+  for (const btn of $("#arrows").querySelectorAll("button[data-area]")) applyUnlockPayState(btn);
 }
 
 // ---- hand cursor overlay ------------------------------------
@@ -1398,6 +1444,17 @@ function refreshUnlockAfford() {
 // load state) change — re-creating the <img>s every render blanked them for
 // a frame; a mousemove only moves it (moveHandCursor).
 let handChipSig = null;
+// DOM overlays the chip must never draw over (quest panel, bottom strips, the
+// recipe popup, the top bar): hovering one hides it. Tracked by pointerenter /
+// pointerleave on each overlay, re-checked from the real event target on
+// every mousemove (an overlay hidden under the pointer never fires leave).
+const HAND_OVERLAYS = "#quest-panel, #recipe-menu, #recipe-info, #build-menu, #link-menu, #roster-menu, #topbar";
+let overlayHover = false;
+function setOverlayHover(v) {
+  if (v === overlayHover) return;
+  overlayHover = v;
+  renderHandCursor();
+}
 function moveHandCursor() {
   const hc = $("#hand-cursor");
   hc.style.left = cursor.cx + "px";
@@ -1407,7 +1464,7 @@ function renderHandCursor() {
   const hc = $("#hand-cursor");
   const hand = window.GS.hand;
   // hidden while ANY modal is up: it would draw over dialog text / the tree
-  if (!hand.length || document.querySelector(".modal:not(.hidden)")) { hc.classList.add("hidden"); return; }
+  if (!hand.length || overlayHover || document.querySelector(".modal:not(.hidden)")) { hc.classList.add("hidden"); return; }
   hc.classList.remove("hidden");
   moveHandCursor();
   let sig = "";
@@ -1457,7 +1514,9 @@ function renderBuildMenu() {
   buildCatSig = sig; buildMenuWasOpen = open;
   if (open) E.markBuildListed();   // a reveal while the menu is open counts as listed
   syncBuildDot();
+  const wasHidden = bar.classList.contains("hidden");
   bar.classList.toggle("hidden", !open);
+  if (wasHidden === open) positionUnlockButtons();   // the strip shifts the viewport
   updateHoverName();
   if (!open) return;
   bar.innerHTML = "";
@@ -1732,11 +1791,13 @@ function openRecipeMenu(areaKey, b) {
   closeLinkMenu(); closeRoster();   // one building panel at a time
   recipeMenuFor = { area: areaKey, id: b.id };
   renderRecipeMenu();
+  positionUnlockButtons();
 }
 function closeRecipeMenu() {
   recipeMenuFor = null;
   $("#recipe-menu").classList.add("hidden");
   hideRecipeInfo();
+  positionUnlockButtons();
 }
 // The recipe picker: a "Recipes" title over a 3x3 icon grid (one icon per
 // existing recipe). Hovering an icon opens the detail popup bottom-right.
@@ -1899,11 +1960,13 @@ function openLinkMenu(areaKey, b) {
   closeRecipeMenu(); closeRoster();   // one building panel at a time
   linkMode = { area: areaKey, id: b.id, picking: null, srcId: null };
   renderLinkMenu();
+  positionUnlockButtons();
   requestGridPaint();
 }
 function closeLinkMenu() {
   linkMode = null;
   $("#link-menu").classList.add("hidden");
+  positionUnlockButtons();
   requestGridPaint();
 }
 function renderLinkMenu() {
@@ -2092,7 +2155,7 @@ function milestoneInfo() {
       html += `<div class="qp-name">☯ Ascend for +${E.ascendReward()} ☯</div>` +
         `<div class="qp-desc">Click the Ascension Gate ⛩️ to ascend — ` +
         (allOpen ? `every region is open.</div>` +
-          `<div class="ms-line">Offerings ${off.count}/${off.cap} — right-click spare ${offIcons} onto the Gate (+1 ☯ each)</div>`
+          `<div class="ms-line">${offeringsHTML(off)}${off.count >= off.cap ? "" : ` — right-click spares onto the Gate (+1 ☯ each)`}</div>`
           : `each region unlocked (+2 ☯) or gate offering (${offIcons}, ${off.count}/${off.cap}) = more Ascension Points.</div>`);
     }
   }
@@ -2249,9 +2312,9 @@ function openHelp() {
   S.push(["🕹️ Controls",
     "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Q / E rotate the stacks in your hand, Esc cancels/closes."]);
   S.push(["✋ Gathering & the hand",
-    "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown bottom-right); if you START the hold on an item, only that item type is vacuumed. RIGHT-click drops items / feeds buildings; the front stack feeds first (Q / E change which stack is in front). Holding right-click keeps feeding but stops at the target: it never spills onto the ground once the building is full."]);
+    "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown in the bottom bar); if you START the hold on an item, only that item type is vacuumed. RIGHT-click drops items / feeds buildings; the front stack feeds first (Q / E change which stack is in front). Holding right-click keeps feeding but stops at the target: it never spills onto the ground once the building is full."]);
   S.push(["🏗️ Buildings",
-    "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input, and show what they are doing under the result icon: <b>Needs</b> an input (red), <b>No fuel</b> (red), <b>Stock full</b> (amber — inputs at the cap), <b>Output pile full</b> (amber — too much of its output is lying around it, so it waits until the pile is cleared or wisped away), or Working with crafts per minute. Region unlocks can be paid in installments: right-click the unlock button as often as you like and what you have paid is kept."]);
+    "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input, and show what they are doing under the result icon: <b>Needs</b> an input (red), <b>No fuel</b> (red), <b>Stock full</b> (amber — inputs at the cap), <b>Output pile full</b> (amber — too much of its output is lying around it, so it waits until the pile is cleared or wisped away), or Working with crafts per minute. Region unlocks can be paid in installments: click or right-click the unlock button to pay what your hand holds, as often as you like — what you have paid is kept."]);
   S.push(["🔥 Fuel racks",
     `Every burner (Kiln, Forge, Pill Furnace, Star Anvil) has one FUEL RACK on its LEFT: right-click wood, bamboo, charcoal or firestone into it (charcoal burns 4× longer than wood, firestone 12×). Fuel is separate from ingredients — recipes never consume it, only the burn does. A Furnace Spirit 🕯️ (holds ${DD.BUILDINGS.furnace_spirit.stoker.cap}) tops up every burner whose CENTRE is inside its dashed circle (${stokeReach(DD.BUILDINGS.furnace_spirit)} cells) from its own stash; hover it to see the range.`]);
   S.push(["🏛️ Altar upgrades",
@@ -2263,7 +2326,7 @@ function openHelp() {
   S.push(["🫕 Dragon pills",
     "The Pill Furnace refines Qi Elixirs into four pills. Right-click one onto the dragon and it exhales a timed blessing (60s base, longer with Dragon Affinity): Ember = burners 2×, Verdant = regrow 2×, Swiftwind = wisps 2×, Stoneheart = double mining drops. A new pill replaces the active one."]);
   S.push(["🏮 Wisp network",
-    `Gathering Stones 🧿 vacuum ground items inside their circle (hover one, or open a lantern's link menu, to see it; it holds ${DD.BUILDINGS.gathering_stone.gather.cap} and shows n/cap). Wisp Lanterns ferry items: click a lantern to edit its links (Add link → source → target, served in order, one per beat; a dot per link shows sent / source empty / target refused / idle). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw. Wisps cannot cross the void between regions: links stay within one region. A link is refused if its target can never use the source's item (a Kiln can't take Planks).`]);
+    `Gathering Stones 🧿 vacuum ground items inside their circle (hover one, or open a lantern's link menu, to see it; it holds ${DD.BUILDINGS.gathering_stone.gather.cap} and shows n/cap). Wisp Lanterns ferry items: click a lantern to edit its links (Add link → source → target, served in order, one per beat; a dot per link shows sent / source empty / target refused / idle; amber also means the source holds nothing this target uses). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw. Wisps cannot cross the void between regions: links stay within one region. A link is refused if its target can never use the source's item (a Kiln can't take Planks).`]);
   S.push(["🧘 Disciples",
     "Build a Meditation Pavilion, then click it and Recruit disciples (each costs a Robe 🥋 from the Loom). Feed the pavilion Spirit Buns 🥟 (Mill) or Spirit Wine 🍶 (Brewery, worth 3×) by hand or wisp — while fed, each disciple cultivates Spirit Essence ✨. Disciple Mastery in the upgrade tree raises the cap."]);
   if (dr >= 1) S.push(["🔥 Forge & smelting",
@@ -2281,13 +2344,13 @@ function openHelp() {
   S.push(["🛠️ Troubleshooting logistics",
     "<b>Stone full</b> (red n/cap): its buffer is clogged, often by byproducts. Link the stone to targets and it only collects what those targets use, so strays stay on the ground. " +
     "<b>Low fuel</b>: a burner reading No fuel needs items on its left rack — or a Furnace Spirit in range with a stocked stash. " +
-    "<b>Nothing moves</b>: check the link dot (amber = source empty, red = target refused/full) and that both ends sit in the SAME region — wisps can't cross the void. " +
-    "<b>Automation skipping</b>: when too much of one item is lying around a region, automation stops harvesting that item (a marker with its icon shows at the region's top) until you vacuum it up or clear it away; other work carries on."]);
+    "<b>Nothing moves</b>: check the link dot (amber = source empty, or it holds nothing this target uses; red = target refused/full) and that both ends sit in the SAME region — wisps can't cross the void. " +
+    "<b>Automation skipping</b>: when too much of one item is lying around a region, automation stops harvesting that item (a small amber 'Skipping' chip with its icon shows at the region's top-left corner) until you vacuum it up or clear it away; other work carries on."]);
   if (dr >= 4) S.push(["⛩️ Ascension",
     "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate — the built gate glows gold; click it to ascend. Ascending resets the grounds and grants Ascension Points (AP: 3, +2 per region beyond the Center, plus gate offerings — right-click spare Talismans, Star Steel and Dragon Scales onto the gate, 2 of each count — all × the bonus from any vows you kept) and +20% world speed per ascension (it adds up; ☯ in the bottom bar)."]);
   if ((window.GS.ascensions || 0) > 0 || (window.GS.ascendPoints || 0) > 0)
     S.push(["☯ Ascension Shrine",
-      "Open the Shrine (the ☯ button in the bottom bar) to spend AP on permanent perks, grouped by Pace, Economy, Combat, Meta and Legacy — they persist through every future reset. After your first ascension you can also take Vows: optional restrictions for a run that pay out extra when you ascend."]);
+      "Open the Shrine (the ☯ button in the bottom bar) to spend AP on permanent perks, grouped by Pace, Economy, Combat, Meta and Legacy — they persist through every future reset. Remembered Paths opens the Mine, then Fishing, then the Farm; Center automation also taps the Spirit Tree. After your first ascension you can also take Vows: optional restrictions for a run that pay out extra when you ascend."]);
   if (u.farm || u.mine || u.fishing) S.push(["🗺️ Regions",
     "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron ore; Fishing: fish, algae & spring water). Jade shards drop from the Center quarry rock and Mine jade veins. Unlock buttons appear on the side of the screen where the new region lies, only for regions bordering the one you're viewing."]);
   else S.push(["🗺️ Regions",
@@ -2355,8 +2418,8 @@ function syncAscendModal() {
       `World speed <b>×${now.toFixed(2)} → ×${next.toFixed(2)}</b> ` +
       `(machines, nature, wisps, foxes and your own hands).` +
       (E.tributeMult ? `<br>Dragon tributes <b>×${E.tributeMult(asc).toFixed(2)} → ×${E.tributeMult(asc + 1).toFixed(2)}</b> (the dragon remembers you).` : "") +
-      (off ? `<br>Offerings <b>${off.count}/${off.cap}</b> (+${off.count} ☯) — right-click spare ` +
-        `${iconHTML("talisman")} ${iconHTML("star_steel")} ${iconHTML("dragon_scale")} onto the Gate.` : "") +
+      (off ? `<br>${offeringsHTML(off)}` + (off.count >= off.cap ? "" :
+        ` (+${off.count} ☯) — right-click spare ${iconHTML("talisman")} ${iconHTML("star_steel")} ${iconHTML("dragon_scale")} onto the Gate.`) : "") +
       (kept.length ? `<br>Vows kept this run: ${kept.map(v => v.icon + " " + v.name).join(", ")} — ` +
         `AP ×${E.vowMult().toFixed(2)}.` : "") +
       `<br>(Ascended ${asc} time${asc === 1 ? "" : "s"} so far.)`;
@@ -2469,7 +2532,7 @@ const PERK_FX = {   // [label, level -> value]
   fury:      ["damage",       l => `+${l}`],
   bless:     ["blessings",    l => perkMul(Math.pow(1.2, l))],
   bounty:    ["fields",       l => perkMul(Math.pow(0.9, l))],
-  paths:     ["opens",        l => l ? ["Farm", "Mine", "Fishing"].slice(0, l).join(" + ") : "none"],
+  paths:     ["opens",        l => l ? (E.PATH_REGIONS || ["mine", "fishing", "farm"]).slice(0, l).map(k => DD.AREAS[k].name).join(" + ") : "none"],
   legacy:    ["auto L1",      l => l ? ["Center", "Farm", "Mine"].slice(0, l).join(" + ") : "none"],
 };
 function perkFxHTML(perk, lvl) {
@@ -2608,9 +2671,6 @@ function stallRowsHTML(summary) {
   const full = (summary.stalls || []).filter(s => s.kind === "ground").map(s => area(s.areaKey));
   if (full.length)
     rows.push(`Ground full in <b>${full.join(", ")}</b>: the oldest loose raw items were cleared. Gathering Stones feeding Storehouses keep it clear.`);
-  const paused = (summary.stalls || []).filter(s => s.kind === "autopaused").map(s => area(s.areaKey));
-  if (paused.length)
-    rows.push(`Bots paused in <b>${paused.join(", ")}</b> — too many loose items on the ground. Gathering Stones + Storehouses clear it.`);
   for (const s of summary.stalls || []) {
     if (s.kind === "autoskip")
       rows.push(`<b>${area(s.areaKey)}</b>: bots skipped ${names(s)} — plenty already lay loose. Gathering Stones + Storehouses clear it.`);
@@ -2801,6 +2861,7 @@ let lastReachHover = 0;   // id of the stone/spirit whose reach circle is showin
 function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   syncCursor(e);
+  setOverlayHover(!!(e.target && e.target.closest && e.target.closest(HAND_OVERLAYS)));
   moveHandCursor();   // position only — the chip's content changes via render
   updateHoverName();
   if ((window.GS.build.placing || (linkMode && linkMode.picking)) && cursor.over)
@@ -3265,12 +3326,19 @@ function wireInput() {
   tcvs.addEventListener("mousemove", onTreeMove);
   tcvs.addEventListener("click", onTreeClick);
   tcvs.addEventListener("mouseleave", () => { treeHoverId = null; hideTip(); if (upgradesOpen) drawTree(); });
+  for (const n of document.querySelectorAll(HAND_OVERLAYS)) {
+    n.addEventListener("pointerenter", () => setOverlayHover(true));
+    n.addEventListener("pointerleave", () => setOverlayHover(false));
+  }
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", onMouseUp);
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
   window.addEventListener("resize", fitViewport);
-  if (window.ResizeObserver) new ResizeObserver(() => positionUnlockButtons()).observe($("#quest-panel"));
+  if (window.ResizeObserver) {   // panel, viewport AND the main column (bottom strips open/close, window resize)
+    const ro = new ResizeObserver(() => positionUnlockButtons());
+    for (const id of ["#quest-panel", "#world-viewport", "#main"]) { const n = $(id); if (n) ro.observe(n); }
+  }
   const hpill = document.querySelector(".hand-pill");
   if (hpill) hpill.title = "Carried items. Q: send the front stack to the back · E: bring the back stack to the front";
   recenterCamera();                     // start at the top-centre of the centre region
