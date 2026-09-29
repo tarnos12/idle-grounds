@@ -10,6 +10,10 @@
        saves lastSeen at the resume point, and the next load replays exactly
        the remainder; Skip forfeits it.
    (e) summary shape: stalls ("why it stopped"), skippedMs, gate still 90s.
+   (f) v52 fix wave: plateau early stop (saturated, not forfeited; the world
+       really is static), resume copy data (GS.offlineAwayFrom carries the
+       original away start + migrates), autopaused/autoskip/outfull stall
+       rows, a throwing replay is flagged failed and still closes.
    Standalone vm sandbox — loads js/data.js, js/state.js, js/engine.js.
    Usage: node tests/test-v52-offline.js [repoRoot]   (default /home/user/idle-grounds)
    Exits 1 on any FAIL. */
@@ -145,8 +149,9 @@ try {
       const diff = Math.abs(hNew - hOld) / Math.max(1, hOld);
       check(`parity seed ${seed}: held-item totals within 2% (old vs new, 20 sim-min; stochastic placement noise)`, diff <= 0.02,
         `old=${hOld} new=${hNew} (${(diff * 100).toFixed(2)}%), gained old=${gOld} new=${gNew}`);
-      check(`parity seed ${seed}: replay covered the whole window`, r.simulatedMs >= SIM && r.skippedMs === 0,
-        `simulated=${r.simulatedMs} skipped=${r.skippedMs}`);
+      check(`parity seed ${seed}: replay covered the whole window (simulated or saturated)`,
+        r.simulatedMs + (r.saturatedMs || 0) >= SIM && r.skippedMs === 0,
+        `simulated=${r.simulatedMs} saturated=${r.saturatedMs} skipped=${r.skippedMs}`);
       runs.push({ msOld, msNew });
       // every ground item ends in a valid spot (finite, in the map, outside colliders)
       const P = sNew.DATA.GRID.cells * sNew.DATA.GRID.cell;
@@ -251,6 +256,29 @@ try {
     const job3 = boot({ seed: 6, clock: clk3, saved }).ENGINE.beginOfflineCatchup();
     check("resume: time closed after the unload is added on top",
       !!job3 && job3.elapsedMs === remaining + 300000, job3 ? "elapsed=" + job3.elapsedMs : "null");
+    // resume copy data: the save carries the ORIGINAL away start, so the
+    // resumed summary shows the real gap (not just the remainder)
+    check("resume: mid-replay save carries offlineAwayFrom = the original lastSeen",
+      saved && saved.offlineAwayFrom === T0, saved ? "offlineAwayFrom=" + saved.offlineAwayFrom : "no save");
+    check("resume: resumed job is flagged and its awayMs is the real gap",
+      !!job2 && job2.resumed === true && job2.awayMs === nowAtUnload - T0,
+      job2 ? `resumed=${job2.resumed} awayMs=${job2.awayMs} expected=${nowAtUnload - T0}` : "null");
+    s2.ENGINE.skipOfflineCatchup(job2);
+    const sum2 = s2.ENGINE.finishOfflineCatchup(job2);
+    check("resume: resumed summary carries resumed + the real gap; offlineAwayFrom cleared",
+      sum2.resumed === true && sum2.awayMs === nowAtUnload - T0 && s2.GS.offlineAwayFrom === null,
+      `resumed=${sum2.resumed} awayMs=${sum2.awayMs} from=${s2.GS.offlineAwayFrom}`);
+    // migration: absent / nonsensical offlineAwayFrom loads as null
+    const bad = Object.assign({}, saved, { offlineAwayFrom: saved.lastSeen + 5 });
+    const s4 = boot({ seed: 6, clock: { t: nowAtUnload }, saved: bad });
+    const noFld = Object.assign({}, saved); delete noFld.offlineAwayFrom;
+    const s5 = boot({ seed: 6, clock: { t: nowAtUnload }, saved: noFld });
+    check("migration: offlineAwayFrom later than lastSeen / absent -> null",
+      s4.GS.offlineAwayFrom === null && s5.GS.offlineAwayFrom === null,
+      `bad=${s4.GS.offlineAwayFrom} absent=${s5.GS.offlineAwayFrom}`);
+    const job5 = s5.ENGINE.beginOfflineCatchup();
+    check("migration: a save without the field replays as a plain (non-resumed) gap",
+      !!job5 && job5.resumed === false && job5.awayMs === job5.elapsedMs, job5 ? `awayMs=${job5.awayMs}` : "null");
 
     // Skip: remainder forfeited — the next save stamps the real clock
     E.skipOfflineCatchup(job);
@@ -312,6 +340,121 @@ try {
     const gs = area.buildings.find(b => b.built && D.BUILDINGS[b.type].gather);
     if (gs) gs.inv = [{ item: "wood", qty: D.BUILDINGS[gs.type].gather.cap }];
     check("stalls: full Gathering Stone -> stonefull", !gs || E.offlineStalls().some(x => x.kind === "stonefull"));
+  }
+  // ---- (f) plateau early stop ---------------------------------------------
+  {
+    // a fresh world: only field generators produce, they cap within minutes
+    const clk = { t: T0 };
+    const s = boot({ seed: 12, clock: clk }), E = s.ENGINE;
+    s.GS.lastSeen = T0 - 8 * 3600 * 1000;
+    clk.t = T0;
+    const t = process.hrtime.bigint();
+    const r = E.runOfflineCatchup();
+    const ms = Number(process.hrtime.bigint() - t) / 1e6;
+    check("plateau: a static world stops early, remainder reported as saturated (not forfeited)",
+      r.saturatedMs > 0 && r.skippedMs === 0 && r.simulatedMs + r.saturatedMs === r.elapsedMs,
+      `simulated=${r.simulatedMs} saturated=${r.saturatedMs} skipped=${r.skippedMs} (${ms.toFixed(0)}ms)`);
+    check("plateau: stopped within an hour of sim time, >= 15 sim-min after output flattened",
+      r.simulatedMs <= 3600000 && Number.isFinite(r.flatAtMs) && r.simulatedMs - r.flatAtMs >= E.OFFLINE_PLATEAU_MS,
+      `simulated=${r.simulatedMs} flatAt=${r.flatAtMs}`);
+    check("plateau: saturated job leaves no resume point + clears offlineAwayFrom",
+      E.offlineResumeAt() === null && !E.offlineActive() && s.GS.offlineAwayFrom === null);
+    // ...and the world really was saturated: 30 more sim-minutes change nothing held
+    const before = E.countHeldItems();
+    s.GS.lastSeen = T0 - 8 * 3600 * 1000 + r.simulatedMs;
+    const more = oldReplay(s, 30 * 60 * 1000, false);
+    check("plateau: 30 further sim-min (full ticks) add nothing held",
+      total(more.after) === total(before), `before=${total(before)} after=${total(more.after)}`);
+  }
+  {
+    // a busy late world is NOT cut off while output keeps changing
+    const clk = { t: T0 };
+    const s = lateState(boot({ seed: 13, clock: clk })), E = s.ENGINE;
+    s.GS.lastSeen = T0 - 30 * 60 * 1000;
+    const r = E.runOfflineCatchup();
+    check("plateau: a still-producing 30-min replay runs to the end",
+      r.saturatedMs === 0 && r.simulatedMs === r.elapsedMs, `simulated=${r.simulatedMs} saturated=${r.saturatedMs}`);
+  }
+  {
+    // Skip after output has levelled off: flagged `levelled` (the copy then
+    // says little was lost); before any plateau it is a plain forfeit
+    const clk = { t: T0, inc: 0 };
+    const s = boot({ seed: 14, clock: clk }), E = s.ENGINE;
+    s.GS.lastSeen = T0 - 8 * 3600 * 1000;
+    const job = E.beginOfflineCatchup();
+    check("levelled: not levelled at the start", E.offlineLevelled(job) === false);
+    let guard = 0;
+    clk.inc = 1;                              // 1ms per real-clock read: small slices
+    while (!E.offlineLevelled(job) && guard++ < 20000) E.stepOfflineCatchup(job, 5);
+    clk.inc = 0;
+    check("levelled: a static world reads levelled before the 15-min stop", E.offlineLevelled(job) && !job.saturated,
+      `sim=${job.virt - job.start} flatSince=${job.flatSince}`);
+    E.skipOfflineCatchup(job);
+    const sum = E.finishOfflineCatchup(job);
+    check("levelled: skip after a plateau began -> summary.levelled, time still counted as skipped",
+      sum.levelled === true && sum.skippedMs > 0 && sum.saturatedMs === 0, JSON.stringify({ l: sum.levelled, sk: sum.skippedMs }));
+  }
+
+  // ---- (f) stall rows: autopaused / autoskip / outfull --------------------
+  {
+    const s = lateState(boot({ seed: 15 })), E = s.ENGINE, D = s.DATA;
+    const area = s.GS.areas.farm;
+    check("stalls: none of the new kinds on a clean state",
+      !E.offlineStalls().some(x => ["autopaused", "autoskip", "outfull"].includes(x.kind)));
+    area.autoPaused = true;
+    check("stalls: area.autoPaused -> autopaused row", E.offlineStalls().some(x => x.kind === "autopaused" && x.areaKey === "farm"));
+    area.autoPaused = false;
+    for (const shape of [["wood", "stone"], vm.runInContext("new Set([\"wood\", \"stone\"])", s), { wood: true, stone: 1, clay: false }]) {
+      area._autoSkip = shape;
+      const row = E.offlineStalls().find(x => x.kind === "autoskip" && x.areaKey === "farm");
+      check(`stalls: area._autoSkip (${Array.isArray(shape) ? "array" : shape instanceof vm.runInContext("Set", s) ? "Set" : "map"}) -> autoskip row with item names`,
+        !!row && row.count === 2 && row.names.join(",") === [E.itemName("wood"), E.itemName("stone")].join(","),
+        row ? JSON.stringify(row.names) : "none");
+    }
+    area._autoSkip = undefined;
+    check("stalls: absent _autoSkip -> no autoskip row", !E.offlineStalls().some(x => x.kind === "autoskip"));
+    // converter whose status is the ground slice's 'Output pile full'
+    const conv = s.GS.areas.center.buildings.find(b => b.built && D.BUILDINGS[b.type].recipes);
+    const realStatus = s.buildingStatus;
+    s.buildingStatus = (k, b) => b === conv ? { state: "full", label: "Output pile full" } : realStatus(k, b);
+    const row = E.offlineStalls().find(x => x.kind === "outfull");
+    s.buildingStatus = realStatus;
+    check("stalls: converter with 'Output pile full' -> outfull row",
+      !conv || (!!row && row.areaKey === "center" && row.names[0] === D.BUILDINGS[conv.type].name),
+      row ? JSON.stringify(row) : "none");
+  }
+
+  // ---- (f) a throwing replay is flagged failed and still closes ------------
+  {
+    const clk = { t: T0, inc: 0 };
+    const s = lateState(boot({ seed: 16, clock: clk })), E = s.ENGINE;
+    s.GS.lastSeen = T0 - 60 * 60 * 1000;
+    const job = E.beginOfflineCatchup();
+    clk.inc = 1;
+    E.stepOfflineCatchup(job, 20);
+    clk.inc = 0;
+    const realTick = s.gameTick;
+    s.gameTick = () => { throw new Error("boom"); };
+    let threw = false;
+    try { E.stepOfflineCatchup(job, 20); } catch (e) { threw = true; }
+    s.gameTick = realTick;
+    check("failed: the slice rethrows (caller logs it) and Date.now is the real clock again",
+      threw && s.Date.now() === clk.t && job.virt > job.start && job.virt < job.end);
+    check("failed: job flagged failed + stopped, no resume point", job.failed && job.stop && E.offlineResumeAt() === null);
+    check("failed: next step reports done", E.stepOfflineCatchup(job, 20) === true);
+    const sum = E.finishOfflineCatchup(job);
+    check("failed: summary.failed, offlineActive() false, offlineAwayFrom cleared",
+      sum && sum.failed === true && !E.offlineActive() && s.GS.offlineAwayFrom === null);
+    // finish itself never throws: a broken tidy-up still returns a summary
+    const s2 = lateState(boot({ seed: 17, clock: { t: T0 } })), E2 = s2.ENGINE;
+    s2.GS.lastSeen = T0 - 20 * 60 * 1000;
+    const j2 = E2.beginOfflineCatchup();
+    s2.settleAfterReplay = () => { throw new Error("boom"); };
+    const cerr = console.error; console.error = () => {};
+    let sum2 = null, threw2 = false;
+    try { sum2 = E2.finishOfflineCatchup(j2); } catch (e) { threw2 = true; }
+    console.error = cerr;
+    check("failed: finish survives a throwing tidy-up and flags failed", !threw2 && sum2 && sum2.failed === true);
   }
 } catch (e) {
   console.log("FAIL harness threw — " + ((e && e.stack) || e));
