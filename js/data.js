@@ -119,11 +119,12 @@ const AREAS = {
       { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 350,
         sprite: "⛰️", clicksPerDrop: 5, drop: "stone",
         rareDrop: { item: "jade_shard", chance: 0.12 } },
-      // the Spirit Tree: ONE great tree centred in the top band — the only
-      // wood source in the Center. Works like the rock but has NO passive
-      // production: it only gives while you click / hold on it.
+      // the Spirit Tree: ONE great tree centred in the top band. Works like
+      // the rock but has NO passive production: it gives while you click /
+      // hold on it — and (autoTap) Center Automation taps it once per tick
+      // per level, so bought automation feeds the starter wood line.
       { kind: "spirittree", zone: "midTop", size: 4, interaction: "quarry", swingMs: 350,
-        sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3,
+        sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3, autoTap: true,
         rareDrop: { item: "bamboo", chance: 0.12 } },
     ],
     generators: [
@@ -134,7 +135,8 @@ const AREAS = {
       // "quarry" upgrade speeds it up
       { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry",
         rareDrop: { item: "jade_shard", chance: 0.08 } },
-      // wood's first idle source — the Spirit Tree stays manual-only. A compact
+      // wood's first idle source (the Spirit Tree needs a hand or bought
+      // Center Automation). A compact
       // field around the starter wood Gathering Stone so its line really flows.
       { kind: "wood", zone: "woodField", item: "wood", intervalMs: 3000, cap: 10 },
     ],
@@ -533,7 +535,7 @@ const UPGRADE_TREE = [
     desc: "Center bushes respawn faster.", links: ["auto_c"],
     costs: [{ wood: 20 }, { wood: 50, leaves: 15 }, { wood: 120, spirit_essence: 10 }] },
   { id: "auto_c", icon: "🤖", name: "Automation",      x: 300,  y: -85,  area: "center",  type: "automation",
-    desc: "Auto-harvests Center nodes.", links: ["act_fi"],
+    desc: "Auto-harvests Center bushes and taps the Spirit Tree 🌳 (1 swing/s per level) — its wood flows to the starter wood line.", links: ["act_fi"],
     costs: [{ wood: 60, stone: 30 }, { stone: 120, clay: 40 }, { iron_ore: 40, spirit_essence: 20 }] },
   { id: "act_fi", icon: "🎣", name: "Reel Speed",      x: 455,  y: -45,  area: "fishing", type: "harvestSpeed",
     desc: "Faster reeling when fishing.", links: [],
@@ -799,7 +801,7 @@ const PERKS = [
   // Legacy: head starts applied by ascend() to every fresh run
   // (the genre's strongest prestige payoff is skipping the opening).
   { id: "paths",  name: "Remembered Paths",  icon: "🗺️", max: 3, cost: [3, 6, 12],
-    desc: "Each run starts with the Farm already open; level 2 adds the Mine, level 3 Fishing." },
+    desc: "Each run starts with the Mine already open; level 2 adds Fishing, level 3 the Farm." },
   { id: "legacy", name: "Legacy Automation", icon: "🤖", max: 3, cost: [4, 8, 16],
     desc: "Each run starts with Automation L1 in the Center; level 2 adds the Farm, level 3 the Mine (works once that region is open)." },
 ];

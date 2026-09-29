@@ -30,19 +30,21 @@ function boot(testMode) {
 }
 
 // Reference = the pre-fix O(n^2) settleGround, verbatim math (MIN 18).
+// Returns VISIBLE pushes only (> 0.05px — sub-pixel jitter doesn't repaint).
 function refSettle(items, PLAY_PX) {
   const clampPx = v => Math.max(4, Math.min(PLAY_PX - 4, v));
-  const MIN = 18; let moves = 0;
+  const MIN = 18; let moves = 0, pushed = 0;
   for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
     const a = items[i], b = items[j];
     let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
     if (d < 0.01) throw new Error("reference hit random branch — layout must avoid coincident items");
     if (d < MIN) {
       const push = (MIN - d) / 2, ux = dx / d, uy = dy / d;
-      a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push; moves++;
+      a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
+      pushed++; if (push > 0.05) moves++;
     }
   }
-  if (moves) for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
+  if (pushed) for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
   return moves;
 }
 

@@ -436,7 +436,7 @@ function remapLegacyQuestIdx(oldIdx, chainIds) {
   return Math.min(idx, ids.length);
 }
 // Every (type@row,col) the starter network was ever aimed at in the Center
-// (v36..v52 layouts) — old saves carry no b.starter tag, so the builtTypes
+// (v36..v52 layouts + the later converter-row sinks) — old saves carry no b.starter tag, so the builtTypes
 // migration infers it from these spots. findSpot nudges a starter building
 // off a cell a random node took, so a building within 3 cells of an unused
 // spot of its type (lowest ids first — the network was placed at game
@@ -468,6 +468,10 @@ const LEGACY_STARTER_SPOTS = new Set([
   "gathering_stone@80,73", "gathering_stone@12,80",
   "warding_seal@74,22", "warding_seal@30,44",
   "wisp_lantern@76,20", "wisp_lantern@22,44", "wisp_lantern@52,58",
+  // converter-row sinks (plank / brick / spirit-stone stores; design pass) — always
+  // tagged at placement; listed so a tag-stripped save still infers them
+  "gathering_stone@61,43", "gathering_stone@61,55", "storehouse@63,36", "storehouse@63,45",
+  "storehouse@63,57", "wisp_lantern@62,51",
   // pre-v46 (75-cell grid)
   "forge@52,26", "workbench@52,31", "paper_mill@52,36", "kiln@52,41", "infusion_array@52,46",
   "storehouse@56,28", "storehouse@56,34", "storehouse@60,26", "storehouse@26,36",

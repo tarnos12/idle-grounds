@@ -478,12 +478,35 @@ try {
           if (why) seen.add(why);
         }
     check("placeReason === null  <=>  canPlaceBuilding (every cell, 8 area/type pairs)", mism.length === 0, mism.slice(0, 3).join("; ") || "ok");
-    const want = ["Wild land — build in the clearing", "Blocked", "Fuel rack blocked", "Water only"];
-    check("reasons cover wild land / blocked / fuel rack / water", want.every(w => seen.has(w)), [...seen].join(" | "));
+    const want = ["Build around the Altar clearing", "Build on the rim, outside the field", "Blocked", "Fuel rack blocked", "Water only"];
+    check("reasons cover wild land (Center + region) / blocked / fuel rack / water", want.every(w => seen.has(w)), [...seen].join(" | "));
     check("algae farm on land: 'Water only'", E.placeReason("center", 40, 40, "algae_farm") === "Water only");
     const nb = D.ZONES[[].concat(D.AREAS.center.noBuild)[0]][0];
-    check("a wild-land cell reads 'Wild land — build in the clearing'", E.placeReason("center", nb.r0, nb.c0 + 3, "storehouse") === "Wild land — build in the clearing",
+    check("a Center wild-land cell reads 'Build around the Altar clearing'", E.placeReason("center", nb.r0, nb.c0 + 3, "storehouse") === "Build around the Altar clearing",
       E.placeReason("center", nb.r0, nb.c0 + 3, "storehouse"));
+    const mf = D.ZONES[[].concat(D.AREAS.mine.noBuild)[0]][0];
+    check("a resource region's field reads 'Build on the rim, outside the field'",
+      E.placeReason("mine", mf.r0 + 5, mf.c0 + 5, "forge") === "Build on the rim, outside the field", E.placeReason("mine", mf.r0 + 5, mf.c0 + 5, "forge"));
+    // the Ascension Gate is unique: with a gate ghost down, a second gate is
+    // refused everywhere — and the reason agrees with canPlaceBuilding
+    let gsp = null;
+    for (let r = 26; r < 66 && !gsp; r++) for (let c = 26; c < 66 && !gsp; c++)
+      if (E.canPlaceBuilding("center", r, c, "ascension_gate")) gsp = { r, c };
+    check("an Ascension Gate fits somewhere in the Center (none placed yet)", !!gsp && E.placeReason("center", gsp.r, gsp.c, "ascension_gate") === null);
+    // (a gate ghost, placed directly — the build menu still gates the type)
+    const ca = s.GS.areas.center;
+    ca.buildings.push({ id: ca.nextBuildId++, type: "ascension_gate", row: gsp.r, col: gsp.c, paid: {}, built: false, item: null, qty: 0 });
+    const gm = [], gwhy = new Set();
+    for (const area of ["center", "mine"])
+      for (let r = -1; r < N + 1; r++) for (let c = -1; c < N + 1; c++) {
+        const ok = E.canPlaceBuilding(area, r, c, "ascension_gate"), why = E.placeReason(area, r, c, "ascension_gate");
+        if (ok !== (why === null)) gm.push(`${area}@${r},${c} ok=${ok} why=${why}`);
+        if (why) gwhy.add(why);
+      }
+    check("second gate: placeReason <=> canPlaceBuilding on every cell (center + mine)", gm.length === 0, gm.slice(0, 3).join("; ") || "ok");
+    check("second gate: in-bounds cells read 'Only one Ascension Gate'",
+      E.placeReason("mine", 40, 5, "ascension_gate") === "Only one Ascension Gate" &&
+      [...gwhy].every(w => w === "Only one Ascension Gate" || w === "Off the edge"), [...gwhy].join(" | "));
   }
 } catch (e) {
   console.log("FAIL exception — " + (e && e.stack || e));

@@ -281,13 +281,13 @@ try {
     const s = world(1); s.GS.perks = { paths: 2, legacy: 3 };
     s.ENGINE.ascend([]);
     const GS = s.GS, u = GS.world.unlocked;
-    check("Remembered Paths 2: farm + mine open, fishing closed", u.farm && u.mine && !u.fishing, JSON.stringify(u));
+    check("Remembered Paths 2: mine + fishing open, farm closed (dragon path first)", u.mine && u.fishing && !u.farm, JSON.stringify(u));
     check("Legacy Automation 3: center/farm/mine automation 1",
       ["center", "farm", "mine"].every(k => GS.areas[k].upgrades.automation === 1) && GS.areas.fishing.upgrades.automation === 0,
       ["center", "farm", "mine", "fishing"].map(k => GS.areas[k].upgrades.automation).join(","));
     const p1 = world(1); p1.GS.perks = { paths: 1, legacy: 1 }; p1.ENGINE.ascend([]);
-    check("paths 1 / legacy 1: farm open + center auto only",
-      p1.GS.world.unlocked.farm && !p1.GS.world.unlocked.mine && p1.GS.areas.center.upgrades.automation === 1
+    check("paths 1 / legacy 1: mine open + center auto only",
+      p1.GS.world.unlocked.mine && !p1.GS.world.unlocked.fishing && !p1.GS.world.unlocked.farm && p1.GS.areas.center.upgrades.automation === 1
         && p1.GS.areas.farm.upgrades.automation === 0, "");
     const none = world(1); none.ENGINE.ascend([]);
     check("no legacy perks: regions closed, automation 0",
@@ -352,20 +352,20 @@ try {
   {
     const s = world(1), E = s.ENGINE, GS = s.GS;
     GS.ascendPoints = 100;
-    GS.world.unlockPaid = { mine: { wood: 3 } };
+    GS.world.unlockPaid = { fishing: { wood: 3 } };
     GS.hand = [];
-    check("paths L1 bought: farm opens now", E.buyPerk("paths") && GS.world.unlocked.farm && !GS.world.unlocked.mine,
+    check("paths L1 bought: mine opens now (dragon path first)", E.buyPerk("paths") && GS.world.unlocked.mine && !GS.world.unlocked.fishing,
       JSON.stringify(GS.world.unlocked));
-    check("paths L2 bought: mine opens now", E.buyPerk("paths") && GS.world.unlocked.mine, "");
-    check("paths L2: mine installments refunded to the hand, entry cleared",
-      E.handCount("wood") === 3 && !GS.world.unlockPaid.mine, `wood=${E.handCount("wood")}`);
+    check("paths L2 bought: fishing opens now", E.buyPerk("paths") && GS.world.unlocked.fishing, "");
+    check("paths L2: fishing installments refunded to the hand, entry cleared",
+      E.handCount("wood") === 3 && !GS.world.unlockPaid.fishing, `wood=${E.handCount("wood")}`);
     GS.areas.farm.upgrades.automation = 2;
     check("legacy L1 bought: center automation 1 now", E.buyPerk("legacy") && GS.areas.center.upgrades.automation === 1, "");
     check("legacy L2 bought: farm keeps its higher level (max(cur,1))",
       E.buyPerk("legacy") && GS.areas.farm.upgrades.automation === 2 && GS.areas.mine.upgrades.automation === 0,
       ["center", "farm", "mine"].map(k => GS.areas[k].upgrades.automation).join(","));
     check("legacy L3 bought: mine automation 1 now", E.buyPerk("legacy") && GS.areas.mine.upgrades.automation === 1, "");
-    GS.world.unlocked.fishing = true;
+    GS.world.unlocked.farm = true;
     const ap = GS.ascendPoints;
     check("paths L3 on an already-open region: just the level", E.buyPerk("paths") && GS.perks.paths === 3
       && GS.ascendPoints === ap - 12, `ap ${ap} -> ${GS.ascendPoints}`);
