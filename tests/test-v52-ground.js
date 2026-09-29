@@ -308,8 +308,10 @@ try {
     const label = test ? "TEST" : "REAL";
     check(label + " zero-input " + mins + " min: ground stays far below the cap", maxLen < 400, "max=" + maxLen);
     check(label + " zero-input: the player's tree harvest lands and stays", fresh >= 6, "fresh wood=" + fresh);
-    check(label + " zero-input: automation not blocked by crafted litter (skips only saturated leaves)",
-      Array.isArray(a._autoSkip) && a._autoSkip.every(t => t === "leaves"), JSON.stringify(a._autoSkip));
+    // (only saturated RAW types: bush leaves, and wood once the tree-tapped
+    // wood line is full — crafted litter never stalls the bots)
+    check(label + " zero-input: automation not blocked by crafted litter (skips only saturated leaves/wood)",
+      Array.isArray(a._autoSkip) && a._autoSkip.every(t => t === "leaves" || t === "wood"), JSON.stringify(a._autoSkip));
     const jadeSh = a.buildings.find(b => b.type === "storehouse" && b.item === "jade_shard");
     const j0 = jadeSh.qty;
     run(s, 5 * 60000);

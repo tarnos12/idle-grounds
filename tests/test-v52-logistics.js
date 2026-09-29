@@ -238,11 +238,19 @@ try {
     check("460 crafted items: bots keep working (_autoSkip empty)", n1 > 0 && a.autoPaused === false &&
       Array.isArray(a._autoSkip) && a._autoSkip.length === 0, "harvested=" + n1);
     E.dropGround("center", "leaves", E.AUTO_SKIP_LOOSE, 1500, 1500);
+    a.nodes.find(nd => nd.kind === "spirittree").clicks = 0;   // next tap can't complete a drop
     const before = a.ground.length;
     const n = E.automationTick();
+    // (the Spirit Tree is still tapped once — L1 = 1 swing, no drop yet at 1/3 clicks)
     check(">= 120 loose leaves: bushes skipped, _autoSkip = ['leaves'], autoPaused derived true",
-      n === 0 && a.ground.length === before && JSON.stringify(a._autoSkip) === '["leaves"]' && a.autoPaused === true,
+      n === 1 && a.ground.length === before && JSON.stringify(a._autoSkip) === '["leaves"]' && a.autoPaused === true,
       "len=" + a.ground.length + " harvested=" + n + " skip=" + JSON.stringify(a._autoSkip));
+    a.ground = a.ground.filter(g => g.item !== "star_steel");   // (keep leaves + wood under the ground cap)
+    E.dropGround("center", "wood", E.AUTO_SKIP_LOOSE, 1500, 1500);
+    const tree = a.nodes.find(nd => nd.kind === "spirittree"), c0 = tree.clicks;
+    const n2 = E.automationTick();
+    check(">= 120 loose wood: the Spirit Tree tap is skipped too", n2 === 0 && tree.clicks === c0 &&
+      JSON.stringify(a._autoSkip) === '["leaves","wood"]', "harvested=" + n2 + " skip=" + JSON.stringify(a._autoSkip));
   }
 
   // (6) fuel sliver starts a batch + (10) buildingStatus -------------------
