@@ -620,6 +620,21 @@ function drawWorldInner() {
     ctx.lineWidth = 2;
     ctx.fillRect(px, py, B.w * CELL * s, B.h * CELL * s);
     ctx.strokeRect(px, py, B.w * CELL * s, B.h * CELL * s);
+    if (!ok) {
+      // short reason under the red ghost (same checks canPlaceBuilding runs)
+      const why = !E.isAreaUnlocked(cursor.region) ? "Region locked"
+        : E.placeReason(cursor.region, cursor.lrow, cursor.lcol, window.GS.build.placing) || "Blocked";
+      const fpx = MIN_LABEL_PX + 1;
+      ctx.font = `800 ${fpx}px ${TEXT_FONT}`;
+      const tw = ctx.measureText(why).width, w = tw + 12, h = fpx + 8;
+      const cx = px + B.w * CELL * s / 2, ty = py + B.h * CELL * s + 4;
+      ctx.fillStyle = "rgba(40,10,10,.9)";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(cx - w / 2, ty, w, h, 6); else ctx.rect(cx - w / 2, ty, w, h);
+      ctx.fill();
+      ctx.fillStyle = "#fecaca"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(why, cx, ty + h / 2 + 0.5);
+    }
   }
 
   // feedback juice on the very top (floating +N numbers, spark bursts)
@@ -1321,6 +1336,7 @@ function renderBuildMenu() {
   const sig = buildCatalogSig();
   if (open && buildMenuWasOpen && sig !== buildCatSig) buildClickLockUntil = Date.now() + 400;
   buildCatSig = sig; buildMenuWasOpen = open;
+  if (open) E.markBuildListed();   // a reveal while the menu is open counts as listed
   syncBuildDot();
   bar.classList.toggle("hidden", !open);
   updateHoverName();
@@ -1784,10 +1800,11 @@ function renderLinkMenu() {
       : `${src ? bLabel(src) : "?"} → click the TARGET building… Esc cancels`));
   } else {
     const add = el("button", "build-card", `<span class="bc-name">➕ Add link</span>`);
-    add.onclick = () => { linkMode.picking = "source"; linkMode.srcId = null; linkMode.hint = false; renderLinkMenu(); };
+    add.onclick = () => { linkMode.picking = "source"; linkMode.srcId = null; linkMode.hint = false; linkMode.refuse = null; renderLinkMenu(); };
     bar.appendChild(add);
   }
   if (linkMode.hint) bar.appendChild(el("div", "rm-warn", "Wisps can't cross the void between regions"));
+  if (linkMode.refuse && linkMode.picking === "target") bar.appendChild(el("div", "rm-warn", `${linkMode.refuse} — pick another target`));
   (lan.links || []).forEach((l, i) => {
     const f = E.buildingById(linkMode.area, l.from), t = E.buildingById(linkMode.area, l.to);
     const [dot, why] = linkDot(l);
@@ -1825,30 +1842,79 @@ function needRows(rem) {
       (srcHint(it) ? ` <span class="ms-src">— ${srcHint(it)}</span>` : "") + `</div>`;
   }).join("");
 }
-// First missing sub-step toward `item` by walking recipes -> buildings:
-// no producer standing -> "build a X (inputs)"; producer standing -> chase
-// the first input neither the hand nor its stock covers; raw -> source hint.
-function stepToward(item, path) {
+// "a" / "an" before a name.
+const aAn = w => (/^[aeiou]/i.test(w) ? "an " : "a ") + w;
+// Items of `item` sitting in built Storehouses / Warding Seals anywhere:
+// { qty, where } (where = the kind holding the most).
+function storedCount(item) {
+  let qty = 0, sh = 0, seal = 0;
+  for (const k of Object.keys(window.GS.areas))
+    for (const b of window.GS.areas[k].buildings) {
+      if (!b.built || b.item !== item || !(b.qty > 0)) continue;
+      if (b.type === "storehouse") { qty += b.qty; sh += b.qty; }
+      else if (DD.BUILDINGS[b.type].seal) { qty += b.qty; seal += b.qty; }
+    }
+  return { qty, where: sh >= seal ? "Storehouse" : "Warding Seal" };
+}
+// First missing sub-step toward `need` x `item` by walking recipes ->
+// buildings. Storehouse / Seal stock counts as covered ("Paper: 7 in a
+// Storehouse"). A standing producer is preferred on the recipe it RUNS; one
+// on another recipe -> "switch the X to <recipe>"; none -> "build a X
+// (inputs)"; producer running -> chase the first input neither the hand,
+// storage nor its stock covers; raw -> source hint.
+function stepToward(item, path, need) {
   path = path || [];
-  const prods = [];
-  for (const [type, bc] of Object.entries(DD.BUILDINGS))
-    for (const r of bc.recipes || []) if (r.output === item) prods.push({ type, r });
+  need = need || 1;
   const head = path.length ? `<span class="ms-path">${path.map(E.itemName).join(" › ")} ›</span> ` : "";
   const label = `${iconHTML(item)} <b>${E.itemName(item)}</b>`;
+  const st = storedCount(item);
+  if (st.qty > 0 && E.handCount(item) + st.qty >= need)
+    return { text: `${head}${label}: ${st.qty} in ${aAn(st.where)} — left-click it to withdraw` };
+  const prods = [];
+  for (const [type, bc] of Object.entries(DD.BUILDINGS))
+    (bc.recipes || []).forEach((r, ri) => { if (r.output === item) prods.push({ type, r, ri }); });
   if (!prods.length || path.length >= 4) return { text: `${head}${label} ← ${srcHint(item) || "gather it"}` };
-  const pick = prods.find(p => builtAnywhere(p.type)) || prods.find(p => E.isBuildingUnlocked(p.type)) || prods[0];
-  const bc = DD.BUILDINGS[pick.type], ins = Object.keys(pick.r.inputs);
-  const insTxt = ins.map(E.itemName).join(" + ");
-  if (!builtAnywhere(pick.type))
-    return { text: `${head}${label} ← build a ${bc.name} (${insTxt})`, build: pick.type };
-  for (const it of ins) {
-    let have = E.handCount(it);
-    for (const k of Object.keys(window.GS.areas))
-      for (const b of window.GS.areas[k].buildings)
-        if (b.built && b.type === pick.type && b.recipe != null && bc.recipes[b.recipe] === pick.r) have += (b.stock && b.stock[it]) || 0;
-    if (have < pick.r.inputs[it]) return stepToward(it, path.concat(item));
+  // standing producers: the ones already RUNNING a recipe for this item win
+  const running = [], idle = [];
+  for (const k of Object.keys(window.GS.areas))
+    for (const b of window.GS.areas[k].buildings) {
+      if (!b.built) continue;
+      const mine = prods.filter(p => p.type === b.type);
+      if (!mine.length) continue;
+      const on = mine.find(p => p.ri === (b.recipe || 0));
+      if (on) running.push({ b, p: on }); else idle.push({ b, p: mine[0] });
+    }
+  if (!running.length && idle.length) {
+    const bc = DD.BUILDINGS[idle[0].p.type];
+    return { text: `${head}${label} ← switch the ${bc.name} to ${idle[0].p.r.name} (click it)` };
   }
-  return { text: `${head}${label} ← feed a ${bc.name}: ${insTxt}` };
+  if (!running.length) {
+    const pick = prods.find(p => E.isBuildingUnlocked(p.type)) || prods[0];
+    const bc = DD.BUILDINGS[pick.type];
+    const insTxt = Object.keys(pick.r.inputs).map(E.itemName).join(" + ");
+    return { text: `${head}${label} ← build ${aAn(bc.name)} (${insTxt})`, build: pick.type };
+  }
+  const pick = running[0].p, bc = DD.BUILDINGS[pick.type], ins = Object.keys(pick.r.inputs);
+  const insTxt = ins.map(E.itemName).join(" + ");
+  let stocked = true;
+  for (const it of ins) {
+    let inStock = 0;
+    for (const { b, p } of running) if (p === pick) inStock += (b.stock && b.stock[it]) || 0;
+    if (inStock < pick.r.inputs[it]) stocked = false;
+    const have = E.handCount(it) + storedCount(it).qty + inStock;
+    if (have < pick.r.inputs[it]) return stepToward(it, path.concat(item), pick.r.inputs[it]);
+  }
+  if (stocked) return { text: `${head}${label} ← the ${bc.name} is making it — collect the output` };
+  return { text: `${head}${label} ← feed the ${bc.name}: ${insTxt}` };
+}
+// Standing building of a type that produces `item` (recipe output or a
+// generator like the Algae Farm / Herb Garden) — the unbuilt, revealed ones
+// are what the milestone should point the build menu at.
+function producerTypes(item) {
+  const out = [];
+  for (const [type, bc] of Object.entries(DD.BUILDINGS))
+    if ((bc.recipes || []).some(r => r.output === item) || (bc.gen && bc.gen.item === item)) out.push(type);
+  return out;
 }
 // The next big goal, from minute 0: dragon tribute -> raise the Ascension
 // Gate (expanded into its first missing sub-step) -> ascend. Plus two side
@@ -1857,18 +1923,28 @@ function stepToward(item, path) {
 function milestoneInfo() {
   const G0 = window.GS;
   let html = "", build = null;
+  const builds = [];   // every building the goal points at (build-menu targets, in order)
   const ap = G0.ascendPoints || 0;
   if (!G0.perkShopSeen && ap > 0) {
     let cheapest = null;
     for (const pk of DD.PERKS) { const c = E.perkCost(pk.id); if (c != null && (cheapest == null || c < cheapest)) cheapest = c; }
     if (cheapest != null && ap >= cheapest)
-      html += `<div class="ms-line gold">☯ Spend ${ap} AP at the Ascension Shrine (top bar)</div>`;
+      html += `<div class="ms-line gold">☯ Spend ${ap} AP at the Ascension Shrine (☯ in the bottom bar)</div>`;
   }
   const st = E.dragonStage();
   if (st) {
     const n = G0.dragon.stage || 0, rem = E.dragonRemaining();
     let paid = 0, all = 0;
     for (const it of Object.keys(st.needs)) { const pd = G0.dragon.paid[it] || 0; paid += pd; all += pd + (rem[it] || 0); }
+    // tribute items no hand covers whose producer (Forge, Algae Farm, Herb
+    // Garden...) is revealed but not standing: the build menu leads with it
+    for (const it of Object.keys(rem)) {
+      if (E.handCount(it) >= rem[it]) continue;
+      const types = producerTypes(it);
+      if (types.some(builtAnywhere)) continue;
+      const t = types.find(ty => E.isBuildingUnlocked(ty));
+      if (t && !builds.includes(t)) builds.push(t);
+    }
     html += `<div class="qp-name">🐉 Dragon tribute ${n + 1}/${DD.DRAGON_STAGES.length}</div>` +
       `<div class="qp-desc">Right-click the dragon to feed it. In hand / still needed:</div>${needRows(rem)}` +
       `<div class="qp-bar"><div class="qp-fill" style="width:${all ? Math.round(100 * paid / all) : 0}%"></div></div>`;
@@ -1880,7 +1956,7 @@ function milestoneInfo() {
       const gType = Object.keys(DD.BUILDINGS).find(t => DD.BUILDINGS[t].gate);
       const rem = gate ? E.buildingNeeds(gate) : (gType ? DD.BUILDINGS[gType].cost : {});
       const miss = Object.keys(rem).find(it => E.handCount(it) < rem[it]);
-      const step = miss ? stepToward(miss)
+      const step = miss ? stepToward(miss, [], rem[miss])
         : { text: gate ? "Right-click the Gate ghost to feed it." : "Place it from the build menu (B)." };
       if (!gate && !miss) build = gType;
       else if (step.build) build = step.build;
@@ -1888,8 +1964,14 @@ function milestoneInfo() {
         `<div class="qp-desc">${gate ? "Feed its ghost (right-click). In hand / still needed:" : "Build it (B), then feed it. In hand / cost:"}</div>` +
         needRows(rem) + `<div class="ms-step">Next step: ${step.text}</div>`;
     } else {
+      const allOpen = Object.keys(DD.WORLD.regions).every(k => G0.world.unlocked[k]);
+      const off = E.gateOfferings(null, gate);
+      const offIcons = DD.GATE_OFFERINGS.items.map(it => iconHTML(it)).join(" ");
       html += `<div class="qp-name">☯ Ascend for +${E.ascendReward()} ☯</div>` +
-        `<div class="qp-desc">Click the Ascension Gate ⛩️ to ascend — more regions unlocked = more Ascension Points.</div>`;
+        `<div class="qp-desc">Click the Ascension Gate ⛩️ to ascend — ` +
+        (allOpen ? `every region is open.</div>` +
+          `<div class="ms-line">Offerings ${off.count}/${off.cap} — right-click spare ${offIcons} onto the Gate (+1 ☯ each)</div>`
+          : `each region unlocked (+2 ☯) or gate offering (${offIcons}, ${off.count}/${off.cap}) = more Ascension Points.</div>`);
     }
   }
   // disciples eat buns: the first pavilion's seed runs out — point at a Mill
@@ -1899,10 +1981,11 @@ function milestoneInfo() {
       for (const b of G0.areas[k].buildings) if (b.built && DD.BUILDINGS[b.type].roster && (b.disciples || 0) > 0) hungry = true;
     if (hungry) {
       html += `<div class="ms-line">🥟 Disciples eat Spirit Buns — build a Mill (Rice Flour → Spirit Buns) or a Brewery (Spirit Wine) for more.</div>`;
-      if (!build) build = "mill";
+      if (!builds.includes("mill")) builds.push("mill");
     }
   }
-  return { html, build };
+  if (build && !builds.includes(build)) builds.unshift(build);
+  return { html, build: build || builds[0] || null, builds };
 }
 // Build-menu targets: what the active quest asks for (not yet built by the
 // player), then the milestone's building.
@@ -1912,8 +1995,7 @@ function buildTargets() {
     const p = E.questProgress(gq.idx);
     if (p && !p.done) for (const t of q.builds) if (!(window.GS.builtTypes || {})[t]) out.push(t);
   }
-  const mb = milestoneInfo().build;
-  if (mb && !out.includes(mb)) out.push(mb);
+  for (const mb of milestoneInfo().builds) if (!out.includes(mb)) out.push(mb);
   return out;
 }
 // "Unlocks: <icons>" preview of a quest's reward (shown BEFORE claiming).
@@ -2447,7 +2529,10 @@ function maybeShowEnding() {
   add("Ascensions", G.ascensions);
   add("Total crafted", st.totalCrafted);
   if (st.started !== undefined) add("Playtime", fmtAway(Date.now() - st.started));
-  $("#ending-stats").innerHTML = rows.map(([label, val]) =>
+  const gc = DD.BUILDINGS.ascension_gate ? DD.BUILDINGS.ascension_gate.cost : {};
+  $("#ending-stats").innerHTML = `<p class="ending-next">The dragon now sheds Dragon Scales ${iconHTML("dragon_scale")} — ` +
+    `with ${gc.talisman || 3} Talismans and ${gc.star_steel || 3} Star Steel, raise the Ascension Gate (B).</p>` +
+    rows.map(([label, val]) =>
     `<div class="st-row"><span class="st-label">${label}</span>` +
     `<span class="st-val">${val}</span></div>`).join("");
   $("#ending-modal").classList.remove("hidden");
@@ -2638,11 +2723,20 @@ function onMouseDown(e) {
       linkMode.hint = false;
       const bAt = E.buildingAt(p.region, p.lrow, p.lcol);
       if (bAt && linkMode.picking === "source" && E.canBeLinkSource(bAt)) {
-        linkMode.srcId = bAt.id; linkMode.picking = "target";
+        linkMode.srcId = bAt.id; linkMode.picking = "target"; linkMode.refuse = null;
         renderLinkMenu(); requestGridPaint();
       } else if (bAt && linkMode.picking === "target" && E.canBeLinkTarget(bAt) && bAt.id !== linkMode.srcId) {
+        const why = E.linkRefusal(linkMode.area, linkMode.srcId, bAt.id);
+        if (why) {
+          // can never carry anything: buzz + say why, stay in target picking
+          if (window.AUDIO) window.AUDIO.play("error");
+          const rp = regionPx(p.region);
+          addFloater(rp.x + p.lx, rp.y + p.ly, why.text, C.danger);
+          linkMode.refuse = why.text; renderLinkMenu();
+          return;
+        }
         E.addLink(linkMode.area, linkMode.id, linkMode.srcId, bAt.id);
-        linkMode.picking = null; linkMode.srcId = null;
+        linkMode.picking = null; linkMode.srcId = null; linkMode.refuse = null;
         renderLinkMenu(); render();
       }
       return;

@@ -187,29 +187,39 @@ function loadState() {
     // merge stats/quest onto defaults so counters added later start at 0
     if (s.stats) Object.assign(fresh.stats, s.stats);
     // quest idx indexes the chain it was saved under: an older chain (no
-    // stamp = the v51 13-quest list) is remapped by quest id
+    // stamp) is remapped by quest id. Two unstamped chains exist: v51 (13
+    // quests) always serialised dragonBlessed, v50/master (11) never did.
+    // An unstamped veteran (ascended or won) is past any tutorial -> the end.
     const legacyChain = !s.quest || s.quest.chain !== window.DATA.QUEST_CHAIN;
     if (s.quest) Object.assign(fresh.quest, s.quest);
     fresh.quest.chain = window.DATA.QUEST_CHAIN;
     const qIdx0 = Number.isFinite(fresh.quest.idx) ? fresh.quest.idx : 0;
-    fresh.quest.idx = legacyChain ? remapLegacyQuestIdx(qIdx0)
-      : Math.max(0, Math.min(qIdx0, window.DATA.QUESTS.length));
+    const legacyVet = (Number.isFinite(s.ascensions) && s.ascensions > 0) || !!s.won;
+    fresh.quest.idx = !legacyChain ? Math.max(0, Math.min(qIdx0, window.DATA.QUESTS.length))
+      : legacyVet ? window.DATA.QUESTS.length
+      : remapLegacyQuestIdx(qIdx0, s.dragonBlessed === undefined ? QUEST_IDS_V50 : QUEST_IDS_V51);
     // build-menu reveal: pre-v52 saves saw every card, so nothing badges as
-    // 'new' and every type they already placed stays revealed
+    // 'new' and every type the PLAYER already built stays revealed. Game-
+    // placed starter buildings (tagged b.starter since v52; inferred on old
+    // saves from the known starter layouts) and unbuilt ghosts don't count —
+    // an early-chain save keeps the progressive reveal.
     const B = window.DATA.BUILDINGS;
     fresh.builtTypes = {}; fresh.buildSeen = {};
     if (s.builtTypes && typeof s.builtTypes === "object") {
       for (const t of Object.keys(s.builtTypes)) if (B[t] && s.builtTypes[t]) fresh.builtTypes[t] = true;
     } else {
-      for (const k of Object.keys(s.areas || {}))
-        for (const b of (s.areas[k] && s.areas[k].buildings) || []) if (b && B[b.type]) fresh.builtTypes[b.type] = true;
+      if (s.starterPlaced && s.areas && s.areas.center) inferStarterTags(s.areas.center.buildings);
+      if (!(s.stats && s.stats.buildingsBuilt === 0))   // 0 = the player never finished one
+        for (const k of Object.keys(s.areas || {}))
+          for (const b of (s.areas[k] && s.areas[k].buildings) || [])
+            if (b && b.built && !b.starter && B[b.type]) fresh.builtTypes[b.type] = true;
     }
     if (s.buildSeen && typeof s.buildSeen === "object") {
       for (const t of Object.keys(s.buildSeen))
         if (B[t] && Number.isFinite(s.buildSeen[t]) && s.buildSeen[t] > 0) fresh.buildSeen[t] = Math.min(2, s.buildSeen[t]);
     } else for (const t of Object.keys(B)) fresh.buildSeen[t] = 2;
-    // pavilion bun seed is once: a save that already has a built pavilion
-    // (or recruited disciples) never gets it
+    // pavilion bun seed is once per RUN (ascend() re-arms it): a save that
+    // already has a built pavilion (or recruited disciples) never gets it
     fresh.pavilionSeeded = s.pavilionSeeded !== undefined ? !!s.pavilionSeeded
       : (fresh.stats.disciplesRecruited || 0) > 0 || Object.keys(s.areas || {}).some(k =>
           ((s.areas[k] && s.areas[k].buildings) || []).some(b => b && b.built && B[b.type] && B[b.type].roster));
@@ -276,6 +286,7 @@ function loadState() {
           (a.buildings || []).some(x => x.id === l.to));
       }
       for (const b of a.buildings || []) {
+        if (b.starter) b.starter = true; else delete b.starter;          // game-placed starter tag
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
         // Ascension Gate offerings: a finite count within the cap
@@ -342,22 +353,67 @@ function loadState() {
   } catch (e) { return null; }
 }
 
-// v51's 13-quest chain, in order: a pre-v52 idx means "quests [0, idx)
-// claimed". Map to the new chain as the slot just after the LATEST claimed
-// quest that still exists — never back past a completed quest (inserted new
-// quests before it are skipped); a finished chain stays finished.
+// The unstamped (pre-v52) quest chains, in order: an old idx means "quests
+// [0, idx) claimed". Map to the new chain as the slot just after the LATEST
+// claimed quest that still exists — never back past a completed quest
+// (inserted new quests before it are skipped); a finished chain stays
+// finished. v50 = master (11 quests), v51 = the experimental branch (13).
+const QUEST_IDS_V50 = ["wood", "leaves", "dragon1", "fox", "build", "upgrade", "link",
+  "recipe", "craft", "explore", "cultivate"];
 const QUEST_IDS_V51 = ["wood", "leaves", "dragon1", "fox", "build", "upgrade", "link",
   "recipe", "craft", "explore", "waters", "weaver", "cultivate"];
-function remapLegacyQuestIdx(oldIdx) {
+function remapLegacyQuestIdx(oldIdx, chainIds) {
+  const old = chainIds || QUEST_IDS_V51;
   const ids = window.DATA.QUESTS.map(q => q.id);
-  const o = Math.max(0, Math.min(Math.floor(oldIdx) || 0, QUEST_IDS_V51.length));
-  if (o >= QUEST_IDS_V51.length) return ids.length;
+  const o = Math.max(0, Math.min(Math.floor(oldIdx) || 0, old.length));
+  if (o >= old.length) return ids.length;
   let idx = 0;
-  for (let i = 0; i < o; i++) { const j = ids.indexOf(QUEST_IDS_V51[i]); if (j >= 0) idx = Math.max(idx, j + 1); }
+  for (let i = 0; i < o; i++) { const j = ids.indexOf(old[i]); if (j >= 0) idx = Math.max(idx, j + 1); }
   return Math.min(idx, ids.length);
 }
+// Every (type@row,col) the starter network was ever aimed at in the Center
+// (v36..v52 layouts) — old saves carry no b.starter tag, so the builtTypes
+// migration infers it from these spots. findSpot nudges a starter building
+// off a cell a random node took, so a building within 3 cells of an unused
+// spot of its type (lowest ids first — the network was placed at game
+// start) counts as that starter.
+function inferStarterTags(buildings) {
+  if (!Array.isArray(buildings)) return;
+  const spots = [...LEGACY_STARTER_SPOTS].map(k => {
+    const [type, rc] = k.split("@"), [r, c] = rc.split(",").map(Number);
+    return { type, r, c, used: false };
+  });
+  const list = buildings.filter(b => b && b.built && Number.isFinite(b.row) && Number.isFinite(b.col))
+    .sort((a, b) => (a.id || 0) - (b.id || 0));
+  for (const b of list) {
+    if (b.starter) continue;
+    let best = null, bd = 4;
+    for (const sp of spots) {
+      if (sp.used || sp.type !== b.type) continue;
+      const d = Math.max(Math.abs(sp.r - b.row), Math.abs(sp.c - b.col));
+      if (d < bd) { bd = d; best = sp; }
+    }
+    if (best) { best.used = true; b.starter = true; }
+  }
+}
+const LEGACY_STARTER_SPOTS = new Set([
+  // v46..v52 (93-cell grid)
+  "forge@55,30", "workbench@55,36", "paper_mill@55,42", "kiln@55,48", "infusion_array@55,54",
+  "storehouse@78,27", "storehouse@26,44", "storehouse@83,27",
+  "gathering_stone@80,13", "gathering_stone@80,18", "gathering_stone@16,44", "gathering_stone@80,80",
+  "gathering_stone@80,73", "gathering_stone@12,80",
+  "warding_seal@74,22", "warding_seal@30,44",
+  "wisp_lantern@76,20", "wisp_lantern@22,44", "wisp_lantern@52,58",
+  // pre-v46 (75-cell grid)
+  "forge@52,26", "workbench@52,31", "paper_mill@52,36", "kiln@52,41", "infusion_array@52,46",
+  "storehouse@56,28", "storehouse@56,34", "storehouse@60,26", "storehouse@26,36",
+  "gathering_stone@62,18", "gathering_stone@16,33", "gathering_stone@62,56", "gathering_stone@12,62",
+  "warding_seal@58,22", "warding_seal@30,36",
+  "wisp_lantern@60,20", "wisp_lantern@22,36", "wisp_lantern@44,52",
+]);
 
 function clearSave() { saveDisabled = true; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
-window.SAVE = { saveState, loadState, clearSave, fresh: makeInitialState, KEY: SAVE_KEY, remapLegacyQuestIdx };
+window.SAVE = { saveState, loadState, clearSave, fresh: makeInitialState, KEY: SAVE_KEY, remapLegacyQuestIdx,
+  QUEST_IDS_V50, QUEST_IDS_V51 };
 window.GS = loadState() || makeInitialState();

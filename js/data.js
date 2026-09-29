@@ -641,8 +641,16 @@ const QUESTS = [
     reward: { reveal: ["algae_farm"], items: { wood: 8 } },   // toward the Mine's border
     target: { area: "center", kind: "dragon" } },
   { id: "iron", icon: "🧲", name: "Iron for the dragon",
-    desc: "Unlock the Mine, break ⛏ iron veins for Iron Ore, then build a Forge (B), feed it ore plus wood as fuel, and carry 4 Iron Bars.",
-    goal: () => ({ cur: window.GS.dragon.stage >= 3 ? 4 : Math.min(window.ENGINE.handCount("iron_bar"), 4), need: 4 }),
+    desc: "Unlock the Mine, break ⛓️ iron veins for Iron Ore, then build a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the dragon's third tribute asks for (bars already fed to it count).",
+    // need = the stage-3 iron tribute (scaled, from the engine); bars already
+    // paid to the dragon at stage 2 count, so feeding it never resets this
+    goal: () => {
+      const E = window.ENGINE, dr = window.GS.dragon;
+      const need = Math.max(1, E.dragonTribute(2).iron_bar || 1);
+      if (dr.stage >= 3) return { cur: need, need };
+      const paid = dr.stage === 2 ? (dr.paid.iron_bar || 0) : 0;
+      return { cur: Math.min(need, E.handCount("iron_bar") + paid), need };
+    },
     builds: ["forge"] },
   { id: "waters", icon: "🎣", name: "Unlock the waters",
     desc: "Fishing is where Algae and Spring Water come from — carry wood to the glowing border button and unlock Fishing.",
@@ -708,15 +716,15 @@ const SOURCES = {
   stone: "quarry rock ⛰️ (bottom-left) · Mine rocks",
   clay: "clay field (Center, bottom-right) · Mine rocks",
   sand: "Farm sand band (left side)",
-  iron_ore: "Mine ⛏ iron veins",
-  iron_bar: "Mine ⛏ iron veins → Forge",
+  iron_ore: "Mine ⛓️ iron veins",
+  iron_bar: "Mine ⛓️ iron veins → Forge",
   fish: "Fishing: click surfacing koi 🐟",
   algae: "Fishing: click surfacing algae 🪸 · Algae Farm",
   water: "Fishing spring ⛲ (top-left)",
   spirit_essence: "slay Fox Spirits 🦊 (top-right) · disciples",
   spirit_herb: "Spirit Grove bushes · Herb Garden",
   bamboo: "Spirit Tree rare drop · Spirit Grove stalks",
-  jade_shard: "quarry rock rare drop",
+  jade_shard: "Mine jade veins 🟢 · quarry rock rare drop",
   plank: "Workbench ← Wood",
   brick: "Kiln ← Clay",
   paper: "Paper Mill ← Bamboo + Wood",
