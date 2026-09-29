@@ -256,7 +256,7 @@ function loadState() {
       a.ground = (a.ground || []).filter(g => LIVE.has(g.item) && Number.isFinite(g.x) && Number.isFinite(g.y));
       // ground tags: `crafted` (eviction-protected building product) is kept
       // as a boolean; the player-drop grace stamp is transient — never loaded
-      for (const g of a.ground) { delete g.manualAt; if (g.crafted) g.crafted = true; else delete g.crafted; }
+      for (const g of a.ground) { delete g.manualAt; if (g.crafted) g.crafted = true; else delete g.crafted; if (g.gen && !g.crafted) g.gen = true; else delete g.gen; }
       delete a.autoPaused;                       // transient automation pause flag
       a.enemies = (a.enemies || []).filter(en =>
         Number.isFinite(en.x) && Number.isFinite(en.y) && Number.isFinite(en.hp) && en.hp > 0);

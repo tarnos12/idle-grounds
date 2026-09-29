@@ -1754,6 +1754,7 @@ function linkDot(lk) {
   const st = lk._stat;
   if (st && st.fail === "refused") return ["red", "Target refused the item"];
   if (st && st.fail === "empty") return ["amber", "Source is empty"];
+  if (st && st.fail === "nomatch") return ["amber", "Source holds nothing this target uses"];
   if (st && st.sentAt && Date.now() - st.sentAt < 3000) return ["green", "Sent an item just now"];
   return ["grey", "Idle"];
 }
