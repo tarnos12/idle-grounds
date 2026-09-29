@@ -588,8 +588,10 @@ function placeBuilt(areaKey, type, r0, c0, extra) {
   const area = window.GS.areas[areaKey];
   const spot = findSpot(areaKey, type, r0, c0);
   if (!spot) return null;
+  // starter: game-placed (only setupStarterNetwork uses placeBuilt) — never
+  // counts as a player-built type for the progressive build reveal
   const b = Object.assign({ id: area.nextBuildId++, type, row: spot.r, col: spot.c,
-    paid: {}, built: true, item: null, qty: 0 }, extra || {});
+    paid: {}, built: true, item: null, qty: 0, starter: true }, extra || {});
   initLogistics(b);
   area.buildings.push(b);
   return b;
@@ -1118,6 +1120,40 @@ function canPlaceBuilding(areaKey, row, col, type) {
     for (let c = col; c < col + B.w; c++) if (racks.has(r + "," + c)) return false;
   return true;
 }
+// Why `type` can't go at (row,col) — a short player-facing reason, or null
+// when canPlaceBuilding would allow it. Mirrors canPlaceBuilding check for
+// check (tested to agree on every cell).
+function placeReason(areaKey, row, col, type) {
+  const bCfg = (type && D.BUILDINGS[type]) || {};
+  const B = bCfg.size || D.GRID.building;
+  if (row < 0 || col < 0 || row + B.h > D.GRID.cells || col + B.w > D.GRID.cells) return "Off the edge";
+  if (bCfg.waterOnly && areaKey !== "fishing") return "Water only";
+  const occ = occupiedCells(areaKey);
+  let wild = false, water = false, blocked = false;
+  for (let r = row; r < row + B.h; r++)
+    for (let c = col; c < col + B.w; c++) {
+      if (bCfg.waterOnly ? !cellInZone("centre", r, c) : (!bCfg.anyZone && inNoBuild(areaKey, r, c))) {
+        if (bCfg.waterOnly) water = true; else wild = true;
+      }
+      if (occ.has(r + "," + c)) blocked = true;
+    }
+  if (water) return "Water only";
+  if (wild) return "Wild land — build in the clearing";
+  if (blocked) return "Blocked";
+  const racks = rackCells(areaKey);
+  if (bCfg.fuel) {
+    if (col - 3 < 0) return "Fuel rack blocked";
+    for (let r = row; r <= row + 1; r++)
+      for (let c = col - 3; c <= col - 1; c++) {
+        const k = r + "," + c;
+        if (occ.has(k) || racks.has(k)) return "Fuel rack blocked";
+        if (!bCfg.anyZone && inNoBuild(areaKey, r, c)) return "Fuel rack blocked";
+      }
+  }
+  for (let r = row; r < row + B.h; r++)
+    for (let c = col; c < col + B.w; c++) if (racks.has(r + "," + c)) return "Blocked";
+  return null;
+}
 // Set of "r,c" cells covered by the fuel racks of the area's burners
 // (ghosts included — the rack appears once they're built).
 function rackCells(areaKey) {
@@ -1555,10 +1591,50 @@ function wispPos(areaKey, w, now) {
   return { x: w.x0 + (t.x - w.x0) * frac, y: w.y0 + (t.y - w.y0) * frac, frac };
 }
 
-// Wire a new link onto a lantern.
+// Item types a link SOURCE could ever send: null = unknown (a Gathering
+// Stone vacuums whatever lands nearby; an untuned seal / empty storehouse
+// takes whatever arrives first).
+function linkSourceTypes(src) {
+  const cfg = D.BUILDINGS[src.type];
+  if (cfg.stoker) return Object.keys(D.FUEL);
+  if (cfg.seal || src.type === "storehouse") return src.item ? [src.item] : null;
+  return null;
+}
+// Item types a link TARGET could EVER accept, across recipe switches (a
+// converter's every recipe input + fuel for burners): null = anything/unknown.
+function linkTargetTypesEver(t) {
+  const cfg = D.BUILDINGS[t.type];
+  if (cfg.gather) return null;
+  if (cfg.seal || t.type === "storehouse") return t.item ? [t.item] : null;
+  if (cfg.recipes) {
+    const out = [];
+    for (const r of cfg.recipes) for (const it of Object.keys(r.inputs)) if (out.indexOf(it) < 0) out.push(it);
+    if (cfg.fuel) for (const f of Object.keys(D.FUEL)) if (out.indexOf(f) < 0) out.push(f);
+    return out;
+  }
+  return targetTypes(t);
+}
+// Why a link from -> to can never carry anything, or null when it may.
+// { code, text } — code: "self" | "source" | "target" | "types".
+function linkRefusal(areaKey, fromId, toId) {
+  const src = buildingById(areaKey, fromId), dst = buildingById(areaKey, toId);
+  if (!canBeLinkSource(src)) return { code: "source", text: "Not a link source" };
+  if (!canBeLinkTarget(dst)) return { code: "target", text: "Not a link target" };
+  if (src.id === dst.id) return { code: "self", text: "A building can't feed itself" };
+  const from = linkSourceTypes(src), to = linkTargetTypesEver(dst);
+  if (from === null || to === null) return null;
+  if (from.some(it => to.indexOf(it) >= 0)) return null;
+  const names = from.slice(0, 2).map(itemName).join("/") + (from.length > 2 ? "…" : "");
+  return { code: "types", text: `${D.BUILDINGS[dst.type].name} can't use ${names}` };
+}
+
+// Wire a new link onto a lantern. Refuses (false) a link whose target can
+// never accept anything the source holds — and a refused link never counts
+// toward the link quest.
 function addLink(areaKey, lanternId, fromId, toId) {
   const lb = buildingById(areaKey, lanternId);
   if (!lb || !D.BUILDINGS[lb.type].lantern) return false;
+  if (linkRefusal(areaKey, fromId, toId)) return false;
   lb.links = lb.links || [];
   lb.links.push({ from: fromId, to: toId });
   window.GS.stats.linksAdded = (window.GS.stats.linksAdded || 0) + 1;
@@ -1838,12 +1914,14 @@ function dropFromHand(areaKey, x, y, noGround) {
       occEpoch++;                                    // a burner's fuel rack now occupies cells
       window.GS.stats.buildingsBuilt = (window.GS.stats.buildingsBuilt || 0) + 1;
       (window.GS.builtTypes = window.GS.builtTypes || {})[b.type] = true;   // owning one keeps it revealed
-      // the FIRST Meditation Pavilion comes stocked with Spirit Buns so the
-      // tutorial's disciple visibly cultivates before a Mill exists
+      // each run's FIRST Meditation Pavilion comes stocked with a full larder
+      // of Spirit Buns (its food cap) so the disciple visibly cultivates for
+      // a few minutes before a Mill exists. Per-RUN by design: ascend()
+      // starts from a fresh state (pavilionSeeded false) and re-seeds.
       const ros = D.BUILDINGS[b.type].roster;
       if (ros && !window.GS.pavilionSeeded) {
         window.GS.pavilionSeeded = true;
-        b.buns = Math.min(ros.foodCap || 10, 10);
+        b.buns = ros.foodCap || 20;
       }
       if (window.onSfx) window.onSfx("build", areaKey);
       // completing the Ascension Gate offers the ending
@@ -1978,6 +2056,23 @@ function dragonRemaining() {
     if (r > 0) rem[item] = r;
   }
   return rem;
+}
+
+// Full tribute of stage index `i` (scaled like dragonRemaining): { item: qty }.
+// The CURRENT stage reads paid + remaining, so it always agrees with the
+// feeding math.
+function dragonTribute(i) {
+  const st = D.DRAGON_STAGES[i];
+  if (!st) return {};
+  const out = {};
+  if (i === (window.GS.dragon.stage || 0)) {
+    const rem = dragonRemaining();
+    for (const item of Object.keys(st.needs)) out[item] = (window.GS.dragon.paid[item] || 0) + (rem[item] || 0);
+    return out;
+  }
+  for (const [item, qty] of Object.entries(st.needs))
+    out[item] = scaled(qty) * (vowActive("restless") ? 2 : 1);
+  return out;
 }
 
 // ---- World regions (one continuous map) ---------------------
@@ -2897,6 +2992,7 @@ window.ENGINE = {
   buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, recipeOf, setRecipe, smeltRemaining,
   fuelQueue, fuelTotal, fuelSpace, craftsPossible,
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
+  linkRefusal, placeReason, dragonTribute,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
   wispPos, endpointAccepts, endpointGive, smeltSpace,
   questProgress, claimQuest, isBuildingNew, markBuildSeen, buildMenuHasNew, markBuildListed, isVeteran,

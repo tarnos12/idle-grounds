@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /* Regression: v52 slice D — guidance. Progressive build-menu reveal
    (DATA.REVEAL), the 14-quest spine + old-index migration, quest item
-   rewards, the first-pavilion bun seed, 'new' badges, DATA.SOURCES coverage.
+   rewards, the per-run first-pavilion bun seed, 'new' badges, DATA.SOURCES coverage;
+   fix wave: v50/v51 unstamped chains, iron quest, starter tags, link refusal,
+   placeReason.
    Standalone vm sandbox — loads js/data.js, js/state.js, js/engine.js.
    Usage: node tests/test-v52-guidance.js [repoRoot]   (default /home/user/idle-grounds)
    Exits 1 on any FAIL. */
@@ -36,11 +38,14 @@ function boot(saved) {
 const initAll = s => { for (const k of Object.keys(s.DATA.AREAS)) s.ENGINE.initArea(k); };
 const catalog = s => s.ENGINE.buildingCatalog().map(b => b.id).sort().join(",");
 const qIdx = (s, id) => s.DATA.QUESTS.findIndex(q => q.id === id);
-// a v51-shaped save (no quest.chain / builtTypes / buildSeen / pavilionSeeded)
+// a v51-shaped save (no quest.chain / builtTypes / buildSeen / pavilionSeeded;
+// v51 always serialised dragonBlessed)
 const oldSave = (idx, extra) => Object.assign({
   areas: {}, world: { unlocked: { center: true } }, quest: { idx, hidden: false },
-  stats: {}, introSeen: true,
+  stats: {}, introSeen: true, dragonBlessed: false,
 }, extra || {});
+// a v50 (master) save: same, but no dragonBlessed field at all
+const v50Save = (idx, extra) => { const o = oldSave(idx, extra); delete o.dragonBlessed; return o; };
 
 try {
   // (a) data shape -----------------------------------------------------------
@@ -273,7 +278,8 @@ try {
       return b;
     };
     const p1 = buildOne();
-    check("first pavilion built with 10 Spirit Buns", p1.built && p1.buns === 10 && G.pavilionSeeded === true, `built=${p1.built} buns=${p1.buns}`);
+    const cap = s.DATA.BUILDINGS.meditation_pavilion.roster.foodCap;
+    check("first pavilion of the run built with a full larder (foodCap) of Spirit Buns", p1.built && cap === 20 && p1.buns === cap && G.pavilionSeeded === true, `built=${p1.built} buns=${p1.buns}`);
     check("building it records the type as player-owned", G.builtTypes.meditation_pavilion === true);
     const p2 = buildOne();
     check("second pavilion gets no seed", p2.built && (p2.buns || 0) === 0, `buns=${p2.buns}`);
@@ -300,6 +306,184 @@ try {
     s.SAVE.saveState();
     const s2 = boot(JSON.parse(s._stored()));
     check("seen state persists across reload", !s2.ENGINE.isBuildingNew("storehouse") && s2.ENGINE.isBuildingNew("kiln"));
+  }
+  // (i) v50 (master) vs v51 unstamped chains --------------------------------------
+  {
+    // v50: wood leaves dragon1 fox build upgrade link recipe craft explore cultivate | done
+    const V50 = ["wood", "leaves", "dragon1", "fox", "build", "upgrade", "link", "recipe", "craft", "explore", "cultivate"];
+    const expect50 = [0, 1, 2, 3, 4, 5, 6, 7, 7, 7, 8, 14];
+    const got = [], back = [];
+    for (let old = 0; old <= 11; old++) {
+      const s = boot(v50Save(old));
+      const ids = s.DATA.QUESTS.map(q => q.id);
+      got.push(s.GS.quest.idx);
+      for (let k = 0; k < old; k++) { const j = ids.indexOf(V50[k]); if (j >= 0 && s.GS.quest.idx <= j) back.push(old + ">" + V50[k]); }
+      s.SAVE.saveState();
+      const s2 = boot(JSON.parse(s._stored()));
+      if (s2.GS.quest.idx !== s.GS.quest.idx) back.push(old + ":reload " + s2.GS.quest.idx);
+    }
+    check("v50 (no dragonBlessed) old idx 0..11 -> new idx", got.join(",") === expect50.join(","), got.join(","));
+    check("v50 migration never moves back past a completed quest; reload-stable", back.length === 0, back.join(",") || "ok");
+    const s0 = boot();
+    check("SAVE exposes both legacy chains (11 + 13 ids)", s0.SAVE.QUEST_IDS_V50.length === 11 && s0.SAVE.QUEST_IDS_V51.length === 13 &&
+      s0.SAVE.QUEST_IDS_V50.join() === V50.join());
+    // finished v50 player (idx 11 = chain done) must NOT land on quest 12/14
+    const sF = boot(v50Save(11));
+    check("finished v50 save -> chain finished", sF.GS.quest.idx === sF.DATA.QUESTS.length, String(sF.GS.quest.idx));
+    // unstamped veterans go to the end whatever their idx, both chains
+    const vet = [];
+    for (const mk of [oldSave, v50Save])
+      for (const extra of [{ ascensions: 1 }, { won: true }, { ascensions: 3, won: true }])
+        for (const old of [0, 5, 10]) {
+          const s = boot(mk(old, extra));
+          if (s.GS.quest.idx !== s.DATA.QUESTS.length) vet.push((mk === oldSave ? "v51" : "v50") + JSON.stringify(extra) + "@" + old + "->" + s.GS.quest.idx);
+        }
+    check("unstamped save with ascensions>0 or won -> end (both chains)", vet.length === 0, vet.join(";") || "ok");
+    // a stamped (v52) veteran keeps its idx
+    const sS = boot(Object.assign(oldSave(4, { ascensions: 1 }), { quest: { idx: 4, hidden: false, chain: 2 } }));
+    check("stamped save is never remapped (even ascended)", sS.GS.quest.idx === 4, String(sS.GS.quest.idx));
+  }
+
+  // (j) 'iron' quest: bars fed to the dragon count; need from the tribute --------------
+  {
+    const s = boot(); initAll(s);
+    const E = s.ENGINE, G = s.GS, D = s.DATA;
+    const qi = qIdx(s, "iron"), q = D.QUESTS[qi];
+    const need = E.dragonTribute(2).iron_bar;
+    const expNeed = Math.max(1, Math.ceil(D.TEST.ENABLED ? D.DRAGON_STAGES[2].needs.iron_bar * D.TEST.costScale : D.DRAGON_STAGES[2].needs.iron_bar));
+    check("dragonTribute(2).iron_bar = scaled stage-3 iron tribute", need === expNeed, `${need} vs ${expNeed}`);
+    G.dragon.stage = 1; G.hand = [{ item: "iron_bar", qty: 2 }];
+    let p = E.questProgress(qi);
+    check("iron: need = stage-3 tribute, cur = bars in hand", p.need === need && p.cur === Math.min(need, 2), JSON.stringify(p));
+    G.dragon.stage = 2; G.dragon.paid = { iron_bar: 3 }; G.hand = [{ item: "iron_bar", qty: 1 }];
+    p = E.questProgress(qi);
+    check("iron at stage 2: cur = hand + bars already paid", p.cur === Math.min(need, 4) && p.need === need, JSON.stringify(p));
+    // feeding the dragon moves bars hand -> paid without resetting progress
+    G.dragon.paid = {}; G.hand = [{ item: "iron_bar", qty: need }];
+    const before = E.questProgress(qi).cur;
+    G.dragon.paid = { iron_bar: need }; G.hand = [];
+    check("feeding the bars keeps the quest complete", before === need && E.questProgress(qi).cur === need && E.questProgress(qi).done);
+    G.dragon.stage = 3; G.dragon.paid = {};
+    check("stage 3 reached -> done", E.questProgress(qi).done);
+    check("iron quest text: no literal 4, uses the ⛓️ vein sprite", !/\b4\b/.test(q.desc) && q.desc.includes("⛓️") && !q.desc.includes("⛏"), q.desc);
+    // the ⛓️ glyph is the iron vein's real sprite; jade veins named in SOURCES
+    const mineSp = D.AREAS.mine.spawners || [];
+    const iron = mineSp.find(sp => (sp.drops || []).some(d => d.item === "iron_ore"));
+    const jade = mineSp.find(sp => (sp.drops || []).some(d => d.item === "jade_shard"));
+    check("iron sources use the iron-vein sprite (no ⛏)", iron && D.SOURCES.iron_ore.includes(iron.sprite) && D.SOURCES.iron_bar.includes(iron.sprite) &&
+      !D.SOURCES.iron_ore.includes("⛏") && !D.SOURCES.iron_bar.includes("⛏"), D.SOURCES.iron_ore + " | " + D.SOURCES.iron_bar);
+    check("SOURCES.jade_shard names the Mine jade veins + quarry", jade && D.SOURCES.jade_shard === "Mine jade veins 🟢 · quarry rock rare drop" &&
+      D.SOURCES.jade_shard.includes(jade.sprite), D.SOURCES.jade_shard);
+  }
+
+  // (k) pavilion seed is per RUN: ascension re-arms it ------------------------------
+  {
+    const s = boot(); initAll(s);
+    s.GS.pavilionSeeded = true; s.GS.quest.idx = s.DATA.QUESTS.length;
+    s.ENGINE.ascend([]);
+    check("ascend() starts the new run with pavilionSeeded=false", s.GS.pavilionSeeded === false && s.GS.ascensions === 1);
+    initAll(s);
+    const E = s.ENGINE, G = s.GS;
+    let spot = null;
+    for (let r = 26; r < 66 && !spot; r++) for (let c = 26; c < 66 && !spot; c++)
+      if (E.canPlaceBuilding("center", r, c, "meditation_pavilion")) spot = { r, c };
+    const b = E.placeBuilding("center", "meditation_pavilion", spot.r, spot.c);
+    G.hand = Object.entries(s.DATA.BUILDINGS.meditation_pavilion.cost).map(([item, qty]) => ({ item, qty }));
+    for (let k = 0; k < 60 && !b.built; k++) E.dropFromHand("center", (b.col + 1.5) * 32, (b.row + 1.5) * 32);
+    check("run 2's first pavilion is seeded again (foodCap buns)", b.built && b.buns === s.DATA.BUILDINGS.meditation_pavilion.roster.foodCap, `buns=${b.buns}`);
+  }
+
+  // (l) builtTypes: starter buildings never count as player-built ------------------
+  {
+    const s = boot(); initAll(s); s.ENGINE.setupStarterNetwork();
+    const starters = s.GS.areas.center.buildings.filter(b => b.starter);
+    const placedTypes = new Set(starters.map(b => b.type));
+    check("setupStarterNetwork tags every building it places (b.starter)", starters.length >= 12 &&
+      s.GS.areas.center.buildings.filter(b => !b.starter).every(b => b.type === "center" || b.type === "dragon"), `${starters.length} tagged`);
+    check("starter network doesn't touch builtTypes", JSON.stringify(s.GS.builtTypes) === "{}");
+    s.SAVE.saveState();
+    const s2 = boot(JSON.parse(s._stored()));
+    check("starter tag survives save/load", s2.GS.areas.center.buildings.filter(b => b.starter).length === starters.length);
+    // an OLD (v51-shaped) save: starter buildings carry no tag, no builtTypes
+    const raw = JSON.parse(s._stored());
+    for (const b of raw.areas.center.buildings) delete b.starter;
+    delete raw.builtTypes; delete raw.buildSeen; delete raw.pavilionSeeded; delete raw.quest.chain;
+    raw.quest.idx = 3; raw.dragonBlessed = false; raw.stats.buildingsBuilt = 0;
+    const s3 = boot(JSON.parse(JSON.stringify(raw)));
+    check("old early save: builtTypes excludes the starter network", JSON.stringify(s3.GS.builtTypes) === "{}", JSON.stringify(s3.GS.builtTypes));
+    check("old early save keeps the progressive reveal (no Kiln/Workbench card)", !s3.ENGINE.isBuildingUnlocked("kiln") && !s3.ENGINE.isBuildingUnlocked("workbench") &&
+      !s3.ENGINE.isBuildingUnlocked("gathering_stone"));
+    check("old save: starter tag inferred from the known layout", s3.GS.areas.center.buildings.filter(b => b.starter).length === starters.length,
+      s3.GS.areas.center.buildings.filter(b => !b.starter).map(b => b.type + "@" + b.row + "," + b.col).join(" "));
+    // player-built buildings still count (even with starter spots inferred)
+    const raw2 = JSON.parse(JSON.stringify(raw));
+    raw2.stats.buildingsBuilt = 2;
+    raw2.areas.center.buildings.push({ id: 900, type: "loom", row: 30, col: 60, paid: {}, built: true });
+    raw2.areas.center.buildings.push({ id: 901, type: "kiln", row: 36, col: 60, paid: {}, built: false });   // a ghost
+    raw2.areas.center.buildings.push({ id: 902, type: "workbench", row: 42, col: 60, paid: {}, built: true });
+    const s4 = boot(raw2);
+    check("old save: player-built types count, starters + ghosts don't", s4.GS.builtTypes.loom === true && s4.GS.builtTypes.workbench === true &&
+      !s4.GS.builtTypes.kiln && !s4.GS.builtTypes.gathering_stone && !s4.GS.builtTypes.wisp_lantern, JSON.stringify(s4.GS.builtTypes));
+    // a legacy v50 layout (75-grid spots) is recognised too
+    const raw3 = v50Save(2, { starterPlaced: true, stats: { buildingsBuilt: 1 }, areas: { center: { buildings: [
+      { id: 3, type: "gathering_stone", row: 62, col: 18, paid: {}, built: true },
+      { id: 4, type: "wisp_lantern", row: 44, col: 52, paid: {}, built: true },
+      { id: 9, type: "storehouse", row: 40, col: 40, paid: {}, built: true }] } } });
+    const s5 = boot(raw3);
+    check("pre-v46 starter spots recognised; the player's storehouse counts", s5.GS.builtTypes.storehouse === true &&
+      !s5.GS.builtTypes.gathering_stone && !s5.GS.builtTypes.wisp_lantern, JSON.stringify(s5.GS.builtTypes));
+  }
+
+  // (m) link editor refuses links that can never carry anything --------------------
+  {
+    const s = boot(); initAll(s); s.ENGINE.setupStarterNetwork();
+    const E = s.ENGINE, G = s.GS, A = G.areas.center.buildings;
+    G.quest.idx = s.DATA.QUESTS.length;   // every card revealed
+    const kiln = A.find(b => b.type === "kiln"), bench = A.find(b => b.type === "workbench");
+    const lan = A.find(b => b.type === "wisp_lantern");
+    const gs = A.find(b => b.type === "gathering_stone");
+    const free = (type) => { for (let r = 26; r < 70; r++) for (let c = 26; c < 70; c++) if (E.canPlaceBuilding("center", r, c, type)) return { r, c }; return null; };
+    const put = (type, extra) => { const sp = free(type); const b = E.placeBuilding("center", type, sp.r, sp.c); Object.assign(b, { built: true }, extra || {}); return b; };
+    const plankSh = put("storehouse", { item: "plank", qty: 5 });
+    const emptySh = put("storehouse", { item: null, qty: 0 });
+    const woodSeal = A.find(b => b.type === "warding_seal" && b.item === "wood");
+    const n0 = G.stats.linksAdded || 0, l0 = lan.links.length;
+    const why = E.linkRefusal("center", plankSh.id, kiln.id);
+    check("plank storehouse -> Kiln refused: 'Kiln can't use Plank'", why && why.code === "types" && why.text === "Kiln can't use Plank", JSON.stringify(why));
+    check("addLink refuses it, link quest not credited", E.addLink("center", lan.id, plankSh.id, kiln.id) === false &&
+      (G.stats.linksAdded || 0) === n0 && lan.links.length === l0);
+    check("plank storehouse -> Workbench allowed (Tools uses Plank, any recipe counts)", E.linkRefusal("center", plankSh.id, bench.id) === null);
+    check("wood seal -> Kiln allowed (wood is fuel)", E.linkRefusal("center", woodSeal.id, kiln.id) === null);
+    check("Gathering Stone (unknown content) -> Kiln allowed", E.linkRefusal("center", gs.id, kiln.id) === null);
+    check("empty storehouse -> Kiln allowed", E.linkRefusal("center", emptySh.id, kiln.id) === null);
+    check("plank storehouse -> empty storehouse allowed", E.linkRefusal("center", plankSh.id, emptySh.id) === null);
+    check("self-link refused", E.linkRefusal("center", plankSh.id, plankSh.id) !== null);
+    check("valid addLink still credits the quest", E.addLink("center", lan.id, plankSh.id, bench.id) === true && G.stats.linksAdded === n0 + 1);
+  }
+
+  // (n) placeReason mirrors canPlaceBuilding on every cell ------------------------
+  {
+    const s = boot(); initAll(s); s.ENGINE.setupStarterNetwork();
+    const E = s.ENGINE, D = s.DATA, N = D.GRID.cells;
+    // a ghost burner so rack cells exist too
+    const fsp = (() => { for (let r = 30; r < 60; r++) for (let c = 30; c < 60; c++) if (E.canPlaceBuilding("center", r, c, "kiln")) return { r, c }; })();
+    E.placeBuilding("center", "kiln", fsp.r, fsp.c);
+    const mism = [], seen = new Set();
+    for (const [area, types] of [["center", ["storehouse", "kiln", "gathering_stone", "algae_farm", "meditation_pavilion"]],
+                                 ["fishing", ["algae_farm", "storehouse"]], ["mine", ["forge"]]])
+      for (const t of types)
+        for (let r = -1; r < N + 1; r += 1) for (let c = -1; c < N + 1; c += 1) {
+          const ok = E.canPlaceBuilding(area, r, c, t), why = E.placeReason(area, r, c, t);
+          if (ok !== (why === null)) mism.push(`${area}:${t}@${r},${c} ok=${ok} why=${why}`);
+          if (why) seen.add(why);
+        }
+    check("placeReason === null  <=>  canPlaceBuilding (every cell, 8 area/type pairs)", mism.length === 0, mism.slice(0, 3).join("; ") || "ok");
+    const want = ["Wild land — build in the clearing", "Blocked", "Fuel rack blocked", "Water only"];
+    check("reasons cover wild land / blocked / fuel rack / water", want.every(w => seen.has(w)), [...seen].join(" | "));
+    check("algae farm on land: 'Water only'", E.placeReason("center", 40, 40, "algae_farm") === "Water only");
+    const nb = D.ZONES[[].concat(D.AREAS.center.noBuild)[0]][0];
+    check("a wild-land cell reads 'Wild land — build in the clearing'", E.placeReason("center", nb.r0, nb.c0 + 3, "storehouse") === "Wild land — build in the clearing",
+      E.placeReason("center", nb.r0, nb.c0 + 3, "storehouse"));
   }
 } catch (e) {
   console.log("FAIL exception — " + (e && e.stack || e));
