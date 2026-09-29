@@ -11,7 +11,7 @@ the v51 + v52 EXPERIMENTAL, evidence-driven design passes for the user to
 test-drive before merging (do NOT merge it until they say so). Current
 asset version: **?v=52**.
 
-Test build (branch): https://claude.ai/artifact/VRBo3V3rXrnRtn6gHCTsmm
+Test build (branch): https://claude.ai/artifact/PFdYcT925mm7bxRdagGr2u
 Master build (v50): https://claude.ai/artifact/FxjCkJ6WdDt33nYntCBpJD
 
 Wait for the user's verdict on the branch (merge / tweak / discard). Next
