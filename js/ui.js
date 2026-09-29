@@ -448,6 +448,10 @@ function animActive() {
       if ((bd.inv || []).reduce((s, x) => s + x.qty, 0) >= g.cap) continue;   // full: no pulls
       const c = E.buildingCenterPx(bd), R = g.radius * CELL;
       for (const gi of window.GS.areas[key].ground) {
+        // only items the engine actually pulled this moment (it stamps _pullAt
+        // on the ticks it moves them) — a stone that rejects nearby items
+        // (link-aware filter) must not force 60 idle redraws/s
+        if (!gi._pullAt || now - gi._pullAt >= 200) continue;
         const d = Math.hypot(c.x - gi.x, c.y - gi.y);
         if (d > 22 && d <= R) return true;   // early-out on first in-ring item
       }
