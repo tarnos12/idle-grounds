@@ -38,7 +38,9 @@ try {
   check("jadevein: break, 3 hits, drops jade_shard 1-2",
     sp && sp.interaction === "break" && sp.hits === 3 &&
     sp.drops.length === 1 && sp.drops[0].item === "jade_shard", JSON.stringify(sp && sp.drops));
+  check("jadevein spawner target 1 (about 15 veins, not 30)", sp && sp.target === 1, sp && sp.target);
   const veins = GS.areas.mine.nodes.filter(n => n.kind === "jadevein");
+  check("fresh Mine has roughly 15 jade veins (10..20)", veins.length >= 10 && veins.length <= 20, "count=" + veins.length);
   check("fresh Mine spawns jade veins", veins.length >= 1, "count=" + veins.length);
   if (veins.length) {
     const v = veins[0];
@@ -75,8 +77,16 @@ try {
     gl && gl.inputs.sand === 3 && gl.outputQty === 2 && gl.timeMs < 6000, JSON.stringify(gl));
   const og = rec("Obsidian Glass"), ast = rec("Astral Steel"), moon = rec("Moon Elixir");
   check("Obsidian Glass unchanged (1 obsidian -> 2 glass)", og && og.inputs.obsidian === 1 && og.outputQty === 2);
-  check("Astral Steel unchanged (outputs 1)", ast && ast.outputQty === 1);
-  check("Moon Elixir unchanged (outputs 1)", moon && moon.outputQty === 1);
+  check("Astral Steel outputs 2 (keeps a niche vs the doubled bone route)", ast && ast.outputQty === 2, ast && ast.outputQty);
+  check("Moon Elixir outputs 2 (keeps a niche vs the doubled herb route)", moon && moon.outputQty === 2 && moon.inputs.moonpetal === 2, moon && moon.outputQty);
+
+  // 4b. Astral Bounty copy names every passive field it speeds up (wood included)
+  const bounty = D.PERKS ? D.PERKS.find(p => p.id === "bounty") : null;
+  if (bounty) check("Astral Bounty desc mentions wood", /wood/.test(bounty.desc), bounty.desc);
+  else {
+    const m = /id: "bounty"[^}]*?desc: "([^"]+)"/.exec(fs.readFileSync(JS("data.js"), "utf8"));
+    check("Astral Bounty desc mentions wood", !!m && /wood/.test(m[1]), m && m[1]);
+  }
 
   // 5. fixtures -----------------------------------------------------------
   const fx = [];

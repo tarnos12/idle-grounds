@@ -1490,21 +1490,31 @@ function sourceMatches(src, dst) {
 // ---- Building status + craft rate (UI read-outs; pure, DOM-free) ----
 let offlineReplay = false;                // runOfflineCatchup: don't record live craft rates
 const CRAFT_WINDOW_MS = 60000;
-// Stamp one finished batch into the building's transient ring (b._crafts).
+// Stamp one finished batch into the building's transient ring (b._crafts);
+// b._craftFirst = the first craft of the current run of crafts (reset after an
+// idle gap longer than the window), so a fresh converter's rate is not diluted
+// by the 60 s window it hasn't lived through yet.
 function noteCraft(b, now) {
   const r = b._crafts || (b._crafts = []);
-  r.push(now);
   while (r.length && now - r[0] > CRAFT_WINDOW_MS) r.shift();
+  if (!r.length) b._craftFirst = now;
+  r.push(now);
   if (r.length > 240) r.splice(0, r.length - 240);
 }
-// Crafts per minute over the last 60s (transient; 0 after a reload).
-function craftRate(b) {
+// Crafts per minute, over min(time since the first recorded craft, 60 s)
+// (transient; 0 after a reload). While the window is still filling it counts
+// the gaps (n-1 crafts since the first one), afterwards the last 60 s. With
+// forDisplay, fewer than 2 recorded crafts read 0 (nothing honest to show yet).
+function craftRate(b, forDisplay) {
   const r = b && b._crafts;
   if (!r || !r.length) return 0;
   const now = Date.now();
   let n = 0;
   for (let i = r.length - 1; i >= 0 && now - r[i] <= CRAFT_WINDOW_MS; i--) n++;
-  return n;
+  if (n < 2) return forDisplay ? 0 : n;
+  const first = b._craftFirst || r[0];
+  const span = Math.min(Math.max(now - first, 1000), CRAFT_WINDOW_MS);
+  return span >= CRAFT_WINDOW_MS ? n : (n - 1) * 60000 / span;
 }
 // ---- Output back-pressure ----
 // A producer (converter, generator building, pavilion) starts no new work
