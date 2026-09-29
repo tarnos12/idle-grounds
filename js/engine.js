@@ -787,15 +787,21 @@ function pushOutOfColliders(areaKey) {
   for (const n of area.nodes)
     if (n.fixed) rects.push({ x0: n.col * CELL, y0: n.row * CELL, x1: (n.col + n.size) * CELL, y1: (n.row + n.size) * CELL });
   if (!rects.length) return 0;
+  const inAny = (x, y) => rects.some(r => x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1);
   let moved = 0;
   for (const g of area.ground) {
     for (const r of rects) {
       if (g.x <= r.x0 || g.x >= r.x1 || g.y <= r.y0 || g.y >= r.y1) continue;
-      const dl = g.x - r.x0, dr = r.x1 - g.x, dt = g.y - r.y0, db = r.y1 - g.y;
-      const m = Math.min(dl, dr, dt, db);
-      if (m === dl) g.x = r.x0 - 8; else if (m === dr) g.x = r.x1 + 8;
-      else if (m === dt) g.y = r.y0 - 8; else g.y = r.y1 + 8;
-      g.x = clampPx(g.x); g.y = clampPx(g.y);
+      // exit through the nearest edge whose landing spot is free — two
+      // flush colliders (the quarry rock + its gathering stone) would
+      // otherwise ping-pong an item between them forever. Stable sort keeps
+      // the old left/right/top/bottom tie order; all blocked = nearest.
+      const exits = [
+        [g.x - r.x0, clampPx(r.x0 - 8), clampPx(g.y)], [r.x1 - g.x, clampPx(r.x1 + 8), clampPx(g.y)],
+        [g.y - r.y0, clampPx(g.x), clampPx(r.y0 - 8)], [r.y1 - g.y, clampPx(g.x), clampPx(r.y1 + 8)],
+      ].sort((a, b) => a[0] - b[0]);
+      const e = exits.find(x => !inAny(x[1], x[2])) || exits[0];
+      g.x = e[1]; g.y = e[2];
       moved++;
     }
   }

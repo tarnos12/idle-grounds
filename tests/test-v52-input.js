@@ -125,6 +125,9 @@ try {
     const type = Object.keys(D.BUILDINGS).find(t => {
       const c = D.BUILDINGS[t].cost || {}; return Object.keys(c).length === 1 && c.wood && !D.BUILDINGS[t].unique;
     });
+    // v52 slice D gates placeBuilding on the progressive reveal (the
+    // Workbench shows after the "build" quest) — reveal it the way play does.
+    if (type && !E.isBuildingUnlocked(type)) s.GS.builtTypes = Object.assign(s.GS.builtTypes || {}, { [type]: true });
     if (type) {
       let placed = null;
       for (let r = 2; r < 60 && !placed; r++) for (let c = 2; c < 60 && !placed; c++)
