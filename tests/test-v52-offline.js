@@ -87,6 +87,10 @@ function freshOccupied(s, areaKey) {
     const sz = s.ENGINE.buildingSize(b.type);
     for (let r = b.row; r < b.row + sz.h; r++)
       for (let c = b.col; c < b.col + sz.w; c++) set.add(r + "," + c);
+    // (v52 fix wave) a BUILT burner's 3x2 fuel rack, left of the footprint
+    if (b.built && s.DATA.BUILDINGS[b.type].fuel)
+      for (let r = b.row; r <= b.row + 1; r++)
+        for (let c = b.col - 3; c <= b.col - 1; c++) set.add(r + "," + c);
   }
   return set;
 }
@@ -292,8 +296,14 @@ try {
     check("summary: fields present", r && Number.isFinite(r.awayMs) && Number.isFinite(r.simulatedMs) &&
       r.skippedMs === 0 && Array.isArray(r.stalls) && typeof r.gained === "object",
       r ? Object.keys(r).join(",") : "null");
-    check("summary: saturated state reports a full-ground stall", r.stalls.some(x => x.kind === "ground"),
-      JSON.stringify(r.stalls.map(x => x.kind + ":" + x.areaKey)));
+    // (v52 fix wave: back-pressure + per-type bot skips keep a 20-min replay
+    // far below the cap now, so the full-ground stall is staged directly)
+    const fullArea = s.GS.areas.farm, keep = fullArea.ground;
+    fullArea.ground = Array.from({ length: 600 }, (_, k) => ({ id: 5e6 + k, item: "wheat", x: 500, y: 500 }));
+    const stl = E.offlineStalls();
+    fullArea.ground = keep;
+    check("summary: saturated state reports a full-ground stall", stl.some(x => x.kind === "ground" && x.areaKey === "farm"),
+      JSON.stringify(stl.map(x => x.kind + ":" + x.areaKey)) + " replay: " + JSON.stringify(r.stalls.map(x => x.kind + ":" + x.areaKey)));
     // a burner holding a full batch but with no fuel -> "nofuel"; a pavilion with disciples and no food -> "nobuns"
     const area = s.GS.areas.center;
     const burner = area.buildings.find(b => b.built && D.BUILDINGS[b.type].fuel && E.recipeOf(b));

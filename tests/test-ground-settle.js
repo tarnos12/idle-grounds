@@ -55,12 +55,14 @@ const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
   const s = boot(true), E = s.ENGINE, area = s.GS.areas.center;
   area.ground = [];
   const firstId = area.nextGroundId;
-  E.dropGround("center", "stone", 800, 500, 500);          // one bulk call
+  // v52 fix wave: a call never evicts its OWN items (only the 900 hard
+  // ceiling can) — one bulk call of 1000 keeps its newest 900
+  E.dropGround("center", "stone", 1000, 500, 500);         // one bulk call
   const ids = area.ground.map(g => g.id);
-  const want = Array.from({ length: 600 }, (_, k) => firstId + 200 + k);
-  check("cap: bulk drop of 800 leaves 600", area.ground.length === 600, "len=" + area.ground.length);
-  check("cap: bulk survivors are the NEWEST 600 ids, in order", JSON.stringify(ids) === JSON.stringify(want),
-    "first=" + ids[0] + " last=" + ids[ids.length - 1] + " want " + want[0] + ".." + want[599]);
+  const want = Array.from({ length: 900 }, (_, k) => firstId + 100 + k);
+  check("cap: bulk drop of 1000 keeps 900 (hard ceiling; a call never evicts its own below it)", area.ground.length === 900, "len=" + area.ground.length);
+  check("cap: bulk survivors are the NEWEST 900 ids, in order", JSON.stringify(ids) === JSON.stringify(want),
+    "first=" + ids[0] + " last=" + ids[ids.length - 1] + " want " + want[0] + ".." + want[899]);
 
   area.ground = [];
   const f2 = area.nextGroundId;

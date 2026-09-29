@@ -113,8 +113,21 @@ try {
     check("every starter converter crafted within the first TEST minute", idle.length === 0,
       conv.map(b => b.type + "=" + E.craftRate(b)).join(" "));
     run(s, 9 * 60000);
+    // v52 fix wave: output back-pressure bounds the zero-input litter (the
+    // old ">= 200 crafts" flooded the Center into the ground cap)
     const n = s.GS.stats.totalCrafted;
-    check("starter network: >= 200 crafts in 10 TEST-minutes, zero input (v51: ~16 in 2h)", n >= 200, "crafted=" + n);
+    const piles = conv.map(b => E.outputPileCount(a, b, E.recipeOf(b).output));
+    check("starter network: crafted litter bounded by output back-pressure (<= 12 + a batch each)",
+      n >= 20 && piles.every((p, i) => p <= E.OUTPUT_PILE_MAX + (E.recipeOf(conv[i]).outputQty || 1)),
+      "crafted=" + n + " piles=" + piles.join(","));
+    const bench = conv.find(b => b.type === "workbench");
+    const st = E.buildingStatus("center", bench);
+    check("a blocked converter reports 'Output pile full' (not stock-full)", st && st.state === "full" && st.label === "Output pile full" &&
+      st.item === "plank", JSON.stringify(st));
+    a.ground = a.ground.filter(g => g.item !== "plank");           // the player collects the plank pile
+    const n0 = s.GS.stats.totalCrafted;
+    run(s, 30000);
+    check("collecting the pile resumes crafting", s.GS.stats.totalCrafted > n0, "crafts +" + (s.GS.stats.totalCrafted - n0));
   }
 
   // (2) link-aware Gathering Stones ---------------------------------------
@@ -195,21 +208,19 @@ try {
     const cnt = it => a.ground.filter(g => g.item === it).length;
     check("overflow evicts the oldest class-0 items (leaves) first", a.ground.length === 600 && cnt("leaves") === 345 &&
       cnt("dragon_scale") === 5 && cnt("star_steel") === 100, "leaves=" + cnt("leaves"));
+    // v52 fix wave: a call never evicts its own items; protected items past
+    // PROTECTED_SHARE (480) go oldest-first before any raw item
     E.dropGround("mine", "jade_shard", 400, 500, 500);
-    check("leaves gone before any class-1 item, then class 1 (essence) next",
-      cnt("leaves") === 0 && cnt("spirit_essence") === 45 && cnt("jade_shard") === 400 && a.ground.length === 600,
-      "leaves=" + cnt("leaves") + " essence=" + cnt("spirit_essence"));
-    check("crafted-tagged algae, star steel, dragon scales never evicted while raw remain",
-      cnt("algae") === 50 && cnt("star_steel") === 100 && cnt("dragon_scale") === 5);
+    check("protected over the 480 share: the oldest protected (star steel) go first, then class 0",
+      cnt("star_steel") === 25 && cnt("leaves") === 20 && cnt("jade_shard") === 400 && cnt("spirit_essence") === 100 &&
+      cnt("algae") === 50 && cnt("dragon_scale") === 5 && a.ground.length === 600,
+      "steel=" + cnt("star_steel") + " leaves=" + cnt("leaves") + " essence=" + cnt("spirit_essence"));
     E.dropGround("mine", "wood", 10, 500, 500);
-    check("a class-0 drop goes before the remaining class-1 items", cnt("wood") === 0 && cnt("spirit_essence") === 45 &&
-      a.ground.length === 600, "len=" + a.ground.length);
+    check("a fresh class-0 drop is never evicted by its own call (older class 0 goes)", cnt("wood") === 10 && cnt("leaves") === 10 &&
+      cnt("spirit_essence") === 100 && a.ground.length === 600, "len=" + a.ground.length + " leaves=" + cnt("leaves"));
     E.dropGround("mine", "iron_bar", 250, 500, 500);
-    check("only protected items left: area exceeds the cap (805 <= 900)", a.ground.length === 805 && cnt("spirit_essence") === 0,
-      "len=" + a.ground.length);
-    E.dropGround("mine", "iron_bar", 200, 500, 500);
-    check("hard ceiling 900: the oldest go regardless", a.ground.length === 900 && cnt("star_steel") === 0 && cnt("algae") === 45,
-      "len=" + a.ground.length + " oldest=" + a.ground[0].item);
+    check("protected drop over the share: oldest protected evicted, raw kept", a.ground.length === 600 && cnt("iron_bar") === 250 &&
+      cnt("spirit_essence") === 100 && cnt("star_steel") === 0, "len=" + a.ground.length + " steel=" + cnt("star_steel"));
   }
 
   // (5) automation pauses on a littered field ----------------------------
@@ -220,11 +231,18 @@ try {
     a.ground = [];
     E.automationTick();
     check("automation runs on a clean field (autoPaused false)", a.autoPaused === false);
+    // v52 fix wave: no whole-area pause — crafted litter never stalls bots;
+    // a node is skipped only while its own yield type is saturated
     E.dropGround("center", "star_steel", 460, 1500, 1500);
+    const n1 = E.automationTick();
+    check("460 crafted items: bots keep working (_autoSkip empty)", n1 > 0 && a.autoPaused === false &&
+      Array.isArray(a._autoSkip) && a._autoSkip.length === 0, "harvested=" + n1);
+    E.dropGround("center", "leaves", E.AUTO_SKIP_LOOSE, 1500, 1500);
     const before = a.ground.length;
     const n = E.automationTick();
-    check("> 450 ground items: area skipped, autoPaused = true", a.autoPaused === true && a.ground.length === before && n === 0,
-      "len=" + a.ground.length + " harvested=" + n);
+    check(">= 120 loose leaves: bushes skipped, _autoSkip = ['leaves'], autoPaused derived true",
+      n === 0 && a.ground.length === before && JSON.stringify(a._autoSkip) === '["leaves"]' && a.autoPaused === true,
+      "len=" + a.ground.length + " harvested=" + n + " skip=" + JSON.stringify(a._autoSkip));
   }
 
   // (6) fuel sliver starts a batch + (10) buildingStatus -------------------
@@ -273,9 +291,10 @@ try {
     lan.links.push({ from: gs.id, to: sh.id });
     E.gameTick();
     check("link health: empty source -> fail 'empty'", lan.links[0]._stat && lan.links[0]._stat.fail === "empty");
-    gs.inv = [{ item: "stone", qty: 3 }];
+    gs.inv = [{ item: "wood", qty: 3 }]; sh.qty = s.DATA.BUILDINGS.storehouse.cap;   // target full
     s.clock += 300; E.gameTick();
     check("link health: target refuses what the source holds -> 'refused'", lan.links[0]._stat.fail === "refused");
+    sh.qty = 0;
     gs.inv = [{ item: "wood", qty: 3 }];
     s.clock += 300; const t0 = s.clock; E.gameTick();
     const beat = lan.nextSend - t0, want = 1000 * s.DATA.TEST.timeScale * s.ENGINE.prestigeFactor();
