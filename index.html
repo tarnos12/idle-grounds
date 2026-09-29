@@ -125,11 +125,14 @@
   <!-- Ascension Shrine: spend Ascension Points on permanent prestige perks -->
   <div id="perk-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="perk-title">
     <div class="modal-box perk-box" tabindex="-1">
-      <div class="modal-head">
-        <h2 id="perk-title">☯ Ascension Shrine</h2>
-        <button id="perk-close" class="close-btn" aria-label="Close">✕</button>
+      <!-- sticky header: title, ✕ and the AP line stay in view while the list scrolls -->
+      <div id="perk-head" style="position:sticky;top:-18px;z-index:3;background:var(--bg-2);margin:-18px -18px 0;padding:18px 18px 0">
+        <div class="modal-head">
+          <h2 id="perk-title">☯ Ascension Shrine</h2>
+          <button id="perk-close" class="close-btn" aria-label="Close">✕</button>
+        </div>
+        <p id="perk-ap-line"></p>
       </div>
-      <p id="perk-ap-line"></p>
       <div id="perk-list"></div>
     </div>
   </div>

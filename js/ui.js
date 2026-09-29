@@ -1249,13 +1249,21 @@ function renderUnlockButtons() {
     const side = sideOf(unlockCentreKey, key);
     if (!side) continue;   // doesn't border the region we're looking at
     const cost = E.areaUnlockCost(key);
-    const label = Object.entries(cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
-    const ok = E.canAfford(cost);
+    // installments: show paid/needed per item once anything is paid
+    const paid = E.unlockPaidOf ? E.unlockPaidOf(key) : {};
+    const label = Object.entries(cost).map(([it, q]) =>
+      paid[it] ? `${Math.min(paid[it], q)}/${q} ${iconHTML(it)}` : `${q} ${iconHTML(it)}`).join(" ");
+    const ok = E.canPayUnlock ? E.canPayUnlock(key) : E.canAfford(cost);
     const btn = el("button", `edge-arrow ${side} locked` + (ok ? " afford" : " cant"));
     btn.dataset.area = key;
     btn.innerHTML = `<span class="arr">🔓</span>` +
       `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span>`;
-    btn.onclick = () => { if (E.unlockArea(key)) { clampCam(); render(); } else if (window.AUDIO) window.AUDIO.play("error"); };
+    btn.onclick = () => {
+      const res = E.unlockArea(key);
+      if (res === true) { clampCam(); render(); }
+      else if (res) renderUnlockButtons();   // installment paid: refresh the paid/needed label
+      else if (window.AUDIO) window.AUDIO.play("error");
+    };
     wrap.appendChild(btn);
   }
 }
@@ -1266,7 +1274,7 @@ function syncUnlockButtons() {
 // Tick refresh: re-evaluate each unlock button's affordability in place.
 function refreshUnlockAfford() {
   for (const btn of $("#arrows").querySelectorAll("button[data-area]")) {
-    const ok = E.canAfford(E.areaUnlockCost(btn.dataset.area));
+    const ok = E.canPayUnlock ? E.canPayUnlock(btn.dataset.area) : E.canAfford(E.areaUnlockCost(btn.dataset.area));
     btn.classList.toggle("cant", !ok); btn.classList.toggle("afford", ok);
   }
 }
@@ -1368,7 +1376,9 @@ function treeStates() {
   const adj = {}; nodes.forEach(n => adj[n.id] = new Set());
   nodes.forEach(n => (n.links || []).forEach(l => { adj[n.id].add(l); adj[l].add(n.id); }));
   const owned = new Set(nodes.filter(n => E.upgradeLevel(n.area, n.type).lvl > 0).map(n => n.id));
-  const src = owned.size ? [...owned] : ["hand"];
+  // BFS always seeds from the root too: levels granted without buying the
+  // path (Legacy Automation) must never hide Hand Size
+  const src = [...new Set([...owned, "hand"])];
   const dist = {}; src.forEach(id => dist[id] = 0);
   const q = [...src];
   while (q.length) { const id = q.shift(); for (const nb of adj[id]) if (!(nb in dist)) { dist[nb] = dist[id] + 1; q.push(nb); } }
@@ -2146,6 +2156,7 @@ function syncAscendModal() {
     const html = `Ascending grants <b>${n} ☯</b> Ascension Point${n === 1 ? "" : "s"}.<br>` +
       `World speed <b>×${now.toFixed(2)} → ×${next.toFixed(2)}</b> ` +
       `(machines, nature, wisps, foxes and your own hands).` +
+      (E.tributeMult ? `<br>Dragon tributes <b>×${E.tributeMult(asc).toFixed(2)} → ×${E.tributeMult(asc + 1).toFixed(2)}</b> (the dragon remembers you).` : "") +
       (off ? `<br>Offerings <b>${off.count}/${off.cap}</b> (+${off.count} ☯) — right-click spare ` +
         `${iconHTML("talisman")} ${iconHTML("star_steel")} ${iconHTML("dragon_scale")} onto the Gate.` : "") +
       (kept.length ? `<br>Vows kept this run: ${kept.map(v => v.icon + " " + v.name).join(", ")} — ` +
@@ -2205,13 +2216,31 @@ function showAscendedCard() {
     `<div class="dragon-ico">☯</div><h2>Ascension ${ja.n} complete</h2>` +
     `<p><b>+${ja.ap} ☯</b> &nbsp;·&nbsp; world speed <b>×${ja.speedFrom.toFixed(2)} → ×${ja.speedTo.toFixed(2)}</b></p>` +
     (vs.length ? `<p>Vows this run: ${vs.map(v => v.icon + " " + v.name).join(", ")}</p>` : "") +
-    `<p>Spend your Ascension Points at the Shrine before you begin.</p>` +
+    `<p>${headStartsText()}</p>` +
+    `<p>Spend your Ascension Points at the Shrine before you begin — every perk applies at once.</p>` +
     `<div class="ascend-row"><button id="ascended-shrine" class="build-card">☯ Open Shrine</button>` +
     `<button id="ascended-close" class="build-card">Begin run ${ja.n + 1}</button></div></div>`;
   document.body.appendChild(m);
   const dismiss = () => { window.GS.justAscended = null; window.SAVE.saveState(); m.remove(); renderTopBar(); };
   m.querySelector("#ascended-shrine").onclick = () => { dismiss(); openPerkShop(); };
   m.querySelector("#ascended-close").onclick = dismiss;
+}
+
+// What this run starts with, from the legacy perks + ascension count:
+// "Head starts: Farm + Mine open · Center auto L1 · dragon tributes ×0.80".
+// `asc` optionally overrides the ascension count (the preview shows the
+// NEXT run's tribute scale).
+function headStartsText(asc) {
+  const lv = id => E.perkLevel(id);
+  const parts = [];
+  const paths = (E.PATH_REGIONS || []).slice(0, lv("paths")).map(k => DD.AREAS[k].name);
+  const auto = (E.LEGACY_REGIONS || []).slice(0, lv("legacy")).map(k => DD.AREAS[k].name);
+  if (paths.length) parts.push(`${paths.join(" + ")} open`);
+  if (auto.length) parts.push(`${auto.join(" + ")} auto L1`);
+  if (lv("hands")) parts.push(`hand +${5 * lv("hands")}`);
+  const tm = E.tributeMult ? E.tributeMult(asc) : 1;
+  if (tm < 1) parts.push(`dragon tributes ×${tm.toFixed(2)}`);
+  return `Head starts: ${parts.length ? parts.join(" · ") : "none yet — Remembered Paths and Legacy Automation add them"}`;
 }
 
 // ---- Ascension Shrine (prestige perk shop) -------------------
@@ -2254,8 +2283,15 @@ function perkFxHTML(perk, lvl) {
 }
 function renderPerkShop() {
   const ap = window.GS.ascendPoints || 0;
-  $("#perk-ap-line").innerHTML = `<b>${ap}</b> Ascension Point${ap === 1 ? "" : "s"} to spend` +
-    ` &nbsp;·&nbsp; ${window.GS.ascensions || 0} ascension${(window.GS.ascensions || 0) === 1 ? "" : "s"}`;
+  // opened from the ascend modal ("See perks"): a preview — show the AP the
+  // ascension is about to add and what the legacy perks will give
+  const preview = !!window.GS.ascendPrompt;
+  const gain = preview ? E.ascendReward() : 0;
+  $("#perk-ap-line").innerHTML = (preview
+    ? `You have <b>${ap}</b> ☯ <span style="color:var(--gold)">(+${gain} on ascending)</span>`
+    : `<b>${ap}</b> Ascension Point${ap === 1 ? "" : "s"} to spend`) +
+    ` &nbsp;·&nbsp; ${window.GS.ascensions || 0} ascension${(window.GS.ascensions || 0) === 1 ? "" : "s"}` +
+    `<br><span style="font-size:12px">${preview ? "Next run — " : ""}${headStartsText(preview ? (window.GS.ascensions || 0) + 1 : undefined)}</span>`;
   const list = $("#perk-list");
   list.innerHTML = "";
   // grouped under small headers; unknown ids land in a trailing "Other"
@@ -2283,7 +2319,9 @@ function perkCard(perk, ap) {
       (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
   const buyBtn = card.querySelector(".pk-buy");
   if (!maxed && afford) buyBtn.onclick = () => {
-    if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); }
+    // (Remembered Paths opens a region at once: rebuild the unlock buttons
+    // and repaint the veil)
+    if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); renderUnlockButtons(); requestGridPaint(); }
   };
   else if (!maxed) {   // unaffordable: disabled button swallows clicks in Firefox — buzz on the card
     buyBtn.style.pointerEvents = "none";
@@ -2819,8 +2857,8 @@ function onKeyDown(e) {
     }
     // dismiss any open modal overlay (skip the one-time #win-modal)
     if (!$("#dragon-modal").classList.contains("hidden")) { dismissDragonDialog(); return; }
+    if (!$("#perk-modal").classList.contains("hidden")) { closePerkShop(); return; }   // on top of the ascend modal
     if (!$("#ascend-modal").classList.contains("hidden")) { window.GS.ascendPrompt = false; renderPlay(); return; }
-    if (!$("#perk-modal").classList.contains("hidden")) { closePerkShop(); return; }
     if (!$("#stats-modal").classList.contains("hidden")) { closeStats(); return; }
     if (!$("#help-modal").classList.contains("hidden")) { closeHelp(); return; }
     if (!$("#welcome-modal").classList.contains("hidden")) { dismissWelcome(); return; }
@@ -2977,6 +3015,7 @@ window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   dismissEnding, openPerkShop, closePerkShop, chosenVows, showAscendedCard,
   slowTickDirty,
   _draw: () => drawWorld(),   // test hook
+  _treeStates: () => treeStates(),   // test hook
   _questRing: () => questRingOnScreen(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook
   _lookAt: (area, row, col) => {                                              // test hook

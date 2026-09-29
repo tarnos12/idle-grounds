@@ -811,7 +811,7 @@ const VOWS = [
 const VOW_MULT = [1, 1.15, 1.3, 1.5, 1.75];   // AP multiplier by active vow count
 
 // Offerings at the BUILT Ascension Gate: +1 AP each at ascension, capped.
-const GATE_OFFERINGS = { items: ["talisman", "star_steel", "dragon_scale"], cap: 6 };
+const GATE_OFFERINGS = { items: ["talisman", "star_steel", "dragon_scale"], cap: 6, perType: 2 };   // 2 of each type
 
 // ------------------------------------------------------------------
 // TESTING CONVENIENCES — flip ENABLED to false to restore GDD balance.
