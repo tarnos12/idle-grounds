@@ -81,7 +81,7 @@ try {
 
   // -- (2) automation-skip marker (replaces 'Automation paused')
   check("marker: no 'Automation paused' text left in ui.js", !/Automation paused/.test(ui));
-  check("marker: 'Automation skipping' + 'too many lying around'", /Automation skipping/.test(ui) && /too many lying around/.test(ui));
+  check("marker: compact 'Skipping' chip at the region's top-left (icons kept)", /"Skipping"/.test(ui) && /drawAutoSkip/.test(ui) && !/too many lying around/.test(ui));
   {
     const sb2 = {}; vm.createContext(sb2);
     vm.runInContext(extractFn(ui, "autoSkipOf"), sb2);
