@@ -277,8 +277,9 @@ try {
     s.clock += 300; E.gameTick();
     check("link health: target refuses what the source holds -> 'refused'", lan.links[0]._stat.fail === "refused");
     gs.inv = [{ item: "wood", qty: 3 }];
-    s.clock += 300; const t0 = s.clock; E.gameTick();
-    const beat = lan.nextSend - t0, want = 1000 * s.DATA.TEST.timeScale * s.ENGINE.prestigeFactor();
+    // (the beat re-arms from its DUE time — the idle retry's slot — not from now)
+    s.clock += 300; const t0 = s.clock, due0 = lan.nextSend; E.gameTick();
+    const beat = lan.nextSend - due0, want = 1000 * s.DATA.TEST.timeScale * s.ENGINE.prestigeFactor();
     check("link health: send stamps sentAt, fail null", lan.links[0]._stat.sentAt === t0 && lan.links[0]._stat.fail === null);
     check("TEST mode scales the lantern beat by timeScale", Math.abs(beat - want) < 1, "beat=" + beat + " want=" + want);
   }

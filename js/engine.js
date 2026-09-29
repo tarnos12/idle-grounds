@@ -148,13 +148,36 @@ function perkCost(id) {
   const lvl = perkLevel(id);
   return lvl >= def.max ? null : def.cost[lvl];
 }
+// Legacy perk region lists: level n of Remembered Paths opens PATH_REGIONS
+// [n-1]; level n of Legacy Automation grants Automation L1 in
+// LEGACY_REGIONS[n-1] (at every fresh run AND the moment it's bought).
+const PATH_REGIONS = ["farm", "mine", "fishing"];
+const LEGACY_REGIONS = ["center", "farm", "mine"];
 // Buy one level if affordable and not maxed. Returns true on success.
+// Every perk takes effect at once (like Fleet Hands / Frugal Frontier):
+// Remembered Paths opens its region now, Legacy Automation sets that
+// region's automation to at least L1 now.
 function buyPerk(id) {
   const cost = perkCost(id);
   if (cost == null || (window.GS.ascendPoints || 0) < cost) return false;
   window.GS.ascendPoints -= cost;
-  window.GS.perks[id] = perkLevel(id) + 1;
+  const lvl = window.GS.perks[id] = perkLevel(id) + 1;
   if (id === "hands") window.GS.handCap += 5;    // apply Fleet Hands live
+  const pk = id === "paths" && PATH_REGIONS[lvl - 1];
+  if (pk && !isAreaUnlocked(pk)) {
+    // installments already paid toward it go back to the hand (spill: Center)
+    const paid = unlockPaidOf(pk);
+    if (window.GS.world.unlockPaid) delete window.GS.world.unlockPaid[pk];
+    for (const [it, q] of Object.entries(paid)) {
+      const left = q - handAdd(it, q);
+      if (left > 0) dropGround("center", it, left, PLAY_PX / 2, PLAY_PX / 2 + 3 * CELL, "manual");
+    }
+    openRegion(pk);
+  }
+  if (id === "legacy" && LEGACY_REGIONS[lvl - 1]) {
+    const up = window.GS.areas[LEGACY_REGIONS[lvl - 1]].upgrades;
+    up.automation = Math.max(up.automation || 0, 1);
+  }
   return true;
 }
 // AP earned by ascending NOW: 3 base + 2 per unlocked region beyond Center
@@ -167,6 +190,12 @@ function ascendReward() {
   const offerings = g ? gateOfferings(g.areaKey, g.b).count : 0;
   return Math.round((3 + 2 * Math.max(0, regions - 1) + perkLevel("apgain") + offerings) * vowMult());
 }
+// Any Ascension Gate (ghost or built) anywhere? The gate is unique.
+function gateExists() {
+  for (const k of Object.keys(window.GS.areas))
+    if (window.GS.areas[k].buildings.some(b => D.BUILDINGS[b.type] && D.BUILDINGS[b.type].gate)) return true;
+  return false;
+}
 // The (first) BUILT Ascension Gate anywhere: { areaKey, b } or null.
 function builtGate() {
   for (const k of Object.keys(window.GS.areas))
@@ -174,10 +203,21 @@ function builtGate() {
       if (b.built && D.BUILDINGS[b.type] && D.BUILDINGS[b.type].gate) return { areaKey: k, b };
   return null;
 }
-// Offerings laid at a built gate (talisman / star steel / dragon scale).
+// Offerings laid at a built gate (talisman / star steel / dragon scale),
+// tracked per item in b.offered (refunded on demolish; b.offerings mirrors
+// the total). Each type caps at perType (2 each = 6), so scales alone
+// can't fill it.
 function gateOfferings(areaKey, b) {
-  const cap = D.GATE_OFFERINGS.cap;
-  return { count: Math.max(0, Math.min(cap, (b && b.offerings) || 0)), cap };
+  const G = D.GATE_OFFERINGS, cap = G.cap, per = G.perType || cap;
+  const offered = (b && b.offered) || {};
+  let count = 0;
+  for (const it of G.items) count += Math.max(0, Math.min(per, offered[it] || 0));
+  return { count: Math.min(cap, count), cap, perType: per, offered };
+}
+// Can one more `item` be offered at gate b?
+function gateTakes(areaKey, b, item) {
+  const off = gateOfferings(areaKey, b);
+  return D.GATE_OFFERINGS.items.includes(item) && off.count < off.cap && (off.offered[item] || 0) < off.perType;
 }
 
 // ---- Vows (opt-in challenge runs) ---------------------------
@@ -255,8 +295,8 @@ function ascend(nextVows) {
   // Legacy perks: Remembered Paths opens Farm/Mine/Fishing; Legacy
   // Automation sets Automation L1 in Center/Farm/Mine (the same tree
   // upgrade buying the node gives; it works once the region is open).
-  ["farm", "mine", "fishing"].slice(0, perks.paths || 0).forEach(k => { fresh.world.unlocked[k] = true; });
-  ["center", "farm", "mine"].slice(0, perks.legacy || 0).forEach(k => {
+  PATH_REGIONS.slice(0, perks.paths || 0).forEach(k => { fresh.world.unlocked[k] = true; });
+  LEGACY_REGIONS.slice(0, perks.legacy || 0).forEach(k => {
     const up = fresh.areas[k].upgrades; up.automation = Math.max(up.automation || 0, 1);
   });
   window.GS = fresh;
@@ -1003,6 +1043,7 @@ function canPlaceBuilding(areaKey, row, col, type) {
   const B = bCfg.size || D.GRID.building;
   if (row < 0 || col < 0 || row + B.h > D.GRID.cells || col + B.w > D.GRID.cells) return false;
   if (bCfg.waterOnly && areaKey !== "fishing") return false;   // water buildings live in the fishing waters
+  if (bCfg.gate && gateExists()) return false;                  // the Ascension Gate is unique
   const occ = occupiedCells(areaKey);
   for (let r = row; r < row + B.h; r++)
     for (let c = col; c < col + B.w; c++) {
@@ -1477,6 +1518,10 @@ function demolishBuilding(areaKey, buildingId) {
     if (cfg.roster) {
       if (b.disciples > 0) dropGround(areaKey, cfg.roster.recruit, b.disciples, x, y, "manual");
     }
+    // an Ascension Gate gives its offerings back
+    if (cfg.gate)
+      for (const [item, qty] of Object.entries(b.offered || {}))
+        if (qty > 0) dropGround(areaKey, item, qty, x, y, "manual");
   } else {
     for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y, "manual");
   }
@@ -1656,16 +1701,22 @@ function dropFromHand(areaKey, x, y, noGround) {
   // laid as OFFERINGS (+1 AP each at ascension, capped). Anything else still
   // drops on the ground as before.
   if (b && b.built && D.BUILDINGS[b.type].gate) {
-    const off = gateOfferings(areaKey, b), items = D.GATE_OFFERINGS.items;
+    const items = D.GATE_OFFERINGS.items;
     const first = window.GS.hand[0];
     if (first && items.includes(first.item)) {
-      if (off.count >= off.cap) return null;   // full: don't waste it on the ground
-      handTake(first.item, 1);
-      b.offerings = off.count + 1;
-      return { fed: first.item };
+      if (gateTakes(areaKey, b, first.item)) {
+        handTake(first.item, 1);
+        b.offered = b.offered || {};
+        b.offered[first.item] = (b.offered[first.item] || 0) + 1;
+        b.offerings = gateOfferings(areaKey, b).count;
+        return { fed: first.item };
+      }
+      // this type is full: bring another still-wanted offering forward;
+      // else keep it (don't waste it on the ground)
+      for (const it of items) if (handCount(it) > 0 && gateTakes(areaKey, b, it)) { handMoveToFront(it); return { reordered: it }; }
+      return null;
     }
-    if (off.count < off.cap)
-      for (const it of items) if (handCount(it) > 0) { handMoveToFront(it); return { reordered: it }; }
+    for (const it of items) if (handCount(it) > 0 && gateTakes(areaKey, b, it)) { handMoveToFront(it); return { reordered: it }; }
   }
   if (b && !b.built) {
     const res = feedNeeds(buildingNeeds(b), b.paid);
@@ -1787,13 +1838,29 @@ function selectUpgrade(areaKey, type) {
 // The dragon's CURRENT stage definition, or null once fully progressed.
 function dragonStage() { return D.DRAGON_STAGES[window.GS.dragon.stage] || null; }
 
-// Per-item tribute the current stage still wants (TEST-scaled): { item: qty }.
+// The dragon remembers you: each ascension shrinks its tributes,
+// x 1/(1 + 0.25*asc), never below x0.4. `asc` defaults to the current count.
+function tributeMult(asc) {
+  const a = asc != null ? asc : (window.GS.ascensions || 0);
+  return Math.max(0.4, 1 / (1 + 0.25 * a));
+}
+// Full per-item tribute of the current stage (TEST-scaled, ascension-shrunk,
+// doubled by the Vow of the Restless Dragon): { item: qty }.
+function dragonNeeds() {
+  const st = dragonStage();
+  if (!st) return {};
+  const out = {}, m = tributeMult();
+  for (const [item, qty] of Object.entries(st.needs))
+    out[item] = Math.max(1, Math.ceil(scaled(qty) * m)) * (vowActive("restless") ? 2 : 1);   // Vow of the Restless Dragon
+  return out;
+}
+// Per-item tribute the current stage still wants: { item: qty }.
 function dragonRemaining() {
   const st = dragonStage();
   if (!st) return {};
   const rem = {};
-  for (const [item, qty] of Object.entries(st.needs)) {
-    const r = scaled(qty) * (vowActive("restless") ? 2 : 1) - (window.GS.dragon.paid[item] || 0);   // Vow of the Restless Dragon
+  for (const [item, need] of Object.entries(dragonNeeds())) {
+    const r = need - (window.GS.dragon.paid[item] || 0);
     if (r > 0) rem[item] = r;
   }
   return rem;
@@ -1830,23 +1897,84 @@ function areaUnlockCost(areaKey) {
 
 function isAreaUnlocked(areaKey) { return !!window.GS.world.unlocked[areaKey]; }
 
-// Pay to open a region. All regions exist (and are visible) from the start;
-// unlocking only widens where the camera may pan and enables interaction.
-function unlockArea(areaKey) {
-  if (!D.AREAS[areaKey] || isAreaUnlocked(areaKey)) return false;
+// Installments already paid toward a locked region: { item: qty }.
+function unlockPaidOf(areaKey) {
+  const w = window.GS.world;
+  return (w.unlockPaid && w.unlockPaid[areaKey]) || {};
+}
+// What a region's unlock still wants: cost minus installments. { item: qty }
+function unlockRemaining(areaKey) {
   const cost = areaUnlockCost(areaKey);
-  if (!cost || !spend(cost)) return false;
+  if (!cost) return null;
+  const paid = unlockPaidOf(areaKey), rem = {};
+  for (const [it, q] of Object.entries(cost)) { const r = q - (paid[it] || 0); if (r > 0) rem[it] = r; }
+  return rem;
+}
+// Can the hand pay at least one more installment toward the region?
+function canPayUnlock(areaKey) {
+  const rem = unlockRemaining(areaKey);
+  return !!rem && Object.keys(rem).some(it => handCount(it) > 0);
+}
+// Mark a region open (unlock payment, Remembered Paths).
+function openRegion(areaKey) {
   window.GS.world.unlocked[areaKey] = true;
-  if (window.onSfx) window.onSfx("unlock", areaKey);
   // Refresh stale surfaced fish so they don't all dive the instant it opens.
   const cfg = D.AREAS[areaKey];
   for (const n of window.GS.areas[areaKey].nodes)
     if (n.surfaceUntil)
       n.surfaceUntil = Date.now() + (cfg.surfaceWindow || 3) * 1000 * (0.5 + Math.random());
+}
+
+// Pay to open a region. All regions exist (and are visible) from the start;
+// unlocking only widens where the camera may pan and enables interaction.
+// Paid in INSTALLMENTS: each click moves whatever the hand carries toward
+// the cost into GS.world.unlockPaid[region] (kept until the region opens —
+// never refunded), so a small hand (Vow of Burden) can still pay a big one.
+// Returns true once the region opens, { paid: n } for a partial payment,
+// false when the hand holds nothing it needs.
+function unlockArea(areaKey) {
+  if (!D.AREAS[areaKey] || isAreaUnlocked(areaKey)) return false;
+  const rem = unlockRemaining(areaKey);
+  if (!rem) return false;
+  const w = window.GS.world;
+  if (!w.unlockPaid) w.unlockPaid = {};
+  let n = 0;
+  for (const [it, r] of Object.entries(rem)) {
+    const take = Math.min(r, handCount(it));
+    if (take <= 0) continue;
+    handTake(it, take);
+    const paid = w.unlockPaid[areaKey] || (w.unlockPaid[areaKey] = {});
+    paid[it] = (paid[it] || 0) + take;
+    n += take;
+  }
+  if (Object.keys(unlockRemaining(areaKey)).length) return n > 0 ? { paid: n } : false;
+  delete w.unlockPaid[areaKey];
+  openRegion(areaKey);
+  if (window.onSfx) window.onSfx("unlock", areaKey);
   return true;
 }
 
 // ---- Ticks --------------------------------------------------
+
+// Periodic clocks (field generators, generator buildings, lantern beats,
+// pavilion cycles) re-arm from their DUE time, not from `now`, so a coarse
+// tick (offline replay steps up to ~640ms, a throttled background tab)
+// fires as many events as 50ms ticks do. Catch-up is bounded: a clock due
+// before the PREVIOUS tick (+ one interval) wasn't running — fresh, paused,
+// region just opened — so it restarts at now instead of bursting.
+let lastTickAt = 0;                      // clock of the previous gameTick
+let tickGap = 0;                         // now - lastTickAt (bounded), this tick
+const MAX_TICK_GAP = 10000;              // never catch up more than 10s in one tick
+const MAX_TICK_EVENTS = 400;             // hard ceiling on events per clock per tick
+// Returns { n, next }: how many periods are due by `now` (0 = none) and the
+// clock's next due time after firing them.
+function periodic(due, interval, now) {
+  if (!(interval > 0)) return { n: 0, next: due };
+  if (!Number.isFinite(due) || due < now - tickGap - interval) due = now;   // stale: restart now
+  if (now < due) return { n: 0, next: due };
+  const n = Math.min(MAX_TICK_EVENTS, Math.floor((now - due) / interval) + 1);
+  return { n, next: Math.max(due + n * interval, now - interval + 1) };
+}
 
 // Advance the world. Returns true only if something visible changed, so the
 // caller can skip repainting idle frames (repainting a huge world every tick
@@ -1855,6 +1983,8 @@ function gameTick() {
   const now = Date.now();
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   let changed = false;
+  tickGap = lastTickAt > 0 && now > lastTickAt ? Math.min(now - lastTickAt, MAX_TICK_GAP) : 0;
+  lastTickAt = now;
   for (const areaKey of Object.keys(D.AREAS)) {
     if (!isAreaUnlocked(areaKey)) continue;
     const area = window.GS.areas[areaKey];
@@ -1878,23 +2008,27 @@ function gameTick() {
     // Generators (e.g. clay ground) auto-drop items up to their cap.
     (cfg.generators || []).forEach((gen, gi) => {
       if (!area.genTimers) area.genTimers = [];
-      if (now < (area.genTimers[gi] || 0)) return;
       // some generators speed up with an upgrade (e.g. quarry stone output)
       const upLvl = gen.upgrade ? (area.upgrades[gen.upgrade] || 0) : 0;
-      area.genTimers[gi] = now + gen.intervalMs * scale * Math.pow(0.8, upLvl) * Math.pow(0.9, perkLevel("bounty")) * prestigeFactor();
+      const tm = periodic(area.genTimers[gi] || 0, gen.intervalMs * scale * Math.pow(0.8, upLvl) * Math.pow(0.9, perkLevel("bounty")) * prestigeFactor(), now);
+      if (!tm.n) return;
+      area.genTimers[gi] = tm.next;
       // the cap counts only items lying INSIDE this generator's field —
       // items mined/carried elsewhere don't block passive production
       const z = zoneRects(gen.zone)[0];
       const fx0 = z.c0 * CELL - 16, fx1 = (z.c1 + 1) * CELL + 16;
       const fy0 = z.r0 * CELL - 16, fy1 = (z.r1 + 1) * CELL + 16;
-      const inField = area.ground.filter(g => g.item === gen.item &&
+      let inField = area.ground.filter(g => g.item === gen.item &&
         g.x >= fx0 && g.x <= fx1 && g.y >= fy0 && g.y <= fy1).length;
+      for (let ev = 0; ev < tm.n; ev++) {             // one drop per due period (catch-up)
       if (inField >= gen.cap) return;
+      inField++;
       dropGround(areaKey, gen.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
       // generators can also surface rare finds (uncapped, chance-gated)
       if (gen.rareDrop && Math.random() < gen.rareDrop.chance)
         dropGround(areaKey, gen.rareDrop.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
       changed = true;
+      }
     });
 
     // Generator BUILDINGS (e.g. the Algae Farm) drip their item around
@@ -1902,16 +2036,18 @@ function gameTick() {
     for (const b of area.buildings) {
       const gcfg = b.built && D.BUILDINGS[b.type].gen;
       if (!gcfg) continue;
-      if (now < (b.nextGen || 0)) continue;
-      b.nextGen = now + gcfg.intervalMs * scale * prestigeFactor();
+      const tm = periodic(b.nextGen || 0, gcfg.intervalMs * scale * prestigeFactor(), now);
+      if (!tm.n) continue;
+      b.nextGen = tm.next;
       const bs = buildingSize(b.type);
       const bx = (b.col + bs.w / 2) * CELL, by = (b.row + bs.h / 2) * CELL;
       const R = 4 * CELL;
-      const near = area.ground.filter(g => g.item === gcfg.item &&
+      let near = area.ground.filter(g => g.item === gcfg.item &&
         Math.hypot(g.x - bx, g.y - by) <= R).length;
-      if (near >= gcfg.cap) continue;
-      dropGround(areaKey, gcfg.item, 1, bx + rand(-R / 2, R / 2), by + rand(-R / 2, R / 2), "crafted");
-      changed = true;
+      for (let ev = 0; ev < tm.n && near < gcfg.cap; ev++, near++) {
+        dropGround(areaKey, gcfg.item, 1, bx + rand(-R / 2, R / 2), by + rand(-R / 2, R / 2), "crafted");
+        changed = true;
+      }
     }
 
     // Converter buildings (the Forge): finish the active batch (drop its
@@ -1989,6 +2125,14 @@ function gameTick() {
       if (bCfg.lantern && (b.links || []).length && now >= (b.nextSend || 0)) {
         const haste = area.upgrades.wispRate || 0;
         const wind = buffActive("swiftwind_pill") ? 0.5 : 1;   // Swiftwind Blessing
+        // (TEST mode scales the beat like converter batches — the lantern
+        // was the hidden TEST-mode bottleneck)
+        const beat = (bCfg.lantern.rateMs || 1000) * scale * Math.pow(0.85, haste) * wind * prestigeFactor() * Math.pow(0.9, perkLevel("gale"));
+        const tm = periodic(b.nextSend || 0, beat, now);
+        let due = tm.next - tm.n * beat;              // first beat due this tick
+        let idle = !tm.n;
+        for (let ev = 0; ev < tm.n; ev++, due += beat) {   // one link per due beat (catch-up)
+        let sent = false;
         for (let k = 0; k < b.links.length; k++) {
           const l = b.links[(b.connIdx + k) % b.links.length];
           const src = buildingById(areaKey, l.from), dst = buildingById(areaKey, l.to);
@@ -2004,16 +2148,16 @@ function gameTick() {
           // rendering is silky at any framerate regardless of tick rate.
           // fromId lets a refused delivery fly its cargo back home.
           area.wisps.push({ id: area.nextWispId++, x0: sc.x, y0: sc.y, x: sc.x, y: sc.y,
-                            item, toId: l.to, fromId: l.from, t0: now,
+                            item, toId: l.to, fromId: l.from, t0: Math.min(now, due),
                             sp: (bCfg.lantern.speed || 170) * (1 + 0.25 * haste) / wind });
           b.connIdx = (b.connIdx + k + 1) % b.links.length;
-          // (TEST mode scales the beat like converter batches — the lantern
-          // was the hidden TEST-mode bottleneck)
-          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * scale * Math.pow(0.85, haste) * wind * prestigeFactor() * Math.pow(0.9, perkLevel("gale"));
           changed = true;
+          sent = true;
           break;
         }
-        if (now >= (b.nextSend || 0)) b.nextSend = now + 250;   // idle: retry soon
+        if (!sent) { idle = true; break; }
+        }
+        b.nextSend = idle ? now + 250 : tm.next;   // idle (nothing to send): retry soon
       }
       // Furnace Spirits stoke low burners within their radius from their
       // own fuel buffer (best fuel first).
@@ -2035,15 +2179,15 @@ function gameTick() {
       // Meditation Pavilions: fed disciples cultivate essence each cycle,
       // eating one Spirit Bun per essence produced. Out of buns -> idle.
       if (bCfg.roster && (b.disciples || 0) > 0) {
-        if (now >= (b.nextCultivate || 0)) {
-          b.nextCultivate = now + bCfg.roster.produceMs * scale * prestigeFactor();
+        const tm = periodic(b.nextCultivate || 0, bCfg.roster.produceMs * scale * prestigeFactor(), now);
+        if (tm.n) b.nextCultivate = tm.next;
+        for (let ev = 0; ev < tm.n; ev++) {            // one cycle per due period (catch-up)
           const worked = Math.min(b.disciples, b.buns || 0);
-          if (worked > 0) {
-            b.buns -= worked;
-            const c = buildingCenterPx(b);
-            dropGround(areaKey, bCfg.roster.produce, worked, c.x + rand(-40, 40), (b.row + buildingSize(b.type).h) * CELL + 12, "crafted");
-            changed = true;
-          }
+          if (worked <= 0) break;
+          b.buns -= worked;
+          const c = buildingCenterPx(b);
+          dropGround(areaKey, bCfg.roster.produce, worked, c.x + rand(-40, 40), (b.row + buildingSize(b.type).h) * CELL + 12, "crafted");
+          changed = true;
         }
       }
     }
@@ -2496,7 +2640,8 @@ window.ENGINE = {
   questProgress, claimQuest, isBuildingNew, markBuildSeen, buildMenuHasNew, markBuildListed, isVeteran,
   buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
   perkLevel, perkDef, perkCost, buyPerk, ascendReward,
-  builtGate, gateOfferings, activeVows, vowActive, vowMult, vowMarks, nextPrestigeFactor, burnFuel,
+  builtGate, gateOfferings, gateTakes, gateExists, tributeMult, dragonNeeds,
+  unlockPaidOf, unlockRemaining, canPayUnlock, openRegion, PATH_REGIONS, LEGACY_REGIONS, activeVows, vowActive, vowMult, vowMarks, nextPrestigeFactor, burnFuel,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,

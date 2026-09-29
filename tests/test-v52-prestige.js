@@ -4,6 +4,10 @@
    generator buildings, fox respawn, dragon scales, manual swings), per-slot
    fox respawn, gate offerings + AP formula, vows (mult, marks, hooks), legacy
    perks applied by ascend(), justAscended, save migration.
+   Fix wave: legacy perks apply at buy time, due-time timer re-arm (coarse
+   vs fine ticks agree), unique gate + per-type offerings + demolish refund,
+   ascension-shrunk dragon tributes, region-unlock installments, config-
+   owned node fields refreshed on load.
    Standalone vm sandbox — loads js/data.js, js/state.js, js/engine.js with a
    controllable clock.
    Usage: node tests/test-v52-prestige.js [repoRoot]   (default /home/user/idle-grounds)
@@ -168,16 +172,24 @@ try {
     const c = E.buildingCenterPx(gate);
     check("test gate spot is free (buildingAt finds the gate)",
       E.buildingAt("center", Math.floor(c.y / 32), Math.floor(c.x / 32)) === gate, "");
-    GS.hand = [{ item: "wood", qty: 2 }, { item: "talisman", qty: 5 }, { item: "star_steel", qty: 3 }];
+    // scales alone stop at 2 of 6 (per-type cap 2)
+    GS.hand = [{ item: "dragon_scale", qty: 5 }];
+    let fedS = 0;
+    for (let i = 0; i < 6; i++) { const r = E.dropFromHand("center", c.x, c.y); if (r && r.fed) fedS++; }
+    check("gate: scales alone stop at 2 (per-type cap)", fedS === 2 && E.gateOfferings("center", gate).count === 2
+      && E.handCount("dragon_scale") === 3, `fed=${fedS} left=${E.handCount("dragon_scale")}`);
+    GS.hand = [{ item: "wood", qty: 2 }, { item: "talisman", qty: 5 }, { item: "star_steel", qty: 3 }, { item: "dragon_scale", qty: 3 }];
     const r0 = E.dropFromHand("center", c.x, c.y);
     check("gate: carried offering reordered to the front", r0 && r0.reordered === "talisman", JSON.stringify(r0));
     let fed = 0;
-    for (let i = 0; i < 10; i++) { const r = E.dropFromHand("center", c.x, c.y); if (r && r.fed) fed++; }
+    for (let i = 0; i < 12; i++) { const r = E.dropFromHand("center", c.x, c.y); if (r && r.fed) fed++; }
     const off = E.gateOfferings("center", gate);
-    check("gate offerings capped at 6", fed === 6 && off.count === 6 && off.cap === 6 && gate.offerings === 6,
+    check("gate offerings capped at 6 = 2 of each", fed === 4 && off.count === 6 && off.cap === 6 && gate.offerings === 6
+      && JSON.stringify(gate.offered) === '{"dragon_scale":2,"talisman":2,"star_steel":2}',
       `fed=${fed} ${JSON.stringify(off)}`);
-    check("capped gate keeps the surplus offerings in hand", E.handCount("talisman") + E.handCount("star_steel") === 2,
-      `t=${E.handCount("talisman")} s=${E.handCount("star_steel")}`);
+    check("capped gate keeps the surplus offerings in hand",
+      E.handCount("talisman") === 3 && E.handCount("star_steel") === 1 && E.handCount("dragon_scale") === 3,
+      `t=${E.handCount("talisman")} s=${E.handCount("star_steel")} d=${E.handCount("dragon_scale")}`);
     check("AP = 3 + 2*(regions-1) + offerings === 21", E.ascendReward() === 21, String(E.ascendReward()));
     GS.perks = { apgain: 1 };
     check("AP + apgain 1 === 22", E.ascendReward() === 22, String(E.ascendReward()));
@@ -334,6 +346,200 @@ try {
     c.SAVE.saveState();
     const c2 = boot(c.stored);
     check("migration idempotent (vows)", JSON.stringify(c2.GS.vows) === JSON.stringify(c.GS.vows), JSON.stringify(c2.GS.vows));
+  }
+
+  // (10) legacy perks apply at buy time ----------------------------------------
+  {
+    const s = world(1), E = s.ENGINE, GS = s.GS;
+    GS.ascendPoints = 100;
+    GS.world.unlockPaid = { mine: { wood: 3 } };
+    GS.hand = [];
+    check("paths L1 bought: farm opens now", E.buyPerk("paths") && GS.world.unlocked.farm && !GS.world.unlocked.mine,
+      JSON.stringify(GS.world.unlocked));
+    check("paths L2 bought: mine opens now", E.buyPerk("paths") && GS.world.unlocked.mine, "");
+    check("paths L2: mine installments refunded to the hand, entry cleared",
+      E.handCount("wood") === 3 && !GS.world.unlockPaid.mine, `wood=${E.handCount("wood")}`);
+    GS.areas.farm.upgrades.automation = 2;
+    check("legacy L1 bought: center automation 1 now", E.buyPerk("legacy") && GS.areas.center.upgrades.automation === 1, "");
+    check("legacy L2 bought: farm keeps its higher level (max(cur,1))",
+      E.buyPerk("legacy") && GS.areas.farm.upgrades.automation === 2 && GS.areas.mine.upgrades.automation === 0,
+      ["center", "farm", "mine"].map(k => GS.areas[k].upgrades.automation).join(","));
+    check("legacy L3 bought: mine automation 1 now", E.buyPerk("legacy") && GS.areas.mine.upgrades.automation === 1, "");
+    GS.world.unlocked.fishing = true;
+    const ap = GS.ascendPoints;
+    check("paths L3 on an already-open region: just the level", E.buyPerk("paths") && GS.perks.paths === 3
+      && GS.ascendPoints === ap - 12, `ap ${ap} -> ${GS.ascendPoints}`);
+  }
+
+  // (11) timers re-arm from the DUE time: coarse ticks == fine ticks ------------
+  {
+    // run `ms` of world time at a fixed tick `step`; return event counts per clock
+    const run = (step, ms, asc) => {
+      const s = world(asc), E = s.ENGINE, GS = s.GS, CELL = s.DATA.GRID.cell;
+      GS.world.unlocked.fishing = true; GS.world.unlocked.mine = true;
+      const tally = {};
+      s.onGroundDrop = (k, item, qty) => { tally[k + ":" + item] = (tally[k + ":" + item] || 0) + qty; };
+      const fish = GS.areas.fishing, mine = GS.areas.mine;
+      fish.buildings.push({ id: 9301, type: "algae_farm", row: 40, col: 40, paid: {}, built: true, nextGen: 0 });
+      mine.nodes = []; mine.buildings = []; mine.genTimers = [];
+      const src = { id: 9401, type: "storehouse", row: 40, col: 30, paid: {}, built: true, item: "wood", qty: 150 };
+      const dst = { id: 9402, type: "storehouse", row: 40, col: 50, paid: {}, built: true, item: "wood", qty: 0, lock: true };
+      const lan = { id: 9403, type: "wisp_lantern", row: 44, col: 40, paid: {}, built: true, links: [{ from: 9401, to: 9402 }], connIdx: 0, nextSend: 0 };
+      const pav = { id: 9404, type: "meditation_pavilion", row: 30, col: 40, paid: {}, built: true, disciples: 2, buns: 1e6, nextCultivate: 0 };
+      mine.buildings.push(src, dst, lan, pav);
+      const w0 = mine.nextWispId;
+      const end = s.clock.t + ms;
+      while (s.clock.t < end) {
+        E.gameTick();
+        for (const k of Object.keys(GS.areas)) GS.areas[k].ground = [];   // no field caps bind
+        src.qty = 150; dst.qty = 0;
+        s.clock.t += step;
+      }
+      return { clay: tally["center:clay"] || 0, stone: tally["center:stone"] || 0, algae: tally["fishing:algae"] || 0,
+               beats: mine.nextWispId - w0, cycles: 1e6 - pav.buns };
+    };
+    for (const asc of [0, 3]) {
+      const fine = run(50, 60000, asc), coarse = run(640, 60000, asc);
+      for (const k of ["clay", "stone", "algae", "beats", "cycles"]) {
+        // equal up to the last partial coarse step (one step's worth of events)
+        const slack = k === "beats" ? 4 : 2;
+        check(`timer re-arm @asc=${asc}: ${k} at 640ms steps ~ 50ms steps`, fine[k] > 0 && Math.abs(fine[k] - coarse[k]) <= slack,
+          `fine=${fine[k]} coarse=${coarse[k]}`);
+      }
+    }
+    // a clock that wasn't running (region just opened) restarts, no burst
+    const s = world(0), a = s.GS.areas.center, E = s.ENGINE;
+    let n = 0; s.onGroundDrop = (k, item) => { if (k === "center" && item === "clay") n++; };
+    a.ground = []; a.genTimers = [s.clock.t - 600000];
+    E.gameTick();
+    check("stale generator clock fires once (no catch-up burst)", n === 1, String(n));
+  }
+
+  // (12) unique gate + demolish refund -----------------------------------------
+  {
+    const s = world(0), E = s.ENGINE, GS = s.GS;
+    const a = GS.areas.center;
+    GS.stats = GS.stats || {};
+    const type = "ascension_gate";
+    s.DATA.BUILDINGS[type].unlocked = true;
+    const origUnlocked = E.isBuildingUnlocked;
+    // find a free spot for a gate ghost
+    let spot = null;
+    for (let r = 0; r < 90 && !spot; r++) for (let c = 0; c < 90 && !spot; c++)
+      if (E.canPlaceBuilding("center", r, c, type)) spot = [r, c];
+    check("a gate can be placed while none exists", !!spot, JSON.stringify(spot));
+    const ghost = { id: 9500, type, row: spot[0], col: spot[1], paid: {}, built: false };
+    a.buildings.push(ghost);
+    let second = false;
+    for (const k of ["center", "farm"])
+      for (let r = 0; r < 90 && !second; r++) for (let c = 0; c < 90 && !second; c++)
+        if (E.canPlaceBuilding(k, r, c, type)) second = true;
+    check("a second gate can't be placed anywhere (ghost exists)", !second && E.gateExists(), "");
+    // built gate with offerings: demolish refunds cost + offerings
+    ghost.built = true; ghost.offered = { talisman: 2, dragon_scale: 1 }; ghost.offerings = 3;
+    a.ground = [];
+    E.demolishBuilding("center", 9500);
+    const cnt = it => a.ground.filter(g => g.item === it).length;
+    const cost = s.DATA.BUILDINGS[type].cost;
+    check("demolished gate refunds its offerings (+ cost)",
+      cnt("talisman") === cost.talisman + 2 && cnt("dragon_scale") === cost.dragon_scale + 1 && cnt("star_steel") === cost.star_steel,
+      `t=${cnt("talisman")} d=${cnt("dragon_scale")} s=${cnt("star_steel")}`);
+    check("gate can be placed again after demolish", !E.gateExists() && E.canPlaceBuilding("center", spot[0], spot[1], type), "");
+  }
+
+  // (13) dragon tributes shrink with ascensions ----------------------------------
+  {
+    const s = world(0), E = s.ENGINE;
+    const tm = [0, 1, 2, 4, 10].map(a => +E.tributeMult(a).toFixed(4));
+    check("tributeMult = 1/(1+0.25a), floor 0.4", JSON.stringify(tm) === "[1,0.8,0.6667,0.5,0.4]", JSON.stringify(tm));
+    const needs = asc => { const w = world(asc); w.GS.dragon.stage = 0; w.GS.dragon.paid = {}; return w.ENGINE.dragonRemaining(); };
+    const n0 = needs(0), n2 = needs(2), st = s.DATA.DRAGON_STAGES[0].needs;
+    const sc = q => Math.max(1, Math.ceil(s.DATA.TEST.ENABLED ? q * s.DATA.TEST.costScale : q));
+    const ok = Object.keys(st).every(k => n0[k] === sc(st[k]) && n2[k] === Math.max(1, Math.ceil(sc(st[k]) / 1.5)));
+    check("asc 2: stage tribute x0.667 (ceil, min 1)", ok, `${JSON.stringify(n0)} -> ${JSON.stringify(n2)}`);
+    const r = world(2); r.GS.vows.active = ["restless"]; r.GS.dragon.stage = 0; r.GS.dragon.paid = {};
+    const nr = r.ENGINE.dragonRemaining();
+    check("restless doubles the shrunk tribute", Object.keys(n2).every(k => nr[k] === 2 * n2[k]), JSON.stringify(nr));
+  }
+
+  // (14) region unlock installments (real balance + Vow of Burden) --------------
+  {
+    const s = world(1), E = s.ENGINE, GS = s.GS;
+    s.DATA.TEST.ENABLED = false;
+    GS.vows.active = ["burden"];
+    const cap = E.handCap();
+    const cost = E.areaUnlockCost("mine");
+    const total = Object.values(cost).reduce((x, y) => x + y, 0);
+    check("burden at real balance: mine costs more than the hand holds", total > cap, `cost=${total} cap=${cap}`);
+    GS.hand = [];
+    E.handAdd("wood", cap);
+    const r1 = E.unlockArea("mine");
+    check("partial payment returns {paid}, remembers it", r1 && r1.paid === Math.min(cap, cost.wood || 0)
+      && GS.world.unlockPaid.mine && !GS.world.unlocked.mine, JSON.stringify(r1) + " " + JSON.stringify(GS.world.unlockPaid));
+    check("nothing to pay -> false", E.unlockArea("mine") === false, "");
+    // survives save/reload
+    s.SAVE.saveState();
+    const r = boot(s.stored);
+    check("installments survive a reload", JSON.stringify(r.GS.world.unlockPaid) === JSON.stringify(GS.world.unlockPaid),
+      JSON.stringify(r.GS.world.unlockPaid));
+    let clicks = 1, res = r1;
+    while (res !== true && clicks < 20) {
+      for (const [it, q] of Object.entries(E.unlockRemaining("mine"))) E.handAdd(it, Math.min(q, E.handSpace()));
+      res = E.unlockArea("mine"); clicks++;
+    }
+    check("burden: mine opens after a few installments", res === true && GS.world.unlocked.mine && !GS.world.unlockPaid.mine,
+      `clicks=${clicks}`);
+    check("fresh state: world.unlockPaid {}", JSON.stringify(world(0).GS.world.unlockPaid) === "{}", "");
+    // migration scrub + idempotence
+    const f = world(0);
+    const bad = JSON.parse(JSON.stringify(f.GS));
+    bad.world.unlockPaid = { farm: { wood: 4, bogus_item: 3, clay: NaN }, center: { wood: 2 }, nowhere: { wood: 1 }, mine: "x", fishing: {} };
+    const m = boot(bad);
+    check("unlockPaid scrubbed (dead items, open/unknown regions, junk)",
+      JSON.stringify(m.GS.world.unlockPaid) === '{"farm":{"wood":4}}', JSON.stringify(m.GS.world.unlockPaid));
+    m.SAVE.saveState();
+    const m2 = boot(m.stored);
+    check("unlockPaid migration idempotent", JSON.stringify(m2.GS.world.unlockPaid) === '{"farm":{"wood":4}}', "");
+    const pre = JSON.parse(JSON.stringify(f.GS)); delete pre.world.unlockPaid;
+    check("pre-installment save: unlockPaid {}", JSON.stringify(boot(pre).GS.world.unlockPaid) === "{}", "");
+    // ascension resets installments
+    const a = world(1); a.GS.world.unlockPaid = { farm: { wood: 3 } }; a.ENGINE.ascend([]);
+    check("ascend: installments reset", JSON.stringify(a.GS.world.unlockPaid) === "{}", JSON.stringify(a.GS.world.unlockPaid));
+  }
+
+  // (15) config-owned node fields refreshed on load; gate offered migration ------
+  {
+    const f = world(0);
+    const old = JSON.parse(JSON.stringify(f.GS));
+    const q = old.areas.center.nodes.find(n => n.fixed && n.kind === "quarry");
+    const bush = old.areas.center.nodes.find(n => !n.fixed && n.spawnerKind === "bush");
+    q.swingMs = 1000; q.sprite = "🪨"; q.clicksPerDrop = 9;
+    bush.swingMs = 999; bush.sprite = "?";
+    const m = boot(old);
+    const q2 = m.GS.areas.center.nodes.find(n => n.fixed && n.kind === "quarry");
+    const b2 = m.GS.areas.center.nodes.find(n => n.id === bush.id);
+    const fx = m.DATA.AREAS.center.fixtures.find(x => x.kind === "quarry");
+    const sp = m.DATA.AREAS.center.spawners.find(x => x.kind === "bush");
+    check("v51 fixture refreshed: swingMs/sprite/clicksPerDrop from config",
+      q2 && q2.swingMs === fx.swingMs && q2.sprite === fx.sprite && q2.clicksPerDrop === fx.clicksPerDrop,
+      q2 && `${q2.swingMs} ${q2.sprite} ${q2.clicksPerDrop}`);
+    check("spawner node refreshed: swingMs/sprite from config", b2 && b2.swingMs === sp.swingMs && b2.sprite === sp.sprite,
+      b2 && `${b2.swingMs} ${b2.sprite}`);
+    // legacy count-only gate offerings -> per item (scales first), idempotent
+    const g = JSON.parse(JSON.stringify(f.GS));
+    g.areas.center.buildings.push({ id: 9600, type: "ascension_gate", row: 10, col: 10, paid: {}, built: true, offerings: 5 });
+    g.areas.center.buildings.push({ id: 9601, type: "ascension_gate", row: 20, col: 20, paid: {}, built: true,
+      offered: { talisman: 9, star_steel: NaN, bogus: 2, dragon_scale: 1 } });
+    const gm = boot(g);
+    const g0 = gm.GS.areas.center.buildings.find(b => b.id === 9600), g1 = gm.GS.areas.center.buildings.find(b => b.id === 9601);
+    check("legacy offerings 5 -> {dragon_scale 2, star_steel 2, talisman 1}",
+      JSON.stringify(g0.offered) === '{"talisman":1,"star_steel":2,"dragon_scale":2}' && g0.offerings === 5, JSON.stringify(g0.offered));
+    check("corrupt offered scrubbed + clamped per type", JSON.stringify(g1.offered) === '{"talisman":2,"dragon_scale":1}' && g1.offerings === 3,
+      JSON.stringify(g1.offered));
+    gm.SAVE.saveState();
+    const gm2 = boot(gm.stored);
+    check("offered migration idempotent",
+      JSON.stringify(gm2.GS.areas.center.buildings.find(b => b.id === 9600).offered) === JSON.stringify(g0.offered), "");
   }
 } catch (e) {
   console.log("FAIL exception — " + (e && e.stack || e));

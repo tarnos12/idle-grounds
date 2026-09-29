@@ -41,6 +41,9 @@ function makeInitialState() {
       // One continuous map; regions are visible but the camera can't pan into
       // a region until it's unlocked at its border button.
       unlocked: { center: true, farm: false, mine: false, fishing: false, volcano: false, grove: false, celestial: false },
+      // Region unlocks are paid in installments: { region: { item: qty } }
+      // paid so far toward a still-locked region (kept until it opens).
+      unlockPaid: {},
     },
     build: { open: false, placing: null },  // build menu state (transient)
     // The Center building's active upgrade project:
@@ -149,6 +152,16 @@ function loadState() {
     if (s.upgradeJob) fresh.upgradeJob = s.upgradeJob;
     if (s.dragon) fresh.dragon = Object.assign({ stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null }, s.dragon);
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
+    // unlock installments: known, still-locked regions; live items only
+    // (the item filter runs below, once LIVE is known)
+    const sup = (s.world.unlockPaid && typeof s.world.unlockPaid === "object") ? s.world.unlockPaid : {};
+    for (const r of Object.keys(sup)) {
+      if (!window.DATA.AREAS[r] || fresh.world.unlocked[r] || !sup[r] || typeof sup[r] !== "object") continue;
+      const m = {};
+      for (const it of Object.keys(sup[r]))
+        if (Number.isFinite(sup[r][it]) && sup[r][it] > 0) m[it] = Math.floor(sup[r][it]);
+      if (Object.keys(m).length) fresh.world.unlockPaid[r] = m;
+    }
     fresh.won = !!s.won;
     fresh.dragonBlessed = s.dragonBlessed !== undefined ? !!s.dragonBlessed : !!s.won;
     fresh.starterPlaced = !!s.starterPlaced;
@@ -246,6 +259,23 @@ function loadState() {
       a.spawnQueue = (a.spawnQueue || []).filter(e => spKinds.has(e.kind));
       a.buildings = (a.buildings || []).filter(b =>
         window.DATA.BUILDINGS[b.type] && Number.isFinite(b.row) && Number.isFinite(b.col));
+      // config-owned node fields follow the CURRENT config (e.g. the v52
+      // 350ms fixture swing reaches v51 saves): fixtures by kind, spawner
+      // nodes by spawnerKind
+      const fxBy = {}, spBy = {};
+      for (const fx of cfg.fixtures || []) fxBy[fx.kind] = fx;
+      for (const sp of cfg.spawners || []) spBy[sp.kind] = sp;
+      for (const n of a.nodes) {
+        if (n.fixed && fxBy[n.kind]) {
+          const fx = fxBy[n.kind];
+          n.swingMs = fx.swingMs || 1000; n.sprite = fx.sprite || "⛰️";
+          n.clicksPerDrop = fx.clicksPerDrop; n.dropItem = fx.drop;
+          n.dropMin = fx.dropMin; n.dropMax = fx.dropMax; n.rareDrop = fx.rareDrop || null;
+        } else if (!n.fixed && spBy[n.spawnerKind]) {
+          const sp = spBy[n.spawnerKind];
+          n.swingMs = sp.swingMs || 350; n.sprite = sp.sprite || null;
+        }
+      }
       for (const n of a.nodes) {
         if (n.tier !== 1) {                      // high-tier node -> base type
           n.tier = 1;
@@ -278,10 +308,32 @@ function loadState() {
       for (const b of a.buildings || []) {
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
-        // Ascension Gate offerings: a finite count within the cap
-        if (window.DATA.BUILDINGS[b.type].gate && b.offerings !== undefined) {
-          const oc = window.DATA.GATE_OFFERINGS ? window.DATA.GATE_OFFERINGS.cap : 6;
-          b.offerings = Number.isFinite(b.offerings) ? Math.max(0, Math.min(oc, Math.floor(b.offerings))) : 0;
+        // Ascension Gate offerings: per item in b.offered (each type capped
+        // at perType, total at cap); b.offerings mirrors the total. A pre-
+        // per-item save only kept a count: attribute it to dragon scales
+        // first (the fastest to farm), then star steel, then talismans.
+        if (window.DATA.BUILDINGS[b.type].gate && (b.offerings !== undefined || b.offered !== undefined)) {
+          const G = window.DATA.GATE_OFFERINGS || { items: ["talisman", "star_steel", "dragon_scale"], cap: 6 };
+          const per = G.perType || G.cap;
+          const src = (b.offered && typeof b.offered === "object") ? b.offered : null;
+          const off = {};
+          let total = 0;
+          if (src) {
+            for (const it of G.items) {
+              const q = Number.isFinite(src[it]) ? Math.max(0, Math.min(per, Math.floor(src[it]), G.cap - total)) : 0;
+              if (q > 0) { off[it] = q; total += q; }
+            }
+          } else {
+            let n = Number.isFinite(b.offerings) ? Math.max(0, Math.min(G.cap, Math.floor(b.offerings))) : 0;
+            const by = {};
+            for (const it of G.items.slice().reverse()) {
+              const q = Math.min(per, n);
+              if (q > 0) { by[it] = q; total += q; n -= q; }
+            }
+            for (const it of G.items) if (by[it]) off[it] = by[it];   // stable key order (idempotent)
+          }
+          b.offered = off;
+          b.offerings = total;
         }
         // meditation pavilion: keep disciple/bun counters finite
         if (window.DATA.BUILDINGS[b.type].roster) {
@@ -338,6 +390,11 @@ function loadState() {
     if (fresh.upgradeJob && (!fresh.upgradeJob.needs || fresh.upgradeJob.item))
       fresh.upgradeJob = null;
     for (const it of Object.keys(fresh.dragon.paid || {})) if (!LIVE.has(it)) delete fresh.dragon.paid[it];
+    for (const r of Object.keys(fresh.world.unlockPaid)) {
+      const m = fresh.world.unlockPaid[r];
+      for (const it of Object.keys(m)) if (!LIVE.has(it)) delete m[it];
+      if (!Object.keys(m).length) delete fresh.world.unlockPaid[r];
+    }
     return fresh;
   } catch (e) { return null; }
 }
