@@ -836,8 +836,8 @@ const TEST = {
 // asset version in index.html on every code change; `desc` is a one-line
 // note of what that version changed (shown as the badge's tooltip).
 const VERSION = {
-  num: 51,
-  desc: "EXPERIMENTAL design-pass branch: bigger ascension payoff (~15 AP + 18%/run, blessing & stats persist) with a pending-gain preview, automation ladder (2/6/20 clicks), wood trickle generator, live next-milestone tracker, labelled converters, recipe route badges, grouped perk shop, batch-set feeding.",
+  num: 52,
+  desc: "Design pass 2: idle loop that runs, reveal+quests, vows & legacy perks, readable logistics",
 };
 
 window.DATA = {

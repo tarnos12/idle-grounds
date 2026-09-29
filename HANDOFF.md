@@ -6,33 +6,26 @@
 ## ▶ NEXT SESSION: start here
 
 READ DESIGN.md FIRST — the full economy/building/logistics plan with
-done-markers. **The entire roadmap (phases 1-5) is implemented, plus
-disciples, full item-sink coverage, offline/idle catch-up, feedback juice,
-and deeper prestige (Ascension Shrine perk shop).** Current asset version:
-?v=50.
+done-markers. **`master` is v50.** Branch **`feature/design-pass`** carries
+the v51 + v52 EXPERIMENTAL, evidence-driven design passes for the user to
+test-drive before merging (do NOT merge it until they say so). Current
+asset version: **?v=52**.
 
-Everything designed is live: gathering, dragon story (4 stages ->
-awakening), combat (foxes + baited Spirit Boar), the whole T1/T2/T3
-economy, wisp logistics (gatherers/lanterns/seals/furnace-spirit) with a
-link-editor UI and fuel system, dragon pills + timed blessings, disciples
-(Meditation Pavilion), and the Ascension prestige loop.
+Test build (branch): https://claude.ai/artifact/VRBo3V3rXrnRtn6gHCTsmm
+Master build (v50): https://claude.ai/artifact/FxjCkJ6WdDt33nYntCBpJD
 
-Remaining directions are NEW design scope — confirm with the user before
-picking:
-1. **More regions** — the map has room; each could add unique resources.
-   (One is now done: Celestial Peak, ?v=48 — see Last session summary. More
-   still fit south/east of it.)
-2. **Sprite art pass** — swap emoji for sheet art per the DESIGN.md
-   wishlist (item icons already use assets/icons/*.png with emoji
-   fallback; buildings/nodes/enemies are still emoji).
-3. **More prestige perks** — the Ascension Shrine (js/data.js `PERKS`) has
-   4 perks; add more (yield %, wisp haste, combat, cheaper unlocks…) — each
-   needs one wiring point in engine.js like the existing ones.
-4. Polish: SFX are DONE (procedural WebAudio synth, ?v=41). Balance is
-   deliberately left in FAST TEST MODE (DATA.TEST.ENABLED=true) — the user
-   chose to keep quick play while iterating (2026-07-08); a real GDD-balance
-   pass (ENABLED=false) is a future toggle when they're ready to ship slow.
-   (Offline catch-up, feedback juice, deeper prestige AND sound are DONE.)
+Wait for the user's verdict on the branch (merge / tweak / discard). Next
+candidates after that — confirm with the user before picking:
+1. **Spirit Vault cross-region logistics** — wisps can't cross regions;
+   ~11 recipes need items from 2-3 regions.
+2. **Wisps feeding ghosts / Altar jobs** (logistics reaching the Altar and
+   other hand-fed sinks).
+3. **Per-item flow ledger in Stats** (produced / consumed / lost per item).
+4. **Real-balance pass** — the game is still in FAST TEST MODE
+   (`DATA.TEST.ENABLED=true`, the user's choice 2026-07-08); a real GDD
+   balance pass needs `ENABLED=false`.
+Older directions (more regions, sprite art pass, more prestige perks) still
+stand as new design scope.
 
 **Every git commit MUST update this file** (this pointer + the Last
 session summary below) so a fresh session knows the state; bump the ?v=
@@ -246,6 +239,66 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Design pass 2 (?v=52, branch `feature/design-pass`, EXPERIMENTAL, NOT merged).**
+Master stays at v50. Research: agents read the source of 6 open-source idle
+games (A Dark Room, Kittens Game, Trimps, Evolve, Antimatter Dimensions,
+shapez.io) since page fetches are proxy-blocked, plus 3 designer playtests and
+an economy model of v51. Built as parallel slices, then fix waves. 13 test
+suites in `tests/` (run each: `node tests/<f> .`) all pass.
+- **Idle loop that runs:** compact 9x9 wood/sand generator fields; link- and
+  capacity-aware Gathering Stones; 4s player-drop grace (8s fixtures);
+  value-aware ground eviction (never fresh/grace drops, protected share 480,
+  hard ceiling 900); output back-pressure ("Output pile full" at 12 loose
+  outputs within 3 cells); automation skips saturated item types (>=120
+  loose) instead of pausing; Center automation taps the Spirit Tree; starter
+  network: Forge removed (dragon stage 1 grants it), stone/plank/brick/
+  spirit-stone storehouses as sinks; wisp in-flight reservation;
+  least-recently-served lantern links; fuel sliver fix; rack collision; recipe
+  switch keeps shared stock.
+- **Prestige:** +20% world speed per ascension (additive, 1/(1+0.2n)) on all
+  clocks incl. generators, foxes (per-slot respawn), dragon scales and your
+  own swings (floor 120ms); dragon tributes shrink x1/(1+0.25n), floor 0.4;
+  AP = 3 + 2/region + gate offerings (2 talisman/2 star steel/2 scale, +1
+  each) x vow multiplier. Vows (burden, coldhearth, restless, solitude)
+  x1.15/1.3/1.5/1.75 AP + first-completion marks (x0.96 timers). Legacy perks
+  Remembered Paths (Mine>Fishing>Farm) and Legacy Automation apply
+  immediately. Region unlock installments (`GS.world.unlockPaid`); unique
+  gate with offering refunds; post-ascension card.
+- **Guidance:** `DATA.REVEAL` progressive build menu (tiers by quest/region/
+  stage; veterans bypass quest/region gates); 14-quest chain (destructive
+  Kiln>Glass and pre-completed craft-5 quests removed; dragon2/iron/dragon3
+  added; rewards + Unlocks preview + target ring); milestone tracker from
+  minute 0 with item names + `DATA.SOURCES` hints + gate sub-step walker +
+  offerings line; build menu sort/new badges/click lock; placement reason
+  text; link editor refuses impossible links; quest migration for v50 and v51
+  saves (QUEST_IDS_V50/V51 remap in state.js).
+- **Input:** right-hold latch (never spills after a target completes); ground
+  right-hold 400ms ramp stops at the front stack; Q/E rotate hand; type-locked
+  vacuum; full-hand swing stop; fixture swing 350ms with click parity;
+  consumables one per press.
+- **Clarity:** converter status lines (Needs X / No fuel / Output pile full /
+  N/min); stone n/cap + accepted icons + radius circles; link status dots;
+  unlock buttons per camera region & direction with installment labels and
+  right-click pay; overlay z-order; dragon speech wrap; gate gold border; help
+  rewrite.
+- **Balance:** Mine jade veins (~15); Dragon Shrine costs obsidian not jade;
+  Algae Farm/Herb Garden x3 cap & 2x speed; bone Star Steel / herb Qi Elixir /
+  Moon Elixir / Astral Steel output 2; sand glass 3>2.
+- **Offline:** async sliced replay with progress bar + Skip + plateau early
+  stop; settle skipped during replay; occupiedCells memo; timers re-armed from
+  due time (live/offline parity within ~1-3%); summary tiers (<90s none,
+  <10min toast, else modal with 'why it stopped').
+- **Supersedes v51 numbers below:** AP is now the v52 formula above (not
+  "~15 AP + 18%/run"); ascension speed is +20%/run (was 18%/8%).
+- **Known limits:** in TEST mode the zero-input starter network fills its
+  200-item storehouses in ~7 min then idles (REAL ~39 min) — storage caps by
+  design; REAL-mode Center automation wood is limited by lantern throughput.
+- Version: `?v=52` (6 refs in index.html + `DATA.VERSION.num`). Key commits:
+  9144920 (prestige), 6cf013f (logistics/ground), 57ad061 (input), 49e8c71
+  (guidance), a9251ad (clarity), e035a41 (balance), 9a2a225 (offline), fix
+  waves 70aa946/710e04a/c644cd8/6ab6967/f4a8f7e/11379f3, 901ee74 (UI polish),
+  8dde4e5 (engine seams), e496cd0.
 
 **feature/design-pass — EXPERIMENTAL evidence-driven design pass (?v=51, branch only).**
 Master stays at v50; this branch is for the user to test-drive before any merge.

@@ -50,7 +50,8 @@ input. The Furnace Spirit logistics building auto-stokes burners in ~3 cells.
 ## Wisp logistics ✅ (implemented)
 
 Endpoints: **Gathering Stone** (vacuums ground items, radius 10 cells,
-buffer 20), **Warding Seal** (typed pass-through, cap 5; right-click with
+buffer 60 — link-aware and capacity-aware: only pulls types a linked target/its own
+buffer can take, and stops when full), **Warding Seal** (typed pass-through, cap 20; right-click with
 an item tunes it), **Storehouse** (typed buffer; `lock` keeps type when
 empty), any **converter** (holds an INPUT STOCK per recipe item, cap 20 —
 stockCap in the smelt config; batches start themselves whenever the stock
@@ -88,8 +89,8 @@ seeded so every line visibly runs from the first minute.
 5. ✅ Talisman Atelier (paper+spirit jade+elixir -> talisman); ✅ Dragon
    Scales shed by the awakened dragon (45s, cap-5 pile, 2x with a
    shrine); ✅ Dragon Shrine (+60s blessings); ✅ Ascension Gate
-   (3 talisman + 3 star steel + 3 scale) -> ASCEND: reset, keep +8%
-   permanent global speed per ascension (tutorial skipped on reruns).
+   (offerings: talisman + star steel + scale) -> ASCEND: reset, keep +20%
+   world speed per ascension (additive; see Design pass 2; tutorial skipped on reruns).
 
 THE FULL ROADMAP IS IMPLEMENTED, plus DISCIPLES (post-roadmap):
 Meditation Pavilion recruits disciples with Robes and feeds them Spirit
@@ -112,9 +113,9 @@ hook). Fires on harvest yields, crafts, loot, pickups and swings; gold
 sparkle for prized loot; suppressed during offline catch-up.
 
 ✅ Deeper prestige — Ascension Shrine (post-roadmap): ascending grants
-Ascension Points (1 + unlocked regions beyond Center); a perk shop (☯ pill)
+Ascension Points (v52 formula: 3 + 2 per unlocked region + gate offerings, x vow multiplier); a perk shop (☯ pill)
 spends them on permanent perks that persist across resets — Eternal Haste
-(global speed), Master's Hall (disciple cap), Long Slumber (offline hours),
+(global speed), Master's Hall (disciple cap), Long Slumber (offline hours, unchanged: 8h + 2h/level),
 Fleet Hands (carry capacity). Perks in js/data.js PERKS; add more by wiring
 one point in engine.js each.
 
@@ -189,6 +190,45 @@ duration calc in `dropFromHand`) and **bounty** (generator interval x0.9
 per level, max 3 — wired into `gameTick`'s `genTimers` line).
 
 Next frontiers: sprite art (see wishlist), more perks.
+
+## ✅ Design pass 2 (v52, branch feature/design-pass)
+
+EXPERIMENTAL, branch-only (master = v50). Evidence: source of 6 open-source
+idle games + designer playtests + an economy model. Supersedes the v51 AP /
+speed numbers.
+- **Prestige:** +20% world speed per ascension (additive, 1/(1+0.2n)) on
+  every clock (generators, foxes, dragon scales, own swings, floor 120ms);
+  dragon tributes shrink x1/(1+0.25n), floor 0.4. AP = 3 + 2/region + gate
+  offerings (2 talisman / 2 star steel / 2 scale, +1 AP each) x vow
+  multiplier. **Vows** (burden, coldhearth, restless, solitude) x1.15/1.3/
+  1.5/1.75 AP; first completion of a vow marks it (x0.96 timers). **Legacy
+  perks:** Remembered Paths (opens Mine > Fishing > Farm) and Legacy
+  Automation, applied immediately. Region unlock installments
+  (`GS.world.unlockPaid`), unique Ascension Gate with offering refunds,
+  post-ascension card.
+- **Idle loop:** compact 9x9 wood/sand generator fields; Gathering Stone buffer
+  60 (link/capacity-aware); ground integrity (grace windows, value-aware
+  eviction, output back-pressure, saturated types skipped by automation);
+  Center automation taps the Spirit Tree; starter network without a Forge,
+  with stone/plank/brick/spirit-stone storehouse sinks; wisps reserve
+  in-flight cargo and serve least-recently-served links.
+- **Guidance:** `DATA.REVEAL` progressive build menu (veterans bypass
+  quest/region gates), 14-quest chain with rewards and unlock previews,
+  milestone tracker from minute 0 (item names, `DATA.SOURCES` hints, gate
+  walker, offerings line), placement reasons, link editor refusing
+  impossible links.
+- **Input:** right-hold latch, ground right-hold ramp stops at the front
+  stack, Q/E rotate hand, type-locked vacuum, one consumable per press.
+- **Clarity:** converter status lines, stone n/cap + reach circles, link
+  status dots, per-region unlock buttons with installments, help rewrite.
+- **Balance:** Mine jade veins, Dragon Shrine costs obsidian, Algae Farm/Herb
+  Garden x3 cap & 2x speed, several output-2 recipes, sand glass 3>2.
+- **Offline:** async sliced replay (progress + Skip + plateau stop), due-time
+  timer re-arm (live/offline parity ~1-3%), tiered welcome-back summary.
+- **Known limits / next:** TEST-mode starter network idles after ~7 min when
+  storehouses fill (REAL ~39 min); Spirit Vault cross-region logistics
+  (wisps can't cross regions; ~11 recipes need 2-3 regions), wisps feeding
+  ghosts/Altar jobs, per-item flow ledger in Stats, real-balance pass.
 
 ## Building sprite wishlist (assets/buildings/<file>)
 
