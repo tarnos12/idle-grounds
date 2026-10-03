@@ -114,16 +114,17 @@ const AREAS = {
     ],
     fixtures: [
       // the quarry rock: manually minable WITHOUT limit (5 clicks -> 1 stone,
-      // hold auto-clicks at 1/s) — and it ALSO produces stone passively
+      // hold auto-clicks at ~3/s) — and it ALSO produces stone passively
       // (see the generator below)
-      { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 1000,
+      { kind: "quarry", zone: "cornerBL", size: 2, interaction: "quarry", swingMs: 350,
         sprite: "⛰️", clicksPerDrop: 5, drop: "stone",
         rareDrop: { item: "jade_shard", chance: 0.12 } },
-      // the Spirit Tree: ONE great tree centred in the top band — the only
-      // wood source in the Center. Works like the rock but has NO passive
-      // production: it only gives while you click / hold on it.
-      { kind: "spirittree", zone: "midTop", size: 4, interaction: "quarry", swingMs: 1000,
-        sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3,
+      // the Spirit Tree: ONE great tree centred in the top band. Works like
+      // the rock but has NO passive production: it gives while you click /
+      // hold on it — and (autoTap) Center Automation taps it once per tick
+      // per level, so bought automation feeds the starter wood line.
+      { kind: "spirittree", zone: "midTop", size: 4, interaction: "quarry", swingMs: 350,
+        sprite: "🌳", clicksPerDrop: 3, drop: "wood", dropMin: 2, dropMax: 3, autoTap: true,
         rareDrop: { item: "bamboo", chance: 0.12 } },
     ],
     generators: [
@@ -134,6 +135,10 @@ const AREAS = {
       // "quarry" upgrade speeds it up
       { kind: "stone", zone: "quarryField", item: "stone", intervalMs: 1500, cap: 10, upgrade: "quarry",
         rareDrop: { item: "jade_shard", chance: 0.08 } },
+      // wood's first idle source (the Spirit Tree needs a hand or bought
+      // Center Automation). A compact
+      // field around the starter wood Gathering Stone so its line really flows.
+      { kind: "wood", zone: "woodField", item: "wood", intervalMs: 3000, cap: 10 },
     ],
     // Fox Spirits haunt the top-right corner: they wander their zone, take a
     // few hits to slay, and drop Spirit Essence. `cap` is the BASE cap — the
@@ -158,8 +163,9 @@ const AREAS = {
         interaction: "instant", swingMs: 300, sprite: "☁️", regrow: 18, drops: [d("cotton", 1, 2)] },
     ],
     generators: [
-      // sand ground in the middle-left band auto-spawns sand (like centre's clay)
-      { kind: "sand", zone: "midLeft", item: "sand", intervalMs: 1500, cap: 10 },
+      // sand ground: a compact 9x9 field inside the middle-left band (like
+      // centre's clay) — one Gathering Stone can cover all of it
+      { kind: "sand", zone: "sandField", item: "sand", intervalMs: 1500, cap: 10 },
     ],
     tiers: [
       { name: "Rice", drops: [d("wheat", 2, 3)], timer: 20 },
@@ -174,8 +180,12 @@ const AREAS = {
         rareDrop: { item: "firestone", chance: 0.05 } },
       // iron veins: rarer, tougher rocks scattered among the stone
       { kind: "ironvein", zone: "centre", sizes: [2], target: 2, interaction: "break",
-        swingMs: 500, sprite: "⚙️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)],
+        swingMs: 500, sprite: "⛓️", hits: 3, regrow: 12, drops: [d("iron_ore", 1, 2)],
         rareDrop: { item: "firestone", chance: 0.15 } },
+      // jade veins: the direct source of jade shards (the talisman chain's
+      // choke point) — tough, small target like the iron veins
+      { kind: "jadevein", zone: "centre", sizes: [2], target: 1, interaction: "break",
+        swingMs: 500, sprite: "🟢", hits: 3, regrow: 14, drops: [d("jade_shard", 1, 2)] },
     ],
     tiers: [
       { name: "Stone", hits: 2, drops: [d("stone", 3), d("clay", 1)], timer: 10 },
@@ -196,7 +206,7 @@ const AREAS = {
     fixtures: [
       // the spring: click/hold for water, and it wells up passively into the
       // field around it (see the generator)
-      { kind: "spring", zone: "cornerTL", size: 2, interaction: "quarry", swingMs: 1000,
+      { kind: "spring", zone: "cornerTL", size: 2, interaction: "quarry", swingMs: 350,
         sprite: "⛲", clicksPerDrop: 3, drop: "water" },
     ],
     generators: [
@@ -293,6 +303,15 @@ const ZONES = {
   // water field around the spring, centred in the TL block (fishing region)
   springField:[(() => { const m = Math.floor((_T - 1) / 2), h = 4;
                         return { r0: m - h, c0: m - h, r1: m + h, c1: m + h }; })()],
+  // compact 9x9 wood field centred on the starter wood Gathering Stone at
+  // (16,44) in the Center's top band (rows 12-20, cols 40-48) — the whole
+  // 25x43 midTop band left the stone catching ~19% of the trickle
+  woodField:  [{ r0: 12, c0: 40, r1: 20, c1: 48 }],
+  // compact 9x9 sand field in the Farm's middle-left band (rows 42-50,
+  // cols 14-22): vertically centred, near the crop field's left edge (col 25),
+  // clear of plots — one Gathering Stone at (46,18) covers every cell
+  sandField:  [(() => { const m = Math.floor((_T + _N - _T - 1) / 2), c = 18, h = 4;
+                        return { r0: m - h, c0: c - h, r1: m + h, c1: c + h }; })()],
 };
 
 // Buildings the player can place. cost is paid by dropping resources into
@@ -321,7 +340,7 @@ const BUILDINGS = {
                fuel: true, size: { w: 3, h: 5 },
                recipes: [
                  { name: "Brick", inputs: { clay: 2 }, output: "brick", outputQty: 1, timeMs: 5000 },
-                 { name: "Glass", inputs: { sand: 2 }, output: "glass", outputQty: 1, timeMs: 6000 },
+                 { name: "Glass", inputs: { sand: 3 }, output: "glass", outputQty: 2, timeMs: 5000 },
                  { name: "Obsidian Glass", inputs: { obsidian: 1 }, output: "glass", outputQty: 2, timeMs: 5000 },
                ] },
   paper_mill:{ name: "Paper Mill", icon: "📜", cost: { wood: 10, stone: 5 }, unlocked: true,
@@ -353,10 +372,10 @@ const BUILDINGS = {
                ] },
   cauldron:  { name: "Cauldron",  icon: "⚗️", cost: { stone: 8, iron_bar: 2 }, unlocked: true,
                recipes: [
-                 { name: "Qi Elixir", inputs: { spirit_herb: 1, water: 2, spirit_essence: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
+                 { name: "Qi Elixir", inputs: { spirit_herb: 1, water: 2, spirit_essence: 1 }, output: "qi_elixir", outputQty: 2, timeMs: 8000 },
                  { name: "Vitality Pill", inputs: { fish: 1, spirit_herb: 1, water: 1 }, output: "vitality_pill", outputQty: 1, timeMs: 7000 },
                  { name: "Beast Bait", inputs: { fish: 2, algae: 2 }, output: "beast_bait", outputQty: 1, timeMs: 6000 },
-                 { name: "Moon Elixir", inputs: { moonpetal: 2, water: 1 }, output: "qi_elixir", outputQty: 1, timeMs: 8000 },
+                 { name: "Moon Elixir", inputs: { moonpetal: 2, water: 1 }, output: "qi_elixir", outputQty: 2, timeMs: 8000 },
                ] },
   jade_carver:{ name: "Jade Carver", icon: "🗿", cost: { wood: 6, stone: 8 }, unlocked: true,
                recipes: [
@@ -374,8 +393,8 @@ const BUILDINGS = {
   star_anvil:{ name: "Star Anvil", icon: "⚒️", cost: { iron_bar: 6, tools: 3, glass: 2 }, unlocked: true,
                fuel: true, size: { w: 3, h: 5 },
                recipes: [
-                 { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 1, timeMs: 10000 },
-                 { name: "Astral Steel", inputs: { star_fragment: 3, iron_bar: 2 }, output: "star_steel", outputQty: 1, timeMs: 9000 },
+                 { name: "Star Steel", inputs: { iron_bar: 2, firestone: 1, beast_bone: 1 }, output: "star_steel", outputQty: 2, timeMs: 10000 },
+                 { name: "Astral Steel", inputs: { star_fragment: 3, iron_bar: 2 }, output: "star_steel", outputQty: 2, timeMs: 9000 },
                ] },
   // ---- Phase-5 endgame ----
   talisman_atelier:{ name: "Talisman Atelier", icon: "🖌️", cost: { plank: 6, jade: 2, glass: 2 }, unlocked: true,
@@ -384,10 +403,10 @@ const BUILDINGS = {
                ] },
   // Dragon Shrine: honours the awakened dragon — blessings last +60s and
   // it sheds Dragon Scales twice as often while one stands.
-  dragon_shrine:{ name: "Dragon Shrine", icon: "🐲", cost: { brick: 10, cloth: 8, jade: 3 }, unlocked: true,
+  dragon_shrine:{ name: "Dragon Shrine", icon: "🐲", cost: { brick: 10, cloth: 8, obsidian: 4 }, unlocked: true,
                shrine: true },
   // Ascension Gate: the final monument. Building it offers ASCENSION —
-  // reset the grounds, keep a permanent +8% global speed per ascension.
+  // reset the grounds, keep +20% world speed per ascension (additive).
   ascension_gate:{ name: "Ascension Gate", icon: "⛩️", size: { w: 5, h: 5 }, unlocked: true,
                gate: true, cost: { talisman: 3, star_steel: 3, dragon_scale: 3 } },
   charcoal_pit:{ name: "Charcoal Pit", icon: "🕳️", cost: { stone: 6, clay: 4 }, unlocked: true,
@@ -425,17 +444,17 @@ const BUILDINGS = {
   // Algae Farm: can ONLY be placed in the water (fishing's centre zone);
   // passively grows algae around itself.
   algae_farm:{ name: "Algae Farm", icon: "🪸", cost: { wood: 12, algae: 6 }, unlocked: false, stageUnlock: 2,
-               waterOnly: true, gen: { item: "algae", intervalMs: 4000, cap: 8 } },
+               waterOnly: true, gen: { item: "algae", intervalMs: 2000, cap: 24 } },
   // Herb Garden: taught at dragon stage 3 — passively grows Spirit Herbs
   // (the cultivation herbs) around itself, on land.
   herb_garden:{ name: "Herb Garden", icon: "🪴", cost: { wood: 10, water: 5, clay: 5 }, unlocked: false,
-                stageUnlock: 3, gen: { item: "spirit_herb", intervalMs: 5000, cap: 6 } },
+                stageUnlock: 3, gen: { item: "spirit_herb", intervalMs: 2500, cap: 24 } },
 
   // ---- Wisp logistics (small 1x1 formations; may sit on wild land) ----
   // Gathering Stone: vacuums ground items within `radius` cells into its
   // buffer (capacity `cap` total across types).
   gathering_stone: { name: "Gathering Stone", icon: "🧿", size: { w: 1, h: 1 }, anyZone: true,
-               cost: { stone: 5 }, unlocked: true, gather: { radius: 8, cap: 20 } },
+               cost: { stone: 5 }, unlocked: true, gather: { radius: 8, cap: 60 } },   // cap 20 -> 60: a 20-item buffer choked on real-balance income
   // Wisp Lantern: hosts worker wisps. Holds a LIST of links {from,to}
   // (building ids); every `rateMs` it services ONE link, round-robin in the
   // order they were added, sending 1 item the target accepts.
@@ -444,7 +463,7 @@ const BUILDINGS = {
   // Warding Seal: a pass-through buffer locked to ONE item type — wisps
   // simply never bring it anything else, so lines stay pure.
   warding_seal: { name: "Warding Seal", icon: "🈯", size: { w: 1, h: 1 }, anyZone: true,
-               cost: { wood: 3, stone: 3 }, unlocked: true, seal: { cap: 5 } },
+               cost: { wood: 3, stone: 3 }, unlocked: true, seal: { cap: 20 } },   // cap 5 -> 20: pass-through lines stalled on a 5-item buffer
 };
 
 // The Dragon's feeding milestones. Each stage lists the tribute it wants
@@ -516,7 +535,7 @@ const UPGRADE_TREE = [
     desc: "Center bushes respawn faster.", links: ["auto_c"],
     costs: [{ wood: 20 }, { wood: 50, leaves: 15 }, { wood: 120, spirit_essence: 10 }] },
   { id: "auto_c", icon: "🤖", name: "Automation",      x: 300,  y: -85,  area: "center",  type: "automation",
-    desc: "Auto-harvests Center nodes.", links: ["act_fi"],
+    desc: "Auto-harvests Center bushes and taps the Spirit Tree 🌳 (1 swing/s per level) — its wood flows to the starter wood line.", links: ["act_fi"],
     costs: [{ wood: 60, stone: 30 }, { stone: 120, clay: 40 }, { iron_ore: 40, spirit_essence: 20 }] },
   { id: "act_fi", icon: "🎣", name: "Reel Speed",      x: 455,  y: -45,  area: "fishing", type: "harvestSpeed",
     desc: "Faster reeling when fishing.", links: [],
@@ -569,48 +588,180 @@ const UPGRADE_TREE = [
 // immediately (the Claim button lights up as soon as cur >= need).
 // Later quests only appear after earlier ones are claimed, so nothing
 // references content the player hasn't seen yet.
+// v52 spine (14): the dragon stays in the chain (stages 1-3), each claim
+// previews what it unlocks (`reward.reveal` is DISPLAY only — REVEAL below
+// drives the build menu), `reward.items` land in the hand (else beside the
+// Altar). `builds` = buildings the quest asks for (build-menu target first);
+// `target` = world object the quest ring pulses on while it's active.
+// Saves index this array; QUEST_CHAIN bumps whenever the order changes so
+// loadState can remap an old index by quest id (see state.js).
 // ------------------------------------------------------------------
+const QUEST_CHAIN = 2;
 const QUESTS = [
   { id: "wood", icon: "🪵", name: "First timber",
     desc: "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.)",
-    goal: () => ({ cur: window.ENGINE.handCount("wood"), need: 5 }) },
+    goal: () => ({ cur: window.ENGINE.handCount("wood"), need: 5 }),
+    reward: { reveal: ["storehouse"] },
+    target: { area: "center", kind: "fixture", id: "spirittree" } },
   { id: "leaves", icon: "🍃", name: "Bush whacker",
     desc: "Chop the small bushes 🌿 around the Altar and collect 5 leaves.",
     goal: () => ({ cur: window.ENGINE.handCount("leaves"), need: 5 }) },
   { id: "dragon1", icon: "🐉", name: "Wake the sleeper",
-    desc: "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click it to feed its tribute until it stirs.",
-    goal: () => ({ cur: window.GS.dragon.stage >= 1 ? 1 : 0, need: 1 }) },
+    desc: "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click it to feed its tribute until it stirs — the dragon teaches you the Forge.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 1 ? 1 : 0, need: 1 }),
+    reward: { reveal: ["forge"] },
+    target: { area: "center", kind: "dragon" } },
   { id: "fox", icon: "🦊", name: "Fox hunt",
     desc: "A Fox Spirit prowls the red zone (top-right corner). Click it until it falls — hold left-click to auto-attack. It drops Spirit Essence.",
-    goal: () => ({ cur: window.GS.stats.foxKills || 0, need: 1 }) },
+    goal: () => ({ cur: window.GS.stats.foxKills || 0, need: 1 }),
+    reward: { reveal: ["infusion_array"] },
+    target: { area: "center", kind: "enemyZone" } },
   { id: "build", icon: "🔨", name: "Raise a building",
     desc: "Press B, place a Storehouse ghost somewhere open, then RIGHT-click it while carrying the wood it asks for.",
-    goal: () => ({ cur: window.GS.stats.buildingsBuilt || 0, need: 1 }) },
+    goal: () => ({ cur: window.GS.stats.buildingsBuilt || 0, need: 1 }),
+    builds: ["storehouse"],
+    reward: { reveal: ["gathering_stone", "wisp_lantern", "warding_seal", "workbench", "kiln", "paper_mill", "charcoal_pit"] } },
   { id: "upgrade", icon: "🏛️", name: "First insight",
     desc: "Click the Altar to open the upgrade tree, pick an upgrade, then RIGHT-click-feed the Altar the cost it shows.",
-    goal: () => ({ cur: window.GS.stats.upgradesApplied || 0, need: 1 }) },
+    goal: () => ({ cur: window.GS.stats.upgradesApplied || 0, need: 1 }),
+    reward: { items: { wood: 10 } },          // the next wood sweep (a region unlock) is on the house
+    target: { area: "center", kind: "altar" } },
   { id: "link", icon: "🏮", name: "Wisp wrangler",
     desc: "Wisps already ferry items along the dashed threads. Click a Wisp Lantern, press ➕ Add link, then click a source (🧿/📦) and a target building.",
-    goal: () => ({ cur: window.GS.stats.linksAdded || 0, need: 1 }) },
-  { id: "recipe", icon: "🏺", name: "Change of plans",
-    desc: "Click the Kiln and switch its recipe. (Anything it held drops on the ground — that's normal.)",
-    goal: () => ({ cur: window.GS.stats.recipeSwitches || 0, need: 1 }) },
-  { id: "craft", icon: "⚙️", name: "Production line",
-    desc: "Let your buildings craft 5 items in total (planks, bricks, spirit stones…). Keep the wisps fed!",
-    goal: () => ({ cur: window.GS.stats.totalCrafted || 0, need: 5 }) },
+    goal: () => ({ cur: window.GS.stats.linksAdded || 0, need: 1 }),
+    reward: { reveal: ["furnace_spirit"] },
+    target: { area: "center", kind: "building", id: "wisp_lantern" } },
   { id: "explore", icon: "🔓", name: "Beyond the woods",
     desc: "Carry enough wood to a glowing border button and unlock a neighbouring region (Farm, Mine or Fishing).",
     goal: () => {
       const u = window.GS.world.unlocked;
       return { cur: (u.farm || u.mine || u.fishing) ? 1 : 0, need: 1 };
     } },
+  { id: "dragon2", icon: "🐉", name: "Stone & clay for the dragon",
+    desc: "The dragon's next tribute is stone and clay. The starter Gathering Stones 🧿 by the quarry rock and the clay field (bottom corners) collect both — LEFT-click (or hold) one to withdraw into your hand, then right-click the dragon.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 2 ? 1 : 0, need: 1 }),
+    reward: { reveal: ["algae_farm"], items: { wood: 8 } },   // toward the Mine's border
+    target: { area: "center", kind: "dragon" } },
+  { id: "iron", icon: "🧲", name: "Iron for the dragon",
+    desc: "Unlock the Mine, break ⛓️ iron veins for Iron Ore, then build a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the dragon's third tribute asks for (bars already fed to it count).",
+    // need = the stage-3 iron tribute (scaled, from the engine); bars already
+    // paid to the dragon at stage 2 count, so feeding it never resets this
+    goal: () => {
+      const E = window.ENGINE, dr = window.GS.dragon;
+      const need = Math.max(1, E.dragonTribute(2).iron_bar || 1);
+      if (dr.stage >= 3) return { cur: need, need };
+      const paid = dr.stage === 2 ? (dr.paid.iron_bar || 0) : 0;
+      return { cur: Math.min(need, E.handCount("iron_bar") + paid), need };
+    },
+    builds: ["forge"] },
+  { id: "waters", icon: "🎣", name: "Unlock the waters",
+    desc: "Fishing is where Algae and Spring Water come from — carry wood to the glowing border button and unlock Fishing.",
+    goal: () => ({ cur: window.GS.world.unlocked.fishing ? 1 : 0, need: 1 }),
+    reward: { reveal: ["loom", "mill", "brewery"] } },
+  { id: "dragon3", icon: "🐉", name: "The dragon tastes iron",
+    desc: "Feed the dragon its third tribute — Iron Bars, Algae and Spring Water. The 🎯 milestone below lists what's still needed and where each comes from.",
+    goal: () => ({ cur: window.GS.dragon.stage >= 3 ? 1 : 0, need: 1 }),
+    reward: { reveal: ["herb_garden", "pill_furnace", "star_anvil", "talisman_atelier"] },
+    target: { area: "center", kind: "dragon" } },
+  { id: "weaver", icon: "🪢", name: "Weaver's path",
+    desc: "Build a Loom (B), then click the Loom and pick Rope (Cotton + Algae); switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth in hand. Cotton grows on the Farm — unlock it if you haven't.",
+    goal: () => ({ cur: Math.min(window.ENGINE.handCount("rope"), 2) + Math.min(window.ENGINE.handCount("cloth"), 6), need: 8 }),
+    builds: ["loom"],
+    reward: { reveal: ["meditation_pavilion"], items: { spirit_herb: 2 } },   // the Robe's herb, no Grove detour
+    target: { area: "center", kind: "building", id: "loom" } },
   { id: "cultivate", icon: "🧘", name: "Gather disciples",
-    desc: "Build a Meditation Pavilion, weave a Robe at the Loom, then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
-    goal: () => ({ cur: window.GS.stats.disciplesRecruited || 0, need: 1 }) },
+    desc: "Build a Meditation Pavilion (your first comes stocked with Spirit Buns), weave a Robe at the Loom (Cloth + Spirit Herb), then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
+    goal: () => ({ cur: window.GS.stats.disciplesRecruited || 0, need: 1 }),
+    builds: ["meditation_pavilion", "loom"],
+    target: { area: "center", kind: "building", id: "meditation_pavilion" } },
 ];
 
+// Progressive reveal of the build menu: building type -> conditions, ANY
+// satisfied reveals it. {quest:id} = that quest claimed, {region:key} =
+// region unlocked, {stage:n} = dragon stage >= n. Owning one (built by
+// the player — GS.builtTypes) also reveals it. Veterans (ascended, or the
+// chain finished) skip quest/region conditions but NOT stage ones. Types
+// with a `stageUnlock` (forge/algae_farm/herb_garden) keep that gate; types
+// with neither stay hidden (Altar/Dragon).
+const REVEAL = {
+  storehouse:          [{ quest: "wood" }],
+  gathering_stone:     [{ quest: "build" }],
+  wisp_lantern:        [{ quest: "build" }],
+  warding_seal:        [{ quest: "build" }],
+  workbench:           [{ quest: "build" }],
+  kiln:                [{ quest: "build" }],
+  paper_mill:          [{ quest: "build" }],
+  charcoal_pit:        [{ quest: "build" }],
+  infusion_array:      [{ quest: "fox" }],
+  furnace_spirit:      [{ quest: "link" }],
+  loom:                [{ region: "farm" }, { quest: "waters" }],
+  mill:                [{ region: "farm" }, { quest: "waters" }],
+  brewery:             [{ region: "farm" }, { quest: "waters" }],
+  jade_carver:         [{ region: "mine" }],
+  cauldron:            [{ region: "mine" }],
+  meditation_pavilion: [{ quest: "weaver" }, { region: "grove" }],
+  pill_furnace:        [{ stage: 3 }],
+  star_anvil:          [{ stage: 3 }],
+  talisman_atelier:    [{ stage: 3 }],
+  dragon_shrine:       [{ stage: 4 }],
+  ascension_gate:      [{ stage: 4 }],
+};
+
+// One-line "where does this come from" hint per item (milestone tracker).
+// Every ITEM_NAMES key must have one (tested). No quantities — recipe
+// numbers get rebalanced, the route doesn't.
+const SOURCES = {
+  wood: "Spirit Tree 🌳 (Center, top) + fallen logs",
+  leaves: "chop bushes 🌿 around the Altar",
+  wheat: "Farm rice plots 🌾",
+  cotton: "Farm cotton patches ☁️",
+  stone: "quarry rock ⛰️ (bottom-left) · Mine rocks",
+  clay: "clay field (Center, bottom-right) · Mine rocks",
+  sand: "Farm sand band (left side)",
+  iron_ore: "Mine ⛓️ iron veins",
+  iron_bar: "Mine ⛓️ iron veins → Forge",
+  fish: "Fishing: click surfacing koi 🐟",
+  algae: "Fishing: click surfacing algae 🪸 · Algae Farm",
+  water: "Fishing spring ⛲ (top-left)",
+  spirit_essence: "slay Fox Spirits 🦊 (top-right) · disciples",
+  spirit_herb: "Spirit Grove bushes · Herb Garden",
+  bamboo: "Spirit Tree rare drop · Spirit Grove stalks",
+  jade_shard: "Mine jade veins 🟢 · quarry rock rare drop",
+  plank: "Workbench ← Wood",
+  brick: "Kiln ← Clay",
+  paper: "Paper Mill ← Bamboo + Wood",
+  spirit_stone: "Infusion Array ← Stone + Spirit Essence",
+  tools: "Workbench ← Planks + Iron Bar",
+  glass: "Kiln ← Sand (Farm) or Obsidian",
+  spirit_jade: "Infusion Array ← Jade + Spirit Essence",
+  cloth: "Loom ← Cotton",
+  rope: "Loom ← Cotton + Algae",
+  robe: "Loom ← Cloth + Spirit Herb",
+  flour: "Mill ← Rice",
+  spirit_buns: "Mill ← Rice Flour + Spring Water",
+  spirit_wine: "Brewery ← Rice + Spring Water + Leaves",
+  qi_elixir: "Cauldron ← Spirit Herb + Water + Essence",
+  vitality_pill: "Cauldron ← Koi + Spirit Herb + Water",
+  beast_bait: "Cauldron ← Koi + Algae",
+  charcoal: "Charcoal Pit ← Wood",
+  jade: "Jade Carver ← Jade Shards",
+  firestone: "Volcano fire veins · rare in the Mine",
+  beast_bone: "Spirit Boar 🐗 (lure one with Beast Bait)",
+  star_steel: "Star Anvil ← Iron Bars + Firestone + Beast Bone",
+  ember_pill: "Pill Furnace ← Qi Elixir + Firestone",
+  verdant_pill: "Pill Furnace ← Qi Elixir + Spirit Herb",
+  swiftwind_pill: "Pill Furnace ← Qi Elixir + Cotton",
+  stoneheart_pill: "Pill Furnace ← Qi Elixir + Spirit Stone",
+  talisman: "Talisman Atelier ← Paper + Spirit Jade + Qi Elixir",
+  dragon_scale: "shed by the awakened dragon 🐉",
+  obsidian: "Volcano obsidian rocks",
+  star_fragment: "Celestial Peak star rocks ☄️",
+  moonpetal: "Celestial Peak moon shrubs 💮",
+};
+
 // How many ready nodes each automation level harvests per tick.
-const AUTOMATION_CLICKS = { 1: 1, 2: 2, 3: Infinity };
+// (ladder not cliff — L3 was Infinity, ~158k items/h at real balance)
+const AUTOMATION_CLICKS = { 1: 2, 2: 6, 3: 20 };
 
 const HAND_CAP = 20;   // max items carried in-hand at once
 
@@ -622,7 +773,7 @@ const HAND_CAP = 20;   // max items carried in-hand at once
 // ------------------------------------------------------------------
 const PERKS = [
   { id: "haste",   name: "Eternal Haste",  icon: "⚡", max: 5, cost: [1, 2, 3, 5, 8],
-    desc: "-5% to every duration in the world (regrow, batches, wisp beats). Compounds with your +8%/ascension." },
+    desc: "-5% to every timer in the world (regrow, batches, wisp beats, fields, foxes, your swings). Stacks with the +20% world speed per ascension." },
   { id: "hall",    name: "Master's Hall",  icon: "🏯", max: 5, cost: [1, 2, 3, 4, 6],
     desc: "+1 disciple capacity at every Meditation Pavilion, per level." },
   { id: "slumber", name: "Long Slumber",   icon: "🌙", max: 4, cost: [1, 2, 4, 6],
@@ -646,8 +797,31 @@ const PERKS = [
   { id: "bless",  name: "Heaven's Favor", icon: "🌠", max: 3, cost: [2, 4, 6],
     desc: "Dragon-pill blessings last +20% longer per level." },
   { id: "bounty", name: "Astral Bounty",  icon: "☄️", max: 3, cost: [2, 4, 6],
-    desc: "Passive fields (clay, stone, sand, spring water) well up 10% faster per level." },
+    desc: "Passive fields (clay, stone, wood, sand, spring water) well up 10% faster per level." },
+  // Legacy: head starts applied by ascend() to every fresh run
+  // (the genre's strongest prestige payoff is skipping the opening).
+  { id: "paths",  name: "Remembered Paths",  icon: "🗺️", max: 3, cost: [3, 6, 12],
+    desc: "Each run starts with the Mine already open; level 2 adds Fishing, level 3 the Farm." },
+  { id: "legacy", name: "Legacy Automation", icon: "🤖", max: 3, cost: [4, 8, 16],
+    desc: "Each run starts with Automation L1 in the Center; level 2 adds the Farm, level 3 the Mine (works once that region is open)." },
 ];
+
+// ------------------------------------------------------------------
+// Vows: opt-in challenge runs, chosen in the ascend modal (after the first
+// ascension) for the NEXT run. Ascending with vows active multiplies that
+// run's AP by VOW_MULT[count]; each vow's FIRST completion leaves a
+// permanent mark (x0.96 timers). Each is wired at one engine point.
+// ------------------------------------------------------------------
+const VOWS = [
+  { id: "burden",     name: "Vow of Burden",       icon: "🎒", desc: "Your hands carry half as much." },
+  { id: "coldhearth", name: "Vow of the Cold Hearth", icon: "🧊", desc: "Burners consume fuel twice as fast." },
+  { id: "restless",   name: "Vow of the Restless Dragon", icon: "🐉", desc: "Every dragon tribute is doubled." },
+  { id: "solitude",   name: "Vow of Solitude",     icon: "🕯️", desc: "The run starts without the starter wisp network." },
+];
+const VOW_MULT = [1, 1.15, 1.3, 1.5, 1.75];   // AP multiplier by active vow count
+
+// Offerings at the BUILT Ascension Gate: +1 AP each at ascension, capped.
+const GATE_OFFERINGS = { items: ["talisman", "star_steel", "dragon_scale"], cap: 6, perType: 2 };   // 2 of each type
 
 // ------------------------------------------------------------------
 // TESTING CONVENIENCES — flip ENABLED to false to restore GDD balance.
@@ -662,12 +836,13 @@ const TEST = {
 // asset version in index.html on every code change; `desc` is a one-line
 // note of what that version changed (shown as the badge's tooltip).
 const VERSION = {
-  num: 50,
-  desc: "Designer playtest fixes: unlock buttons appear only at reachable borders (Fishing was hidden under Celestial) and pulse when affordable, fuel-rack right-click feeds the burner, menus wheel-scroll, ending card shows once after the dragon speech, pills auto-front, starter clay/stone lines actually cover their fields, hand-full feedback.",
+  num: 52,
+  desc: "Design pass 2: idle loop that runs, reveal+quests, vows & legacy perks, readable logistics",
 };
 
 window.DATA = {
   ITEM_NAMES, ITEM_ICONS, TIER_SPRITES,
   AREAS, GRID, ZONES, BUILDINGS, DRAGON_STAGES, DRAGON_BUFFS, VITALITY, WORLD, AUTOMATION_CLICKS, FUEL, FUEL_CAP, FUEL_SLOTS,
-  UPGRADE_TREE, QUESTS, HAND_CAP, PERKS, TEST, VERSION,
+  UPGRADE_TREE, QUESTS, QUEST_CHAIN, REVEAL, SOURCES, HAND_CAP, PERKS, TEST, VERSION,
+  VOWS, VOW_MULT, GATE_OFFERINGS,
 };

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Idle Grounds — Prototype</title>
   <!-- ?v= busts any stale cached copies (the server also sends no-store now) -->
-  <link rel="stylesheet" href="style.css?v=50" />
+  <link rel="stylesheet" href="style.css?v=52" />
 </head>
 <body>
   <!-- Main: camera-locked world viewport -->
@@ -125,11 +125,14 @@
   <!-- Ascension Shrine: spend Ascension Points on permanent prestige perks -->
   <div id="perk-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="perk-title">
     <div class="modal-box perk-box" tabindex="-1">
-      <div class="modal-head">
-        <h2 id="perk-title">☯ Ascension Shrine</h2>
-        <button id="perk-close" class="close-btn" aria-label="Close">✕</button>
+      <!-- sticky header: title, ✕ and the AP line stay in view while the list scrolls -->
+      <div id="perk-head" style="position:sticky;top:-18px;z-index:3;background:var(--bg-2);margin:-18px -18px 0;padding:18px 18px 0">
+        <div class="modal-head">
+          <h2 id="perk-title">☯ Ascension Shrine</h2>
+          <button id="perk-close" class="close-btn" aria-label="Close">✕</button>
+        </div>
+        <p id="perk-ap-line"></p>
       </div>
-      <p id="perk-ap-line"></p>
       <div id="perk-list"></div>
     </div>
   </div>
@@ -140,10 +143,19 @@
       <div class="dragon-ico">🌙</div>
       <h2 id="welcome-title">Welcome back</h2>
       <p id="welcome-away"></p>
+      <div id="welcome-progress" class="hidden">
+        <div class="wp-bar"><div class="wp-fill"></div></div>
+        <div class="wp-label" aria-live="polite">Catching up… 0%</div>
+        <button id="welcome-skip" class="wp-skip">Skip</button>
+      </div>
       <div id="welcome-gains"></div>
+      <div id="welcome-why"></div>
       <button id="welcome-close" class="build-card">Continue ▶</button>
     </div>
   </div>
+
+  <!-- Short-absence welcome-back line (90s–10min away): fades out on its own -->
+  <div id="offline-toast" class="hidden" role="status" aria-live="polite"></div>
 
   <!-- Ending: the Sleeping Dragon fully awakens (GS.won) -->
   <div id="ending-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="ending-title">
@@ -167,11 +179,11 @@
     </div>
   </div>
 
-  <script src="js/data.js?v=50"></script>
-  <script src="js/state.js?v=50"></script>
-  <script src="js/audio.js?v=50"></script>
-  <script src="js/engine.js?v=50"></script>
-  <script src="js/ui.js?v=50"></script>
-  <script src="js/main.js?v=50"></script>
+  <script src="js/data.js?v=52"></script>
+  <script src="js/state.js?v=52"></script>
+  <script src="js/audio.js?v=52"></script>
+  <script src="js/engine.js?v=52"></script>
+  <script src="js/ui.js?v=52"></script>
+  <script src="js/main.js?v=52"></script>
 </body>
 </html>

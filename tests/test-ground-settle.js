@@ -30,19 +30,21 @@ function boot(testMode) {
 }
 
 // Reference = the pre-fix O(n^2) settleGround, verbatim math (MIN 18).
+// Returns VISIBLE pushes only (> 0.05px — sub-pixel jitter doesn't repaint).
 function refSettle(items, PLAY_PX) {
   const clampPx = v => Math.max(4, Math.min(PLAY_PX - 4, v));
-  const MIN = 18; let moves = 0;
+  const MIN = 18; let moves = 0, pushed = 0;
   for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
     const a = items[i], b = items[j];
     let dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy);
     if (d < 0.01) throw new Error("reference hit random branch — layout must avoid coincident items");
     if (d < MIN) {
       const push = (MIN - d) / 2, ux = dx / d, uy = dy / d;
-      a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push; moves++;
+      a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
+      pushed++; if (push > 0.05) moves++;
     }
   }
-  if (moves) for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
+  if (pushed) for (const it of items) { it.x = clampPx(it.x); it.y = clampPx(it.y); }
   return moves;
 }
 
@@ -55,12 +57,14 @@ const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
   const s = boot(true), E = s.ENGINE, area = s.GS.areas.center;
   area.ground = [];
   const firstId = area.nextGroundId;
-  E.dropGround("center", "stone", 800, 500, 500);          // one bulk call
+  // v52 fix wave: a call never evicts its OWN items (only the 900 hard
+  // ceiling can) — one bulk call of 1000 keeps its newest 900
+  E.dropGround("center", "stone", 1000, 500, 500);         // one bulk call
   const ids = area.ground.map(g => g.id);
-  const want = Array.from({ length: 600 }, (_, k) => firstId + 200 + k);
-  check("cap: bulk drop of 800 leaves 600", area.ground.length === 600, "len=" + area.ground.length);
-  check("cap: bulk survivors are the NEWEST 600 ids, in order", JSON.stringify(ids) === JSON.stringify(want),
-    "first=" + ids[0] + " last=" + ids[ids.length - 1] + " want " + want[0] + ".." + want[599]);
+  const want = Array.from({ length: 900 }, (_, k) => firstId + 100 + k);
+  check("cap: bulk drop of 1000 keeps 900 (hard ceiling; a call never evicts its own below it)", area.ground.length === 900, "len=" + area.ground.length);
+  check("cap: bulk survivors are the NEWEST 900 ids, in order", JSON.stringify(ids) === JSON.stringify(want),
+    "first=" + ids[0] + " last=" + ids[ids.length - 1] + " want " + want[0] + ".." + want[899]);
 
   area.ground = [];
   const f2 = area.nextGroundId;
@@ -167,7 +171,9 @@ const rnd = () => ((seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296);
   check("offline: returns a summary { elapsedMs, gained }", !!r && Number.isFinite(r.elapsedMs) && r.elapsedMs > 0 &&
     typeof r.gained === "object" && Object.keys(r.gained).length > 0,
     r ? "elapsedMs=" + r.elapsedMs + " items=" + Object.keys(r.gained).length : "null");
-  check("offline: every area ground <= 600", ground.every(n => n <= 600), "ground=" + JSON.stringify(ground));
+  // v52: 600 is the soft cap; eviction-protected (crafted/rare) items may
+  // push an area up to the 900 hard ceiling
+  check("offline: every area ground <= 900 (hard ceiling)", ground.every(n => n <= 900), "ground=" + JSON.stringify(ground));
 }
 
 console.log(fails ? `\n${fails} FAILED` : "\nALL PASS");

@@ -21,8 +21,9 @@ then open http://localhost:5174 (or just double-click `index.html`).
 
 | Input | Action |
 |---|---|
-| Left click / hold | Harvest, attack, vacuum items, withdraw from storehouse |
-| Right click / hold | Drop items / feed buildings, the Altar and the Dragon |
+| Left click / hold | Harvest, attack, vacuum items (holding on an item vacuums only that type), withdraw from storehouse |
+| Right click / hold | Drop items / feed buildings, the Altar and the Dragon (holding stops once the target is satisfied) |
+| Q / E | Rotate the hand (cycle carried stacks) |
 | WASD | Pan the camera (Shift toggles 2× sprint) |
 | Mouse wheel | Zoom 1×–3× |
 | B | Build menu |

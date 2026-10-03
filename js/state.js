@@ -13,7 +13,7 @@ function makeAreaState() {
     spawnQueue: [],   // { at, kind } respawns pending per spawner
     genTimers: [],    // next-spawn time per generator
     enemies: [],      // roaming beasts       {id,x,y,hp,maxHp,tx,ty,hitAt}
-    enemyRespawnAt: 0,
+    enemyRespawns: [],  // per-slot fox respawn due-times (one per missing fox)
     wisps: [],        // items in flight      {id,x,y,item,toId}
     nextNodeId: 1,
     nextGroundId: 1,
@@ -41,6 +41,9 @@ function makeInitialState() {
       // One continuous map; regions are visible but the camera can't pan into
       // a region until it's unlocked at its border button.
       unlocked: { center: true, farm: false, mine: false, fishing: false, volcano: false, grove: false, celestial: false },
+      // Region unlocks are paid in installments: { region: { item: qty } }
+      // paid so far toward a still-locked region (kept until it opens).
+      unlockPaid: {},
     },
     build: { open: false, placing: null },  // build menu state (transient)
     // The Center building's active upgrade project:
@@ -52,17 +55,24 @@ function makeInitialState() {
     dragon: { stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null },
     starterPlaced: false,   // the pre-wired wisp demo network (built once)
     won: false,
+    dragonBlessed: false,   // the awakened dragon's permanent blessing survives ascension
     // Active dragon-pill blessing: { kind: <pill item id>, until: ts }.
     buff: null,
     // Active Vitality Pill combat buff (Martial Vigor): { until: ts }.
     combatBuff: null,
-    // Prestige: completed Ascensions grant +8% global speed each (kept
-    // across the reset). ascendPrompt shows the Ascension Gate dialog.
+    // Prestige: completed Ascensions grant +20% world speed each, additive
+    // (kept across the reset). ascendPrompt shows the Ascension Gate dialog.
     ascensions: 0,
     ascendPrompt: false,
     // Prestige currency + permanent perks (persist across every Ascension).
     ascendPoints: 0,
     perks: {},              // { perkId: level }
+    // Vows (challenge runs): active = this run's vow ids; done = { vowId:
+    // times completed } (a first completion is a permanent timer mark).
+    vows: { active: [], done: {} },
+    // Set by ascend(): { n, ap, speedFrom, speedTo } — the one-time
+    // "Ascension n complete" card on the next load; cleared on dismiss.
+    justAscended: null,
     // First-run onboarding: show the intro once (existing saves count as seen).
     introSeen: false,
     endingSeen: false,           // the awakening ending card has been shown (persisted)
@@ -70,10 +80,24 @@ function makeInitialState() {
     // map layout on load (see the migration in loadState).
     gridCells: window.DATA.GRID.cells,
     // Tutorial quest chain: idx = current quest, hidden = panel collapsed.
-    quest: { idx: 0, hidden: false },
+    // chain = which QUESTS layout idx indexes (DATA.QUEST_CHAIN) — an older
+    // chain's idx is remapped by quest id on load.
+    quest: { idx: 0, hidden: false, chain: window.DATA.QUEST_CHAIN },
+    // Progressive build-menu reveal (see DATA.REVEAL): types the PLAYER has
+    // built (owning one keeps it revealed), and per-type "seen" level for
+    // the 'new' badges — 1 = listed in an opened menu (clears the Build
+    // button dot), 2 = hovered (clears the card badge).
+    builtTypes: {},
+    buildSeen: {},
+    pavilionSeeded: false,  // the first Meditation Pavilion came stocked with buns
+    perkShopSeen: false,    // the Ascension Shrine was opened this run (tracker hint)
     // Wall-clock of the last save — offline catch-up (engine) replays the
     // passive economy for the gap since this on the next load.
     lastSeen: Date.now(),
+    // The ORIGINAL away start while an offline replay is unfinished (a tab
+    // closed mid-replay resumes it), so the resumed summary shows the real
+    // gap. null = no replay pending. Set/cleared by the engine.
+    offlineAwayFrom: null,
     stats: { started: Date.now(), totalGathered: 0, totalCrafted: 0,
              foxKills: 0, buildingsBuilt: 0, upgradesApplied: 0,
              linksAdded: 0, recipeSwitches: 0, disciplesRecruited: 0 },
@@ -88,12 +112,22 @@ const SAVE_KEY = "idle-grounds-save-v1";
 // beforeunload autosave instantly re-writes the state we just wiped.
 let saveDisabled = false;
 
+// Transient runtime fields never reach a save: any "_"-prefixed key (e.g.
+// b._crafts, link._stat) plus the ground grace stamp and automation pause.
+function transientReplacer(k, v) {
+  return (k[0] === "_" || k === "manualAt" || k === "autoPaused") ? undefined : v;
+}
+
 function saveState() {
   if (saveDisabled) return false;
   try {
-    const s = JSON.parse(JSON.stringify(window.GS));
+    const s = JSON.parse(JSON.stringify(window.GS, transientReplacer));
     s.build = { open: false, placing: null };   // never persist UI mode
-    s.lastSeen = Date.now();                     // for offline catch-up on reload
+    // for offline catch-up on reload — mid-replay (a tab closed while the
+    // catch-up is still running) stamp the resume point instead, so the
+    // unsimulated remainder replays next load rather than being lost
+    const resume = window.ENGINE && window.ENGINE.offlineResumeAt ? window.ENGINE.offlineResumeAt() : null;
+    s.lastSeen = Number.isFinite(resume) ? resume : Date.now();
     localStorage.setItem(SAVE_KEY, JSON.stringify(s));
     return true;
   } catch (e) { return false; }
@@ -122,7 +156,18 @@ function loadState() {
     if (s.upgradeJob) fresh.upgradeJob = s.upgradeJob;
     if (s.dragon) fresh.dragon = Object.assign({ stage: 0, paid: {}, msg: null, msgUntil: 0, dialog: null }, s.dragon);
     Object.assign(fresh.world.unlocked, s.world.unlocked || {});
+    // unlock installments: known, still-locked regions; live items only
+    // (the item filter runs below, once LIVE is known)
+    const sup = (s.world.unlockPaid && typeof s.world.unlockPaid === "object") ? s.world.unlockPaid : {};
+    for (const r of Object.keys(sup)) {
+      if (!window.DATA.AREAS[r] || fresh.world.unlocked[r] || !sup[r] || typeof sup[r] !== "object") continue;
+      const m = {};
+      for (const it of Object.keys(sup[r]))
+        if (Number.isFinite(sup[r][it]) && sup[r][it] > 0) m[it] = Math.floor(sup[r][it]);
+      if (Object.keys(m).length) fresh.world.unlockPaid[r] = m;
+    }
     fresh.won = !!s.won;
+    fresh.dragonBlessed = s.dragonBlessed !== undefined ? !!s.dragonBlessed : !!s.won;
     fresh.starterPlaced = !!s.starterPlaced;
     if (s.buff && Number.isFinite(s.buff.until) && window.DATA.DRAGON_BUFFS[s.buff.kind])
       fresh.buff = s.buff;
@@ -135,6 +180,19 @@ function loadState() {
     fresh.endingSeen = s.endingSeen !== undefined ? !!s.endingSeen : !!s.won;
     // prestige currency + perks: carry, clamping each perk to its config max
     fresh.ascendPoints = Number.isFinite(s.ascendPoints) ? s.ascendPoints : 0;
+    // vows: keep only known ids (deduped), finite completion counts
+    const VOWIDS = new Set((window.DATA.VOWS || []).map(v => v.id));
+    const sv = (s.vows && typeof s.vows === "object") ? s.vows : {};
+    fresh.vows = {
+      active: Array.isArray(sv.active) ? sv.active.filter((id, i, arr) => VOWIDS.has(id) && arr.indexOf(id) === i) : [],
+      done: {},
+    };
+    if (sv.done && typeof sv.done === "object")
+      for (const id of Object.keys(sv.done))
+        if (VOWIDS.has(id) && Number.isFinite(sv.done[id]) && sv.done[id] > 0) fresh.vows.done[id] = Math.floor(sv.done[id]);
+    const ja = s.justAscended;
+    fresh.justAscended = (ja && Number.isFinite(ja.n) && Number.isFinite(ja.ap)
+      && Number.isFinite(ja.speedFrom) && Number.isFinite(ja.speedTo)) ? ja : null;
     fresh.perks = {};
     if (s.perks && typeof s.perks === "object")
       for (const perk of window.DATA.PERKS) {
@@ -143,10 +201,49 @@ function loadState() {
       }
     // null on pre-catch-up saves -> engine skips offline sim (no false credit)
     fresh.lastSeen = Number.isFinite(s.lastSeen) ? s.lastSeen : null;
+    // original away start of an interrupted replay (older saves: none)
+    fresh.offlineAwayFrom = (Number.isFinite(s.offlineAwayFrom) && Number.isFinite(fresh.lastSeen)
+      && s.offlineAwayFrom < fresh.lastSeen) ? s.offlineAwayFrom : null;
     // merge stats/quest onto defaults so counters added later start at 0
     if (s.stats) Object.assign(fresh.stats, s.stats);
+    // quest idx indexes the chain it was saved under: an older chain (no
+    // stamp) is remapped by quest id. Two unstamped chains exist: v51 (13
+    // quests) always serialised dragonBlessed, v50/master (11) never did.
+    // An unstamped veteran (ascended or won) is past any tutorial -> the end.
+    const legacyChain = !s.quest || s.quest.chain !== window.DATA.QUEST_CHAIN;
     if (s.quest) Object.assign(fresh.quest, s.quest);
-    fresh.quest.idx = Math.max(0, Math.min(fresh.quest.idx || 0, window.DATA.QUESTS.length));
+    fresh.quest.chain = window.DATA.QUEST_CHAIN;
+    const qIdx0 = Number.isFinite(fresh.quest.idx) ? fresh.quest.idx : 0;
+    const legacyVet = (Number.isFinite(s.ascensions) && s.ascensions > 0) || !!s.won;
+    fresh.quest.idx = !legacyChain ? Math.max(0, Math.min(qIdx0, window.DATA.QUESTS.length))
+      : legacyVet ? window.DATA.QUESTS.length
+      : remapLegacyQuestIdx(qIdx0, s.dragonBlessed === undefined ? QUEST_IDS_V50 : QUEST_IDS_V51);
+    // build-menu reveal: pre-v52 saves saw every card, so nothing badges as
+    // 'new' and every type the PLAYER already built stays revealed. Game-
+    // placed starter buildings (tagged b.starter since v52; inferred on old
+    // saves from the known starter layouts) and unbuilt ghosts don't count —
+    // an early-chain save keeps the progressive reveal.
+    const B = window.DATA.BUILDINGS;
+    fresh.builtTypes = {}; fresh.buildSeen = {};
+    if (s.builtTypes && typeof s.builtTypes === "object") {
+      for (const t of Object.keys(s.builtTypes)) if (B[t] && s.builtTypes[t]) fresh.builtTypes[t] = true;
+    } else {
+      if (s.starterPlaced && s.areas && s.areas.center) inferStarterTags(s.areas.center.buildings);
+      if (!(s.stats && s.stats.buildingsBuilt === 0))   // 0 = the player never finished one
+        for (const k of Object.keys(s.areas || {}))
+          for (const b of (s.areas[k] && s.areas[k].buildings) || [])
+            if (b && b.built && !b.starter && B[b.type]) fresh.builtTypes[b.type] = true;
+    }
+    if (s.buildSeen && typeof s.buildSeen === "object") {
+      for (const t of Object.keys(s.buildSeen))
+        if (B[t] && Number.isFinite(s.buildSeen[t]) && s.buildSeen[t] > 0) fresh.buildSeen[t] = Math.min(2, s.buildSeen[t]);
+    } else for (const t of Object.keys(B)) fresh.buildSeen[t] = 2;
+    // pavilion bun seed is once per RUN (ascend() re-arms it): a save that
+    // already has a built pavilion (or recruited disciples) never gets it
+    fresh.pavilionSeeded = s.pavilionSeeded !== undefined ? !!s.pavilionSeeded
+      : (fresh.stats.disciplesRecruited || 0) > 0 || Object.keys(s.areas || {}).some(k =>
+          ((s.areas[k] && s.areas[k].buildings) || []).some(b => b && b.built && B[b.type] && B[b.type].roster));
+    fresh.perkShopSeen = !!s.perkShopSeen;
 
     // ---- migration: scrub content that no longer exists in the game ----
     // (old saves may hold removed node kinds, tiers and item types)
@@ -158,7 +255,14 @@ function loadState() {
     const regrid = s.gridCells !== window.DATA.GRID.cells;
     for (const k of Object.keys(fresh.areas)) {
       const a = fresh.areas[k];
-      if (regrid) { a.nodes = []; a.spawnQueue = []; a.enemies = []; a.genTimers = []; }
+      // fox respawn went per-slot: the old shared enemyRespawnAt becomes one
+      // pending slot clock (the tick fills any other missing slot at once)
+      // (read the RAW save: the merge above already defaulted the field)
+      if (!Array.isArray(s.areas[k] && s.areas[k].enemyRespawns))
+        a.enemyRespawns = Number.isFinite(a.enemyRespawnAt) && a.enemyRespawnAt > 0 ? [a.enemyRespawnAt] : [];
+      a.enemyRespawns = a.enemyRespawns.filter(Number.isFinite);
+      delete a.enemyRespawnAt;
+      if (regrid) { a.nodes = []; a.spawnQueue = []; a.enemies = []; a.genTimers = []; a.enemyRespawns = []; }
       const cfg = window.DATA.AREAS[k];
       const spKinds = new Set((cfg.spawners || []).map(sp => sp.kind));
       const fxKinds = new Set((cfg.fixtures || []).map(fx => fx.kind));
@@ -172,6 +276,23 @@ function loadState() {
       a.spawnQueue = (a.spawnQueue || []).filter(e => spKinds.has(e.kind));
       a.buildings = (a.buildings || []).filter(b =>
         window.DATA.BUILDINGS[b.type] && Number.isFinite(b.row) && Number.isFinite(b.col));
+      // config-owned node fields follow the CURRENT config (e.g. the v52
+      // 350ms fixture swing reaches v51 saves): fixtures by kind, spawner
+      // nodes by spawnerKind
+      const fxBy = {}, spBy = {};
+      for (const fx of cfg.fixtures || []) fxBy[fx.kind] = fx;
+      for (const sp of cfg.spawners || []) spBy[sp.kind] = sp;
+      for (const n of a.nodes) {
+        if (n.fixed && fxBy[n.kind]) {
+          const fx = fxBy[n.kind];
+          n.swingMs = fx.swingMs || 1000; n.sprite = fx.sprite || "⛰️";
+          n.clicksPerDrop = fx.clicksPerDrop; n.dropItem = fx.drop;
+          n.dropMin = fx.dropMin; n.dropMax = fx.dropMax; n.rareDrop = fx.rareDrop || null;
+        } else if (!n.fixed && spBy[n.spawnerKind]) {
+          const sp = spBy[n.spawnerKind];
+          n.swingMs = sp.swingMs || 350; n.sprite = sp.sprite || null;
+        }
+      }
       for (const n of a.nodes) {
         if (n.tier !== 1) {                      // high-tier node -> base type
           n.tier = 1;
@@ -180,6 +301,10 @@ function loadState() {
         }
       }
       a.ground = (a.ground || []).filter(g => LIVE.has(g.item) && Number.isFinite(g.x) && Number.isFinite(g.y));
+      // ground tags: `crafted` (eviction-protected building product) is kept
+      // as a boolean; the player-drop grace stamp is transient — never loaded
+      for (const g of a.ground) { delete g.manualAt; if (g.crafted) g.crafted = true; else delete g.crafted; if (g.gen && !g.crafted) g.gen = true; else delete g.gen; }
+      delete a.autoPaused;                       // transient automation pause flag
       a.enemies = (a.enemies || []).filter(en =>
         Number.isFinite(en.x) && Number.isFinite(en.y) && Number.isFinite(en.hp) && en.hp > 0);
       a.wisps = (a.wisps || []).filter(w =>
@@ -198,8 +323,36 @@ function loadState() {
           (a.buildings || []).some(x => x.id === l.to));
       }
       for (const b of a.buildings || []) {
+        if (b.starter) b.starter = true; else delete b.starter;          // game-placed starter tag
         if (b.item && !LIVE.has(b.item)) { b.item = null; b.qty = 0; }   // storehouse contents
         if (b.paid) for (const it of Object.keys(b.paid)) if (!LIVE.has(it)) delete b.paid[it];
+        // Ascension Gate offerings: per item in b.offered (each type capped
+        // at perType, total at cap); b.offerings mirrors the total. A pre-
+        // per-item save only kept a count: attribute it to dragon scales
+        // first (the fastest to farm), then star steel, then talismans.
+        if (window.DATA.BUILDINGS[b.type].gate && (b.offerings !== undefined || b.offered !== undefined)) {
+          const G = window.DATA.GATE_OFFERINGS || { items: ["talisman", "star_steel", "dragon_scale"], cap: 6 };
+          const per = G.perType || G.cap;
+          const src = (b.offered && typeof b.offered === "object") ? b.offered : null;
+          const off = {};
+          let total = 0;
+          if (src) {
+            for (const it of G.items) {
+              const q = Number.isFinite(src[it]) ? Math.max(0, Math.min(per, Math.floor(src[it]), G.cap - total)) : 0;
+              if (q > 0) { off[it] = q; total += q; }
+            }
+          } else {
+            let n = Number.isFinite(b.offerings) ? Math.max(0, Math.min(G.cap, Math.floor(b.offerings))) : 0;
+            const by = {};
+            for (const it of G.items.slice().reverse()) {
+              const q = Math.min(per, n);
+              if (q > 0) { by[it] = q; total += q; n -= q; }
+            }
+            for (const it of G.items) if (by[it]) off[it] = by[it];   // stable key order (idempotent)
+          }
+          b.offered = off;
+          b.offerings = total;
+        }
         // meditation pavilion: keep disciple/bun counters finite
         if (window.DATA.BUILDINGS[b.type].roster) {
           if (!Number.isFinite(b.disciples) || b.disciples < 0) b.disciples = 0;
@@ -255,11 +408,80 @@ function loadState() {
     if (fresh.upgradeJob && (!fresh.upgradeJob.needs || fresh.upgradeJob.item))
       fresh.upgradeJob = null;
     for (const it of Object.keys(fresh.dragon.paid || {})) if (!LIVE.has(it)) delete fresh.dragon.paid[it];
+    for (const r of Object.keys(fresh.world.unlockPaid)) {
+      const m = fresh.world.unlockPaid[r];
+      for (const it of Object.keys(m)) if (!LIVE.has(it)) delete m[it];
+      if (!Object.keys(m).length) delete fresh.world.unlockPaid[r];
+    }
     return fresh;
   } catch (e) { return null; }
 }
 
+// The unstamped (pre-v52) quest chains, in order: an old idx means "quests
+// [0, idx) claimed". Map to the new chain as the slot just after the LATEST
+// claimed quest that still exists — never back past a completed quest
+// (inserted new quests before it are skipped); a finished chain stays
+// finished. v50 = master (11 quests), v51 = the experimental branch (13).
+const QUEST_IDS_V50 = ["wood", "leaves", "dragon1", "fox", "build", "upgrade", "link",
+  "recipe", "craft", "explore", "cultivate"];
+const QUEST_IDS_V51 = ["wood", "leaves", "dragon1", "fox", "build", "upgrade", "link",
+  "recipe", "craft", "explore", "waters", "weaver", "cultivate"];
+function remapLegacyQuestIdx(oldIdx, chainIds) {
+  const old = chainIds || QUEST_IDS_V51;
+  const ids = window.DATA.QUESTS.map(q => q.id);
+  const o = Math.max(0, Math.min(Math.floor(oldIdx) || 0, old.length));
+  if (o >= old.length) return ids.length;
+  let idx = 0;
+  for (let i = 0; i < o; i++) { const j = ids.indexOf(old[i]); if (j >= 0) idx = Math.max(idx, j + 1); }
+  return Math.min(idx, ids.length);
+}
+// Every (type@row,col) the starter network was ever aimed at in the Center
+// (v36..v52 layouts + the later converter-row sinks) — old saves carry no b.starter tag, so the builtTypes
+// migration infers it from these spots. findSpot nudges a starter building
+// off a cell a random node took, so a building within 3 cells of an unused
+// spot of its type (lowest ids first — the network was placed at game
+// start) counts as that starter.
+function inferStarterTags(buildings) {
+  if (!Array.isArray(buildings)) return;
+  const spots = [...LEGACY_STARTER_SPOTS].map(k => {
+    const [type, rc] = k.split("@"), [r, c] = rc.split(",").map(Number);
+    return { type, r, c, used: false };
+  });
+  const list = buildings.filter(b => b && b.built && Number.isFinite(b.row) && Number.isFinite(b.col))
+    .sort((a, b) => (a.id || 0) - (b.id || 0));
+  for (const b of list) {
+    if (b.starter) continue;
+    let best = null, bd = 4;
+    for (const sp of spots) {
+      if (sp.used || sp.type !== b.type) continue;
+      const d = Math.max(Math.abs(sp.r - b.row), Math.abs(sp.c - b.col));
+      if (d < bd) { bd = d; best = sp; }
+    }
+    if (best) { best.used = true; b.starter = true; }
+  }
+}
+const LEGACY_STARTER_SPOTS = new Set([
+  // v46..v52 (93-cell grid)
+  "forge@55,30", "workbench@55,36", "paper_mill@55,42", "kiln@55,48", "infusion_array@55,54",
+  "storehouse@78,27", "storehouse@26,44", "storehouse@83,27",
+  "gathering_stone@80,13", "gathering_stone@80,18", "gathering_stone@16,44", "gathering_stone@80,80",
+  "gathering_stone@80,73", "gathering_stone@12,80",
+  "warding_seal@74,22", "warding_seal@30,44",
+  "wisp_lantern@76,20", "wisp_lantern@22,44", "wisp_lantern@52,58",
+  // converter-row sinks (plank / brick / spirit-stone stores; design pass) — always
+  // tagged at placement; listed so a tag-stripped save still infers them
+  "gathering_stone@61,43", "gathering_stone@61,55", "storehouse@63,36", "storehouse@63,45",
+  "storehouse@63,57", "wisp_lantern@62,51",
+  // pre-v46 (75-cell grid)
+  "forge@52,26", "workbench@52,31", "paper_mill@52,36", "kiln@52,41", "infusion_array@52,46",
+  "storehouse@56,28", "storehouse@56,34", "storehouse@60,26", "storehouse@26,36",
+  "gathering_stone@62,18", "gathering_stone@16,33", "gathering_stone@62,56", "gathering_stone@12,62",
+  "warding_seal@58,22", "warding_seal@30,36",
+  "wisp_lantern@60,20", "wisp_lantern@22,36", "wisp_lantern@44,52",
+]);
+
 function clearSave() { saveDisabled = true; try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 
-window.SAVE = { saveState, loadState, clearSave, fresh: makeInitialState, KEY: SAVE_KEY };
+window.SAVE = { saveState, loadState, clearSave, fresh: makeInitialState, KEY: SAVE_KEY, remapLegacyQuestIdx,
+  QUEST_IDS_V50, QUEST_IDS_V51 };
 window.GS = loadState() || makeInitialState();

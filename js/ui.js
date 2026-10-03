@@ -40,7 +40,7 @@ const PICKUP_R = G.cell * 2;   // gravity-field radius while holding left = 2 ce
 const C = {
   void: "#161b16", gridLine: "rgba(255,255,255,.05)",
   text: "#e6edf3", muted: "#94a3b8", accent: "#4ade80", accentDk: "#22a35a",
-  gold: "#fbbf24", danger: "#f87171", line: "#3c4651", panel: "#2b333c", panel2: "#37414d",
+  gold: "#fbbf24", amber: "#f59e0b", danger: "#f87171", line: "#3c4651", panel: "#2b333c", panel2: "#37414d",
   region: { center: "#25351f", farm: "#3a3318", mine: "#2c2c33", fishing: "#16323b", volcano: "#3a1c17", grove: "#1e3a2b", celestial: "#231d40" },
   zone: "rgba(74,222,128,.05)", zoneEdge: "rgba(74,222,128,.18)",
   frame: "rgba(74,222,128,.30)",
@@ -123,15 +123,18 @@ function drawFX(now, X, Y, s) {
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
   for (const f of floaters) {
     const age = now - f.t0, k = age / f.ttl;
-    const alpha = k < 0.12 ? k / 0.12 : 1 - (k - 0.12) / 0.88;
+    const alpha = age < 400 ? Math.min(1, age / 60) : Math.max(0, 1 - (age - 400) / Math.max(1, f.ttl - 400));   // full alpha ~400 ms, then fade
     const sx = X(f.x), sy = Y(f.y - k * 30);    // drift upward over its life
     ctx.globalAlpha = Math.max(0, alpha);
     const isz = 15 * s;
     if (f.item) drawItemIcon(f.item, sx, sy, isz);
     ctx.fillStyle = f.color;
     ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
-    ctx.shadowColor = "rgba(0,0,0,.6)"; ctx.shadowBlur = 3 * s;
-    ctx.fillText(f.text, sx + isz * 0.62, sy);
+    const tx = sx + isz * 0.62;
+    ctx.lineJoin = "round"; ctx.lineWidth = Math.max(2, 3.5 * s);
+    ctx.strokeStyle = "rgba(8,10,14,.85)"; ctx.strokeText(f.text, tx, sy);   // dark halo
+    ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 4 * s;
+    ctx.fillText(f.text, tx, sy);
     ctx.shadowBlur = 0;
   }
   ctx.globalAlpha = 1;
@@ -215,11 +218,27 @@ let lastErrBuzz = 0;      // throttle the held right-click rejection buzz
 let lastWithdrawErr = 0;  // throttle the empty-withdraw rejection buzz
 let lastFullBuzz = 0;     // throttle the "Hand full" pickup floater + buzz
 function handFullNudge(region, lx, ly) {
-  if (Date.now() - lastFullBuzz < 900) return;
+  if (Date.now() - lastFullBuzz < 900) return false;
   lastFullBuzz = Date.now();
   if (window.AUDIO) window.AUDIO.play("error");
   const rp = regionPx(region); addFloater(rp.x + lx, rp.y + ly - 8, "Hand full", C.danger);
+  return true;
 }
+// Right-hold latch. A hold that BEGAN on a building (ghost, converter,
+// Altar, dragon, gate...) only ever feeds THAT building -- it never falls
+// through to ground drops -- and stops for good once the ghost completes or
+// the target refuses. A hold that began on open ground drops 1, then (after
+// GROUND_REPEAT_MS) repeats only until the FRONT stack runs out.
+let holdTarget = null;    // { region, id, wasBuilt } while a feed-hold is latched
+let holdDone = false;     // latched feed-hold finished: ignore the rest of it
+let holdFront = null;     // ground-hold: the front stack's item being dropped
+const GROUND_REPEAT_MS = 400;
+let suckFilter = null;    // left-hold vacuum type-lock (item key) or null = any
+const LOCK_R = G.cell * 0.75;   // a hold starting this close to an item locks to its type
+const EDGE_PICK_PX = 10;        // clicks this close to a building edge prefer vacuuming...
+const EDGE_PICK_FRAC = 0.15;    // ...capped at 15% of the footprint's smaller side
+const EDGE_ITEM_PX = 14;        // ...and only with a loose item right at the click
+const fixtureHitAt = new Map(); // "region:id" -> last counted swing on a fixture
 const CLICK_COOLDOWN = 100;   // ms — max ~10 real manual clicks / second
 let lastClickAt = 0;
 
@@ -285,6 +304,7 @@ function fitViewport() {
   vp.style.height = (renderedW * VIEW_ASPECT) + "px";
   sizeCanvas();
   requestGridPaint();
+  positionUnlockButtons();
   if (upgradesOpen) { sizeTreeCanvas(); drawTree(); }
 }
 function sizeCanvas() {
@@ -377,7 +397,9 @@ function requestGridPaint() {
   requestAnimationFrame(() => {
     drawQueued = false;
     drawWorld();
+    syncUnlockButtons();
     if (animActive()) requestGridPaint();
+    else if (gateOnScreen()) scheduleSlowPaint();
   });
 }
 
@@ -426,6 +448,10 @@ function animActive() {
       if ((bd.inv || []).reduce((s, x) => s + x.qty, 0) >= g.cap) continue;   // full: no pulls
       const c = E.buildingCenterPx(bd), R = g.radius * CELL;
       for (const gi of window.GS.areas[key].ground) {
+        // only items the engine actually pulled this moment (it stamps _pullAt
+        // on the ticks it moves them) — a stone that rejects nearby items
+        // (link-aware filter) must not force 60 idle redraws/s
+        if (!gi._pullAt || now - gi._pullAt >= 200) continue;
         const d = Math.hypot(c.x - gi.x, c.y - gi.y);
         if (d > 22 && d <= R) return true;   // early-out on first in-ring item
       }
@@ -437,10 +463,35 @@ function animActive() {
   if (window.GS.buff && window.GS.buff.until > now) return true;
   if (window.GS.combatBuff && window.GS.combatBuff.until > now) return true;
   if (fxActive()) return true;   // floating +N numbers / spark bursts in flight
+  if (questRingOnScreen()) return true;   // the quest target ring pulses while visible
   return false;
 }
+// The built Ascension Gate's gold pulse is a SLOW animation: it repaints about
+// every GATE_PULSE_MS (not every frame) while the gate is on screen.
+const GATE_PULSE_MS = 150;
+function gateOnScreen() {
+  const fr = 2 * CELL;
+  const l = cam.x - fr, t = cam.y - fr, r = cam.x + VIEW_W + fr, b = cam.y + VIEW_H + fr;
+  for (const key of Object.keys(DD.WORLD.regions)) {
+    if (!E.isAreaUnlocked(key)) continue;
+    const p = regionPx(key);
+    if (p.x > r || p.x + PLAY_W < l || p.y > b || p.y + PLAY_W < t) continue;
+    for (const bd of window.GS.areas[key].buildings) {
+      if (!bd.built || !DD.BUILDINGS[bd.type].gate) continue;
+      const bs = E.buildingSize(bd.type);
+      const bx = bd.col * CELL + p.x, by = bd.row * CELL + p.y;
+      if (bx < r && bx + bs.w * CELL > l && by < b && by + bs.h * CELL > t) return true;
+    }
+  }
+  return false;
+}
+let slowPaintTimer = 0;
+function scheduleSlowPaint() {
+  if (slowPaintTimer) return;
+  slowPaintTimer = setTimeout(() => { slowPaintTimer = 0; requestGridPaint(); }, GATE_PULSE_MS);
+}
 // Tick gate: repaint on "idle" ticks only when something animated is visible.
-function needsLiveRepaint() { return animActive(); }
+function needsLiveRepaint() { return animActive(); }   // the gate pulse is NOT here: it self-chains via scheduleSlowPaint (150 ms), not every 50 ms tick
 
 // ---- top bar --------------------------------------------------
 function renderTopBar() {
@@ -448,7 +499,8 @@ function renderTopBar() {
   const a = key ? DD.AREAS[key] : null;
   $("#area-name").innerHTML = (a ? `${a.icon} ${a.name}${E.isAreaUnlocked(key) ? "" : " 🔒"}` : "🌫️ Wilds")
     + (sprint ? ` <span class="sprint-tag">🏃2×</span>` : "")
-    + ((window.GS.ascensions || 0) > 0 ? ` <span class="sprint-tag">☯${window.GS.ascensions}</span>` : "");
+    + ((window.GS.ascensions || 0) > 0 ? ` <span class="sprint-tag">☯${window.GS.ascensions}</span>` : "")
+    + vowChipHTML();
   const hTot = E.handTotal(), hCap = E.handCap(), hp = $("#hand-count");
   hp.textContent = `${hTot}/${hCap}`;
   const pill = hp.closest(".hand-pill") || hp;   // warn near cap, full at cap
@@ -467,10 +519,11 @@ function renderTopBar() {
     parts.push(`${iconHTML(DD.VITALITY.item)} ${DD.VITALITY.name} ${Math.ceil((cb.until - now) / 1000)}s`);
   if (parts.length) { bp.classList.remove("hidden"); bp.innerHTML = parts.join(" &nbsp; "); }
   else bp.classList.add("hidden");
-  // Ascension Shrine pill: appears once you've ascended (or hold AP); shows
-  // spendable Ascension Points and pulses when something is affordable.
+  // Ascension Shrine pill: appears once you've ascended, hold AP, or have
+  // built the Gate (so the modal's "+N ☯" points at something you can see);
+  // shows spendable Ascension Points and pulses when something is affordable.
   const pb = $("#perk-btn"), ap = window.GS.ascendPoints || 0;
-  const showPerks = (window.GS.ascensions || 0) > 0 || ap > 0;
+  const showPerks = (window.GS.ascensions || 0) > 0 || ap > 0 || !!(E.builtGate && E.builtGate());
   pb.classList.toggle("hidden", !showPerks);
   if (showPerks) {
     $("#perk-ap").textContent = ap;
@@ -481,6 +534,15 @@ function renderTopBar() {
   $("#build-btn").classList.toggle("on", window.GS.build.open);
   $("#demolish-btn").classList.toggle("on", demolishMode);
   $("#debug-btn").classList.toggle("on", debugShow);
+}
+
+// Small bottom-bar chip naming this run's vows (icons; names in the tooltip).
+function vowChipHTML() {
+  const act = E.activeVows ? E.activeVows() : [];
+  if (!act.length) return "";
+  const vs = act.map(id => (DD.VOWS || []).find(v => v.id === id)).filter(Boolean);
+  return ` <span class="sprint-tag vow-chip" title="Vows this run: ${vs.map(v => v.name).join(", ")}">` +
+    `${vs.map(v => v.icon).join("")}</span>`;
 }
 
 // ---- world painter --------------------------------------------
@@ -545,12 +607,17 @@ function drawWorldInner() {
   // then all item icons on the very top. A later-drawn region's background or
   // veil can never cover an earlier region's sprites this way.
   for (const v of visible) drawRegionGround(v.key, v.ox, v.oy, view, s, X, Y);
+  drawRadii(visible, s, X, Y);   // gather / stoke reach circles (under the sprites)
   for (const v of visible) if (!v.unlocked) {
     drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
     drawRegionVeil(v.ox, v.oy, s, X, Y);
   }
   for (const v of visible) if (v.unlocked) drawRegionObjects(v.key, v.ox, v.oy, now, view, s, X, Y);
   for (const v of visible) if (v.unlocked) drawRegionItems(v.key, v.ox, v.oy, view, s, X, Y);
+  drawQuestRing(now, X, Y, s);   // the active quest's world target
+
+  // "Skipping <icons>" chip at the top-left of each affected region
+  for (const v of visible) if (v.unlocked) drawAutoSkip(v.ox, v.oy, s, X, Y, vw, autoSkipOf(window.GS.areas[v.key]));
 
   // link picking: rubber-band line from the chosen source to the cursor
   if (linkMode && linkMode.picking === "target" && linkMode.srcId && cursor.over &&
@@ -581,10 +648,119 @@ function drawWorldInner() {
     ctx.lineWidth = 2;
     ctx.fillRect(px, py, B.w * CELL * s, B.h * CELL * s);
     ctx.strokeRect(px, py, B.w * CELL * s, B.h * CELL * s);
+    if (!ok) {
+      // short reason under the red ghost (same checks canPlaceBuilding runs)
+      const why = !E.isAreaUnlocked(cursor.region) ? "Region locked"
+        : E.placeReason(cursor.region, cursor.lrow, cursor.lcol, window.GS.build.placing) || "Blocked";
+      const fpx = MIN_LABEL_PX + 1;
+      ctx.font = `800 ${fpx}px ${TEXT_FONT}`;
+      const tw = ctx.measureText(why).width, w = tw + 12, h = fpx + 8;
+      // under the ghost; above it near the bottom edge; always inside the view
+      const vh = vw * VIEW_ASPECT;
+      const cx = clamp(px + B.w * CELL * s / 2, w / 2 + 4, Math.max(w / 2 + 4, vw - w / 2 - 4));
+      let ty = py + B.h * CELL * s + 4;
+      if (ty + h > vh - 4) ty = py - h - 4;
+      ty = clamp(ty, 4, Math.max(4, vh - h - 4));
+      ctx.fillStyle = "rgba(40,10,10,.9)";
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(cx - w / 2, ty, w, h, 6); else ctx.rect(cx - w / 2, ty, w, h);
+      ctx.fill();
+      ctx.fillStyle = "#fecaca"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(why, cx, ty + h / 2 + 0.5);
+    }
   }
 
   // feedback juice on the very top (floating +N numbers, spark bursts)
   if (fxActive()) drawFX(now, X, Y, s);
+}
+
+// ---- reach circles: Gathering Stone (gather.radius) / Furnace Spirit (stoker.radius)
+// Translucent, drawn under the sprites. Shown for: the placement ghost, the
+// hovered building, and EVERY stone of the region while a lantern's link menu
+// is open (so the player can see what each stone will actually collect).
+// A spirit stokes a burner when the burner's CENTRE lies within radius + 1.5
+// cells of the spirit's centre (engine gameTick stoker test) — the circle
+// drawn is exactly that distance.
+const STOKE_SLACK_CELLS = 1.5;
+function stokeReach(cfg) { return cfg.stoker.radius + STOKE_SLACK_CELLS; }
+function reachOf(cfg) {
+  return cfg.gather ? { r: cfg.gather.radius, rgb: "74,222,128" }
+    : cfg.stoker ? { r: stokeReach(cfg), rgb: "251,146,60" } : null;
+}
+function hoverReachBuilding() {
+  if (!cursor.over || !cursor.region || !E.isAreaUnlocked(cursor.region)) return null;
+  const b = E.buildingAt(cursor.region, cursor.lrow, cursor.lcol);
+  return b && b.built && reachOf(DD.BUILDINGS[b.type]) ? b : null;
+}
+function drawRadiusCircle(cxPx, cyPx, reach, s, X, Y) {
+  ctx.beginPath();
+  ctx.arc(X(cxPx), Y(cyPx), reach.r * CELL * s, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(${reach.rgb},.07)`; ctx.fill();
+  ctx.strokeStyle = `rgba(${reach.rgb},.5)`; ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 5]); ctx.stroke(); ctx.setLineDash([]);
+}
+function drawRadii(visible, s, X, Y) {
+  const hb = hoverReachBuilding();
+  for (const v of visible) {
+    if (!v.unlocked) continue;
+    const st = window.GS.areas[v.key];
+    const listAll = linkMode && linkMode.area === v.key;
+    for (const b of st.buildings) {
+      if (!b.built) continue;
+      const reach = reachOf(DD.BUILDINGS[b.type]);
+      if (!reach) continue;
+      if (!((listAll && DD.BUILDINGS[b.type].gather) || (hb === b))) continue;
+      const c = E.buildingCenterPx(b);
+      drawRadiusCircle(v.ox + c.x, v.oy + c.y, reach, s, X, Y);
+    }
+  }
+  // placement ghost of a stone / spirit
+  const pl = window.GS.build.placing;
+  if (pl && cursor.over && cursor.region && E.isAreaUnlocked(cursor.region)) {
+    const reach = reachOf(DD.BUILDINGS[pl]);
+    if (reach) {
+      const B = E.buildingSize(pl), p = regionPx(cursor.region);
+      drawRadiusCircle(p.x + (cursor.lcol + B.w / 2) * CELL, p.y + (cursor.lrow + B.h / 2) * CELL, reach, s, X, Y);
+    }
+  }
+}
+
+// Item keys automation is skipping in an area (engine sets area._autoSkip when
+// a raw item is piled up too high); absent/empty/non-array = none.
+function autoSkipOf(area) {
+  const a = area && area._autoSkip;
+  return Array.isArray(a) && a.length ? a : [];
+}
+// Gate offerings progress text: full -> "Offerings 6/6 — full (+6 ☯)", else the
+// per-type remainder "🧧 1/2 ⚔️ 2/2 🔶 0/2" (offered/cap per offering type).
+function offeringsHTML(off) {
+  if (off.count >= off.cap) return `Offerings ${off.count}/${off.cap} — full (+${off.count} ☯)`;
+  return `Offerings ${off.count}/${off.cap}: ` +
+    DD.GATE_OFFERINGS.items.map(it => `${iconHTML(it)} ${Math.min(off.perType, off.offered[it] || 0)}/${off.perType}`).join(" ");
+}
+// Compact amber chip at the region's top-left corner (kept off the middle of
+// the region, where building labels live) whose automation is skipping some
+// items because too many lie around: "Skipping [icons]". The help explains it.
+function drawAutoSkip(ox, oy, s, X, Y, vw, items) {
+  if (!items.length) return;
+  const l = Math.max(X(ox), 0), r = Math.min(X(ox + PLAY_W), vw);
+  if (r - l < 40) return;
+  const t1 = "Skipping";
+  const px = MIN_LABEL_PX, ipx = Math.round(px * 1.4), gap = 3, pad = 6;
+  const shown = items.slice(0, 4);
+  ctx.font = `800 ${px}px ${TEXT_FONT}`;
+  const w1 = ctx.measureText(t1).width;
+  const iconsW = shown.length * ipx + (shown.length - 1) * gap;
+  const w = w1 + iconsW + gap * 2 + pad * 2, h = Math.max(px, ipx) + 6;
+  const x0 = l + 6, y = Math.max(Y(oy), 0) + 6, my = y + h / 2;
+  ctx.fillStyle = "rgba(60,40,8,.92)"; ctx.strokeStyle = C.amber; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x0, y, w, h, 7); else ctx.rect(x0, y, w, h);
+  ctx.fill(); ctx.stroke();
+  ctx.fillStyle = "#fde68a"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  let x = x0 + pad;
+  ctx.fillText(t1, x, my + 0.5); x += w1 + gap * 2;
+  shown.forEach(it => { drawItemIcon(it, x + ipx / 2, my, ipx); x += ipx + gap; });
 }
 
 // LAYER 1 — flat ground: region tint, zone tints, frame.
@@ -621,13 +797,104 @@ function drawRegionGround(key, ox, oy, view, s, X, Y) {
   ctx.strokeRect(X(ox), Y(oy), PLAY_W * s, PLAY_W * s);
 }
 
+// Readability floor: building labels / stock numbers never drop below 10 CSS
+// px at any zoom (viewScale `s` maps logical world px -> CSS px).
+const MIN_LABEL_PX = 10;
+function lblPx(size, s) { return Math.max(size * s, MIN_LABEL_PX); }
+
+// Greedy word-wrap to <= maxChars per line, <= maxLines lines ("…" if cut).
+function wrapLines(text, maxChars, maxLines) {
+  const lines = [];
+  let cur = "";
+  for (const w of String(text).split(/\s+/)) {
+    if (!w) continue;
+    const word = w.length > maxChars ? w.slice(0, maxChars - 1) + "…" : w;
+    if (!cur) cur = word;
+    else if ((cur + " " + word).length <= maxChars) cur += " " + word;
+    else { lines.push(cur); cur = word; }
+  }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    const last = lines[maxLines - 1];
+    lines[maxLines - 1] = (last.length >= maxChars ? last.slice(0, maxChars - 1) : last) + "…";
+  }
+  return lines;
+}
+// The dragon's world-space murmur: centred on cx, its LAST line ends at
+// baseY (screen px); kept inside the viewport horizontally.
+function drawDragonSpeech(msg, cx, baseY, s) {
+  const px = lblPx(14, s), lh = px * 1.2;
+  const lines = wrapLines(msg, 42, 3);
+  ctx.font = `800 ${px}px ${TEXT_FONT}`;
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  const vw = renderedW;
+  let wMax = 0;
+  for (const l of lines) wMax = Math.max(wMax, ctx.measureText(l).width);
+  const x = clamp(cx, wMax / 2 + 6, Math.max(wMax / 2 + 6, vw - wMax / 2 - 6));
+  ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3;
+  ctx.fillStyle = "#e9d5ff";
+  lines.forEach((l, i) => ctx.fillText(l, x, baseY - (lines.length - 1 - i) * lh));
+  ctx.shadowBlur = 0;
+}
+
 // A small corner count next to an icon (dark-shadowed for legibility).
 function drawCornerCount(px, py, text, color, align, s) {
-  ctx.font = `800 ${9.5 * s}px ${TEXT_FONT}`;
+  ctx.font = `800 ${lblPx(9.5, s)}px ${TEXT_FONT}`;
   ctx.textAlign = align; ctx.textBaseline = "middle";
   ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3 * s;
   ctx.fillStyle = color; ctx.fillText(text, px, py);
   ctx.shadowBlur = 0;
+}
+
+// One-line building status under the converter/pavilion result icon, from
+// ENGINE.buildingStatus (guarded — absent = nothing drawn): starved -> red
+// "Needs <icon>", nofuel -> red, full -> amber ("Output pile full" / "Stock
+// full"), working -> green + crafts/min (only once >= 2 crafts are recorded).
+function statusFor(key, b) {
+  const st = E.buildingStatus ? E.buildingStatus(key, b) : null;
+  if (st) return st;
+  // fallback (no engine status): a fed-out pavilion still says what it needs
+  const r = DD.BUILDINGS[b.type].roster;
+  if (r && (b.disciples || 0) > 0 && (b.buns || 0) <= 0) return { state: "starved", item: r.food };
+  return null;
+}
+// maxW (screen px, optional) = the building's width: the line drops its
+// "Working ·" prefix when that doesn't fit, then ellipsizes.
+function drawStatusLine(key, b, cx, cy, s, maxW) {
+  const st = statusFor(key, b);
+  if (!st || st.state === "idle") return;
+  const px = lblPx(9, s), ipx = Math.round(px * 1.35);
+  ctx.font = `800 ${px}px ${TEXT_FONT}`;
+  const alt = [];          // candidate texts, longest first
+  let color, icon = null;
+  if (st.state === "starved") { alt.push("Needs"); color = C.danger; icon = st.item || null; }
+  else if (st.state === "nofuel") { alt.push("No fuel"); color = C.danger; }
+  else if (st.state === "full") {
+    if (/output/i.test(st.label || "")) alt.push("Output pile full", "Pile full"); else alt.push("Stock full");
+    color = C.amber;
+  } else if (st.state === "working") {
+    const n = E.craftRate ? Math.round(E.craftRate(b, true)) : 0;
+    if (n > 0) alt.push(`Working \u00b7 ${n}/min`, `${n}/min`); else alt.push("Working");
+    color = C.accent;
+  } else return;
+  const extra = icon ? ipx + 3 : 0;
+  let text = alt[0];
+  if (maxW) {
+    text = alt.find(t => ctx.measureText(t).width + extra <= maxW) || alt[alt.length - 1];
+    if (ctx.measureText(text).width + extra > maxW) {
+      // ellipsize to the building width
+      while (text.length > 1 && ctx.measureText(text + "\u2026").width + extra > maxW) text = text.slice(0, -1);
+      text += "\u2026";
+    }
+  }
+  ctx.textBaseline = "middle";
+  const tw = ctx.measureText(text).width, total = tw + extra;
+  ctx.shadowColor = "rgba(0,0,0,.9)"; ctx.shadowBlur = 3;
+  ctx.fillStyle = color; ctx.textAlign = "left";
+  ctx.fillText(text, cx - total / 2, cy);
+  ctx.shadowBlur = 0;
+  if (icon) drawItemIcon(icon, cx - total / 2 + tw + 3 + ipx / 2, cy, ipx);
 }
 
 // Converter face, centred inside a content rect (world px: fx0,fy0,fw,fh —
@@ -635,14 +902,32 @@ function drawCornerCount(px, py, text, color, align, s) {
 // never shifts the centre). Rows: input icons (top-left = in stock,
 // bottom-right = needed per craft), the result icon (bottom-right = batches
 // the current stock can still make, fuel ignored), a 1-cell progress bar.
-function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
+function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now, key) {
   const rec = E.recipeOf(b);
   if (!rec) return;
   const cxW = fx0 + fw / 2;
+  // name label (icon + short name) along the top — emoji drawn separately in
+  // a bright fill (Firefox rule), the name muted; shrinks to fit the width.
+  const bc = DD.BUILDINGS[b.type], ly = Y(fy0 + 8);
+  // never below MIN_LABEL_PX: a name that doesn't fit is ellipsized, not shrunk
+  const fpx = lblPx(9.5, s), maxW = (fw - 6) * s;
+  ctx.font = `700 ${fpx}px ${TEXT_FONT}`;
+  const iw = fpx * 1.3;
+  let name = bc.name;
+  if (ctx.measureText(name).width + iw > maxW) {
+    while (name.length > 1 && ctx.measureText(name + "…").width + iw > maxW) name = name.slice(0, -1);
+    name += "…";
+  }
+  const tw = ctx.measureText(name).width, lx0 = X(cxW) - (iw + tw) / 2;
+  ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  ctx.fillStyle = C.muted; ctx.fillText(name, lx0 + iw, ly);
+  ctx.font = `${fpx}px ${EMOJI_FONT}`; ctx.fillStyle = C.text;
+  ctx.fillText(bc.icon, lx0, ly);
+  ctx.textAlign = "center";
   const inputs = Object.entries(rec.inputs);
   const ipx = 18 * s, gapW = 24;
   const startW = cxW - (inputs.length - 1) * gapW / 2;
-  const iy = Y(fy0 + fh * 0.26);
+  const iy = Y(fy0 + fh * 0.30);
   inputs.forEach(([it, need], i) => {
     const sx = X(startW + i * gapW), have = (b.stock && b.stock[it]) || 0;
     drawItemIcon(it, sx, iy, ipx);
@@ -650,11 +935,12 @@ function drawConverterFace(b, fx0, fy0, fw, fh, s, X, Y, now) {
     drawCornerCount(sx + ipx / 2, iy + ipx / 2, String(need), C.gold, "right", s);
   });
   // result icon + predicted crafts
-  const rpx = 22 * s, rx = X(cxW), ry = Y(fy0 + fh * 0.60);
+  const rpx = 22 * s, rx = X(cxW), ry = Y(fy0 + fh * 0.55);
   drawItemIcon(rec.output, rx, ry, rpx);
   drawCornerCount(rx + rpx / 2, ry + rpx / 2, String(E.craftsPossible(b)), C.gold, "right", s);
+  drawStatusLine(key, b, X(cxW), Y(fy0 + fh * 0.755), s, (fw - 4) * s);
   // 1-cell-wide progress bar, centred
-  const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(fy0 + fh * 0.87);
+  const pw = CELL * s, px0 = X(cxW - CELL / 2), py0 = Y(fy0 + fh * 0.9);
   // Denominator MUST match the real batch duration (engine canStartBatch):
   // timeMs * testScale * prestigeFactor * (Ember blessing on a burner ? 0.5).
   let dur = rec.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1) * E.prestigeFactor();
@@ -700,7 +986,7 @@ function drawFuelRack(b, fx0, fy0, fw, fh, s, X, Y) {
     }
   }
   if (E.fuelTotal(b) <= 0) {
-    ctx.fillStyle = C.danger; ctx.font = `800 ${10 * s}px ${TEXT_FONT}`;
+    ctx.fillStyle = C.danger; ctx.font = `800 ${lblPx(10, s)}px ${TEXT_FONT}`;
     ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
     ctx.shadowColor = "rgba(0,0,0,.85)"; ctx.shadowBlur = 3 * s;
     ctx.fillText("No fuel", X(fx0 + fw / 2), Y(fy0) - 4 * s);
@@ -772,7 +1058,7 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.fillStyle = C.gold;
         drawNeedsLine(Object.entries(E.jobRemaining(job)), cxp, Y(by + bh * 0.86), 20 * s);
       } else {
-        ctx.fillStyle = C.muted; ctx.font = `700 ${16 * s}px ${TEXT_FONT}`;
+        ctx.fillStyle = C.muted; ctx.font = `700 ${lblPx(16, s)}px ${TEXT_FONT}`;
         ctx.textBaseline = "middle"; ctx.textAlign = "center";
         ctx.fillText("Select an upgrade", cxp, Y(by + bh * 0.86));
       }
@@ -786,39 +1072,64 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.fillText(awake ? "Awakened Dragon" : bCfg.name, cxp, Y(by + bh * 0.64));
       if (st) {
         ctx.fillStyle = C.gold;
-        drawNeedsLine(Object.entries(E.dragonRemaining()), cxp, Y(by + bh * 0.84), 15 * s, "Feed:");
+        drawNeedsLine(Object.entries(E.dragonRemaining()), cxp, Y(by + bh * 0.84), lblPx(15, s), "Feed:");
       } else {
-        ctx.fillStyle = C.muted; ctx.font = `700 ${13 * s}px ${TEXT_FONT}`;
+        ctx.fillStyle = C.muted; ctx.font = `700 ${lblPx(13, s)}px ${TEXT_FONT}`;
         ctx.fillText("watches over the grounds", cxp, Y(by + bh * 0.84));
       }
-      // stage-up murmur floats above the dragon for a few seconds
+      // stage-up murmur floats above the dragon for a few seconds — wrapped to
+      // <=42 chars x 3 lines, and hidden while the dragon's dialog modal is up
       const dr = window.GS.dragon;
-      if (dr.msg && dr.msgUntil > Date.now()) {
-        ctx.fillStyle = "#e9d5ff"; ctx.font = `800 ${14 * s}px ${TEXT_FONT}`;
-        ctx.fillText(dr.msg, cxp, Y(by - 12));
-      }
+      if (dr.msg && dr.msgUntil > Date.now() && !dr.dialog) drawDragonSpeech(dr.msg, cxp, Y(by - 12), s);
     } else if (b.built && (bCfg.gather || bCfg.lantern || bCfg.seal || bCfg.stoker)) {
       // compact 1x1 wisp-logistics formations: icon + a tiny status badge
       ctx.fillStyle = C.text;
       ctx.font = `${20 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
       ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.5));
       if (bCfg.seal && b.item) drawItemIcon(b.item, cxp, Y(by - 8), 13 * s);
-      ctx.fillStyle = C.gold; ctx.font = `800 ${9 * s}px ${TEXT_FONT}`;
-      const badge = (bCfg.gather || bCfg.stoker) ? String(E.gatherTotal(b))
-        : bCfg.seal ? String(b.qty || 0)
+      const cap = bCfg.gather ? bCfg.gather.cap : bCfg.stoker ? bCfg.stoker.cap : bCfg.seal ? (bCfg.seal.cap || 5) : 0;
+      const qty = (bCfg.gather || bCfg.stoker) ? E.gatherTotal(b) : bCfg.seal ? (b.qty || 0) : 0;
+      const bpx = lblPx(9, s), badgeY = Y(by + bh) + 8 * s;
+      ctx.fillStyle = cap && qty >= cap ? C.danger : C.gold;
+      ctx.font = `800 ${bpx}px ${TEXT_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+      // stones/spirits read n/cap (red at cap); a seal shows its count (red when full)
+      const badge = (bCfg.gather || bCfg.stoker) ? `${qty}/${cap}`
+        : bCfg.seal ? String(qty)
         : `${(b.links || []).length}⛓`;
-      ctx.fillText(badge, cxp, Y(by + bh + 8));
+      ctx.fillText(badge, cxp, badgeY);
+      // a linked stone only collects what its targets use: show those items
+      const acc = bCfg.gather && E.stoneAccepts ? E.stoneAccepts(key, b) : null;
+      if (acc && acc.length) {
+        const ip = Math.round(bpx * 1.2), shown = acc.slice(0, 4);
+        const x0 = cxp - (shown.length - 1) * (ip + 1) / 2, iy = badgeY + bpx * 0.5 + ip * 0.5 + 1;
+        shown.forEach((it, i) => drawItemIcon(it, x0 + i * (ip + 1), iy, ip));
+      }
+    } else if (b.built && bCfg.gate) {
+      // the BUILT Ascension Gate: gold border + soft pulse + click-to-ascend
+      // subtitle, like the awakened dragon's treatment
+      const pulse = 0.5 + 0.5 * Math.sin(now / 500);
+      ctx.strokeStyle = C.gold; ctx.lineWidth = Math.max(2, (2.5 + pulse) * s / 0.7);
+      ctx.shadowColor = `rgba(251,191,36,${0.35 + 0.4 * pulse})`; ctx.shadowBlur = (6 + 8 * pulse) * s;
+      ctx.strokeRect(X(bx), Y(by), bw * s, bh * s);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = C.text; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+      ctx.font = `${56 * s}px ${EMOJI_FONT}`;
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.36));
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(16, s)}px ${TEXT_FONT}`;
+      ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.64));
+      ctx.fillStyle = "#fde68a"; ctx.font = `700 ${lblPx(12, s)}px ${TEXT_FONT}`;
+      ctx.fillText(`Ascend \u00b7 +${E.ascendReward ? E.ascendReward() : 1} \u262f`, cxp, Y(by + bh * 0.84));
     } else if (b.built && bCfg.recipes) {
       // converter face (centred): input icons (have/need) + result icon (+
       // crafts the stock can still make) + a 1-cell progress bar. Burners
       // fill their whole 3x5 footprint with the crafting face and hang a
       // 3x2 fuel rack outside the footprint on the LEFT (purely visual).
       if (bCfg.fuel) {
-        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
+        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now, key);
         // fuel rack outside the footprint on the LEFT, flush with the TOP edge
         drawFuelRack(b, bx - 3 * CELL, by, 3 * CELL, 2 * CELL, s, X, Y);
       } else {
-        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now);
+        drawConverterFace(b, bx, by, bw, bh, s, X, Y, now, key);
       }
     } else if (b.built && b.type === "storehouse") {
       if (b.item) drawItemIcon(b.item, cxp, Y(by + bh * 0.4), 26 * s);
@@ -827,16 +1138,18 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
         ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle";
         ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.4));
       }
-      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`; ctx.textBaseline = "middle";
+      ctx.fillStyle = b.item && b.qty >= (bCfg.cap || Infinity) ? C.danger : C.text;   // full -> red
+      ctx.font = `700 ${lblPx(10, s)}px ${TEXT_FONT}`; ctx.textBaseline = "middle";
       ctx.fillText(b.item ? `${E.itemName(b.item)} ×${b.qty}` : "empty", cxp, Y(by + bh * 0.78));
     } else if (b.built && bCfg.roster) {
       // pavilion: icon + disciple count, and a thin bun-stock bar
       ctx.fillStyle = C.text;
       ctx.font = `${24 * s}px ${EMOJI_FONT}`; ctx.textBaseline = "middle"; ctx.textAlign = "center";
-      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.34));
-      ctx.fillStyle = C.text; ctx.font = `700 ${11 * s}px ${TEXT_FONT}`;
-      ctx.fillText(`👤 ${b.disciples || 0}/${E.rosterCap(b)}`, cxp, Y(by + bh * 0.62));
-      const fw = bw * 0.7 * s, fx0 = X(bx + bw * 0.15), fy0 = Y(by + bh * 0.8);
+      ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.28));
+      ctx.fillStyle = C.text; ctx.font = `700 ${lblPx(11, s)}px ${TEXT_FONT}`;
+      ctx.fillText(`👤 ${b.disciples || 0}/${E.rosterCap(b)}`, cxp, Y(by + bh * 0.5));
+      drawStatusLine(key, b, cxp, Y(by + bh * 0.67), s, (bw - 4) * s);
+      const fw = bw * 0.7 * s, fx0 = X(bx + bw * 0.15), fy0 = Y(by + bh * 0.84);
       ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.fillRect(fx0, fy0, fw, 4 * s);
       ctx.fillStyle = (b.buns || 0) > 0 ? C.accent : C.danger;
       ctx.fillRect(fx0, fy0, fw * clamp((b.buns || 0) / bCfg.roster.foodCap, 0, 1), 4 * s);
@@ -846,11 +1159,11 @@ function drawRegionObjects(key, ox, oy, now, view, s, X, Y, phase = "all") {
       ctx.globalAlpha = b.built ? 1 : 0.7;
       ctx.fillText(bCfg.icon, cxp, Y(by + bh * 0.38));
       ctx.globalAlpha = 1;
-      ctx.fillStyle = C.text; ctx.font = `700 ${10 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.text; ctx.font = `700 ${lblPx(10, s)}px ${TEXT_FONT}`;
       ctx.fillText(bCfg.name, cxp, Y(by + bh * 0.66));
       if (!b.built) {
         ctx.fillStyle = C.gold;
-        drawNeedsLine(Object.entries(E.buildingNeeds(b)), cxp, Y(by + bh * 0.86), 10 * s);
+        drawNeedsLine(Object.entries(E.buildingNeeds(b)), cxp, Y(by + bh * 0.86), lblPx(10, s));
       }
     }
   }
@@ -935,18 +1248,24 @@ function drawRegionNodes(key, ox, oy, now, view, s, X, Y, phase, cfg, st, unlock
     // overlays
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     if (debugShow && node.interaction === "quarry") {
-      ctx.fillStyle = C.gold; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(11, s)}px ${TEXT_FONT}`;
       ctx.fillText(`${node.clicks || 0}/${node.clicksPerDrop || 5}`, X(bx), Y(by - w - 6));
     } else if (debugShow && (node.interaction === "chop" || node.interaction === "break") && node.hitsLeft > 0) {
-      ctx.fillStyle = C.gold; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(11, s)}px ${TEXT_FONT}`;
       ctx.fillText(`${node.hitsLeft}`, X(bx), Y(by - w - 6));
     }
-    if (unlocked && node.interaction === "surface" && node.surfaceUntil) {
-      ctx.fillStyle = C.danger; ctx.font = `800 ${11 * s}px ${TEXT_FONT}`;
-      ctx.fillText(`${Math.max(0, (node.surfaceUntil - now) / 1000).toFixed(1)}s`, X(bx), Y(by + 10));
+    // fishing countdown: only in the last second, or while hovered (a field of
+    // surfacing fish otherwise reads as a string of "2.4s 1.9s…")
+    if (unlocked && node.interaction === "surface" && node.surfaceUntil > now) {
+      const left = node.surfaceUntil - now;
+      const hov = cursor.over && cursor.region === key && nodeAtCell(key, cursor.lrow, cursor.lcol) === node;
+      if (left < 1000 || hov) {
+        ctx.fillStyle = C.danger; ctx.font = `800 ${lblPx(11, s)}px ${TEXT_FONT}`;
+        ctx.fillText(`${(left / 1000).toFixed(1)}s`, X(bx), Y(by + 10));
+      }
     }
     if (node.autoFlash > now) {
-      ctx.fillStyle = C.gold; ctx.font = `800 ${9 * s}px ${TEXT_FONT}`;
+      ctx.fillStyle = C.gold; ctx.font = `800 ${lblPx(9, s)}px ${TEXT_FONT}`;
       ctx.fillText("AUTO", X(bx + w / 2), Y(by - w - 2));
     }
   }
@@ -987,61 +1306,248 @@ function drawRegionVeil(ox, oy, s, X, Y) {
 }
 
 // Edge buttons for LOCKED neighbour regions (DOM overlay — event-driven UI).
-// Only regions 4-adjacent (region grid) to an UNLOCKED one get a button, so
-// the frontier grows as you expand (and side-anchored buttons never stack).
+// Only locked regions that BORDER the region under the camera centre get a
+// button, on the viewport side matching their true direction (region-grid
+// rx/ry delta), so a button never points the wrong way or hides distant stuff.
 function unlockFrontier(key) {
   const R = DD.WORLD.regions, r = R[key];
   return !!r && Object.keys(R).some(k => E.isAreaUnlocked(k) &&
     Math.abs(R[k].rx - r.rx) + Math.abs(R[k].ry - r.ry) === 1);
 }
+// Region the camera is looking at: under the centre, else the nearest one
+// (the centre can sit in a void gap while zoomed out).
+function cameraRegion() {
+  const k = regionAtCamCentre();
+  if (k) return k;
+  const cx = cam.x + VIEW_W / 2, cy = cam.y + VIEW_H / 2;
+  let best = null, bd = Infinity;
+  for (const key of Object.keys(DD.WORLD.regions)) {
+    const p = regionPx(key), d = Math.hypot(p.x + PLAY_W / 2 - cx, p.y + PLAY_W / 2 - cy);
+    if (d < bd) { bd = d; best = key; }
+  }
+  return best;
+}
+let unlockCentreKey = null;   // camera region the buttons were last built for
+function sideOf(from, to) {   // viewport side of `to` as seen from `from`
+  const R = DD.WORLD.regions, dx = R[to].rx - R[from].rx, dy = R[to].ry - R[from].ry;
+  if (Math.abs(dx) + Math.abs(dy) !== 1) return null;
+  return dx < 0 ? "left" : dx > 0 ? "right" : dy < 0 ? "up" : "down";
+}
+// How the hand stands against a region's remaining unlock cost:
+// { state: "afford" (covers ALL of it) | "partial" (an installment only) | "cant",
+//   have, need } — have/need count items toward the remaining cost.
+function unlockPayState(key) {
+  const rem = E.unlockRemaining ? E.unlockRemaining(key) : E.areaUnlockCost(key);
+  if (!rem) return { state: "cant", have: 0, need: 0 };
+  let have = 0, need = 0;
+  for (const [it, q] of Object.entries(rem)) {
+    const s = window.GS.hand.find(x => x.item === it);
+    need += q; have += Math.min(q, s ? s.qty : 0);
+  }
+  const state = need > 0 && have >= need ? "afford" : have > 0 ? "partial" : "cant";
+  return { state, have, need };
+}
+function applyUnlockPayState(btn) {
+  const st = unlockPayState(btn.dataset.area);
+  btn.classList.toggle("afford", st.state === "afford");
+  btn.classList.toggle("partial", st.state === "partial");
+  btn.classList.toggle("cant", st.state === "cant");
+  const pay = btn.querySelector(".arr-pay");
+  if (pay) pay.textContent = st.state === "partial" ? `pay ${st.have}/${st.need}` : "";
+}
+// Pay what the hand holds toward a locked region (left- or right-click).
+function payUnlockButton(key) {
+  const res = E.unlockArea(key);
+  if (res === true) { clampCam(); render(); }
+  else if (res) renderUnlockButtons();   // installment paid: refresh the paid/needed label
+  else if (window.AUDIO) window.AUDIO.play("error");
+}
+function unlockButtonEl(key, side) {
+  const cost = E.areaUnlockCost(key);
+  // installments: show paid/needed per item once anything is paid
+  const paid = E.unlockPaidOf ? E.unlockPaidOf(key) : {};
+  const label = Object.entries(cost).map(([it, q]) =>
+    paid[it] ? `${Math.min(paid[it], q)}/${q} ${iconHTML(it)}` : `${q} ${iconHTML(it)}`).join(" ");
+  const btn = el("button", `edge-arrow ${side} locked cant`);
+  btn.dataset.area = key;
+  btn.innerHTML = `<span class="arr">🔓</span>` +
+    `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span><span class="arr-pay"></span>`;
+  applyUnlockPayState(btn);
+  btn.onclick = () => payUnlockButton(key);
+  // the button sits INSIDE #world-viewport: a mousedown must never reach the
+  // world handler (a right-click there would drop the hand's front stack on
+  // the ground). Right-click pays the same way left-click does.
+  btn.addEventListener("mousedown", e => {
+    e.stopPropagation();
+    if (e.button === 2) { e.preventDefault(); payUnlockButton(key); }
+  });
+  btn.addEventListener("contextmenu", e => { e.preventDefault(); e.stopPropagation(); });
+  return btn;
+}
 function renderUnlockButtons() {
   const wrap = $("#arrows");
   wrap.innerHTML = "";
-  for (const [key, side] of Object.entries(DD.WORLD.unlockSide)) {
-    if (E.isAreaUnlocked(key) || !unlockFrontier(key)) continue;
-    const cost = E.areaUnlockCost(key);
-    const label = Object.entries(cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
-    const ok = E.canAfford(cost);
-    const btn = el("button", `edge-arrow ${side} locked` + (ok ? " afford" : " cant"));
-    btn.dataset.area = key;
-    btn.innerHTML = `<span class="arr">🔓</span>` +
-      `<span class="arr-label">Unlock ${DD.AREAS[key].name}<br>${label}</span>`;
-    btn.onclick = () => { if (E.unlockArea(key)) { clampCam(); render(); } else if (window.AUDIO) window.AUDIO.play("error"); };
-    wrap.appendChild(btn);
+  unlockCentreKey = cameraRegion();
+  if (!unlockCentreKey) return;
+  if (!E.isAreaUnlocked(unlockCentreKey)) {
+    // the camera centre sits INSIDE a locked frontier region (one that lies in
+    // the unlocked bounding box): show that region's own button, centred
+    if (unlockFrontier(unlockCentreKey)) wrap.appendChild(unlockButtonEl(unlockCentreKey, "here"));
+    positionUnlockButtons();
+    return;
   }
+  for (const key of Object.keys(DD.WORLD.regions)) {
+    if (E.isAreaUnlocked(key) || !unlockFrontier(key)) continue;
+    const side = sideOf(unlockCentreKey, key);
+    if (!side) continue;   // doesn't border the region we're looking at
+    wrap.appendChild(unlockButtonEl(key, side));
+  }
+  positionUnlockButtons();
+}
+// The quest panel is a fixed overlay on the viewport's top-right; a side
+// button must never sit under it. Left/right buttons stay vertically centred
+// unless they would overlap the panel, then drop just below its bottom edge
+// (clamped to the viewport). Re-run whenever the panel or viewport resizes.
+function positionUnlockButtons() {
+  const wrap = $("#arrows"), vp = $("#world-viewport"), panel = $("#quest-panel");
+  if (!wrap || !vp) return;
+  const btns = wrap.querySelectorAll(".edge-arrow.left, .edge-arrow.right");
+  if (!btns.length) return;
+  const vr = vp.getBoundingClientRect();
+  const pr = panel && panel.getClientRects().length ? panel.getBoundingClientRect() : null;   // fixed => offsetParent is null, so test rects
+  for (const b of btns) {
+    b.style.top = ""; b.style.transform = ""; b.style.right = "";
+    if (!pr || !pr.height) continue;
+    const r = b.getBoundingClientRect();
+    const overlapX = r.right > pr.left && r.left < pr.right;
+    const overlapY = r.bottom > pr.top && r.top < pr.bottom;
+    if (!(overlapX && overlapY)) continue;
+    // tiny viewport, right-hand button: slide it to the LEFT of the panel
+    // (keeps it vertically centred) when that still fits inside the viewport
+    if (b.classList.contains("right") && pr.left - 8 - r.width >= vr.left + 8) {
+      b.style.right = Math.max(8, vr.right - pr.left + 8) + "px";
+      continue;
+    }
+    let top = pr.bottom + 10 - vr.top;                      // just below the panel
+    top = Math.min(top, vr.height - r.height - 8);           // keep inside the viewport
+    b.style.transform = "none";
+    b.style.top = Math.max(8, top) + "px";
+  }
+}
+// Camera moved to another region: rebuild the buttons for its borders.
+function syncUnlockButtons() {
+  if (cameraRegion() !== unlockCentreKey) renderUnlockButtons();
 }
 // Tick refresh: re-evaluate each unlock button's affordability in place.
 function refreshUnlockAfford() {
-  for (const btn of $("#arrows").querySelectorAll("button[data-area]")) {
-    const ok = E.canAfford(E.areaUnlockCost(btn.dataset.area));
-    btn.classList.toggle("cant", !ok); btn.classList.toggle("afford", ok);
-  }
+  for (const btn of $("#arrows").querySelectorAll("button[data-area]")) applyUnlockPayState(btn);
 }
 
 // ---- hand cursor overlay ------------------------------------
+// The chip's markup is rebuilt only when the hand's contents (or an icon's
+// load state) change — re-creating the <img>s every render blanked them for
+// a frame; a mousemove only moves it (moveHandCursor).
+let handChipSig = null;
+// DOM overlays the chip must never draw over (quest panel, bottom strips, the
+// recipe popup, the top bar): hovering one hides it. Tracked by pointerenter /
+// pointerleave on each overlay, re-checked from the real event target on
+// every mousemove (an overlay hidden under the pointer never fires leave).
+const HAND_OVERLAYS = "#quest-panel, #recipe-menu, #recipe-info, #build-menu, #link-menu, #roster-menu, #topbar";
+let overlayHover = false;
+function setOverlayHover(v) {
+  if (v === overlayHover) return;
+  overlayHover = v;
+  renderHandCursor();
+}
+function moveHandCursor() {
+  const hc = $("#hand-cursor");
+  hc.style.left = cursor.cx + "px";
+  hc.style.top = cursor.cy + "px";
+}
 function renderHandCursor() {
   const hc = $("#hand-cursor");
   const hand = window.GS.hand;
-  if (!hand.length) { hc.classList.add("hidden"); return; }
+  // hidden while ANY modal is up: it would draw over dialog text / the tree
+  if (!hand.length || overlayHover || document.querySelector(".modal:not(.hidden)")) { hc.classList.add("hidden"); return; }
   hc.classList.remove("hidden");
-  hc.style.left = cursor.cx + "px";
-  hc.style.top = cursor.cy + "px";
+  moveHandCursor();
+  let sig = "";
+  for (const s of hand) sig += s.item + ":" + s.qty + (ICON_IMGS[s.item] ? "i," : ",");
+  if (sig === handChipSig) return;
+  handChipSig = sig;
   hc.innerHTML = hand.map((s, i) =>
     `<span class="hc-stack${i === 0 ? " first" : ""}">${s.qty}<span class="hc-ico">${iconHTML(s.item)}</span></span>`
   ).join("");
 }
 
 // ---- build menu ---------------------------------------------
+// Reveal-filtered catalog (DATA.REVEAL via ENGINE.buildingCatalog). Order:
+// the current quest/milestone target, then 'new' cards, then what the hand
+// can pay for, then the rest. A reveal that reshuffles an OPEN menu locks
+// card clicks for 400 ms so the layout shift can't eat a click (Trimps'
+// lockOnUnlock). Rebuilt on discrete events only (render / a reveal).
+let buildCatSig = "", buildMenuWasOpen = false, buildClickLockUntil = 0;
+function buildCatalogSig() {   // cheap per-tick check (no catalog objects built)
+  let sig = "";
+  for (const t in DD.BUILDINGS) if (E.isBuildingUnlocked(t)) sig += t + ",";
+  return sig;
+}
+// What a card makes (recipe outputs) or does — its tooltip.
+function buildRole(id, b) {
+  if (b.recipes) return "Makes " + [...new Set(b.recipes.map(r => E.itemName(r.output)))].join(", ");
+  if (b.gather) return `Vacuums loose items within ${b.gather.radius} cells into its buffer`;
+  if (b.lantern) return "Hosts wisps that ferry items along its links";
+  if (b.seal) return "Pass-through buffer locked to one item type";
+  if (b.stoker) return `Stokes fuel into burners whose centre is within ${stokeReach(b)} cells`;
+  if (b.roster) return `Disciples cultivate ${E.itemName(b.roster.produce)} (they eat ${E.itemName(b.roster.food)})`;
+  if (b.gen) return `Grows ${E.itemName(b.gen.item)} around itself` + (b.waterOnly ? " (water only)" : "");
+  if (b.shrine) return "Longer dragon blessings, more Dragon Scales";
+  if (b.gate) return "The final monument — Ascend from here";
+  if (id === "storehouse") return `Stores up to ${b.cap} of one item type`;
+  return "";
+}
+function syncBuildDot() {
+  const btn = $("#build-btn");
+  if (btn) btn.classList.toggle("has-new", !window.GS.build.open && E.buildMenuHasNew());
+}
 function renderBuildMenu() {
   const bar = $("#build-menu");
-  bar.classList.toggle("hidden", !window.GS.build.open);
-  if (!window.GS.build.open) return;
+  const open = !!window.GS.build.open;
+  const sig = buildCatalogSig();
+  if (open && buildMenuWasOpen && sig !== buildCatSig) buildClickLockUntil = Date.now() + 400;
+  buildCatSig = sig; buildMenuWasOpen = open;
+  if (open) E.markBuildListed();   // a reveal while the menu is open counts as listed
+  syncBuildDot();
+  const wasHidden = bar.classList.contains("hidden");
+  bar.classList.toggle("hidden", !open);
+  if (wasHidden === open) positionUnlockButtons();   // the strip shifts the viewport
+  updateHoverName();
+  if (!open) return;
   bar.innerHTML = "";
-  for (const b of E.buildingCatalog()) {
+  const targets = buildTargets();
+  const cards = E.buildingCatalog().map((b, i) => ({ b, i, tgt: targets.includes(b.id),
+    isNew: E.isBuildingNew(b.id), afford: E.canAfford(b.cost) }));
+  const rank = c => c.tgt ? 0 : c.isNew ? 1 : c.afford ? 2 : 3;
+  cards.sort((a, c) => rank(a) - rank(c) || a.i - c.i);
+  if (!cards.length)   // minute 0: the quest chain reveals the first card
+    bar.appendChild(el("div", "bc-empty", "Nothing to build yet — follow the 📜 quests to unlock buildings."));
+  for (const { b, tgt, isNew, afford } of cards) {
     const cost = Object.entries(b.cost).map(([it, q]) => `${q} ${iconHTML(it)}`).join(" ");
-    const card = el("button", "build-card" + (window.GS.build.placing === b.id ? " active" : ""));
-    card.innerHTML = `<span class="bc-ico">${b.icon}</span><span class="bc-name">${b.name}</span><span class="bc-cost">${cost}</span>`;
-    card.onclick = () => { window.GS.build.placing = b.id; window.GS.build.open = false; render(); };
+    const card = el("button", "build-card " + (afford ? "afford" : "cant") +
+      (tgt ? " target" : "") + (window.GS.build.placing === b.id ? " active" : ""));
+    card.title = `${b.name} — ${buildRole(b.id, b)}` + (tgt ? " (your current goal)" : "");
+    card.innerHTML = `<span class="bc-ico">${b.icon}</span><span class="bc-name">${b.name}</span><span class="bc-cost">${cost}</span>` +
+      (tgt ? `<span class="bc-tgt" aria-hidden="true">🎯</span>` : "") +
+      (isNew ? `<span class="bc-new">new</span>` : "");
+    card.onmouseenter = () => {
+      if (!E.isBuildingNew(b.id)) return;
+      E.markBuildSeen(b.id);
+      const nb = card.querySelector(".bc-new"); if (nb) nb.remove();
+    };
+    card.onclick = () => {
+      if (Date.now() < buildClickLockUntil) return;   // the menu just reshuffled
+      window.GS.build.placing = b.id; window.GS.build.open = false; render();
+    };
     bar.appendChild(card);
   }
 }
@@ -1060,7 +1566,9 @@ function treeStates() {
   const adj = {}; nodes.forEach(n => adj[n.id] = new Set());
   nodes.forEach(n => (n.links || []).forEach(l => { adj[n.id].add(l); adj[l].add(n.id); }));
   const owned = new Set(nodes.filter(n => E.upgradeLevel(n.area, n.type).lvl > 0).map(n => n.id));
-  const src = owned.size ? [...owned] : ["hand"];
+  // BFS always seeds from the root too: levels granted without buying the
+  // path (Legacy Automation) must never hide Hand Size
+  const src = [...new Set([...owned, "hand"])];
   const dist = {}; src.forEach(id => dist[id] = 0);
   const q = [...src];
   while (q.length) { const id = q.shift(); for (const nb of adj[id]) if (!(nb in dist)) { dist[nb] = dist[id] + 1; q.push(nb); } }
@@ -1269,8 +1777,9 @@ function toggleDebug(force) {
 }
 function toggleBuild(force) {
   window.GS.build.open = force != null ? force : !window.GS.build.open;
-  if (window.GS.build.open) { window.GS.build.placing = null; demolishMode = false; }
+  if (window.GS.build.open) { window.GS.build.placing = null; demolishMode = false; E.markBuildListed(); }
   render();
+  if (window.GS.build.open) $("#build-menu").scrollLeft = 0;   // always open at the first (target) card
 }
 function toggleDemolish(force) {
   demolishMode = force != null ? force : !demolishMode;
@@ -1286,11 +1795,13 @@ function openRecipeMenu(areaKey, b) {
   closeLinkMenu(); closeRoster();   // one building panel at a time
   recipeMenuFor = { area: areaKey, id: b.id };
   renderRecipeMenu();
+  positionUnlockButtons();
 }
 function closeRecipeMenu() {
   recipeMenuFor = null;
   $("#recipe-menu").classList.add("hidden");
   hideRecipeInfo();
+  positionUnlockButtons();
 }
 // The recipe picker: a "Recipes" title over a 3x3 icon grid (one icon per
 // existing recipe). Hovering an icon opens the detail popup bottom-right.
@@ -1304,9 +1815,21 @@ function renderRecipeMenu() {
   bar.innerHTML = `<div class="rm-head">Recipes</div><div class="rm-grid"></div>`;
   const grid = bar.querySelector(".rm-grid");
   const active = b.recipe || 0;
+  // Same-output routes (Glass vs Obsidian Glass, Star vs Astral Steel): badge
+  // each with its distinguishing input — the first one no sibling shares.
+  const routeBadge = r => {
+    const sibs = recipes.filter(o => o !== r && o.output === r.output);
+    if (!sibs.length) return "";
+    const ins = Object.keys(r.inputs);
+    const it = ins.find(k => sibs.every(o => !(k in o.inputs))) || ins[0];
+    return it ? `<span class="rm-route" title="via ${E.itemName(it)}" style="position:absolute;right:2px;` +
+      `top:2px;font-size:14px;line-height:1;background:var(--bg-2);border-radius:5px;padding:1px">` +
+      `${iconHTML(it).replace('class="item-ico"', 'class="item-ico" style="width:14px;height:14px"')}</span>` : "";
+  };
   recipes.forEach((r, i) => {
     const cell = el("button", "rm-cell" + (i === active ? " active" : ""));
-    cell.innerHTML = iconHTML(r.output);
+    cell.innerHTML = iconHTML(r.output) + routeBadge(r);
+    cell.style.position = "relative";
     cell.setAttribute("aria-label", r.name);
     cell.onmouseenter = () => showRecipeInfo(r);
     cell.onmouseleave = () => hideRecipeInfo();
@@ -1332,8 +1855,8 @@ function positionRecipeMenu(bar, b) {
   bar.style.left = left + "px";
   bar.style.top = top + "px";
 }
-// Detail popup (bottom-right): output icon, name, then each required item on
-// its own row — icon with a count badge (bottom-right) + the item name.
+// Detail popup (beside the picker): output icon, name, the yield line, then
+// each required item on its own row — icon with a count badge + the name.
 function showRecipeInfo(r) {
   const info = $("#recipe-info");
   const reqs = Object.entries(r.inputs).map(([it, q]) =>
@@ -1341,11 +1864,25 @@ function showRecipeInfo(r) {
       `<span class="ri-ico">${iconHTML(it)}<span class="ri-badge">${q}</span></span>` +
       `<span class="ri-name">${E.itemName(it)}</span>` +
     `</div>`).join("");
+  // batch time at the CURRENT scale (test scale x prestige), in seconds
+  const secs = r.timeMs * (DD.TEST.ENABLED ? DD.TEST.timeScale : 1) * E.prestigeFactor() / 1000;
   info.innerHTML =
     `<div class="ri-out">${iconHTML(r.output)}</div>` +
     `<div class="ri-title">${r.name}</div>` +
+    `<div class="ri-yield" style="font-size:13px;font-weight:700;color:var(--gold);text-align:center;margin:-6px 0 12px">` +
+      `→ ${r.outputQty || 1}× ${iconHTML(r.output)} ${E.itemName(r.output)} · ${+secs.toFixed(1)}s</div>` +
     `<div class="ri-reqs">${reqs}</div>`;
   info.classList.remove("hidden");
+  // sit beside the picker (top-right of it), flipping left if off-screen
+  const mr = $("#recipe-menu").getBoundingClientRect();
+  if (mr.width) {
+    const w = info.offsetWidth, h = info.offsetHeight;
+    let left = mr.right + 8;
+    if (left + w > window.innerWidth - 8) left = Math.max(8, mr.left - 8 - w);
+    info.style.left = left + "px";
+    info.style.top = clamp(mr.top, 8, Math.max(8, window.innerHeight - h - 8)) + "px";
+    info.style.right = "auto"; info.style.bottom = "auto";
+  }
 }
 function hideRecipeInfo() { $("#recipe-info").classList.add("hidden"); }
 
@@ -1362,6 +1899,7 @@ function renderRoster() {
   const cfg = b && DD.BUILDINGS[b.type].roster;
   if (!b || !b.built || !cfg) { closeRoster(); return; }
   bar.classList.remove("hidden");
+  updateHoverName();
   const cap = E.rosterCap(b);
   const haveRobe = E.handCount(cfg.recruit) > 0;
   const full = (b.disciples || 0) >= cap;
@@ -1383,20 +1921,56 @@ function renderRoster() {
 // Left-click a lantern -> panel lists its links (removable) and "Add link"
 // starts a two-click pick: SOURCE building on the map, then TARGET.
 let linkMode = null;   // { area, id, picking: null|"source"|"target", srcId }
+// A Gathering Stone reads as its fullest buffer item + count (the count span
+// is refreshed in place, see refreshLinkCounts); every other building by name.
+function topBuffer(b) {
+  let top = null;
+  for (const x of b.inv || []) if (x.qty > 0 && (!top || x.qty > top.qty)) top = x;
+  return top;
+}
+function stoneCountText(b) {
+  const top = topBuffer(b);
+  return top ? `×${E.gatherTotal(b)}` : "(empty)";
+}
 function bLabel(b) {
   const cfg = DD.BUILDINGS[b.type];
+  if (cfg.gather) {
+    const top = topBuffer(b);
+    return `${cfg.icon} ${top ? iconHTML(top.item) : ""} <span class="lr-cnt" data-bid="${b.id}">${stoneCountText(b)}</span>`;
+  }
   const typed = (cfg.seal || b.type === "storehouse") && b.item ? ` ${iconHTML(b.item)}` : "";
   return `${cfg.icon} ${cfg.name}${typed}`;
+}
+// Live-update stone counts in an open link menu without rebuilding its buttons.
+function refreshLinkCounts() {
+  if (!linkMode) return;
+  for (const sp of $("#link-menu").querySelectorAll(".lr-cnt[data-bid]")) {
+    const b = E.buildingById(linkMode.area, Number(sp.dataset.bid));
+    if (b) sp.textContent = stoneCountText(b);
+  }
+}
+// Status dot colour for a link, from the engine's transient lk._stat
+// ({ sentAt, fail: 'empty'|'refused'|null }): red = target refused, amber =
+// source empty, green = sent within 3 s, grey = idle.
+function linkDot(lk) {
+  const st = lk._stat;
+  if (st && st.fail === "refused") return ["red", "Target refused the item"];
+  if (st && st.fail === "empty") return ["amber", "Source is empty"];
+  if (st && st.fail === "nomatch") return ["amber", "Source holds nothing this target uses"];
+  if (st && st.sentAt && Date.now() - st.sentAt < 3000) return ["green", "Sent an item just now"];
+  return ["grey", "Idle"];
 }
 function openLinkMenu(areaKey, b) {
   closeRecipeMenu(); closeRoster();   // one building panel at a time
   linkMode = { area: areaKey, id: b.id, picking: null, srcId: null };
   renderLinkMenu();
+  positionUnlockButtons();
   requestGridPaint();
 }
 function closeLinkMenu() {
   linkMode = null;
   $("#link-menu").classList.add("hidden");
+  positionUnlockButtons();
   requestGridPaint();
 }
 function renderLinkMenu() {
@@ -1405,18 +1979,9 @@ function renderLinkMenu() {
   const lan = E.buildingById(linkMode.area, linkMode.id);
   if (!lan || !lan.built) { closeLinkMenu(); return; }
   bar.classList.remove("hidden");
+  updateHoverName();
   bar.innerHTML = `<div class="rm-title">🏮 Wisp Lantern — links run in order, one per beat</div>`;
-  (lan.links || []).forEach((l, i) => {
-    const f = E.buildingById(linkMode.area, l.from), t = E.buildingById(linkMode.area, l.to);
-    const row = el("div", "link-row",
-      `<span class="lr-n">${i + 1}.</span> ${f ? bLabel(f) : "?"} <span class="lr-arr">→</span> ${t ? bLabel(t) : "?"}`);
-    const x = el("button", "lr-x", "✕");
-    x.title = "Remove this link";
-    x.setAttribute("aria-label", "Remove this link");
-    x.onclick = () => { E.removeLink(linkMode.area, linkMode.id, i); renderLinkMenu(); render(); };
-    row.appendChild(x);
-    bar.appendChild(row);
-  });
+  // "Add link" (or the pick prompt) comes FIRST so wrapping/many rows can't push it off-screen
   if (linkMode.picking) {
     const src = linkMode.srcId ? E.buildingById(linkMode.area, linkMode.srcId) : null;
     bar.appendChild(el("div", "rm-hint", linkMode.picking === "source"
@@ -1424,22 +1989,236 @@ function renderLinkMenu() {
       : `${src ? bLabel(src) : "?"} → click the TARGET building… Esc cancels`));
   } else {
     const add = el("button", "build-card", `<span class="bc-name">➕ Add link</span>`);
-    add.onclick = () => { linkMode.picking = "source"; linkMode.srcId = null; renderLinkMenu(); };
+    add.onclick = () => { linkMode.picking = "source"; linkMode.srcId = null; linkMode.hint = false; linkMode.refuse = null; renderLinkMenu(); };
     bar.appendChild(add);
   }
+  if (linkMode.hint) bar.appendChild(el("div", "rm-warn", "Wisps can't cross the void between regions"));
+  if (linkMode.refuse && linkMode.picking === "target") bar.appendChild(el("div", "rm-warn", `${linkMode.refuse} — pick another target`));
+  (lan.links || []).forEach((l, i) => {
+    const f = E.buildingById(linkMode.area, l.from), t = E.buildingById(linkMode.area, l.to);
+    const [dot, why] = linkDot(l);
+    const row = el("div", "link-row",
+      `<span class="lr-dot d-${dot}" title="${why}"></span><span class="lr-n">${i + 1}.</span> ${f ? bLabel(f) : "?"} <span class="lr-arr">→</span> ${t ? bLabel(t) : "?"}`);
+    row.querySelector(".lr-dot").setAttribute("aria-label", why);
+    const x = el("button", "lr-x", "✕");
+    x.title = "Remove this link";
+    x.setAttribute("aria-label", "Remove this link");
+    x.onclick = () => { E.removeLink(linkMode.area, linkMode.id, i); renderLinkMenu(); render(); };
+    row.appendChild(x);
+    bar.appendChild(row);
+  });
 }
 
 // ---- tutorial quest panel ------------------------------------
 // The side panel shows ONE quest at a time; goals read live state so
-// already-done things are instantly claimable. Rebuilt only when the
-// quest index / progress / collapsed state actually changes.
+// already-done things are instantly claimable. Under it, from minute 0, a
+// compact 🎯 next-milestone block (the long goal, never hidden). Rebuilt
+// only when the key string (quest index / progress / milestone HTML /
+// collapsed state) actually changes — never a DOM rebuild per tick.
 let lastQuestKey = "";
+const srcHint = it => (DD.SOURCES && DD.SOURCES[it]) || "";
+// Any standing (built) building of this type, anywhere?
+function builtAnywhere(type) {
+  for (const k of Object.keys(window.GS.areas))
+    if (window.GS.areas[k].buildings.some(b => b.built && b.type === type)) return true;
+  return false;
+}
+// Named have/need rows with a one-line source hint per item.
+function needRows(rem) {
+  return Object.entries(rem).map(([it, q]) => {
+    const have = E.handCount(it);
+    return `<div class="ms-need${have >= q ? " ok" : ""}">${iconHTML(it)} <b>${E.itemName(it)}</b> ${have}/${q}` +
+      (srcHint(it) ? ` <span class="ms-src">— ${srcHint(it)}</span>` : "") + `</div>`;
+  }).join("");
+}
+// "a" / "an" before a name.
+const aAn = w => (/^[aeiou]/i.test(w) ? "an " : "a ") + w;
+// Items of `item` sitting in built Storehouses / Warding Seals anywhere:
+// { qty, where } (where = the kind holding the most).
+function storedCount(item) {
+  let qty = 0, sh = 0, seal = 0;
+  for (const k of Object.keys(window.GS.areas))
+    for (const b of window.GS.areas[k].buildings) {
+      if (!b.built || b.item !== item || !(b.qty > 0)) continue;
+      if (b.type === "storehouse") { qty += b.qty; sh += b.qty; }
+      else if (DD.BUILDINGS[b.type].seal) { qty += b.qty; seal += b.qty; }
+    }
+  return { qty, where: sh >= seal ? "Storehouse" : "Warding Seal" };
+}
+// First missing sub-step toward `need` x `item` by walking recipes ->
+// buildings. Storehouse / Seal stock counts as covered ("Paper: 7 in a
+// Storehouse"). A standing producer is preferred on the recipe it RUNS; one
+// on another recipe -> "switch the X to <recipe>"; none -> "build a X
+// (inputs)"; producer running -> chase the first input neither the hand,
+// storage nor its stock covers; raw -> source hint.
+function stepToward(item, path, need) {
+  path = path || [];
+  need = need || 1;
+  const head = path.length ? `<span class="ms-path">${path.map(E.itemName).join(" › ")} ›</span> ` : "";
+  const label = `${iconHTML(item)} <b>${E.itemName(item)}</b>`;
+  const st = storedCount(item);
+  if (st.qty > 0 && E.handCount(item) + st.qty >= need)
+    return { text: `${head}${label}: ${st.qty} in ${aAn(st.where)} — left-click it to withdraw` };
+  const prods = [];
+  for (const [type, bc] of Object.entries(DD.BUILDINGS))
+    (bc.recipes || []).forEach((r, ri) => { if (r.output === item) prods.push({ type, r, ri }); });
+  if (!prods.length || path.length >= 4) return { text: `${head}${label} ← ${srcHint(item) || "gather it"}` };
+  // standing producers: the ones already RUNNING a recipe for this item win
+  const running = [], idle = [];
+  for (const k of Object.keys(window.GS.areas))
+    for (const b of window.GS.areas[k].buildings) {
+      if (!b.built) continue;
+      const mine = prods.filter(p => p.type === b.type);
+      if (!mine.length) continue;
+      const on = mine.find(p => p.ri === (b.recipe || 0));
+      if (on) running.push({ b, p: on }); else idle.push({ b, p: mine[0] });
+    }
+  if (!running.length && idle.length) {
+    const bc = DD.BUILDINGS[idle[0].p.type];
+    return { text: `${head}${label} ← switch the ${bc.name} to ${idle[0].p.r.name} (click it)` };
+  }
+  if (!running.length) {
+    const pick = prods.find(p => E.isBuildingUnlocked(p.type)) || prods[0];
+    const bc = DD.BUILDINGS[pick.type];
+    const insTxt = Object.keys(pick.r.inputs).map(E.itemName).join(" + ");
+    return { text: `${head}${label} ← build ${aAn(bc.name)} (${insTxt})`, build: pick.type };
+  }
+  const pick = running[0].p, bc = DD.BUILDINGS[pick.type], ins = Object.keys(pick.r.inputs);
+  const insTxt = ins.map(E.itemName).join(" + ");
+  let stocked = true;
+  for (const it of ins) {
+    let inStock = 0;
+    for (const { b, p } of running) if (p === pick) inStock += (b.stock && b.stock[it]) || 0;
+    if (inStock < pick.r.inputs[it]) stocked = false;
+    const have = E.handCount(it) + storedCount(it).qty + inStock;
+    if (have < pick.r.inputs[it]) return stepToward(it, path.concat(item), pick.r.inputs[it]);
+  }
+  if (stocked) return { text: `${head}${label} ← the ${bc.name} is making it — collect the output` };
+  return { text: `${head}${label} ← feed the ${bc.name}: ${insTxt}` };
+}
+// Standing building of a type that produces `item` (recipe output or a
+// generator like the Algae Farm / Herb Garden) — the unbuilt, revealed ones
+// are what the milestone should point the build menu at.
+function producerTypes(item) {
+  const out = [];
+  for (const [type, bc] of Object.entries(DD.BUILDINGS))
+    if ((bc.recipes || []).some(r => r.output === item) || (bc.gen && bc.gen.item === item)) out.push(type);
+  return out;
+}
+// The next big goal, from minute 0: dragon tribute -> raise the Ascension
+// Gate (expanded into its first missing sub-step) -> ascend. Plus two side
+// lines: unspent AP (shop not opened this run) and hungry disciples.
+// Returns { html, build } (build = a building type the goal asks for).
+function milestoneInfo() {
+  const G0 = window.GS;
+  let html = "", build = null;
+  const builds = [];   // every building the goal points at (build-menu targets, in order)
+  const ap = G0.ascendPoints || 0;
+  if (!G0.perkShopSeen && ap > 0) {
+    let cheapest = null;
+    for (const pk of DD.PERKS) { const c = E.perkCost(pk.id); if (c != null && (cheapest == null || c < cheapest)) cheapest = c; }
+    if (cheapest != null && ap >= cheapest)
+      html += `<div class="ms-line gold">☯ Spend ${ap} AP at the Ascension Shrine (☯ in the bottom bar)</div>`;
+  }
+  const st = E.dragonStage();
+  if (st) {
+    const n = G0.dragon.stage || 0, rem = E.dragonRemaining();
+    let paid = 0, all = 0;
+    for (const it of Object.keys(st.needs)) { const pd = G0.dragon.paid[it] || 0; paid += pd; all += pd + (rem[it] || 0); }
+    // tribute items no hand covers whose producer (Forge, Algae Farm, Herb
+    // Garden...) is revealed but not standing: the build menu leads with it
+    for (const it of Object.keys(rem)) {
+      if (E.handCount(it) >= rem[it]) continue;
+      const types = producerTypes(it);
+      if (types.some(builtAnywhere)) continue;
+      const t = types.find(ty => E.isBuildingUnlocked(ty));
+      if (t && !builds.includes(t)) builds.push(t);
+    }
+    html += `<div class="qp-name">🐉 Dragon tribute ${n + 1}/${DD.DRAGON_STAGES.length}</div>` +
+      `<div class="qp-desc">Right-click the dragon to feed it. In hand / still needed:</div>${needRows(rem)}` +
+      `<div class="qp-bar"><div class="qp-fill" style="width:${all ? Math.round(100 * paid / all) : 0}%"></div></div>`;
+  } else {
+    let gate = null;
+    for (const k of Object.keys(G0.areas))
+      for (const b of G0.areas[k].buildings) if (DD.BUILDINGS[b.type].gate && (!gate || b.built)) gate = b;
+    if (!gate || !gate.built) {
+      const gType = Object.keys(DD.BUILDINGS).find(t => DD.BUILDINGS[t].gate);
+      const rem = gate ? E.buildingNeeds(gate) : (gType ? DD.BUILDINGS[gType].cost : {});
+      const miss = Object.keys(rem).find(it => E.handCount(it) < rem[it]);
+      const step = miss ? stepToward(miss, [], rem[miss])
+        : { text: gate ? "Right-click the Gate ghost to feed it." : "Place it from the build menu (B)." };
+      if (!gate && !miss) build = gType;
+      else if (step.build) build = step.build;
+      html += `<div class="qp-name">⛩️ Raise the Ascension Gate</div>` +
+        `<div class="qp-desc">${gate ? "Feed its ghost (right-click). In hand / still needed:" : "Build it (B), then feed it. In hand / cost:"}</div>` +
+        needRows(rem) + `<div class="ms-step">Next step: ${step.text}</div>`;
+    } else {
+      const allOpen = Object.keys(DD.WORLD.regions).every(k => G0.world.unlocked[k]);
+      const off = E.gateOfferings(null, gate);
+      const offIcons = DD.GATE_OFFERINGS.items.map(it => iconHTML(it)).join(" ");
+      html += `<div class="qp-name">☯ Ascend for +${E.ascendReward()} ☯</div>` +
+        `<div class="qp-desc">Click the Ascension Gate ⛩️ to ascend — ` +
+        (allOpen ? `every region is open.</div>` +
+          `<div class="ms-line">${offeringsHTML(off)}${off.count >= off.cap ? "" : ` — right-click spares onto the Gate (+1 ☯ each)`}</div>`
+          : `each region unlocked (+2 ☯) or gate offering (${offIcons}, ${off.count}/${off.cap}) = more Ascension Points.</div>`);
+    }
+  }
+  // disciples eat buns: the first pavilion's seed runs out — point at a Mill
+  if (!builtAnywhere("mill") && !builtAnywhere("brewery")) {
+    let hungry = false;
+    for (const k of Object.keys(G0.areas))
+      for (const b of G0.areas[k].buildings) if (b.built && DD.BUILDINGS[b.type].roster && (b.disciples || 0) > 0) hungry = true;
+    if (hungry) {
+      html += `<div class="ms-line">🥟 Disciples eat Spirit Buns — build a Mill (Rice Flour → Spirit Buns) or a Brewery (Spirit Wine) for more.</div>`;
+      if (!builds.includes("mill")) builds.push("mill");
+    }
+  }
+  if (build && !builds.includes(build)) builds.unshift(build);
+  return { html, build: build || builds[0] || null, builds };
+}
+// Build-menu targets: what the active quest asks for (not yet built by the
+// player), then the milestone's building.
+function buildTargets() {
+  const out = [], gq = window.GS.quest, q = DD.QUESTS[gq.idx];
+  if (q && q.builds) {
+    const p = E.questProgress(gq.idx);
+    if (p && !p.done) for (const t of q.builds) if (!(window.GS.builtTypes || {})[t]) out.push(t);
+  }
+  for (const mb of milestoneInfo().builds) if (!out.includes(mb)) out.push(mb);
+  return out;
+}
+// "Unlocks: <icons>" preview of a quest's reward (shown BEFORE claiming).
+function questRewardHTML(q) {
+  const r = q.reward;
+  if (!r) return "";
+  const parts = (r.reveal || []).filter(t => DD.BUILDINGS[t])
+    .map(t => `<span class="qp-unl" title="${DD.BUILDINGS[t].name}">${DD.BUILDINGS[t].icon}</span>`);
+  for (const [it, n] of Object.entries(r.items || {}))
+    parts.push(`<span class="qp-unl" title="${n} ${E.itemName(it)}">+${n} ${iconHTML(it)}</span>`);
+  return parts.length ? `<div class="qp-unlocks">Unlocks: ${parts.join(" ")}</div>` : "";
+}
+// Reward juice after a claim: hand-bound items float at the view centre
+// (what didn't fit already dropped beside the Altar with its own "+N").
+function questRewardFx(res) {
+  let dy = 0;
+  for (const [it, n] of Object.entries(res.toHand || {})) {
+    addFloater(cam.x + VIEW_W / 2, cam.y + VIEW_H * 0.35 + dy, `+${n} ${E.itemName(it)} → hand`, C.gold, it);
+    dy += 22;
+  }
+  if (dy) requestGridPaint();
+}
 function renderQuestPanel() {
+  const before = lastQuestKey;
+  renderQuestPanelInner();
+  if (lastQuestKey !== before) positionUnlockButtons();
+}
+function renderQuestPanelInner() {
   const panel = $("#quest-panel");
   const gq = window.GS.quest;
   const i = gq.idx, total = DD.QUESTS.length;
   const p = i < total ? E.questProgress(i) : null;
-  const key = `${gq.hidden}|${i}|${p ? p.cur + "/" + p.need + "/" + p.done : "end"}`;
+  const ms = !gq.hidden ? milestoneInfo().html : "";
+  const key = `${gq.hidden}|${i}|${p ? p.cur + "/" + p.need + "/" + p.done : "end"}|${ms}`;
   if (key === lastQuestKey) return;
   lastQuestKey = key;
 
@@ -1452,24 +2231,79 @@ function renderQuestPanel() {
   }
   panel.className = "";
   if (i >= total) {
-    panel.innerHTML = `<div class="qp-head"><span>📜 Quests</span>` +
-      `<button id="quest-min" title="Collapse">–</button></div>` +
-      `<div class="qp-done">🎉 Tutorial complete!<br>Now cultivate on — feed the Sleeping Dragon 🐉 through its stages to fully awaken it, then raise the Ascension Gate ⛩️ to ascend.</div>`;
+    panel.innerHTML = `<div class="qp-head"><span>🎯 Next milestone</span>` +
+      `<button id="quest-min" title="Collapse">–</button></div>` + ms;
     $("#quest-min").setAttribute("aria-label", "Collapse quest panel");
     $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
     return;
   }
-  const q = DD.QUESTS[i];
+  const q = DD.QUESTS[i], nq = DD.QUESTS[i + 1];
   panel.innerHTML =
     `<div class="qp-head"><span>📜 Quest ${i + 1}/${total}</span>` +
     `<button id="quest-min" title="Collapse">–</button></div>` +
     `<div class="qp-name">${q.icon} ${q.name}</div>` +
     `<div class="qp-desc">${q.desc}</div>` +
+    questRewardHTML(q) +
     `<div class="qp-bar"><div class="qp-fill" style="width:${Math.round(100 * p.cur / p.need)}%"></div></div>` +
     `<div class="qp-row"><span class="qp-prog">${p.cur}/${p.need}</span>` +
-    `<button id="quest-claim" ${p.done ? "" : "disabled"}>${p.done ? "Claim ✔" : "Claim"}</button></div>`;
+    `<button id="quest-claim" ${p.done ? "" : "disabled"}>${p.done ? "Claim ✔" : "Claim"}</button></div>` +
+    (nq ? `<div class="qp-next">Next: ${nq.icon} ${nq.name}</div>` : "") +
+    (ms ? `<div class="qp-ms"><div class="qp-ms-head">🎯 Next milestone</div>${ms}</div>` : "");
   $("#quest-min").onclick = () => { gq.hidden = true; renderQuestPanel(); };
-  $("#quest-claim").onclick = () => { if (E.claimQuest()) renderQuestPanel(); };
+  $("#quest-claim").onclick = () => {
+    const res = E.claimQuest();
+    if (res) { questRewardFx(res); render(); }   // full render: the claim may reveal build cards
+  };
+}
+
+// ---- quest target ring ---------------------------------------
+// The active quest may name a world object (DATA.QUESTS[].target); while
+// it's unclaimed-and-unfinished a soft gold ring pulses on it. It only
+// animates while on screen (animActive), so idle stays at 0 draws.
+function questTargetRect() {
+  const gq = window.GS.quest, q = DD.QUESTS[gq.idx];
+  if (!q || !q.target) return null;
+  const t = q.target, area = t.area || "center";
+  if (!DD.WORLD.regions[area] || !E.isAreaUnlocked(area)) return null;
+  const p = E.questProgress(gq.idx);
+  if (!p || p.done) return null;
+  const st = window.GS.areas[area], o = regionPx(area);
+  if (t.kind === "fixture") {
+    const n = st.nodes.find(nd => nd.fixed && nd.kind === t.id);
+    return n ? { x: o.x + n.col * CELL, y: o.y + n.row * CELL, w: n.size * CELL, h: n.size * CELL } : null;
+  }
+  if (t.kind === "enemyZone") {
+    const ez = DD.AREAS[area].enemies, z = ez && E.zoneRects(ez.zone)[0];
+    return z ? { x: o.x + z.c0 * CELL, y: o.y + z.r0 * CELL, w: (z.c1 - z.c0 + 1) * CELL, h: (z.r1 - z.r0 + 1) * CELL, zone: true } : null;
+  }
+  const type = t.kind === "dragon" ? "dragon" : t.kind === "altar" ? "center" : t.id;
+  const b = st.buildings.find(bd => bd.built && bd.type === type) || st.buildings.find(bd => bd.type === type);
+  if (!b) return null;
+  const bs = E.buildingSize(b.type);
+  return { x: o.x + b.col * CELL, y: o.y + b.row * CELL, w: bs.w * CELL, h: bs.h * CELL };
+}
+function questRingOnScreen() {
+  const r = questTargetRect();
+  return !!r && r.x < cam.x + VIEW_W && r.x + r.w > cam.x && r.y < cam.y + VIEW_H && r.y + r.h > cam.y;
+}
+function drawQuestRing(now, X, Y, s) {
+  if (!questRingOnScreen()) return;
+  const r = questTargetRect();
+  const k = 0.5 + 0.5 * Math.sin(now / 320);
+  ctx.save();
+  ctx.strokeStyle = `rgba(251,191,36,${(0.35 + 0.4 * k).toFixed(3)})`;
+  ctx.lineWidth = Math.max(2, 3 * s);
+  if (r.zone) {                               // a whole zone: pulsing dashed frame
+    ctx.setLineDash([10 * s, 8 * s]);
+    const in_ = 6 + 4 * k;
+    ctx.strokeRect(X(r.x + in_), Y(r.y + in_), (r.w - 2 * in_) * s, (r.h - 2 * in_) * s);
+  } else {
+    const rad = Math.max(r.w, r.h) * 0.62 + 6 + 6 * k;
+    ctx.beginPath();
+    ctx.arc(X(r.x + r.w / 2), Y(r.y + r.h / 2), rad * s, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
 }
 
 // ---- help / tutorial modal -----------------------------------
@@ -1480,13 +2314,13 @@ function openHelp() {
   const u = window.GS.world.unlocked;
   const S = [];
   S.push(["🕹️ Controls",
-    "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Esc cancels/closes."]);
+    "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Q / E rotate the stacks in your hand, Esc cancels/closes."]);
   S.push(["✋ Gathering & the hand",
-    "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown bottom-right). RIGHT-click drops items / feeds buildings; the front stack feeds first."]);
+    "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown in the bottom bar); if you START the hold on an item, only that item type is vacuumed. RIGHT-click drops items / feeds buildings; the front stack feeds first (Q / E change which stack is in front). Holding right-click keeps feeding but stops at the target: it never spills onto the ground once the building is full."]);
   S.push(["🏗️ Buildings",
-    "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input."]);
-  S.push(["🔥 Fuel",
-    "Burners (Kiln, Forge…) show an orange fuel gauge — feed them wood, bamboo or charcoal (charcoal burns 4× longer, from the Charcoal Pit). A Furnace Spirit 🕯️ stokes every burner within 3 cells from its own stash."]);
+    "B places a ghost; right-click-feed it its cost to build. Left-click a converter to pick its recipe (switching drops its held stock). 🗑 Demolish refunds. Converters hold up to 20 of each input, and show what they are doing under the result icon: <b>Needs</b> an input (red), <b>No fuel</b> (red), <b>Stock full</b> (amber — inputs at the cap), <b>Output pile full</b> (amber — too much of its output is lying around it, so it waits until the pile is cleared or wisped away), or Working with crafts per minute. Region unlocks can be paid in installments: click or right-click the unlock button to pay what your hand holds, as often as you like — what you have paid is kept."]);
+  S.push(["🔥 Fuel racks",
+    `Every burner (Kiln, Forge, Pill Furnace, Star Anvil) has one FUEL RACK on its LEFT: right-click wood, bamboo, charcoal or firestone into it (charcoal burns 4× longer than wood, firestone 12×). Fuel is separate from ingredients — recipes never consume it, only the burn does. A Furnace Spirit 🕯️ (holds ${DD.BUILDINGS.furnace_spirit.stoker.cap}) tops up every burner whose CENTRE is inside its dashed circle (${stokeReach(DD.BUILDINGS.furnace_spirit)} cells) from its own stash; hover it to see the range.`]);
   S.push(["🏛️ Altar upgrades",
     "Click the Altar to open the upgrade tree. Select a node, then right-click-feed the Altar the cost shown on it. Switching refunds what you fed."]);
   S.push(["🐉 The Sleeping Dragon",
@@ -1496,13 +2330,11 @@ function openHelp() {
   S.push(["🫕 Dragon pills",
     "The Pill Furnace refines Qi Elixirs into four pills. Right-click one onto the dragon and it exhales a timed blessing (60s base, longer with Dragon Affinity): Ember = burners 2×, Verdant = regrow 2×, Swiftwind = wisps 2×, Stoneheart = double mining drops. A new pill replaces the active one."]);
   S.push(["🏮 Wisp network",
-    "Gathering Stones 🧿 vacuum ground items. Wisp Lanterns ferry them: click a lantern to edit its links (source → target, served in order, one per beat). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw."]);
+    `Gathering Stones 🧿 vacuum ground items inside their circle (hover one, or open a lantern's link menu, to see it; it holds ${DD.BUILDINGS.gathering_stone.gather.cap} and shows n/cap). Wisp Lanterns ferry items: click a lantern to edit its links (Add link → source → target, served in order, one per beat; a dot per link shows sent / source empty / target refused / idle; amber also means the source holds nothing this target uses). Warding Seals 🈯 only pass their tuned item — right-click one with an item to retune. Storehouses 📦 buffer a single type; left-click any buffer to withdraw. Wisps cannot cross the void between regions: links stay within one region. A link is refused if its target can never use the source's item (a Kiln can't take Planks).`]);
   S.push(["🧘 Disciples",
     "Build a Meditation Pavilion, then click it and Recruit disciples (each costs a Robe 🥋 from the Loom). Feed the pavilion Spirit Buns 🥟 (Mill) or Spirit Wine 🍶 (Brewery, worth 3×) by hand or wisp — while fed, each disciple cultivates Spirit Essence ✨. Disciple Mastery in the upgrade tree raises the cap."]);
-  S.push(["🔥 Burner fuel racks",
-    "Every burner has a FUEL RACK on its LEFT — feed coal or wood there (right-click) and it keeps the fire lit. Fuel is separate from ingredients: recipes never consume the fuel you rack, only the burn gauge does."]);
   if (dr >= 1) S.push(["🔥 Forge & smelting",
-    "The dragon taught you the Forge: feed it iron ore + wood (wisps or hand) and it smelts Iron Bars from its stock automatically."]);
+    "The dragon taught you the Forge: feed it iron ore (wisps or hand) and it smelts Iron Bars automatically. Wood, charcoal and firestone are its FUEL — they go on the rack, not into the recipe."]);
   if (u.volcano) S.push(["🌋 Volcano",
     "A molten region yielding Obsidian and Firestone. Unlock its border by paying Iron Bars — the deep heat rewards those who have already mastered smelting."]);
   if (u.grove) S.push(["🎋 Spirit Grove",
@@ -1513,15 +2345,20 @@ function openHelp() {
     "Grows Spirit Herbs around itself on land — the cultivation herb."]);
   if (dr >= 4) S.push(["🐲 The Awakened Dragon",
     "It watches over the grounds and sheds Dragon Scales 🔶 beside itself (faster with a Dragon Shrine, which also lengthens blessings)."]);
+  S.push(["🛠️ Troubleshooting logistics",
+    "<b>Stone full</b> (red n/cap): its buffer is clogged, often by byproducts. Link the stone to targets and it only collects what those targets use, so strays stay on the ground. " +
+    "<b>Low fuel</b>: a burner reading No fuel needs items on its left rack — or a Furnace Spirit in range with a stocked stash. " +
+    "<b>Nothing moves</b>: check the link dot (amber = source empty, or it holds nothing this target uses; red = target refused/full) and that both ends sit in the SAME region — wisps can't cross the void. " +
+    "<b>Automation skipping</b>: when too much of one item is lying around a region, automation stops harvesting that item (a small amber 'Skipping' chip with its icon shows at the region's top-left corner) until you vacuum it up or clear it away; other work carries on."]);
   if (dr >= 4) S.push(["⛩️ Ascension",
-    "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate. Completing it offers ASCENSION: reset the grounds, keep +8% permanent global speed per ascension (☯ in the bottom bar)."]);
+    "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate — the built gate glows gold; click it to ascend. Ascending resets the grounds and grants Ascension Points (AP: 3, +2 per region beyond the Center, plus gate offerings — right-click spare Talismans, Star Steel and Dragon Scales onto the gate, 2 of each count — all × the bonus from any vows you kept) and +20% world speed per ascension (it adds up; ☯ in the bottom bar)."]);
   if ((window.GS.ascensions || 0) > 0 || (window.GS.ascendPoints || 0) > 0)
     S.push(["☯ Ascension Shrine",
-      "Each ascension grants Ascension Points. Open the Shrine (the ☯ button in the bottom bar) to spend them on permanent perks that persist through every future reset."]);
+      "Open the Shrine (the ☯ button in the bottom bar) to spend AP on permanent perks, grouped by Pace, Economy, Combat, Meta and Legacy — they persist through every future reset. Remembered Paths opens the Mine, then Fishing, then the Farm; Center automation also taps the Spirit Tree. After your first ascension you can also take Vows: optional restrictions for a run that pay out extra when you ascend."]);
   if (u.farm || u.mine || u.fishing) S.push(["🗺️ Regions",
-    "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron & jade; Fishing: fish, algae & spring water). Unlock borders with wood."]);
+    "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron ore; Fishing: fish, algae & spring water). Jade shards drop from the Center quarry rock and Mine jade veins. Unlock buttons appear on the side of the screen where the new region lies, only for regions bordering the one you're viewing."]);
   else S.push(["🗺️ Regions",
-    "Locked regions wait beyond the borders — gather wood and pay at a glowing 🔓 border button to expand."]);
+    "Locked regions wait beyond the borders — gather wood and pay at a glowing 🔓 button on the edge facing a region to expand."]);
   S.push(["📊 Stats",
     "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, ascensions and more."]);
 
@@ -1553,7 +2390,7 @@ function openStats() {
     const total = Object.keys(window.DATA.WORLD.regions).length;
     add("Regions unlocked", `${unlocked} / ${total}`);
   }
-  add("Carry capacity", G.handCap);
+  add("Carry capacity", E.handCap());
   $("#stats-body").innerHTML = rows.map(([label, val]) =>
     `<div class="st-row"><span class="st-label">${label}</span>` +
     `<span class="st-val">${val}</span></div>`).join("");
@@ -1563,50 +2400,201 @@ function closeStats() { $("#stats-modal").classList.add("hidden"); }
 
 // ---- ascension gate dialog -----------------------------------
 // Completing (or clicking) the built Gate offers the ending: ascend and
-// keep +8% global speed per ascension, or keep playing this run.
+// keep +20% world speed per ascension (additive), or keep playing this run.
+// After the first ascension it also offers VOWS for the next run.
+const vowPick = new Set();   // vow ids ticked for the NEXT run (UI-only)
+let ascendCountKey = "";
 function syncAscendModal() {
   const modal = $("#ascend-modal");
   if (!modal) return;
   const show = !!window.GS.ascendPrompt;
-  if (show) $("#ascend-count").textContent =
-    `You have ascended ${window.GS.ascensions || 0} time${(window.GS.ascensions || 0) === 1 ? "" : "s"}. ` +
-    `Ascending now grants +8% permanent speed AND ${E.ascendReward()} Ascension Point` +
-    `${E.ascendReward() === 1 ? "" : "s"} to spend at the Shrine — then begins the grounds anew.`;
+  if (show) {
+    const G0 = window.GS, asc = G0.ascensions || 0, n = E.ascendReward();
+    // world speed now vs after this ascension: 1/prestigeFactor — the
+    // engine's own formula (next = one more ascension + marks from kept vows)
+    const now = 1 / E.prestigeFactor();
+    const next = E.nextPrestigeFactor ? 1 / E.nextPrestigeFactor() : now;
+    const g = E.builtGate ? E.builtGate() : null;
+    const off = g ? E.gateOfferings(g.areaKey, g.b) : null;
+    const kept = (E.activeVows ? E.activeVows() : []).map(id => (DD.VOWS || []).find(v => v.id === id)).filter(Boolean);
+    const cnt = $("#ascend-count");
+    const html = `Ascending grants <b>${n} ☯</b> Ascension Point${n === 1 ? "" : "s"}.<br>` +
+      `World speed <b>×${now.toFixed(2)} → ×${next.toFixed(2)}</b> ` +
+      `(machines, nature, wisps, foxes and your own hands).` +
+      (E.tributeMult ? `<br>Dragon tributes <b>×${E.tributeMult(asc).toFixed(2)} → ×${E.tributeMult(asc + 1).toFixed(2)}</b> (the dragon remembers you).` : "") +
+      (off ? `<br>${offeringsHTML(off)}` + (off.count >= off.cap ? "" :
+        ` (+${off.count} ☯) — right-click spare ${iconHTML("talisman")} ${iconHTML("star_steel")} ${iconHTML("dragon_scale")} onto the Gate.`) : "") +
+      (kept.length ? `<br>Vows kept this run: ${kept.map(v => v.icon + " " + v.name).join(", ")} — ` +
+        `AP ×${E.vowMult().toFixed(2)}.` : "") +
+      `<br>(Ascended ${asc} time${asc === 1 ? "" : "s"} so far.)`;
+    if (html !== ascendCountKey) { ascendCountKey = html; cnt.innerHTML = html; }
+    if (!$("#ascend-perks")) {   // "See perks": preview what AP buys
+      const pbtn = el("button", "build-card", "☯ See perks");
+      pbtn.id = "ascend-perks";
+      pbtn.onclick = () => openPerkShop();
+      const row = modal.querySelector(".ascend-row");
+      if (row) row.appendChild(pbtn);
+    }
+    if (asc >= 1 && DD.VOWS && !$("#ascend-vows")) {   // vow picker for the next run, built once
+      const vb = el("div", "hp-sec vow-box", "");
+      vb.id = "ascend-vows";
+      vb.style.cssText = "text-align:left;margin:8px 10px 0";
+      const done = (G0.vows && G0.vows.done) || {};
+      vb.innerHTML = `<div class="hp-t" style="color:var(--gold)">Vows for the next run (optional)</div>` +
+        `<div class="hp-d">A harder run pays more: AP ×${DD.VOW_MULT.slice(1).map(m => m.toFixed(2)).join(" / ×")} ` +
+        `for 1–4 vows kept to the next ascension. A vow's first completion leaves a permanent mark (timers ×0.96).</div>` +
+        DD.VOWS.map(v => `<label class="vow-row" style="display:flex;gap:8px;align-items:baseline;margin:4px 0;cursor:pointer;font-size:13px">` +
+          `<input type="checkbox" data-vow="${v.id}"${vowPick.has(v.id) ? " checked" : ""}>` +
+          `<span>${v.icon} <b>${v.name}</b> — ${v.desc}${(done[v.id] || 0) > 0 ? ` <span style="color:var(--accent)">✓ marked</span>` : ""}</span></label>`).join("");
+      for (const cb of vb.querySelectorAll("input[data-vow]"))
+        cb.onchange = () => { if (cb.checked) vowPick.add(cb.dataset.vow); else vowPick.delete(cb.dataset.vow); };
+      const rowEl = modal.querySelector(".ascend-row");
+      rowEl.parentNode.insertBefore(vb, rowEl);
+    }
+    if (!$("#ascend-keep")) {   // static KEEP / RESET summary, built once
+      const box = el("div", "", "");
+      box.id = "ascend-keep";
+      box.style.cssText = "display:flex;gap:10px;text-align:left;margin:8px 10px 0";
+      const col = (t, color, items) => `<div class="hp-sec" style="flex:1"><div class="hp-t" style="color:${color}">${t}</div>` +
+        `<div class="hp-d">${items.map(x => "• " + x).join("<br>")}</div></div>`;
+      box.innerHTML =
+        col("✔ Keep", "var(--accent)", ["Perks + Ascension Points", "Ascension speed + vow marks", "Dragon's blessing", "Lifetime stats", "Know-how (tutorial skipped)"]) +
+        col("↺ Reset", "var(--danger)", ["Buildings & regions", "Resources", "Dragon stages", "Upgrades"]);
+      cnt.parentNode.insertBefore(box, cnt.nextSibling);
+    }
+  }
   modal.classList.toggle("hidden", !show);
+}
+// Vow ids ticked in the ascend modal (main.js passes them to ENGINE.ascend).
+function chosenVows() { return [...vowPick]; }
+
+// One-time "Ascension n complete" card on the first load of the new run
+// (GS.justAscended, set by ENGINE.ascend); dismissing clears it and saves.
+function showAscendedCard() {
+  const ja = window.GS.justAscended;
+  if (!ja || $("#ascended-modal")) return;
+  const vs = (E.activeVows ? E.activeVows() : []).map(id => (DD.VOWS || []).find(v => v.id === id)).filter(Boolean);
+  const m = el("div", "modal", "");
+  m.id = "ascended-modal";
+  m.setAttribute("role", "dialog"); m.setAttribute("aria-modal", "true"); m.setAttribute("aria-label", "Ascension complete");
+  m.innerHTML = `<div class="modal-box ascend-box" tabindex="-1">` +
+    `<div class="dragon-ico">☯</div><h2>Ascension ${ja.n} complete</h2>` +
+    `<p><b>+${ja.ap} ☯</b> &nbsp;·&nbsp; world speed <b>×${ja.speedFrom.toFixed(2)} → ×${ja.speedTo.toFixed(2)}</b></p>` +
+    (vs.length ? `<p>Vows this run: ${vs.map(v => v.icon + " " + v.name).join(", ")}</p>` : "") +
+    `<p>${headStartsText()}</p>` +
+    `<p>Spend your Ascension Points at the Shrine before you begin — every perk applies at once.</p>` +
+    `<div class="ascend-row"><button id="ascended-shrine" class="build-card">☯ Open Shrine</button>` +
+    `<button id="ascended-close" class="build-card">Begin run ${ja.n + 1}</button></div></div>`;
+  document.body.appendChild(m);
+  const dismiss = () => { window.GS.justAscended = null; window.SAVE.saveState(); m.remove(); renderTopBar(); };
+  m.querySelector("#ascended-shrine").onclick = () => { dismiss(); openPerkShop(); };
+  m.querySelector("#ascended-close").onclick = dismiss;
+}
+
+// What this run starts with, from the legacy perks + ascension count:
+// "Head starts: Farm + Mine open · Center auto L1 · dragon tributes ×0.80".
+// `asc` optionally overrides the ascension count (the preview shows the
+// NEXT run's tribute scale).
+function headStartsText(asc) {
+  const lv = id => E.perkLevel(id);
+  const parts = [];
+  const paths = (E.PATH_REGIONS || []).slice(0, lv("paths")).map(k => DD.AREAS[k].name);
+  const auto = (E.LEGACY_REGIONS || []).slice(0, lv("legacy")).map(k => DD.AREAS[k].name);
+  if (paths.length) parts.push(`${paths.join(" + ")} open`);
+  if (auto.length) parts.push(`${auto.join(" + ")} auto L1`);
+  if (lv("hands")) parts.push(`hand +${5 * lv("hands")}`);
+  const tm = E.tributeMult ? E.tributeMult(asc) : 1;
+  if (tm < 1) parts.push(`dragon tributes ×${tm.toFixed(2)}`);
+  return `Head starts: ${parts.length ? parts.join(" · ") : "none yet — Remembered Paths and Legacy Automation add them"}`;
 }
 
 // ---- Ascension Shrine (prestige perk shop) -------------------
 // Spend Ascension Points (earned by ascending) on permanent perks that
-// persist through every future reset.
+// persist through every future reset. Cards are grouped by role, with a few
+// flagged as good first picks (spending guidance at the first prestige).
+const PERK_GROUPS = [
+  ["Pace", ["haste", "regrow", "gale"]],
+  ["Economy", ["frugal", "ember", "bounty", "hands"]],
+  ["Combat", ["fury"]],
+  ["Meta", ["apgain", "hall", "autoboost", "slumber", "bless"]],
+  ["Legacy", ["paths", "legacy"]],
+];
+const PERK_FIRST_PICKS = ["haste", "hands", "paths"];
+// Effect value at a given level — cards show "now → next".
+const perkMul = v => `×${v.toFixed(2)}`;
+const PERK_FX = {   // [label, level -> value]
+  haste:     ["timers",       l => perkMul(Math.pow(0.95, l))],
+  hall:      ["disciples",    l => `+${l}`],
+  slumber:   ["offline",      l => `${8 + 2 * l}h`],
+  hands:     ["carry",        l => `+${5 * l}`],
+  frugal:    ["unlock cost",  l => perkMul(Math.pow(0.8, l))],
+  ember:     ["fuel use",     l => perkMul(Math.pow(0.85, l))],
+  apgain:    ["AP/ascension", l => `+${l}`],
+  autoboost: ["nodes/tick",   l => `+${l}`],
+  regrow:    ["regrow",       l => perkMul(Math.pow(0.9, l))],
+  gale:      ["lantern beat", l => perkMul(Math.pow(0.9, l))],
+  fury:      ["damage",       l => `+${l}`],
+  bless:     ["blessings",    l => perkMul(Math.pow(1.2, l))],
+  bounty:    ["fields",       l => perkMul(Math.pow(0.9, l))],
+  paths:     ["opens",        l => l ? (E.PATH_REGIONS || ["mine", "fishing", "farm"]).slice(0, l).map(k => DD.AREAS[k].name).join(" + ") : "none"],
+  legacy:    ["auto L1",      l => l ? ["Center", "Farm", "Mine"].slice(0, l).join(" + ") : "none"],
+};
+function perkFxHTML(perk, lvl) {
+  const fx = PERK_FX[perk.id];
+  if (!fx) return "";
+  const [label, f] = fx;
+  return `<div class="pk-fx" style="font-size:12px;color:var(--accent);margin-top:2px">${label} ` +
+    (lvl >= perk.max ? `${f(lvl)} (max)` : `${f(lvl)} → ${f(lvl + 1)}`) + `</div>`;
+}
 function renderPerkShop() {
   const ap = window.GS.ascendPoints || 0;
-  $("#perk-ap-line").innerHTML = `<b>${ap}</b> Ascension Point${ap === 1 ? "" : "s"} to spend` +
-    ` &nbsp;·&nbsp; ${window.GS.ascensions || 0} ascension${(window.GS.ascensions || 0) === 1 ? "" : "s"}`;
+  // opened from the ascend modal ("See perks"): a preview — show the AP the
+  // ascension is about to add and what the legacy perks will give
+  const preview = !!window.GS.ascendPrompt;
+  const gain = preview ? E.ascendReward() : 0;
+  $("#perk-ap-line").innerHTML = (preview
+    ? `You have <b>${ap}</b> ☯ <span style="color:var(--gold)">(+${gain} on ascending)</span>`
+    : `<b>${ap}</b> Ascension Point${ap === 1 ? "" : "s"} to spend`) +
+    ` &nbsp;·&nbsp; ${window.GS.ascensions || 0} ascension${(window.GS.ascensions || 0) === 1 ? "" : "s"}` +
+    `<br><span style="font-size:12px">${preview ? "Next run — " : ""}${headStartsText(preview ? (window.GS.ascensions || 0) + 1 : undefined)}</span>`;
   const list = $("#perk-list");
   list.innerHTML = "";
-  for (const perk of DD.PERKS) {
-    const lvl = E.perkLevel(perk.id), cost = E.perkCost(perk.id);
-    const maxed = cost == null, afford = !maxed && ap >= cost;
-    const card = el("div", "perk-card" + (maxed ? " maxed" : afford ? " afford" : ""));
-    card.innerHTML =
-      `<div class="pk-ico">${perk.icon}</div>` +
-      `<div class="pk-body"><div class="pk-name">${perk.name} ` +
-        `<span class="pk-lv">${lvl}/${perk.max}</span></div>` +
-        `<div class="pk-desc">${perk.desc}</div></div>` +
-      `<button class="pk-buy build-card"${afford ? "" : " disabled"}>` +
-        (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
-    const buyBtn = card.querySelector(".pk-buy");
-    if (!maxed && afford) buyBtn.onclick = () => {
-      if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); }
-    };
-    else if (!maxed) {   // unaffordable: disabled button swallows clicks in Firefox — buzz on the card
-      buyBtn.style.pointerEvents = "none";
-      card.onclick = () => { if (window.AUDIO) window.AUDIO.play("error"); };
-    }
-    list.appendChild(card);
+  // grouped under small headers; unknown ids land in a trailing "Other"
+  const groupOf = id => PERK_GROUPS.find(g => g[1].includes(id));
+  const groups = PERK_GROUPS.map(g => [g[0], DD.PERKS.filter(p => groupOf(p.id) === g)])
+    .concat([["Other", DD.PERKS.filter(p => !groupOf(p.id))]]);
+  for (const [gName, perks] of groups) {
+    if (!perks.length) continue;
+    const h = list.appendChild(el("div", "perk-group", gName));
+    h.style.cssText = "font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 2px -4px";
+    for (const perk of perks) list.appendChild(perkCard(perk, ap));
   }
 }
-function openPerkShop() { renderPerkShop(); $("#perk-modal").classList.remove("hidden"); }
+function perkCard(perk, ap) {
+  const lvl = E.perkLevel(perk.id), cost = E.perkCost(perk.id);
+  const maxed = cost == null, afford = !maxed && ap >= cost;
+  const card = el("div", "perk-card" + (maxed ? " maxed" : afford ? " afford" : ""));
+  card.innerHTML =
+    `<div class="pk-ico">${perk.icon}</div>` +
+    `<div class="pk-body"><div class="pk-name">${perk.name} ` +
+      `<span class="pk-lv">${lvl}/${perk.max}</span>` +
+      (PERK_FIRST_PICKS.includes(perk.id) ? ` <span class="perk-pick">★ good first pick</span>` : "") + `</div>` +
+      `<div class="pk-desc">${perk.desc}</div>${perkFxHTML(perk, lvl)}</div>` +
+    `<button class="pk-buy build-card"${afford ? "" : " disabled"}>` +
+      (maxed ? "MAX" : `${cost} ☯`) + `</button>`;
+  const buyBtn = card.querySelector(".pk-buy");
+  if (!maxed && afford) buyBtn.onclick = () => {
+    // (Remembered Paths opens a region at once: rebuild the unlock buttons
+    // and repaint the veil)
+    if (E.buyPerk(perk.id)) { renderPerkShop(); renderTopBar(); renderUnlockButtons(); requestGridPaint(); }
+  };
+  else if (!maxed) {   // unaffordable: disabled button swallows clicks in Firefox — buzz on the card
+    buyBtn.style.pointerEvents = "none";
+    card.onclick = () => { if (window.AUDIO) window.AUDIO.play("error"); };
+  }
+  return card;
+}
+function openPerkShop() { window.GS.perkShopSeen = true; renderPerkShop(); $("#perk-modal").classList.remove("hidden"); }
 function closePerkShop() { $("#perk-modal").classList.add("hidden"); }
 
 // ---- dragon story dialog ------------------------------------
@@ -1634,13 +2622,130 @@ function fmtAway(ms) {
   if (m > 0) return `${m}m`;
   return `${s}s`;
 }
-// Show the "Welcome back" modal with what accrued while the tab was closed.
-// `summary` is engine.runOfflineCatchup()'s return, or null (shows nothing).
+// Put the #welcome-modal into its "welcome back" shape (the first-run intro
+// reuses the same DOM with other text/icon).
+function welcomeShape() {
+  $("#welcome-modal .dragon-ico").textContent = "🌙";
+  $("#welcome-modal h2").textContent = "Welcome back";
+  $("#welcome-gains").innerHTML = "";
+  $("#welcome-why").innerHTML = "";
+}
+// Long absence: the replay runs in slices (main.js) — show the modal with a
+// progress bar and a Skip button. Skip is honest: the remaining away-time is
+// forfeited, not credited (once output has levelled off it says so instead).
+// Continue stays hidden until the summary is in.
+function showOfflineProgress(job, onSkip) {
+  welcomeShape();
+  $("#welcome-away").textContent = job.resumed
+    ? `You were away ${fmtAway(job.awayMs)}. Finishing your interrupted catch-up…`
+    : `You were away ${fmtAway(job.awayMs)}. Catching up on what the grounds made…`;
+  $("#welcome-progress").classList.remove("hidden");
+  $("#welcome-close").classList.add("hidden");
+  const skip = $("#welcome-skip");
+  skip.disabled = false;
+  skip.onclick = () => { skip.disabled = true; skip.textContent = "Stopping…"; if (onSkip) onSkip(); };
+  updateOfflineProgress(job);
+  $("#welcome-modal").classList.remove("hidden");
+}
+// Called between replay slices (never during one), so Date.now is real here.
+function updateOfflineProgress(job) {
+  const f = E.offlineProgress(job);
+  const pct = Math.floor(f * 100);
+  $("#welcome-progress .wp-fill").style.width = pct + "%";
+  $("#welcome-progress .wp-label").textContent = `Catching up… ${pct}%`;
+  const skip = $("#welcome-skip");
+  if (!skip.disabled) {
+    const left = Math.max(0, job.end - job.virt);
+    skip.textContent = E.offlineLevelled && E.offlineLevelled(job)
+      ? "Skip — output has levelled off"
+      : `Skip — forfeit the last ${fmtAway(left)}`;
+  }
+}
+
+// "Why it stopped" rows: plain-language reasons passive output capped out,
+// each with the fix. `stalls` comes from engine offlineStalls().
+function stallRowsHTML(summary) {
+  const rows = [];
+  const area = k => (DD.AREAS[k] && DD.AREAS[k].name) || k;
+  const names = s => (s.names || []).join(", ");
+  if (summary.saturatedMs > 0)
+    rows.push(`Output levelled off after about <b>${fmtAway(summary.flatAtMs || 0)}</b> — saturated: nothing more would have been produced in the remaining ${fmtAway(Math.max(0, summary.elapsedMs - (summary.flatAtMs || 0)))}, so the catch-up stopped there (nothing was forfeited).`);
+  else if (summary.plateauMs)
+    rows.push(`Output levelled off after about <b>${fmtAway(summary.plateauMs)}</b> — the rest of the time added little.`);
+  const full = (summary.stalls || []).filter(s => s.kind === "ground").map(s => area(s.areaKey));
+  if (full.length)
+    rows.push(`Ground full in <b>${full.join(", ")}</b>: the oldest loose raw items were cleared. Gathering Stones feeding Storehouses keep it clear.`);
+  for (const s of summary.stalls || []) {
+    if (s.kind === "autoskip")
+      rows.push(`<b>${area(s.areaKey)}</b>: bots skipped ${names(s)} — plenty already lay loose. Gathering Stones + Storehouses clear it.`);
+    else if (s.kind === "outfull")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${names(s)} stopped — ${s.count > 1 ? "their output piles are" : "its output pile is"} full. A Gathering Stone beside it hauls products away.`);
+    else if (s.kind === "nofuel")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${s.count > 1 ? s.count + " burners" : "a burner"} (${names(s)}) ran out of fuel — a Furnace Spirit keeps racks stoked.`);
+    else if (s.kind === "nobuns")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${names(s)} ran out of food, so the disciples stopped cultivating — link food to it.`);
+    else if (s.kind === "stonefull")
+      rows.push(`<b>${area(s.areaKey)}</b>: ${s.count} ${s.count > 1 ? "Gathering Stones are" : "Gathering Stone is"} full — link a Wisp Lantern to haul from ${s.count > 1 ? "them" : "it"}.`);
+  }
+  if (!rows.length) return "";
+  return `<div class="ww-head">Why it stopped</div>` + rows.map(r => `<div class="ww-row">${r}</div>`).join("");
+}
+
+// Short absence (90s–10min): no modal, just a line that fades on its own.
+let toastTimer = 0;
+function showOfflineToast(text) {
+  const t = $("#offline-toast");
+  if (!t) return;
+  t.textContent = text;
+  t.classList.remove("hidden", "fade");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.classList.add("fade");
+    toastTimer = setTimeout(() => t.classList.add("hidden"), 700);
+  }, 5000);
+}
+
+// Welcome-back, tiered by how long the tab was closed. `summary` is the
+// engine's finishOfflineCatchup()/runOfflineCatchup() result, or null
+// (a plain reload < 90s: shows nothing).
+//   < 10 min  a toast: "Welcome back — +N items while away"
+//   >= 10 min the modal: gains, what was skipped, and "why it stopped" rows
 function showOfflineSummary(summary) {
-  if (!summary) return;
+  if (!summary) {
+    // no summary (should not happen for a started replay): never strand the
+    // progress bar — let the player close the modal
+    if (!$("#welcome-progress").classList.contains("hidden")) {
+      $("#welcome-progress").classList.add("hidden");
+      $("#welcome-close").classList.remove("hidden");
+      $("#welcome-away").textContent = "The catch-up couldn't finish — your grounds are as you left them.";
+    }
+    return;
+  }
   const gains = Object.entries(summary.gained || {}).sort((a, b) => b[1] - a[1]);
-  $("#welcome-away").textContent =
-    `You were away ${fmtAway(summary.elapsedMs)}. The grounds kept working:`;
+  const away = summary.awayMs !== undefined ? summary.awayMs : summary.elapsedMs;
+  if (away < E.OFFLINE_MODAL_MS) {
+    const n = gains.reduce((s, [, q]) => s + q, 0);
+    if (n > 0) showOfflineToast(`Welcome back — +${n} item${n === 1 ? "" : "s"} while away`);
+    return;
+  }
+  welcomeShape();
+  $("#welcome-progress").classList.add("hidden");
+  $("#welcome-close").classList.remove("hidden");
+  let line = `You were away ${fmtAway(away)}`;
+  const capped = summary.capped !== undefined ? summary.capped : summary.elapsedMs < away - 1000;
+  if (capped)   // beyond the offline window (8h + Long Slumber)
+    line += ` — the grounds work for up to ${fmtAway(summary.capMs || summary.elapsedMs)} while you're gone`;
+  if (summary.resumed) line += ` (your catch-up was interrupted and has now finished)`;
+  if (summary.failed)
+    line += `. The catch-up hit an error after ${fmtAway(summary.simulatedMs)} and stopped early — the rest couldn't be credited:`;
+  else if (summary.saturatedMs > 0)
+    line += ". The grounds kept working until everything was saturated:";
+  else if (summary.skippedMs > 0 && summary.levelled)
+    line += `. You skipped the catch-up after ${fmtAway(summary.simulatedMs)}; output had already levelled off, so little was lost:`;
+  else if (summary.skippedMs > 0)
+    line += `. You skipped the catch-up after ${fmtAway(summary.simulatedMs)}; the rest was forfeited:`;
+  else line += ". The grounds kept working:";
+  $("#welcome-away").textContent = line;
   const box = $("#welcome-gains");
   if (gains.length) {
     box.innerHTML = gains.map(([it, q]) =>
@@ -1649,9 +2754,15 @@ function showOfflineSummary(summary) {
     box.innerHTML = `<span class="wg-none">Nothing new was produced — set up generators, ` +
       `converters or disciples to gather while you're gone.</span>`;
   }
+  $("#welcome-why").innerHTML = stallRowsHTML(summary);
   $("#welcome-modal").classList.remove("hidden");
 }
-function dismissWelcome() { $("#welcome-modal").classList.add("hidden"); }
+// The modal can't be dismissed (Esc) while a replay is still running —
+// the world behind it isn't live yet.
+function dismissWelcome() {
+  if (E.offlineActive && E.offlineActive()) return;
+  $("#welcome-modal").classList.add("hidden");
+}
 
 // ---- ending overlay -----------------------------------------
 // When the Sleeping Dragon fully awakens (GS.won) show a one-time victory
@@ -1668,7 +2779,10 @@ function maybeShowEnding() {
   add("Ascensions", G.ascensions);
   add("Total crafted", st.totalCrafted);
   if (st.started !== undefined) add("Playtime", fmtAway(Date.now() - st.started));
-  $("#ending-stats").innerHTML = rows.map(([label, val]) =>
+  const gc = DD.BUILDINGS.ascension_gate ? DD.BUILDINGS.ascension_gate.cost : {};
+  $("#ending-stats").innerHTML = `<p class="ending-next">The dragon now sheds Dragon Scales ${iconHTML("dragon_scale")} — ` +
+    `with ${gc.talisman || 3} Talismans and ${gc.star_steel || 3} Star Steel, raise the Ascension Gate (B).</p>` +
+    rows.map(([label, val]) =>
     `<div class="st-row"><span class="st-label">${label}</span>` +
     `<span class="st-val">${val}</span></div>`).join("");
   $("#ending-modal").classList.remove("hidden");
@@ -1701,11 +2815,13 @@ function renderPlay() {
   syncDragonDialog();
   syncAscendModal();
   renderQuestPanel();
+  if (buildCatalogSig() !== buildCatSig) renderBuildMenu();   // a reveal: new cards + Build-button dot
   refreshUnlockAfford();
   // keep an open roster/link panel's numbers live — rebuilt only when its
   // content changed (a 50ms rebuild would swap buttons mid-click)
   const ps = panelSig();
   if (ps !== lastPanelSig) { lastPanelSig = ps; if (rosterFor) renderRoster(); if (linkMode) renderLinkMenu(); }
+  else if (linkMode) refreshLinkCounts();
   maybeShowEnding();
 }
 let lastPanelSig = "";
@@ -1716,13 +2832,26 @@ function panelSig() {
     s += b && cfg ? `r${b.id}|${b.built}|${b.disciples || 0}|${b.buns || 0}|${E.rosterCap(b)}|${E.handCount(cfg.recruit) > 0}` : "r-";
   }
   if (linkMode) {
-    const A = linkMode.area, lan = E.buildingById(A, linkMode.id), it = id => { const x = E.buildingById(A, id); return x ? x.type + (x.item || "") : "?"; };
-    s += lan ? `l${lan.id}|${lan.built}|${linkMode.picking}|${linkMode.srcId}|` +
-      (lan.links || []).map(l => `${it(l.from)}>${it(l.to)}`).join(",") : "l-";
+    const A = linkMode.area, lan = E.buildingById(A, linkMode.id);
+    const it = id => { const x = E.buildingById(A, id); return x ? x.type + (x.item || "") + (topBuffer(x) ? topBuffer(x).item : "") : "?"; };
+    s += lan ? `l${lan.id}|${lan.built}|${linkMode.picking}|${linkMode.srcId}|${linkMode.hint ? 1 : 0}|` +
+      (lan.links || []).map(l => `${it(l.from)}>${it(l.to)}:${linkDot(l)[0]}`).join(",") : "l-";
   }
   return s;
 }
 window.renderPlay = renderPlay;
+// 1 s automation-tick hook (main.js): true when something only the slow tick
+// changes needs a repaint — the "automation skipping" markers appearing/clearing,
+// or an open link menu's status dots (sent-within-3s ageing to grey).
+let lastPauseSig = "";
+function slowTickDirty() {
+  let sig = "";
+  for (const key of Object.keys(window.GS.areas)) { const sk = autoSkipOf(window.GS.areas[key]); if (sk.length) sig += key + ":" + sk.join("+") + ","; }
+  let dirty = false;
+  if (sig !== lastPauseSig) { lastPauseSig = sig; dirty = true; }
+  if (linkMode && panelSig() !== lastPanelSig) dirty = true;
+  return dirty;
+}
 
 // ---- mouse interaction --------------------------------------
 function syncCursor(e) {
@@ -1732,18 +2861,25 @@ function syncCursor(e) {
   const p = pointFromEvent(e);
   cursor.region = p.region; cursor.lx = p.lx; cursor.ly = p.ly; cursor.lrow = p.lrow; cursor.lcol = p.lcol;
 }
+let lastReachHover = 0;   // id of the stone/spirit whose reach circle is showing
 function onMouseMove(e) {
   cursor.cx = e.clientX; cursor.cy = e.clientY;
   syncCursor(e);
-  renderHandCursor();
+  setOverlayHover(!!(e.target && e.target.closest && e.target.closest(HAND_OVERLAYS)));
+  moveHandCursor();   // position only — the chip's content changes via render
   updateHoverName();
   if ((window.GS.build.placing || (linkMode && linkMode.picking)) && cursor.over)
     requestGridPaint();   // move the placement preview / link rubber-band
+  else {
+    // hovering a Gathering Stone / Furnace Spirit shows its reach circle
+    const hb = hoverReachBuilding(), hk = hb ? hb.id : 0;
+    if (hk !== lastReachHover) { lastReachHover = hk; requestGridPaint(); }
+  }
 }
 // Show the hovered building's name as plain text at the bottom-centre.
 function updateHoverName() {
   const label = $("#hover-name");
-  if (recipeMenuFor || linkMode || rosterFor) { label.classList.add("hidden"); return; }   // panels own that strip
+  if (recipeMenuFor || linkMode || rosterFor || window.GS.build.open) { label.classList.add("hidden"); return; }   // panels own that strip
   const b = cursor.over && cursor.region && E.isAreaUnlocked(cursor.region)
     ? E.buildingAt(cursor.region, cursor.lrow, cursor.lcol) : null;
   if (b && b.built) {
@@ -1753,6 +2889,12 @@ function updateHoverName() {
   else label.classList.add("hidden");
 }
 
+// The ground-hold pauses over a building — or a burner's fuel rack, which
+// a right-click feeds (rackRedirect lands on the burner).
+function groundHoldBlocked(region, lx, ly) {
+  const d = rackRedirect(region, lx, ly);
+  return !!E.buildingAt(region, Math.floor(d.y / CELL), Math.floor(d.x / CELL));
+}
 // A right-click on a built burner's 3x2 fuel rack (outside the footprint on
 // its LEFT, top-aligned) feeds the burner: redirect to the footprint centre.
 function rackRedirect(region, lx, ly) {
@@ -1778,9 +2920,15 @@ function onMouseDown(e) {
     e.preventDefault();
     if (window.GS.build.placing || demolishMode) { window.GS.build.placing = null; demolishMode = false; render(); return; }
     if (!active) return;
-    rightHeld = true; holdStart = Date.now();
+    rightHeld = true; holdStart = Date.now(); holdDone = false;
     const d = rackRedirect(p.region, p.lx, p.ly);
-    const r = E.dropFromHand(p.region, d.x, d.y);  // ground drop, ghost feed, or storehouse deposit
+    const tb = E.buildingAt(p.region, Math.floor(d.y / CELL), Math.floor(d.x / CELL));
+    holdTarget = tb ? { region: p.region, id: tb.id, wasBuilt: !!tb.built, stage: window.GS.dragon.stage } : null;
+    holdFront = !tb && window.GS.hand[0] ? window.GS.hand[0].item : null;
+    // ground drop, ghost feed, or storehouse deposit (a building never spills)
+    const r = E.dropFromHand(p.region, d.x, d.y, !!tb);
+    if (tb) holdDone = feedHoldEnded(r);
+    else if (r && r.once) holdFront = null;   // a quaffed pill / bait lure: one per press
     if (r === null) {
       if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = holdStart;
       const rp = regionPx(p.region); addFloater(rp.x + p.lx, rp.y + p.ly, "✗", C.danger);
@@ -1822,13 +2970,31 @@ function onMouseDown(e) {
   if (active) {
     // link picking captures ALL world clicks until done/cancelled
     if (linkMode && linkMode.picking) {
-      const bAt = p.region === linkMode.area ? E.buildingAt(p.region, p.lrow, p.lcol) : null;
+      if (p.region !== linkMode.area) {
+        // wisps only fly inside one region: say why the pick was ignored
+        if (!linkMode.hint) { linkMode.hint = true; renderLinkMenu(); }
+        if (window.AUDIO) window.AUDIO.play("error");
+        const rp = regionPx(p.region);
+        addFloater(rp.x + p.lx, rp.y + p.ly, "Wisps can't cross the void", C.danger);
+        return;
+      }
+      linkMode.hint = false;
+      const bAt = E.buildingAt(p.region, p.lrow, p.lcol);
       if (bAt && linkMode.picking === "source" && E.canBeLinkSource(bAt)) {
-        linkMode.srcId = bAt.id; linkMode.picking = "target";
+        linkMode.srcId = bAt.id; linkMode.picking = "target"; linkMode.refuse = null;
         renderLinkMenu(); requestGridPaint();
       } else if (bAt && linkMode.picking === "target" && E.canBeLinkTarget(bAt) && bAt.id !== linkMode.srcId) {
+        const why = E.linkRefusal(linkMode.area, linkMode.srcId, bAt.id);
+        if (why) {
+          // can never carry anything: buzz + say why, stay in target picking
+          if (window.AUDIO) window.AUDIO.play("error");
+          const rp = regionPx(p.region);
+          addFloater(rp.x + p.lx, rp.y + p.ly, why.text, C.danger);
+          linkMode.refuse = why.text; renderLinkMenu();
+          return;
+        }
         E.addLink(linkMode.area, linkMode.id, linkMode.srcId, bAt.id);
-        linkMode.picking = null; linkMode.srcId = null;
+        linkMode.picking = null; linkMode.srcId = null; linkMode.refuse = null;
         renderLinkMenu(); render();
       }
       return;
@@ -1844,7 +3010,11 @@ function onMouseDown(e) {
       startLoop(); renderPlay();
       return;
     }
-    const sh = E.buildingAt(p.region, p.lrow, p.lcol);
+    let sh = E.buildingAt(p.region, p.lrow, p.lcol);
+    // converter outputs settle hugging the building edge: a click right on
+    // the edge of a multi-cell building, with a loose item right at the
+    // click and room in the hand, vacuums instead of opening the building
+    if (sh && edgePickRedirect(sh, p.region, p.lx, p.ly)) sh = null;
     // the Altar opens the upgrade tree
     if (sh && sh.built && sh.type === "center") { toggleUpgrades(true); return; }
     // the built Ascension Gate re-offers the ending
@@ -1874,23 +3044,75 @@ function onMouseDown(e) {
     const node = nodeAtCell(p.region, p.lrow, p.lcol);
     if (node && !node.deco) {   // decorative border trees are inert
       const t = Date.now();
-      if (t - lastClickAt >= CLICK_COOLDOWN) { E.harvestNode(p.region, node.id, false); lastClickAt = t; }
+      // fixtures (Spirit Tree, quarry rock, spring) count one click per
+      // swing interval — spam-clicking can't outpace holding
+      const fk = p.region + ":" + node.id;
+      const fixReady = !node.fixed || t - (fixtureHitAt.get(fk) || 0) >= E.harvestInterval(p.region, node);
+      if (t - lastClickAt >= CLICK_COOLDOWN && fixReady) {
+        E.harvestNode(p.region, node.id, false); lastClickAt = t;
+        if (node.fixed) fixtureHitAt.set(fk, t);
+      }
       else node.hitAt = t;   // too fast to count as damage — still show the hit
       fxSwing(p.region, p.lx, p.ly);   // swing spark at the hit
       leftHeld = true; harvestHeld = true; lastSwing = t;
       startLoop(); renderPlay();
       return;
     }
-    const itemsNear = window.GS.areas[p.region].ground.some(g => Math.hypot(g.x - p.lx, g.y - p.ly) <= PICKUP_R);
-    if (itemsNear) {
+    if (groundNear(p.region, p.lx, p.ly, PICKUP_R, null)) {
       leftHeld = true; pickupMode = true;
+      // starting ON / right next to an item locks this hold to its type
+      const lock = nearestGround(p.region, p.lx, p.ly, LOCK_R);
+      suckFilter = lock ? lock.item : null;
       if (E.handSpace() <= 0) handFullNudge(p.region, p.lx, p.ly);   // vacuum can't take more
-      const s0 = E.suctionStep(p.region, p.lx, p.ly, PICKUP_R);   // starts the pull; loop continues it
+      const s0 = E.suctionStep(p.region, p.lx, p.ly, PICKUP_R, suckFilter);   // starts the pull; loop continues it
       fxPickup(p.region, p.lx, p.ly, s0.picked);
       startLoop(); renderPlay();
       return;
     }
   }
+}
+
+// Any ground item (of `item`, or any when null) within `r` of (lx,ly)?
+function groundNear(region, lx, ly, r, item) {
+  return window.GS.areas[region].ground.some(g =>
+    (!item || g.item === item) && Math.hypot(g.x - lx, g.y - ly) <= r);
+}
+// Closest ground item within `r`, or null.
+function nearestGround(region, lx, ly, r) {
+  let best = null, bd = r;
+  for (const g of window.GS.areas[region].ground) {
+    const d = Math.hypot(g.x - lx, g.y - ly);
+    if (d <= bd) { bd = d; best = g; }
+  }
+  return best;
+}
+// Should a left-click at (lx,ly) on building b vacuum instead of opening it?
+// Only on buildings larger than 1x1, within min(10px, 15% of the smaller
+// side) of the edge, with a loose item within EDGE_ITEM_PX, and hand space.
+function edgePickRedirect(b, region, lx, ly) {
+  const s = E.buildingSize(b.type);
+  if (s.w <= 1 && s.h <= 1) return false;
+  if (edgeDist(b, lx, ly) > Math.min(EDGE_PICK_PX, EDGE_PICK_FRAC * Math.min(s.w, s.h) * CELL)) return false;
+  if (E.handSpace() <= 0) return false;
+  return groundNear(region, lx, ly, EDGE_ITEM_PX, null);
+}
+// Distance (px) from a point inside building b to its nearest footprint edge.
+function edgeDist(b, lx, ly) {
+  const s = E.buildingSize(b.type), x0 = b.col * CELL, y0 = b.row * CELL;
+  return Math.min(lx - x0, x0 + s.w * CELL - lx, ly - y0, y0 + s.h * CELL - ly);
+}
+// A latched feed-hold ends when the target refused (null), a consumable was
+// used (a pill quaffed / fed to the dragon, a bait lure — r.once: one per
+// press), the dragon advanced a stage (its story modal is up), or the ghost
+// it began on has just been completed.
+function feedHoldEnded(r) {
+  if (!r || r.used || r.once) return true;
+  if (window.GS.dragon.stage !== holdTarget.stage) return true;
+  if (!holdTarget.wasBuilt) {
+    const b = E.buildingById(holdTarget.region, holdTarget.id);
+    if (!b || b.built) return true;
+  }
+  return false;
 }
 
 // ---- WASD camera pan ----------------------------------------
@@ -1926,8 +3148,15 @@ function onKeyDown(e) {
     if (!panRunning) { panRunning = true; requestAnimationFrame(panStep); }
     return;
   }
+  if (E.offlineActive && E.offlineActive()) return;   // offline replay running: only WASD panning
   if (k === "shift" && !e.repeat) { sprint = !sprint; renderTopBar(); return; }  // sprint toggle (2x pan)
   if (k === "b") { toggleBuild(); return; }   // B toggles the build menu
+  // Q / E rotate the hand: Q sends the front stack to the back, E brings the
+  // back stack to the front
+  if ((k === "q" || k === "e") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (E.handRotate(k === "q" ? 1 : -1)) renderPlay();
+    return;
+  }
   if (e.key === "F9") {                       // self-diagnostic (rendering issues)
     e.preventDefault();
     const r = cvs.getBoundingClientRect();
@@ -1956,20 +3185,23 @@ function onKeyDown(e) {
     }
     // dismiss any open modal overlay (skip the one-time #win-modal)
     if (!$("#dragon-modal").classList.contains("hidden")) { dismissDragonDialog(); return; }
+    if (!$("#perk-modal").classList.contains("hidden")) { closePerkShop(); return; }   // on top of the ascend modal
     if (!$("#ascend-modal").classList.contains("hidden")) { window.GS.ascendPrompt = false; renderPlay(); return; }
-    if (!$("#perk-modal").classList.contains("hidden")) { closePerkShop(); return; }
     if (!$("#stats-modal").classList.contains("hidden")) { closeStats(); return; }
     if (!$("#help-modal").classList.contains("hidden")) { closeHelp(); return; }
     if (!$("#welcome-modal").classList.contains("hidden")) { dismissWelcome(); return; }
     if (!$("#ending-modal").classList.contains("hidden")) { dismissEnding(); return; }
-    window.GS.build.placing = null; demolishMode = false; render();
+    // cancel placement / demolish and close the build strip (state + DOM)
+    window.GS.build.placing = null; window.GS.build.open = false; demolishMode = false; render();
   }
 }
 function onKeyUp(e) { keys.delete(e.key.toLowerCase()); }
 
 function onMouseUp(e) {
-  if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; attackHeld = false; withdrawSH = null; }
-  if (e.button === 2) { rightHeld = false; lastErrBuzz = 0; } // next held right-click buzzes once again
+  if (e.button === 0) { leftHeld = false; pickupMode = false; harvestHeld = false; attackHeld = false; withdrawSH = null; suckFilter = null; }
+  if (e.button === 2) {   // next held right-click buzzes once again
+    rightHeld = false; lastErrBuzz = 0; holdTarget = null; holdDone = false; holdFront = null;
+  }
 }
 
 // while a mouse button is held, keep vacuuming / drip-dropping
@@ -1982,11 +3214,11 @@ function startLoop() {
     const rg = cursor.region && E.isAreaUnlocked(cursor.region) ? cursor.region : null;
     if (leftHeld && pickupMode && cursor.over && rg) {
       // gravity suction: items in range drift to the cursor, collect on arrival
-      const s = E.suctionStep(rg, cursor.lx, cursor.ly, PICKUP_R);
+      const s = E.suctionStep(rg, cursor.lx, cursor.ly, PICKUP_R, suckFilter);
       if (s.moved > 0 || s.picked > 0) dirty = true;
       if (s.picked > 0) fxPickup(rg, cursor.lx, cursor.ly, s.picked);
       else if (E.handSpace() <= 0 && Date.now() - lastFullBuzz >= 900 &&
-          window.GS.areas[rg].ground.some(g => Math.hypot(g.x - cursor.lx, g.y - cursor.ly) <= PICKUP_R)) {
+          groundNear(rg, cursor.lx, cursor.ly, PICKUP_R, suckFilter)) {
         handFullNudge(rg, cursor.lx, cursor.ly); dirty = true;
       }
     }
@@ -2014,21 +3246,48 @@ function startLoop() {
     // hold-left over a node auto-swings at that node's own harvest rate
     if (harvestHeld && cursor.over && rg) {
       const n = nodeAtCell(rg, cursor.lrow, cursor.lcol);
-      if (n && !n.deco && Date.now() - lastSwing >= E.harvestInterval(rg, n)) {
-        E.harvestNode(rg, n.id, true); fxSwing(rg, cursor.lx, cursor.ly); lastSwing = Date.now(); dirty = true;
+      const iv = n && !n.deco ? E.harvestInterval(rg, n) : 0, fk = n ? rg + ":" + n.id : "";
+      if (n && !n.deco && Date.now() - lastSwing >= iv &&
+          (!n.fixed || Date.now() - (fixtureHitAt.get(fk) || 0) >= iv)) {
+        // a full hand stops the auto-swing (drops would only litter);
+        // a single click still harvests
+        if (E.handSpace() <= 0) { if (handFullNudge(rg, cursor.lx, cursor.ly)) dirty = true; }
+        else {
+          E.harvestNode(rg, n.id, false, true); fxSwing(rg, cursor.lx, cursor.ly); lastSwing = Date.now(); dirty = true;
+          if (n.fixed) fixtureHitAt.set(fk, lastSwing);
+        }
       }
     }
-    if (rightHeld && cursor.over && rg) {
-      // near-instant spin-up: ramp 4 -> 20/s over the first 0.2s of the hold
+    // a modal popping up (dragon stage story, ending...) ends a right-hold
+    if (rightHeld && (holdTarget || holdFront) && !holdDone && document.querySelector(".modal:not(.hidden)")) {
+      holdDone = true; holdFront = null;
+    }
+    if (rightHeld && cursor.over && rg && holdTarget && !holdDone) {
+      // latched feed-hold: near-instant spin-up, ramp 4 -> 20/s over 0.2s;
+      // feeds only while the cursor is still on the building it began on
       const elapsed = Date.now() - holdStart;
       const rate = 4 + Math.min(elapsed / 200, 1) * 16;
-      if (Date.now() - lastDrop >= 1000 / rate) {
-        const d = rackRedirect(rg, cursor.lx, cursor.ly);
-        const r = E.dropFromHand(rg, d.x, d.y); lastDrop = Date.now(); dirty = true;
-        if (r === null && Date.now() - lastErrBuzz >= 400) {   // hand empty / nothing accepts: buzz once
+      const d = rackRedirect(rg, cursor.lx, cursor.ly);
+      const b = rg === holdTarget.region ? E.buildingAt(rg, Math.floor(d.y / CELL), Math.floor(d.x / CELL)) : null;
+      if (b && b.id === holdTarget.id && Date.now() - lastDrop >= 1000 / rate) {
+        const r = E.dropFromHand(rg, d.x, d.y, true); lastDrop = Date.now(); dirty = true;
+        holdDone = feedHoldEnded(r);
+        if (r === null && Date.now() - lastErrBuzz >= 400) {   // target refuses: buzz once
           if (window.AUDIO) window.AUDIO.play("error"); lastErrBuzz = Date.now();
           const rp = regionPx(rg); addFloater(rp.x + cursor.lx, rp.y + cursor.ly, "✗", C.danger);
         }
+      }
+    } else if (rightHeld && cursor.over && rg && holdFront) {
+      // ground-hold: auto-repeat only after GROUND_REPEAT_MS, then ramp
+      // 4 -> 20/s; stops when the front stack runs out (release + hold
+      // again for the next stack). Paused while over a building.
+      const elapsed = Date.now() - holdStart - GROUND_REPEAT_MS;
+      const front = window.GS.hand[0];
+      if (!front || front.item !== holdFront) holdFront = null;
+      else if (elapsed >= 0 && Date.now() - lastDrop >= 1000 / (4 + Math.min(elapsed / 200, 1) * 16) &&
+          !groundHoldBlocked(rg, cursor.lx, cursor.ly)) {
+        const r = E.dropFromHand(rg, cursor.lx, cursor.ly); lastDrop = Date.now(); dirty = true;
+        if (r && r.once) holdFront = null;   // pill quaffed / beast lured: one per press
       }
     }
     if (dirty) renderPlay();
@@ -2066,16 +3325,26 @@ function wireInput() {
   // the horizontal strips (build / link / roster) scroll sideways on the wheel
   for (const id of ["#build-menu", "#link-menu", "#roster-menu"]) {
     const strip = $(id);
-    if (strip) strip.addEventListener("wheel", e => { e.preventDefault(); strip.scrollLeft += (e.deltaY || e.deltaX); }, { passive: false });
+    if (strip) strip.addEventListener("wheel", e => { e.preventDefault(); strip.scrollLeft += (e.deltaY || e.deltaX); strip.scrollTop += e.deltaY; }, { passive: false });
   }
   tcvs.addEventListener("mousemove", onTreeMove);
   tcvs.addEventListener("click", onTreeClick);
   tcvs.addEventListener("mouseleave", () => { treeHoverId = null; hideTip(); if (upgradesOpen) drawTree(); });
+  for (const n of document.querySelectorAll(HAND_OVERLAYS)) {
+    n.addEventListener("pointerenter", () => setOverlayHover(true));
+    n.addEventListener("pointerleave", () => setOverlayHover(false));
+  }
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", onMouseUp);
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("keyup", onKeyUp);
   window.addEventListener("resize", fitViewport);
+  if (window.ResizeObserver) {   // panel, viewport AND the main column (bottom strips open/close, window resize)
+    const ro = new ResizeObserver(() => positionUnlockButtons());
+    for (const id of ["#quest-panel", "#world-viewport", "#main"]) { const n = $(id); if (n) ro.observe(n); }
+  }
+  const hpill = document.querySelector(".hand-pill");
+  if (hpill) hpill.title = "Carried items. Q: send the front stack to the back · E: bring the back stack to the front";
   recenterCamera();                     // start at the top-centre of the centre region
   fitViewport();
   requestAnimationFrame(fitViewport);   // re-fit once layout has settled
@@ -2083,9 +3352,12 @@ function wireInput() {
 
 window.UI = { render, renderPlay, needsLiveRepaint, recenterCamera, setZoom,
   toggleUpgrades, toggleBuild, toggleDemolish, toggleDebug, toggleTreeDebug, wireInput,
-  dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, dismissWelcome,
-  dismissEnding, openPerkShop, closePerkShop,
+  dismissDragonDialog, openHelp, closeHelp, openStats, closeStats, showOfflineSummary, showOfflineProgress, updateOfflineProgress, dismissWelcome,
+  dismissEnding, openPerkShop, closePerkShop, chosenVows, showAscendedCard,
+  slowTickDirty,
   _draw: () => drawWorld(),   // test hook
+  _treeStates: () => treeStates(),   // test hook
+  _questRing: () => questRingOnScreen(),   // test hook
   _openRecipe: (area, id) => openRecipeMenu(area, E.buildingById(area, id)),  // test hook
   _lookAt: (area, row, col) => {                                              // test hook
     const p = regionPx(area);

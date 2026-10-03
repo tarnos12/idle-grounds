@@ -88,7 +88,8 @@ body {
 
 /* ---- Ascension Shrine (perk shop) ---- */
 .perk-box { width: min(560px, 94vw); }
-#perk-ap-line { font-size: 15px; color: var(--muted); margin: 2px 2px 14px; }
+#perk-ap-line { font-size: 15px; color: var(--muted); margin: 2px 2px 14px;
+  position: sticky; top: -18px; z-index: 2; background: var(--bg-2); padding: 6px 0; }   /* stays in view while scrolling */
 #perk-ap-line b { color: var(--gold); font-size: 18px; }
 #perk-list { display: flex; flex-direction: column; gap: 10px; }
 .perk-card {
@@ -102,6 +103,12 @@ body {
 .pk-name { font-weight: 800; font-size: 15px; }
 .pk-lv { color: var(--gold); font-weight: 800; font-size: 13px; margin-left: 4px; }
 .pk-desc { font-size: 12.5px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+.pk-group { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .12em;
+  color: var(--muted); margin: 8px 2px 0; }
+.pk-group:first-child { margin-top: 0; }
+.perk-pick { display: inline-block; font-size: 10.5px; font-weight: 800; color: var(--gold);
+  border: 1px solid var(--gold); border-radius: 999px; padding: 0 7px; margin-left: 6px;
+  line-height: 1.6; vertical-align: middle; white-space: nowrap; }
 .pk-buy { flex: 0 0 auto; min-width: 64px; font-weight: 800; }
 .pk-buy:disabled { opacity: .4; cursor: default; }
 .perk-card.afford .pk-buy { border-color: var(--gold); color: var(--gold); }
@@ -240,14 +247,24 @@ body {
 .edge-arrow.down  { bottom: 8px; left: 50%; transform: translateX(-50%); }
 .edge-arrow.left  { left: 8px;   top: 50%;  transform: translateY(-50%); }
 .edge-arrow.right { right: 8px;  top: 50%;  transform: translateY(-50%); }
+.edge-arrow.here  { top: 50%;  left: 50%;  transform: translate(-50%, -50%); }   /* camera centre is inside this locked region */
 .edge-arrow.down-left { bottom: 8px; left: 8px; }   /* Spirit Grove — bottom-left corner */
 .edge-arrow.locked { border-style: dashed; border-color: #6b561c; }
 .edge-arrow.locked .arr, .edge-arrow.locked .arr-label { color: var(--gold); }
-.edge-arrow.cant { opacity: .65; }
+/* low visual weight so a button never hides world objects; full on hover */
+.edge-arrow { opacity: .6; }
+.edge-arrow:hover, .edge-arrow:focus-visible { opacity: 1; }
+.edge-arrow.cant { opacity: .6; }
+.edge-arrow.cant:hover { opacity: 1; }
 .edge-arrow.disabled { opacity: .4; cursor: not-allowed; }
 .edge-arrow.disabled .arr { color: var(--muted); }
-/* affordable unlock: gentle gold pulse */
+/* affordable unlock (the hand covers ALL of it): gentle gold pulse */
 .edge-arrow.afford { border-color: var(--gold); animation: edge-afford 1.8s ease-in-out infinite; }
+/* partial: the hand can pay an installment only — dimmer, dashed gold, no pulse */
+.edge-arrow.partial { border: 1px dashed var(--gold); opacity: .8; }
+.edge-arrow.partial:hover { opacity: 1; }
+.edge-arrow .arr-pay { font-size: 10px; font-weight: 800; color: var(--gold); line-height: 1.1; }
+.edge-arrow .arr-pay:empty { display: none; }
 @keyframes edge-afford {
   0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
   50%      { box-shadow: 0 0 10px 2px rgba(251,191,36,.55); }
@@ -255,13 +272,19 @@ body {
 
 /* ---- Hand cursor overlay ---- */
 #hand-cursor {
-  position: fixed; z-index: 300; pointer-events: none;
+  position: fixed; z-index: 110; pointer-events: none;   /* below the quest panel (120) and popups */
   transform: translate(14px, 14px);
   display: flex; align-items: center; gap: 6px;
   background: rgba(20,25,30,.9); border: 1px solid var(--accent);
   border-radius: 8px; padding: 2px 7px;
 }
 #hand-cursor.hidden { display: none; }
+/* the hand chip and the hover label never draw over a dialog / building panel */
+body:has(.modal:not(.hidden)) #hand-cursor { display: none; }
+body:has(.modal:not(.hidden)) #hover-name,
+body:has(#build-menu:not(.hidden)) #hover-name,
+body:has(#link-menu:not(.hidden)) #hover-name,
+body:has(#roster-menu:not(.hidden)) #hover-name { display: none; }
 .hc-stack {
   display: flex; align-items: center; gap: 1px;
   font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap;
@@ -293,6 +316,15 @@ body {
   padding: 10px 14px; display: flex; gap: 10px; overflow-x: auto; align-items: center;
 }
 #link-menu.hidden, #roster-menu.hidden { display: none; }
+/* link rows wrap onto more lines instead of running off-screen */
+#link-menu { flex-wrap: wrap; max-height: 40vh; overflow-y: auto; }
+#link-menu .rm-hint, #link-menu .rm-title { white-space: normal; }
+.rm-warn { font-size: 12px; font-weight: 800; color: var(--danger); }
+.lr-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; background: #64748b; }
+.lr-dot.d-green { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+.lr-dot.d-amber { background: #f59e0b; }
+.lr-dot.d-red   { background: var(--danger); }
+.lr-dot.d-grey  { background: #64748b; }
 
 /* Recipe picker: floating popup — "Recipes" title over a 3x3 icon grid.
    Positioned by JS just above the selected building (left/top set inline). */
@@ -388,6 +420,10 @@ body {
 .qp-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .2s; }
 .qp-row { display: flex; justify-content: space-between; align-items: center; }
 .qp-prog { font-size: 12px; font-weight: 800; color: var(--gold); }
+.qp-needs { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 6px; }
+.qp-need { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 800;
+  color: var(--muted); font-variant-numeric: tabular-nums; }
+.qp-need.ok { color: var(--gold); }
 #quest-claim {
   background: var(--accent-dk); color: #fff; border: 1px solid var(--accent);
   border-radius: 8px; padding: 5px 14px; font-weight: 800; cursor: pointer;
@@ -512,6 +548,27 @@ img.item-ico { width: 1.2em; height: 1.2em; image-rendering: pixelated; vertical
 .wg-item b { color: var(--accent); }
 .wg-none { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 0 8px; }
 .welcome-box .build-card { margin: 0 auto; }
+.welcome-box .build-card.hidden { display: none; }
+/* async offline catch-up: progress bar + Skip (long absences only) */
+#welcome-progress { margin: 0 12px 16px; }
+#welcome-progress.hidden { display: none; }
+.wp-bar { height: 12px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+.wp-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--accent-dk), var(--accent)); }
+.wp-label { font-size: 14px; color: var(--muted); margin: 8px 0 10px; }
+.wp-skip { font: inherit; font-size: 13px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 4px 12px; cursor: pointer; }
+.wp-skip:hover { color: var(--text); border-color: var(--muted); }
+/* "why it stopped" rows under the gains (long absences) */
+#welcome-why { text-align: left; margin: -6px 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+#welcome-why:empty { display: none; }
+.ww-head { font-size: 13px; font-weight: 700; color: var(--gold); }
+.ww-row { font-size: 13px; color: var(--muted); line-height: 1.45; }
+.ww-row b { color: var(--text); font-weight: 600; }
+/* short-absence welcome-back line: top-centre, fades out on its own */
+#offline-toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 210; pointer-events: none;
+  background: var(--bg-2); border: 1px solid var(--accent-dk); border-radius: 10px; padding: 8px 16px;
+  font-size: 14px; color: var(--text); box-shadow: 0 4px 18px rgba(0,0,0,.4); transition: opacity .6s; opacity: 1; }
+#offline-toast.fade { opacity: 0; }
+#offline-toast.hidden { display: none; }
 
 .win-box { text-align: center; }
 .win-box h1 { margin: 6px 0; font-size: 26px; }
@@ -532,3 +589,34 @@ button:focus-visible, .build-card:focus-visible, .close-btn:focus-visible, .pk-b
 @media (prefers-reduced-motion: reduce) {
   .node.surface .sprite, .node.hit .sprite, .edge-arrow.afford { animation: none; }
 }
+
+/* ---- v52 guidance: progressive build menu + quest spine + milestone tracker ---- */
+#build-btn { position: relative; }
+#build-btn.has-new::after {            /* newly revealed buildings not yet listed */
+  content: ""; position: absolute; top: 3px; right: 3px; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 2px rgba(251,191,36,.3);
+}
+#build-menu .build-card { position: relative; }
+#build-menu .build-card.cant { opacity: .62; }
+#build-menu .build-card.cant .bc-cost { color: var(--muted); }
+#build-menu .build-card.afford { border-color: rgba(74,222,128,.55); }
+#build-menu .build-card.target { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(251,191,36,.28); opacity: 1; }
+.bc-empty { font-size: 13px; color: var(--muted); padding: 10px 4px; }
+.bc-tgt { position: absolute; top: 3px; left: 5px; font-size: 12px; }
+.bc-new { position: absolute; top: 3px; right: 5px; font-size: 10px; font-weight: 800; line-height: 1;
+  color: #16130a; background: var(--gold); border-radius: 999px; padding: 2px 6px; }
+#quest-panel { max-height: calc(100vh - 120px); overflow-y: auto; }
+.qp-unlocks { font-size: 12px; color: var(--muted); margin: -2px 0 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 6px; }
+.qp-unl { color: var(--gold); font-weight: 800; font-size: 14px; }
+.qp-next { font-size: 12px; color: var(--muted); opacity: .6; margin-top: 6px; }
+.qp-ms { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 7px; }
+.qp-ms-head { font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 4px; }
+.qp-ms .qp-name { font-size: 13px; }
+.qp-ms .qp-desc { margin-bottom: 4px; }
+.ms-need { font-size: 12px; line-height: 1.45; margin-bottom: 3px; font-variant-numeric: tabular-nums; }
+.ms-need.ok b { color: var(--accent); }
+.ms-src { color: var(--muted); }
+.ms-step { font-size: 12px; line-height: 1.45; margin: 4px 0 2px; }
+.ms-path { color: var(--muted); }
+.ms-line { font-size: 12px; line-height: 1.45; margin: 2px 0 6px; color: var(--muted); }
+.ms-line.gold { color: var(--gold); font-weight: 800; }

@@ -16,8 +16,11 @@ function itemIcon(key) { return D.ITEM_ICONS[key] || "📦"; }
 // ---- The hand (cursor carry, ordered stacks, total <= HAND_CAP) ----
 
 function handTotal() { return window.GS.hand.reduce((s, x) => s + x.qty, 0); }
-function handCap() { return window.GS.handCap; }
-function handSpace() { return window.GS.handCap - handTotal(); }
+// Vow of Burden halves the carry capacity for its run.
+function handCap() {
+  return vowActive("burden") ? Math.max(1, Math.floor(window.GS.handCap / 2)) : window.GS.handCap;
+}
+function handSpace() { return handCap() - handTotal(); }
 function handCount(item) { const s = window.GS.hand.find(x => x.item === item); return s ? s.qty : 0; }
 
 // Add up to `qty`, capped by remaining space. Returns the amount added.
@@ -43,6 +46,19 @@ function handMoveToFront(item) {
   if (idx < 0) return false;
   if (idx > 0) window.GS.hand.unshift(window.GS.hand.splice(idx, 1)[0]);
   return true;
+}
+
+// Rotate the hand's stacks (Q / E): dir +1 sends the FRONT stack to the
+// back, dir -1 brings the BACK stack to the front. Returns the new front
+// item, or null when the hand is empty. A 1-stack hand is a no-op.
+function handRotate(dir) {
+  const h = window.GS.hand;
+  if (!h.length) return null;
+  if (h.length > 1) {
+    if (dir < 0) h.unshift(h.pop());
+    else h.push(h.shift());
+  }
+  return h[0].item;
 }
 
 // Remove up to `n` of a specific item. Returns amount removed.
@@ -132,29 +148,141 @@ function perkCost(id) {
   const lvl = perkLevel(id);
   return lvl >= def.max ? null : def.cost[lvl];
 }
+// Legacy perk region lists: level n of Remembered Paths opens PATH_REGIONS
+// [n-1]; level n of Legacy Automation grants Automation L1 in
+// LEGACY_REGIONS[n-1] (at every fresh run AND the moment it's bought).
+// (Paths opens the dragon's critical path first: Mine, then Fishing, Farm.)
+const PATH_REGIONS = ["mine", "fishing", "farm"];
+const LEGACY_REGIONS = ["center", "farm", "mine"];
 // Buy one level if affordable and not maxed. Returns true on success.
+// Every perk takes effect at once (like Fleet Hands / Frugal Frontier):
+// Remembered Paths opens its region now, Legacy Automation sets that
+// region's automation to at least L1 now.
 function buyPerk(id) {
   const cost = perkCost(id);
   if (cost == null || (window.GS.ascendPoints || 0) < cost) return false;
   window.GS.ascendPoints -= cost;
-  window.GS.perks[id] = perkLevel(id) + 1;
+  const lvl = window.GS.perks[id] = perkLevel(id) + 1;
   if (id === "hands") window.GS.handCap += 5;    // apply Fleet Hands live
+  const pk = id === "paths" && PATH_REGIONS[lvl - 1];
+  if (pk && !isAreaUnlocked(pk)) {
+    // installments already paid toward it go back to the hand (spill: Center)
+    const paid = unlockPaidOf(pk);
+    if (window.GS.world.unlockPaid) delete window.GS.world.unlockPaid[pk];
+    refundToHand(paid);
+    openRegion(pk);
+  }
+  // Frugal Frontier shrinks every unlock cost at once: installments paid
+  // past the new cost go back to the hand, and a region whose remaining
+  // cost is now empty opens on the spot.
+  if (id === "frugal") {
+    const up = window.GS.world.unlockPaid || {};
+    for (const k of Object.keys(up)) {
+      if (!D.AREAS[k] || isAreaUnlocked(k)) continue;
+      const cost = areaUnlockCost(k) || {}, paid = up[k] || {}, over = {};
+      for (const [it, q] of Object.entries(paid)) {
+        const x = q - (cost[it] || 0);
+        if (x > 0) { over[it] = x; paid[it] = q - x; }
+        if (!(paid[it] > 0)) delete paid[it];
+      }
+      refundToHand(over);
+      if (!Object.keys(unlockRemaining(k)).length) {
+        delete up[k];
+        openRegion(k);
+        if (window.onSfx) window.onSfx("unlock", k);
+      }
+    }
+  }
+  if (id === "legacy" && LEGACY_REGIONS[lvl - 1]) {
+    const up = window.GS.areas[LEGACY_REGIONS[lvl - 1]].upgrades;
+    up.automation = Math.max(up.automation || 0, 1);
+  }
   return true;
 }
-// AP earned by ascending NOW: 1 base + 1 per unlocked region beyond Center.
+// Give `items` ({ item: qty }) back to the hand; what doesn't fit lands
+// beside the Altar as a player drop (stones leave it be for the grace).
+function refundToHand(items) {
+  for (const [it, q] of Object.entries(items || {})) {
+    if (!(q > 0)) continue;
+    const left = q - handAdd(it, q);
+    if (left > 0) dropGround("center", it, left, PLAY_PX / 2, PLAY_PX / 2 + 3 * CELL, "manual");
+  }
+}
+// AP earned by ascending NOW: 3 base + 2 per unlocked region beyond Center
+// + Ascendant Insight + gate offerings (+1 each, capped), all x vowMult()
+// for the vows kept this run. (~15 AP with all regions; sized so a first
+// reset buys 2-3 perks. Offerings pay a marginal gain for playing on.)
 function ascendReward() {
   const regions = Object.values(window.GS.world.unlocked).filter(Boolean).length;
-  return 1 + Math.max(0, regions - 1) + perkLevel("apgain");
+  const g = builtGate();
+  const offerings = g ? gateOfferings(g.areaKey, g.b).count : 0;
+  return Math.round((3 + 2 * Math.max(0, regions - 1) + perkLevel("apgain") + offerings) * vowMult());
+}
+// Any Ascension Gate (ghost or built) anywhere? The gate is unique.
+function gateExists() {
+  for (const k of Object.keys(window.GS.areas))
+    if (window.GS.areas[k].buildings.some(b => D.BUILDINGS[b.type] && D.BUILDINGS[b.type].gate)) return true;
+  return false;
+}
+// The (first) BUILT Ascension Gate anywhere: { areaKey, b } or null.
+function builtGate() {
+  for (const k of Object.keys(window.GS.areas))
+    for (const b of window.GS.areas[k].buildings)
+      if (b.built && D.BUILDINGS[b.type] && D.BUILDINGS[b.type].gate) return { areaKey: k, b };
+  return null;
+}
+// Offerings laid at a built gate (talisman / star steel / dragon scale),
+// tracked per item in b.offered (refunded on demolish; b.offerings mirrors
+// the total). Each type caps at perType (2 each = 6), so scales alone
+// can't fill it.
+function gateOfferings(areaKey, b) {
+  const G = D.GATE_OFFERINGS, cap = G.cap, per = G.perType || cap;
+  const offered = (b && b.offered) || {};
+  let count = 0;
+  for (const it of G.items) count += Math.max(0, Math.min(per, offered[it] || 0));
+  return { count: Math.min(cap, count), cap, perType: per, offered };
+}
+// Can one more `item` be offered at gate b?
+function gateTakes(areaKey, b, item) {
+  const off = gateOfferings(areaKey, b);
+  return D.GATE_OFFERINGS.items.includes(item) && off.count < off.cap && (off.offered[item] || 0) < off.perType;
+}
+
+// ---- Vows (opt-in challenge runs) ---------------------------
+// Chosen in the ascend modal for the NEXT run; kept vows multiply that
+// ascension's AP, and each vow's first completion leaves a permanent mark
+// (x0.96 timers, folded into prestigeFactor).
+function activeVows() { return (window.GS.vows && window.GS.vows.active) || []; }
+function vowActive(id) { return activeVows().includes(id); }
+function vowMult() { const n = activeVows().length; return D.VOW_MULT[Math.min(n, D.VOW_MULT.length - 1)]; }
+// Permanent marks: vows completed at least once (optionally counting the
+// currently-active ones as completed — the post-ascension preview).
+function vowMarks(includeActive) {
+  const done = (window.GS.vows && window.GS.vows.done) || {};
+  return D.VOWS.filter(v => (done[v.id] || 0) > 0 || (includeActive && vowActive(v.id))).length;
 }
 // The offline catch-up window, extended +2h per Long Slumber level.
 function offlineCapMs() { return (8 + 2 * perkLevel("slumber")) * 3600 * 1000; }
 
-// Prestige: each completed Ascension shaves 8% off every duration
-// (regrowth, batches, lantern beats). Compounds multiplicatively, and the
-// Eternal Haste perk shaves a further 5% per level.
-function prestigeFactor() {
-  // Awakened dragon's blessing: a permanent ~11% global speedup.
-  return Math.pow(0.92, window.GS.ascensions || 0) * Math.pow(0.95, perkLevel("haste")) * (window.GS.won ? 0.9 : 1);
+// Prestige: +20% world speed per completed Ascension, ADDITIVE (timers
+// x 1/(1 + 0.2*asc)) like the genre's per-point bonuses, not an uncapped
+// 0.85^n. Applies to the clocks players wait on: regrowth, batches, lantern
+// beats, pavilions, field generators, generator buildings, fox respawn,
+// dragon scales and manual swings. Eternal Haste x0.95/level, the dragon's
+// blessing x0.9, and each vow mark x0.96 multiply on top.
+// `o` optionally overrides { ascensions, marks } (ascension preview).
+function prestigeFactor(o) {
+  const asc = o && o.ascensions != null ? o.ascensions : (window.GS.ascensions || 0);
+  const marks = o && o.marks != null ? o.marks : vowMarks(false);
+  // Awakened dragon's blessing: a permanent ~11% global speedup (survives
+  // ascension via GS.dragonBlessed).
+  return 1 / (1 + 0.2 * asc) * Math.pow(0.95, perkLevel("haste"))
+    * (window.GS.won || window.GS.dragonBlessed ? 0.9 : 1) * Math.pow(0.96, marks);
+}
+// The factor the NEXT run would have (one more ascension; active vows
+// counted as completed marks).
+function nextPrestigeFactor() {
+  return prestigeFactor({ ascensions: (window.GS.ascensions || 0) + 1, marks: vowMarks(true) });
 }
 
 // Is a Dragon Shrine standing anywhere? (blessings +60s, scales 2x rate)
@@ -165,19 +293,43 @@ function shrineBuilt() {
 }
 
 // The Ascension itself: reset the grounds, keep the prestige counter (and
-// spare veterans the tutorial). Saves, then reboots into the fresh run.
-function ascend() {
+// spare veterans the tutorial). `nextVows` = vow ids chosen for the NEW run
+// (only after the first ascension). Saves, then reboots into the fresh run.
+function ascend(nextVows) {
   if (window.onSfx) window.onSfx("ascend");
   const asc = (window.GS.ascensions || 0) + 1;
-  const pts = (window.GS.ascendPoints || 0) + ascendReward();
+  const reward = ascendReward();
+  const pts = (window.GS.ascendPoints || 0) + reward;
   const perks = window.GS.perks || {};
+  const speedFrom = 1 / prestigeFactor();
+  // vows kept this run are completed; the new run takes the chosen ones
+  const vows = { active: [], done: Object.assign({}, (window.GS.vows && window.GS.vows.done) || {}) };
+  for (const id of activeVows()) vows.done[id] = (vows.done[id] || 0) + 1;
+  if ((window.GS.ascensions || 0) >= 1 && Array.isArray(nextVows))
+    for (const id of nextVows)
+      if (D.VOWS.some(v => v.id === id) && !vows.active.includes(id)) vows.active.push(id);
   const fresh = window.SAVE.fresh();
   fresh.ascensions = asc;
   fresh.ascendPoints = pts;            // AP + perks survive the reset
   fresh.perks = perks;
   fresh.handCap = D.HAND_CAP + 5 * (perks.hands || 0);   // re-apply Fleet Hands
   fresh.quest.idx = D.QUESTS.length;   // veterans skip the tutorial chain
+  fresh.dragonBlessed = window.GS.dragonBlessed || window.GS.won;   // the "forever" blessing
+  fresh.stats = window.GS.stats;       // lifetime stats — wiping them reads as loss
+  fresh.introSeen = true;              // a veteran never re-sees the intro
+  fresh.endingSeen = window.GS.endingSeen;
+  fresh.vows = vows;
+  if (vows.active.includes("solitude")) fresh.starterPlaced = true;   // Vow of Solitude: no starter network
+  // Legacy perks: Remembered Paths opens Farm/Mine/Fishing; Legacy
+  // Automation sets Automation L1 in Center/Farm/Mine (the same tree
+  // upgrade buying the node gives; it works once the region is open).
+  PATH_REGIONS.slice(0, perks.paths || 0).forEach(k => { fresh.world.unlocked[k] = true; });
+  LEGACY_REGIONS.slice(0, perks.legacy || 0).forEach(k => {
+    const up = fresh.areas[k].upgrades; up.automation = Math.max(up.automation || 0, 1);
+  });
   window.GS = fresh;
+  // one-time "Ascension n complete" card on the next load
+  fresh.justAscended = { n: asc, ap: reward, speedFrom, speedTo: 1 / prestigeFactor() };
   window.SAVE.saveState();
   location.reload();
 }
@@ -192,10 +344,11 @@ function effectiveTimer(areaKey, tierIndex) {
 }
 
 // Delay between held auto-swings for a node, reduced 20% per harvestSpeed lvl.
+// Ascension speed applies too (floor 120ms — fixtures and swings alike).
 function harvestInterval(areaKey, node) {
   const base = (node && node.swingMs) || 350;
   const lvl = window.GS.areas[areaKey].upgrades.harvestSpeed || 0;
-  return base * Math.pow(0.8, lvl);
+  return Math.max(120, base * Math.pow(0.8, lvl) * prestigeFactor());
 }
 
 
@@ -223,18 +376,66 @@ function buildingSize(type) {
 }
 
 // Set of "r,c" cells occupied by live nodes and placed buildings.
+// Memoized per area — respawns call this on every placement attempt (a hot
+// path, worst during offline replay with automation). Change detection is a
+// signature: every add bumps nextNodeId/nextBuildId, every remove shrinks a
+// list (or replaces it via filter), and nothing moves a node/building in
+// place — so (array identity, length, next id) for both lists is exact. Any
+// mismatch rebuilds from scratch. The two hot mutations (a spawner placing a
+// node, depleteNode removing one) instead patch the cache in place via
+// occNodeAdded/occNodeRemoved, with per-cell counts so an overlap (old
+// saves) can never free a cell another object still covers. The returned
+// Set is SHARED and read-only: copy it (`new Set(...)`) before adding cells.
+// Built burners' 3x2 fuel racks count as occupied too (nodes must not spawn
+// under a rack). A ghost completing IN PLACE changes neither list, so that
+// transition bumps `occEpoch` (dropFromHand) — part of the signature.
+const occCache = new WeakMap();           // area object -> { sig..., set, cnt } (transient, never saved)
+let occEpoch = 0;                         // bumped whenever a building turns built in place
+function occFresh(area, h) {
+  return !!h && h.ep === occEpoch && h.nodes === area.nodes && h.nLen === area.nodes.length && h.nId === area.nextNodeId &&
+    h.blds === area.buildings && h.bLen === area.buildings.length && h.bId === area.nextBuildId;
+}
+function occCells(r0, c0, h, w, fn) {
+  for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) fn(r + "," + c);
+}
 function occupiedCells(areaKey) {
-  const set = new Set();
   const area = window.GS.areas[areaKey];
-  for (const n of area.nodes)
-    for (let r = n.row; r < n.row + n.size; r++)
-      for (let c = n.col; c < n.col + n.size; c++) set.add(r + "," + c);
+  const hit = occCache.get(area);
+  if (occFresh(area, hit)) return hit.set;
+  const set = new Set(), cnt = new Map();
+  const inc = k => { cnt.set(k, (cnt.get(k) || 0) + 1); set.add(k); };
+  for (const n of area.nodes) occCells(n.row, n.col, n.size, n.size, inc);
   for (const b of area.buildings) {
     const s = buildingSize(b.type);
-    for (let r = b.row; r < b.row + s.h; r++)
-      for (let c = b.col; c < b.col + s.w; c++) set.add(r + "," + c);
+    occCells(b.row, b.col, s.h, s.w, inc);
+    if (b.built && D.BUILDINGS[b.type] && D.BUILDINGS[b.type].fuel)
+      occCells(b.row, b.col - 3, 2, 3, inc);      // fuel rack: 3x2 LEFT of the footprint (= rackCells)
   }
+  occCache.set(area, { ep: occEpoch, nodes: area.nodes, nLen: area.nodes.length, nId: area.nextNodeId,
+    blds: area.buildings, bLen: area.buildings.length, bId: area.nextBuildId, set, cnt });
   return set;
+}
+// `node` was just pushed onto area.nodes (taking id nextNodeId-1). Patch the
+// cache only if it was fresh right before that push; otherwise leave it
+// stale for a full rebuild.
+function occNodeAdded(area, node) {
+  const h = occCache.get(area);
+  if (!h || h.ep !== occEpoch || h.nodes !== area.nodes || h.nLen !== area.nodes.length - 1 || h.nId !== node.id ||
+      area.nextNodeId !== node.id + 1 || h.blds !== area.buildings || h.bLen !== area.buildings.length ||
+      h.bId !== area.nextBuildId) return;
+  occCells(node.row, node.col, node.size, node.size, k => { h.cnt.set(k, (h.cnt.get(k) || 0) + 1); h.set.add(k); });
+  h.nLen = area.nodes.length; h.nId = area.nextNodeId;
+}
+// `node` was just spliced out of area.nodes; `wasFresh` = occFresh() taken
+// right before the splice.
+function occNodeRemoved(area, node, wasFresh) {
+  if (!wasFresh) return;
+  const h = occCache.get(area);
+  occCells(node.row, node.col, node.size, node.size, k => {
+    const n = (h.cnt.get(k) || 0) - 1;
+    if (n > 0) h.cnt.set(k, n); else { h.cnt.delete(k); h.set.delete(k); }
+  });
+  h.nLen = area.nodes.length;
 }
 
 function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
@@ -291,6 +492,7 @@ function spawnFromSpawner(areaKey, sp) {
       autoFlash: 0,
     };
     area.nodes.push(node);
+    occNodeAdded(area, node);           // patch the occupancy memo in place
     return node;
   }
   return null; // zone was full
@@ -322,7 +524,7 @@ function areaScale() { return Math.max(1, Math.round((D.GRID.cells / 24) ** 2));
 // the centre of the map.
 function placeDecoRing(areaKey, rect, sprite) {
   const area = window.GS.areas[areaKey];
-  const occ = occupiedCells(areaKey);
+  const occ = new Set(occupiedCells(areaKey));   // private copy: grown below as the ring is placed
   const N = D.GRID.cells;
   const cx = (rect.c0 + rect.c1 + 1) / 2, cy = (rect.r0 + rect.r1 + 1) / 2;
   const aim = Math.atan2(N / 2 - cy, N / 2 - cx);   // direction toward the map centre
@@ -398,7 +600,7 @@ function initArea(areaKey) {
 // Auto-builds a small pre-wired demo so the logistics are alive from the
 // first minute: collectors at the stone/wood/clay/fox sources, seals
 // filtering the rare finds off to typed storehouses, and lanterns fanning
-// wood out to four consumers round-robin.
+// wood out to three consumers round-robin.
 
 // Nearest legal placement to an anchor cell (ring-scan outward).
 function findSpot(areaKey, type, r0, c0) {
@@ -414,8 +616,10 @@ function placeBuilt(areaKey, type, r0, c0, extra) {
   const area = window.GS.areas[areaKey];
   const spot = findSpot(areaKey, type, r0, c0);
   if (!spot) return null;
+  // starter: game-placed (only setupStarterNetwork uses placeBuilt) — never
+  // counts as a player-built type for the progressive build reveal
   const b = Object.assign({ id: area.nextBuildId++, type, row: spot.r, col: spot.c,
-    paid: {}, built: true, item: null, qty: 0 }, extra || {});
+    paid: {}, built: true, item: null, qty: 0, starter: true }, extra || {});
   initLogistics(b);
   area.buildings.push(b);
   return b;
@@ -426,8 +630,9 @@ function setupStarterNetwork() {
   // Coords tuned to the N=93,T=25 layout: Altar auto-centres at rows/cols
   // 44-48; quarry rock ~(79,11), spirit tree ~(10,44), fox corner ~(12,80),
   // clay field ~rows/cols 76-84.
-  // producers in the open band south of the Altar (centre zone rows 25-67)
-  const forge = placeBuilt(A, "forge", 55, 30);
+  // producers in the open band south of the Altar (centre zone rows 25-67).
+  // No Forge: dragon stage 1 really teaches it (and it has no ore until the
+  // Mine anyway — it only soaked up the wood line's fuel).
   const bench = placeBuilt(A, "workbench", 55, 36);
   const mill  = placeBuilt(A, "paper_mill", 55, 42);
   const kiln  = placeBuilt(A, "kiln", 55, 48);
@@ -436,6 +641,9 @@ function setupStarterNetwork() {
   // (just outside the wild-land corners, beside the quarry / below the tree)
   const shJade   = placeBuilt(A, "storehouse", 78, 27, { item: "jade_shard", lock: true });
   const shBamboo = placeBuilt(A, "storehouse", 26, 44, { item: "bamboo", lock: true });
+  // stone overflow store so the quarry line self-drains: while stone keeps
+  // leaving the stone Gathering Stone, the jade shards keep flowing too
+  const shStone  = placeBuilt(A, "storehouse", 83, 27, { item: "stone", lock: true });
   // collectors at each source (anyZone, so they sit on the wild land).
   // Stone + clay stones sit IN their 9x9 fields (rows 76-84; quarry cols 8-16,
   // clay cols 76-84) so the radius-8 vacuum reaches every field cell — else
@@ -443,7 +651,7 @@ function setupStarterNetwork() {
   // distance from the 1x1 stone's centre: clay (80,80) 4.5*sqrt2 = 6.36;
   // stone (80,13) — beside the rock at 79-80,11-12 — hypot(4.5,5.5) = 7.11.
   const gsStone = placeBuilt(A, "gathering_stone", 80, 13);
-  const gsWood  = placeBuilt(A, "gathering_stone", 16, 44);
+  const gsWood  = placeBuilt(A, "gathering_stone", 16, 44);   // = ZONES.woodField centre (rows 12-20, cols 40-48)
   const gsClay  = placeBuilt(A, "gathering_stone", 80, 80);
   const gsFox   = placeBuilt(A, "gathering_stone", 12, 80);
   // seals keep the main lines pure
@@ -453,12 +661,25 @@ function setupStarterNetwork() {
   const L = (lb, from, to) => { if (lb && from && to) lb.links.push({ from: from.id, to: to.id }); };
   const lanQ = placeBuilt(A, "wisp_lantern", 76, 20);
   L(lanQ, gsStone, sealStone); L(lanQ, sealStone, array); L(lanQ, gsStone, shJade);
+  L(lanQ, gsStone, shStone);
   const lanT = placeBuilt(A, "wisp_lantern", 22, 44);
   L(lanT, gsWood, sealWood);
-  L(lanT, sealWood, forge); L(lanT, sealWood, bench); L(lanT, sealWood, mill); L(lanT, sealWood, kiln);
-  L(lanT, gsWood, shBamboo);
+  L(lanT, sealWood, bench); L(lanT, sealWood, mill); L(lanT, sealWood, kiln);
+  L(lanT, gsWood, shBamboo); L(lanT, shBamboo, mill);   // bamboo -> Paper Mill, so the paper line runs too
   const lanM = placeBuilt(A, "wisp_lantern", 52, 58);
   L(lanM, gsClay, kiln); L(lanM, gsFox, array);
+  // sinks for the converter row: a Gathering Stone between the Workbench and
+  // Kiln outputs hauls planks + bricks into typed Storehouses (200 each), and
+  // one beside the Infusion Array banks its spirit stones — so the starter
+  // line fills real buffers instead of parking on a 12-item output pile.
+  // (The Paper Mill keeps its pile: paper is hand-carried to the tribute.)
+  const gsOut = placeBuilt(A, "gathering_stone", 61, 43);   // radius 8: reaches both outputs
+  const gsSpirit = placeBuilt(A, "gathering_stone", 61, 55);
+  const shPlank  = placeBuilt(A, "storehouse", 63, 36, { item: "plank", lock: true });
+  const shBrick  = placeBuilt(A, "storehouse", 63, 45, { item: "brick", lock: true });
+  const shSpirit = placeBuilt(A, "storehouse", 63, 57, { item: "spirit_stone", lock: true });
+  const lanS = placeBuilt(A, "wisp_lantern", 62, 51);
+  L(lanS, gsOut, shPlank); L(lanS, gsOut, shBrick); L(lanS, gsSpirit, shSpirit);
   // seed the sources so every line visibly runs from the first minute
   const seed = (item, n, r, c) => dropGround(A, item, n, (c + 0.5) * CELL, (r + 0.5) * CELL);
   seed("stone", 8, 80, 14); seed("jade_shard", 2, 79, 15);
@@ -472,7 +693,11 @@ function setupStarterNetwork() {
 function depleteNode(areaKey, node) {
   const area = window.GS.areas[areaKey];
   const i = area.nodes.indexOf(node);
-  if (i >= 0) area.nodes.splice(i, 1);
+  if (i >= 0) {
+    const fresh = occFresh(area, occCache.get(area));
+    area.nodes.splice(i, 1);
+    occNodeRemoved(area, node, fresh);  // patch the occupancy memo in place
+  }
   const speed = window.GS.areas[areaKey].upgrades.speed;
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   const buffFac = buffActive("verdant_pill") ? 0.5 : 1;   // Verdant Blessing
@@ -483,15 +708,118 @@ function depleteNode(areaKey, node) {
 // ---- Ground items (never stack — one icon per item) ---------
 
 const GROUND_CAP = 600;                   // max loose ground items per area
+const GROUND_HARD_CAP = 900;              // ceiling when only protected items remain
+const MANUAL_GRACE_MS = 4000;             // Gathering Stones ignore a player's own drops this long (real ms)
+const FIXTURE_GRACE_MS = 8000;            // ...and a fixture's (Spirit Tree / quarry / spring) this long
+// Set by harvestNode while a PLAYER swing drops its yield: the node's id and
+// the grace to grant. Drops are tagged with it (transient _src) so a hold
+// that keeps swinging can re-arm the grace on that node's earlier drops.
+let manualSrc = null;
 
-function dropGround(areaKey, item, qty, x, y) {
+// Eviction value class of a ground item: 0 = raw common (evicted first),
+// 1 = other raw gathered, 2 = protected (crafted/rare — never evicted while
+// any class 0/1 item remains). Derived once from DATA: class 0 = the regular
+// (non-rare) node/fixture/generator yields of regions opened with raw-only
+// costs; anything a recipe outputs, dragon scales and the rare finds are
+// protected; everything else is class 1.
+let evictClassMap = null;
+function evictClassOf(g) {
+  if (g.crafted) return 2;
+  if (!evictClassMap) {
+    const m = {}, crafted = new Set(), raw = new Set();
+    for (const b of Object.values(D.BUILDINGS))
+      for (const r of b.recipes || []) crafted.add(r.output);
+    // (generator-building / pavilion products are protected per drop via
+    // g.crafted — their item types, e.g. algae, are commons elsewhere)
+    const rawCost = k => Object.keys((D.WORLD.unlockCost || {})[k] || {}).every(it => !crafted.has(it));
+    const specItems = list => (list || []).forEach(sp => raw.add(sp.item));
+    for (const [k, a] of Object.entries(D.AREAS)) {
+      if (!rawCost(k)) continue;
+      for (const t of a.tiers || []) { specItems(t.perHit); specItems(t.drops); }
+      for (const sp of a.spawners || []) { specItems(sp.perHit); specItems(sp.drops); }
+      for (const fx of a.fixtures || []) if (fx.drop) raw.add(fx.drop);
+      for (const gen of a.generators || []) raw.add(gen.item);
+    }
+    for (const it of Object.keys(D.ITEM_NAMES))
+      m[it] = crafted.has(it) ? 2 : raw.has(it) ? 0 : 1;
+    for (const it of ["dragon_scale", "jade_shard", "firestone"]) m[it] = 2;
+    evictClassMap = m;
+  }
+  const c = evictClassMap[g.item];
+  if (c == null) return 1;
+  // a generator's rare find (g.gen: jade in the quarry field) is plain raw
+  // litter until someone moves it — only deliberately placed rares are kept
+  return c === 2 && g.gen ? 1 : c;
+}
+// Over GROUND_CAP: evict the OLDEST (array is push-ordered) items, in order:
+//   1. protected (class 2) items while they fill more than PROTECTED_SHARE
+//      of the area — crafted litter can never crowd raw drops out;
+//   2. class 0 (raw commons), then 3. class 1 (other raw).
+// NEVER evicted by steps 1-3: the items the current dropGround call just
+// added (index >= freshFrom) and a player's own drops inside their grace
+// window (g.manualAt) — a player's harvest / hand drop / refund never
+// vanishes as it lands. If only those remain, the area may grow to
+// GROUND_HARD_CAP, past which the oldest go (non-fresh first) — the last
+// resort that bounds render, settling and offline replay.
+const PROTECTED_SHARE = 480;
+const GEN_RARE_IDLE = 2;                  // rare finds a capped generator field may still surface (see gameTick)
+let evictCls = new Int8Array(1024), evictOut = new Uint8Array(1024);   // reused scratch
+function evictGround(area, freshFrom) {
+  const g = area.ground, n = g.length;
+  let excess = n - GROUND_CAP;
+  if (excess <= 0) return 0;
+  if (freshFrom == null || freshFrom > n) freshFrom = n;
+  if (evictCls.length < n) { evictCls = new Int8Array(n * 2); evictOut = new Uint8Array(n * 2); }
+  const cls = evictCls, out = evictOut, now = Date.now();
+  let prot = 0, gone = 0;
+  for (let i = 0; i < n; i++) {
+    const it = g[i];
+    const c = evictClassOf(it);
+    if (c === 2) prot++;
+    // -1 = untouchable for steps 1-3 (fresh from this call, or in grace)
+    cls[i] = i >= freshFrom || (it.manualAt && now - it.manualAt < MANUAL_GRACE_MS) ? -1 : c;
+    out[i] = 0;
+  }
+  for (let i = 0; i < n && gone < excess && prot > PROTECTED_SHARE; i++)
+    if (cls[i] === 2) { out[i] = 1; gone++; prot--; }
+  for (let c = 0; c <= 1 && gone < excess; c++)
+    for (let i = 0; i < n && gone < excess; i++)
+      if (cls[i] === c) { out[i] = 1; gone++; }
+  // last resort: above the hard ceiling the oldest go — older batches first,
+  // this call's own items only if it alone overflows the ceiling
+  for (let pass = 0; pass < 2 && n - gone > GROUND_HARD_CAP; pass++)
+    for (let i = 0; i < n && n - gone > GROUND_HARD_CAP; i++)
+      if (!out[i] && (pass === 1 || i < freshFrom)) { out[i] = 1; gone++; }
+  if (!gone) return 0;
+  let w = 0;
+  for (let i = 0; i < n; i++) if (!out[i]) g[w++] = g[i];
+  g.length = w;
+  return gone;
+}
+
+// `tag`: "manual" = made by a player action (harvest, loot, hand drop,
+// recipe spill) — Gathering Stones leave it alone for MANUAL_GRACE_MS;
+// "crafted" = a building's product — protected from ground-cap eviction;
+// "gen" = a generator's rare find — raw (class 1) even for a rare item type.
+function dropGround(areaKey, item, qty, x, y, tag) {
   const area = window.GS.areas[areaKey];
+  if (!tag && autoHarvesting) tag = "gen";          // a bot's rare find (vein firestone) is raw litter too
+  // manualAt = when the grace window STARTS counting; a fixture's drops are
+  // stamped (FIXTURE - MANUAL) ms ahead so the stones' one check
+  // (now - manualAt < MANUAL_GRACE_MS) holds them FIXTURE_GRACE_MS in all.
+  const src = tag === "manual" ? manualSrc : null;
+  const manualAt = tag === "manual" ? Date.now() + (src ? src.grace - MANUAL_GRACE_MS : 0) : 0;
+  const freshFrom = area.ground.length;             // this call's items are never evicted by it
   for (let k = 0; k < qty; k++) {
     const jx = clampPx(x + rand(-16, 16)), jy = clampPx(y + rand(-16, 16));
-    area.ground.push({ id: area.nextGroundId++, item, x: jx, y: jy });
+    const g = { id: area.nextGroundId++, item, x: jx, y: jy };
+    if (manualAt) g.manualAt = manualAt;           // transient (stripped on save)
+    if (src) g._src = src.id;                      // transient: which node dropped it
+    if (tag === "crafted") g.crafted = true;
+    else if (tag === "gen" && evictClassOf(g) === 2) g.gen = true;   // saved: keeps its raw eviction class
+    area.ground.push(g);
   }
-  // overflow despawns oldest (array is push-ordered) — bounds render, settling and offline replay
-  if (area.ground.length > GROUND_CAP) area.ground.splice(0, area.ground.length - GROUND_CAP);
+  if (area.ground.length > GROUND_CAP) evictGround(area, freshFrom);
   // Feedback juice: the UI hooks this to float a "+N" at the drop. Detached
   // during offline catch-up so a fast-forward doesn't queue a blizzard.
   if (window.onGroundDrop) window.onGroundDrop(areaKey, item, qty, x, y);
@@ -499,31 +827,34 @@ function dropGround(areaKey, item, qty, x, y) {
 
 function rollAmount(spec) { return spec.min + Math.floor(Math.random() * (spec.max - spec.min + 1)); }
 
-function grantDropsGround(areaKey, node, specs, mult) {
+function grantDropsGround(areaKey, node, specs, mult, tag) {
   const c = nodeCenterPx(node);
   for (const spec of specs || []) {
     const amt = rollAmount(spec) * (mult || 1);
-    if (amt > 0) { dropGround(areaKey, spec.item, amt, c.x, c.y); window.GS.stats.totalGathered += amt; }
+    if (amt > 0) { dropGround(areaKey, spec.item, amt, c.x, c.y, tag); window.GS.stats.totalGathered += amt; }
   }
 }
 
 // Drop a node's accumulated (deferred) yield — used when a chop clears.
-function flushPending(areaKey, node) {
+function flushPending(areaKey, node, tag) {
   if (!node.pending) return;
   const c = nodeCenterPx(node);
   for (const [item, qty] of Object.entries(node.pending)) {
-    if (qty > 0) { dropGround(areaKey, item, qty, c.x, c.y); window.GS.stats.totalGathered += qty; }
+    if (qty > 0) { dropGround(areaKey, item, qty, c.x, c.y, tag); window.GS.stats.totalGathered += qty; }
   }
   node.pending = null;
 }
 
 // Push overlapping ground items apart so they don't sit on top of each other.
-// Returns how many pushes happened (0 = everything already settled).
+// Returns how many VISIBLE pushes happened (0 = settled): a settled pile's
+// sub-pixel float jitter (pushes <= SETTLE_EPS) still nudges items but doesn't
+// count, so idle piles don't force a repaint every tick.
 // 64px spatial buckets (MIN << 64): each item only tests its own + 8
 // neighbour buckets, j > i — same pair math as a full pairwise pass, but
 // O(n) on dense piles instead of O(n^2) every tick / offline replay step.
 // Bucket lists are reused typed-array linked lists (no per-tick garbage).
 const SETTLE_G = (PLAY_PX >> 6) + 1;                  // buckets per side
+const SETTLE_EPS = 0.05;                              // px: smaller moves are invisible
 const settleHead = new Int32Array(SETTLE_G * SETTLE_G);
 let settleNext = new Int32Array(1024), settleCell = new Int32Array(1024);
 function settleGround(areaKey) {
@@ -541,7 +872,7 @@ function settleGround(areaKey) {
     const c = cx * G + cy;
     cellOf[i] = c; next[i] = head[c]; head[c] = i;
   }
-  let moves = 0;
+  let moves = 0, pushed = 0;
   for (let i = 0; i < n; i++) {
     const a = items[i], cx = (cellOf[i] / G) | 0, cy = cellOf[i] - cx * G;
     for (let nx = cx - 1; nx <= cx + 1; nx++) {
@@ -558,7 +889,8 @@ function settleGround(areaKey) {
           if (d < MIN) {
             const push = (MIN - d) / 2, ux = dx / d, uy = dy / d;
             a.x -= ux * push; a.y -= uy * push; b.x += ux * push; b.y += uy * push;
-            moves++;
+            pushed++;
+            if (push > SETTLE_EPS) moves++;
           }
         }
       }
@@ -566,7 +898,7 @@ function settleGround(areaKey) {
   }
   // same result as clamping every item; skips the in-range majority
   const HI = PLAY_PX - 4;
-  if (moves) for (const it of items) {
+  if (pushed) for (const it of items) {
     if (it.x < 4 || it.x > HI) it.x = clampPx(it.x);
     if (it.y < 4 || it.y > HI) it.y = clampPx(it.y);
   }
@@ -592,16 +924,34 @@ function pushOutOfColliders(areaKey) {
   for (const n of area.nodes)
     if (n.fixed) rects.push({ x0: n.col * CELL, y0: n.row * CELL, x1: (n.col + n.size) * CELL, y1: (n.row + n.size) * CELL });
   if (!rects.length) return 0;
+  const inAny = (x, y) => rects.some(r => x > r.x0 && x < r.x1 && y > r.y0 && y < r.y1);
   let moved = 0;
+  const now = Date.now();
   for (const g of area.ground) {
+    // an item a Gathering Stone is pulling this tick flies OVER footprints —
+    // else a rock between it and the stone (jade behind the quarry rock)
+    // pins it in a pull/push-out stalemate forever
+    if (g._pullAt && now - g._pullAt < 200) continue;
     for (const r of rects) {
       if (g.x <= r.x0 || g.x >= r.x1 || g.y <= r.y0 || g.y >= r.y1) continue;
-      const dl = g.x - r.x0, dr = r.x1 - g.x, dt = g.y - r.y0, db = r.y1 - g.y;
-      const m = Math.min(dl, dr, dt, db);
-      if (m === dl) g.x = r.x0 - 8; else if (m === dr) g.x = r.x1 + 8;
-      else if (m === dt) g.y = r.y0 - 8; else g.y = r.y1 + 8;
-      g.x = clampPx(g.x); g.y = clampPx(g.y);
-      moved++;
+      // exit through the nearest edge whose landing spot is free — two
+      // flush colliders (the quarry rock + its gathering stone) would
+      // otherwise ping-pong an item between them forever. Stable sort keeps
+      // the old left/right/top/bottom tie order; all blocked = nearest.
+      const exits = [
+        [g.x - r.x0, clampPx(r.x0 - 8), clampPx(g.y)], [r.x1 - g.x, clampPx(r.x1 + 8), clampPx(g.y)],
+        [g.y - r.y0, clampPx(g.x), clampPx(r.y0 - 8)], [r.y1 - g.y, clampPx(g.x), clampPx(r.y1 + 8)],
+      ].sort((a, b) => a[0] - b[0]);
+      // an item a stone was pulling exits on the side FACING the stone, so a
+      // stalled pull never throws it back to the far side (no ping-pong)
+      const pt = g._pullTo;
+      if (pt && now - g._pullAt < 5000)
+        exits.sort((a, b) => Math.hypot(a[1] - pt.x, a[2] - pt.y) - Math.hypot(b[1] - pt.x, b[2] - pt.y));
+      const e = exits.find(x => !inAny(x[1], x[2])) || exits[0];
+      // (only a visible move counts — an item clamped against the map edge
+      // inside a footprint lands where it was and must not force repaints)
+      if (Math.abs(e[1] - g.x) + Math.abs(e[2] - g.y) > SETTLE_EPS) moved++;
+      g.x = e[1]; g.y = e[2];
     }
   }
   return moved;
@@ -610,12 +960,14 @@ function pushOutOfColliders(areaKey) {
 // Gravity suction while holding left: items within `radius` of the cursor
 // are pulled toward it (faster the closer they get); once they reach the
 // cursor they're collected as usual. Does nothing when the hand is full.
-function suctionStep(areaKey, x, y, radius) {
+// `itemFilter` (optional, null = any) type-locks the pull to one item key.
+function suctionStep(areaKey, x, y, radius, itemFilter) {
   if (handSpace() <= 0) return { moved: 0, picked: 0 };
   const area = window.GS.areas[areaKey];
   let moved = 0, picked = 0;
   const taken = new Set();
   for (const g of area.ground) {
+    if (itemFilter && g.item !== itemFilter) continue;   // type-locked hold
     const dx = x - g.x, dy = y - g.y, d = Math.hypot(dx, dy);
     if (d > radius) continue;
     if (d <= 12) {                                   // reached the cursor — collect
@@ -650,11 +1002,37 @@ function pickupNear(areaKey, x, y, radius) {
 
 // ---- Harvesting ---------------------------------------------
 
+// True only while automationTick harvests — its drops are NOT player drops.
+// (isAuto = the AUTO badge + silent swing, passed only by automationTick; the
+// UI's hold loop passes held=true instead.)
+let autoHarvesting = false;
+
+// A player swing on `node`: re-arm the stone grace on the drops this node
+// already made that still lie on the ground, so a long hold-chop doesn't lose
+// its early drops to a Gathering Stone — the window runs from the LAST swing.
+function refreshNodeGrace(area, node, grace) {
+  const at = Date.now() + grace - MANUAL_GRACE_MS;
+  for (const g of area.ground)
+    if (g._src === node.id && g.manualAt && g.manualAt < at) g.manualAt = at;
+}
+
 // Click a node. Behaviour depends on its `interaction`.
-function harvestNode(areaKey, nodeId, isAuto) {
+// isAuto: an automation swing (AUTO badge, no sound). held: the player's
+// hold-left auto-swing (sounds + grace like a click; no badge).
+function harvestNode(areaKey, nodeId, isAuto, held) {
   const node = nodeById(areaKey, nodeId);
   if (!node || node.deco) return false;   // decorative nodes can't be interacted with
   if (!isAuto && window.onSfx) window.onSfx("harvest", areaKey);   // player swing feedback
+  const tag = autoHarvesting ? undefined : "manual";   // player drops get the stone grace window
+  if (tag === "manual") {
+    const grace = node.fixed ? FIXTURE_GRACE_MS : MANUAL_GRACE_MS;
+    refreshNodeGrace(window.GS.areas[areaKey], node, grace);
+    manualSrc = { id: node.id, grace };
+  }
+  try { return harvestSwing(areaKey, node, isAuto, tag); }
+  finally { manualSrc = null; }
+}
+function harvestSwing(areaKey, node, isAuto, tag) {
 
   // AUTO badge should stay solid while auto-mining: last longer than the gap
   // between auto-swings (and the 1s automation tick).
@@ -676,11 +1054,11 @@ function harvestNode(areaKey, nodeId, isAuto) {
       let amt = node.dropMin ? rand(node.dropMin, node.dropMax || node.dropMin) : 1;
       if (buffActive("stoneheart_pill")) amt *= 2;   // Stoneheart Blessing
       const c = nodeCenterPx(node);
-      dropGround(areaKey, node.dropItem || "stone", amt, c.x, c.y);
+      dropGround(areaKey, node.dropItem || "stone", amt, c.x, c.y, tag);
       window.GS.stats.totalGathered += amt;
       // rare finds: jade shards in the rock, bamboo shoots at the tree…
       if (node.rareDrop && Math.random() < node.rareDrop.chance) {
-        dropGround(areaKey, node.rareDrop.item, 1, c.x, c.y);
+        dropGround(areaKey, node.rareDrop.item, 1, c.x, c.y, tag);
         window.GS.stats.totalGathered += 1;
       }
     }
@@ -698,8 +1076,8 @@ function harvestNode(areaKey, nodeId, isAuto) {
     node.hitsLeft--;
     if (isAuto) node.autoFlash = Date.now() + flashMs;
     if (node.hitsLeft > 0) return true;
-    flushPending(areaKey, node);                      // felled/cleared — drop it all
-    grantDropsGround(areaKey, node, specs.drops);
+    flushPending(areaKey, node, tag);                 // felled/cleared — drop it all
+    grantDropsGround(areaKey, node, specs.drops, 1, tag);
     depleteNode(areaKey, node);
     return true;
   }
@@ -707,18 +1085,18 @@ function harvestNode(areaKey, nodeId, isAuto) {
     node.hitsLeft--;
     if (isAuto) node.autoFlash = Date.now() + flashMs;
     if (node.hitsLeft > 0) return true;               // nothing until it cracks
-    grantDropsGround(areaKey, node, specs.drops, buffActive("stoneheart_pill") ? 2 : 1);
+    grantDropsGround(areaKey, node, specs.drops, buffActive("stoneheart_pill") ? 2 : 1, tag);
     // rare finds on the final crack (firestone in ore / iron veins)
     if (node.rareDrop && Math.random() < node.rareDrop.chance) {
       const c = nodeCenterPx(node);
-      dropGround(areaKey, node.rareDrop.item, 1, c.x, c.y);
+      dropGround(areaKey, node.rareDrop.item, 1, c.x, c.y, tag);
       window.GS.stats.totalGathered += 1;
     }
     depleteNode(areaKey, node);
     return true;
   }
   // instant (crops) & surface (fishing): one click lands the drops
-  grantDropsGround(areaKey, node, specs.drops);
+  grantDropsGround(areaKey, node, specs.drops, 1, tag);
   if (isAuto) node.autoFlash = Date.now() + flashMs;
   depleteNode(areaKey, node);
   return true;
@@ -726,11 +1104,51 @@ function harvestNode(areaKey, nodeId, isAuto) {
 
 // ---- Buildings ----------------------------------------------
 
-// Unlocked outright, or taught by the Sleeping Dragon (stageUnlock).
+// Progressive reveal (DATA.REVEAL): a type with reveal conditions shows
+// once ANY is met, or once the player has built one. Taught-by-dragon types
+// keep their stageUnlock gate; anything else falls back to `unlocked`.
+function isVeteran() {
+  return (window.GS.ascensions || 0) > 0 || (window.GS.quest.idx || 0) >= D.QUESTS.length;
+}
+function questClaimed(id) {
+  const j = D.QUESTS.findIndex(q => q.id === id);
+  return j >= 0 && (window.GS.quest.idx || 0) > j;
+}
+function revealCondMet(c, vet) {
+  if (c.stage != null) return (window.GS.dragon.stage || 0) >= c.stage;
+  if (c.quest != null) return vet || questClaimed(c.quest);
+  if (c.region != null) return vet || !!window.GS.world.unlocked[c.region];
+  return false;
+}
 function isBuildingUnlocked(type) {
   const b = D.BUILDINGS[type];
   if (!b) return false;
-  return !!b.unlocked || (b.stageUnlock != null && (window.GS.dragon.stage || 0) >= b.stageUnlock);
+  if (b.stageUnlock != null) return (window.GS.dragon.stage || 0) >= b.stageUnlock;
+  const conds = D.REVEAL && D.REVEAL[type];
+  if (!conds) return !!b.unlocked;
+  if (window.GS.builtTypes && window.GS.builtTypes[type]) return true;
+  const vet = isVeteran();
+  return conds.some(c => revealCondMet(c, vet));
+}
+// 'new' badge: revealed but never hovered in the build menu (veterans have
+// seen it all before — no badges).
+function isBuildingNew(type) {
+  if ((window.GS.ascensions || 0) > 0) return false;
+  return isBuildingUnlocked(type) && ((window.GS.buildSeen || {})[type] || 0) < 2;
+}
+function markBuildSeen(type) {
+  const seen = window.GS.buildSeen = window.GS.buildSeen || {};
+  if (D.BUILDINGS[type]) seen[type] = 2;
+}
+// Build-button dot: something revealed that no opened menu has listed yet.
+function buildMenuHasNew() {
+  if ((window.GS.ascensions || 0) > 0) return false;
+  const seen = window.GS.buildSeen || {};
+  return Object.keys(D.BUILDINGS).some(t => (seen[t] || 0) < 1 && isBuildingUnlocked(t));
+}
+function markBuildListed() {
+  const seen = window.GS.buildSeen = window.GS.buildSeen || {};
+  for (const t of Object.keys(D.BUILDINGS)) if (!seen[t] && isBuildingUnlocked(t)) seen[t] = 1;
 }
 
 function buildingCatalog() {
@@ -754,6 +1172,7 @@ function canPlaceBuilding(areaKey, row, col, type) {
   const B = bCfg.size || D.GRID.building;
   if (row < 0 || col < 0 || row + B.h > D.GRID.cells || col + B.w > D.GRID.cells) return false;
   if (bCfg.waterOnly && areaKey !== "fishing") return false;   // water buildings live in the fishing waters
+  if (bCfg.gate && gateExists()) return false;                  // the Ascension Gate is unique
   const occ = occupiedCells(areaKey);
   for (let r = row; r < row + B.h; r++)
     for (let c = col; c < col + B.w; c++) {
@@ -764,7 +1183,76 @@ function canPlaceBuilding(areaKey, row, col, type) {
         : (!bCfg.anyZone && inNoBuild(areaKey, r, c))) return false;
       if (occ.has(r + "," + c)) return false;
     }
+  // Burner fuel racks (3x2, LEFT of the footprint, flush with its top — see
+  // pushOutOfColliders / ui.js rackRedirect) are solid too: a new burner's
+  // rack must fit in bounds on free cells, and no footprint may cover an
+  // existing burner's rack.
+  const racks = rackCells(areaKey);
+  if (bCfg.fuel) {
+    if (col - 3 < 0) return false;
+    for (let r = row; r <= row + 1; r++)
+      for (let c = col - 3; c <= col - 1; c++) {
+        const k = r + "," + c;
+        if (occ.has(k) || racks.has(k)) return false;
+        if (!bCfg.anyZone && inNoBuild(areaKey, r, c)) return false;
+      }
+  }
+  for (let r = row; r < row + B.h; r++)
+    for (let c = col; c < col + B.w; c++) if (racks.has(r + "," + c)) return false;
   return true;
+}
+// Why `type` can't go at (row,col) — a short player-facing reason, or null
+// when canPlaceBuilding would allow it. Mirrors canPlaceBuilding check for
+// check (tested to agree on every cell).
+function placeReason(areaKey, row, col, type) {
+  const bCfg = (type && D.BUILDINGS[type]) || {};
+  const B = bCfg.size || D.GRID.building;
+  if (row < 0 || col < 0 || row + B.h > D.GRID.cells || col + B.w > D.GRID.cells) return "Off the edge";
+  if (bCfg.waterOnly && areaKey !== "fishing") return "Water only";
+  if (bCfg.gate && gateExists()) return "Only one Ascension Gate";
+  const occ = occupiedCells(areaKey);
+  let wild = false, water = false, blocked = false;
+  for (let r = row; r < row + B.h; r++)
+    for (let c = col; c < col + B.w; c++) {
+      if (bCfg.waterOnly ? !cellInZone("centre", r, c) : (!bCfg.anyZone && inNoBuild(areaKey, r, c))) {
+        if (bCfg.waterOnly) water = true; else wild = true;
+      }
+      if (occ.has(r + "," + c)) blocked = true;
+    }
+  if (water) return "Water only";
+  if (wild) return wildLandReason(areaKey);
+  if (blocked) return "Blocked";
+  const racks = rackCells(areaKey);
+  if (bCfg.fuel) {
+    if (col - 3 < 0) return "Fuel rack blocked";
+    for (let r = row; r <= row + 1; r++)
+      for (let c = col - 3; c <= col - 1; c++) {
+        const k = r + "," + c;
+        if (occ.has(k) || racks.has(k)) return "Fuel rack blocked";
+        if (!bCfg.anyZone && inNoBuild(areaKey, r, c)) return "Fuel rack blocked";
+      }
+  }
+  for (let r = row; r < row + B.h; r++)
+    for (let c = col; c < col + B.w; c++) if (racks.has(r + "," + c)) return "Blocked";
+  return null;
+}
+// Where a region's buildable land is, for the "wild land" placement reason:
+// the Center builds around the Altar clearing, resource regions on the rim
+// outside their central field.
+function wildLandReason(areaKey) {
+  return areaKey === "center" ? "Build around the Altar clearing"
+    : "Build on the rim, outside the field";
+}
+// Set of "r,c" cells covered by the fuel racks of the area's burners
+// (ghosts included — the rack appears once they're built).
+function rackCells(areaKey) {
+  const set = new Set();
+  for (const b of window.GS.areas[areaKey].buildings) {
+    if (!D.BUILDINGS[b.type] || !D.BUILDINGS[b.type].fuel) continue;
+    for (let r = b.row; r <= b.row + 1; r++)
+      for (let c = b.col - 3; c <= b.col - 1; c++) set.add(r + "," + c);
+  }
+  return set;
 }
 
 // Per-type mutable fields for logistics buildings.
@@ -841,6 +1329,7 @@ function addFuelItem(b, item) {
 // Burn `ms` from the back (oldest) items, popping spent ones so the next
 // one only starts once the current finishes.
 function burnFuel(b, ms) {
+  if (vowActive("coldhearth")) ms *= 2;   // Vow of the Cold Hearth
   const q = fuelQueue(b);
   while (ms > 0 && q.length) {
     const back = q[q.length - 1];
@@ -849,8 +1338,10 @@ function burnFuel(b, ms) {
     if (back.rem <= 0.5) q.pop();
   }
 }
-// Switch a converter's active recipe. Everything it holds — the input
-// stock AND the batch in progress — drops on the ground first.
+// Switch a converter's active recipe. What it holds — the input stock AND
+// the batch in progress — is sorted: inputs the NEW recipe also uses stay in
+// stock; the rest goes back into the hand while it has room, and only the
+// overflow drops on the ground (as a player drop, so stones leave it be).
 function setRecipe(areaKey, buildingId, idx) {
   const b = buildingById(areaKey, buildingId);
   const list = b && D.BUILDINGS[b.type].recipes;
@@ -858,13 +1349,19 @@ function setRecipe(areaKey, buildingId, idx) {
   if ((b.recipe || 0) === idx) return true;
   const s = buildingSize(b.type);
   const x = (b.col + s.w / 2) * CELL, y = (b.row + s.h / 2) * CELL;
-  for (const [item, qty] of Object.entries(b.stock || {}))
-    if (qty > 0) dropGround(areaKey, item, qty, x, y);
+  const held = Object.assign({}, b.stock || {});
   if (b.smeltDoneAt > 0) {
     const old = recipeOf(b);
-    if (old) for (const [item, qty] of Object.entries(old.inputs)) dropGround(areaKey, item, qty, x, y);
+    if (old) for (const [item, qty] of Object.entries(old.inputs)) held[item] = (held[item] || 0) + qty;
   }
+  const keep = list[idx].inputs;
   b.stock = {};
+  for (const [item, qty] of Object.entries(held)) {
+    if (!(qty > 0)) continue;
+    if (keep[item] != null) { b.stock[item] = qty; continue; }
+    const over = qty - handAdd(item, qty);
+    if (over > 0) dropGround(areaKey, item, over, x, y, "manual");
+  }
   b.smeltDoneAt = 0;
   b.recipe = idx;
   window.GS.stats.recipeSwitches = (window.GS.stats.recipeSwitches || 0) + 1;
@@ -931,39 +1428,255 @@ function buildingCenterPx(b) {
 }
 function gatherTotal(b) { return (b.inv || []).reduce((s, x) => s + x.qty, 0); }
 
-// Will `b` accept one `item` right now?
-function endpointAccepts(b, item) {
+// Cargo already flying to `dst` (outbound wisps AND ones flying home to it):
+// { n: total, by: { item: n } }. Lanterns reserve it against the target's
+// capacity (see endpointAccepts' `fly`), so a seal / storehouse / converter
+// is never overshot and no refused wisp comes back to spill its cargo.
+const NO_FLIGHT = Object.freeze({ n: 0, by: Object.freeze({}) });
+function inFlightTo(area, dst) {
+  const ws = area && area.wisps;
+  if (!dst || !ws || !ws.length) return NO_FLIGHT;
+  let r = null;
+  for (const w of ws) {
+    if (w.toId !== dst.id) continue;
+    r = r || { n: 0, by: {} };
+    r.n++; r.by[w.item] = (r.by[w.item] || 0) + 1;
+  }
+  return r || NO_FLIGHT;
+}
+
+// Will `b` accept one `item` right now? `fly` (optional, inFlightTo) = cargo
+// already en route to it, counted as if it had landed.
+function endpointAccepts(b, item, fly) {
   if (!b || !b.built) return false;
+  const f = fly || NO_FLIGHT, fi = f.by[item] || 0;
   const cfg = D.BUILDINGS[b.type];
-  if (cfg.seal) return !!b.item && b.item === item && (b.qty || 0) < (cfg.seal.cap || 5);
-  if (b.type === "storehouse") return (b.item ? b.item === item : true) && (b.qty || 0) < storehouseCap();
-  if (cfg.gather) return gatherTotal(b) < cfg.gather.cap;
-  if (cfg.stoker) return D.FUEL[item] != null && gatherTotal(b) < cfg.stoker.cap;
-  if (cfg.roster) return foodValue(b, item) > 0 && (cfg.roster.foodCap - (b.buns || 0)) >= foodValue(b, item);
+  if (cfg.seal) return !!b.item && b.item === item && (b.qty || 0) + fi < (cfg.seal.cap || 5);
+  if (b.type === "storehouse") {
+    // an empty untyped store takes the type of the first cargo flying in
+    const typ = b.item || Object.keys(f.by)[0];
+    return (typ ? typ === item : true) && (b.qty || 0) + f.n < storehouseCap();
+  }
+  // a wired stone only takes what its links could ever pass on (b._accEver,
+  // refreshed every tick by ejectUnwanted; absent/null = anything)
+  if (cfg.gather) return gatherTotal(b) + f.n < cfg.gather.cap && (!b._accEver || b._accEver.indexOf(item) >= 0);
+  if (cfg.stoker) return D.FUEL[item] != null && gatherTotal(b) + f.n < cfg.stoker.cap;
+  if (cfg.roster) {
+    let due = 0;
+    for (const [it, q] of Object.entries(f.by)) due += foodValue(b, it) * q;
+    return foodValue(b, item) > 0 && (cfg.roster.foodCap - (b.buns || 0) - due) >= foodValue(b, item);
+  }
   if (cfg.recipes) {
     const rec = recipeOf(b);
     const isInput = rec && rec.inputs[item] != null;
     // burners drink fuel items into their visible rack (max FUEL_SLOTS) —
     // UNLESS the item is also an ingredient of the current recipe (e.g.
     // firestone in Ember Pill / Star Steel), which must reach recipe stock.
-    if (cfg.fuel && D.FUEL[item] != null && !isInput) return fuelSpace(b) > 0;
+    if (cfg.fuel && D.FUEL[item] != null && !isInput) {
+      let fuelFly = 0;
+      for (const [it, q] of Object.entries(f.by)) if (D.FUEL[it] != null && !(rec && rec.inputs[it] != null)) fuelFly += q;
+      return fuelSpace(b) - fuelFly > 0;
+    }
     if (!isInput) return false;
     b.stock = b.stock || {};
-    return (b.stock[item] || 0) < (rec.stockCap || 20);
+    return (b.stock[item] || 0) + fi < (rec.stockCap || 20);
   }
   return false;
 }
-// Which item can `src` supply that `dst` accepts? (null = nothing to send)
-function pickTransfer(src, dst) {
+// Which item can `src` supply that `dst` accepts, counting cargo `fly`
+// already en route to dst? (null = nothing to send)
+function pickTransfer(src, dst, fly) {
   const sCfg = D.BUILDINGS[src.type];
   if (sCfg.gather || sCfg.stoker) {
-    const st = (src.inv || []).find(s => s.qty > 0 && endpointAccepts(dst, s.item));
+    const st = (src.inv || []).find(s => s.qty > 0 && endpointAccepts(dst, s.item, fly));
     return st ? st.item : null;
   }
   if (sCfg.seal || src.type === "storehouse")
-    return src.item && (src.qty || 0) > 0 && endpointAccepts(dst, src.item) ? src.item : null;
+    return src.item && (src.qty || 0) > 0 && endpointAccepts(dst, src.item, fly) ? src.item : null;
   return null;
 }
+// Does a link source hold anything at all? (link health: "empty" vs "refused")
+function sourceHolds(src) {
+  const cfg = D.BUILDINGS[src.type];
+  if (cfg.gather || cfg.stoker) return gatherTotal(src) > 0;
+  return !!src.item && (src.qty || 0) > 0;
+}
+
+// Item TYPES a target accepts — null = any. `room` = only what it has ROOM
+// for right now (a full Storehouse / Seal -> []); without it, what it could
+// EVER accept (capacity ignored). An untuned Warding Seal counts as "any":
+// it takes whatever it is tuned to next.
+function targetTypes(t, room) {
+  if (!t || !t.built) return [];
+  const cfg = D.BUILDINGS[t.type];
+  if (cfg.gather) return null;
+  if (cfg.seal) {
+    if (!t.item) return null;
+    return room && (t.qty || 0) >= (cfg.seal.cap || 5) ? [] : [t.item];
+  }
+  if (t.type === "storehouse") {
+    if (room && (t.qty || 0) >= storehouseCap()) return [];
+    return t.item ? [t.item] : null;
+  }
+  if (cfg.stoker) return Object.keys(D.FUEL);
+  if (cfg.roster) return Object.keys(cfg.roster.foodValues || { [cfg.roster.food]: 1 });
+  if (cfg.recipes) {
+    const rec = recipeOf(t);
+    const out = rec ? Object.keys(rec.inputs) : [];
+    if (cfg.fuel) for (const f of Object.keys(D.FUEL)) if (out.indexOf(f) < 0) out.push(f);
+    return out;
+  }
+  return [];
+}
+// What a Gathering Stone picks up: null = everything (no outgoing links, or
+// a link target that takes anything), else the union of item types its link
+// targets accept — so byproducts no longer clog a wired stone. By default
+// capacity-aware: a FULL Storehouse/Seal target adds nothing, so a stone
+// whose stone-store is full keeps collecting jade for the jade store.
+// `ever` = ignore capacity (what the stone may HOLD at all — see ejectUnwanted).
+function stoneAccepts(areaKey, b, ever) {
+  if (!b || !D.BUILDINGS[b.type] || !D.BUILDINGS[b.type].gather) return null;
+  let out = null, linked = false;
+  for (const lb of window.GS.areas[areaKey].buildings) {
+    if (!lb.links || !lb.links.length) continue;
+    for (const l of lb.links) {
+      if (l.from !== b.id) continue;
+      linked = true;
+      const types = targetTypes(buildingById(areaKey, l.to), !ever);
+      if (types === null) return null;              // e.g. an empty Storehouse: anything goes
+      out = out || [];
+      for (const it of types) if (out.indexOf(it) < 0) out.push(it);
+    }
+  }
+  return linked ? out : null;
+}
+// A wired stone drops what NO link target could ever take (junk vacuumed
+// before its first link, or after a link/seal/recipe change shrank its set)
+// beside itself as manual drops — so it never sits on dead stock. Records
+// the capacity-free set as transient b._accEver (endpointAccepts reads it).
+function ejectUnwanted(areaKey, b) {
+  const ever = stoneAccepts(areaKey, b, true);
+  b._accEver = ever;
+  if (!ever || !b.inv || !b.inv.length) return false;
+  const keep = [];
+  let ejected = false;
+  const c = buildingCenterPx(b);
+  for (const st of b.inv) {
+    if (ever.indexOf(st.item) >= 0) { keep.push(st); continue; }
+    if (st.qty > 0) dropGround(areaKey, st.item, st.qty, c.x, c.y + CELL, "manual");
+    ejected = true;
+  }
+  if (ejected) b.inv = keep;
+  return ejected;
+}
+// Could `dst` EVER take anything `src` holds? (false -> link fail "nomatch")
+function sourceMatches(src, dst) {
+  const types = targetTypes(dst, false);
+  if (types === null) return true;
+  const cfg = D.BUILDINGS[src.type];
+  if (cfg.gather || cfg.stoker) return (src.inv || []).some(s => s.qty > 0 && types.indexOf(s.item) >= 0);
+  return !!src.item && types.indexOf(src.item) >= 0;
+}
+
+// ---- Building status + craft rate (UI read-outs; pure, DOM-free) ----
+let offlineReplay = false;                // runOfflineCatchup: don't record live craft rates
+const CRAFT_WINDOW_MS = 60000;
+// Stamp one finished batch into the building's transient ring (b._crafts);
+// b._craftFirst = the first craft of the current run of crafts (reset after an
+// idle gap longer than the window), so a fresh converter's rate is not diluted
+// by the 60 s window it hasn't lived through yet.
+function noteCraft(b, now) {
+  const r = b._crafts || (b._crafts = []);
+  while (r.length && now - r[0] > CRAFT_WINDOW_MS) r.shift();
+  if (!r.length) b._craftFirst = now;
+  r.push(now);
+  if (r.length > 240) r.splice(0, r.length - 240);
+}
+// Crafts per minute, over min(time since the first recorded craft, 60 s)
+// (transient; 0 after a reload). While the window is still filling it counts
+// the gaps (n-1 crafts since the first one), afterwards the last 60 s. With
+// forDisplay, fewer than 2 recorded crafts read 0 (nothing honest to show yet).
+function craftRate(b, forDisplay) {
+  const r = b && b._crafts;
+  if (!r || !r.length) return 0;
+  const now = Date.now();
+  let n = 0;
+  for (let i = r.length - 1; i >= 0 && now - r[i] <= CRAFT_WINDOW_MS; i--) n++;
+  if (n < 2) return forDisplay ? 0 : n;
+  const first = b._craftFirst || r[0];
+  const span = Math.min(Math.max(now - first, 1000), CRAFT_WINDOW_MS);
+  return span >= CRAFT_WINDOW_MS ? n : (n - 1) * 60000 / span;
+}
+// ---- Output back-pressure ----
+// A producer (converter, generator building, pavilion) starts no new work
+// while OUTPUT_PILE_MAX of its own product lie loose within
+// OUTPUT_PILE_CELLS of its footprint. Measured at most every
+// PILE_RECHECK_MS per building (transient b._pileFull / _pileAt / _pileItem),
+// so a blocked producer costs one ground scan per recheck, not per tick.
+const OUTPUT_PILE_MAX = 12, OUTPUT_PILE_CELLS = 3, PILE_RECHECK_MS = 500;
+function outputPileCount(area, b, item) {
+  const s = buildingSize(b.type), m = OUTPUT_PILE_CELLS * CELL;
+  const x0 = b.col * CELL - m, x1 = (b.col + s.w) * CELL + m;
+  const y0 = b.row * CELL - m, y1 = (b.row + s.h) * CELL + m;
+  let n = 0;
+  for (const g of area.ground)
+    if (g.item === item && g.x >= x0 && g.x <= x1 && g.y >= y0 && g.y <= y1) n++;
+  return n;
+}
+function outputPileFull(area, b, item, now) {
+  if (b._pileAt && now < b._pileAt && b._pileItem === item) return !!b._pileFull;
+  b._pileAt = now + PILE_RECHECK_MS; b._pileItem = item;
+  return (b._pileFull = outputPileCount(area, b, item) >= OUTPUT_PILE_MAX);
+}
+function pileStatus(item) { return { state: "full", item, pile: true, label: "Output pile full" }; }
+
+// Is `b` the target of any lantern link in its area?
+function isLinkTarget(areaKey, b) {
+  for (const lb of window.GS.areas[areaKey].buildings)
+    if (lb.links) for (const l of lb.links) if (l.to === b.id) return true;
+  return false;
+}
+// One-glance status of a building for its face/badge:
+// null | { state: working|starved|nofuel|full|idle, item?, label }.
+function buildingStatus(areaKey, b) {
+  if (!b || !b.built) return null;
+  const cfg = D.BUILDINGS[b.type];
+  if (!cfg) return null;
+  if (cfg.recipes) {
+    const rec = recipeOf(b);
+    if (!rec) return { state: "idle", label: "Idle" };
+    const stock = b.stock || {};
+    const cap = rec.stockCap || 20;
+    const atCap = Object.keys(rec.inputs).every(it => (stock[it] || 0) >= cap);
+    if (b.smeltDoneAt > 0)
+      return atCap ? { state: "full", label: "Stock full" } : { state: "working", label: "Working" };
+    let missing = null;
+    for (const [it, q] of Object.entries(rec.inputs)) if ((stock[it] || 0) < q) { missing = it; break; }
+    if (!missing) {
+      if (b._pileFull && b._pileItem === rec.output) return pileStatus(rec.output);
+      if (cfg.fuel && !(fuelTotal(b) > 0)) return { state: "nofuel", label: "No fuel" };
+      return { state: "working", label: "Working" };
+    }
+    const any = Object.keys(rec.inputs).some(it => (stock[it] || 0) > 0);
+    if (!any && !isLinkTarget(areaKey, b)) return { state: "idle", item: missing, label: "Idle" };
+    return { state: "starved", item: missing, label: "Needs " + itemName(missing) };
+  }
+  if (cfg.gather || cfg.stoker) {
+    const cap = (cfg.gather || cfg.stoker).cap;
+    return gatherTotal(b) >= cap ? { state: "full", label: "Full" } : null;
+  }
+  if (cfg.seal) return (b.qty || 0) >= (cfg.seal.cap || 5) ? { state: "full", item: b.item || undefined, label: "Full" } : null;
+  if (b.type === "storehouse") return (b.qty || 0) >= storehouseCap() ? { state: "full", item: b.item || undefined, label: "Full" } : null;
+  if (cfg.roster) {
+    if ((b.disciples || 0) > 0 && !((b.buns || 0) > 0))
+      return { state: "starved", item: "spirit_buns", label: "Needs " + itemName("spirit_buns") };
+    if ((b.disciples || 0) > 0 && b._pileFull) return pileStatus(cfg.roster.produce);
+    return null;
+  }
+  if (cfg.gen && b._pileFull) return pileStatus(cfg.gen.item);
+  return null;
+}
+
 function endpointTake(b, item) {
   const cfg = D.BUILDINGS[b.type];
   if (cfg.gather || cfg.stoker) {
@@ -1009,10 +1722,50 @@ function wispPos(areaKey, w, now) {
   return { x: w.x0 + (t.x - w.x0) * frac, y: w.y0 + (t.y - w.y0) * frac, frac };
 }
 
-// Wire a new link onto a lantern.
+// Item types a link SOURCE could ever send: null = unknown (a Gathering
+// Stone vacuums whatever lands nearby; an untuned seal / empty storehouse
+// takes whatever arrives first).
+function linkSourceTypes(src) {
+  const cfg = D.BUILDINGS[src.type];
+  if (cfg.stoker) return Object.keys(D.FUEL);
+  if (cfg.seal || src.type === "storehouse") return src.item ? [src.item] : null;
+  return null;
+}
+// Item types a link TARGET could EVER accept, across recipe switches (a
+// converter's every recipe input + fuel for burners): null = anything/unknown.
+function linkTargetTypesEver(t) {
+  const cfg = D.BUILDINGS[t.type];
+  if (cfg.gather) return null;
+  if (cfg.seal || t.type === "storehouse") return t.item ? [t.item] : null;
+  if (cfg.recipes) {
+    const out = [];
+    for (const r of cfg.recipes) for (const it of Object.keys(r.inputs)) if (out.indexOf(it) < 0) out.push(it);
+    if (cfg.fuel) for (const f of Object.keys(D.FUEL)) if (out.indexOf(f) < 0) out.push(f);
+    return out;
+  }
+  return targetTypes(t);
+}
+// Why a link from -> to can never carry anything, or null when it may.
+// { code, text } — code: "self" | "source" | "target" | "types".
+function linkRefusal(areaKey, fromId, toId) {
+  const src = buildingById(areaKey, fromId), dst = buildingById(areaKey, toId);
+  if (!canBeLinkSource(src)) return { code: "source", text: "Not a link source" };
+  if (!canBeLinkTarget(dst)) return { code: "target", text: "Not a link target" };
+  if (src.id === dst.id) return { code: "self", text: "A building can't feed itself" };
+  const from = linkSourceTypes(src), to = linkTargetTypesEver(dst);
+  if (from === null || to === null) return null;
+  if (from.some(it => to.indexOf(it) >= 0)) return null;
+  const names = from.slice(0, 2).map(itemName).join("/") + (from.length > 2 ? "…" : "");
+  return { code: "types", text: `${D.BUILDINGS[dst.type].name} can't use ${names}` };
+}
+
+// Wire a new link onto a lantern. Refuses (false) a link whose target can
+// never accept anything the source holds — and a refused link never counts
+// toward the link quest.
 function addLink(areaKey, lanternId, fromId, toId) {
   const lb = buildingById(areaKey, lanternId);
   if (!lb || !D.BUILDINGS[lb.type].lantern) return false;
+  if (linkRefusal(areaKey, fromId, toId)) return false;
   lb.links = lb.links || [];
   lb.links.push({ from: fromId, to: toId });
   window.GS.stats.linksAdded = (window.GS.stats.linksAdded || 0) + 1;
@@ -1068,25 +1821,29 @@ function demolishBuilding(areaKey, buildingId) {
   const s = buildingSize(b.type);
   const x = (b.col + s.w / 2) * CELL, y = (b.row + s.h / 2) * CELL;
   if (b.built) {
-    for (const [item, qty] of Object.entries(cfg.cost)) dropGround(areaKey, item, qty, x, y);
-    if ((b.type === "storehouse" || cfg.seal) && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y);
-    for (const st of b.inv || []) if (st.qty > 0) dropGround(areaKey, st.item, st.qty, x, y);
+    for (const [item, qty] of Object.entries(cfg.cost)) dropGround(areaKey, item, qty, x, y, "manual");
+    if ((b.type === "storehouse" || cfg.seal) && b.item && b.qty > 0) dropGround(areaKey, b.item, b.qty, x, y, "manual");
+    for (const st of b.inv || []) if (st.qty > 0) dropGround(areaKey, st.item, st.qty, x, y, "manual");
     // a converter refunds its whole input stock plus the batch in progress
     if (cfg.recipes) {
       for (const [item, qty] of Object.entries(b.stock || {}))
-        if (qty > 0) dropGround(areaKey, item, qty, x, y);
+        if (qty > 0) dropGround(areaKey, item, qty, x, y, "manual");
       const rec = recipeOf(b);
       if (b.smeltDoneAt > 0 && rec)
         for (const [item, qty] of Object.entries(rec.inputs))
-          dropGround(areaKey, item, qty, x, y);
+          dropGround(areaKey, item, qty, x, y, "manual");
     }
     // a pavilion refunds its disciples (as Robes); cultivation cycles are
     // consumed, not stored — no refund (like fuel).
     if (cfg.roster) {
-      if (b.disciples > 0) dropGround(areaKey, cfg.roster.recruit, b.disciples, x, y);
+      if (b.disciples > 0) dropGround(areaKey, cfg.roster.recruit, b.disciples, x, y, "manual");
     }
+    // an Ascension Gate gives its offerings back
+    if (cfg.gate)
+      for (const [item, qty] of Object.entries(b.offered || {}))
+        if (qty > 0) dropGround(areaKey, item, qty, x, y, "manual");
   } else {
-    for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y);
+    for (const [item, qty] of Object.entries(b.paid)) dropGround(areaKey, item, qty, x, y, "manual");
   }
   area.buildings.splice(i, 1);
   // sever any wisp links that referenced the demolished endpoint
@@ -1111,15 +1868,36 @@ function feedNeeds(rem, paid) {
     if (handCount(item) > 0) { handMoveToFront(item); return { reordered: item }; }
   return null;
 }
+// Converter stock only: feed the carried input with the LOWEST stock/need
+// ratio (ties: front stack, then recipe order), so first clicks fill a whole
+// batch SET instead of front-filling one ingredient to its cap.
+function feedRatio(b, rec) {
+  const space = smeltSpace(b);
+  const first = window.GS.hand[0];
+  const order = first && space[first.item] ? [first.item] : [];
+  for (const it of Object.keys(space)) if (it !== order[0]) order.push(it);
+  let pick = null, best = Infinity;
+  for (const it of order) {
+    if (handCount(it) <= 0) continue;
+    const r = (b.stock[it] || 0) / Math.max(1, rec.inputs[it] || 0);
+    if (r < best) { best = r; pick = it; }
+  }
+  if (pick) handMoveToFront(pick);
+  return feedNeeds(space, b.stock);
+}
+// Buffs scale with the world clock: 60s test / 240s real.
+function buffScale() { return D.TEST.ENABLED ? 1 : 4; }
 
-function dropFromHand(areaKey, x, y) {
+// `noGround` (the latched right-hold on a feed target): return null instead
+// of falling through to a ground drop when nothing here accepts the item.
+function dropFromHand(areaKey, x, y, noGround) {
   const col = Math.floor(x / CELL), row = Math.floor(y / CELL);
   // Vitality Pill in the front hand slot is TAKEN (never dropped): it grants
   // the Martial Vigor combat buff. Right-click it anywhere to quaff.
   if (window.GS.hand[0] && window.GS.hand[0].item === D.VITALITY.item) {
     handTake(D.VITALITY.item, 1);
-    window.GS.combatBuff = { until: Date.now() + D.VITALITY.ms };
-    return { used: D.VITALITY.item };
+    window.GS.combatBuff = { until: Date.now() + D.VITALITY.ms * buffScale() };
+    return { used: D.VITALITY.item, once: true };   // one pill per press
   }
   // Beast Bait INSIDE the enemy zone always lures (even over a formation
   // that would otherwise catch the drop): a tier-2 beast appears there.
@@ -1133,7 +1911,7 @@ function dropFromHand(areaKey, x, y) {
       const area2 = window.GS.areas[areaKey];
       area2.enemies.push({ id: area2.nextEnemyId++, x, y, hp: bs.hp, maxHp: bs.hp,
         tx: x, ty: y, hitAt: 0, kind: "boss", sprite: bs.sprite, spd: bs.speed });
-      return { fed: "beast_bait" };
+      return { fed: "beast_bait", lured: true, once: true };   // one lure per press
     }
   }
   const b = buildingAt(areaKey, row, col);
@@ -1156,9 +1934,9 @@ function dropFromHand(areaKey, x, y) {
     if (first0 && D.DRAGON_BUFFS[first0.item]) {
       handTake(first0.item, 1);
       const dur = (60000 + 30000 * (window.GS.areas.center.upgrades.affinity || 0)
-        + (shrineBuilt() ? 60000 : 0)) * Math.pow(1.2, perkLevel("bless"));   // Dragon Shrine + Heaven's Favor perk
+        + (shrineBuilt() ? 60000 : 0)) * Math.pow(1.2, perkLevel("bless")) * buffScale();   // Dragon Shrine + Heaven's Favor perk
       window.GS.buff = { kind: first0.item, until: Date.now() + dur };
-      return { fed: first0.item };
+      return { fed: first0.item, once: true };   // one blessing pill per press
     }
     // a pill deeper in the hand: bring it to the front (the NEXT click feeds
     // it) — always once awakened, else only when no tribute is carried
@@ -1173,7 +1951,7 @@ function dropFromHand(areaKey, x, y) {
       dr.msg = st.text; dr.msgUntil = Date.now() + 8000;
       dr.dialog = st.text;   // story dialog box (persists until dismissed)
       if (window.onSfx) window.onSfx("dragon", areaKey);
-      if (!dragonStage()) window.GS.won = true;   // final stage: it AWAKENS
+      if (!dragonStage()) window.GS.won = window.GS.dragonBlessed = true;   // final stage: it AWAKENS
     }
     return res || (pill ? pillFront() : null);
   }
@@ -1214,7 +1992,7 @@ function dropFromHand(areaKey, x, y) {
       addFuelItem(b, first.item);
       return { fed: first.item };
     }
-    const res = feedNeeds(smeltSpace(b), b.stock);
+    const res = feedRatio(b, rec);
     if (res) return res;
     // nothing the recipe needs — bring carried fuel forward instead
     if (bCfg.fuel && fuelSpace(b) > 0)
@@ -1239,20 +2017,53 @@ function dropFromHand(areaKey, x, y) {
     return { fed: first.item };
   }
   if (b && b.built && b.type === "storehouse") return depositToStorehouse(b);
+  // Built Ascension Gate: surplus talismans / star steel / dragon scales are
+  // laid as OFFERINGS (+1 AP each at ascension, capped). Anything else still
+  // drops on the ground as before.
+  if (b && b.built && D.BUILDINGS[b.type].gate) {
+    const items = D.GATE_OFFERINGS.items;
+    const first = window.GS.hand[0];
+    if (first && items.includes(first.item)) {
+      if (gateTakes(areaKey, b, first.item)) {
+        handTake(first.item, 1);
+        b.offered = b.offered || {};
+        b.offered[first.item] = (b.offered[first.item] || 0) + 1;
+        b.offerings = gateOfferings(areaKey, b).count;
+        return { fed: first.item };
+      }
+      // this type is full: bring another still-wanted offering forward;
+      // else keep it (don't waste it on the ground)
+      for (const it of items) if (handCount(it) > 0 && gateTakes(areaKey, b, it)) { handMoveToFront(it); return { reordered: it }; }
+      return null;
+    }
+    for (const it of items) if (handCount(it) > 0 && gateTakes(areaKey, b, it)) { handMoveToFront(it); return { reordered: it }; }
+  }
   if (b && !b.built) {
     const res = feedNeeds(buildingNeeds(b), b.paid);
     if (res && res.fed && Object.keys(buildingNeeds(b)).length === 0) {
       b.built = true;
+      occEpoch++;                                    // a burner's fuel rack now occupies cells
       window.GS.stats.buildingsBuilt = (window.GS.stats.buildingsBuilt || 0) + 1;
+      (window.GS.builtTypes = window.GS.builtTypes || {})[b.type] = true;   // owning one keeps it revealed
+      // each run's FIRST Meditation Pavilion comes stocked with a full larder
+      // of Spirit Buns (its food cap) so the disciple visibly cultivates for
+      // a few minutes before a Mill exists. Per-RUN by design: ascend()
+      // starts from a fresh state (pavilionSeeded false) and re-seeds.
+      const ros = D.BUILDINGS[b.type].roster;
+      if (ros && !window.GS.pavilionSeeded) {
+        window.GS.pavilionSeeded = true;
+        b.buns = ros.foodCap || 20;
+      }
       if (window.onSfx) window.onSfx("build", areaKey);
       // completing the Ascension Gate offers the ending
       if (D.BUILDINGS[b.type].gate) window.GS.ascendPrompt = true;
     }
     return res ? Object.assign(res, { building: b.id }) : null;
   }
+  if (noGround) return null;
   const item = handTakeFirst();
   if (!item) return null;
-  dropGround(areaKey, item, 1, x, y);
+  dropGround(areaKey, item, 1, x, y, "manual");
   return { dropped: item };
 }
 
@@ -1330,7 +2141,7 @@ function refundUpgradeJob() {
   const x = cb ? (cb.col + s.w / 2) * CELL : PLAY_PX / 2;
   const y = cb ? (cb.row + s.h / 2) * CELL : PLAY_PX / 2;
   for (const [item, qty] of Object.entries(job.paid || {}))
-    if (qty > 0) dropGround("center", item, qty, x, y);
+    if (qty > 0) dropGround("center", item, qty, x, y, "manual");
 }
 
 // Pick the Center building's active upgrade project. Switching away from a
@@ -1350,16 +2161,49 @@ function selectUpgrade(areaKey, type) {
 // The dragon's CURRENT stage definition, or null once fully progressed.
 function dragonStage() { return D.DRAGON_STAGES[window.GS.dragon.stage] || null; }
 
-// Per-item tribute the current stage still wants (TEST-scaled): { item: qty }.
+// The dragon remembers you: each ascension shrinks its tributes,
+// x 1/(1 + 0.25*asc), never below x0.4. `asc` defaults to the current count.
+function tributeMult(asc) {
+  const a = asc != null ? asc : (window.GS.ascensions || 0);
+  return Math.max(0.4, 1 / (1 + 0.25 * a));
+}
+// Full per-item tribute of the current stage (TEST-scaled, ascension-shrunk,
+// doubled by the Vow of the Restless Dragon): { item: qty }.
+function dragonNeeds() {
+  const st = dragonStage();
+  if (!st) return {};
+  const out = {}, m = tributeMult();
+  for (const [item, qty] of Object.entries(st.needs))
+    out[item] = Math.max(1, Math.ceil(scaled(qty) * m)) * (vowActive("restless") ? 2 : 1);   // Vow of the Restless Dragon
+  return out;
+}
+// Per-item tribute the current stage still wants: { item: qty }.
 function dragonRemaining() {
   const st = dragonStage();
   if (!st) return {};
   const rem = {};
-  for (const [item, qty] of Object.entries(st.needs)) {
-    const r = scaled(qty) - (window.GS.dragon.paid[item] || 0);
+  for (const [item, need] of Object.entries(dragonNeeds())) {
+    const r = need - (window.GS.dragon.paid[item] || 0);
     if (r > 0) rem[item] = r;
   }
   return rem;
+}
+
+// Full tribute of stage index `i` (scaled like dragonRemaining): { item: qty }.
+// The CURRENT stage reads paid + remaining, so it always agrees with the
+// feeding math.
+function dragonTribute(i) {
+  const st = D.DRAGON_STAGES[i];
+  if (!st) return {};
+  const out = {};
+  if (i === (window.GS.dragon.stage || 0)) {
+    const rem = dragonRemaining();
+    for (const item of Object.keys(st.needs)) out[item] = (window.GS.dragon.paid[item] || 0) + (rem[item] || 0);
+    return out;
+  }
+  for (const [item, qty] of Object.entries(st.needs))
+    out[item] = scaled(qty) * (vowActive("restless") ? 2 : 1);
+  return out;
 }
 
 // ---- World regions (one continuous map) ---------------------
@@ -1393,23 +2237,87 @@ function areaUnlockCost(areaKey) {
 
 function isAreaUnlocked(areaKey) { return !!window.GS.world.unlocked[areaKey]; }
 
-// Pay to open a region. All regions exist (and are visible) from the start;
-// unlocking only widens where the camera may pan and enables interaction.
-function unlockArea(areaKey) {
-  if (!D.AREAS[areaKey] || isAreaUnlocked(areaKey)) return false;
+// Installments already paid toward a locked region: { item: qty }.
+function unlockPaidOf(areaKey) {
+  const w = window.GS.world;
+  return (w.unlockPaid && w.unlockPaid[areaKey]) || {};
+}
+// What a region's unlock still wants: cost minus installments. { item: qty }
+function unlockRemaining(areaKey) {
   const cost = areaUnlockCost(areaKey);
-  if (!cost || !spend(cost)) return false;
+  if (!cost) return null;
+  const paid = unlockPaidOf(areaKey), rem = {};
+  for (const [it, q] of Object.entries(cost)) { const r = q - (paid[it] || 0); if (r > 0) rem[it] = r; }
+  return rem;
+}
+// Can the hand pay at least one more installment toward the region? (True
+// with nothing left to pay — a fully paid region just needs the click.)
+function canPayUnlock(areaKey) {
+  const rem = unlockRemaining(areaKey);
+  if (!rem) return false;
+  const need = Object.keys(rem);
+  return !need.length || need.some(it => handCount(it) > 0);
+}
+// Mark a region open (unlock payment, Remembered Paths).
+function openRegion(areaKey) {
   window.GS.world.unlocked[areaKey] = true;
-  if (window.onSfx) window.onSfx("unlock", areaKey);
   // Refresh stale surfaced fish so they don't all dive the instant it opens.
   const cfg = D.AREAS[areaKey];
   for (const n of window.GS.areas[areaKey].nodes)
     if (n.surfaceUntil)
       n.surfaceUntil = Date.now() + (cfg.surfaceWindow || 3) * 1000 * (0.5 + Math.random());
+}
+
+// Pay to open a region. All regions exist (and are visible) from the start;
+// unlocking only widens where the camera may pan and enables interaction.
+// Paid in INSTALLMENTS: each click moves whatever the hand carries toward
+// the cost into GS.world.unlockPaid[region] (kept until the region opens —
+// never refunded), so a small hand (Vow of Burden) can still pay a big one.
+// Returns true once the region opens, { paid: n } for a partial payment,
+// false when the hand holds nothing it needs.
+function unlockArea(areaKey) {
+  if (!D.AREAS[areaKey] || isAreaUnlocked(areaKey)) return false;
+  const rem = unlockRemaining(areaKey);
+  if (!rem) return false;
+  const w = window.GS.world;
+  if (!w.unlockPaid) w.unlockPaid = {};
+  let n = 0;
+  for (const [it, r] of Object.entries(rem)) {
+    const take = Math.min(r, handCount(it));
+    if (take <= 0) continue;
+    handTake(it, take);
+    const paid = w.unlockPaid[areaKey] || (w.unlockPaid[areaKey] = {});
+    paid[it] = (paid[it] || 0) + take;
+    n += take;
+  }
+  if (Object.keys(unlockRemaining(areaKey)).length) return n > 0 ? { paid: n } : false;
+  delete w.unlockPaid[areaKey];
+  openRegion(areaKey);
+  if (window.onSfx) window.onSfx("unlock", areaKey);
   return true;
 }
 
 // ---- Ticks --------------------------------------------------
+
+// Periodic clocks (field generators, generator buildings, lantern beats,
+// pavilion cycles) re-arm from their DUE time, not from `now`, so a coarse
+// tick (offline replay steps up to ~640ms, a throttled background tab)
+// fires as many events as 50ms ticks do. Catch-up is bounded: a clock due
+// before the PREVIOUS tick (+ one interval) wasn't running — fresh, paused,
+// region just opened — so it restarts at now instead of bursting.
+let lastTickAt = 0;                      // clock of the previous gameTick
+let tickGap = 0;                         // now - lastTickAt (bounded), this tick
+const MAX_TICK_GAP = 10000;              // never catch up more than 10s in one tick
+const MAX_TICK_EVENTS = 400;             // hard ceiling on events per clock per tick
+// Returns { n, next }: how many periods are due by `now` (0 = none) and the
+// clock's next due time after firing them.
+function periodic(due, interval, now) {
+  if (!(interval > 0)) return { n: 0, next: due };
+  if (!Number.isFinite(due) || due < now - tickGap - interval) due = now;   // stale: restart now
+  if (now < due) return { n: 0, next: due };
+  const n = Math.min(MAX_TICK_EVENTS, Math.floor((now - due) / interval) + 1);
+  return { n, next: Math.max(due + n * interval, now - interval + 1) };
+}
 
 // Advance the world. Returns true only if something visible changed, so the
 // caller can skip repainting idle frames (repainting a huge world every tick
@@ -1418,6 +2326,8 @@ function gameTick() {
   const now = Date.now();
   const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
   let changed = false;
+  tickGap = lastTickAt > 0 && now > lastTickAt ? Math.min(now - lastTickAt, MAX_TICK_GAP) : 0;
+  lastTickAt = now;
   for (const areaKey of Object.keys(D.AREAS)) {
     if (!isAreaUnlocked(areaKey)) continue;
     const area = window.GS.areas[areaKey];
@@ -1441,23 +2351,43 @@ function gameTick() {
     // Generators (e.g. clay ground) auto-drop items up to their cap.
     (cfg.generators || []).forEach((gen, gi) => {
       if (!area.genTimers) area.genTimers = [];
-      if (now < (area.genTimers[gi] || 0)) return;
       // some generators speed up with an upgrade (e.g. quarry stone output)
       const upLvl = gen.upgrade ? (area.upgrades[gen.upgrade] || 0) : 0;
-      area.genTimers[gi] = now + gen.intervalMs * scale * Math.pow(0.8, upLvl) * Math.pow(0.9, perkLevel("bounty"));
+      const tm = periodic(area.genTimers[gi] || 0, gen.intervalMs * scale * Math.pow(0.8, upLvl) * Math.pow(0.9, perkLevel("bounty")) * prestigeFactor(), now);
+      if (!tm.n) return;
+      area.genTimers[gi] = tm.next;
       // the cap counts only items lying INSIDE this generator's field —
       // items mined/carried elsewhere don't block passive production
       const z = zoneRects(gen.zone)[0];
       const fx0 = z.c0 * CELL - 16, fx1 = (z.c1 + 1) * CELL + 16;
       const fy0 = z.r0 * CELL - 16, fy1 = (z.r1 + 1) * CELL + 16;
-      const inField = area.ground.filter(g => g.item === gen.item &&
-        g.x >= fx0 && g.x <= fx1 && g.y >= fy0 && g.y <= fy1).length;
-      if (inField >= gen.cap) return;
+      // (its rare finds count too, so uncollected jade can't pile up forever)
+      const rare = gen.rareDrop ? gen.rareDrop.item : null;
+      let inField = 0, rareIn = 0;
+      for (const g of area.ground)
+        if ((g.item === gen.item || g.item === rare) &&
+            g.x >= fx0 && g.x <= fx1 && g.y >= fy0 && g.y <= fy1) { inField++; if (g.item === rare) rareIn++; }
+      for (let ev = 0; ev < tm.n; ev++) {             // one drop per due period (catch-up)
+      if (inField >= gen.cap) {
+        // a full (idle) field still surfaces its rare find at the same odds
+        // while fewer than GEN_RARE_IDLE of them lie in it — so jade keeps
+        // trickling to a wired stone even when nobody drains the stone
+        if (rare && rareIn < GEN_RARE_IDLE && Math.random() < gen.rareDrop.chance) {
+          dropGround(areaKey, rare, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL, "gen");
+          rareIn++; inField++; changed = true;
+        }
+        continue;                                   // every due period rolls (not once per tick)
+      }
+      inField++;
       dropGround(areaKey, gen.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
-      // generators can also surface rare finds (uncapped, chance-gated)
-      if (gen.rareDrop && Math.random() < gen.rareDrop.chance)
-        dropGround(areaKey, gen.rareDrop.item, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL);
+      // generators can also surface rare finds (chance-gated; raw litter
+      // class "gen" until collected — see evictClassOf)
+      if (rare && Math.random() < gen.rareDrop.chance) {
+        dropGround(areaKey, rare, 1, (rand(z.c0, z.c1) + 0.5) * CELL, (rand(z.r0, z.r1) + 0.5) * CELL, "gen");
+        inField++; rareIn++;
+      }
       changed = true;
+      }
     });
 
     // Generator BUILDINGS (e.g. the Algae Farm) drip their item around
@@ -1465,52 +2395,74 @@ function gameTick() {
     for (const b of area.buildings) {
       const gcfg = b.built && D.BUILDINGS[b.type].gen;
       if (!gcfg) continue;
-      if (now < (b.nextGen || 0)) continue;
-      b.nextGen = now + gcfg.intervalMs * scale;
+      const tm = periodic(b.nextGen || 0, gcfg.intervalMs * scale * prestigeFactor(), now);
+      if (!tm.n) continue;
+      b.nextGen = tm.next;
       const bs = buildingSize(b.type);
       const bx = (b.col + bs.w / 2) * CELL, by = (b.row + bs.h / 2) * CELL;
       const R = 4 * CELL;
-      const near = area.ground.filter(g => g.item === gcfg.item &&
+      let near = area.ground.filter(g => g.item === gcfg.item &&
         Math.hypot(g.x - bx, g.y - by) <= R).length;
-      if (near >= gcfg.cap) continue;
-      dropGround(areaKey, gcfg.item, 1, bx + rand(-R / 2, R / 2), by + rand(-R / 2, R / 2));
-      changed = true;
+      if (near >= gcfg.cap) { b._pileFull = true; b._pileAt = 0; continue; }   // (re-measured next beat)
+      if (outputPileFull(area, b, gcfg.item, now)) continue;                  // output back-pressure
+      for (let ev = 0; ev < tm.n && near < gcfg.cap; ev++, near++) {           // catch-up
+        dropGround(areaKey, gcfg.item, 1, bx + rand(-R / 2, R / 2), by + rand(-R / 2, R / 2), "crafted");
+        changed = true;
+      }
     }
 
     // Converter buildings (the Forge): finish the active batch (drop its
     // output beside the building), then start the next straight from the
-    // input stock whenever it covers the recipe.
+    // input stock whenever it covers the recipe. Like periodic() clocks, a
+    // batch that finished INSIDE this tick re-arms the next one from its due
+    // time (not `now`), so a coarse tick (offline replay, throttled tab)
+    // crafts as many batches as 50ms ticks do — bounded by MAX_TICK_EVENTS.
     for (const b of area.buildings) {
       const scfg = b.built && recipeOf(b);
       if (!scfg) continue;
-      if (b.smeltDoneAt && now >= b.smeltDoneAt) {
-        const bs = buildingSize(b.type);
-        const bx = (b.col + bs.w / 2) * CELL, by = (b.row + bs.h) * CELL + 12;
-        const qty = scfg.outputQty || 1;
-        dropGround(areaKey, scfg.output, qty, bx, by);
-        window.GS.stats.totalCrafted += qty;
-        if (window.onSfx) window.onSfx("craft", areaKey);
-        b.smeltDoneAt = 0;
-        changed = true;
-      }
-      if (!b.smeltDoneAt && canStartBatch(b)) {
+      const isBurner = !!D.BUILDINGS[b.type].fuel;
+      const emberK = isBurner ? Math.pow(0.85, perkLevel("ember")) : 1;
+      for (let ev = 0; ev < MAX_TICK_EVENTS; ev++) {
+        let doneAt = 0;
+        if (b.smeltDoneAt && now >= b.smeltDoneAt) {
+          // burners charge the batch's unburned tail (fuelBurnAt..due time)
+          if (isBurner) burnFuel(b, Math.max(0, b.smeltDoneAt - (b.fuelBurnAt || b.smeltDoneAt)) * emberK);
+          doneAt = b.smeltDoneAt;
+          const bs = buildingSize(b.type);
+          const bx = (b.col + bs.w / 2) * CELL, by = (b.row + bs.h) * CELL + 12;
+          const qty = scfg.outputQty || 1;
+          dropGround(areaKey, scfg.output, qty, bx, by, "crafted");
+          window.GS.stats.totalCrafted += qty;
+          if (!offlineReplay) noteCraft(b, now);
+          if (window.onSfx) window.onSfx("craft", areaKey);
+          b.smeltDoneAt = 0;
+          changed = true;
+        }
+        // output back-pressure: a finished batch always lands, but no NEW
+        // batch starts while OUTPUT_PILE_MAX of its product lie loose beside
+        // it — crafting resumes once the pile is collected (bounds litter)
+        if (b.smeltDoneAt || !canStartBatch(b) || outputPileFull(area, b, scfg.output, now)) break;
         let cost = scfg.timeMs * scale * prestigeFactor();
         // Ember Blessing: burners work twice as fast (and burn half the fuel)
-        if (D.BUILDINGS[b.type].fuel && buffActive("ember_pill")) cost *= 0.5;
-        // burners need enough fuel to see the whole batch through; it's spent
-        // gradually below (matching the burn animation), not up front.
-        if (D.BUILDINGS[b.type].fuel && fuelTotal(b) < cost) continue;
+        if (isBurner && buffActive("ember_pill")) cost *= 0.5;
+        // burners start a batch on ANY fuel left in the rack (a sliver shorter
+        // than the batch still starts it — the remainder is free), so a rack
+        // that reads "has fuel" never silently stalls. Fuel is spent gradually
+        // (matching the burn animation), not up front.
+        if (isBurner && !(fuelTotal(b) > 0)) break;
         for (const [it, q] of Object.entries(scfg.inputs)) b.stock[it] -= q;
-        b.smeltDoneAt = now + cost;
-        b.fuelBurnAt = now;
+        // catch-up: re-arm from the finished batch's due time when it fell
+        // within this tick; otherwise (fresh start, stock just arrived) now
+        const t0 = doneAt && doneAt >= now - tickGap ? doneAt : now;
+        b.smeltDoneAt = t0 + cost;
+        b.fuelBurnAt = t0;
         changed = true;
+        if (b.smeltDoneAt > now) break;       // still running: done for this tick
       }
       // Burn fuel from the back of the rack in real time while a batch runs
       // (silent — the UI animates on-screen burners via animActive).
-      if (D.BUILDINGS[b.type].fuel) {
-        if (b.smeltDoneAt && now < b.smeltDoneAt) {
-          burnFuel(b, (now - (b.fuelBurnAt || now)) * Math.pow(0.85, perkLevel("ember")));
-        }
+      if (isBurner) {
+        if (b.smeltDoneAt && now < b.smeltDoneAt) burnFuel(b, Math.max(0, now - (b.fuelBurnAt || now)) * emberK);
         b.fuelBurnAt = now;   // keep current so idle time never burns a backlog
       }
     }
@@ -1520,49 +2472,89 @@ function gameTick() {
       if (!b.built) continue;
       const bCfg = D.BUILDINGS[b.type];
       // Gathering Stones vacuum nearby ground items into their buffer.
-      if (bCfg.gather && gatherTotal(b) < bCfg.gather.cap) {
+      // A stone that feeds lantern links only takes item TYPES some link
+      // target could ever accept (stoneAccepts); a player's own fresh drops
+      // (g.manualAt) are left alone for MANUAL_GRACE_MS. Stock no link could
+      // ever take is dropped beside the stone first (ejectUnwanted).
+      if (bCfg.gather && ejectUnwanted(areaKey, b)) changed = true;
+      // (wisps flying home to the stone keep their slot reserved)
+      const stoneFly = bCfg.gather ? inFlightTo(area, b).n : 0;
+      if (bCfg.gather && gatherTotal(b) + stoneFly < bCfg.gather.cap) {
         const c = buildingCenterPx(b);
         const R = bCfg.gather.radius * CELL;
         const taken = new Set();
+        const acc = stoneAccepts(areaKey, b);           // null = collects everything
         for (const g of area.ground) {
+          if (acc && acc.indexOf(g.item) < 0) continue;
+          if (g.manualAt && now - g.manualAt < MANUAL_GRACE_MS) continue;
           const dx = c.x - g.x, dy = c.y - g.y, d = Math.hypot(dx, dy);
           if (d > R) continue;
           if (d <= 22) {
-            if (gatherTotal(b) < bCfg.gather.cap && endpointGive(b, g.item)) { taken.add(g.id); changed = true; }
+            if (gatherTotal(b) + stoneFly < bCfg.gather.cap && endpointGive(b, g.item)) { taken.add(g.id); changed = true; }
             continue;
           }
-          const pull = 2 + (1 - d / R) * 4;
+          // px per 50ms tick, scaled by the real tick gap so a coarse tick
+          // (offline replay ~640ms, a throttled tab) hauls at the live rate;
+          // capped at x13 so a 10s throttled tick can't teleport a pile
+          const pull = (2 + (1 - d / R) * 4) * Math.min(13, Math.max(1, (tickGap || 50) / 50));
           g.x += (dx / d) * Math.min(pull, d);
           g.y += (dy / d) * Math.min(pull, d);
+          g._pullAt = now; g._pullTo = c;   // in flight to the stone: may pass over colliders (pushOutOfColliders)
           // Nudge is visual-only: on-screen pulls repaint via animActive(); off-screen movement needs no repaint (matches enemy/wisp movement).
         }
         if (taken.size) area.ground = area.ground.filter(g => !taken.has(g.id));
       }
-      // Wisp Lanterns service ONE link per beat, round-robin in added order.
-      // The Wisp Haste upgrade quickens the beat and the wisps themselves.
+      // Wisp Lanterns service ONE link per beat: of the links that can send
+      // right now, the one served LEAST recently (ties: round-robin in added
+      // order from connIdx). Plain "next after the last sent" phase-locked a
+      // shared seal: stone->seal refilled it and the link right after it
+      // (seal->Workbench) always took that one item, so the Kiln's fuel link
+      // behind it starved forever. The Wisp Haste upgrade quickens the beat
+      // and the wisps themselves.
       if (bCfg.lantern && (b.links || []).length && now >= (b.nextSend || 0)) {
         const haste = area.upgrades.wispRate || 0;
         const wind = buffActive("swiftwind_pill") ? 0.5 : 1;   // Swiftwind Blessing
+        // (TEST mode scales the beat like converter batches — the lantern
+        // was the hidden TEST-mode bottleneck)
+        const beat = (bCfg.lantern.rateMs || 1000) * scale * Math.pow(0.85, haste) * wind * prestigeFactor() * Math.pow(0.9, perkLevel("gale"));
+        const tm = periodic(b.nextSend || 0, beat, now);
+        let due = tm.next - tm.n * beat;              // first beat due this tick
+        let idle = !tm.n;
+        for (let ev = 0; ev < tm.n; ev++, due += beat) {   // one link per due beat (catch-up)
+        let pick = -1, pickItem = null, pickSeq = Infinity;
         for (let k = 0; k < b.links.length; k++) {
-          const l = b.links[(b.connIdx + k) % b.links.length];
+          const idx = (b.connIdx + k) % b.links.length, l = b.links[idx];
           const src = buildingById(areaKey, l.from), dst = buildingById(areaKey, l.to);
           if (!src || !dst || !src.built) continue;
-          const item = pickTransfer(src, dst);
-          if (!item) continue;
+          const item = pickTransfer(src, dst, inFlightTo(area, dst));
+          // link health (transient, UI status dot): why this link sent nothing
+          const st = l._stat || (l._stat = { sentAt: 0, fail: null });
+          // "nomatch" = the source only holds types the target NEVER takes
+          if (!item) { st.fail = !sourceHolds(src) ? "empty" : sourceMatches(src, dst) ? "refused" : "nomatch"; continue; }
+          st.fail = null;
+          const seq = l._seq || 0;                    // transient: beat it last sent on
+          if (seq < pickSeq) { pick = idx; pickItem = item; pickSeq = seq; }
+        }
+        let sent = false;
+        if (pick >= 0) {
+          const l = b.links[pick], item = pickItem, src = buildingById(areaKey, l.from);
+          l._stat.sentAt = now;
+          l._seq = b._seq = (b._seq || 0) + 1;
           endpointTake(src, item);
           const sc = buildingCenterPx(src);
           // parametric flight: position is derived from departure time, so
           // rendering is silky at any framerate regardless of tick rate.
           // fromId lets a refused delivery fly its cargo back home.
           area.wisps.push({ id: area.nextWispId++, x0: sc.x, y0: sc.y, x: sc.x, y: sc.y,
-                            item, toId: l.to, fromId: l.from, t0: now,
+                            item, toId: l.to, fromId: l.from, t0: Math.min(now, due),
                             sp: (bCfg.lantern.speed || 170) * (1 + 0.25 * haste) / wind });
-          b.connIdx = (b.connIdx + k + 1) % b.links.length;
-          b.nextSend = now + (bCfg.lantern.rateMs || 1000) * Math.pow(0.85, haste) * wind * prestigeFactor() * Math.pow(0.9, perkLevel("gale"));
+          b.connIdx = (pick + 1) % b.links.length;
           changed = true;
-          break;
+          sent = true;
         }
-        if (now >= (b.nextSend || 0)) b.nextSend = now + 250;   // idle: retry soon
+        if (!sent) { idle = true; break; }
+        }
+        b.nextSend = idle ? now + 250 : tm.next;   // idle (nothing to send): retry soon
       }
       // Furnace Spirits stoke low burners within their radius from their
       // own fuel buffer (best fuel first).
@@ -1584,15 +2576,18 @@ function gameTick() {
       // Meditation Pavilions: fed disciples cultivate essence each cycle,
       // eating one Spirit Bun per essence produced. Out of buns -> idle.
       if (bCfg.roster && (b.disciples || 0) > 0) {
-        if (now >= (b.nextCultivate || 0)) {
-          b.nextCultivate = now + bCfg.roster.produceMs * scale * prestigeFactor();
+        const tm = periodic(b.nextCultivate || 0, bCfg.roster.produceMs * scale * prestigeFactor(), now);
+        if (tm.n) b.nextCultivate = tm.next;
+        for (let ev = 0; ev < tm.n; ev++) {            // one cycle per due period (catch-up)
           const worked = Math.min(b.disciples, b.buns || 0);
-          if (worked > 0) {
-            b.buns -= worked;
-            const c = buildingCenterPx(b);
-            dropGround(areaKey, bCfg.roster.produce, worked, c.x + rand(-40, 40), (b.row + buildingSize(b.type).h) * CELL + 12);
-            changed = true;
-          }
+          if (worked <= 0) break;
+          // output back-pressure: a full essence pile beside the hall pauses
+          // cultivation (no buns eaten) until it is collected
+          if (outputPileFull(area, b, bCfg.roster.produce, now)) break;
+          b.buns -= worked;
+          const c = buildingCenterPx(b);
+          dropGround(areaKey, bCfg.roster.produce, worked, c.x + rand(-40, 40), (b.row + buildingSize(b.type).h) * CELL + 12, "crafted");
+          changed = true;
         }
       }
     }
@@ -1631,15 +2626,22 @@ function gameTick() {
       const x0 = (z.c0 + 1) * CELL, x1 = z.c1 * CELL;
       const y0 = (z.r0 + 1) * CELL, y1 = z.r1 * CELL;
       const cap = ecfg.cap + (area.upgrades.enemyCap || 0);   // Spirit Call upgrade
-      // baited beasts don't count toward the regular spawn cap
-      if (area.enemies.filter(e => e.kind !== "boss").length < cap && now >= (area.enemyRespawnAt || 0)) {
+      // Per-slot respawn: every missing fox has its OWN clock (a kill queues
+      // one), so Spirit Call's extra slots add real throughput. A missing
+      // slot without a clock (fresh area / new Spirit Call level) fills now.
+      // Baited beasts don't count toward the regular spawn cap.
+      const missing = Math.max(0, cap - area.enemies.filter(e => e.kind !== "boss").length);
+      if (!Array.isArray(area.enemyRespawns)) area.enemyRespawns = [];
+      const rq = area.enemyRespawns;
+      if (rq.length > missing) { rq.sort((p, q) => p - q); rq.length = missing; }
+      while (rq.length < missing) rq.push(now);
+      for (let i = rq.length - 1; i >= 0; i--) {
+        if (rq[i] > now) continue;
+        rq.splice(i, 1);
         area.enemies.push({
           id: area.nextEnemyId++, x: rand(x0, x1), y: rand(y0, y1),
           hp: ecfg.hp, maxHp: ecfg.hp, tx: rand(x0, x1), ty: rand(y0, y1), hitAt: 0,
         });
-        // each replacement waits a full interval — advance the shared timer on
-        // spawn too (not only on kill) or multi-empty slots refill every tick
-        area.enemyRespawnAt = now + (ecfg.respawnMs || 5000) * scale;
         changed = true;
       }
       for (const en of area.enemies) {
@@ -1653,7 +2655,7 @@ function gameTick() {
     // The AWAKENED dragon sheds Dragon Scales beside itself now and then
     // (twice as often while a Dragon Shrine stands; small pile cap).
     if (areaKey === "center" && !D.DRAGON_STAGES[window.GS.dragon.stage]) {
-      const interval = 45000 * scale * (shrineBuilt() ? 0.5 : 1);
+      const interval = 45000 * scale * (shrineBuilt() ? 0.5 : 1) * prestigeFactor();
       if (!window.GS.dragonScaleAt) window.GS.dragonScaleAt = now + interval;
       else if (now >= window.GS.dragonScaleAt) {
         window.GS.dragonScaleAt = now + interval;
@@ -1671,9 +2673,13 @@ function gameTick() {
     }
 
     // Separate overlapping ground items (gravity-like repulsion), and keep
-    // them out of solid footprints (buildings, the quarry stone).
-    if (area.ground.length > 1 && settleGround(areaKey) > 0) changed = true;
-    if (pushOutOfColliders(areaKey) > 0) changed = true;
+    // them out of solid footprints (buildings, the quarry stone). Skipped
+    // during offline replay (pure presentation, ~half the replay's cost;
+    // yield is unchanged) — settleAfterReplay() tidies up once at the end.
+    if (!offlineSim) {
+      if (area.ground.length > 1 && settleGround(areaKey) > 0) changed = true;
+      if (pushOutOfColliders(areaKey) > 0) changed = true;
+    }
   }
   return changed;
 }
@@ -1700,11 +2706,13 @@ function damageEnemy(areaKey, en, dmg) {
   const loot = combatBuffActive() ? D.VITALITY.lootMult : 1;   // Martial Vigor
   for (const spec of drops || []) {
     const amt = rollAmount(spec) * loot;
-    if (amt > 0) { dropGround(areaKey, spec.item, amt, en.x, en.y); window.GS.stats.totalGathered += amt; }
+    if (amt > 0) { dropGround(areaKey, spec.item, amt, en.x, en.y, "manual"); window.GS.stats.totalGathered += amt; }
   }
   if (en.kind !== "boss") {
     const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
-    area.enemyRespawnAt = Date.now() + (ecfg.respawnMs || 5000) * scale;
+    // this slot's own respawn clock (per-slot; see gameTick)
+    if (!Array.isArray(area.enemyRespawns)) area.enemyRespawns = [];
+    area.enemyRespawns.push(Date.now() + (ecfg.respawnMs || 5000) * scale * prestigeFactor());
     window.GS.stats.foxKills = (window.GS.stats.foxKills || 0) + 1;
   }
 }
@@ -1719,12 +2727,32 @@ function questProgress(i) {
   const p = q.goal();
   return { cur: Math.min(p.cur, p.need), need: p.need, done: p.cur >= p.need };
 }
+// Claim the active quest: advance the chain and pay its item reward into
+// the hand (what doesn't fit drops beside the Altar). Returns false, or
+// { id, toHand:{item:qty}, dropped:{item:qty}, at:{area,x,y}|null } so the
+// UI can float the reward.
 function claimQuest() {
   const gq = window.GS.quest;
   const p = questProgress(gq.idx);
   if (!p || !p.done) return false;
+  const q = D.QUESTS[gq.idx];
   gq.idx++;
-  return true;
+  const out = { id: q.id, toHand: {}, dropped: {}, at: null };
+  const items = (q.reward && q.reward.items) || {};
+  for (const [it, qty] of Object.entries(items)) {
+    if (!D.ITEM_NAMES[it] || !(qty > 0)) continue;
+    const got = handAdd(it, qty);
+    if (got > 0) out.toHand[it] = got;
+    if (qty - got > 0) {
+      const altar = window.GS.areas.center.buildings.find(b => b.type === "center");
+      const c = altar ? buildingCenterPx(altar) : { x: PLAY_PX / 2, y: PLAY_PX / 2 };
+      const y = altar ? (altar.row + buildingSize(altar.type).h) * CELL + 14 : c.y;
+      dropGround("center", it, qty - got, c.x, y);
+      out.dropped[it] = qty - got;
+      out.at = { area: "center", x: c.x, y };
+    }
+  }
+  return out;
 }
 
 // One strike on the targeted enemy. Damage scales with the Spirit Blade
@@ -1745,23 +2773,64 @@ function attackEnemy(areaKey, id) {
   return true;
 }
 
+const AUTO_SKIP_LOOSE = 120;              // bots skip a node once this many of its drop lie loose (raw, class 0/1)
+
+// The item types a node yields on the ground (perHit + drops; not rare finds).
+function nodeYieldTypes(areaKey, node) {
+  const sp = nodeSpecs(areaKey, node), out = [];
+  for (const s of sp.perHit.concat(sp.drops)) if (out.indexOf(s.item) < 0) out.push(s.item);
+  return out;
+}
+
+function cfgFixtures(areaKey) { return (D.AREAS[areaKey] && D.AREAS[areaKey].fixtures) || []; }
 function automationTick() {
   let harvested = 0;
   for (const areaKey of Object.keys(D.AREAS)) {
     if (!isAreaUnlocked(areaKey)) continue;
-    const level = window.GS.areas[areaKey].upgrades.automation;
-    if (level <= 0) continue;
+    const area = window.GS.areas[areaKey];
+    const level = area.upgrades.automation;
+    if (level <= 0) { area._autoSkip = []; area.autoPaused = false; continue; }
+    // Per-TYPE saturation instead of a whole-area pause: a node is skipped
+    // while ANY type it yields already has AUTO_SKIP_LOOSE loose raw items
+    // (class 0/1 — crafted litter never stalls the bots) in this area. The
+    // raw flood is bounded anyway (class-0 eviction), so this can't deadlock;
+    // it only stops bots making litter nobody collects. Transient
+    // area._autoSkip = the saturated types whose nodes were skipped
+    // (autoPaused = derived boolean, kept for the UI marker).
+    const loose = {};
+    for (const g of area.ground) if (evictClassOf(g) < 2) loose[g.item] = (loose[g.item] || 0) + 1;
+    const skip = [];
     const budget = D.AUTOMATION_CLICKS[level] + perkLevel("autoboost");
-    // Only regrowing field nodes are automated — fixtures (Spirit Tree,
-    // quarry rock, spring) give solely to a manual click/hold, never a bot.
-    const nodes = window.GS.areas[areaKey].nodes
+    // Regrowing field nodes are automated. Fixtures give to a manual
+    // click/hold only — except those flagged `autoTap` in DATA (the Spirit
+    // Tree), which the bots swing `level` times per tick on top of the node
+    // budget (quarry rock and spring stay manual).
+    const nodes = area.nodes
       .filter(n => !n.deco && !n.fixed).sort((a, b) => b.tier - a.tier);
+    const taps = area.nodes.filter(n => n.fixed && !n.deco &&
+      ((cfgFixtures(areaKey).find(f => f.kind === n.kind) || {}).autoTap));
     let clicks = 0;
-    for (const node of nodes) {
-      if (clicks >= budget) break;
-      harvestNode(areaKey, node.id, true);
-      clicks++;
-    }
+    autoHarvesting = true;                   // bot drops: no player grace window
+    try {
+      for (const node of nodes) {
+        const full = nodeYieldTypes(areaKey, node).filter(t => (loose[t] || 0) >= AUTO_SKIP_LOOSE);
+        if (full.length) {
+          for (const t of full) if (skip.indexOf(t) < 0) skip.push(t);
+          continue;
+        }
+        if (clicks >= budget) continue;       // (keep scanning: _autoSkip lists every saturated type)
+        harvestNode(areaKey, node.id, true);
+        clicks++;
+      }
+      for (const node of taps) {
+        const t = node.dropItem || "stone";
+        if ((loose[t] || 0) >= AUTO_SKIP_LOOSE) { if (skip.indexOf(t) < 0) skip.push(t); continue; }
+        // (harvestSwing honours the fixture's clicksPerDrop)
+        for (let i = 0; i < level; i++) { harvestNode(areaKey, node.id, true); clicks++; }
+      }
+    } finally { autoHarvesting = false; }
+    area._autoSkip = skip;
+    area.autoPaused = skip.length > 0;
     harvested += clicks;
   }
   return harvested;
@@ -1773,14 +2842,24 @@ function automationTick() {
 // real gameTick/automationTick — so every producer (generators, converters,
 // wisps, disciples, automation) stays authoritative and can't drift from a
 // parallel formula. Everything offline can make is naturally bounded (field
-// caps, converter stock + fuel, disciple buns, building buffers), so this
-// can't run away. Bounded compute too: a very long absence just widens the
-// simulated step (generator intervals are >=1.5s, so a sub-second step stays
-// faithful). Returns { elapsedMs, gained:{item:qty} } or null if the gap was
-// too short to bother (a plain reload).
-const OFFLINE_MAX_TICKS = 45000;          // ~1s worst-case compute on load
+// caps, converter stock + fuel, disciple buns, building buffers, the ground
+// cap), so this can't run away. The tick count is bounded too: a very long
+// absence widens the simulated step past 250ms. That is an approximation —
+// engine timers fire at most once per tick, and under TEST timeScale some
+// generators tick every ~300ms — but passive output saturates within
+// minutes, so it costs little. Compute is NOT ~1s: a saturated 1h gap is
+// seconds of work, so the replay is SLICED (begin/step/finish) and the boot
+// runs long gaps asynchronously behind a progress bar (main.js).
+// runOfflineCatchup() is the one-shot synchronous form (short gaps, tests).
+const OFFLINE_MAX_TICKS = 45000;          // tick-count ceiling (the step widens beyond it)
 const OFFLINE_MIN_MS = 90000;             // < 90s away = a reload, no catch-up / welcome-back
+const OFFLINE_MODAL_MS = 10 * 60 * 1000;  // >= 10 min: async replay + progress + full summary
 // (the max window is offlineCapMs(): 8h + 2h per Long Slumber perk level)
+
+// True only INSIDE a replay slice: gameTick skips the ground physics. Module
+// scope (not GS) so it is never saved; a slice always clears it in `finally`.
+let offlineSim = false;
+let offlineJob = null;                    // the replay in progress (transient), or null
 
 // Total units of each item that exist as loot or stock ANYWHERE — ground,
 // wisps in flight, and every building store (storehouse qty, gatherer/stoker
@@ -1801,47 +2880,286 @@ function countHeldItems() {
   }
   return tally;
 }
+function heldTotal(t) { let n = 0; for (const k in t) n += t[k]; return n; }
 
-function runOfflineCatchup() {
-  const realNow = Date.now;
-  const now = realNow();
-  const last = window.GS.lastSeen;
+// Why passive output stops: read at the end of a replay so the welcome-back
+// summary can teach the player how to make offline time pay better. Returns
+// [{ kind, areaKey, count, names }] — kind: "ground" (loose items near the
+// per-region cap: the oldest loose raw items get cleared), "autopaused" (the
+// region's bots paused on a littered field), "autoskip" (bots skipped some
+// item types — area._autoSkip, set by automationTick), "nofuel" (a burner
+// holding a full batch of inputs but too little fuel), "outfull" (a
+// converter whose output pile is full), "nobuns" (a pavilion with disciples
+// and no food), "stonefull" (Gathering Stone buffers full with nothing
+// hauling them away).
+function offlineStalls() {
+  const out = [];
+  const scale = D.TEST.ENABLED ? D.TEST.timeScale : 1;
+  for (const areaKey of Object.keys(D.AREAS)) {
+    if (!isAreaUnlocked(areaKey)) continue;
+    const area = window.GS.areas[areaKey];
+    if (area.ground.length >= GROUND_CAP * 0.95) out.push({ kind: "ground", areaKey, count: area.ground.length });
+    if (area.autoPaused) out.push({ kind: "autopaused", areaKey, count: area.ground.length });
+    const skipped = autoSkipList(area._autoSkip);
+    if (skipped.length) out.push({ kind: "autoskip", areaKey, count: skipped.length, names: skipped.map(itemName) });
+    const nofuel = [], nobuns = [], full = [], outfull = [];
+    for (const b of area.buildings) {
+      if (!b.built) continue;
+      const cfg = D.BUILDINGS[b.type];
+      if (!cfg) continue;
+      const rec = recipeOf(b);
+      if (cfg.fuel && rec && !b.smeltDoneAt && canStartBatch(b)) {
+        let cost = rec.timeMs * scale * prestigeFactor();   // mirrors gameTick's batch start
+        if (buffActive("ember_pill")) cost *= 0.5;
+        if (fuelTotal(b) < cost) nofuel.push(cfg.name);
+      }
+      if (cfg.roster && (b.disciples || 0) > 0 && (b.buns || 0) <= 0) nobuns.push(cfg.name);
+      if (cfg.gather && gatherTotal(b) >= cfg.gather.cap) full.push(cfg.name);
+      if (cfg.recipes) {
+        const st = buildingStatus(areaKey, b);
+        if (st && st.state === "full" && /output pile/i.test(st.label || "")) outfull.push(cfg.name);
+      }
+    }
+    if (nofuel.length) out.push({ kind: "nofuel", areaKey, count: nofuel.length, names: [...new Set(nofuel)] });
+    if (outfull.length) out.push({ kind: "outfull", areaKey, count: outfull.length, names: [...new Set(outfull)] });
+    if (nobuns.length) out.push({ kind: "nobuns", areaKey, count: nobuns.length, names: [...new Set(nobuns)] });
+    if (full.length) out.push({ kind: "stonefull", areaKey, count: full.length, names: [...new Set(full)] });
+  }
+  return out;
+}
+
+// area._autoSkip (ground slice, transient) as a list of skipped item keys —
+// tolerant of an Array, a Set, or a { key: truthy } map; [] when absent.
+function autoSkipList(v) {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.filter(x => typeof x === "string");
+  if (v instanceof Set) return [...v].filter(x => typeof x === "string");
+  if (typeof v === "object") return Object.keys(v).filter(k => v[k]);
+  return [];
+}
+
+// Plateau early stop: once the world's signature (held totals per item,
+// where they sit, and every building's status) has not changed for this
+// long of sim time — and no converter is mid-batch — nothing more would be
+// produced, so the replay stops and reports the rest as SATURATED (not
+// forfeited). Checked once per sim-minute.
+const OFFLINE_PLATEAU_MS = 15 * 60 * 1000;
+function offlineSignature(held) {
+  let active = false;
+  const parts = [];
+  for (const k of Object.keys(held).sort()) parts.push(k + ":" + held[k]);
+  for (const areaKey of Object.keys(D.AREAS)) {
+    if (!isAreaUnlocked(areaKey)) continue;
+    const area = window.GS.areas[areaKey];
+    parts.push("|" + areaKey + ":" + area.ground.length + "/" + (area.wisps || []).length +
+      (area.autoPaused ? "p" : "") + autoSkipList(area._autoSkip).join(","));
+    for (const b of area.buildings) {
+      if (!b.built) continue;
+      const cfg = D.BUILDINGS[b.type];
+      if (!cfg) continue;
+      const st = buildingStatus(areaKey, b);
+      if (cfg.recipes && (b.smeltDoneAt > 0 || (st && st.state === "working"))) active = true;
+      let hold = (b.qty || 0) + gatherTotal(b) + (b.buns || 0) + (b.disciples || 0);
+      for (const it of Object.keys(b.stock || {})) hold += b.stock[it] || 0;
+      parts.push(b.id + (st ? st.state : "-") + hold);
+    }
+  }
+  return { sig: parts.join(";"), active };
+}
+// Update the job's plateau streak at sim time `sim`; true = saturated.
+function offlinePlateauCheck(job, sim, held) {
+  const { sig, active } = offlineSignature(held);
+  if (active || job.flatSince === null || sig !== job.sig) {
+    job.sig = active ? null : sig;
+    job.flatSince = active ? null : sim;
+    return false;
+  }
+  return sim - job.flatSince >= OFFLINE_PLATEAU_MS;
+}
+// True while output has visibly levelled off (the current no-change streak
+// spans at least one sim-minute sample) — the Skip button's copy uses it.
+function offlineLevelled(job) {
+  return !!job && job.flatSince !== null && job.flatSince !== undefined &&
+    (job.virt - job.start) - job.flatSince >= 60000;
+}
+
+// Start a replay for the gap since GS.lastSeen. Returns a job, or null when
+// there is nothing to replay (pre-feature save, or a plain reload < 90s).
+// job.virt is the virtual clock, advanced by stepOfflineCatchup to job.end.
+// GS.offlineAwayFrom persists the ORIGINAL away start while a replay is
+// unfinished: a tab closed mid-replay saves lastSeen at the resume point, so
+// without it the resumed summary would show only the remainder as the gap.
+function beginOfflineCatchup() {
+  const now = Date.now();
+  const G = window.GS;
+  const last = G.lastSeen;
+  const af = G.offlineAwayFrom;
+  G.offlineAwayFrom = null;
   if (!Number.isFinite(last)) return null;      // pre-feature save: skip
-  let elapsed = now - last;
-  if (elapsed <= OFFLINE_MIN_MS) return null;   // just a reload
-  elapsed = Math.min(elapsed, offlineCapMs());
-  const step = Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS));
-  const before = countHeldItems();
+  const gap = now - last;
+  if (gap <= OFFLINE_MIN_MS) return null;       // just a reload
+  const resumed = Number.isFinite(af) && af < last;
+  const from = resumed ? af : last;
+  const elapsed = Math.min(gap, offlineCapMs());
+  const job = {
+    start: last, end: last + elapsed, virt: last, sinceAuto: 0,
+    step: Math.max(250, Math.ceil(elapsed / OFFLINE_MAX_TICKS)),
+    awayMs: now - from, elapsedMs: elapsed, capped: gap - elapsed > 1000, capMs: offlineCapMs(), resumed,
+    before: countHeldItems(), samples: [],      // samples: [simMs, heldTotal] ~once per sim-minute
+    sig: null, flatSince: null,                 // plateau streak (offlinePlateauCheck)
+    stop: false, done: false, saturated: false, failed: false, summary: null,
+  };
+  job.samples.push([0, heldTotal(job.before)]);
+  offlinePlateauCheck(job, 0, job.before);
+  G.offlineAwayFrom = from;                     // cleared by finishOfflineCatchup
+  offlineJob = job;
+  return job;
+}
+
+// Run replay ticks for up to `budgetMs` of WALL time (Infinity = to the
+// end). Date.now is virtual only inside this call — restored before it
+// returns (even on a throw), so UI code between slices sees the real clock.
+// Returns true once nothing is left to run (end reached, or skipped); then
+// call finishOfflineCatchup(job).
+function stepOfflineCatchup(job, budgetMs) {
+  if (!job || job.done || job.stop || job.saturated || job.virt >= job.end) return true;
+  const realNow = Date.now;
+  const t0 = realNow();
   const sink = window.onGroundDrop;             // silence "+N" floaters during the sim
   const sfxSink = window.onSfx;                 // and mute SFX for the whole replay
-  let virt = last, sinceAuto = 0;
   try {
     window.onGroundDrop = null;
     window.onSfx = null;
-    Date.now = () => virt;                      // drive every timer off the virtual clock
-    for (; virt < last + elapsed; virt += step) {
+    offlineSim = true;                          // skip ground physics during replay
+    offlineReplay = true;                       // no live craft-rate stamps
+    Date.now = () => job.virt;                  // drive every timer off the virtual clock
+    while (job.virt < job.end) {
       gameTick();
-      sinceAuto += step;
-      if (sinceAuto >= 1000) { automationTick(); sinceAuto -= 1000; }
+      job.sinceAuto += job.step;
+      if (job.sinceAuto >= 1000) { automationTick(); job.sinceAuto -= 1000; }
+      job.virt += job.step;
+      const sim = job.virt - job.start;
+      if (sim - job.samples[job.samples.length - 1][0] >= 60000) {
+        const held = countHeldItems();
+        job.samples.push([sim, heldTotal(held)]);
+        if (job.virt < job.end && offlinePlateauCheck(job, sim, held)) { job.saturated = true; break; }
+      }
+      if (realNow() - t0 >= budgetMs) break;
     }
+  } catch (err) {
+    job.failed = true;                          // the summary says so; the rest is not credited
+    job.stop = true;
+    throw err;
   } finally {
     Date.now = realNow;                         // ALWAYS restore, even if a tick throws
+    offlineSim = false;
+    offlineReplay = false;
     window.onGroundDrop = sink;
     window.onSfx = sfxSink;
   }
-  const after = countHeldItems();
-  const gained = {};
-  for (const it of Object.keys(after)) {
-    const d = after[it] - (before[it] || 0);
-    if (d > 0) gained[it] = d;
+  return job.virt >= job.end || job.saturated;
+}
+
+// Stop a running replay early. The unsimulated remainder is FORFEITED (the
+// summary reports it as skippedMs); the next save stamps the real clock.
+function skipOfflineCatchup(job) { if (job && !job.done) job.stop = true; }
+
+// Fraction of the replay done (0..1) — drives the progress bar.
+function offlineProgress(job) {
+  if (!job) return 1;
+  if (job.saturated) return 1;
+  return Math.max(0, Math.min(1, (job.virt - job.start) / Math.max(1, job.end - job.start)));
+}
+
+// The lastSeen a save should stamp while a replay is unfinished (a mid-
+// replay tab close): shifted back so the NEXT load's gap = the unsimulated
+// remainder + however long the tab then stays closed. (Uncapped, this is
+// the virtual position plus the wall time spent replaying; a capped-away
+// excess stays forfeited.) null = no replay running: stamp the real clock.
+function offlineResumeAt() {
+  const j = offlineJob;
+  if (!j || j.done || j.stop || j.saturated) return null;
+  return Date.now() - Math.max(0, j.end - j.virt);
+}
+function offlineActive() { return !!(offlineJob && !offlineJob.done); }
+
+// A few settle + collider passes per region so ground items that piled up
+// during the physics-free replay end in valid spots (the live tick keeps
+// spreading them afterwards).
+function settleAfterReplay() {
+  for (const areaKey of Object.keys(D.AREAS)) {
+    if (!isAreaUnlocked(areaKey)) continue;
+    const area = window.GS.areas[areaKey];
+    for (let k = 0; k < 6 && area.ground.length > 1; k++) if (settleGround(areaKey) === 0) break;
+    for (let k = 0; k < 2; k++) if (pushOutOfColliders(areaKey) === 0) break;
   }
-  return { elapsedMs: elapsed, gained };
+}
+
+// Close out a replay: tidy the ground, diff held items, find the stalls.
+// Returns { awayMs, elapsedMs, simulatedMs, skippedMs, gained:{item:qty},
+// stalls:[...], plateauMs } — plateauMs = sim time at which held items first
+// reached 99% of the final total, when that was well before the end (null
+// otherwise): "output levelled off after ~X".
+// Also: saturatedMs (the remainder after a plateau early stop — nothing more
+// would have been produced; skippedMs is then 0), flatAtMs (sim time output
+// stopped changing, when saturated), levelled (a Skip came after output had
+// already levelled off), resumed (a replay a closed tab interrupted), capped
+// (the gap exceeded the offline window), failed (a tick threw: the rest was
+// not credited). Never throws — a broken tidy-up still yields a summary, so
+// the progress UI always closes.
+function finishOfflineCatchup(job) {
+  if (!job) return null;
+  if (job.done) return job.summary;
+  job.done = true;
+  if (offlineJob === job) offlineJob = null;
+  window.GS.offlineAwayFrom = null;
+  const simulatedMs = Math.max(0, Math.min(job.virt, job.end) - job.start);
+  const rest = Math.max(0, job.elapsedMs - simulatedMs);
+  const base = {
+    awayMs: job.awayMs, elapsedMs: job.elapsedMs, simulatedMs,
+    skippedMs: job.saturated ? 0 : rest, saturatedMs: job.saturated ? rest : 0,
+    flatAtMs: job.saturated ? job.flatSince : null,
+    levelled: !job.saturated && !!job.stop && !job.failed && offlineLevelled(job),
+    resumed: !!job.resumed, capped: !!job.capped, capMs: job.capMs, failed: !!job.failed,
+    gained: {}, stalls: [], plateauMs: null,
+  };
+  try {
+    settleAfterReplay();
+    const after = countHeldItems();
+    for (const it of Object.keys(after)) {
+      const d = after[it] - (job.before[it] || 0);
+      if (d > 0) base.gained[it] = d;
+    }
+    const total0 = job.samples[0][1], total1 = heldTotal(after);
+    if (total1 > total0) {
+      const s = job.samples.find(([, n]) => n >= total0 + (total1 - total0) * 0.99);
+      if (s && s[0] >= 60000 && (job.saturated || s[0] < simulatedMs * 0.8)) base.plateauMs = s[0];
+    }
+    base.stalls = offlineStalls();
+  } catch (err) {
+    base.failed = true;
+    if (typeof console !== "undefined") console.error("offline catch-up summary failed", err);
+  }
+  job.summary = base;
+  return job.summary;
+}
+
+// Synchronous one-shot replay (short gaps, tests). Returns the summary, or
+// null if the gap was too short to bother (a plain reload).
+function runOfflineCatchup() {
+  const job = beginOfflineCatchup();
+  if (!job) return null;
+  try { stepOfflineCatchup(job, Infinity); }
+  finally { finishOfflineCatchup(job); }
+  return job.summary;
 }
 
 window.ENGINE = {
   itemName, itemIcon,
-  countHeldItems, runOfflineCatchup,
-  handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, canAfford,
+  countHeldItems, runOfflineCatchup, beginOfflineCatchup, stepOfflineCatchup, finishOfflineCatchup,
+  skipOfflineCatchup, offlineProgress, offlineResumeAt, offlineActive, offlineStalls, OFFLINE_MODAL_MS,
+  offlineLevelled, OFFLINE_PLATEAU_MS,
+  handTotal, handCap, handSpace, handCount, handAdd, handTakeFirst, handTake, handRotate, canAfford,
   depositToStorehouse, takeFromStorehouse,
   effectiveTimer, harvestInterval, rollTier, zoneRects, noBuildRects, inNoBuild, occupiedCells,
   spawnFromSpawner, placeFixture, initArea, nodeById, nodeCenterPx, depleteNode, harvestNode,
@@ -1850,12 +3168,19 @@ window.ENGINE = {
   buildingNeeds, buildingAt, dropFromHand, isBuildingUnlocked, recipeOf, setRecipe, smeltRemaining,
   fuelQueue, fuelTotal, fuelSpace, craftsPossible,
   buildingById, buildingCenterPx, gatherTotal, withdrawFromBuilding, addLink, removeLink,
+  linkRefusal, placeReason, dragonTribute,
   canBeLinkSource, canBeLinkTarget, setupStarterNetwork,
-  wispPos, endpointAccepts, endpointGive, smeltSpace,
-  questProgress, claimQuest, buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
+  wispPos, endpointAccepts, endpointGive, inFlightTo, addFuelItem, smeltSpace,
+  questProgress, claimQuest, isBuildingNew, markBuildSeen, buildMenuHasNew, markBuildListed, isVeteran,
+  buffActive, combatBuffActive, prestigeFactor, shrineBuilt, ascend, recruitDisciple, rosterCap,
   perkLevel, perkDef, perkCost, buyPerk, ascendReward,
+  builtGate, gateOfferings, gateTakes, gateExists, tributeMult, dragonNeeds,
+  unlockPaidOf, unlockRemaining, canPayUnlock, openRegion, PATH_REGIONS, LEGACY_REGIONS, activeVows, vowActive, vowMult, vowMarks, nextPrestigeFactor, burnFuel,
   upgradeCost, upgradeLevel, selectUpgrade, refundUpgradeJob, demolishBuilding,
   jobRemaining, dragonStage, dragonRemaining, enemyAt, attackEnemy,
   regionOrigin, regionAt, areaUnlockCost, isAreaUnlocked, unlockArea,
   gameTick, automationTick,
+  buildingStatus, craftRate, stoneAccepts, rackCells,
+  evictGround, evictClassOf, outputPileCount, sourceMatches,
+  GROUND_CAP, GROUND_HARD_CAP, PROTECTED_SHARE, OUTPUT_PILE_MAX, OUTPUT_PILE_CELLS, AUTO_SKIP_LOOSE, MANUAL_GRACE_MS,
 };
