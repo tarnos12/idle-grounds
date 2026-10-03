@@ -6,16 +6,16 @@
 ## ▶ NEXT SESSION: start here
 
 READ DESIGN.md FIRST — the full economy/building/logistics plan with
-done-markers. **`master` is v50.** Branch **`feature/design-pass`** carries
-the v51 + v52 EXPERIMENTAL, evidence-driven design passes for the user to
-test-drive before merging (do NOT merge it until they say so). Current
-asset version: **?v=52**.
+done-markers. **`master` is v52** — the v51 + v52 evidence-driven design
+passes were merged from `feature/design-pass` on 2026-10-03 at the user's
+request ("push everything"). Current asset version: **?v=52**.
 
-Test build (branch): https://claude.ai/artifact/PFdYcT925mm7bxRdagGr2u
-Master build (v50): https://claude.ai/artifact/FxjCkJ6WdDt33nYntCBpJD
+Current build (v52): https://claude.ai/artifact/PFdYcT925mm7bxRdagGr2u
+(the old v50 build at https://claude.ai/artifact/FxjCkJ6WdDt33nYntCBpJD is
+stale — republish to the v52 link above, or read the old one fully first if
+you must reuse its URL).
 
-Wait for the user's verdict on the branch (merge / tweak / discard). Next
-candidates after that — confirm with the user before picking:
+Next candidates — confirm with the user before picking:
 1. **Spirit Vault cross-region logistics** — wisps can't cross regions;
    ~11 recipes need items from 2-3 regions.
 2. **Wisps feeding ghosts / Altar jobs** (logistics reaching the Altar and
@@ -239,6 +239,10 @@ icons). Fixes that must stay:
   + push at the end of each batch as instructed).
 
 ## Last session summary
+
+**Merged to master (2026-10-03).** `feature/design-pass` (v51 + v52) merged
+into `master` with no code changes; the branch is retired. All 13 suites in
+tests/ pass (`node tests/<f> .`).
 
 **Design pass 2 (?v=52, branch `feature/design-pass`, EXPERIMENTAL, NOT merged).**
 Master stays at v50. Research: agents read the source of 6 open-source idle
