@@ -31,6 +31,10 @@ const log = fs.existsSync(LOG) ? JSON.parse(fs.readFileSync(LOG, 'utf8')) : { fi
 const known = new Map(log.files.map(f => [f.path, f]));
 const stats = { added: 0, updated: 0, skipped: 0, notes: 0, zips: 0, ignored: 0 };
 const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'art-intake-'));
+// delivery time per source (zip name -> mtime ms): a file is never replaced by an OLDER delivery
+// (e.g. a rejected v1 still sitting in an earlier zip must not overwrite the accepted v2)
+const srcTime = new Map();
+for (const cat of CATEGORIES) { const d = path.join(SRC, cat); if (fs.existsSync(d)) for (const f of walk(d)) srcTime.set(path.basename(f), fs.statSync(f).mtimeMs); }
 
 function importFile(file, category, source) {
   const ext = path.extname(file).toLowerCase();
@@ -44,6 +48,7 @@ function importFile(file, category, source) {
   destPath = path.join(DEST, rel);
   const prev = known.get(rel);
   if (prev && prev.sha1 === hash) { stats.skipped++; return; }
+  if (prev && (srcTime.get(source) || 0) < (srcTime.get(prev.source) || 0)) { stats.skipped++; return; }   // older delivery
   console.log((prev ? '  update ' : '  add    ') + rel + ' (' + size + ' B) <- ' + source);
   if (!DRY) {
     fs.mkdirSync(path.dirname(destPath), { recursive: true });
@@ -57,7 +62,7 @@ for (const cat of CATEGORIES) {
   const dir = path.join(SRC, cat);
   if (!fs.existsSync(dir)) continue;
   console.log('[' + cat + ']');
-  for (const f of walk(dir)) {
+  for (const f of walk(dir).sort((a, b) => fs.statSync(a).mtimeMs - fs.statSync(b).mtimeMs)) {   // oldest first: newest wins
     if (path.extname(f).toLowerCase() === '.zip') {
       stats.zips++;
       const out = path.join(tmpRoot, cat + '-' + path.basename(f, '.zip'));
