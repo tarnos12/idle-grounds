@@ -374,7 +374,7 @@ Nodes are harvested by clicking and then relocate. Frame convention: **break/cho
 
 | Key / file | Island, size (cells) → canvas | What it depicts | Frames | Pri | Status |
 |---|---|---|---|---|---|
-| `node_bush_32x48_2f.png` | Center, 1×1 → 32×48 | Small leafy shrub with blossoms (chopped for leaves); frame 2 = trimmed, bare twigs | 2 | P1 | requested |
+| `node_bush_32x48_2f.png` | Center, 1×1 → 32×48 | Small leafy shrub with blossoms (chopped for leaves); frame 2 = trimmed, bare twigs | 2 | P1 | integrated |
 | `node_crop.png` | Farm, 3×3 → 96×112 | Ripe **rice paddy plot**: water-flooded square with golden rice stalks ready to harvest, earth bund edges | 1 | P2 | requested |
 | `node_cotton.png` | Farm, 2×2 → 64×80 | Patch of cotton plants, fluffy white bolls on green stalks | 1 | P2 | requested |
 | `node_ore_1x1_32x48_2f.png` | Mine, 1×1 | Small grey rock outcrop with a dark clay seam; frame 2 = cracked | 2 | P2 | requested |
@@ -779,3 +779,4 @@ Intake: `node tools/art-intake/pull.js` (Drive `incoming/<category>/` -> `Assets
 | 2026-10-04 | `bld_workbench.png`, `bld_storehouse.png` | `incoming/buildings/Idle-Grounds-Buildings-002.zip` | integrated (full-size). Feedback: excellent — exactly the target look. Next please: `bld_center` (Altar), `bld_kiln`, `fix_spirittree`, `node_bush`, `fix_quarry`, Center island tiles + cliff, sky layers, wisp and fox. |
 | 2026-10-04 | `bld_center.png` (Altar), `bld_kiln.png` | `incoming/buildings/Idle-Grounds-Buildings-003.zip`, `-004.zip` | integrated (full-size). Feedback: the Altar is outstanding; the Kiln reads well. Next please: `fix_spirittree`, `node_bush`, `fix_quarry`, Center island ground blob tiles + cliff, sky layers, `fx_wisp`, `enemy_fox`, `dragon_sleeping`. |
 | 2026-10-04 | `fix_spirittree.png`, `fix_quarry.png` | `incoming/fixtures/Idle-Grounds-Fixtures-001.zip` | integrated (correct scale in-world). Feedback: superb. Note: the decorative tree ring around islands still uses emoji — add `deco_tree_32x48_3f.png` (3 small round-canopy trees/pines, P2). Next please: `node_bush`, Center island ground blob tiles + cliff, sky layers, `fx_wisp`, `enemy_fox`, `dragon_sleeping`, `fix_spirittree_sparkle`. |
+| 2026-10-04 | `node_bush_32x48_2f.png` | `incoming/nodes/Idle-Grounds-Nodes-001.zip` | integrated (both frames used: intact / trimmed after hits). Feedback: good. Next please: Center island ground blob tiles + cliff, sky layers, `fx_wisp`, `enemy_fox`, `dragon_sleeping`, `fix_spirittree_sparkle`, `deco_tree`. |

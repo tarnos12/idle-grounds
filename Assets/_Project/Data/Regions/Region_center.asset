@@ -154,8 +154,10 @@ MonoBehaviour:
   groundColor: {r: 0.3, g: 0.45, b: 0.28, a: 1}
   sprites:
   - key: node_bush
-    sprite: {fileID: -1871362101, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
+    sprite: {fileID: -6384541825141156081, guid: 96a9fe99262e49c47aea5ecbddf1bb48, type: 3}
+    frames:
+    - {fileID: -6384541825141156081, guid: 96a9fe99262e49c47aea5ecbddf1bb48, type: 3}
+    - {fileID: -4080273661060406747, guid: 96a9fe99262e49c47aea5ecbddf1bb48, type: 3}
   - key: fix_quarry
     sprite: {fileID: 21300000, guid: dad98f336b68deb4e996e77e6de04042, type: 3}
     frames: []

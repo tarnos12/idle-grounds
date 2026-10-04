@@ -1,0 +1,7 @@
+Built-in image generation prompt summary:
+
+Create one small leafy harvest shrub in exactly two matching side-by-side states for Idle Grounds. Left: intact dense rounded bush with broad jade-green leaves and a few small pale-jade/gold blossoms. Right: the same bush after harvesting, clearly trimmed and sparse, with mostly bare dark-wood twigs, a few remaining leaves, and no flowers. Crisp chunky top-down three-quarter pixel art matching the approved Spirit Tree and buildings; strong silhouette, selective outline, upper-left light.
+
+Final logical strip: exactly 64×48 pixels, two equal 32×48 frames, no gap or divider. Each state centered in its own frame with the same bottom baseline and no cross-boundary content. Exact ART-SPEC 32-color palette, transparent background, binary alpha, no shadows, scenery, ground tile, text, gradients, blur, anti-aliasing, or off-palette colors.
+
+Post-processing: source halves separated; each state trimmed independently, nearest-neighbor fitted within 30×46, no-dither palette remap, 50% alpha threshold, bottom-center extent to 32×48, then horizontal concatenation.
