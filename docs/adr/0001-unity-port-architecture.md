@@ -88,10 +88,17 @@ Placeholder sprites from the emoji atlas (`Art/Sprites/Emoji`), item PNGs from
 
 ### Saves
 
-JSON (Newtonsoft, `com.unity.nuget.newtonsoft-json`) at
-`Application.persistentDataPath/idle-grounds-save.json` with
-`schemaVersion`; sanitising load rules from engine-systems §1.5; a failed
-load backs the file up instead of overwriting it.
+JSON at `Application.persistentDataPath/idle-grounds-save.json` with
+`schemaVersion`. *(Amended in M7: no Newtonsoft.)* Serialization lives in
+the pure Sim assembly — `Sim/Save/SaveCodec.cs` + a small `JsonWriter`,
+parsed back with the existing `Sim/Config/MiniJson.cs` — so the save
+format is EditMode-testable without Unity. The codec walks the public,
+non-`[NonSerialized]` fields of the `GameState` graph by reflection
+(transients never persist), merges a save onto `GameState.CreateInitial`
+and applies the engine-systems §1.5 sanitising rules on every load
+(idempotent); legacy web-save import is not ported. A save from a newer
+schema, or any unparsable/corrupt file, loads as null (never throws); the
+Unity `SaveService` then backs the file up instead of overwriting it.
 
 ## Consequences
 

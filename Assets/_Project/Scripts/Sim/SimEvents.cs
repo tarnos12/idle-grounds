@@ -78,6 +78,11 @@ namespace IdleGrounds.Sim
         { if (!Muted) WispDropped?.Invoke(area, w); }
         internal void RaiseAscendPrompt()
         { if (!Muted) AscendPromptRequested?.Invoke(); }
+        // M7 — RunReset: the state object was replaced (ascension / load); views rebuild from scratch.
+        internal void RaiseRunReset()
+        { if (!Muted) RunReset?.Invoke(); }
+        /// <summary>Offline progress fraction 0..1 — raised between replay slices (never muted).</summary>
+        internal void RaiseOfflineProgress(double fraction) => OfflineProgress?.Invoke(fraction);
         // M5
         internal void RaiseDragonStageAdvanced(int stage, string text)
         { if (!Muted) DragonStageAdvanced?.Invoke(stage, text); }

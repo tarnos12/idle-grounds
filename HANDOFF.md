@@ -57,8 +57,14 @@ M4 view done: Wisp/LinkLine/LinkEditor prefabs, WispViewSync, LinkLineSync,
 lantern beat bar, link editor (click a lantern; Add link → pick source →
 target). Rebuild-all menu includes `Install Logistics (M4)`.
 
-Next: M7 sim (prestige, save/load, offline — in progress), M5+M6 view
-(dragon/altar tree/quests/unlock signs/enemies/pavilion).
+M7 sim done (129 Sim tests): PrestigeSystem (perks, vows, ascend reset),
+SaveCodec (reflection JSON, schemaVersion, sanitising load, never throws),
+OfflineReplay (Boot() tiers None/Toast/Full, Step/Skip/Finish, summary).
+ALL SIM MILESTONES DONE.
+
+Next: M5+M6 view (in progress), then M7 view: GameRunner load/Boot/autosave
+(5 s + pause/quit), welcome-back modal, perk shop, vows, ascension card,
+stats, ending. Then M8 juice/audio, M9 parity.
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -78,6 +84,7 @@ Next: M7 sim (prestige, save/load, offline — in progress), M5+M6 view
 - M5 sim: dragon, Altar tree, quests/milestones, region unlocks, pavilion + 16 tests.
 - M6 sim: combat + automation + 14 tests.
 - M4 view: wisps, link lines + status dots, link editor.
+- M7 sim: prestige, save codec, offline replay + 21 tests.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

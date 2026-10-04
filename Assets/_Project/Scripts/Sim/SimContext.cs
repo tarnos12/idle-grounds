@@ -59,7 +59,12 @@ namespace IdleGrounds.Sim
             Timing = new Timing(Config);
         }
 
-        public double Now => Clock.NowMs;
+        /// <summary>Offline replay's virtual clock (null = live): every system reads <see cref="Now"/>.</summary>
+        public IClock ClockOverride;
+
+        public double Now => ClockOverride != null ? ClockOverride.NowMs : Clock.NowMs;
+        /// <summary>The injected (real) clock, ignoring any replay override.</summary>
+        public double RealNow => Clock.NowMs;
         public int Cell => Config.grid.cell;
         public int N => Config.grid.cells;
         public int PlayPx => Config.grid.PlayPx;

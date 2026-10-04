@@ -16,6 +16,13 @@ namespace IdleGrounds.Sim
         public void Advance(long ms) { NowMs += ms; }
     }
 
+    /// <summary>Offline replay clock (JS `Date.now = () => job.virt`), installed as SimContext.ClockOverride.</summary>
+    public sealed class VirtualClock : IClock
+    {
+        public double Virt;
+        public long NowMs => (long)Virt;
+    }
+
     /// <summary>Real time: Unix epoch ms (= JS Date.now()).</summary>
     public sealed class SystemClock : IClock
     {

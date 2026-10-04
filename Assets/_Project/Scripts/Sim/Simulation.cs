@@ -50,7 +50,76 @@ namespace IdleGrounds.Sim
             Ctx.Buildings.AltarFeed = Ctx.Upgrades.AltarFeed;
             Ctx.Buildings.DragonFeed = Ctx.Dragon.Feed;
             Ctx.Buildings.GateFeed = Ctx.Progression.GateFeed;
+            Prestige = new PrestigeSystem(this);
+            Offline = new OfflineReplay(this);
         }
+
+        // ---- M7 prestige, save, offline (§14, §1.4-1.5, §15, §2.1) ----
+
+        public PrestigeSystem Prestige { get; }
+        public OfflineReplay Offline { get; }
+
+        /// <summary>
+        /// Boot (§2.1 steps 2-4): initArea ×all + starter network, then the
+        /// offline catch-up decision. Tier None ⇒ go live. Toast ⇒ already
+        /// replayed synchronously (summary set). Full ⇒ drive
+        /// <c>Offline.Step(boot.job, 50)</c> once per frame (500 when the app is
+        /// in the background) without ticking live, then <c>Offline.Finish</c>
+        /// for the summary; <c>Offline.Skip</c> forfeits the rest.
+        /// </summary>
+        public OfflineBoot Boot()
+        {
+            InitAllAreas();
+            var job = Offline.Begin();
+            if (job == null) return new OfflineBoot { tier = OfflineTier.None };
+            if (job.awayMs < Config.balance.offlineModalMs)
+            {
+                try { Offline.Step(job); }
+                finally { Offline.Finish(job); }
+                return new OfflineBoot { tier = OfflineTier.Toast, summary = job.summary };
+            }
+            return new OfflineBoot { tier = OfflineTier.Full, job = job };
+        }
+
+        /// <summary>
+        /// Swap in another state (ascension, in-place load): caches dropped,
+        /// tick gap reset, any replay abandoned; <paramref name="boot"/> re-runs
+        /// initArea ×all + starter network. Raises RunReset.
+        /// </summary>
+        public void ReplaceState(GameState state, bool boot = true)
+        {
+            if (state == null) throw new System.ArgumentNullException(nameof(state));
+            var job = Offline.Job;
+            if (job != null) { Offline.Skip(job); Offline.Finish(job); }
+            Ctx.State = state;
+            Ctx.ManualSrc = null;
+            Ctx.ClockOverride = null;
+            Ctx.Occupancy.Invalidate();
+            Ctx.Timing.Reset();
+            if (boot) InitAllAreas();
+            Ctx.Events.RaiseRunReset();
+        }
+
+        /// <summary>`saveState()` JSON: lastSeen = resume point while a replay is unfinished, else the real now.</summary>
+        public string SaveJson() => SaveCodec.Serialize(State, Offline.ResumeAt() ?? Ctx.RealNow);
+
+        /// <summary>Parse + sanitise a save (null + reason on any failure; never throws).</summary>
+        public static GameState LoadJson(string json, GameConfig cfg, double nowMs, out string reason) =>
+            SaveCodec.TryDeserialize(json, cfg, nowMs, out var s, out reason) ? s : null;
+
+        /// <summary>`buyPerk(id)` — false when unaffordable / maxed / unknown.</summary>
+        public bool BuyPerk(string id) => Prestige.BuyPerk(id);
+        /// <summary>AP price of the perk's next level; null when maxed/unknown.</summary>
+        public int? PerkCost(string id) => Prestige.PerkCost(id);
+        public int PerkLevel(string id) => State.PerkLevel(id);
+        /// <summary>`ascend(nextVows)` — resets the run in place (RunReset); save right after.</summary>
+        public JustAscended Ascend(System.Collections.Generic.IEnumerable<string> nextVows = null) => Prestige.Ascend(nextVows);
+        /// <summary>Close the ascend dialog (the gate re-opens it on click).</summary>
+        public void SetAscendPrompt(bool open) => State.ascendPrompt = open;
+        /// <summary>Dismiss the one-time "Ascension n complete" card.</summary>
+        public void ClearJustAscended() => State.justAscended = null;
+        public void MarkPerkShopSeen() => State.perkShopSeen = true;
+        public void MarkIntroSeen() => State.introSeen = true;
 
         public BuildingSystem Buildings => Ctx.Buildings;
         public ConverterSystem Converters => Ctx.Converters;
