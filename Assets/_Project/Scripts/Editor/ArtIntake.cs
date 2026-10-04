@@ -265,6 +265,17 @@ namespace IdleGrounds.Editor
                 { e.sprite = kv.Value; e.frames = fr; e.realArt = true; EditorUtility.SetDirty(db); wired++; }
                 used.Add(kv.Key);
             }
+            // enemy_<kind>_<anim>: per-enemy animation set (idle/move/hit/die)
+            foreach (var kv in map)
+            {
+                if (!Regex.IsMatch(kv.Key, "^enemy_[a-z0-9_]+_(idle|move|hit|die)$")) continue;
+                frameMap.TryGetValue(kv.Key, out var fr);
+                var e = db.enemyAnims.Find(x => x.key == kv.Key);
+                if (e == null) { e = new SpriteEntry { key = kv.Key }; db.enemyAnims.Add(e); }
+                if (e.sprite != kv.Value || !e.realArt || !SameFrames(e.frames, fr))
+                { e.sprite = kv.Value; e.frames = fr; e.realArt = true; EditorUtility.SetDirty(db); wired++; }
+                used.Add(kv.Key);
+            }
             // consumed directly by IslandArtBuilder's Rule Tiles
             used.Add("island_center_ground_fill");
 
@@ -300,10 +311,7 @@ namespace IdleGrounds.Editor
 
         static string EnemyKey(string name)
         {
-            string n = (name ?? "").ToLowerInvariant();
-            if (n.Contains("fox")) return "enemy_fox";
-            if (n.Contains("boar")) return "enemy_boar";
-            return "enemy_" + n;
+            return "enemy_" + GameDatabase.EnemyKind(name);
         }
 
         static bool FilesEqual(string a, string b)

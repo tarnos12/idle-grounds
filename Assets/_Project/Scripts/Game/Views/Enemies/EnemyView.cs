@@ -39,11 +39,32 @@ namespace IdleGrounds.Game
             get { int n = 0; foreach (var p in pipPool) if (p.gameObject.activeSelf && p.color == PipLive) n++; return n; }
         }
 
-        public void Bind(string area, Enemy e, Sprite sprite)
+        Sprite[] idle, move, hit;
+        Vector2 lastPos;
+        float moveUntil;
+        const float IdleFps = 6f, MoveFps = 10f, HitFps = 12f, FeetDropPx = 6f;
+
+        bool RealArt => idle != null;
+
+        public void Bind(string area, Enemy e, Sprite sprite, Sprite[] idleFrames = null, Sprite[] moveFrames = null, Sprite[] hitFrames = null)
         {
             Area = area; Enemy = e;
             name = $"Enemy_{area}_{e.id}{(e.kind == "boss" ? "_boss" : "")}";
-            ViewKit.Fit(spriteRenderer, sprite, e.kind == "boss" ? 36f : 26f);
+            idle = idleFrames; move = moveFrames; hit = hitFrames;
+            lastPos = new Vector2((float)e.x, (float)e.y); moveUntil = 0f;
+            spriteRenderer.flipX = false;
+            if (RealArt)
+            {
+                // native PPU-32 size (1 world unit = 32 px), bottom-pivot art with feet just below the sim position
+                spriteRenderer.sprite = idle[0];
+                spriteRenderer.transform.localScale = Vector3.one;
+                spriteRenderer.transform.localPosition = new Vector3(0f, -ViewKit.U(FeetDropPx), 0f);
+            }
+            else
+            {
+                spriteRenderer.transform.localPosition = Vector3.zero;
+                ViewKit.Fit(spriteRenderer, sprite, e.kind == "boss" ? 36f : 26f);
+            }
             if (pipTemplate != null) pipTemplate.gameObject.SetActive(false);
             lastHp = lastMax = -1;
             squash.localScale = Vector3.one;
@@ -65,8 +86,27 @@ namespace IdleGrounds.Game
                    : Mathf.Lerp(1.06f, 1f, (t - 0.7f) / 0.3f);
                 shake = Mathf.Sin(t * Mathf.PI * 6f) * (1f - t) * ViewKit.U(2.5f);
             }
-            squash.localScale = new Vector3(1f + (1f - sy) * 0.4f, sy, 1f);
-            squash.localPosition = new Vector3(shake, 0f, 0f);
+            if (RealArt)
+            {
+                // art animates itself: hit strip once after hitAt, else move while the position changed, else idle
+                float dx = (float)e.x - lastPos.x, dy = (float)e.y - lastPos.y;
+                lastPos = new Vector2((float)e.x, (float)e.y);
+                if (dx * dx + dy * dy > 0.0001f) moveUntil = Time.time + 0.15f;
+                if (dx > 0.01f) spriteRenderer.flipX = false; else if (dx < -0.01f) spriteRenderer.flipX = true;
+                Sprite[] set = idle; float fps = IdleFps; float t = Time.time;
+                if (hit != null && e.hitAt > 0 && dt >= 0 && dt < hit.Length / HitFps * 1000.0)
+                { set = hit; fps = HitFps; t = (float)(dt / 1000.0); }
+                else if (move != null && Time.time < moveUntil) { set = move; fps = MoveFps; }
+                int fi = Mathf.FloorToInt(t * fps) % set.Length;
+                if (spriteRenderer.sprite != set[fi]) spriteRenderer.sprite = set[fi];
+                squash.localScale = Vector3.one;
+                squash.localPosition = Vector3.zero;
+            }
+            else
+            {
+                squash.localScale = new Vector3(1f + (1f - sy) * 0.4f, sy, 1f);
+                squash.localPosition = new Vector3(shake, 0f, 0f);
+            }
 
             if (e.hp != lastHp || e.maxHp != lastMax) { lastHp = e.hp; lastMax = e.maxHp; LayoutHp(); }
         }

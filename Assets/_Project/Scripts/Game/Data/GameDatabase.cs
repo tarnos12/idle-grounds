@@ -31,6 +31,35 @@ namespace IdleGrounds.Game.Data
         /// <summary>Delivered FX art (fx_* keys, e.g. fx_wisp), wired generically by ArtIntake.</summary>
         public List<SpriteEntry> fx = new List<SpriteEntry>();
 
+        /// <summary>Delivered enemy animation strips keyed enemy_&lt;kind&gt;_&lt;anim&gt; (idle/move/hit/die), wired by ArtIntake.</summary>
+        public List<SpriteEntry> enemyAnims = new List<SpriteEntry>();
+
+        /// <summary>"Fox Spirit" -> "fox", "Boar" -> "boar" (region enemy / bait-spawn display name).</summary>
+        public static string EnemyKind(string name)
+        {
+            string n = (name ?? "").ToLowerInvariant();
+            if (n.Contains("fox")) return "fox";
+            if (n.Contains("boar")) return "boar";
+            return n.Replace(' ', '_');
+        }
+
+        /// <summary>Frames of a delivered enemy animation, or null (emoji placeholder / not delivered).</summary>
+        public Sprite[] EnemyAnim(string kind, string anim)
+        {
+            string key = "enemy_" + kind + "_" + anim;
+            foreach (var e in enemyAnims)
+                if (e != null && e.key == key && e.realArt && e.sprite != null)
+                    return e.frames != null && e.frames.Length > 0 ? e.frames : new[] { e.sprite };
+            return null;
+        }
+
+        /// <summary>Kind ("fox"/"boar") of the enemy a region spawns (bait = lured boss spawn).</summary>
+        public string EnemyKindOf(string regionKey, bool bait)
+        {
+            var d = FindRegion(regionKey)?.def.enemies;
+            return d == null ? "" : EnemyKind(bait ? d.baitSpawn?.name : d.name);
+        }
+
         /// <summary>Animation frames of delivered fx art (1+ frames), or null when not delivered.</summary>
         public Sprite[] FxFrames(string key)
         {

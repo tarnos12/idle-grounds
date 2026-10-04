@@ -87,7 +87,9 @@ namespace IdleGrounds.Game
                     if (!views.TryGetValue(k, out var v) || v.Enemy != e)
                     {
                         if (v == null) { v = pool.Get(); views[k] = v; }
-                        v.Bind(area.key, e, SpriteFor(area.key, e));
+                        string kind = runner.Database.EnemyKindOf(area.key, e.kind == "boss");
+                        v.Bind(area.key, e, SpriteFor(area.key, e), runner.Database.EnemyAnim(kind, "idle"),
+                            runner.Database.EnemyAnim(kind, "move"), runner.Database.EnemyAnim(kind, "hit"));
                     }
                     v.seenFrame = frame;
                     v.Refresh(runner.Space, now);

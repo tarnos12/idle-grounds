@@ -489,3 +489,26 @@ MonoBehaviour:
     - {fileID: -2073842603777890662, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
     - {fileID: -509326019664925791, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
     realArt: 1
+  enemyAnims:
+  - key: enemy_fox_hit
+    sprite: {fileID: 7469885723045225228, guid: 07b4045cda90aec4ca1e0fe488591685, type: 3}
+    frames:
+    - {fileID: 7469885723045225228, guid: 07b4045cda90aec4ca1e0fe488591685, type: 3}
+    - {fileID: 8775873020781767963, guid: 07b4045cda90aec4ca1e0fe488591685, type: 3}
+    realArt: 1
+  - key: enemy_fox_idle
+    sprite: {fileID: 1688976823101074661, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
+    frames:
+    - {fileID: 1688976823101074661, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
+    - {fileID: -8265550670337478759, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
+    - {fileID: 1188285853192314585, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
+    - {fileID: 370471857877179697, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
+    realArt: 1
+  - key: enemy_fox_move
+    sprite: {fileID: -4927331781053515692, guid: bddc281fb264d6c4ea37ea6245563a1c, type: 3}
+    frames:
+    - {fileID: -4927331781053515692, guid: bddc281fb264d6c4ea37ea6245563a1c, type: 3}
+    - {fileID: 2751885881774150665, guid: bddc281fb264d6c4ea37ea6245563a1c, type: 3}
+    - {fileID: 424378963342328625, guid: bddc281fb264d6c4ea37ea6245563a1c, type: 3}
+    - {fileID: 6682710566954346572, guid: bddc281fb264d6c4ea37ea6245563a1c, type: 3}
+    realArt: 1

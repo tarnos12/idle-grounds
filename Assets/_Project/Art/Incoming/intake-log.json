@@ -81,6 +81,22 @@
       "source": "Idle-Grounds-Buildings-004.zip"
     },
     {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-001-generation-prompt.txt",
+      "name": "generation-prompt.txt",
+      "size": 472,
+      "sha1": "94e3029ed83eedfd79c812a0cb377a47d1bfeaa8",
+      "date": "2026-10-04T21:42:38.052Z",
+      "source": "Idle-Grounds-Creatures-001.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-001-README.md",
+      "name": "README.md",
+      "size": 1066,
+      "sha1": "24ed7c80e88ddbab30e869582ea5d25224aac276",
+      "date": "2026-10-04T21:42:38.052Z",
+      "source": "Idle-Grounds-Creatures-001.zip"
+    },
+    {
       "path": "_notes/fixtures-Idle-Grounds-Fixtures-001-fixture_preview.png",
       "name": "fixture_preview.png",
       "size": 15980,
@@ -279,6 +295,30 @@
       "sha1": "5e67d99736d59764af13fb75c43c1401c4acab9a",
       "date": "2026-10-04T10:17:14.457Z",
       "source": "Idle-Grounds-Buildings-001.zip"
+    },
+    {
+      "path": "creatures/enemy_fox_hit_32x32_2f.png",
+      "name": "enemy_fox_hit_32x32_2f.png",
+      "size": 594,
+      "sha1": "ce935dcb9c869217efb904d54c232d45b1847233",
+      "date": "2026-10-04T21:42:38.050Z",
+      "source": "Idle-Grounds-Creatures-001.zip"
+    },
+    {
+      "path": "creatures/enemy_fox_idle_32x32_4f.png",
+      "name": "enemy_fox_idle_32x32_4f.png",
+      "size": 765,
+      "sha1": "37087d32452302f683a225c1d226c201b441de24",
+      "date": "2026-10-04T21:42:38.051Z",
+      "source": "Idle-Grounds-Creatures-001.zip"
+    },
+    {
+      "path": "creatures/enemy_fox_move_32x32_4f.png",
+      "name": "enemy_fox_move_32x32_4f.png",
+      "size": 730,
+      "sha1": "9d6945188cc1834df9c4304dcc232574db3d373c",
+      "date": "2026-10-04T21:42:38.051Z",
+      "source": "Idle-Grounds-Creatures-001.zip"
     },
     {
       "path": "fixtures/fix_quarry.png",
