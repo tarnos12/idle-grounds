@@ -1,0 +1,58 @@
+using System;
+
+namespace IdleGrounds.Sim
+{
+    /// <summary>
+    /// Presentation events (engine-systems §17-§18.4). Everything is suppressed
+    /// while <see cref="Muted"/> (offline replay), like the JS nulling
+    /// onGroundDrop/onSfx. M1 raises: GroundDropped, SoundRequested,
+    /// NodeSpawned, NodeHit, NodeDepleted. The rest are declared for M2+.
+    /// </summary>
+    public sealed class SimEvents
+    {
+        public bool Muted;
+
+        public event Action<string, string, int, double, double> GroundDropped;   // area, item, qty, x, y
+        public event Action<string, string> SoundRequested;                       // name, area (may be null)
+        public event Action<string, Node> NodeSpawned;                            // area, node
+        public event Action<string, Node, bool> NodeHit;                          // area, node, isAuto
+        public event Action<string, Node> NodeDepleted;                           // area, node
+
+        // ---- M2+ (declared, not yet raised) ----
+#pragma warning disable 67
+        public event Action<string, Building> BuildingPlaced;
+        public event Action<string, Building> BuildingCompleted;
+        public event Action<string, Building> BuildingDemolished;
+        public event Action<string, Building, string, int> BatchStarted;
+        public event Action<string, Building, string, int> BatchFinished;
+        public event Action<string, Wisp> WispLaunched;
+        public event Action<string, Wisp> WispArrived;
+        public event Action<string, Wisp> WispReturned;
+        public event Action<string, Wisp> WispDropped;
+        public event Action<string, Enemy> EnemySpawned;
+        public event Action<string, Enemy> EnemyHit;
+        public event Action<string, Enemy> EnemyKilled;
+        public event Action<int, string> DragonStageAdvanced;
+        public event Action DragonAwakened;
+        public event Action<string, double> BlessingStarted;
+        public event Action<double> CombatBuffStarted;
+        public event Action<string, string> UpgradeApplied;
+        public event Action<string> RegionUnlocked;
+        public event Action<string> QuestClaimed;
+        public event Action AscendPromptRequested;
+        public event Action RunReset;
+        public event Action<double> OfflineProgress;
+#pragma warning restore 67
+
+        internal void RaiseGroundDropped(string area, string item, int qty, double x, double y)
+        { if (!Muted) GroundDropped?.Invoke(area, item, qty, x, y); }
+        internal void RaiseSound(string name, string area)
+        { if (!Muted) SoundRequested?.Invoke(name, area); }
+        internal void RaiseNodeSpawned(string area, Node n)
+        { if (!Muted) NodeSpawned?.Invoke(area, n); }
+        internal void RaiseNodeHit(string area, Node n, bool isAuto)
+        { if (!Muted) NodeHit?.Invoke(area, n, isAuto); }
+        internal void RaiseNodeDepleted(string area, Node n)
+        { if (!Muted) NodeDepleted?.Invoke(area, n); }
+    }
+}
