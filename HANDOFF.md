@@ -91,7 +91,10 @@ the recipe takes it (fix the JS quirk).
 
 ART PIPELINE: art requests live in `docs/art/ART-SPEC.md`, mirrored to Google
 Drive `AI files/Idle Grounds Art/ART-SPEC.md`; deliveries arrive in Drive
-`incoming/<category>/` (pixel art, 32 px/cell, PPU 32). Poll it (30 min x1h,
+`incoming/<category>/` (pixel art, 32 px/cell, PPU 32). Intake: `node tools/art-intake/pull.js` (copies/unzips new Drive files into
+`Assets/_Project/Art/Incoming/`, log in intake-log.json) then Unity menu
+`Idle Grounds/Art/Integrate Incoming Art` (import rules + wiring by key).
+Integrated so far: item_wood. Poll it (30 min x1h,
 hourly x2h, then 2-hourly; restart after spec updates) and integrate.
 
 Sim done (139 tests): offline progress removed; Tireless Wisps perk (save id

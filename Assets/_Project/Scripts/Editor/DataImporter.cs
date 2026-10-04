@@ -17,12 +17,14 @@ namespace IdleGrounds.Editor
         const string OldIcons = "old-game/assets/icons/";
 
         static Dictionary<string, Sprite> atlas;
+        static Dictionary<string, Sprite> incoming;   // delivered art (Art/Incoming) - PREFERRED over old icons / emoji
 
         [MenuItem("Idle Grounds/Data/Import From JSON")]
         public static void Import()
         {
             var cfg = GameConfigJson.Load(File.ReadAllText(JsonPath));
             LoadAtlas();
+            incoming = ArtIntake.LoadIncomingSprites();
             var itemSprites = ImportItemIcons();
 
             AssetDatabase.StartAssetEditing();
@@ -30,6 +32,7 @@ namespace IdleGrounds.Editor
             finally { AssetDatabase.StopAssetEditing(); }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
+            ArtIntake.Integrate();   // re-applies strip frames + building variants that the rebuild above cleared
             Debug.Log("DataImporter: imported " + cfg.items.Count + " items, " + cfg.regions.Count + " regions, " +
                       cfg.buildings.Count + " buildings, " + cfg.upgradeTree.Count + " upgrades, " + cfg.perks.Count +
                       " perks, " + cfg.vows.Count + " vows, " + cfg.quests.Count + " quests, " + cfg.dragonStages.Count + " dragon stages.");
@@ -45,7 +48,7 @@ namespace IdleGrounds.Editor
             {
                 var a = Get<ItemAsset>(Root + "Items/Item_" + d.key + ".asset");
                 a.def = d;
-                a.icon = itemSprites.TryGetValue(d.key, out var s) ? s : Atlas("item_" + d.key);
+                a.icon = ArtIntake.Find(incoming, "item_" + d.key) ?? (itemSprites.TryGetValue(d.key, out var s) ? s : Atlas("item_" + d.key));
                 Dirty(a); db.items.Add(a);
             }
             db.buildings.Clear();
@@ -170,7 +173,7 @@ namespace IdleGrounds.Editor
                 if (o is Sprite s) atlas[s.name] = s;
         }
 
-        static Sprite Atlas(string key) => atlas != null && atlas.TryGetValue(key, out var s) ? s : null;
+        static Sprite Atlas(string key) => ArtIntake.Find(incoming, key) ?? (atlas != null && atlas.TryGetValue(key, out var s) ? s : null);
 
         static Dictionary<string, Sprite> ImportItemIcons()
         {

@@ -257,7 +257,7 @@ Frame suffixes in the "Key / file" column show the delivered filename; static ar
 
 | Key / file | What it depicts (cultivation flavour) | Existing 16×16 | Pri | Status |
 |---|---|---|---|---|
-| `item_wood.png` | Short stack of two cut logs from the Spirit Tree, pale cut ends with ring, hint of jade moss | Y | P1 | requested |
+| `item_wood.png` | Short stack of two cut logs from the Spirit Tree, pale cut ends with ring, hint of jade moss | Y | P1 | integrated |
 | `item_leaves.png` | Fan of three broad green leaves, one with a golden dew spot | Y | P1 | requested |
 | `item_stone.png` | Rough grey chunk with a cleaved lighter face | Y | P1 | requested |
 | `item_clay.png` | Wet brick-red clay lump, finger marks | Y | P1 | requested |
@@ -766,3 +766,11 @@ Review process: files in `incoming` are imported into Unity, checked in-game, an
 |---|---|---|
 | v1 — initial request | 2026-10-04 | First full art request: 32-colour xianxia palette, technical spec, floating-island tilesets, sky, Spirit Bridge, all 183 manifest keys, UI chrome and FX. All statuses `requested`. |
 | v2 — irregular islands | 2026-10-04 | New §3.0: islands are hand-painted irregular shapes (never squares); the coast is a visual margin 8–30 cells (bold lobes, bays, islets) around the square 93×93 playable area. Ground tilesets become 47-tile blob sets per biome (`island_<biome>_ground_blob_32x32_47f.png`; the 19-tile strip stays as a minimum); cliff rim must cover diagonals, corners and end caps; underside decorations must combine under any coastline. |
+
+### Delivery log
+
+Intake: `node tools/art-intake/pull.js` (Drive `incoming/<category>/` -> `Assets/_Project/Art/Incoming/`, log in `intake-log.json`), then Unity menu `Idle Grounds/Art/Integrate Incoming Art`.
+
+| Date | File | Source zip | Status |
+|---|---|---|---|
+| 2026-10-04 | `item_wood.png` | `incoming/items/Idle-Grounds-Items-001.zip` | integrated (ItemAsset `wood` icon; ground items, hand, HUD, costs verified in Play mode) |
