@@ -29,7 +29,7 @@ central hub, and wisp routes that cross the border.
   the player has unlocked a second Island.
 - Island silhouettes are irregular and **purely visual**: each Island's
   painted landmass is larger than its square 93×93 playable area, with a
-  hand-painted coast extending 3–12 cells beyond it. The simulation grid stays
+  hand-painted coast extending 8–30 cells beyond it (bold lobes, bays and islets). The simulation grid stays
   square, so there is no shape mask in the sim.
 - A locked Island shows its veil plus an unlock sign at its edge.
 - The sky between Islands is a gradient background with parallax clouds.
