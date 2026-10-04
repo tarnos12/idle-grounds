@@ -1,0 +1,2802 @@
+{
+  "ITEM_NAMES": {
+    "wood": "Wood",
+    "leaves": "Leaves",
+    "wheat": "Rice",
+    "cotton": "Cotton",
+    "stone": "Stone",
+    "clay": "Clay",
+    "sand": "Sand",
+    "iron_ore": "Iron Ore",
+    "iron_bar": "Iron Bar",
+    "fish": "Koi",
+    "algae": "Algae",
+    "water": "Spring Water",
+    "spirit_essence": "Spirit Essence",
+    "spirit_herb": "Spirit Herb",
+    "bamboo": "Bamboo",
+    "jade_shard": "Jade Shard",
+    "plank": "Plank",
+    "brick": "Brick",
+    "paper": "Paper",
+    "spirit_stone": "Spirit Stone",
+    "tools": "Tools",
+    "glass": "Glass",
+    "spirit_jade": "Spirit Jade",
+    "cloth": "Cloth",
+    "rope": "Rope",
+    "robe": "Robe",
+    "flour": "Rice Flour",
+    "spirit_buns": "Spirit Buns",
+    "spirit_wine": "Spirit Wine",
+    "qi_elixir": "Qi Elixir",
+    "vitality_pill": "Vitality Pill",
+    "beast_bait": "Beast Bait",
+    "charcoal": "Charcoal",
+    "jade": "Jade",
+    "firestone": "Firestone",
+    "beast_bone": "Beast Bone",
+    "star_steel": "Star Steel",
+    "ember_pill": "Ember Pill",
+    "verdant_pill": "Verdant Pill",
+    "swiftwind_pill": "Swiftwind Pill",
+    "stoneheart_pill": "Stoneheart Pill",
+    "talisman": "Talisman",
+    "dragon_scale": "Dragon Scale",
+    "obsidian": "Obsidian",
+    "star_fragment": "Star Fragment",
+    "moonpetal": "Moonpetal"
+  },
+  "ITEM_ICONS": {
+    "wood": "🪵",
+    "leaves": "🍃",
+    "wheat": "🌾",
+    "cotton": "☁️",
+    "stone": "🪨",
+    "clay": "🧱",
+    "sand": "🟡",
+    "iron_ore": "🔩",
+    "iron_bar": "🧲",
+    "fish": "🐟",
+    "algae": "🪸",
+    "water": "💧",
+    "spirit_essence": "✨",
+    "spirit_herb": "🌱",
+    "bamboo": "🎍",
+    "jade_shard": "🟢",
+    "plank": "🟫",
+    "brick": "🧱",
+    "paper": "📜",
+    "spirit_stone": "🔮",
+    "tools": "⛏️",
+    "glass": "🧊",
+    "spirit_jade": "🟩",
+    "cloth": "🧶",
+    "rope": "🪢",
+    "robe": "🥋",
+    "flour": "🍚",
+    "spirit_buns": "🥟",
+    "spirit_wine": "🍶",
+    "qi_elixir": "🧪",
+    "vitality_pill": "💊",
+    "beast_bait": "🪱",
+    "charcoal": "⚫",
+    "jade": "💚",
+    "firestone": "🌋",
+    "beast_bone": "🦴",
+    "star_steel": "⚔️",
+    "ember_pill": "🔴",
+    "verdant_pill": "🟢",
+    "swiftwind_pill": "🟡",
+    "stoneheart_pill": "🟣",
+    "talisman": "🧧",
+    "dragon_scale": "🔶",
+    "obsidian": "🔲",
+    "star_fragment": "☄️",
+    "moonpetal": "💮"
+  },
+  "TIER_SPRITES": {
+    "center": [
+      "🌳"
+    ],
+    "farm": [
+      "🌾"
+    ],
+    "mine": [
+      "🪨"
+    ],
+    "fishing": [
+      "🐟"
+    ],
+    "volcano": [
+      "🌋"
+    ],
+    "grove": [
+      "🎋"
+    ],
+    "celestial": [
+      "☄️"
+    ]
+  },
+  "AREAS": {
+    "center": {
+      "name": "Center",
+      "icon": "🌲",
+      "verb": "Chop",
+      "actionIcon": "🪓",
+      "base": "wood",
+      "noBuild": [
+        "corners",
+        "midTop"
+      ],
+      "speedLabel": "Regrow Speed",
+      "timerLabel": "Regrow",
+      "tiers": [
+        {
+          "name": "Oak",
+          "hits": 3,
+          "perHit": [
+            {
+              "item": "wood",
+              "min": 1,
+              "max": 2
+            }
+          ],
+          "drops": [],
+          "timer": 15
+        }
+      ],
+      "spawners": [
+        {
+          "kind": "bush",
+          "zone": "centre",
+          "sizes": [
+            1
+          ],
+          "target": 10,
+          "scaleWithArea": false,
+          "spacing": 6,
+          "interaction": "chop",
+          "swingMs": 300,
+          "sprite": "🌿",
+          "hits": 2,
+          "regrow": 12,
+          "perHit": [
+            {
+              "item": "leaves",
+              "min": 1,
+              "max": 1
+            }
+          ],
+          "drops": [
+            {
+              "item": "leaves",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "kind": "quarry",
+          "zone": "cornerBL",
+          "size": 2,
+          "interaction": "quarry",
+          "swingMs": 350,
+          "sprite": "⛰️",
+          "clicksPerDrop": 5,
+          "drop": "stone",
+          "rareDrop": {
+            "item": "jade_shard",
+            "chance": 0.12
+          }
+        },
+        {
+          "kind": "spirittree",
+          "zone": "midTop",
+          "size": 4,
+          "interaction": "quarry",
+          "swingMs": 350,
+          "sprite": "🌳",
+          "clicksPerDrop": 3,
+          "drop": "wood",
+          "dropMin": 2,
+          "dropMax": 3,
+          "autoTap": true,
+          "rareDrop": {
+            "item": "bamboo",
+            "chance": 0.12
+          }
+        }
+      ],
+      "generators": [
+        {
+          "kind": "clay",
+          "zone": "clayField",
+          "item": "clay",
+          "intervalMs": 1500,
+          "cap": 10
+        },
+        {
+          "kind": "stone",
+          "zone": "quarryField",
+          "item": "stone",
+          "intervalMs": 1500,
+          "cap": 10,
+          "upgrade": "quarry",
+          "rareDrop": {
+            "item": "jade_shard",
+            "chance": 0.08
+          }
+        },
+        {
+          "kind": "wood",
+          "zone": "woodField",
+          "item": "wood",
+          "intervalMs": 3000,
+          "cap": 10
+        }
+      ],
+      "enemies": {
+        "zone": "cornerTR",
+        "name": "Fox Spirit",
+        "sprite": "🦊",
+        "cap": 1,
+        "hp": 3,
+        "speed": 30,
+        "respawnMs": 6000,
+        "attackMs": 400,
+        "drops": [
+          {
+            "item": "spirit_essence",
+            "min": 1,
+            "max": 2
+          }
+        ],
+        "baitSpawn": {
+          "name": "Spirit Boar",
+          "sprite": "🐗",
+          "hp": 8,
+          "speed": 18,
+          "drops": [
+            {
+              "item": "beast_bone",
+              "min": 1,
+              "max": 2
+            },
+            {
+              "item": "spirit_essence",
+              "min": 1,
+              "max": 1
+            }
+          ]
+        }
+      }
+    },
+    "farm": {
+      "name": "Farm",
+      "icon": "🌱",
+      "verb": "Harvest",
+      "actionIcon": "🌾",
+      "base": "wheat",
+      "noBuild": [
+        "centre",
+        "midLeft"
+      ],
+      "speedLabel": "Growth Speed",
+      "timerLabel": "Growth",
+      "spawners": [
+        {
+          "kind": "crop",
+          "zone": "centre",
+          "sizes": [
+            3
+          ],
+          "target": 8,
+          "scaleWithArea": false,
+          "interaction": "instant",
+          "useTiers": true,
+          "swingMs": 300
+        },
+        {
+          "kind": "cotton",
+          "zone": "centre",
+          "sizes": [
+            2
+          ],
+          "target": 5,
+          "scaleWithArea": false,
+          "interaction": "instant",
+          "swingMs": 300,
+          "sprite": "☁️",
+          "regrow": 18,
+          "drops": [
+            {
+              "item": "cotton",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        }
+      ],
+      "generators": [
+        {
+          "kind": "sand",
+          "zone": "sandField",
+          "item": "sand",
+          "intervalMs": 1500,
+          "cap": 10
+        }
+      ],
+      "tiers": [
+        {
+          "name": "Rice",
+          "drops": [
+            {
+              "item": "wheat",
+              "min": 2,
+              "max": 3
+            }
+          ],
+          "timer": 20
+        }
+      ]
+    },
+    "mine": {
+      "name": "Mine",
+      "icon": "⛰️",
+      "verb": "Mine",
+      "actionIcon": "⛏️",
+      "base": "stone",
+      "noBuild": "centre",
+      "speedLabel": "Mining Speed",
+      "timerLabel": "Respawn",
+      "spawners": [
+        {
+          "kind": "ore",
+          "zone": "centre",
+          "sizes": [
+            1,
+            2
+          ],
+          "target": 10,
+          "interaction": "break",
+          "useTiers": true,
+          "swingMs": 450,
+          "rareDrop": {
+            "item": "firestone",
+            "chance": 0.05
+          }
+        },
+        {
+          "kind": "ironvein",
+          "zone": "centre",
+          "sizes": [
+            2
+          ],
+          "target": 2,
+          "interaction": "break",
+          "swingMs": 500,
+          "sprite": "⛓️",
+          "hits": 3,
+          "regrow": 12,
+          "drops": [
+            {
+              "item": "iron_ore",
+              "min": 1,
+              "max": 2
+            }
+          ],
+          "rareDrop": {
+            "item": "firestone",
+            "chance": 0.15
+          }
+        },
+        {
+          "kind": "jadevein",
+          "zone": "centre",
+          "sizes": [
+            2
+          ],
+          "target": 1,
+          "interaction": "break",
+          "swingMs": 500,
+          "sprite": "🟢",
+          "hits": 3,
+          "regrow": 14,
+          "drops": [
+            {
+              "item": "jade_shard",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        }
+      ],
+      "tiers": [
+        {
+          "name": "Stone",
+          "hits": 2,
+          "drops": [
+            {
+              "item": "stone",
+              "min": 3,
+              "max": 3
+            },
+            {
+              "item": "clay",
+              "min": 1,
+              "max": 1
+            }
+          ],
+          "timer": 10
+        }
+      ]
+    },
+    "fishing": {
+      "name": "Fishing",
+      "icon": "🎣",
+      "verb": "Reel",
+      "actionIcon": "🎣",
+      "base": "fish",
+      "noBuild": "centre",
+      "surfaceWindow": 3,
+      "speedLabel": "Fishing Speed",
+      "timerLabel": "Bite",
+      "spawners": [
+        {
+          "kind": "fish",
+          "zone": "centre",
+          "sizes": [
+            1
+          ],
+          "target": 4,
+          "interaction": "surface",
+          "useTiers": true,
+          "swingMs": 350
+        },
+        {
+          "kind": "algae",
+          "zone": "centre",
+          "sizes": [
+            1
+          ],
+          "target": 10,
+          "interaction": "surface",
+          "swingMs": 350,
+          "sprite": "🪸",
+          "regrow": 8,
+          "drops": [
+            {
+              "item": "algae",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "kind": "spring",
+          "zone": "cornerTL",
+          "size": 2,
+          "interaction": "quarry",
+          "swingMs": 350,
+          "sprite": "⛲",
+          "clicksPerDrop": 3,
+          "drop": "water"
+        }
+      ],
+      "generators": [
+        {
+          "kind": "water",
+          "zone": "springField",
+          "item": "water",
+          "intervalMs": 2000,
+          "cap": 10
+        }
+      ],
+      "tiers": [
+        {
+          "name": "Koi",
+          "drops": [
+            {
+              "item": "fish",
+              "min": 1,
+              "max": 2
+            }
+          ],
+          "timer": 12
+        }
+      ]
+    },
+    "volcano": {
+      "name": "Volcano",
+      "icon": "🌋",
+      "verb": "Mine",
+      "actionIcon": "⛏️",
+      "base": "obsidian",
+      "noBuild": "centre",
+      "speedLabel": "Cooling Speed",
+      "timerLabel": "Reform",
+      "spawners": [
+        {
+          "kind": "obsidian",
+          "zone": "centre",
+          "sizes": [
+            1,
+            2
+          ],
+          "target": 8,
+          "interaction": "break",
+          "swingMs": 500,
+          "sprite": "⬛",
+          "hits": 3,
+          "regrow": 14,
+          "drops": [
+            {
+              "item": "obsidian",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        },
+        {
+          "kind": "firevein",
+          "zone": "centre",
+          "sizes": [
+            2
+          ],
+          "target": 2,
+          "interaction": "break",
+          "swingMs": 600,
+          "sprite": "🌋",
+          "hits": 4,
+          "regrow": 20,
+          "drops": [
+            {
+              "item": "firestone",
+              "min": 1,
+              "max": 1
+            }
+          ]
+        }
+      ],
+      "tiers": [
+        {
+          "name": "Obsidian",
+          "hits": 3,
+          "drops": [
+            {
+              "item": "obsidian",
+              "min": 1,
+              "max": 2
+            }
+          ],
+          "timer": 14
+        }
+      ]
+    },
+    "grove": {
+      "name": "Spirit Grove",
+      "icon": "🎋",
+      "verb": "Gather",
+      "actionIcon": "🌿",
+      "base": "spirit_herb",
+      "noBuild": "centre",
+      "speedLabel": "Regrow Speed",
+      "timerLabel": "Regrow",
+      "spawners": [
+        {
+          "kind": "herbbush",
+          "zone": "centre",
+          "sizes": [
+            1
+          ],
+          "target": 10,
+          "interaction": "chop",
+          "swingMs": 350,
+          "sprite": "🌿",
+          "hits": 2,
+          "regrow": 16,
+          "perHit": [
+            {
+              "item": "spirit_herb",
+              "min": 1,
+              "max": 1
+            }
+          ],
+          "drops": [
+            {
+              "item": "spirit_herb",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        },
+        {
+          "kind": "bamboostalk",
+          "zone": "centre",
+          "sizes": [
+            1,
+            2
+          ],
+          "target": 6,
+          "interaction": "break",
+          "swingMs": 400,
+          "sprite": "🎋",
+          "hits": 3,
+          "regrow": 18,
+          "drops": [
+            {
+              "item": "bamboo",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        }
+      ],
+      "tiers": [
+        {
+          "name": "Spirit Herb",
+          "hits": 2,
+          "drops": [
+            {
+              "item": "spirit_herb",
+              "min": 1,
+              "max": 2
+            }
+          ],
+          "timer": 16
+        }
+      ]
+    },
+    "celestial": {
+      "name": "Celestial Peak",
+      "icon": "☁️",
+      "verb": "Gather",
+      "actionIcon": "✨",
+      "base": "star_fragment",
+      "noBuild": "centre",
+      "speedLabel": "Reform Speed",
+      "timerLabel": "Reform",
+      "spawners": [
+        {
+          "kind": "starrock",
+          "zone": "centre",
+          "sizes": [
+            1,
+            2
+          ],
+          "target": 8,
+          "interaction": "break",
+          "swingMs": 550,
+          "sprite": "☄️",
+          "hits": 3,
+          "regrow": 16,
+          "drops": [
+            {
+              "item": "star_fragment",
+              "min": 1,
+              "max": 2
+            }
+          ],
+          "rareDrop": {
+            "item": "firestone",
+            "chance": 0.05
+          }
+        },
+        {
+          "kind": "moonshrub",
+          "zone": "centre",
+          "sizes": [
+            1
+          ],
+          "target": 10,
+          "interaction": "chop",
+          "swingMs": 350,
+          "sprite": "💮",
+          "hits": 2,
+          "regrow": 18,
+          "perHit": [
+            {
+              "item": "moonpetal",
+              "min": 1,
+              "max": 1
+            }
+          ],
+          "drops": [
+            {
+              "item": "moonpetal",
+              "min": 1,
+              "max": 2
+            }
+          ]
+        }
+      ],
+      "tiers": [
+        {
+          "name": "Star Fragment",
+          "hits": 3,
+          "drops": [
+            {
+              "item": "star_fragment",
+              "min": 1,
+              "max": 2
+            }
+          ],
+          "timer": 16
+        }
+      ]
+    }
+  },
+  "GRID": {
+    "cell": 32,
+    "cells": 93,
+    "margin": 10,
+    "gap": 5,
+    "building": {
+      "w": 3,
+      "h": 3
+    }
+  },
+  "ZONES": {
+    "corners": [
+      {
+        "r0": 0,
+        "c0": 0,
+        "r1": 24,
+        "c1": 24
+      },
+      {
+        "r0": 0,
+        "c0": 68,
+        "r1": 24,
+        "c1": 92
+      },
+      {
+        "r0": 68,
+        "c0": 0,
+        "r1": 92,
+        "c1": 24
+      },
+      {
+        "r0": 68,
+        "c0": 68,
+        "r1": 92,
+        "c1": 92
+      }
+    ],
+    "cornerTL": [
+      {
+        "r0": 0,
+        "c0": 0,
+        "r1": 24,
+        "c1": 24
+      }
+    ],
+    "cornerTR": [
+      {
+        "r0": 0,
+        "c0": 68,
+        "r1": 24,
+        "c1": 92
+      }
+    ],
+    "cornerBL": [
+      {
+        "r0": 68,
+        "c0": 0,
+        "r1": 92,
+        "c1": 24
+      }
+    ],
+    "cornerBR": [
+      {
+        "r0": 68,
+        "c0": 68,
+        "r1": 92,
+        "c1": 92
+      }
+    ],
+    "centre": [
+      {
+        "r0": 25,
+        "c0": 25,
+        "r1": 67,
+        "c1": 67
+      }
+    ],
+    "midTop": [
+      {
+        "r0": 0,
+        "c0": 25,
+        "r1": 24,
+        "c1": 67
+      }
+    ],
+    "midLeft": [
+      {
+        "r0": 25,
+        "c0": 0,
+        "r1": 67,
+        "c1": 24
+      }
+    ],
+    "clayField": [
+      {
+        "r0": 76,
+        "c0": 76,
+        "r1": 84,
+        "c1": 84
+      }
+    ],
+    "quarryField": [
+      {
+        "r0": 76,
+        "c0": 8,
+        "r1": 84,
+        "c1": 16
+      }
+    ],
+    "springField": [
+      {
+        "r0": 8,
+        "c0": 8,
+        "r1": 16,
+        "c1": 16
+      }
+    ],
+    "woodField": [
+      {
+        "r0": 12,
+        "c0": 40,
+        "r1": 20,
+        "c1": 48
+      }
+    ],
+    "sandField": [
+      {
+        "r0": 42,
+        "c0": 14,
+        "r1": 50,
+        "c1": 22
+      }
+    ]
+  },
+  "BUILDINGS": {
+    "center": {
+      "name": "Altar",
+      "icon": "🏛️",
+      "cost": {},
+      "size": {
+        "w": 5,
+        "h": 5
+      },
+      "unlocked": false,
+      "indestructible": true
+    },
+    "dragon": {
+      "name": "Sleeping Dragon",
+      "icon": "🐉",
+      "cost": {},
+      "size": {
+        "w": 5,
+        "h": 5
+      },
+      "unlocked": false,
+      "indestructible": true
+    },
+    "workbench": {
+      "name": "Workbench",
+      "icon": "🛠️",
+      "cost": {
+        "wood": 8
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Plank",
+          "inputs": {
+            "wood": 3
+          },
+          "output": "plank",
+          "outputQty": 1,
+          "timeMs": 4000
+        },
+        {
+          "name": "Tools",
+          "inputs": {
+            "plank": 2,
+            "iron_bar": 1
+          },
+          "output": "tools",
+          "outputQty": 1,
+          "timeMs": 6000
+        }
+      ]
+    },
+    "kiln": {
+      "name": "Kiln",
+      "icon": "🏺",
+      "cost": {
+        "wood": 10,
+        "clay": 5
+      },
+      "unlocked": true,
+      "fuel": true,
+      "size": {
+        "w": 3,
+        "h": 5
+      },
+      "recipes": [
+        {
+          "name": "Brick",
+          "inputs": {
+            "clay": 2
+          },
+          "output": "brick",
+          "outputQty": 1,
+          "timeMs": 5000
+        },
+        {
+          "name": "Glass",
+          "inputs": {
+            "sand": 3
+          },
+          "output": "glass",
+          "outputQty": 2,
+          "timeMs": 5000
+        },
+        {
+          "name": "Obsidian Glass",
+          "inputs": {
+            "obsidian": 1
+          },
+          "output": "glass",
+          "outputQty": 2,
+          "timeMs": 5000
+        }
+      ]
+    },
+    "paper_mill": {
+      "name": "Paper Mill",
+      "icon": "📜",
+      "cost": {
+        "wood": 10,
+        "stone": 5
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Paper",
+          "inputs": {
+            "bamboo": 1,
+            "wood": 2
+          },
+          "output": "paper",
+          "outputQty": 1,
+          "timeMs": 5000
+        }
+      ]
+    },
+    "infusion_array": {
+      "name": "Infusion Array",
+      "icon": "🔮",
+      "cost": {
+        "stone": 10,
+        "spirit_essence": 5
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Spirit Stone",
+          "inputs": {
+            "stone": 3,
+            "spirit_essence": 1
+          },
+          "output": "spirit_stone",
+          "outputQty": 1,
+          "timeMs": 8000
+        },
+        {
+          "name": "Spirit Jade",
+          "inputs": {
+            "jade": 1,
+            "spirit_essence": 2
+          },
+          "output": "spirit_jade",
+          "outputQty": 1,
+          "timeMs": 9000
+        }
+      ]
+    },
+    "loom": {
+      "name": "Loom",
+      "icon": "🧵",
+      "cost": {
+        "wood": 10,
+        "plank": 4
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Cloth",
+          "inputs": {
+            "cotton": 3
+          },
+          "output": "cloth",
+          "outputQty": 1,
+          "timeMs": 5000
+        },
+        {
+          "name": "Rope",
+          "inputs": {
+            "cotton": 2,
+            "algae": 2
+          },
+          "output": "rope",
+          "outputQty": 1,
+          "timeMs": 5000
+        },
+        {
+          "name": "Robe",
+          "inputs": {
+            "cloth": 2,
+            "spirit_herb": 1
+          },
+          "output": "robe",
+          "outputQty": 1,
+          "timeMs": 8000
+        }
+      ]
+    },
+    "mill": {
+      "name": "Mill",
+      "icon": "🌾",
+      "cost": {
+        "wood": 8,
+        "stone": 6
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Rice Flour",
+          "inputs": {
+            "wheat": 2
+          },
+          "output": "flour",
+          "outputQty": 1,
+          "timeMs": 4000
+        },
+        {
+          "name": "Spirit Buns",
+          "inputs": {
+            "flour": 2,
+            "water": 1
+          },
+          "output": "spirit_buns",
+          "outputQty": 1,
+          "timeMs": 6000
+        }
+      ]
+    },
+    "brewery": {
+      "name": "Brewery",
+      "icon": "🍶",
+      "cost": {
+        "wood": 8,
+        "clay": 6
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Spirit Wine",
+          "inputs": {
+            "wheat": 2,
+            "water": 2,
+            "leaves": 1
+          },
+          "output": "spirit_wine",
+          "outputQty": 1,
+          "timeMs": 8000
+        }
+      ]
+    },
+    "cauldron": {
+      "name": "Cauldron",
+      "icon": "⚗️",
+      "cost": {
+        "stone": 8,
+        "iron_bar": 2
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Qi Elixir",
+          "inputs": {
+            "spirit_herb": 1,
+            "water": 2,
+            "spirit_essence": 1
+          },
+          "output": "qi_elixir",
+          "outputQty": 2,
+          "timeMs": 8000
+        },
+        {
+          "name": "Vitality Pill",
+          "inputs": {
+            "fish": 1,
+            "spirit_herb": 1,
+            "water": 1
+          },
+          "output": "vitality_pill",
+          "outputQty": 1,
+          "timeMs": 7000
+        },
+        {
+          "name": "Beast Bait",
+          "inputs": {
+            "fish": 2,
+            "algae": 2
+          },
+          "output": "beast_bait",
+          "outputQty": 1,
+          "timeMs": 6000
+        },
+        {
+          "name": "Moon Elixir",
+          "inputs": {
+            "moonpetal": 2,
+            "water": 1
+          },
+          "output": "qi_elixir",
+          "outputQty": 2,
+          "timeMs": 8000
+        }
+      ]
+    },
+    "jade_carver": {
+      "name": "Jade Carver",
+      "icon": "🗿",
+      "cost": {
+        "wood": 6,
+        "stone": 8
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Jade",
+          "inputs": {
+            "jade_shard": 3
+          },
+          "output": "jade",
+          "outputQty": 1,
+          "timeMs": 6000
+        }
+      ]
+    },
+    "pill_furnace": {
+      "name": "Pill Furnace",
+      "icon": "🫕",
+      "cost": {
+        "brick": 6,
+        "iron_bar": 4,
+        "tools": 2
+      },
+      "unlocked": true,
+      "fuel": true,
+      "size": {
+        "w": 3,
+        "h": 5
+      },
+      "recipes": [
+        {
+          "name": "Ember Pill",
+          "inputs": {
+            "qi_elixir": 1,
+            "firestone": 1
+          },
+          "output": "ember_pill",
+          "outputQty": 1,
+          "timeMs": 9000
+        },
+        {
+          "name": "Verdant Pill",
+          "inputs": {
+            "qi_elixir": 1,
+            "spirit_herb": 1
+          },
+          "output": "verdant_pill",
+          "outputQty": 1,
+          "timeMs": 9000
+        },
+        {
+          "name": "Swiftwind Pill",
+          "inputs": {
+            "qi_elixir": 1,
+            "cotton": 1
+          },
+          "output": "swiftwind_pill",
+          "outputQty": 1,
+          "timeMs": 9000
+        },
+        {
+          "name": "Stoneheart Pill",
+          "inputs": {
+            "qi_elixir": 1,
+            "spirit_stone": 1
+          },
+          "output": "stoneheart_pill",
+          "outputQty": 1,
+          "timeMs": 9000
+        }
+      ]
+    },
+    "star_anvil": {
+      "name": "Star Anvil",
+      "icon": "⚒️",
+      "cost": {
+        "iron_bar": 6,
+        "tools": 3,
+        "glass": 2
+      },
+      "unlocked": true,
+      "fuel": true,
+      "size": {
+        "w": 3,
+        "h": 5
+      },
+      "recipes": [
+        {
+          "name": "Star Steel",
+          "inputs": {
+            "iron_bar": 2,
+            "firestone": 1,
+            "beast_bone": 1
+          },
+          "output": "star_steel",
+          "outputQty": 2,
+          "timeMs": 10000
+        },
+        {
+          "name": "Astral Steel",
+          "inputs": {
+            "star_fragment": 3,
+            "iron_bar": 2
+          },
+          "output": "star_steel",
+          "outputQty": 2,
+          "timeMs": 9000
+        }
+      ]
+    },
+    "talisman_atelier": {
+      "name": "Talisman Atelier",
+      "icon": "🖌️",
+      "cost": {
+        "plank": 6,
+        "jade": 2,
+        "glass": 2
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Talisman",
+          "inputs": {
+            "paper": 2,
+            "spirit_jade": 1,
+            "qi_elixir": 1
+          },
+          "output": "talisman",
+          "outputQty": 1,
+          "timeMs": 10000
+        }
+      ]
+    },
+    "dragon_shrine": {
+      "name": "Dragon Shrine",
+      "icon": "🐲",
+      "cost": {
+        "brick": 10,
+        "cloth": 8,
+        "obsidian": 4
+      },
+      "unlocked": true,
+      "shrine": true
+    },
+    "ascension_gate": {
+      "name": "Ascension Gate",
+      "icon": "⛩️",
+      "size": {
+        "w": 5,
+        "h": 5
+      },
+      "unlocked": true,
+      "gate": true,
+      "cost": {
+        "talisman": 3,
+        "star_steel": 3,
+        "dragon_scale": 3
+      }
+    },
+    "charcoal_pit": {
+      "name": "Charcoal Pit",
+      "icon": "🕳️",
+      "cost": {
+        "stone": 6,
+        "clay": 4
+      },
+      "unlocked": true,
+      "recipes": [
+        {
+          "name": "Charcoal",
+          "inputs": {
+            "wood": 2
+          },
+          "output": "charcoal",
+          "outputQty": 1,
+          "timeMs": 4000
+        }
+      ]
+    },
+    "furnace_spirit": {
+      "name": "Furnace Spirit",
+      "icon": "🕯️",
+      "size": {
+        "w": 1,
+        "h": 1
+      },
+      "anyZone": true,
+      "cost": {
+        "stone": 4,
+        "spirit_essence": 2
+      },
+      "unlocked": true,
+      "stoker": {
+        "radius": 3,
+        "cap": 20
+      }
+    },
+    "meditation_pavilion": {
+      "name": "Meditation Pavilion",
+      "icon": "🧘",
+      "cost": {
+        "plank": 6,
+        "cloth": 4,
+        "rope": 2
+      },
+      "unlocked": true,
+      "roster": {
+        "cap": 3,
+        "recruit": "robe",
+        "food": "spirit_buns",
+        "foodCap": 20,
+        "foodValues": {
+          "spirit_buns": 1,
+          "spirit_wine": 3
+        },
+        "produce": "spirit_essence",
+        "produceMs": 6000
+      }
+    },
+    "forge": {
+      "name": "Forge",
+      "icon": "🔥",
+      "cost": {
+        "wood": 5,
+        "stone": 10
+      },
+      "unlocked": false,
+      "stageUnlock": 1,
+      "fuel": true,
+      "size": {
+        "w": 3,
+        "h": 5
+      },
+      "recipes": [
+        {
+          "name": "Iron Bar",
+          "inputs": {
+            "iron_ore": 2
+          },
+          "output": "iron_bar",
+          "outputQty": 1,
+          "timeMs": 6000
+        }
+      ]
+    },
+    "storehouse": {
+      "name": "Storehouse",
+      "icon": "📦",
+      "cost": {
+        "wood": 12
+      },
+      "cap": 200,
+      "unlocked": true
+    },
+    "algae_farm": {
+      "name": "Algae Farm",
+      "icon": "🪸",
+      "cost": {
+        "wood": 12,
+        "algae": 6
+      },
+      "unlocked": false,
+      "stageUnlock": 2,
+      "waterOnly": true,
+      "gen": {
+        "item": "algae",
+        "intervalMs": 2000,
+        "cap": 24
+      }
+    },
+    "herb_garden": {
+      "name": "Herb Garden",
+      "icon": "🪴",
+      "cost": {
+        "wood": 10,
+        "water": 5,
+        "clay": 5
+      },
+      "unlocked": false,
+      "stageUnlock": 3,
+      "gen": {
+        "item": "spirit_herb",
+        "intervalMs": 2500,
+        "cap": 24
+      }
+    },
+    "gathering_stone": {
+      "name": "Gathering Stone",
+      "icon": "🧿",
+      "size": {
+        "w": 1,
+        "h": 1
+      },
+      "anyZone": true,
+      "cost": {
+        "stone": 5
+      },
+      "unlocked": true,
+      "gather": {
+        "radius": 8,
+        "cap": 60
+      }
+    },
+    "wisp_lantern": {
+      "name": "Wisp Lantern",
+      "icon": "🏮",
+      "size": {
+        "w": 1,
+        "h": 1
+      },
+      "anyZone": true,
+      "cost": {
+        "wood": 5,
+        "stone": 5
+      },
+      "unlocked": true,
+      "lantern": {
+        "rateMs": 1000,
+        "speed": 170
+      }
+    },
+    "warding_seal": {
+      "name": "Warding Seal",
+      "icon": "🈯",
+      "size": {
+        "w": 1,
+        "h": 1
+      },
+      "anyZone": true,
+      "cost": {
+        "wood": 3,
+        "stone": 3
+      },
+      "unlocked": true,
+      "seal": {
+        "cap": 20
+      }
+    }
+  },
+  "DRAGON_STAGES": [
+    {
+      "needs": {
+        "leaves": 15
+      },
+      "text": "The dragon cracks one eye open… and teaches you the Forge."
+    },
+    {
+      "needs": {
+        "stone": 25,
+        "clay": 10
+      },
+      "text": "The dragon yawns a plume of steam… and teaches you the Algae Farm."
+    },
+    {
+      "needs": {
+        "iron_bar": 8,
+        "algae": 15,
+        "water": 10
+      },
+      "text": "The dragon tastes forged iron and rumbles approval. \"You shape the earth well, little cultivator. Grow me the herbs of spirit — I will teach you to garden what cannot be farmed.\" (Herb Garden unlocked)"
+    },
+    {
+      "needs": {
+        "spirit_herb": 20,
+        "spirit_essence": 15,
+        "iron_bar": 5
+      },
+      "text": "The dragon breathes in the herbs, the essence, the iron — and OPENS ITS EYES. \"I dreamed a thousand years, and you woke me with patience, not swords. Cultivate on, little one. I will watch over these grounds.\" 🐲 THE DRAGON IS AWAKE."
+    }
+  ],
+  "DRAGON_BUFFS": {
+    "ember_pill": {
+      "name": "Ember Blessing",
+      "desc": "Burners work twice as fast."
+    },
+    "verdant_pill": {
+      "name": "Verdant Blessing",
+      "desc": "Nodes regrow twice as fast."
+    },
+    "swiftwind_pill": {
+      "name": "Swiftwind Blessing",
+      "desc": "Wisps fly and send twice as fast."
+    },
+    "stoneheart_pill": {
+      "name": "Stoneheart Blessing",
+      "desc": "Mining and quarry drops doubled."
+    }
+  },
+  "VITALITY": {
+    "item": "vitality_pill",
+    "name": "Martial Vigor",
+    "ms": 45000,
+    "bonusDamage": 2,
+    "lootMult": 2
+  },
+  "WORLD": {
+    "regions": {
+      "farm": {
+        "rx": 0,
+        "ry": 0
+      },
+      "center": {
+        "rx": 1,
+        "ry": 0
+      },
+      "mine": {
+        "rx": 2,
+        "ry": 0
+      },
+      "fishing": {
+        "rx": 1,
+        "ry": 1
+      },
+      "volcano": {
+        "rx": 2,
+        "ry": 1
+      },
+      "grove": {
+        "rx": 0,
+        "ry": 1
+      },
+      "celestial": {
+        "rx": 1,
+        "ry": 2
+      }
+    },
+    "cols": 3,
+    "rows": 3,
+    "unlockSide": {
+      "farm": "left",
+      "mine": "right",
+      "fishing": "down",
+      "volcano": "up",
+      "grove": "down-left",
+      "celestial": "down"
+    },
+    "unlockCost": {
+      "farm": {
+        "wood": 10
+      },
+      "mine": {
+        "wood": 16
+      },
+      "fishing": {
+        "wood": 20
+      },
+      "volcano": {
+        "iron_bar": 3
+      },
+      "grove": {
+        "wheat": 12,
+        "wood": 8
+      },
+      "celestial": {
+        "spirit_stone": 6,
+        "jade": 3,
+        "glass": 3
+      }
+    }
+  },
+  "AUTOMATION_CLICKS": {
+    "1": 2,
+    "2": 6,
+    "3": 20
+  },
+  "FUEL": {
+    "wood": 10000,
+    "bamboo": 6000,
+    "charcoal": 40000,
+    "firestone": 120000
+  },
+  "FUEL_CAP": 60000,
+  "FUEL_SLOTS": 6,
+  "UPGRADE_TREE": [
+    {
+      "id": "hand",
+      "icon": "✋",
+      "name": "Hand Size",
+      "x": 0,
+      "y": 0,
+      "area": "center",
+      "type": "hand",
+      "desc": "+5 carry capacity per level.",
+      "links": [
+        "spd_c",
+        "act_c",
+        "spd_f",
+        "spd_m",
+        "foe_cap",
+        "wisps"
+      ],
+      "costs": [
+        {
+          "wood": 10
+        },
+        {
+          "wood": 25,
+          "leaves": 10
+        },
+        {
+          "cotton": 15,
+          "wood": 40
+        }
+      ]
+    },
+    {
+      "id": "wisps",
+      "icon": "🏮",
+      "name": "Wisp Haste",
+      "x": -170,
+      "y": 115,
+      "area": "center",
+      "type": "wispRate",
+      "desc": "Lanterns send more often and wisps fly faster.",
+      "links": [
+        "affinity"
+      ],
+      "costs": [
+        {
+          "wood": 40,
+          "spirit_stone": 1
+        },
+        {
+          "spirit_stone": 3,
+          "plank": 8
+        },
+        {
+          "spirit_stone": 6,
+          "brick": 8
+        }
+      ]
+    },
+    {
+      "id": "affinity",
+      "icon": "🐲",
+      "name": "Dragon Affinity",
+      "x": -300,
+      "y": 190,
+      "area": "center",
+      "type": "affinity",
+      "desc": "Dragon-pill blessings last +30s per level.",
+      "links": [
+        "disciples"
+      ],
+      "costs": [
+        {
+          "qi_elixir": 2,
+          "wood": 40
+        },
+        {
+          "spirit_stone": 3,
+          "qi_elixir": 3
+        },
+        {
+          "spirit_jade": 1,
+          "qi_elixir": 5
+        }
+      ]
+    },
+    {
+      "id": "disciples",
+      "icon": "🧘",
+      "name": "Disciple Mastery",
+      "x": -230,
+      "y": 300,
+      "area": "center",
+      "type": "discipleCap",
+      "desc": "+2 disciple capacity per Meditation Pavilion, per level.",
+      "links": [],
+      "costs": [
+        {
+          "robe": 2,
+          "spirit_stone": 2
+        },
+        {
+          "spirit_stone": 4,
+          "spirit_buns": 20
+        },
+        {
+          "spirit_jade": 2,
+          "robe": 5
+        }
+      ]
+    },
+    {
+      "id": "spd_c",
+      "icon": "⏱️",
+      "name": "Regrow Speed",
+      "x": 150,
+      "y": -35,
+      "area": "center",
+      "type": "speed",
+      "desc": "Center bushes respawn faster.",
+      "links": [
+        "auto_c"
+      ],
+      "costs": [
+        {
+          "wood": 20
+        },
+        {
+          "wood": 50,
+          "leaves": 15
+        },
+        {
+          "wood": 120,
+          "spirit_essence": 10
+        }
+      ]
+    },
+    {
+      "id": "auto_c",
+      "icon": "🤖",
+      "name": "Automation",
+      "x": 300,
+      "y": -85,
+      "area": "center",
+      "type": "automation",
+      "desc": "Auto-harvests Center bushes and taps the Spirit Tree 🌳 (1 swing/s per level) — its wood flows to the starter wood line.",
+      "links": [
+        "act_fi"
+      ],
+      "costs": [
+        {
+          "wood": 60,
+          "stone": 30
+        },
+        {
+          "stone": 120,
+          "clay": 40
+        },
+        {
+          "iron_ore": 40,
+          "spirit_essence": 20
+        }
+      ]
+    },
+    {
+      "id": "act_fi",
+      "icon": "🎣",
+      "name": "Reel Speed",
+      "x": 455,
+      "y": -45,
+      "area": "fishing",
+      "type": "harvestSpeed",
+      "desc": "Faster reeling when fishing.",
+      "links": [],
+      "costs": [
+        {
+          "fish": 10,
+          "algae": 15
+        },
+        {
+          "algae": 40,
+          "wood": 30
+        },
+        {
+          "fish": 40,
+          "iron_ore": 15
+        }
+      ]
+    },
+    {
+      "id": "act_c",
+      "icon": "🪓",
+      "name": "Action Speed",
+      "x": -150,
+      "y": -35,
+      "area": "center",
+      "type": "harvestSpeed",
+      "desc": "Faster chop/hold swings in the Center.",
+      "links": [
+        "quarry"
+      ],
+      "costs": [
+        {
+          "wood": 15,
+          "stone": 5
+        },
+        {
+          "stone": 40,
+          "leaves": 20
+        },
+        {
+          "stone": 80,
+          "spirit_essence": 15
+        }
+      ]
+    },
+    {
+      "id": "quarry",
+      "icon": "⛏️",
+      "name": "Quarry Output",
+      "x": -295,
+      "y": 40,
+      "area": "center",
+      "type": "quarry",
+      "desc": "The quarry produces stone faster.",
+      "links": [
+        "act_m"
+      ],
+      "costs": [
+        {
+          "wood": 20,
+          "stone": 10
+        },
+        {
+          "stone": 50,
+          "clay": 20
+        },
+        {
+          "stone": 100,
+          "water": 25
+        }
+      ]
+    },
+    {
+      "id": "act_m",
+      "icon": "⚒️",
+      "name": "Mine Speed",
+      "x": -450,
+      "y": -15,
+      "area": "mine",
+      "type": "harvestSpeed",
+      "desc": "Faster strikes in the Mine.",
+      "links": [],
+      "costs": [
+        {
+          "stone": 30
+        },
+        {
+          "stone": 60,
+          "clay": 25
+        },
+        {
+          "iron_ore": 30,
+          "clay": 50
+        }
+      ]
+    },
+    {
+      "id": "spd_f",
+      "icon": "💧",
+      "name": "Growth Speed",
+      "x": 40,
+      "y": -150,
+      "area": "farm",
+      "type": "speed",
+      "desc": "Farm crops regrow faster.",
+      "links": [
+        "act_f"
+      ],
+      "costs": [
+        {
+          "wheat": 15,
+          "wood": 20
+        },
+        {
+          "wheat": 40,
+          "water": 15
+        },
+        {
+          "wheat": 80,
+          "cotton": 20
+        }
+      ]
+    },
+    {
+      "id": "act_f",
+      "icon": "🌾",
+      "name": "Harvest Speed",
+      "x": -45,
+      "y": -290,
+      "area": "farm",
+      "type": "harvestSpeed",
+      "desc": "Faster crop harvesting.",
+      "links": [
+        "auto_f"
+      ],
+      "costs": [
+        {
+          "wheat": 25
+        },
+        {
+          "wheat": 50,
+          "sand": 15
+        },
+        {
+          "cotton": 25,
+          "water": 20
+        }
+      ]
+    },
+    {
+      "id": "auto_f",
+      "icon": "🚜",
+      "name": "Farm Automation",
+      "x": 55,
+      "y": -430,
+      "area": "farm",
+      "type": "automation",
+      "desc": "Auto-harvests Farm crops.",
+      "links": [],
+      "costs": [
+        {
+          "wheat": 60,
+          "wood": 40
+        },
+        {
+          "wheat": 120,
+          "cotton": 30
+        },
+        {
+          "cotton": 60,
+          "water": 40,
+          "iron_ore": 20
+        }
+      ]
+    },
+    {
+      "id": "spd_m",
+      "icon": "⛰️",
+      "name": "Respawn Speed",
+      "x": -40,
+      "y": 150,
+      "area": "mine",
+      "type": "speed",
+      "desc": "Mine nodes respawn faster.",
+      "links": [
+        "spd_fi"
+      ],
+      "costs": [
+        {
+          "stone": 25,
+          "wood": 20
+        },
+        {
+          "stone": 60,
+          "clay": 30
+        },
+        {
+          "iron_ore": 25,
+          "water": 20
+        }
+      ]
+    },
+    {
+      "id": "spd_fi",
+      "icon": "🌊",
+      "name": "Bite Speed",
+      "x": 50,
+      "y": 290,
+      "area": "fishing",
+      "type": "speed",
+      "desc": "Fish & algae surface more often.",
+      "links": [
+        "auto_m"
+      ],
+      "costs": [
+        {
+          "fish": 10,
+          "wood": 20
+        },
+        {
+          "algae": 30,
+          "clay": 20
+        },
+        {
+          "fish": 30,
+          "water": 30
+        }
+      ]
+    },
+    {
+      "id": "auto_m",
+      "icon": "🛠️",
+      "name": "Mine Automation",
+      "x": -40,
+      "y": 430,
+      "area": "mine",
+      "type": "automation",
+      "desc": "Auto-mines ore veins.",
+      "links": [],
+      "costs": [
+        {
+          "stone": 80,
+          "clay": 30
+        },
+        {
+          "iron_ore": 30,
+          "stone": 100
+        },
+        {
+          "iron_ore": 60,
+          "water": 30,
+          "algae": 30
+        }
+      ]
+    },
+    {
+      "id": "foe_cap",
+      "icon": "🦊",
+      "name": "Spirit Call",
+      "x": 160,
+      "y": 120,
+      "area": "center",
+      "type": "enemyCap",
+      "desc": "+1 Fox Spirit roams the grove per level.",
+      "links": [
+        "foe_dmg"
+      ],
+      "costs": [
+        {
+          "leaves": 25,
+          "wood": 15
+        },
+        {
+          "spirit_essence": 10,
+          "wood": 40
+        },
+        {
+          "spirit_essence": 25,
+          "iron_bar": 5
+        }
+      ]
+    },
+    {
+      "id": "foe_dmg",
+      "icon": "⚔️",
+      "name": "Spirit Blade",
+      "x": 315,
+      "y": 205,
+      "area": "center",
+      "type": "damage",
+      "desc": "+1 damage per strike on beasts.",
+      "links": [
+        "foe_aoe"
+      ],
+      "costs": [
+        {
+          "spirit_essence": 5,
+          "stone": 20
+        },
+        {
+          "spirit_essence": 15,
+          "iron_ore": 10
+        },
+        {
+          "spirit_essence": 30,
+          "iron_bar": 8
+        }
+      ]
+    },
+    {
+      "id": "foe_aoe",
+      "icon": "💥",
+      "name": "Spirit Wave",
+      "x": 470,
+      "y": 300,
+      "area": "center",
+      "type": "aoe",
+      "desc": "Strikes ripple outward, hitting nearby beasts (wider per level).",
+      "links": [],
+      "costs": [
+        {
+          "spirit_essence": 12,
+          "water": 10
+        },
+        {
+          "spirit_essence": 25,
+          "iron_bar": 5
+        },
+        {
+          "spirit_essence": 50,
+          "iron_bar": 12
+        }
+      ]
+    }
+  ],
+  "QUESTS": [
+    {
+      "id": "wood",
+      "icon": "🪵",
+      "name": "First timber",
+      "desc": "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.)",
+      "goal": {
+        "$fn": "() => ({ cur: window.ENGINE.handCount(\"wood\"), need: 5 })"
+      },
+      "reward": {
+        "reveal": [
+          "storehouse"
+        ]
+      },
+      "target": {
+        "area": "center",
+        "kind": "fixture",
+        "id": "spirittree"
+      }
+    },
+    {
+      "id": "leaves",
+      "icon": "🍃",
+      "name": "Bush whacker",
+      "desc": "Chop the small bushes 🌿 around the Altar and collect 5 leaves.",
+      "goal": {
+        "$fn": "() => ({ cur: window.ENGINE.handCount(\"leaves\"), need: 5 })"
+      }
+    },
+    {
+      "id": "dragon1",
+      "icon": "🐉",
+      "name": "Wake the sleeper",
+      "desc": "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click it to feed its tribute until it stirs — the dragon teaches you the Forge.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.dragon.stage >= 1 ? 1 : 0, need: 1 })"
+      },
+      "reward": {
+        "reveal": [
+          "forge"
+        ]
+      },
+      "target": {
+        "area": "center",
+        "kind": "dragon"
+      }
+    },
+    {
+      "id": "fox",
+      "icon": "🦊",
+      "name": "Fox hunt",
+      "desc": "A Fox Spirit prowls the red zone (top-right corner). Click it until it falls — hold left-click to auto-attack. It drops Spirit Essence.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.stats.foxKills || 0, need: 1 })"
+      },
+      "reward": {
+        "reveal": [
+          "infusion_array"
+        ]
+      },
+      "target": {
+        "area": "center",
+        "kind": "enemyZone"
+      }
+    },
+    {
+      "id": "build",
+      "icon": "🔨",
+      "name": "Raise a building",
+      "desc": "Press B, place a Storehouse ghost somewhere open, then RIGHT-click it while carrying the wood it asks for.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.stats.buildingsBuilt || 0, need: 1 })"
+      },
+      "builds": [
+        "storehouse"
+      ],
+      "reward": {
+        "reveal": [
+          "gathering_stone",
+          "wisp_lantern",
+          "warding_seal",
+          "workbench",
+          "kiln",
+          "paper_mill",
+          "charcoal_pit"
+        ]
+      }
+    },
+    {
+      "id": "upgrade",
+      "icon": "🏛️",
+      "name": "First insight",
+      "desc": "Click the Altar to open the upgrade tree, pick an upgrade, then RIGHT-click-feed the Altar the cost it shows.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.stats.upgradesApplied || 0, need: 1 })"
+      },
+      "reward": {
+        "items": {
+          "wood": 10
+        }
+      },
+      "target": {
+        "area": "center",
+        "kind": "altar"
+      }
+    },
+    {
+      "id": "link",
+      "icon": "🏮",
+      "name": "Wisp wrangler",
+      "desc": "Wisps already ferry items along the dashed threads. Click a Wisp Lantern, press ➕ Add link, then click a source (🧿/📦) and a target building.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.stats.linksAdded || 0, need: 1 })"
+      },
+      "reward": {
+        "reveal": [
+          "furnace_spirit"
+        ]
+      },
+      "target": {
+        "area": "center",
+        "kind": "building",
+        "id": "wisp_lantern"
+      }
+    },
+    {
+      "id": "explore",
+      "icon": "🔓",
+      "name": "Beyond the woods",
+      "desc": "Carry enough wood to a glowing border button and unlock a neighbouring region (Farm, Mine or Fishing).",
+      "goal": {
+        "$fn": "() => {\r\n      const u = window.GS.world.unlocked;\r\n      return { cur: (u.farm || u.mine || u.fishing) ? 1 : 0, need: 1 };\r\n    }"
+      }
+    },
+    {
+      "id": "dragon2",
+      "icon": "🐉",
+      "name": "Stone & clay for the dragon",
+      "desc": "The dragon's next tribute is stone and clay. The starter Gathering Stones 🧿 by the quarry rock and the clay field (bottom corners) collect both — LEFT-click (or hold) one to withdraw into your hand, then right-click the dragon.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.dragon.stage >= 2 ? 1 : 0, need: 1 })"
+      },
+      "reward": {
+        "reveal": [
+          "algae_farm"
+        ],
+        "items": {
+          "wood": 8
+        }
+      },
+      "target": {
+        "area": "center",
+        "kind": "dragon"
+      }
+    },
+    {
+      "id": "iron",
+      "icon": "🧲",
+      "name": "Iron for the dragon",
+      "desc": "Unlock the Mine, break ⛓️ iron veins for Iron Ore, then build a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the dragon's third tribute asks for (bars already fed to it count).",
+      "goal": {
+        "$fn": "() => {\r\n      const E = window.ENGINE, dr = window.GS.dragon;\r\n      const need = Math.max(1, E.dragonTribute(2).iron_bar || 1);\r\n      if (dr.stage >= 3) return { cur: need, need };\r\n      const paid = dr.stage === 2 ? (dr.paid.iron_bar || 0) : 0;\r\n      return { cur: Math.min(need, E.handCount(\"iron_bar\") + paid), need };\r\n    }"
+      },
+      "builds": [
+        "forge"
+      ]
+    },
+    {
+      "id": "waters",
+      "icon": "🎣",
+      "name": "Unlock the waters",
+      "desc": "Fishing is where Algae and Spring Water come from — carry wood to the glowing border button and unlock Fishing.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.world.unlocked.fishing ? 1 : 0, need: 1 })"
+      },
+      "reward": {
+        "reveal": [
+          "loom",
+          "mill",
+          "brewery"
+        ]
+      }
+    },
+    {
+      "id": "dragon3",
+      "icon": "🐉",
+      "name": "The dragon tastes iron",
+      "desc": "Feed the dragon its third tribute — Iron Bars, Algae and Spring Water. The 🎯 milestone below lists what's still needed and where each comes from.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.dragon.stage >= 3 ? 1 : 0, need: 1 })"
+      },
+      "reward": {
+        "reveal": [
+          "herb_garden",
+          "pill_furnace",
+          "star_anvil",
+          "talisman_atelier"
+        ]
+      },
+      "target": {
+        "area": "center",
+        "kind": "dragon"
+      }
+    },
+    {
+      "id": "weaver",
+      "icon": "🪢",
+      "name": "Weaver's path",
+      "desc": "Build a Loom (B), then click the Loom and pick Rope (Cotton + Algae); switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth in hand. Cotton grows on the Farm — unlock it if you haven't.",
+      "goal": {
+        "$fn": "() => ({ cur: Math.min(window.ENGINE.handCount(\"rope\"), 2) + Math.min(window.ENGINE.handCount(\"cloth\"), 6), need: 8 })"
+      },
+      "builds": [
+        "loom"
+      ],
+      "reward": {
+        "reveal": [
+          "meditation_pavilion"
+        ],
+        "items": {
+          "spirit_herb": 2
+        }
+      },
+      "target": {
+        "area": "center",
+        "kind": "building",
+        "id": "loom"
+      }
+    },
+    {
+      "id": "cultivate",
+      "icon": "🧘",
+      "name": "Gather disciples",
+      "desc": "Build a Meditation Pavilion (your first comes stocked with Spirit Buns), weave a Robe at the Loom (Cloth + Spirit Herb), then click the pavilion and Recruit a disciple to cultivate Spirit Essence for you.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.stats.disciplesRecruited || 0, need: 1 })"
+      },
+      "builds": [
+        "meditation_pavilion",
+        "loom"
+      ],
+      "target": {
+        "area": "center",
+        "kind": "building",
+        "id": "meditation_pavilion"
+      }
+    }
+  ],
+  "QUEST_CHAIN": 2,
+  "REVEAL": {
+    "storehouse": [
+      {
+        "quest": "wood"
+      }
+    ],
+    "gathering_stone": [
+      {
+        "quest": "build"
+      }
+    ],
+    "wisp_lantern": [
+      {
+        "quest": "build"
+      }
+    ],
+    "warding_seal": [
+      {
+        "quest": "build"
+      }
+    ],
+    "workbench": [
+      {
+        "quest": "build"
+      }
+    ],
+    "kiln": [
+      {
+        "quest": "build"
+      }
+    ],
+    "paper_mill": [
+      {
+        "quest": "build"
+      }
+    ],
+    "charcoal_pit": [
+      {
+        "quest": "build"
+      }
+    ],
+    "infusion_array": [
+      {
+        "quest": "fox"
+      }
+    ],
+    "furnace_spirit": [
+      {
+        "quest": "link"
+      }
+    ],
+    "loom": [
+      {
+        "region": "farm"
+      },
+      {
+        "quest": "waters"
+      }
+    ],
+    "mill": [
+      {
+        "region": "farm"
+      },
+      {
+        "quest": "waters"
+      }
+    ],
+    "brewery": [
+      {
+        "region": "farm"
+      },
+      {
+        "quest": "waters"
+      }
+    ],
+    "jade_carver": [
+      {
+        "region": "mine"
+      }
+    ],
+    "cauldron": [
+      {
+        "region": "mine"
+      }
+    ],
+    "meditation_pavilion": [
+      {
+        "quest": "weaver"
+      },
+      {
+        "region": "grove"
+      }
+    ],
+    "pill_furnace": [
+      {
+        "stage": 3
+      }
+    ],
+    "star_anvil": [
+      {
+        "stage": 3
+      }
+    ],
+    "talisman_atelier": [
+      {
+        "stage": 3
+      }
+    ],
+    "dragon_shrine": [
+      {
+        "stage": 4
+      }
+    ],
+    "ascension_gate": [
+      {
+        "stage": 4
+      }
+    ]
+  },
+  "SOURCES": {
+    "wood": "Spirit Tree 🌳 (Center, top) + fallen logs",
+    "leaves": "chop bushes 🌿 around the Altar",
+    "wheat": "Farm rice plots 🌾",
+    "cotton": "Farm cotton patches ☁️",
+    "stone": "quarry rock ⛰️ (bottom-left) · Mine rocks",
+    "clay": "clay field (Center, bottom-right) · Mine rocks",
+    "sand": "Farm sand band (left side)",
+    "iron_ore": "Mine ⛓️ iron veins",
+    "iron_bar": "Mine ⛓️ iron veins → Forge",
+    "fish": "Fishing: click surfacing koi 🐟",
+    "algae": "Fishing: click surfacing algae 🪸 · Algae Farm",
+    "water": "Fishing spring ⛲ (top-left)",
+    "spirit_essence": "slay Fox Spirits 🦊 (top-right) · disciples",
+    "spirit_herb": "Spirit Grove bushes · Herb Garden",
+    "bamboo": "Spirit Tree rare drop · Spirit Grove stalks",
+    "jade_shard": "Mine jade veins 🟢 · quarry rock rare drop",
+    "plank": "Workbench ← Wood",
+    "brick": "Kiln ← Clay",
+    "paper": "Paper Mill ← Bamboo + Wood",
+    "spirit_stone": "Infusion Array ← Stone + Spirit Essence",
+    "tools": "Workbench ← Planks + Iron Bar",
+    "glass": "Kiln ← Sand (Farm) or Obsidian",
+    "spirit_jade": "Infusion Array ← Jade + Spirit Essence",
+    "cloth": "Loom ← Cotton",
+    "rope": "Loom ← Cotton + Algae",
+    "robe": "Loom ← Cloth + Spirit Herb",
+    "flour": "Mill ← Rice",
+    "spirit_buns": "Mill ← Rice Flour + Spring Water",
+    "spirit_wine": "Brewery ← Rice + Spring Water + Leaves",
+    "qi_elixir": "Cauldron ← Spirit Herb + Water + Essence",
+    "vitality_pill": "Cauldron ← Koi + Spirit Herb + Water",
+    "beast_bait": "Cauldron ← Koi + Algae",
+    "charcoal": "Charcoal Pit ← Wood",
+    "jade": "Jade Carver ← Jade Shards",
+    "firestone": "Volcano fire veins · rare in the Mine",
+    "beast_bone": "Spirit Boar 🐗 (lure one with Beast Bait)",
+    "star_steel": "Star Anvil ← Iron Bars + Firestone + Beast Bone",
+    "ember_pill": "Pill Furnace ← Qi Elixir + Firestone",
+    "verdant_pill": "Pill Furnace ← Qi Elixir + Spirit Herb",
+    "swiftwind_pill": "Pill Furnace ← Qi Elixir + Cotton",
+    "stoneheart_pill": "Pill Furnace ← Qi Elixir + Spirit Stone",
+    "talisman": "Talisman Atelier ← Paper + Spirit Jade + Qi Elixir",
+    "dragon_scale": "shed by the awakened dragon 🐉",
+    "obsidian": "Volcano obsidian rocks",
+    "star_fragment": "Celestial Peak star rocks ☄️",
+    "moonpetal": "Celestial Peak moon shrubs 💮"
+  },
+  "HAND_CAP": 20,
+  "PERKS": [
+    {
+      "id": "haste",
+      "name": "Eternal Haste",
+      "icon": "⚡",
+      "max": 5,
+      "cost": [
+        1,
+        2,
+        3,
+        5,
+        8
+      ],
+      "desc": "-5% to every timer in the world (regrow, batches, wisp beats, fields, foxes, your swings). Stacks with the +20% world speed per ascension."
+    },
+    {
+      "id": "hall",
+      "name": "Master's Hall",
+      "icon": "🏯",
+      "max": 5,
+      "cost": [
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "desc": "+1 disciple capacity at every Meditation Pavilion, per level."
+    },
+    {
+      "id": "slumber",
+      "name": "Long Slumber",
+      "icon": "🌙",
+      "max": 4,
+      "cost": [
+        1,
+        2,
+        4,
+        6
+      ],
+      "desc": "+2h to the offline catch-up window per level (base 8h)."
+    },
+    {
+      "id": "hands",
+      "name": "Fleet Hands",
+      "icon": "🤲",
+      "max": 5,
+      "cost": [
+        1,
+        2,
+        3,
+        4,
+        6
+      ],
+      "desc": "+5 permanent carrying capacity per level (on top of Hand Size)."
+    },
+    {
+      "id": "frugal",
+      "name": "Frugal Frontier",
+      "icon": "🧭",
+      "max": 3,
+      "cost": [
+        2,
+        4,
+        6
+      ],
+      "desc": "Region unlock costs -20% per level."
+    },
+    {
+      "id": "ember",
+      "name": "Ember Heart",
+      "icon": "🔥",
+      "max": 4,
+      "cost": [
+        2,
+        3,
+        5,
+        7
+      ],
+      "desc": "Burners consume fuel 15% slower per level."
+    },
+    {
+      "id": "apgain",
+      "name": "Ascendant Insight",
+      "icon": "🌟",
+      "max": 3,
+      "cost": [
+        3,
+        5,
+        8
+      ],
+      "desc": "+1 Ascension Point per ascension per level."
+    },
+    {
+      "id": "autoboost",
+      "name": "Keen Automation",
+      "icon": "⚙️",
+      "max": 3,
+      "cost": [
+        3,
+        5,
+        8
+      ],
+      "desc": "Automation harvests +1 extra node per tick per level."
+    },
+    {
+      "id": "regrow",
+      "name": "Deep Roots",
+      "icon": "🌿",
+      "max": 3,
+      "cost": [
+        2,
+        4,
+        6
+      ],
+      "desc": "Nodes respawn 10% faster per level."
+    },
+    {
+      "id": "gale",
+      "name": "Wisp Gale",
+      "icon": "🌀",
+      "max": 3,
+      "cost": [
+        2,
+        4,
+        6
+      ],
+      "desc": "Wisp lanterns send 10% faster per level."
+    },
+    {
+      "id": "fury",
+      "name": "Battle Fury",
+      "icon": "⚔️",
+      "max": 3,
+      "cost": [
+        2,
+        4,
+        6
+      ],
+      "desc": "+1 damage to beasts per strike per level."
+    },
+    {
+      "id": "bless",
+      "name": "Heaven's Favor",
+      "icon": "🌠",
+      "max": 3,
+      "cost": [
+        2,
+        4,
+        6
+      ],
+      "desc": "Dragon-pill blessings last +20% longer per level."
+    },
+    {
+      "id": "bounty",
+      "name": "Astral Bounty",
+      "icon": "☄️",
+      "max": 3,
+      "cost": [
+        2,
+        4,
+        6
+      ],
+      "desc": "Passive fields (clay, stone, wood, sand, spring water) well up 10% faster per level."
+    },
+    {
+      "id": "paths",
+      "name": "Remembered Paths",
+      "icon": "🗺️",
+      "max": 3,
+      "cost": [
+        3,
+        6,
+        12
+      ],
+      "desc": "Each run starts with the Mine already open; level 2 adds Fishing, level 3 the Farm."
+    },
+    {
+      "id": "legacy",
+      "name": "Legacy Automation",
+      "icon": "🤖",
+      "max": 3,
+      "cost": [
+        4,
+        8,
+        16
+      ],
+      "desc": "Each run starts with Automation L1 in the Center; level 2 adds the Farm, level 3 the Mine (works once that region is open)."
+    }
+  ],
+  "TEST": {
+    "ENABLED": true,
+    "timeScale": 0.2,
+    "costScale": 0.5
+  },
+  "VERSION": {
+    "num": 52,
+    "desc": "Design pass 2: idle loop that runs, reveal+quests, vows & legacy perks, readable logistics"
+  },
+  "VOWS": [
+    {
+      "id": "burden",
+      "name": "Vow of Burden",
+      "icon": "🎒",
+      "desc": "Your hands carry half as much."
+    },
+    {
+      "id": "coldhearth",
+      "name": "Vow of the Cold Hearth",
+      "icon": "🧊",
+      "desc": "Burners consume fuel twice as fast."
+    },
+    {
+      "id": "restless",
+      "name": "Vow of the Restless Dragon",
+      "icon": "🐉",
+      "desc": "Every dragon tribute is doubled."
+    },
+    {
+      "id": "solitude",
+      "name": "Vow of Solitude",
+      "icon": "🕯️",
+      "desc": "The run starts without the starter wisp network."
+    }
+  ],
+  "VOW_MULT": [
+    1,
+    1.15,
+    1.3,
+    1.5,
+    1.75
+  ],
+  "GATE_OFFERINGS": {
+    "items": [
+      "talisman",
+      "star_steel",
+      "dragon_scale"
+    ],
+    "cap": 6,
+    "perType": 2
+  }
+}
