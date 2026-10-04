@@ -88,7 +88,7 @@ namespace IdleGrounds.Game
             if (ascTag != null)
             {
                 ascTag.SetActive(s.ascensions > 0);
-                ascText.text = s.ascensions + "  ×" + sim.Prestige.WorldSpeed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+                ascText.text = "☯" + s.ascensions + "  ×" + sim.Prestige.WorldSpeed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
             }
         }
     }

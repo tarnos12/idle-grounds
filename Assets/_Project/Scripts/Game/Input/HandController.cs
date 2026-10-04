@@ -283,7 +283,7 @@ namespace IdleGrounds.Game
             if (r == null)
             {
                 lastErrBuzz = holdStart;
-                Error(area, Lx, Ly, "×");
+                Error(area, Lx, Ly, "✗");
             }
             lastDrop = holdStart;      // next drop waits a full interval
         }
@@ -379,7 +379,7 @@ namespace IdleGrounds.Game
                     if (r == null && Now - lastErrBuzz >= ErrBuzzMs)
                     {
                         lastErrBuzz = Now;
-                        Error(rg, Lx, Ly, "×");
+                        Error(rg, Lx, Ly, "✗");
                     }
                 }
             }

@@ -898,5 +898,23 @@
   "key": "ui_gathering_stone",
   "emoji": "🧿",
   "source": "data.js:456"
+ },
+ {
+  "key": "glyph_arrow",
+  "emoji": "→",
+  "source": "ui text glyph",
+  "color": "#ffffff"
+ },
+ {
+  "key": "glyph_cross",
+  "emoji": "✗",
+  "source": "ui text glyph",
+  "color": "#ffffff"
+ },
+ {
+  "key": "glyph_redo",
+  "emoji": "↺",
+  "source": "ui text glyph",
+  "color": "#ffffff"
  }
 ]

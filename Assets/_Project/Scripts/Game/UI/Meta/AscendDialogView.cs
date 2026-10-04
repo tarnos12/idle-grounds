@@ -60,12 +60,12 @@ namespace IdleGrounds.Game
             var (_, gate) = sim.Progression.BuiltGate();
             var off = gate != null ? sim.GateOfferings(gate) : null;
             var kept = MetaText.ActiveVows(sim);
-            string html = "Ascending grants <b>" + n + " AP</b> (Ascension Point" + (n == 1 ? "" : "s") + ").\n" +
+            string html = "Ascending grants <b>" + n + " ☯</b> (Ascension Point" + (n == 1 ? "" : "s") + ").\n" +
                 "World speed <b>×" + now.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " → ×" + next.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "</b> (machines, nature, wisps, foxes and your own hands)." +
                 "\nDragon tributes <b>×" + sim.Dragon.TributeMult(asc).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " → ×" + sim.Dragon.TributeMult(asc + 1).ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "</b> (the dragon remembers you)." +
                 (off != null ? "\n" + MetaText.Offerings(sim.Config, off) + (off.count >= off.cap ? "" :
-                    " (+" + off.count + " AP) — right-click spare Talismans, Star Steel and Dragon Scales onto the Gate.") : "") +
-                (kept.Count > 0 ? "\nVows kept this run: " + string.Join(", ", kept.Select(v => v.name)) + " — AP ×" + sim.Progression.VowMult().ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "." : "") +
+                    " (+" + off.count + " ☯) — right-click spare Talismans, Star Steel and Dragon Scales onto the Gate.") : "") +
+                (kept.Count > 0 ? "\nVows kept this run: " + string.Join(", ", kept.Select(v => v.name)) + " — ☯ ×" + sim.Progression.VowMult().ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "." : "") +
                 "\n(Ascended " + asc + " time" + (asc == 1 ? "" : "s") + " so far.)";
             if (html != shownKey) { shownKey = html; countText.text = html; }
         }
@@ -77,7 +77,7 @@ namespace IdleGrounds.Game
             vowsBox.SetActive(show);
             if (!show) return;
             var mult = sim.Config.balance.vowMult;
-            vowsHint.text = "A harder run pays more: AP ×" + string.Join(" / ×", mult.Skip(1).Select(m => m.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))) +
+            vowsHint.text = "A harder run pays more: ☯ ×" + string.Join(" / ×", mult.Skip(1).Select(m => m.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))) +
                             " for 1–4 vows kept to the next ascension. A vow's first completion leaves a permanent mark (timers ×0.96).";
             var vows = sim.Config.vows;
             while (vowRows.Count < vows.Count)

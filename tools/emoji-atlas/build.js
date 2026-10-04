@@ -20,7 +20,7 @@ if (W > 4096) throw new Error("atlas too wide: " + W);
 
 const cells = manifest.map((m, i) => {
   const x = (i % COLS) * CELL, y = Math.floor(i / COLS) * CELL;
-  return `<div class="c" style="left:${x}px;top:${y}px">${m.emoji}</div>`;
+  return `<div class="c" style="left:${x}px;top:${y}px${m.color ? ";color:" + m.color : ""}">${m.emoji}</div>`;
 }).join("\n");
 const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 html,body{margin:0;padding:0;background:transparent;overflow:hidden}

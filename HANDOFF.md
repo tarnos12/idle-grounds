@@ -74,9 +74,12 @@ progress modals, ascend dialog + vows, perk shop, post-ascension card, help,
 stats, intro, toast, AudioService + SfxLibrary + mute, spark FX. Menu
 `Install Meta (M7+M8)` (in rebuild-all).
 
-THE GAME IS FULLY PLAYABLE IN UNITY. Next: M9 parity pass — TMP sprite
-asset from the emoji atlas (inline icons; UI font lacks emoji/☯), side-by-side
-review vs old-game, fix gaps.
+THE GAME IS FULLY PLAYABLE IN UNITY. TMP emoji sprite asset
+(`Art/Sprites/Emoji/EmojiSprites.asset`, default in TMP Settings; menu
+`Idle Grounds/Art/Build TMP Emoji Sprite Asset`) renders emoji inline.
+
+Next: M9 parity — audits in `docs/port/parity-audit-*.md` (in progress),
+then fix confirmed findings.
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also

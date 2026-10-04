@@ -35,7 +35,7 @@ namespace IdleGrounds.Game
             if (IsOpen) return;
             var vs = MetaText.ActiveVows(Sim);
             titleText.text = "Ascension " + ja.n + " complete";
-            bodyText.text = "<b>+" + ja.ap + " AP</b>  ·  world speed <b>×" + ja.speedFrom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " → ×" + ja.speedTo.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "</b>" +
+            bodyText.text = "<b>+" + ja.ap + " ☯</b>  ·  world speed <b>×" + ja.speedFrom.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + " → ×" + ja.speedTo.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) + "</b>" +
                             (vs.Count > 0 ? "\n\nVows this run: " + string.Join(", ", vs.Select(v => v.name)) : "") +
                             "\n\n" + MetaText.HeadStarts(Sim) +
                             "\n\nSpend your Ascension Points at the Shrine before you begin — every perk applies at once.";

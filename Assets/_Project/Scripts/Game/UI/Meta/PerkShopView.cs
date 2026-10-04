@@ -79,7 +79,7 @@ namespace IdleGrounds.Game
             if (apLine != null)
             {
                 apLine.text = (preview
-                        ? "You have <b>" + ap + "</b> AP <color=" + MetaText.Gold + ">(+" + gain + " on ascending)</color>"
+                        ? "You have <b>" + ap + "</b> ☯ <color=" + MetaText.Gold + ">(+" + gain + " on ascending)</color>"
                         : "<b>" + ap + "</b> Ascension Point" + (ap == 1 ? "" : "s") + " to spend") +
                     "  ·  " + MetaText.Plural(s.ascensions, "ascension") +
                     "  ·  world speed ×" + Sim.Prestige.WorldSpeed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) +
@@ -132,7 +132,7 @@ namespace IdleGrounds.Game
             card.pickTag.SetActive(System.Array.IndexOf(FirstPicks, p.id) >= 0);
             card.descText.text = UiText.StripEmoji(p.desc);
             card.fxText.text = MetaText.PerkFxLine(Sim, p, lvl);
-            card.buyLabel.text = maxed ? "MAX" : cost.Value + " AP";
+            card.buyLabel.text = maxed ? "MAX" : cost.Value + " ☯";
             card.buyButton.interactable = afford;
             card.border.effectColor = afford ? UiPalette.Gold : UiPalette.Line;
             card.group.alpha = maxed ? 0.6f : 1f;

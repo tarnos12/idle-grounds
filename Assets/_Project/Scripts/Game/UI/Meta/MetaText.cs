@@ -6,8 +6,8 @@ using IdleGrounds.Sim;
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// Shared strings of the M7 panels (ui.js fmtAway, headStartsText, PERK_FX, offeringsHTML). The ☯ glyph has
-    /// no glyph in the TMP font, so Ascension Points read "AP" in text and the ☯ sprite is drawn as an Image.
+    /// Shared strings of the M7 panels (ui.js fmtAway, headStartsText, PERK_FX, offeringsHTML). The ☯ glyph renders via the TMP emoji sprite asset (
+    /// EmojiSprites.asset).
     /// </summary>
     public static class MetaText
     {
@@ -83,7 +83,7 @@ namespace IdleGrounds.Game
         /// <summary>`offeringsHTML` (item names instead of inline icons).</summary>
         public static string Offerings(GameConfig cfg, GateOfferingInfo off)
         {
-            if (off.count >= off.cap) return "Offerings " + off.count + "/" + off.cap + " — full (+" + off.count + " AP)";
+            if (off.count >= off.cap) return "Offerings " + off.count + "/" + off.cap + " — full (+" + off.count + " ☯)";
             return "Offerings " + off.count + "/" + off.cap + ": " +
                    string.Join("  ", cfg.gateOfferings.items.Select(it => ItemName(cfg, it) + " " + Math.Min(off.perType, off.offered.Get(it)) + "/" + off.perType));
         }
