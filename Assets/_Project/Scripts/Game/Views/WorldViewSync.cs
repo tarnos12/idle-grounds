@@ -86,7 +86,7 @@ namespace IdleGrounds.Game
                     if (!nodeViews.TryGetValue(k, out var v) || v.Node != n)
                     {
                         if (v == null) { v = nodePool.Get(); nodeViews[k] = v; }
-                        v.Bind(area.key, n, sprites.Node(area.key, n), space);
+                        v.Bind(area.key, n, sprites.Node(area.key, n), space, sprites.NodeArt(area.key, n));
                     }
                     v.seenFrame = frame;
                     if (!ViewCull.Visible(v.transform.position, n.size + 3f)) continue;     // off-camera: skip the animation

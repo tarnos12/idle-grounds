@@ -12,5 +12,7 @@ namespace IdleGrounds.Game.Data
         public Sprite sprite;
         /// <summary>All frames when the art is an animated strip (null for static art); sprite = frame 0.</summary>
         public Sprite[] frames;
+        /// <summary>True when ArtIntake wired delivered art (native PPU-32 size) rather than the emoji placeholder.</summary>
+        public bool realArt;
     }
 }

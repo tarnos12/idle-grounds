@@ -63,6 +63,8 @@ namespace IdleGrounds.Game.Data
         public Sprite RegionActionIcon(string regionKey) => Or(FindRegion(regionKey)?.actionIcon);
         public Sprite NodeSprite(string regionKey, string kind) => Or(FindRegion(regionKey)?.Find("node_" + kind));
         public Sprite FixtureSprite(string regionKey, string kind) => Or(FindRegion(regionKey)?.Find("fix_" + kind));
+        /// <summary>Delivered (real-art) entry for node_/fix_ keys, or null for emoji placeholders.</summary>
+        public SpriteEntry RealNodeArt(string regionKey, string key) { var e = FindRegion(regionKey)?.FindEntry(key); return e != null && e.realArt && e.sprite != null ? e : null; }
         public Sprite EnemySprite(string regionKey) => Or(FindRegion(regionKey)?.Find("enemy"));
         public Sprite BaitSprite(string regionKey) => Or(FindRegion(regionKey)?.Find("enemy_bait"));
         public Sprite UpgradeIcon(string id) { foreach (var a in upgrades) if (a && a.def.id == id) return Or(a.icon); return missingSprite; }

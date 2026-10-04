@@ -158,15 +158,20 @@ MonoBehaviour:
     frames:
     - {fileID: -6384541825141156081, guid: 96a9fe99262e49c47aea5ecbddf1bb48, type: 3}
     - {fileID: -4080273661060406747, guid: 96a9fe99262e49c47aea5ecbddf1bb48, type: 3}
+    realArt: 1
   - key: fix_quarry
     sprite: {fileID: 21300000, guid: dad98f336b68deb4e996e77e6de04042, type: 3}
     frames: []
+    realArt: 1
   - key: fix_spirittree
     sprite: {fileID: 21300000, guid: 5e50f8186bb346145846c86eef6642d0, type: 3}
     frames: []
+    realArt: 1
   - key: enemy
     sprite: {fileID: -162250512, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
     frames: []
+    realArt: 0
   - key: enemy_bait
     sprite: {fileID: 1744168387, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
     frames: []
+    realArt: 0

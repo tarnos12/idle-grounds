@@ -236,7 +236,7 @@ namespace IdleGrounds.Editor
                     if (s == null) continue;
                     string rk = Resolved(map, lookup);
                     frameMap.TryGetValue(rk, out var fr);
-                    if (e.sprite != s || e.frames != fr) { e.sprite = s; e.frames = fr; dirty = true; wired++; }
+                    if (e.sprite != s || e.frames != fr || !e.realArt) { e.sprite = s; e.frames = fr; e.realArt = true; dirty = true; wired++; }
                     used.Add(rk);
                 }
                 if (Set(map, "ui_area_" + r.def.key, used, s => { if (r.icon == s) return false; r.icon = s; dirty = true; return true; })) wired++;

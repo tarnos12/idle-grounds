@@ -31,6 +31,17 @@ namespace IdleGrounds.Game
             return s;
         }
 
+        readonly Dictionary<string, SpriteEntry> artCache = new Dictionary<string, SpriteEntry>();
+        /// <summary>Real-art entry (sprite + frames) for a node/fixture, or null for the emoji placeholder.</summary>
+        public SpriteEntry NodeArt(string area, Node n)
+        {
+            if (n.deco && !n.isFixed) return null;
+            string key = (n.isFixed ? "fix_" : "node_") + (n.isFixed ? n.kind : n.spawnerKind ?? n.kind);
+            string k = area + ":" + key;
+            if (!artCache.TryGetValue(k, out var e)) artCache[k] = e = db.RealNodeArt(area, key);
+            return e;
+        }
+
         public Sprite Building(string type)
         {
             string k = "b:" + type;

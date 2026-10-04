@@ -96,7 +96,8 @@ Drive `AI files/Idle Grounds Art/ART-SPEC.md`; deliveries arrive in Drive
 `Idle Grounds/Art/Integrate Incoming Art` (import rules + wiring by key).
 Integrated so far: item_wood, leaves, stone, clay, plank, brick (all P1 items); bld_gathering_stone, bld_wisp_lantern, bld_warding_seal, bld_workbench, bld_storehouse, bld_center (Altar), bld_kiln, fix_spirittree, fix_quarry, node_bush (real building art
 renders full-size as the building body via BuildingAsset.hasRealArt; info
-moves to compact strips/pills below the footprint). Known: a converter's
+moves to compact strips/pills below the footprint). Real-art nodes/fixtures render native-size with frame use (2f: intact/hit,
+Nf loops; SpriteEntry.realArt). Known: a converter's
 output pile can overlap its info strip. Poll it (30 min x1h,
 hourly x2h, then 2-hourly; restart after spec updates) and integrate.
 
