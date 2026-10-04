@@ -100,6 +100,22 @@ namespace IdleGrounds.Sim
         public bool returning;
     }
 
+    /// <summary>
+    /// A wisp crossing the sky between two Spirit Bridges (ADR 0003). Lives in
+    /// <see cref="GameState.skyWisps"/>, not in an area. All coordinates are
+    /// WORLD px (Island offset + Island-local px): x0/y0 = start of the current
+    /// leg, x/y = last ticked position, sx/sy = the sending bridge's centre at
+    /// launch (where a returning wisp heads), tx/ty = the current leg's target.
+    /// fromIsland/fromId = sending bridge; toIsland/toId = current target bridge
+    /// (the sender again once <see cref="Wisp.returning"/>).
+    /// </summary>
+    [Serializable]
+    public class SkyWisp : Wisp
+    {
+        public string fromIsland, toIsland;
+        public double sx, sy, tx, ty;
+    }
+
     [Serializable]
     public class LinkStat
     {
@@ -154,6 +170,11 @@ namespace IdleGrounds.Sim
         public double fuelBurnAt;
         // generator building
         public double nextGen;
+        // Spirit Bridge (ADR 0003): partner bridge (null island = unpaired); pairSends = this end is the sender.
+        // Buffer = inv (untyped); the beat clock reuses nextSend.
+        public string pairIsland;
+        public int pairId;
+        public bool pairSends;
         // gate
         public ItemCounts offered;
         public int offerings;
@@ -392,8 +413,13 @@ namespace IdleGrounds.Sim
         public ItemCounts buildSeen = new ItemCounts();
         public bool pavilionSeeded;
         public bool perkShopSeen;
-        public double lastSeen;                 // NaN = null (no offline catch-up)
+        /// <summary>Save stamp (ADR 0002: no offline progress — kept readable for old saves, never used).</summary>
+        public double lastSeen;                 // NaN = null
+        /// <summary>Legacy (ADR 0002): read from old saves, unused.</summary>
         public double offlineAwayFrom = double.NaN;  // NaN = null
+        /// <summary>Wisps crossing the sky between paired Spirit Bridges (ADR 0003).</summary>
+        public List<SkyWisp> skyWisps = new List<SkyWisp>();
+        public int nextSkyWispId = 1;
         public GameStats stats = new GameStats();
 
         /// <summary>`makeInitialState()` (state.js:31). Areas in config region order.</summary>

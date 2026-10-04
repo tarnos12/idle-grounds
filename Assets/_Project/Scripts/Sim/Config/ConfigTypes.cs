@@ -197,6 +197,8 @@ namespace IdleGrounds.Sim
         public string tierSprite;
         // WORLD
         public int rx, ry;
+        /// <summary>Default world offset (cells) of this Island's top-left cell (ADR 0003, WORLD.islands). The scene overrides it at boot via Simulation.SetIslandOffsets.</summary>
+        public int islandCol, islandRow;
         public string unlockSide;
         public List<ItemQty> unlockCost = new List<ItemQty>();
         // content
@@ -221,6 +223,8 @@ namespace IdleGrounds.Sim
     [Serializable] public class GatherConfig { public bool enabled; public int radius; public int cap; }
     [Serializable] public class StokerConfig { public bool enabled; public int radius; public int cap; }
     [Serializable] public class LanternConfig { public bool enabled; public int rateMs; public double speed; }
+    /// <summary>Spirit Bridge (ADR 0003): untyped buffer cap; beat + wisp speed base like a lantern.</summary>
+    [Serializable] public class BridgeConfig { public bool enabled; public int cap = 20; public int rateMs = 1000; public double speed = 170; }
     [Serializable] public class SealConfig { public bool enabled; public int cap; }
     [Serializable] public class GenBuildingConfig { public bool enabled; public string item; public int intervalMs; public int cap; }
 
@@ -262,6 +266,7 @@ namespace IdleGrounds.Sim
         public SealConfig seal = new SealConfig();
         public RosterConfig roster = new RosterConfig();
         public GenBuildingConfig gen = new GenBuildingConfig();
+        public BridgeConfig bridge = new BridgeConfig();
 
         public bool IsConverter => recipes != null && recipes.Count > 0;
     }
@@ -360,7 +365,7 @@ namespace IdleGrounds.Sim
         public QuestTarget target = new QuestTarget();
     }
 
-    public enum RevealKind { Quest, Region, Stage }
+    public enum RevealKind { Quest, Region, Stage, Islands }
 
     [Serializable]
     public class RevealCond
@@ -368,6 +373,8 @@ namespace IdleGrounds.Sim
         public RevealKind kind;
         public string key;      // quest id / region key
         public int stage;
+        /// <summary>Islands: revealed once at least this many Islands are unlocked.</summary>
+        public int count;
     }
 
     [Serializable]
@@ -435,10 +442,6 @@ namespace IdleGrounds.Sim
         public int maxTickGap = 10000;
         public int maxTickEvents = 400;
         public int autoSkipLoose = 120;
-        public int offlineMaxTicks = 45000;
-        public int offlineMinMs = 90000;
-        public int offlineModalMs = 600000;
-        public int offlinePlateauMs = 900000;
         // engine.js literals used by M1 systems
         public int dropJitterPx = 16;
         public int pickupCollectPx = 12;

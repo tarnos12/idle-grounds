@@ -27,6 +27,8 @@ MonoBehaviour:
     tierSprite: 
     rx: 0
     ry: 1
+    islandCol: 8
+    islandRow: 131
     unlockSide: down-left
     unlockCost:
     - item: wheat

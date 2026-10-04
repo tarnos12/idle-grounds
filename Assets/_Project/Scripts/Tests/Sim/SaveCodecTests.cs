@@ -76,8 +76,7 @@ namespace IdleGrounds.Sim.Tests
             var s2 = Simulation.LoadJson(j, sim.Config, clock.NowMs, out var reason);
             Assert.IsNotNull(s2, reason);
             var sim2 = new Simulation(sim.Config, s2, clock, new XorShiftRng(5));
-            var boot = sim2.Boot();
-            Assert.AreEqual(OfflineTier.None, boot.tier);
+            sim2.Boot();
             for (int i = 0; i < 400; i++) { clock.Advance(50); sim2.Tick(); }
             Assert.Pass();
         }

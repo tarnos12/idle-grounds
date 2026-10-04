@@ -148,7 +148,7 @@ namespace IdleGrounds.Sim
             var cfg = Cfg.Building(b.type);
             if (cfg == null) return 0;
             if (b.type == "storehouse" || cfg.seal.enabled) return TakeFromStorehouse(b, n);
-            if (cfg.gather.enabled || cfg.stoker.enabled)
+            if (cfg.gather.enabled || cfg.stoker.enabled || cfg.bridge.enabled)
             {
                 int took = 0, want = Math.Max(1, n);
                 while (took < want && Space() > 0 && b.inv != null && b.inv.Count > 0)

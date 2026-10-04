@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace IdleGrounds.Game
 {
-    /// <summary>Top-centre "Welcome back — +N items while away" line (ui.js showOfflineToast): 5 s, then a 0.6 s fade.</summary>
+    /// <summary>Top-centre toast line (ui.js showOfflineToast): 5 s, then a 0.6 s fade. The offline toast is gone (ADR 0002); kept as a generic toast.</summary>
     public class ToastView : MonoBehaviour
     {
         public const float HoldSeconds = 5f, FadeSeconds = 0.6f;

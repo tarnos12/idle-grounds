@@ -70,5 +70,10 @@ MonoBehaviour:
       item: 
       intervalMs: 0
       cap: 0
+    bridge:
+      enabled: 0
+      cap: 20
+      rateMs: 1000
+      speed: 170
   icon: {fileID: -1174358089, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
   prefabOverride: {fileID: 0}

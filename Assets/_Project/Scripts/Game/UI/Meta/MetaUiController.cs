@@ -1,4 +1,3 @@
-using IdleGrounds.Sim;
 using UnityEngine;
 
 namespace IdleGrounds.Game
@@ -6,11 +5,9 @@ namespace IdleGrounds.Game
     /// <summary>
     /// Coordinates the M7 modals (main.js boot flow + ui.js modal priorities):
     /// <list type="bullet">
-    /// <item>Boot: Toast tier → toast "Welcome back — +N item(s) while away" (when N &gt; 0); Full tier → the
-    ///   welcome modal's progress shape, then the summary when <see cref="GameRunner.ReplayFinished"/> fires;
-    ///   tier None on a fresh, intro-unseen run → the intro shape.</item>
+    /// <item>Boot: an intro-unseen run → the welcome modal's intro shape (no offline catch-up, ADR 0002).</item>
     /// <item>Per frame: the ascend dialog follows State.ascendPrompt and the post-ascension card follows
-    ///   State.justAscended — both held back while the welcome modal / replay is up.</item>
+    ///   State.justAscended — both held back while the welcome modal is up.</item>
     /// <item>Esc chain (BuildController.Escape: confirm, then the world panels, then these): perk shop → ascend →
     ///   stats → help → welcome → post-ascension card (ui.js order).</item>
     /// <item>RunReset (ascension): closes the world panels (BuildController) and cancels hand holds.</item>
@@ -56,43 +53,15 @@ namespace IdleGrounds.Game
         void OnDestroy()
         {
             if (Instance == this) Instance = null;
-            if (runner != null)
-            {
-                runner.ReplayFinished -= OnReplayFinished;
-                if (runner.Sim != null) runner.Sim.Events.RunReset -= OnRunReset;
-            }
+            if (runner != null && runner.Sim != null) runner.Sim.Events.RunReset -= OnRunReset;
         }
 
         void Start()
         {
             if (runner == null || runner.Sim == null) return;
-            runner.ReplayFinished += OnReplayFinished;
             runner.Sim.Events.RunReset += OnRunReset;
-            var boot = runner.BootResult;
-            if (boot == null) return;
-            switch (boot.tier)
-            {
-                case OfflineTier.Full:
-                    if (runner.Replaying) welcome.ShowProgress(runner.ReplayJob);
-                    else OnReplayFinished(runner.ReplaySummary);
-                    break;
-                case OfflineTier.Toast:
-                    ShowToastFor(boot.summary);
-                    break;
-                default:
-                    if (!runner.State.introSeen) welcome.ShowIntro();
-                    break;
-            }
+            if (!runner.State.introSeen) welcome.ShowIntro();
         }
-
-        void ShowToastFor(OfflineSummary summary)
-        {
-            if (summary == null || toast == null) return;
-            int n = summary.gained.entries.FindAll(e => e.qty > 0).ConvertAll(e => e.qty).Sum();
-            if (n > 0) toast.Show("Welcome back — +" + n + " item" + (n == 1 ? "" : "s") + " while away");
-        }
-
-        void OnReplayFinished(OfflineSummary summary) => welcome.ShowSummary(summary);
 
         void OnRunReset()
         {
@@ -105,7 +74,7 @@ namespace IdleGrounds.Game
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
-            bool blocked = runner.Replaying || welcome.IsOpen;
+            bool blocked = welcome.IsOpen;
             postAscension.Sync(!blocked && runner.State.justAscended != null);
             ascend.Sync(!blocked && runner.State.ascendPrompt);
         }
@@ -125,10 +94,5 @@ namespace IdleGrounds.Game
             if (postAscension != null && postAscension.Escape()) return true;
             return false;
         }
-    }
-
-    static class IntListExt
-    {
-        public static int Sum(this System.Collections.Generic.List<int> l) { int s = 0; foreach (var v in l) s += v; return s; }
     }
 }

@@ -25,6 +25,15 @@ namespace IdleGrounds.Sim
         public override string ToString() => dot + " " + text;
     }
 
+    /// <summary>A Spirit Bridge the player could pair with (PairableBridges): Island, building, Island-local centre px, world distance px.</summary>
+    public sealed class BridgeCandidate
+    {
+        public string island;
+        public Building building;
+        public double x, y;
+        public double distancePx;
+    }
+
     /// <summary>`wispPos` result: area-local px + flight fraction (≥1 = arrived).</summary>
     public struct WispPosition
     {
@@ -59,6 +68,12 @@ namespace IdleGrounds.Sim
             var cfg = Cfg.Building(t.type);
             if (cfg == null) return new List<string>();
             if (cfg.gather.enabled) return null;
+            if (cfg.bridge.enabled)
+            {
+                // a receiving bridge is only emptied by local lanterns; a sending/unpaired one takes anything
+                if (BridgeReceiving(t)) return new List<string>();
+                return room && BuildingSystem.GatherTotal(t) >= cfg.bridge.cap ? new List<string>() : null;
+            }
             if (cfg.seal.enabled)
             {
                 if (t.item == null) return null;
@@ -115,7 +130,7 @@ namespace IdleGrounds.Sim
         public bool SourceHolds(Building src)
         {
             var cfg = Cfg.Building(src.type);
-            if (cfg.gather.enabled || cfg.stoker.enabled) return BuildingSystem.GatherTotal(src) > 0;
+            if (cfg.gather.enabled || cfg.stoker.enabled || cfg.bridge.enabled) return BuildingSystem.GatherTotal(src) > 0;
             return src.item != null && src.qty > 0;
         }
 
@@ -125,7 +140,7 @@ namespace IdleGrounds.Sim
             var types = TargetTypes(dst, false);
             if (types == null) return true;
             var cfg = Cfg.Building(src.type);
-            if (cfg.gather.enabled || cfg.stoker.enabled)
+            if (cfg.gather.enabled || cfg.stoker.enabled || cfg.bridge.enabled)
             {
                 if (src.inv != null) foreach (var s in src.inv) if (s.qty > 0 && types.Contains(s.item)) return true;
                 return false;
@@ -137,7 +152,8 @@ namespace IdleGrounds.Sim
         public string PickTransfer(Building src, Building dst, InFlight fly)
         {
             var cfg = Cfg.Building(src.type);
-            if (cfg.gather.enabled || cfg.stoker.enabled)
+            if (BridgeSending(src) || BridgeReceiving(dst)) return null;   // bridges: senders only send across the sky, receivers only give
+            if (cfg.gather.enabled || cfg.stoker.enabled || cfg.bridge.enabled)
             {
                 if (src.inv != null) foreach (var s in src.inv) if (s.qty > 0 && B.EndpointAccepts(dst, s.item, fly)) return s.item;
                 return null;
@@ -155,6 +171,7 @@ namespace IdleGrounds.Sim
         {
             if (b == null || !b.built) return false;
             var cfg = Cfg.Building(b.type);
+            if (cfg != null && cfg.bridge.enabled) return !BridgeSending(b);   // receiving (or unpaired) bridge
             return cfg != null && (cfg.gather.enabled || cfg.stoker.enabled || cfg.seal.enabled || b.type == "storehouse");
         }
 
@@ -162,6 +179,7 @@ namespace IdleGrounds.Sim
         {
             if (b == null || !b.built) return false;
             var cfg = Cfg.Building(b.type);
+            if (cfg != null && cfg.bridge.enabled) return !BridgeReceiving(b);  // sending (or unpaired) bridge
             return cfg != null && (cfg.gather.enabled || cfg.stoker.enabled || cfg.seal.enabled || b.type == "storehouse" || cfg.IsConverter || cfg.roster.enabled);
         }
 
@@ -325,22 +343,40 @@ namespace IdleGrounds.Sim
         // ================================================================
 
         /// <summary>Current beat interval (ms) of a lantern in this area (§11.7).</summary>
-        public double BeatMs(AreaState area, BuildingDef def, double now)
+        public double BeatMs(AreaState area, BuildingDef def, double now) =>
+            BeatMs(area, def.bridge.enabled ? def.bridge.rateMs : def.lantern.rateMs, now);
+
+        /// <summary>
+        /// Beat interval (ms) of a lantern or Spirit Bridge with base rate <paramref name="rateMs"/> (§11.7):
+        /// Wisp Haste, Swiftwind, prestige, Wisp Gale, and Tireless Wisps (ADR 0002: +15% beat rate per level).
+        /// </summary>
+        public double BeatMs(AreaState area, double rateMs, double now)
         {
             int haste = area.upgrades.wispRate;
             double wind = Timing.BuffActive(S, "swiftwind_pill", now) ? 0.5 : 1;
-            double rate = def.lantern.rateMs > 0 ? def.lantern.rateMs : 1000;
-            return rate * _ctx.Timing.TimeScale * Math.Pow(0.85, haste) * wind * _ctx.Timing.PrestigeFactor(S) * Math.Pow(0.9, S.PerkLevel("gale"));
+            double rate = rateMs > 0 ? rateMs : 1000;
+            return rate * _ctx.Timing.TimeScale * Math.Pow(0.85, haste) * wind * _ctx.Timing.PrestigeFactor(S) * Math.Pow(0.9, S.PerkLevel("gale"))
+                   / TirelessFactor;
         }
 
-        /// <summary>Wisp flight speed (px/s) launched by this lantern now (§11.7).</summary>
-        public double WispSpeed(AreaState area, BuildingDef def, double now)
+        /// <summary>Wisp flight speed (px/s) launched by this lantern / bridge now (§11.7).</summary>
+        public double WispSpeed(AreaState area, BuildingDef def, double now) =>
+            WispSpeed(area, def.bridge.enabled ? def.bridge.speed : def.lantern.speed, now);
+
+        /// <summary>Wisp flight speed (px/s) from base <paramref name="speed"/>: Wisp Haste, Swiftwind, Tireless Wisps (+15%/level).</summary>
+        public double WispSpeed(AreaState area, double speed, double now)
         {
             int haste = area.upgrades.wispRate;
             double wind = Timing.BuffActive(S, "swiftwind_pill", now) ? 0.5 : 1;
-            double sp = def.lantern.speed > 0 ? def.lantern.speed : 170;
-            return sp * (1 + 0.25 * haste) / wind;
+            double sp = speed > 0 ? speed : 170;
+            return sp * (1 + 0.25 * haste) / wind * TirelessFactor;
         }
+
+        /// <summary>Tireless Wisps perk (save id "slumber", ADR 0002): 1 + 0.15 per level.</summary>
+        public double TirelessFactor => 1 + 0.15 * S.PerkLevel(TirelessPerk);
+
+        /// <summary>Perk id of Tireless Wisps — the old Long Slumber id, kept so existing saves keep their levels.</summary>
+        public const string TirelessPerk = "slumber";
 
         public bool TickLantern(string areaKey, AreaState area, Building b, BuildingDef def, double now)
         {
@@ -453,6 +489,204 @@ namespace IdleGrounds.Sim
                 }
             }
             if (done != null) area.wisps.RemoveAll(w => done.Contains(w.id));
+            return changed;
+        }
+
+        // ================================================================
+        // Spirit Bridges (ADR 0003) — one-way cross-Island pairs
+        // ================================================================
+
+        public bool IsBridge(Building b) => b != null && Cfg.Building(b.type)?.bridge.enabled == true;
+        /// <summary>Paired, and this end sends.</summary>
+        public bool BridgeSending(Building b) => b != null && b.pairIsland != null && b.pairSends && IsBridge(b);
+        /// <summary>Paired, and this end receives.</summary>
+        public bool BridgeReceiving(Building b) => b != null && b.pairIsland != null && !b.pairSends && IsBridge(b);
+
+        /// <summary>The partner of a paired bridge when the pair is intact (both bridges pointing at each other), else null.</summary>
+        public Building PairOf(string island, Building b)
+        {
+            if (b == null || b.pairIsland == null || !IsBridge(b)) return null;
+            var o = S.Area(b.pairIsland)?.BuildingById(b.pairId);
+            if (o == null || !IsBridge(o) || o.pairIsland != island || o.pairId != b.id || o.pairSends == b.pairSends) return null;
+            return o;
+        }
+
+        /// <summary>Sky wisps still heading for this bridge (its in-flight reservations).</summary>
+        public int SkyInFlightTo(string island, int bridgeId)
+        {
+            int n = 0;
+            foreach (var w in S.skyWisps) if (!w.returning && w.toIsland == island && w.toId == bridgeId) n++;
+            return n;
+        }
+
+        /// <summary>Why <see cref="Pair"/> would refuse (null = allowed).</summary>
+        public string PairReason(string islandA, int bridgeA, string islandB, int bridgeB)
+        {
+            if (S.Area(islandA) == null || S.Area(islandB) == null) return "Unknown island";
+            if (islandA == islandB) return "Pair with a bridge on another island";
+            if (!_ctx.World.IsAreaUnlocked(islandA) || !_ctx.World.IsAreaUnlocked(islandB)) return "Island is locked";
+            var a = S.Area(islandA).BuildingById(bridgeA);
+            var b = S.Area(islandB).BuildingById(bridgeB);
+            if (!IsBridge(a) || !IsBridge(b)) return "Not a Spirit Bridge";
+            if (!a.built || !b.built) return "Bridge not built yet";
+            if (a.pairIsland != null || b.pairIsland != null) return "Already paired";
+            return null;
+        }
+
+        /// <summary>Pair two bridges one-way: <paramref name="bridgeA"/> on <paramref name="islandA"/> sends to <paramref name="bridgeB"/>. Null = done, else the reason.</summary>
+        public string Pair(string islandA, int bridgeA, string islandB, int bridgeB)
+        {
+            var why = PairReason(islandA, bridgeA, islandB, bridgeB);
+            if (why != null) return why;
+            var a = S.Area(islandA).BuildingById(bridgeA);
+            var b = S.Area(islandB).BuildingById(bridgeB);
+            a.pairIsland = islandB; a.pairId = bridgeB; a.pairSends = true; a.nextSend = 0;
+            b.pairIsland = islandA; b.pairId = bridgeA; b.pairSends = false; b.nextSend = 0;
+            return null;
+        }
+
+        /// <summary>Break the pair this bridge is in (both ends cleared). Wisps already in the sky return to the sender.</summary>
+        public bool Unpair(string island, int bridgeId)
+        {
+            var b = S.Area(island)?.BuildingById(bridgeId);
+            if (b == null || b.pairIsland == null) return false;
+            var o = S.Area(b.pairIsland)?.BuildingById(b.pairId);
+            if (o != null && o.pairIsland == island && o.pairId == b.id) ClearPair(o);
+            ClearPair(b);
+            return true;
+        }
+
+        static void ClearPair(Building b) { b.pairIsland = null; b.pairId = 0; b.pairSends = false; }
+
+        /// <summary>Unpaired built bridges on OTHER unlocked Islands (the bridge panel's pairing list), Island order.</summary>
+        public List<BridgeCandidate> PairableBridges(string island, int bridgeId)
+        {
+            var res = new List<BridgeCandidate>();
+            var self = S.Area(island)?.BuildingById(bridgeId);
+            (double x, double y) from = self != null ? _ctx.World.BuildingWorldCenterPx(island, self) : (0, 0);
+            foreach (var r in Cfg.regions)
+            {
+                if (r.key == island || !_ctx.World.IsAreaUnlocked(r.key)) continue;
+                foreach (var b in S.Area(r.key).buildings)
+                {
+                    if (!b.built || !IsBridge(b) || b.pairIsland != null) continue;
+                    var (lx, ly) = _ctx.World.BuildingCenterPx(b);
+                    var (wx, wy) = _ctx.World.BuildingWorldCenterPx(r.key, b);
+                    res.Add(new BridgeCandidate
+                    {
+                        island = r.key, building = b, x = lx, y = ly,
+                        distancePx = self != null ? Math.Sqrt((wx - from.x) * (wx - from.x) + (wy - from.y) * (wy - from.y)) : 0,
+                    });
+                }
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Sending bridge beat (tick step 6): lantern beat rules (Wisp Haste of the sending Island,
+        /// Swiftwind, prestige, Wisp Gale, Tireless Wisps). Each beat launches one sky wisp with the
+        /// buffer's first item if the receiver has room counting wisps already on the way.
+        /// </summary>
+        public bool TickBridge(string areaKey, AreaState area, Building b, BuildingDef def, double now)
+        {
+            if (!BridgeSending(b) || now < b.nextSend) return false;
+            var dst = PairOf(areaKey, b);
+            if (dst == null || !dst.built) { b.nextSend = now + 250; return false; }
+            bool changed = false;
+            double beat = BeatMs(area, def.bridge.rateMs, now);
+            double speed = WispSpeed(area, def.bridge.speed, now);
+            var tm = _ctx.Timing.Periodic(b.nextSend, beat, now);
+            double due = tm.next - tm.n * beat;
+            bool idle = tm.n == 0;
+            int dstCap = Cfg.Building(dst.type).bridge.cap;
+            for (int ev = 0; ev < tm.n; ev++, due += beat)
+            {
+                if (b.inv == null || b.inv.Count == 0) { idle = true; break; }
+                if (BuildingSystem.GatherTotal(dst) + SkyInFlightTo(b.pairIsland, dst.id) >= dstCap) { idle = true; break; }
+                string item = b.inv[0].item;
+                if (!B.EndpointTake(b, item)) { idle = true; break; }
+                var (sx, sy) = _ctx.World.BuildingWorldCenterPx(areaKey, b);
+                var (tx, ty) = _ctx.World.BuildingWorldCenterPx(b.pairIsland, dst);
+                var w = new SkyWisp
+                {
+                    id = S.nextSkyWispId++, item = item, x0 = sx, y0 = sy, x = sx, y = sy, sx = sx, sy = sy, tx = tx, ty = ty,
+                    fromIsland = areaKey, fromId = b.id, toIsland = b.pairIsland, toId = dst.id,
+                    t0 = Math.Min(now, due), sp = speed,
+                };
+                S.skyWisps.Add(w);
+                changed = true;
+                _ctx.Events.RaiseWispLaunched(areaKey, w);
+            }
+            b.nextSend = idle ? now + 250 : tm.next;
+            return changed;
+        }
+
+        /// <summary>Sky wisp position (world px) at <paramref name="now"/>: straight line x0,y0 → tx,ty at sp px/s.</summary>
+        public WispPosition SkyWispPos(SkyWisp w, double now)
+        {
+            double D = Math.Sqrt((w.tx - w.x0) * (w.tx - w.x0) + (w.ty - w.y0) * (w.ty - w.y0));
+            double sp = w.sp > 0 ? w.sp : 170;
+            double frac = D > 0 ? Math.Min(1, Math.Max(0, (now - w.t0) / 1000 * sp / D)) : 1;
+            return new WispPosition(w.x0 + (w.tx - w.x0) * frac, w.y0 + (w.ty - w.y0) * frac, frac);
+        }
+
+        /// <summary>Turn a sky wisp around towards its sending bridge (WispReturned on the sending Island).</summary>
+        void SendBack(SkyWisp w, double px, double py, double now)
+        {
+            w.returning = true;
+            w.toIsland = w.fromIsland; w.toId = w.fromId;
+            w.x0 = px; w.y0 = py; w.x = px; w.y = py; w.t0 = now;
+            w.tx = w.sx; w.ty = w.sy;
+            _ctx.Events.RaiseWispReturned(w.fromIsland, w);
+        }
+
+        /// <summary>
+        /// Tick step 7b — sky wisps (once per tick, after every Island). Outbound: a broken pair
+        /// (unpaired / either end demolished) turns it back at once; on arrival the receiver takes the
+        /// item or refuses (then it returns). Returning: the sending bridge takes it back, else (gone
+        /// or full) it drops on the sending Island's ground at the sender's spot.
+        /// </summary>
+        public bool TickSkyWisps(double now)
+        {
+            if (S.skyWisps == null || S.skyWisps.Count == 0) return false;
+            bool changed = false;
+            HashSet<int> done = null;
+            foreach (var w in S.skyWisps.ToArray())
+            {
+                var p = SkyWispPos(w, now);
+                w.x = p.x; w.y = p.y;
+                if (!w.returning)
+                {
+                    var src = S.Area(w.fromIsland)?.BuildingById(w.fromId);
+                    var dst = S.Area(w.toIsland)?.BuildingById(w.toId);
+                    bool intact = src != null && src.built && dst != null && dst.built && src.pairSends && PairOf(w.fromIsland, src) == dst;
+                    if (!intact) { SendBack(w, p.x, p.y, now); changed = true; continue; }
+                    if (p.frac < 1) continue;
+                    if (B.EndpointGive(dst, w.item))
+                    {
+                        (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                        _ctx.Events.RaiseWispArrived(w.toIsland, w);
+                    }
+                    else { SendBack(w, p.x, p.y, now); changed = true; }
+                    continue;
+                }
+                if (p.frac < 1) continue;
+                var home = S.Area(w.fromIsland)?.BuildingById(w.fromId);
+                if (home != null && home.built && IsBridge(home) && B.EndpointGive(home, w.item))
+                {
+                    (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                    _ctx.Events.RaiseWispArrived(w.fromIsland, w);
+                    continue;
+                }
+                if (S.Area(w.fromIsland) != null)
+                {
+                    var (ox, oy) = _ctx.World.IslandOffsetPx(w.fromIsland);
+                    _ctx.Ground.DropGround(w.fromIsland, w.item, 1, _ctx.World.ClampPx(w.sx - ox), _ctx.World.ClampPx(w.sy - oy + 24));
+                }
+                (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                _ctx.Events.RaiseWispDropped(w.fromIsland, w);
+            }
+            if (done != null) S.skyWisps.RemoveAll(w => done.Contains(w.id));
             return changed;
         }
     }

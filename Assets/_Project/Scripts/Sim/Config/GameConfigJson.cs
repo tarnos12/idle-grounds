@@ -88,6 +88,7 @@ namespace IdleGrounds.Sim
             var wRegions = world != null ? Obj(world, "regions") : null;
             var wSide = world != null ? Obj(world, "unlockSide") : null;
             var wCost = world != null ? Obj(world, "unlockCost") : null;
+            var wIslands = world != null ? Obj(world, "islands") : null;
             if (areas != null)
                 foreach (var e in areas.Entries)
                 {
@@ -110,6 +111,10 @@ namespace IdleGrounds.Sim
                     else if (nb is List<object> nl) foreach (var x in nl) reg.noBuild.Add(x as string);
                     var wr = wRegions != null ? Obj(wRegions, e.Key) : null;
                     if (wr != null) { reg.rx = Int(wr, "rx", 0); reg.ry = Int(wr, "ry", 0); }
+                    // ADR 0003: default Island offsets; absent ⇒ the old neighbour grid spread out (93 cells + 30 sky)
+                    var wi = wIslands != null ? Obj(wIslands, e.Key) : null;
+                    reg.islandCol = wi != null ? Int(wi, "col", 0) : reg.rx * 123;
+                    reg.islandRow = wi != null ? Int(wi, "row", 0) : reg.ry * 123;
                     reg.unlockSide = wSide != null ? Str(wSide, e.Key) : null;
                     reg.unlockCost = Map(wCost != null ? Obj(wCost, e.Key) : null);
 
@@ -209,6 +214,8 @@ namespace IdleGrounds.Sim
                     if (st != null) d.stoker = new StokerConfig { enabled = true, radius = Int(st, "radius", 0), cap = Int(st, "cap", 0) };
                     var ln = Obj(b, "lantern");
                     if (ln != null) d.lantern = new LanternConfig { enabled = true, rateMs = Int(ln, "rateMs", 1000), speed = Num(ln, "speed", 170) };
+                    var br = Obj(b, "bridge");
+                    if (br != null) d.bridge = new BridgeConfig { enabled = true, cap = Int(br, "cap", 20), rateMs = Int(br, "rateMs", 1000), speed = Num(br, "speed", 170) };
                     var sl = Obj(b, "seal");
                     if (sl != null) d.seal = new SealConfig { enabled = true, cap = Int(sl, "cap", 0) };
                     var gn = Obj(b, "gen");
@@ -285,6 +292,7 @@ namespace IdleGrounds.Sim
                         if (!(c is JsonObject co)) continue;
                         if (co.Has("stage")) rr.any.Add(new RevealCond { kind = RevealKind.Stage, stage = Int(co, "stage", 0) });
                         else if (co.Has("quest")) rr.any.Add(new RevealCond { kind = RevealKind.Quest, key = Str(co, "quest") });
+                        else if (co.Has("islands")) rr.any.Add(new RevealCond { kind = RevealKind.Islands, count = Int(co, "islands", 2) });
                         else if (co.Has("region")) rr.any.Add(new RevealCond { kind = RevealKind.Region, key = Str(co, "region") });
                     }
                     cfg.reveal.Add(rr);

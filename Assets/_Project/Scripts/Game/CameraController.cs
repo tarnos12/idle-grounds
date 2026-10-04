@@ -88,8 +88,6 @@ namespace IdleGrounds.Game
 
         void OnSprint(InputAction.CallbackContext ctx)
         {
-            var r = GameRunner.Instance;
-            if (r != null && r.Replaying) return;      // offline catch-up: only WASD is live (ui.js:3153)
             sprint = !sprint;
         }
 

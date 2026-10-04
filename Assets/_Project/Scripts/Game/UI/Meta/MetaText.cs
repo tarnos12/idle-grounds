@@ -52,7 +52,7 @@ namespace IdleGrounds.Game
             {
                 case "haste": return ("timers", Mul(Math.Pow(0.95, l)));
                 case "hall": return ("disciples", "+" + l);
-                case "slumber": return ("offline", (8 + 2 * l) + "h");
+                case "slumber": return ("wisp speed", Mul(1 + 0.15 * l));   // Tireless Wisps (save id kept, ADR 0002)
                 case "hands": return ("carry", "+" + 5 * l);
                 case "frugal": return ("unlock cost", Mul(Math.Pow(0.8, l)));
                 case "ember": return ("fuel use", Mul(Math.Pow(0.85, l)));

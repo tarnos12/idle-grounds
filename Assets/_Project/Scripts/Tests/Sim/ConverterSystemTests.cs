@@ -201,10 +201,16 @@ namespace IdleGrounds.Sim.Tests
             M3Util.Click(sim, V, pf);
             Assert.AreEqual(1, pf.stock.Get("firestone"), "input firestone goes to stock");
             Assert.AreEqual(0, sim.Fuel.Queue(pf).Count);
-            // FAITHFUL JS quirk: a wisp delivery (endpointGive) of an input firestone goes to the rack
+            // a wisp delivery (endpointGive) of an input firestone follows the hand rule: stock while it has room…
             Assert.IsTrue(sim.Buildings.EndpointGive(pf, "firestone"));
-            Assert.AreEqual(1, sim.Fuel.Queue(pf).Count);
-            Assert.AreEqual(1, pf.stock.Get("firestone"));
+            Assert.AreEqual(0, sim.Fuel.Queue(pf).Count, "JS quirk fixed: not the rack");
+            Assert.AreEqual(2, pf.stock.Get("firestone"));
+            // …then the fuel rack once the input stock is full
+            pf.stock.Set("firestone", sim.Converters.StockCap(sim.Converters.RecipeOf(pf)));
+            Assert.IsTrue(sim.Buildings.EndpointAccepts(pf, "firestone"));
+            Assert.IsTrue(sim.Buildings.EndpointGive(pf, "firestone"));
+            Assert.AreEqual(1, sim.Fuel.Queue(pf).Count, "stock full: rack");
+            pf.stock.Set("firestone", 1);
             // on a recipe without firestone the hand burns it
             sim.SetRecipe(V, pf.id, 1);
             sim.Hand.MoveToFront("firestone");

@@ -10,37 +10,29 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 910c5fc70431b9d479d3214ef68cfd4f, type: 3}
-  m_Name: Building_jade_carver
+  m_Name: Building_spirit_bridge
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.BuildingAsset
   def:
-    key: jade_carver
-    name: Jade Carver
-    icon: "\U0001F5FF"
-    sizeW: 3
-    sizeH: 3
+    key: spirit_bridge
+    name: Spirit Bridge
+    icon: "\U0001F309"
+    sizeW: 2
+    sizeH: 1
     cost:
     - item: wood
-      qty: 6
+      qty: 10
     - item: stone
-      qty: 8
-    unlocked: 1
+      qty: 10
+    unlocked: 0
     stageUnlock: -1
     indestructible: 0
     fuel: 0
-    anyZone: 0
+    anyZone: 1
     waterOnly: 0
     cap: 0
     shrine: 0
     gate: 0
-    recipes:
-    - name: Jade
-      inputs:
-      - item: jade_shard
-        qty: 3
-      output: jade
-      outputQty: 1
-      timeMs: 6000
-      stockCap: 0
+    recipes: []
     gather:
       enabled: 0
       radius: 0
@@ -71,9 +63,9 @@ MonoBehaviour:
       intervalMs: 0
       cap: 0
     bridge:
-      enabled: 0
+      enabled: 1
       cap: 20
       rateMs: 1000
       speed: 170
-  icon: {fileID: -529772852, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  icon: {fileID: 449270327, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
   prefabOverride: {fileID: 0}

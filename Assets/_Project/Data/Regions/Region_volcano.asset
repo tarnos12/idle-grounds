@@ -27,6 +27,8 @@ MonoBehaviour:
     tierSprite: 
     rx: 2
     ry: 1
+    islandCol: 252
+    islandRow: 122
     unlockSide: up
     unlockCost:
     - item: iron_bar

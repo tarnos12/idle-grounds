@@ -7,7 +7,7 @@ namespace IdleGrounds.Sim
     /// Prestige (engine-systems §14, engine.js:141-335): perks bought with AP,
     /// the ascension reset, vows. Perk/vow effects are read at their single
     /// wiring points in the other systems (haste → Timing.PrestigeFactor, hall →
-    /// Pavilion, slumber → OfflineReplay cap, hands → handCap, frugal →
+    /// Pavilion, slumber (Tireless Wisps) → Logistics beat/speed, hands → handCap, frugal →
     /// Progression.UnlockCost, ember/coldhearth → Converter/Fuel, apgain →
     /// AscendReward, autoboost → Automation, regrow → Node, gale → Logistics,
     /// fury → Combat, bless/restless → Dragon, bounty → FieldGenerator,
@@ -96,7 +96,7 @@ namespace IdleGrounds.Sim
                 foreach (var id in nextVows)
                     if (id != null && Cfg.vows.Exists(v => v.id == id) && !vows.active.Contains(id)) vows.active.Add(id);
 
-            var fresh = GameState.CreateInitial(Cfg, (long)Ctx.RealNow);
+            var fresh = GameState.CreateInitial(Cfg, (long)Ctx.Now);
             fresh.ascensions = asc;
             fresh.ascendPoints = pts;                       // AP + perks survive the reset
             fresh.perks = perks;

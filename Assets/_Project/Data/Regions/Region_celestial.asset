@@ -27,6 +27,8 @@ MonoBehaviour:
     tierSprite: 
     rx: 1
     ry: 2
+    islandCol: 127
+    islandRow: 252
     unlockSide: down
     unlockCost:
     - item: spirit_stone

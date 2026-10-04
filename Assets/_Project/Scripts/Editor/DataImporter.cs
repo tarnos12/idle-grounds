@@ -52,7 +52,8 @@ namespace IdleGrounds.Editor
             foreach (var d in cfg.buildings)
             {
                 var a = Get<BuildingAsset>(Root + "Buildings/Building_" + d.key + ".asset");
-                a.def = d; a.icon = Atlas("bld_" + d.key);
+                // TODO(ADR 0003): spirit_bridge has no atlas emoji yet — the Wisp Lantern icon stands in
+                a.def = d; a.icon = Atlas("bld_" + d.key) ?? (d.key == "spirit_bridge" ? Atlas("bld_wisp_lantern") : null);
                 Dirty(a); db.buildings.Add(a);
             }
             db.regions.Clear();

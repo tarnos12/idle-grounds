@@ -1499,6 +1499,24 @@
       "seal": {
         "cap": 20
       }
+    },
+    "spirit_bridge": {
+      "name": "Spirit Bridge",
+      "icon": "🌉",
+      "size": {
+        "w": 2,
+        "h": 1
+      },
+      "anyZone": true,
+      "cost": {
+        "wood": 10,
+        "stone": 10
+      },
+      "bridge": {
+        "cap": 20,
+        "rateMs": 1000,
+        "speed": 170
+      }
     }
   },
   "DRAGON_STAGES": [
@@ -1619,6 +1637,36 @@
         "spirit_stone": 6,
         "jade": 3,
         "glass": 3
+      }
+    },
+    "islands": {
+      "farm": {
+        "col": 0,
+        "row": 6
+      },
+      "center": {
+        "col": 123,
+        "row": 0
+      },
+      "mine": {
+        "col": 249,
+        "row": 4
+      },
+      "grove": {
+        "col": 8,
+        "row": 131
+      },
+      "fishing": {
+        "col": 125,
+        "row": 126
+      },
+      "volcano": {
+        "col": 252,
+        "row": 122
+      },
+      "celestial": {
+        "col": 127,
+        "row": 252
       }
     }
   },
@@ -2507,6 +2555,11 @@
       {
         "stage": 4
       }
+    ],
+    "spirit_bridge": [
+      {
+        "islands": 2
+      }
     ]
   },
   "SOURCES": {
@@ -2589,8 +2642,8 @@
     },
     {
       "id": "slumber",
-      "name": "Long Slumber",
-      "icon": "🌙",
+      "name": "Tireless Wisps",
+      "icon": "💫",
       "max": 4,
       "cost": [
         1,
@@ -2598,7 +2651,7 @@
         4,
         6
       ],
-      "desc": "+2h to the offline catch-up window per level (base 8h)."
+      "desc": "Wisps fly 15% faster and lanterns and Spirit Bridges send 15% faster per level."
     },
     {
       "id": "hands",

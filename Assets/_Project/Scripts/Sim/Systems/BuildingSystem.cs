@@ -82,8 +82,17 @@ namespace IdleGrounds.Sim
                 case RevealKind.Stage: return S.dragon.stage >= c.stage;
                 case RevealKind.Quest: return vet || QuestClaimed(c.key);
                 case RevealKind.Region: return vet || S.world.IsUnlocked(c.key);
+                case RevealKind.Islands: return UnlockedIslandCount() >= c.count;   // no veteran bypass: pairing needs two Islands anyway
                 default: return false;
             }
+        }
+
+        /// <summary>Unlocked Islands (Center included).</summary>
+        public int UnlockedIslandCount()
+        {
+            int n = 0;
+            foreach (var r in Cfg.regions) if (S.world.IsUnlocked(r.key)) n++;
+            return n;
         }
 
         /// <summary>`isBuildingUnlocked(type)` engine.js:1124.</summary>
@@ -115,6 +124,7 @@ namespace IdleGrounds.Sim
                 case RevealKind.Quest: return "Revealed by a quest";
                 case RevealKind.Region: return "Open the " + (Cfg.Region(c.key)?.name ?? c.key);
                 case RevealKind.Stage: return "The Sleeping Dragon teaches this";
+                case RevealKind.Islands: return "Unlock a second island";
             }
             return "Locked";
         }
@@ -160,7 +170,7 @@ namespace IdleGrounds.Sim
         {
             var def = Cfg.Building(b.type);
             if (def == null) return;
-            if ((def.gather.enabled || def.stoker.enabled) && b.inv == null) b.inv = new List<HandStack>();
+            if ((def.gather.enabled || def.stoker.enabled || def.bridge.enabled) && b.inv == null) b.inv = new List<HandStack>();
             if (def.lantern.enabled) { b.links ??= new List<Link>(); b.nextSend = 0; }
             if (def.roster.enabled) b.nextCultivate = 0;
         }
@@ -248,6 +258,7 @@ namespace IdleGrounds.Sim
             {
                 foreach (var e in b.paid) Drop(e.item, e.qty);
             }
+            if (def.bridge.enabled) _ctx.Logistics.Unpair(areaKey, b.id);   // its sky wisps turn back / drop
             area.buildings.RemoveAt(i);
             foreach (var lb in area.buildings)
                 if (lb.links != null) lb.links.RemoveAll(l => l.from == b.id || l.to == b.id);
@@ -397,6 +408,8 @@ namespace IdleGrounds.Sim
             }
             if (def.gather.enabled)
                 return GatherTotal(b) + f.n < def.gather.cap && (!b.hasAccEver || b.accEver == null || b.accEver.Contains(item));
+            // Spirit Bridge: untyped buffer (sky reservations are checked when the sender launches)
+            if (def.bridge.enabled) return GatherTotal(b) + f.n < def.bridge.cap;
             if (def.stoker.enabled) return Cfg.IsFuel(item) && GatherTotal(b) + f.n < def.stoker.cap;
             if (def.roster.enabled)
             {
@@ -409,9 +422,11 @@ namespace IdleGrounds.Sim
             {
                 var rec = Conv.RecipeOf(b);
                 bool isInput = ConverterSystem.IsInput(rec, item);
-                // burners drink fuel into the rack UNLESS it's an ingredient of the current recipe (§10.3)
-                if (def.fuel && Cfg.IsFuel(item) && !isInput)
+                // burners drink fuel into the rack UNLESS it's an ingredient of the current recipe with
+                // stock room (§10.3); an ingredient fuel whose stock is full falls back to the rack
+                if (def.fuel && Cfg.IsFuel(item))
                 {
+                    if (isInput && Conv.Stock(b).Get(item) + fi < Conv.StockCap(rec)) return true;
                     int fuelFly = 0;
                     foreach (var e in f.by) if (Cfg.IsFuel(e.item) && !ConverterSystem.IsInput(rec, e.item)) fuelFly += e.qty;
                     return Fuel.Space(b) - fuelFly > 0;
@@ -428,7 +443,7 @@ namespace IdleGrounds.Sim
             if (!EndpointAccepts(b, item)) return false;
             var def = Cfg.Building(b.type);
             if (def.seal.enabled || b.type == "storehouse") { if (b.item == null) b.item = item; b.qty++; return true; }
-            if (def.gather.enabled || def.stoker.enabled)
+            if (def.gather.enabled || def.stoker.enabled || def.bridge.enabled)
             {
                 b.inv ??= new List<HandStack>();
                 var st = b.inv.Find(s => s.item == item);
@@ -438,13 +453,15 @@ namespace IdleGrounds.Sim
             if (def.roster.enabled) { b.buns = Math.Min(def.roster.foodCap, b.buns + FoodValue(b, item)); return true; }
             if (def.IsConverter)
             {
-                // FAITHFUL PORT of a JS quirk (engine-systems §11.3 "looks like a JS bug"):
-                // endpointAccepts routes an INPUT firestone to stock, but this branch
-                // sends ANY fuel item to the rack first (no isInput test) — so a wisp
-                // delivering firestone to a Pill Furnace on the Ember recipe fills the
-                // rack if it has space, else is refused. Kept as-is for parity; the
-                // hand path (FeedBuilding) does respect the ingredient rule.
-                if (def.fuel && Cfg.IsFuel(item)) return Fuel.AddItem(b, item);
+                // Fuel that is an ingredient of the current recipe (firestone on a Pill Furnace's
+                // Ember recipe) goes to the input stock while it has room, else to the fuel rack —
+                // the same rule as the hand path. (Deliberate fix of the JS quirk engine-systems
+                // §11.3, where wisp-delivered fuel always went to the rack first.)
+                if (def.fuel && Cfg.IsFuel(item))
+                {
+                    var rec = Conv.RecipeOf(b);
+                    if (!(ConverterSystem.IsInput(rec, item) && Conv.Stock(b).Get(item) < Conv.StockCap(rec))) return Fuel.AddItem(b, item);
+                }
                 Conv.Stock(b).Add(item, 1);
                 return true;
             }
@@ -456,7 +473,7 @@ namespace IdleGrounds.Sim
         {
             var def = Cfg.Building(b.type);
             if (def == null) return false;
-            if (def.gather.enabled || def.stoker.enabled)
+            if (def.gather.enabled || def.stoker.enabled || def.bridge.enabled)
             {
                 var st = b.inv?.Find(s => s.item == item);
                 if (st == null || st.qty <= 0) return false;
@@ -566,6 +583,14 @@ namespace IdleGrounds.Sim
                     result = DropResult.Of(DropResultKind.Fed, first.item);
                     return true;
                 }
+                // 9b. Spirit Bridge: hand-feed a sending / unpaired bridge like a Gathering Stone
+                if (def.bridge.enabled)
+                {
+                    if (first == null || _ctx.Logistics.BridgeReceiving(b) || !EndpointGive(b, first.item)) return true;
+                    Hand.Take(first.item, 1);
+                    result = DropResult.Of(DropResultKind.Fed, first.item);
+                    return true;
+                }
                 // 10. Storehouse
                 if (b.type == "storehouse") { result = Hand.DepositToStorehouse(b); return true; }
                 // 11. Ascension Gate (M5 hook; may fall through)
@@ -653,6 +678,7 @@ namespace IdleGrounds.Sim
                 if (def == null) continue;
                 if (def.gather.enabled) changed |= _ctx.Logistics.TickStone(areaKey, area, b, def, now);     // §11.2
                 if (def.lantern.enabled) changed |= _ctx.Logistics.TickLantern(areaKey, area, b, def, now);  // §11.5
+                if (def.bridge.enabled) changed |= _ctx.Logistics.TickBridge(areaKey, area, b, def, now);    // ADR 0003
                 if (def.stoker.enabled) changed |= Stoke(area, b, def);
                 if (def.roster.enabled) changed |= _ctx.Pavilions.Tick(areaKey, area, b, def, now);           // §12.4
             }
@@ -694,9 +720,9 @@ namespace IdleGrounds.Sim
             var def = Cfg.Building(b.type);
             if (def == null) return null;
             if (def.IsConverter) return Conv.Status(areaKey, b);
-            if (def.gather.enabled || def.stoker.enabled)
+            if (def.gather.enabled || def.stoker.enabled || def.bridge.enabled)
             {
-                int cap = def.gather.enabled ? def.gather.cap : def.stoker.cap;
+                int cap = def.gather.enabled ? def.gather.cap : def.stoker.enabled ? def.stoker.cap : def.bridge.cap;
                 return GatherTotal(b) >= cap ? new BuildingStatusInfo(BuildingState.Full, null, "Full") : null;
             }
             if (def.seal.enabled) return b.qty >= SealCap(def) ? new BuildingStatusInfo(BuildingState.Full, b.item, "Full") : null;

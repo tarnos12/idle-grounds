@@ -27,6 +27,8 @@ MonoBehaviour:
     tierSprite: 
     rx: 1
     ry: 1
+    islandCol: 125
+    islandRow: 126
     unlockSide: down
     unlockCost:
     - item: wood

@@ -24,7 +24,7 @@ namespace IdleGrounds.Sim.Tests
             sim.State.world.SetUnlocked("volcano", true);
             sim.State.quest.idx = sim.Config.quests.Count;
             sim.State.dragon.stage = 4;
-            sim.OfflineSim = true;   // no ground physics: positions stay put
+            sim.NoGroundPhysics = true;   // no ground physics: positions stay put
             return sim;
         }
 

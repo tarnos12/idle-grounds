@@ -10,7 +10,7 @@ namespace IdleGrounds.Game
     /// JSON save file (ADR 0001 "Saves", engine-systems §1.4): <c>persistentDataPath/idle-grounds-save.json</c>,
     /// written atomically (temp file + replace). <see cref="LoadOrNull"/> runs from GameRunner.Awake before the
     /// simulation exists: a corrupt / newer-schema file is renamed to <c>.bak-&lt;timestamp&gt;</c> and the run
-    /// starts fresh. Cadence: autosave every 5 s once the offline replay is over, on pause / quit, after an
+    /// starts fresh. Cadence: autosave every 5 s, on pause / quit, after an
     /// ascension and when the welcome modal closes (callers use <see cref="Save"/>). Reset deletes the file,
     /// blocks saving until the scene reloads (JS saveDisabled), then reloads the scene.
     /// </summary>
@@ -142,7 +142,7 @@ namespace IdleGrounds.Game
 
         void Update()
         {
-            if (runner == null || runner.Sim == null || runner.Replaying) { autosaveAt = Time.unscaledTime + AutosaveSeconds; return; }
+            if (runner == null || runner.Sim == null) { autosaveAt = Time.unscaledTime + AutosaveSeconds; return; }
             if (Time.unscaledTime >= autosaveAt)
             {
                 autosaveAt = Time.unscaledTime + AutosaveSeconds;

@@ -90,7 +90,7 @@ namespace IdleGrounds.Game
             if (runner == null || runner.Sim == null) return;
             float now = Time.unscaledTime;
             if (now >= nextResolveAt) { nextResolveAt = now + 0.25f; Resolve(); }
-            bool on = has && !runner.Replaying && ViewCull.Visible(topLeft, wU, hU);
+            bool on = has && ViewCull.Visible(topLeft, wU, hU);
             Showing = on;
             if (circleRoot.gameObject.activeSelf != (on && !isZone)) circleRoot.gameObject.SetActive(on && !isZone);
             if (zoneFrame != null && zoneFrame.gameObject.activeSelf != (on && isZone)) zoneFrame.gameObject.SetActive(on && isZone);

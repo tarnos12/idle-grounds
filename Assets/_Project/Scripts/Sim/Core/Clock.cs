@@ -2,25 +2,18 @@ using System;
 
 namespace IdleGrounds.Sim
 {
-    /// <summary>Wall-clock source (ms). Offline replay swaps in a virtual clock.</summary>
+    /// <summary>Wall-clock source (ms).</summary>
     public interface IClock
     {
         long NowMs { get; }
     }
 
-    /// <summary>Manually driven clock (tests, offline replay).</summary>
+    /// <summary>Manually driven clock (tests).</summary>
     public sealed class ManualClock : IClock
     {
         public long NowMs { get; set; }
         public ManualClock(long startMs = 1_000_000) { NowMs = startMs; }
         public void Advance(long ms) { NowMs += ms; }
-    }
-
-    /// <summary>Offline replay clock (JS `Date.now = () => job.virt`), installed as SimContext.ClockOverride.</summary>
-    public sealed class VirtualClock : IClock
-    {
-        public double Virt;
-        public long NowMs => (long)Virt;
     }
 
     /// <summary>Real time: Unix epoch ms (= JS Date.now()).</summary>

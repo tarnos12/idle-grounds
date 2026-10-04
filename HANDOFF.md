@@ -94,10 +94,16 @@ Drive `AI files/Idle Grounds Art/ART-SPEC.md`; deliveries arrive in Drive
 `incoming/<category>/` (pixel art, 32 px/cell, PPU 32). Poll it (30 min x1h,
 hourly x2h, then 2-hourly; restart after spec updates) and integrate.
 
-Next: islands/bridges/no-offline sim work (in progress), then deferred UI
+Sim done (139 tests): offline progress removed; Tireless Wisps perk (save id
+`slumber` kept); firestone routing fixed; island world offsets
+(`SetIslandOffsets`); Spirit Bridges (`spirit_bridge` 2x1, PairBridges /
+PairableBridges / SkyWisps). Island/bridge UI next (in progress).
+
+Next: then deferred UI
 lows, Sim query allocations, real art, PlayMode smoke tests.
 ## Last session summary (2026-10-04, port kickoff)
 
+- Sim: no-offline (ADR 0002), islands + Spirit Bridges (ADR 0003), firestone fix.
 - Grilling session: CONTEXT.md glossary, ADR 0002 (no offline), ADR 0003
   (floating islands + Spirit Bridges).
 

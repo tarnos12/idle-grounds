@@ -193,7 +193,7 @@ namespace IdleGrounds.Sim.Tests
         public void FieldGenerators_RespectCap_AndFireImmediately()
         {
             var sim = SimTestUtil.NewSim(out var clock);
-            sim.OfflineSim = true;
+            sim.NoGroundPhysics = true;
             var c = sim.State.Area("center");
             c.ground.Clear();   // M3: drop the starter-network seeds (§16)
             foreach (var b in c.buildings) if (b.type == "gathering_stone") b.built = false;   // M4: keep starter stones from vacuuming the fields
@@ -213,7 +213,7 @@ namespace IdleGrounds.Sim.Tests
             }
             // a coarse catch-up tick fires as many events as fine ticks would
             var sim2 = SimTestUtil.NewSim(out var clock2);
-            sim2.OfflineSim = true;
+            sim2.NoGroundPhysics = true;
             var c2 = sim2.State.Area("center");
             foreach (var b in c2.buildings) if (b.type == "gathering_stone") b.built = false;
             sim2.Tick();

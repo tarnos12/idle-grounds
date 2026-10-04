@@ -21,11 +21,11 @@ namespace IdleGrounds.Sim
         public FieldGeneratorSystem FieldGenerators => Ctx.FieldGenerators;
         public Timing Timing => Ctx.Timing;
 
-        /// <summary>Suppress every event (offline replay).</summary>
+        /// <summary>Suppress every event.</summary>
         public bool Muted { get => Ctx.Events.Muted; set => Ctx.Events.Muted = value; }
 
-        /// <summary>Offline replay mode: skips ground physics (JS offlineSim/offlineReplay).</summary>
-        public bool OfflineSim { get => Ctx.OfflineSim; set { Ctx.OfflineSim = value; Ctx.OfflineReplay = value; } }
+        /// <summary>Skip ground physics (tick step 10) — tests use it to keep item positions put.</summary>
+        public bool NoGroundPhysics { get => Ctx.NoGroundPhysics; set => Ctx.NoGroundPhysics = value; }
 
         public Simulation(GameConfig cfg, GameState state, IClock clock, IRng rng)
         {
@@ -51,37 +51,19 @@ namespace IdleGrounds.Sim
             Ctx.Buildings.DragonFeed = Ctx.Dragon.Feed;
             Ctx.Buildings.GateFeed = Ctx.Progression.GateFeed;
             Prestige = new PrestigeSystem(this);
-            Offline = new OfflineReplay(this);
         }
 
-        // ---- M7 prestige, save, offline (§14, §1.4-1.5, §15, §2.1) ----
+        // ---- M7 prestige, save (§14, §1.4-1.5, §2.1) ----
 
         public PrestigeSystem Prestige { get; }
-        public OfflineReplay Offline { get; }
 
         /// <summary>
-        /// Boot (§2.1 steps 2-4): initArea ×all + starter network, then the
-        /// offline catch-up decision. Tier None ⇒ go live. Toast ⇒ already
-        /// replayed synchronously (summary set). Full ⇒ drive
-        /// <c>Offline.Step(boot.job, 50)</c> once per frame (500 when the app is
-        /// in the background) without ticking live, then <c>Offline.Finish</c>
-        /// for the summary; <c>Offline.Skip</c> forfeits the rest.
+        /// Boot (§2.1 steps 2-3): initArea ×all + starter network. No offline
+        /// catch-up (ADR 0002): the world was frozen while the game was closed.
+        /// Periodic clocks resume from now on the first tick — a stale due time
+        /// restarts without bursting (<see cref="Timing.Periodic"/>).
         /// </summary>
-        public OfflineBoot Boot()
-        {
-            InitAllAreas();
-            var job = Offline.Begin();
-            if (job == null) return new OfflineBoot { tier = OfflineTier.None };
-            if (job.awayMs < Config.balance.offlineModalMs)
-            {
-                // JS main.js:83-88 catches a failed replay and still shows the (failed) summary.
-                try { Offline.Step(job); }
-                catch (System.Exception) { /* Step marked job.failed */ }
-                finally { Offline.Finish(job); }
-                return new OfflineBoot { tier = OfflineTier.Toast, summary = job.summary };
-            }
-            return new OfflineBoot { tier = OfflineTier.Full, job = job };
-        }
+        public void Boot() => InitAllAreas();
 
         /// <summary>
         /// Swap in another state (ascension, in-place load): caches dropped,
@@ -91,19 +73,16 @@ namespace IdleGrounds.Sim
         public void ReplaceState(GameState state, bool boot = true)
         {
             if (state == null) throw new System.ArgumentNullException(nameof(state));
-            var job = Offline.Job;
-            if (job != null) { Offline.Skip(job); Offline.Finish(job); }
             Ctx.State = state;
             Ctx.ManualSrc = null;
-            Ctx.ClockOverride = null;
             Ctx.Occupancy.Invalidate();
             Ctx.Timing.Reset();
             if (boot) InitAllAreas();
             Ctx.Events.RaiseRunReset();
         }
 
-        /// <summary>`saveState()` JSON: lastSeen = resume point while a replay is unfinished, else the real now.</summary>
-        public string SaveJson() => SaveCodec.Serialize(State, Offline.ResumeAt() ?? Ctx.RealNow);
+        /// <summary>`saveState()` JSON (lastSeen = now; informational only, ADR 0002).</summary>
+        public string SaveJson() => SaveCodec.Serialize(State, Ctx.Now);
 
         /// <summary>Parse + sanitise a save (null + reason on any failure; never throws).</summary>
         public static GameState LoadJson(string json, GameConfig cfg, double nowMs, out string reason) =>
@@ -154,12 +133,13 @@ namespace IdleGrounds.Sim
                 changed |= TickWisps(k, now);                   // 7  M2+
                 changed |= TickEnemies(k, now);                 // 8  M2+
                 changed |= TickDragonScales(k, now);            // 9
-                if (!Ctx.OfflineSim)                            // 10 ground physics
+                if (!Ctx.NoGroundPhysics)                       // 10 ground physics
                 {
                     if (Ctx.Ground.SettleGround(k) > 0) changed = true;
                     if (Ctx.Ground.PushOutOfColliders(k) > 0) changed = true;
                 }
             }
+            changed |= Ctx.Logistics.TickSkyWisps(now);         // 7b Spirit Bridge wisps crossing the sky (ADR 0003)
             return changed;
         }
 
@@ -264,6 +244,39 @@ namespace IdleGrounds.Sim
 
         /// <summary>`wispPos` — smooth wisp position at <paramref name="now"/> (frac ≥ 1 = arrived). Wisp.returning ⇒ draw red.</summary>
         public WispPosition WispPos(string areaKey, Wisp w, double now) => Ctx.Logistics.WispPos(areaKey, w, now);
+
+        // ---- Islands + Spirit Bridges (ADR 0003) ----
+
+        /// <summary>
+        /// Island world offsets in px (top-left corner of each Island; x right, y down — the same axes
+        /// as Island-local px). The scene is the authority: the Game layer reads them from the Island
+        /// GameObjects and calls this at boot. Unknown keys are ignored; Islands not listed keep their
+        /// current offset (config default = RegionDef.islandCol/islandRow × cell). Runtime only, not saved.
+        /// </summary>
+        public void SetIslandOffsets(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, (double x, double y)>> offsetsPx)
+        {
+            if (offsetsPx == null) return;
+            foreach (var kv in offsetsPx) Ctx.World.SetIslandOffsetPx(kv.Key, kv.Value.x, kv.Value.y);
+        }
+        public void SetIslandOffset(string island, double xPx, double yPx) => Ctx.World.SetIslandOffsetPx(island, xPx, yPx);
+        public (double x, double y) IslandOffsetPx(string island) => Ctx.World.IslandOffsetPx(island);
+        /// <summary>Island-local px → world px.</summary>
+        public (double x, double y) ToWorldPx(string island, double x, double y) => Ctx.World.ToWorldPx(island, x, y);
+
+        /// <summary>Pair two built, unpaired Spirit Bridges on different unlocked Islands: A sends to B. Null = paired, else the reason.</summary>
+        public string PairBridges(string islandA, int bridgeA, string islandB, int bridgeB) => Ctx.Logistics.Pair(islandA, bridgeA, islandB, bridgeB);
+        /// <summary>Why PairBridges would refuse (null = allowed).</summary>
+        public string PairBridgesReason(string islandA, int bridgeA, string islandB, int bridgeB) => Ctx.Logistics.PairReason(islandA, bridgeA, islandB, bridgeB);
+        /// <summary>Break the pair this bridge belongs to (either end). In-flight wisps return to the sender.</summary>
+        public bool UnpairBridge(string island, int bridgeId) => Ctx.Logistics.Unpair(island, bridgeId);
+        /// <summary>Bridge panel pairing list: unpaired built bridges on OTHER unlocked Islands.</summary>
+        public System.Collections.Generic.List<BridgeCandidate> PairableBridges(string island, int bridgeId) => Ctx.Logistics.PairableBridges(island, bridgeId);
+        /// <summary>The intact partner of a paired bridge (null = unpaired / broken).</summary>
+        public Building BridgePartner(string island, Building bridge) => Ctx.Logistics.PairOf(island, bridge);
+        /// <summary>Wisps crossing the sky (world px; draw with <see cref="SkyWispPos"/>).</summary>
+        public System.Collections.Generic.IReadOnlyList<SkyWisp> SkyWisps => State.skyWisps;
+        /// <summary>Smooth sky wisp position (world px) at <paramref name="now"/>.</summary>
+        public WispPosition SkyWispPos(SkyWisp w, double now) => Ctx.Logistics.SkyWispPos(w, now);
 
         // ---- M5 progression (§12, §13.2, §3.6) ----
 

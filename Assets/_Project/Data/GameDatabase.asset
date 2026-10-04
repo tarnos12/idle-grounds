@@ -94,6 +94,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aa18adbf5aec2fe42acc43fdbcbcc0df, type: 2}
   - {fileID: 11400000, guid: 4db29e8af73a05f4fbdccc98e225e806, type: 2}
   - {fileID: 11400000, guid: ed262a5b98e3c7b47ae2010f9f1a4343, type: 2}
+  - {fileID: 11400000, guid: 6e5442e70337dc5419d5adfc8afa6620, type: 2}
   upgrades:
   - {fileID: 11400000, guid: be076977e3f8d814889cce170ede02da, type: 2}
   - {fileID: 11400000, guid: af5c9d3ff6d226d45a06931132149091, type: 2}
@@ -185,10 +186,6 @@ MonoBehaviour:
     maxTickGap: 10000
     maxTickEvents: 400
     autoSkipLoose: 120
-    offlineMaxTicks: 45000
-    offlineMinMs: 90000
-    offlineModalMs: 600000
-    offlinePlateauMs: 900000
     dropJitterPx: 16
     pickupCollectPx: 12
     settleMinPx: 18
@@ -324,118 +321,149 @@ MonoBehaviour:
     - kind: 0
       key: wood
       stage: 0
+      count: 0
   - building: gathering_stone
     any:
     - kind: 0
       key: build
       stage: 0
+      count: 0
   - building: wisp_lantern
     any:
     - kind: 0
       key: build
       stage: 0
+      count: 0
   - building: warding_seal
     any:
     - kind: 0
       key: build
       stage: 0
+      count: 0
   - building: workbench
     any:
     - kind: 0
       key: build
       stage: 0
+      count: 0
   - building: kiln
     any:
     - kind: 0
       key: build
       stage: 0
+      count: 0
   - building: paper_mill
     any:
     - kind: 0
       key: build
       stage: 0
+      count: 0
   - building: charcoal_pit
     any:
     - kind: 0
       key: build
       stage: 0
+      count: 0
   - building: infusion_array
     any:
     - kind: 0
       key: fox
       stage: 0
+      count: 0
   - building: furnace_spirit
     any:
     - kind: 0
       key: link
       stage: 0
+      count: 0
   - building: loom
     any:
     - kind: 1
       key: farm
       stage: 0
+      count: 0
     - kind: 0
       key: waters
       stage: 0
+      count: 0
   - building: mill
     any:
     - kind: 1
       key: farm
       stage: 0
+      count: 0
     - kind: 0
       key: waters
       stage: 0
+      count: 0
   - building: brewery
     any:
     - kind: 1
       key: farm
       stage: 0
+      count: 0
     - kind: 0
       key: waters
       stage: 0
+      count: 0
   - building: jade_carver
     any:
     - kind: 1
       key: mine
       stage: 0
+      count: 0
   - building: cauldron
     any:
     - kind: 1
       key: mine
       stage: 0
+      count: 0
   - building: meditation_pavilion
     any:
     - kind: 0
       key: weaver
       stage: 0
+      count: 0
     - kind: 1
       key: grove
       stage: 0
+      count: 0
   - building: pill_furnace
     any:
     - kind: 2
       key: 
       stage: 3
+      count: 0
   - building: star_anvil
     any:
     - kind: 2
       key: 
       stage: 3
+      count: 0
   - building: talisman_atelier
     any:
     - kind: 2
       key: 
       stage: 3
+      count: 0
   - building: dragon_shrine
     any:
     - kind: 2
       key: 
       stage: 4
+      count: 0
   - building: ascension_gate
     any:
     - kind: 2
       key: 
       stage: 4
+      count: 0
+  - building: spirit_bridge
+    any:
+    - kind: 3
+      key: 
+      stage: 0
+      count: 2
   gateOfferings:
     items:
     - talisman

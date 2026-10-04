@@ -356,7 +356,7 @@ namespace IdleGrounds.Sim.Tests
             int Run(int tickMs)
             {
                 var sim = SimTestUtil.NewSim(out var clock, seed: 777);
-                sim.OfflineSim = true;
+                sim.NoGroundPhysics = true;
                 var c = sim.State.Area("center");
                 c.ground.Clear();
                 foreach (var b in c.buildings) if (b.type == "gathering_stone") b.built = false;

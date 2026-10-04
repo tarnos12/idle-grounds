@@ -4,8 +4,9 @@ namespace IdleGrounds.Sim
 {
     /// <summary>
     /// Presentation events (engine-systems §17-§18.4). Everything is suppressed
-    /// while <see cref="Muted"/> (offline replay), like the JS nulling
-    /// onGroundDrop/onSfx. M1 raises: GroundDropped, SoundRequested,
+    /// while <see cref="Muted"/>. Wisp events also carry Spirit Bridge sky
+    /// wisps (<see cref="SkyWisp"/>, world px): Launched/Returned/Dropped name the
+    /// sending Island, Arrived the Island it landed on. M1 raises: GroundDropped, SoundRequested,
     /// NodeSpawned, NodeHit, NodeDepleted. The rest are declared for M2+.
     /// </summary>
     public sealed class SimEvents
@@ -41,7 +42,6 @@ namespace IdleGrounds.Sim
         public event Action<string> QuestClaimed;
         public event Action AscendPromptRequested;
         public event Action RunReset;
-        public event Action<double> OfflineProgress;
 #pragma warning restore 67
         /// <summary>M5: (area, pavilion) after a disciple joined.</summary>
         public event Action<string, Building> DiscipleRecruited;
@@ -81,8 +81,6 @@ namespace IdleGrounds.Sim
         // M7 — RunReset: the state object was replaced (ascension / load); views rebuild from scratch.
         internal void RaiseRunReset()
         { if (!Muted) RunReset?.Invoke(); }
-        /// <summary>Offline progress fraction 0..1 — raised between replay slices (never muted).</summary>
-        internal void RaiseOfflineProgress(double fraction) => OfflineProgress?.Invoke(fraction);
         // M5
         internal void RaiseDragonStageAdvanced(int stage, string text)
         { if (!Muted) DragonStageAdvanced?.Invoke(stage, text); }

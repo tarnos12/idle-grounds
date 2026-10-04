@@ -15,8 +15,11 @@ namespace IdleGrounds.Sim
     /// Shape notes: field names = C# field names (≈ the JS GS keys);
     /// <see cref="ItemCounts"/> is a JSON object {item: qty} in insertion
     /// order; enums are strings; NaN doubles are null (lastSeen /
-    /// offlineAwayFrom null = "none"). `schemaVersion` is stamped on every
-    /// save; a save from a newer schema is refused.
+    /// offlineAwayFrom null = "none" — both are legacy, read but unused since
+    /// ADR 0002). `schemaVersion` is stamped on every save; a save from a
+    /// newer schema is refused. Spirit Bridge pairs (Building.pairIsland /
+    /// pairId / pairSends) and sky wisps (GameState.skyWisps) round-trip like
+    /// every other field.
     ///
     /// Load = merge onto <see cref="GameState.CreateInitial"/> (missing fields
     /// keep their defaults) + the §1.5 sanitisation rules on EVERY load
@@ -36,9 +39,9 @@ namespace IdleGrounds.Sim
 
         /// <summary>
         /// `saveState()`: the state as JSON. <paramref name="lastSeenStamp"/> is
-        /// written as lastSeen (JS: offlineResumeAt() while a replay is
-        /// unfinished, else now); null keeps state.lastSeen. `build` is
-        /// always written closed. The state itself is not modified.
+        /// written as lastSeen (informational only — no offline progress, ADR
+        /// 0002); null keeps state.lastSeen. `build` is always written closed.
+        /// The state itself is not modified.
         /// </summary>
         public static string Serialize(GameState s, double? lastSeenStamp = null)
         {
@@ -128,7 +131,7 @@ namespace IdleGrounds.Sim
                 var freshUnlocked = new List<RegionFlag>(fresh.world.unlocked);
                 int savedGrid = o.Get("gridCells") is double gc ? (int)gc : -1;
                 Populate(fresh, o);
-                // lastSeen / offlineAwayFrom: absent or null ⇒ null (NaN) — no false offline credit
+                // lastSeen / offlineAwayFrom: absent or null ⇒ null (NaN). Legacy, unused (ADR 0002).
                 fresh.lastSeen = o.Get("lastSeen") is double ls ? ls : double.NaN;
                 fresh.offlineAwayFrom = o.Get("offlineAwayFrom") is double af ? af : double.NaN;
                 Sanitize(fresh, cfg, now, freshUnlocked, savedGrid);
@@ -381,7 +384,7 @@ namespace IdleGrounds.Sim
                 else if (e.qty > pd.max) s.perks.Set(e.item, pd.max);
             }
 
-            // offline stamps
+            // legacy offline stamps (unused, ADR 0002)
             if (!Finite(s.lastSeen)) s.lastSeen = double.NaN;
             if (!(Finite(s.offlineAwayFrom) && Finite(s.lastSeen) && s.offlineAwayFrom < s.lastSeen)) s.offlineAwayFrom = double.NaN;
 
@@ -410,6 +413,7 @@ namespace IdleGrounds.Sim
             bool regrid = savedGrid != cfg.grid.cells;
             s.gridCells = cfg.grid.cells;
             foreach (var a in s.areas) SanitizeArea(s, a, cfg, now, regrid, Live);
+            SanitizeBridges(s, cfg, now, Live);
 
             // whatever non-finite double is left (no rule above) becomes 0
             ZeroNonFinite(s, 0);
@@ -578,6 +582,35 @@ namespace IdleGrounds.Sim
             if (a.nextBuildId < 1) a.nextBuildId = 1;
             if (a.nextEnemyId < 1) a.nextEnemyId = 1;
             if (a.nextWispId < 1) a.nextWispId = 1;
+        }
+
+        /// <summary>
+        /// Spirit Bridges (ADR 0003): a pair survives only when both ends are bridges pointing at
+        /// each other with opposite roles (else both ends are cleared); sky wisps need known
+        /// Islands, a live item and finite coordinates. Runs after the per-area scrub; idempotent.
+        /// </summary>
+        static void SanitizeBridges(GameState s, GameConfig cfg, double now, Func<string, bool> Live)
+        {
+            bool IsBridge(Building b) => b != null && cfg.Building(b.type)?.bridge.enabled == true;
+            foreach (var a in s.areas)
+                foreach (var b in a.buildings)
+                {
+                    if (b.pairIsland == null) { b.pairId = 0; b.pairSends = false; continue; }
+                    var o = IsBridge(b) && b.pairIsland != a.key ? s.Area(b.pairIsland)?.BuildingById(b.pairId) : null;
+                    bool ok = IsBridge(o) && o.pairIsland == a.key && o.pairId == b.id && o.pairSends != b.pairSends;
+                    if (!ok) { b.pairIsland = null; b.pairId = 0; b.pairSends = false; }
+                }
+            s.skyWisps ??= new List<SkyWisp>();
+            s.skyWisps.RemoveAll(w => w == null || !Live(w.item) || cfg.Region(w.fromIsland) == null || cfg.Region(w.toIsland) == null
+                                      || !Finite(w.x) || !Finite(w.y) || !Finite(w.sx) || !Finite(w.sy) || !Finite(w.tx) || !Finite(w.ty));
+            foreach (var w in s.skyWisps)
+            {
+                if (!Finite(w.t0)) { w.x0 = w.x; w.y0 = w.y; w.t0 = now; }
+                if (!Finite(w.x0) || !Finite(w.y0)) { w.x0 = w.x; w.y0 = w.y; }
+                if (!Finite(w.sp) || w.sp < 50) w.sp = 170;
+                if (w.id >= s.nextSkyWispId) s.nextSkyWispId = w.id + 1;
+            }
+            if (s.nextSkyWispId < 1) s.nextSkyWispId = 1;
         }
 
         /// <summary>Drop entries whose key fails <paramref name="keep"/> (and non-positive ones when asked).</summary>

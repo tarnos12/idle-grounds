@@ -242,7 +242,7 @@ namespace IdleGrounds.Sim
                         int qty = rec.outputQty > 0 ? rec.outputQty : 1;
                         _ctx.Ground.DropGround(areaKey, rec.output, qty, bx, by, GroundTag.Crafted);
                         S.stats.totalCrafted += qty;
-                        if (!_ctx.OfflineReplay) NoteCraft(b, now);
+                        NoteCraft(b, now);
                         _ctx.Events.RaiseSound("craft", areaKey);
                         _ctx.Events.RaiseBatchFinished(areaKey, b, rec.output, qty);
                         b.smeltDoneAt = 0;

@@ -21,7 +21,7 @@ namespace IdleGrounds.Sim.Tests
             var cfg = SimTestUtil.LoadConfig();
             Assert.AreEqual(46, cfg.items.Count, "items");
             Assert.AreEqual(7, cfg.regions.Count, "regions");
-            Assert.AreEqual(26, cfg.buildings.Count, "buildings");
+            Assert.AreEqual(27, cfg.buildings.Count, "buildings (26 of data.js + Spirit Bridge, ADR 0003)");
             Assert.AreEqual(28, cfg.buildings.Sum(b => b.recipes.Count), "recipes");
             Assert.AreEqual(14, cfg.quests.Count, "quests");
             Assert.AreEqual(19, cfg.upgradeTree.Count, "upgrade nodes");
@@ -29,7 +29,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(4, cfg.vows.Count, "vows");
             Assert.AreEqual(4, cfg.dragonStages.Count, "dragon stages");
             Assert.AreEqual(4, cfg.dragonBuffs.Count, "dragon buffs");
-            Assert.AreEqual(21, cfg.reveal.Count, "reveal rules");
+            Assert.AreEqual(22, cfg.reveal.Count, "reveal rules (+ spirit_bridge)");
             CollectionAssert.AreEqual(new[] { "center", "farm", "mine", "fishing", "volcano", "grove", "celestial" },
                 cfg.regions.Select(r => r.key).ToArray());
         }

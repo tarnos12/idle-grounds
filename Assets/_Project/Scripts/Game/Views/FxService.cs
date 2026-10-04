@@ -12,7 +12,7 @@ namespace IdleGrounds.Game
     /// sparks; <see cref="Pickup"/> = green "+N" + 5 sparks + "pickup" SFX; player node swings / enemy strikes
     /// (HandController: at the cursor on every node click / auto-swing, at the enemy on every strike) = 4 light sparks. Sparks: random angle, 30-100 px/s, extra
     /// -30 px/s up, gravity 90 px/s², radius 1.5-3.5 px shrinking 40 %, life 380-640 ms, alpha 1→0.
-    /// Sim events are muted during the offline replay and nothing spawns while <see cref="GameRunner.Replaying"/>.
+    /// Nothing spawns while the sim events are muted.
     /// Everything clears on RunReset (ascension).
     /// </summary>
     public class FxService : MonoBehaviour
@@ -48,7 +48,7 @@ namespace IdleGrounds.Game
             GoldItems.IsMatch(item) ? Gold : SteelItems.IsMatch(item) ? Steel : Green;
 
         float Cell => runner != null && runner.Space != null ? runner.Space.Cell : 32f;
-        bool Suppressed => runner == null || runner.Replaying;
+        bool Suppressed => runner == null;
 
         void Awake()
         {

@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.PerkAsset
   def:
     id: slumber
-    name: Long Slumber
-    icon: "\U0001F319"
+    name: Tireless Wisps
+    icon: "\U0001F4AB"
     max: 4
     cost: 01000000020000000400000006000000
-    desc: +2h to the offline catch-up window per level (base 8h).
+    desc: Wisps fly 15% faster and lanterns and Spirit Bridges send 15% faster per
+      level.
   icon: {fileID: 485935769, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

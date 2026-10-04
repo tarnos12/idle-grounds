@@ -71,7 +71,7 @@ namespace IdleGrounds.Game
 
         void Update()
         {
-            if (runner == null || runner.Sim == null || runner.Replaying) return;
+            if (runner == null || runner.Sim == null) return;
             if (controls.Gameplay.Build.WasPressedThisFrame()) ToggleBuildMenu();
             if (controls.Gameplay.Cancel.WasPressedThisFrame()) Escape();
 

@@ -17,7 +17,7 @@ namespace IdleGrounds.Sim.Tests
             foreach (var r in cfg.regions) { r.spawners.Clear(); r.generators.Clear(); }
             var sim = SimTestUtil.NewSim(out clock, cfg: cfg, init: init);
             sim.State.quest.idx = cfg.quests.Count;
-            if (!init) sim.OfflineSim = true;   // no ground physics: positions stay put
+            if (!init) sim.NoGroundPhysics = true;   // no ground physics: positions stay put
             return sim;
         }
 

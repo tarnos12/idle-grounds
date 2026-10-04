@@ -96,7 +96,6 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null) return;
             UpdateCursor();
-            if (runner.Replaying) { LeftUp(); RightUp(); return; }     // offline catch-up: the world isn't live yet
 
             // Q / E without ctrl / alt (ui.js onKeyDown ignores modified keys)
             var kb = Keyboard.current;

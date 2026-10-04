@@ -178,7 +178,7 @@ namespace IdleGrounds.Sim.Tests
         public void Scales_Cadence_PileCap_ShrineDoubles()
         {
             var sim = SimTestUtil.NewSim(out var clock);
-            sim.OfflineSim = true;
+            sim.NoGroundPhysics = true;
             var S = sim.State;
             var c = S.Area("center");
             int Scales() => SimTestUtil.CountGround(c, "dragon_scale");
@@ -580,7 +580,7 @@ namespace IdleGrounds.Sim.Tests
         static (Simulation sim, ManualClock clock, Building pav) Setup(int disciples, int buns)
         {
             var sim = SimTestUtil.NewSim(out var clock, init: false);
-            sim.OfflineSim = true;
+            sim.NoGroundPhysics = true;
             var pav = sim.Buildings.PlaceBuilt("center", "meditation_pavilion", 55, 36);
             pav.disciples = disciples; pav.buns = buns;
             return (sim, clock, pav);

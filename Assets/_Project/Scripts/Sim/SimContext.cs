@@ -25,10 +25,8 @@ namespace IdleGrounds.Sim
 
         /// <summary>JS `autoHarvesting` — true only while automationTick harvests.</summary>
         public bool AutoHarvesting;
-        /// <summary>JS `offlineSim` — skip ground physics during offline replay.</summary>
-        public bool OfflineSim;
-        /// <summary>JS `offlineReplay` — no craft-rate stamps.</summary>
-        public bool OfflineReplay;
+        /// <summary>Skip tick step 10 (ground settle / collider push) — tests keep item positions put.</summary>
+        public bool NoGroundPhysics;
         /// <summary>JS `manualSrc` (null when not inside a player harvest).</summary>
         public ManualSource? ManualSrc;
 
@@ -59,12 +57,7 @@ namespace IdleGrounds.Sim
             Timing = new Timing(Config);
         }
 
-        /// <summary>Offline replay's virtual clock (null = live): every system reads <see cref="Now"/>.</summary>
-        public IClock ClockOverride;
-
-        public double Now => ClockOverride != null ? ClockOverride.NowMs : Clock.NowMs;
-        /// <summary>The injected (real) clock, ignoring any replay override.</summary>
-        public double RealNow => Clock.NowMs;
+        public double Now => Clock.NowMs;
         public int Cell => Config.grid.cell;
         public int N => Config.grid.cells;
         public int PlayPx => Config.grid.PlayPx;

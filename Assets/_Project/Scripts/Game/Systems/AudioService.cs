@@ -6,8 +6,8 @@ namespace IdleGrounds.Game
 {
     /// <summary>
     /// SFX playback (ui-input-render §6): a small round-robin pool of 2D AudioSources playing clips from the
-    /// <see cref="SfxLibrary"/>. Plays every <c>Sim.Events.SoundRequested</c> (muted by the sim during offline
-    /// replay; also ignored while <see cref="GameRunner.Replaying"/>) plus UI sounds via <see cref="Play"/>
+    /// <see cref="SfxLibrary"/>. Plays every <c>Sim.Events.SoundRequested</c> (unless the sim is muted)
+    /// plus UI sounds via <see cref="Play"/>
     /// ("pickup", "error", "click"). Mute is persisted in PlayerPrefs "ig_muted" (default unmuted).
     /// Harvest gets the JS pitch jitter (620 ± 60 Hz → pitch ±9.7 %).
     /// </summary>
@@ -72,7 +72,6 @@ namespace IdleGrounds.Game
         public void PlayInternal(string name)
         {
             if (Muted || library == null || string.IsNullOrEmpty(name)) return;
-            if (runner != null && runner.Replaying) return;          // FX/SFX suppressed during catch-up
             var e = library.Find(name);
             if (e == null || e.clip == null) return;
             var src = pool[next];

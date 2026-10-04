@@ -40,6 +40,45 @@ namespace IdleGrounds.Sim
 
         public bool IsAreaUnlocked(string key) => S.world.IsUnlocked(key);
 
+        // ---- Island world offsets (ADR 0003) ----
+        // The sim keeps Island-local px everywhere; only flights between Islands (Spirit Bridges)
+        // need world px = Island offset + local px (x right, y down, like local px). Defaults come
+        // from config (RegionDef.islandCol/islandRow × cell); the scene overrides them at boot.
+
+        readonly Dictionary<string, (double x, double y)> _islandOffsetPx = new Dictionary<string, (double x, double y)>();
+
+        /// <summary>World px of the Island's top-left corner (scene override, else the config default).</summary>
+        public (double x, double y) IslandOffsetPx(string key)
+        {
+            if (key != null && _islandOffsetPx.TryGetValue(key, out var o)) return o;
+            var r = Cfg.Region(key);
+            return r == null ? (0, 0) : ((double)r.islandCol * _ctx.Cell, (double)r.islandRow * _ctx.Cell);
+        }
+
+        /// <summary>Override one Island's world offset (px). Unknown keys are ignored.</summary>
+        public void SetIslandOffsetPx(string key, double x, double y)
+        {
+            if (Cfg.Region(key) == null || double.IsNaN(x) || double.IsNaN(y) || double.IsInfinity(x) || double.IsInfinity(y)) return;
+            _islandOffsetPx[key] = (x, y);
+        }
+
+        /// <summary>Drop every override (back to the config defaults).</summary>
+        public void ResetIslandOffsets() => _islandOffsetPx.Clear();
+
+        /// <summary>Island-local px → world px.</summary>
+        public (double x, double y) ToWorldPx(string island, double x, double y)
+        {
+            var (ox, oy) = IslandOffsetPx(island);
+            return (ox + x, oy + y);
+        }
+
+        /// <summary>Building footprint centre in world px.</summary>
+        public (double x, double y) BuildingWorldCenterPx(string island, Building b)
+        {
+            var (x, y) = BuildingCenterPx(b);
+            return ToWorldPx(island, x, y);
+        }
+
         // ---- zones (§3.2) ----
         public List<ZoneRect> ZoneRects(string zone) => Cfg.ZoneRects(zone);
 
