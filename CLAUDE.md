@@ -12,8 +12,10 @@ and the ▶ NEXT SESSION pointer.
 
 ## Workflow rules (the user's preferences — follow these every time)
 
-1. **Work directly on `master` (agreed 2026-10-04).** No feature branches.
-   Commit + push `master` after every completed task.
+1. **Work on `master` by default (agreed 2026-10-04).** Commit + push after
+   every completed task. Use a `feature/<short-kebab-desc>` branch only when
+   it genuinely helps (large/risky/multi-session work that shouldn't land
+   half-done); merge it back to `master` and delete it when finished.
 2. **Every commit MUST update the root HANDOFF.md** in the same commit —
    refresh both the "▶ NEXT SESSION: start here" pointer and the "Last
    session summary". (Edit the `▶` line with an exact string.)

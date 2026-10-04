@@ -9,7 +9,7 @@ v52) now lives in `old-game/` — its full history/handoff is in
 The user is creating the Unity project themselves and will connect Claude via
 the Unity MCP server. Next: once it exists, check the project layout at the
 repo root, add a Unity `.gitignore` if missing, and start porting from
-`old-game/DESIGN.md`. Work directly on `master` (no feature branches).
+`old-game/DESIGN.md`. Work directly on `master` by default (feature branches only when they make sense).
 
 ## Last session summary (2026-10-04)
 
