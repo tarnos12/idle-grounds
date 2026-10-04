@@ -229,6 +229,9 @@ namespace IdleGrounds.Editor
             foreach (var (key, _, _) in Biomes)
             {
                 var g = Frames(GroundPath(key));
+                // delivered centre-fill variants (ART-SPEC 3.0) replace the placeholder strip's fill frames
+                var delivered = Frames($"Assets/_Project/Art/Incoming/islands/island_{key}_ground_fill_32x32_3f.png");
+                if (delivered.Length >= 3) g = delivered;
                 if (g.Length >= 3)
                 {
                     // playable-area fill: centre variants only (the coast blob underneath draws every edge)
@@ -257,7 +260,7 @@ namespace IdleGrounds.Editor
                             int Corner(int bit, int e1, int e2) => Has(e1) && Has(e2) ? (Has(bit) ? T : N) : O;
                             // order: NW, N, NE, W, E, SW, S, SE
                             var sprites = m == 255 ? new[] { g[0], g[1], g[2] } : new[] { b[i] };
-                            rules.Add(Rule(sprites, Corner(128, 1, 64), Edge(1), Corner(2, 1, 4), Edge(64), Edge(4), Corner(32, 16, 64), Edge(16), Corner(8, 16, 4)));
+                            rules.Add(Rule(sprites, Corner(128, 1, 8), Edge(1), Corner(16, 1, 2), Edge(8), Edge(2), Corner(64, 4, 8), Edge(4), Corner(32, 4, 2)));
                         }
                     EditorUtility.SetDirty(coast);
                 }
@@ -348,7 +351,7 @@ namespace IdleGrounds.Editor
         // ------------------------------------------------------------------ 47-blob ground sheet (ART-SPEC 3.0)
 
         /// <summary>
-        /// Neighbour bits of the 47-blob layout: N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128 (1 = ground there).
+        /// Neighbour bits of the 47-blob layout (artist convention, blob_mask_reference.json): N=1, E=2, S=4, W=8, NE=16, SE=32, SW=64, NW=128 (1 = ground there).
         /// A corner bit only counts when both adjacent edges are set. The 47 valid masks, in ASCENDING order, are
         /// the frame order of <c>island_&lt;biome&gt;_ground_blob_32x32_47f.png</c> (frame 0 = isolated cell, frame 46 = all
         /// eight neighbours).
@@ -358,10 +361,10 @@ namespace IdleGrounds.Editor
             var list = new List<int>();
             for (int m = 0; m < 256; m++)
             {
-                bool n = (m & 1) != 0, e = (m & 4) != 0, s = (m & 16) != 0, w = (m & 64) != 0;
-                if ((m & 2) != 0 && !(n && e)) continue;
-                if ((m & 8) != 0 && !(s && e)) continue;
-                if ((m & 32) != 0 && !(s && w)) continue;
+                bool n = (m & 1) != 0, e = (m & 2) != 0, s = (m & 4) != 0, w = (m & 8) != 0;
+                if ((m & 16) != 0 && !(n && e)) continue;
+                if ((m & 32) != 0 && !(s && e)) continue;
+                if ((m & 64) != 0 && !(s && w)) continue;
                 if ((m & 128) != 0 && !(n && w)) continue;
                 list.Add(m);
             }
@@ -372,7 +375,7 @@ namespace IdleGrounds.Editor
         static bool BlobInside(int m, float px, float py)
         {
             const float e = 4f, R = 12f, S = 32f;           // coast inset on N/E/W edges (the S edge runs to the cliff rim), corner radius
-            bool mN = (m & 1) == 0, mE = (m & 4) == 0, mS = (m & 16) == 0, mW = (m & 64) == 0;
+            bool mN = (m & 1) == 0, mE = (m & 2) == 0, mS = (m & 4) == 0, mW = (m & 8) == 0;
             if (mW && px < e) return false;
             if (mE && px > S - e) return false;
             if (mN && py > S - e) return false;
@@ -387,7 +390,7 @@ namespace IdleGrounds.Editor
             if (mS && mE && Out(S - e - R, R, true, false)) return false;
             if (mS && mW && Out(e + R, R, false, false)) return false;
             // soft inner corners (north side only: the cliff rim fills the south diagonals)
-            if (!mN && !mE && (m & 2) == 0 && (px - S) * (px - S) + (py - S) * (py - S) < e * e) return false;
+            if (!mN && !mE && (m & 16) == 0 && (px - S) * (px - S) + (py - S) * (py - S) < e * e) return false;
             if (!mN && !mW && (m & 128) == 0 && px * px + (py - S) * (py - S) < e * e) return false;
             return true;
         }

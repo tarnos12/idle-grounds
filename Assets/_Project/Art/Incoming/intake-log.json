@@ -121,6 +121,22 @@
       "source": "Idle-Grounds-Islands-001.zip"
     },
     {
+      "path": "_notes/islands-Idle-Grounds-Islands-002-prompt.txt",
+      "name": "prompt.txt",
+      "size": 337,
+      "sha1": "f89274d48512876976c9dff34bbafa6eb92704a4",
+      "date": "2026-10-04T17:19:26.746Z",
+      "source": "Idle-Grounds-Islands-002.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-002-README.md",
+      "name": "README.md",
+      "size": 1015,
+      "sha1": "47cf853e8eca845ded9011f8384767fbbfbb8799",
+      "date": "2026-10-04T17:19:26.746Z",
+      "source": "Idle-Grounds-Islands-002.zip"
+    },
+    {
       "path": "_notes/items-Idle-Grounds-Items-001-README.md",
       "name": "README.md",
       "size": 846,
@@ -249,6 +265,14 @@
       "source": "Idle-Grounds-Fixtures-001.zip"
     },
     {
+      "path": "islands/blob_mask_reference.json",
+      "name": "blob_mask_reference.json",
+      "size": 577,
+      "sha1": "d15c22f8481ad5edcde05c66796e03929312fe1e",
+      "date": "2026-10-04T17:19:26.323Z",
+      "source": "Idle-Grounds-Islands-001.zip"
+    },
+    {
       "path": "islands/island_center_cliff_32x32_8f.png",
       "name": "island_center_cliff_32x32_8f.png",
       "size": 2605,
@@ -259,10 +283,18 @@
     {
       "path": "islands/island_center_ground_blob_32x32_47f.png",
       "name": "island_center_ground_blob_32x32_47f.png",
-      "size": 3746,
-      "sha1": "6844ecfcade49a3519edaf0250f659080b8a1337",
-      "date": "2026-10-04T16:44:21.357Z",
-      "source": "Idle-Grounds-Islands-001.zip"
+      "size": 4327,
+      "sha1": "75fc0756b0709b45dca72fce7b81ad59ee5d9bcb",
+      "date": "2026-10-04T17:19:26.745Z",
+      "source": "Idle-Grounds-Islands-002.zip"
+    },
+    {
+      "path": "islands/island_center_ground_fill_32x32_3f.png",
+      "name": "island_center_ground_fill_32x32_3f.png",
+      "size": 887,
+      "sha1": "2b03deea74af633cd2eea2131fed9ee862a2e032",
+      "date": "2026-10-04T17:19:26.745Z",
+      "source": "Idle-Grounds-Islands-002.zip"
     },
     {
       "path": "items/item_brick.png",
