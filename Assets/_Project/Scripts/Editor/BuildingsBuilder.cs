@@ -66,6 +66,7 @@ namespace IdleGrounds.Editor
             CoreLoopBuilder.InstallMenu();
             InstallMenu();
             LogisticsBuilder.InstallMenu();
+            ProgressionBuilder.InstallMenu();
         }
 
         // ------------------------------------------------------------------ shapes
@@ -202,7 +203,7 @@ namespace IdleGrounds.Editor
             return ic;
         }
 
-        static IconRow IconRowNode(Transform parent, string name, int order)
+        internal static IconRow IconRowNode(Transform parent, string name, int order)
         {
             var root = Node(parent, name);
             var row = root.gameObject.AddComponent<IconRow>();
@@ -401,6 +402,7 @@ namespace IdleGrounds.Editor
             Set(f, "icon", Sr(f.transform, "Icon", 3));
             Set(f, "title", Text(f.transform, "Title", 24f, UiPalette.Gold, true, 4, TextAlignmentOptions.Center, 5f));
             Set(f, "sub", Text(f.transform, "Sub", 12f, UiPalette.Muted, true, 4, TextAlignmentOptions.Center, 5f));
+            Set(f, "jobRow", IconRowNode(f.transform, "JobRow", 3));     // M5: active upgrade job remaining cost
         }
 
         static void AddDragon(GameObject go)
@@ -415,6 +417,12 @@ namespace IdleGrounds.Editor
             Set(f, "feedRow", IconRowNode(f.transform, "FeedRow", 3));
             Set(f, "sleepingSprite", Emoji("dragon_sleeping"));
             Set(f, "awakeSprite", Emoji("dragon_awake"));
+            // M5 murmur bubble: 14 px #e9d5ff with the dark floater halo, above every building
+            var murmur = Text(f.transform, "Murmur", 14f, UiPalette.Hex("#e9d5ff"), true, 20, TextAlignmentOptions.Bottom, 9f);
+            murmur.fontSharedMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Art/Fonts/LiberationSans SDF - Floater.mat") ?? murmur.fontSharedMaterial;
+            murmur.GetComponent<MeshRenderer>().sortingLayerName = "Overlay";
+            murmur.gameObject.SetActive(false);
+            Set(f, "murmur", murmur);
         }
 
         static void BuildBuildingPrefabs()

@@ -27,6 +27,12 @@ namespace IdleGrounds.Game
             if (t != null && t.text != s) t.text = s;
         }
 
+        /// <summary>Change-guarded text set for any TMP text (world or UI).</summary>
+        public static void SetText(TMP_Text t, string s)
+        {
+            if (t != null && t.text != s) t.text = s;
+        }
+
         public static void Font(TextMeshPro t, float px) { if (t != null) t.fontSize = px * FontPerPx; }
 
         public static void Colour(TextMeshPro t, Color c) { if (t != null && t.color != c) t.color = c; }

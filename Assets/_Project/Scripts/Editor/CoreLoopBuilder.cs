@@ -138,6 +138,35 @@ namespace IdleGrounds.Editor
             sprite.sortingLayerName = "Entities";
             sprite.sortingOrder = 1;
 
+            // M6: AUTO badge (gold 800 9 px) + M5: Spirit Tree sparkles (ui_sparkle), both inside the sorting group
+            var autoGo = new GameObject("Auto");
+            autoGo.transform.SetParent(root.transform, false);
+            var auto = autoGo.AddComponent<TextMeshPro>();
+            auto.text = "AUTO";
+            auto.fontSize = 10f * ViewKit.FontPerPx;   // lblPx(9) never below 10
+            auto.fontStyle = FontStyles.Bold;
+            auto.color = UiPalette.Gold;
+            auto.alignment = TextAlignmentOptions.Center;
+            auto.textWrappingMode = TextWrappingModes.NoWrap;
+            auto.rectTransform.sizeDelta = new Vector2(1.5f, 0.5f);
+            auto.fontSharedMaterial = FloaterMaterial(auto.font != null ? auto.font : TMP_Settings.defaultFontAsset);
+            var amr = autoGo.GetComponent<MeshRenderer>();
+            amr.sortingLayerName = "Entities"; amr.sortingOrder = 4;
+            autoGo.SetActive(false);
+            var sparkles = new Object[3];
+            for (int i = 0; i < 3; i++)
+            {
+                var sp = new GameObject("Sparkle" + i).AddComponent<SpriteRenderer>();
+                sp.transform.SetParent(squash, false);
+                sp.sprite = Emoji("ui_sparkle");
+                sp.sortingLayerName = "Entities";
+                sp.sortingOrder = 2;
+                sp.gameObject.SetActive(false);
+                sparkles[i] = sp;
+            }
+            Set(view, "autoBadge", auto);
+            BuildingsBuilder.SetArray(view, "sparkles", sparkles);
+
             Set(view, "squash", squash);
             Set(view, "spriteRenderer", sprite);
             Set(view, "pad", pad);

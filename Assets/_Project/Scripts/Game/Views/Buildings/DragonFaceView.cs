@@ -18,6 +18,10 @@ namespace IdleGrounds.Game
         [SerializeField] IconRow feedRow;
         [SerializeField] Sprite sleepingSprite;
         [SerializeField] Sprite awakeSprite;
+        [Tooltip("Murmur (dragon.msg while msgUntil > now and no dialog): #e9d5ff 800 14 px, 42 chars x 3 lines, 12 px above the top.")]
+        [SerializeField] TextMeshPro murmur;
+
+        public string MurmurText => murmur != null && murmur.gameObject.activeSelf ? murmur.text : null;
 
         readonly List<IconRow.Entry> entries = new List<IconRow.Entry>();
         int lastStage = -1; bool lastAwake;
@@ -34,12 +38,44 @@ namespace IdleGrounds.Game
             sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(16f));
             ViewKit.Font(sub, 12f);
             feedRow.transform.localPosition = v.L(0.5f, 0.84f);
+            if (murmur != null)
+            {
+                ViewKit.Font(murmur, 14f);
+                murmur.color = UiPalette.Hex("#e9d5ff");
+                murmur.alignment = TextAlignmentOptions.Bottom;
+                murmur.rectTransform.pivot = new Vector2(0.5f, 0f);
+                murmur.rectTransform.sizeDelta = new Vector2(Mathf.Max(v.W + 2f, 9f), ViewKit.U(60f));
+                murmur.transform.localPosition = new Vector3(v.W * 0.5f, ViewKit.U(12f), 0f);
+                murmur.gameObject.SetActive(false);
+            }
             lastStage = -1;
+        }
+
+        /// <summary>Word-wrap at <paramref name="cols"/> chars, at most <paramref name="lines"/> lines (ui.js murmur).</summary>
+        public static string Wrap(string text, int cols, int lines)
+        {
+            var outLines = new List<string>();
+            var cur = new System.Text.StringBuilder();
+            foreach (var w in text.Split(' '))
+            {
+                if (cur.Length > 0 && cur.Length + 1 + w.Length > cols) { outLines.Add(cur.ToString()); cur.Clear(); }
+                if (cur.Length > 0) cur.Append(' ');
+                cur.Append(w);
+            }
+            if (cur.Length > 0) outLines.Add(cur.ToString());
+            if (outLines.Count > lines) outLines.RemoveRange(0, outLines.Count - lines);
+            return string.Join("\n", outLines);
         }
 
         public override void Refresh(BuildingView v)
         {
             var sim = v.Sync.Sim; var s = sim.State;
+            if (murmur != null)
+            {
+                string m = s.dragon.dialog == null ? sim.DragonMessage() : null;
+                ViewKit.Show(murmur, m != null);
+                if (m != null) ViewKit.Text(murmur, Wrap(UiText.StripEmoji(m), 42, 3));
+            }
             int stage = s.dragon.stage;
             bool awake = s.won || stage >= sim.Config.dragonStages.Count;
             IsAwake = awake;

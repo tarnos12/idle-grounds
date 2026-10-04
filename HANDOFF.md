@@ -62,7 +62,13 @@ SaveCodec (reflection JSON, schemaVersion, sanitising load, never throws),
 OfflineReplay (Boot() tiers None/Toast/Full, Step/Skip/Finish, summary).
 ALL SIM MILESTONES DONE.
 
-Next: M5+M6 view (in progress), then M7 view: GameRunner load/Boot/autosave
+M5+M6 view done: Enemy + UnlockSign prefabs, DragonDialog, UpgradeTree
+(click the Altar), QuestPanel + milestones, PavilionPanel, buff pills, AUTO
+badges; menu `Install Progression+Combat (M5+M6)` (in rebuild-all).
+SFX WAVs rendered from audio.js: `Assets/_Project/Audio/SFX/`
+(`node tools/sfx/render.js`).
+
+Next: M7 view: GameRunner load/Boot/autosave
 (5 s + pause/quit), welcome-back modal, perk shop, vows, ascension card,
 stats, ending. Then M8 juice/audio, M9 parity.
 ## Last session summary (2026-10-04, port kickoff)
@@ -85,6 +91,8 @@ stats, ending. Then M8 juice/audio, M9 parity.
 - M6 sim: combat + automation + 14 tests.
 - M4 view: wisps, link lines + status dots, link editor.
 - M7 sim: prestige, save codec, offline replay + 21 tests.
+- M5+M6 view: enemies/combat input, unlock signs, altar tree, quest panel,
+  dragon dialog, pavilion panel, buffs, AUTO badges. 13 SFX WAVs.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

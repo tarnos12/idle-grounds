@@ -1,17 +1,24 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// The Altar (spec §2.4): icon 56 px at 38%; name 800 24 px at 68%; muted "Select an upgrade" at 86%
-    /// (upgrade jobs + their gold cost line arrive with the upgrade tree, M5).
+    /// The Altar (spec §2.4): icon 56 px at 38%; name 800 24 px at 68%; with an upgrade job a gold
+    /// remaining-cost line (20 px) at 86% (fed by right-clicking the Altar), else muted
+    /// "Select an upgrade" (left-click opens the upgrade tree).
     /// </summary>
     public class AltarFaceView : BuildingFace
     {
         [SerializeField] SpriteRenderer icon;
         [SerializeField] TextMeshPro title;
         [SerializeField] TextMeshPro sub;
+        [SerializeField] IconRow jobRow;
+
+        readonly List<IconRow.Entry> entries = new List<IconRow.Entry>();
+
+        public bool JobShown => jobRow != null && jobRow.gameObject.activeSelf;
 
         public override void Layout(BuildingView v)
         {
@@ -20,11 +27,26 @@ namespace IdleGrounds.Game
             title.text = v.Def.name; ViewKit.Font(title, 24f); title.color = UiPalette.Gold;
             title.transform.localPosition = v.L(0.5f, 0.68f);
             title.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(28f));
-            sub.text = "Select an upgrade"; ViewKit.Font(sub, 12f); sub.color = UiPalette.Muted;
+            sub.text = "Select an upgrade"; ViewKit.Font(sub, 16f); sub.color = UiPalette.Muted;
             sub.transform.localPosition = v.L(0.5f, 0.86f);
-            sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(16f));
+            sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(20f));
+            if (jobRow != null) { jobRow.transform.localPosition = v.L(0.5f, 0.86f); jobRow.Clear(); }
         }
 
-        public override void Refresh(BuildingView v) { }
+        public override void Refresh(BuildingView v)
+        {
+            var sim = v.Sync.Sim;
+            var job = sim.State.upgradeJob;
+            entries.Clear();
+            if (job != null)
+                foreach (var e in sim.UpgradeJobRemaining()) if (e.qty > 0) entries.Add(new IconRow.Entry(e.item, e.qty));
+            bool on = job != null && jobRow != null;
+            ViewKit.Show(sub, !on);
+            if (jobRow != null)
+            {
+                ViewKit.Show(jobRow, on);
+                if (on) jobRow.Set(entries, 20f, UiPalette.Gold, v.Sync.Sprites, null, v.W - ViewKit.U(8f));
+            }
+        }
     }
 }

@@ -18,6 +18,14 @@ namespace IdleGrounds.Game
         [SerializeField] SpriteRenderer spriteRenderer;
         [SerializeField] SpriteRenderer pad;
         [SerializeField] SortingGroup sortingGroup;
+        [Tooltip("Gold AUTO badge, shown while the automation bot just swung this node (autoFlash).")]
+        [SerializeField] TMPro.TextMeshPro autoBadge;
+        [Tooltip("Three sparkles over the Spirit Tree (§2.5).")]
+        [SerializeField] SpriteRenderer[] sparkles;
+
+        public bool AutoBadgeShown => autoBadge != null && autoBadge.gameObject.activeSelf;
+        public bool SparklesShown => sparkles != null && sparkles.Length > 0 && sparkles[0] != null && sparkles[0].gameObject.activeSelf;
+        static readonly Vector2[] SparkleAt = { new Vector2(-0.28f, -0.72f), new Vector2(0.30f, -0.55f), new Vector2(0.05f, -0.92f) };
 
         public string Area { get; private set; }
         public Node Node { get; private set; }
@@ -58,15 +66,33 @@ namespace IdleGrounds.Game
                 pad.transform.localScale = new Vector3(2f * 0.42f * w, 2f * 7f / cell, 1f);
                 pad.transform.localPosition = Vector3.zero;
             }
+            // Spirit Tree: three sparkles at 22% of the sprite size (offsets x fontPx, y down)
+            bool tree = node.isFixed && node.kind == "spirittree";
+            if (sparkles != null)
+                for (int i = 0; i < sparkles.Length; i++)
+                {
+                    var s = sparkles[i];
+                    if (s == null) continue;
+                    s.gameObject.SetActive(tree && i < SparkleAt.Length);
+                    if (!tree || i >= SparkleAt.Length) continue;
+                    ViewKit.Fit(s, s.sprite, px * 0.22f);
+                    s.transform.localPosition = new Vector3(SparkleAt[i].x * spriteUnits, -SparkleAt[i].y * spriteUnits, 0f);
+                }
+            if (autoBadge != null)
+            {
+                autoBadge.gameObject.SetActive(false);
+                autoBadge.transform.localPosition = new Vector3(spriteUnits * 0.42f, spriteUnits + ViewKit.U(4f), 0f);
+            }
             transform.position = basePos;
             sortingGroup.sortingOrder = node.row;      // back-to-front by row (§2.1)
             squash.localScale = Vector3.one;
         }
 
         /// <summary>Per-frame animation from sim state: hit squash, fish bob.</summary>
-        public void Refresh(double now, int cell)
+        public void Refresh(double now, int cell, bool autoFlash = false)
         {
             var n = Node;
+            if (autoBadge != null && autoBadge.gameObject.activeSelf != autoFlash) autoBadge.gameObject.SetActive(autoFlash);
             float sy = 1f;
             double dt = now - n.hitAt;
             if (n.hitAt > 0 && dt >= 0 && dt < SquashMs)

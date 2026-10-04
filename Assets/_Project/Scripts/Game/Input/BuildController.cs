@@ -23,6 +23,10 @@ namespace IdleGrounds.Game
         [SerializeField] BuildMenuView buildMenu;
         [SerializeField] RecipePickerView recipePicker;
         [SerializeField] LinkEditorView linkEditor;
+        [Header("M5 progression panels")]
+        [SerializeField] UpgradeTreeView upgradeTree;
+        [SerializeField] PavilionPanelView pavilionPanel;
+        [SerializeField] DragonDialogView dragonDialog;
 
         IdleGroundsControls controls;
 
@@ -32,7 +36,13 @@ namespace IdleGrounds.Game
         public bool RecipePickerOpen => recipePicker != null && recipePicker.IsOpen;
         public bool LinkEditorOpen => linkEditor != null && linkEditor.IsOpen;
         public LinkEditorView LinkEditor => linkEditor;
-        public bool AnyPanelOpen => BuildMenuOpen || RecipePickerOpen || LinkEditorOpen;
+        public bool UpgradeTreeOpen => upgradeTree != null && upgradeTree.IsOpen;
+        public bool PavilionOpen => pavilionPanel != null && pavilionPanel.IsOpen;
+        public bool DragonDialogOpen => dragonDialog != null && dragonDialog.IsOpen;
+        public UpgradeTreeView UpgradeTree => upgradeTree;
+        public PavilionPanelView PavilionPanel => pavilionPanel;
+        public DragonDialogView DragonDialog => dragonDialog;
+        public bool AnyPanelOpen => BuildMenuOpen || RecipePickerOpen || LinkEditorOpen || PavilionOpen || UpgradeTreeOpen || DragonDialogOpen;
         /// <summary>Building under the cursor (null in void / when over UI).</summary>
         public Building Hovered { get; private set; }
         public string HoveredArea { get; private set; }
@@ -85,7 +95,7 @@ namespace IdleGrounds.Game
         public void OpenBuildMenu()
         {
             Placing = null; Demolishing = false;
-            CloseRecipePicker(); CloseLinkEditor();
+            CloseRecipePicker(); CloseLinkEditor(); ClosePavilion();
             if (buildMenu != null) buildMenu.Open();
         }
 
@@ -112,11 +122,14 @@ namespace IdleGrounds.Game
 
         public void CancelModes() { Placing = null; Demolishing = false; if (preview != null) preview.Hide(); }
 
-        /// <summary>Esc chain (§3.1): recipe picker → else placing/demolish + build menu.</summary>
+        /// <summary>Esc chain (§3.1): tree → recipe picker → roster → link editor → dragon dialog → placing/demolish + build menu.</summary>
         public void Escape()
         {
+            if (UpgradeTreeOpen) { upgradeTree.Close(); return; }
             if (RecipePickerOpen) { CloseRecipePicker(); return; }
+            if (PavilionOpen) { pavilionPanel.Close(); return; }
             if (LinkEditorOpen) { linkEditor.Escape(); return; }      // picking backs out to the menu, then closes
+            if (DragonDialogOpen) { dragonDialog.Continue(); return; }
             CancelModes();
             CloseBuildMenu();
         }
@@ -213,7 +226,25 @@ namespace IdleGrounds.Game
         public void CloseLinkEditor() { if (linkEditor != null && linkEditor.IsOpen) linkEditor.Close(); }
 
         /// <summary>Clicking elsewhere on the map closes the one open building panel (ui.js:3014).</summary>
-        public void CloseBuildingPanels() { CloseRecipePicker(); CloseLinkEditor(); }
+        public void CloseBuildingPanels() { CloseRecipePicker(); CloseLinkEditor(); ClosePavilion(); }
+
+        // ================= M5: Altar tree + pavilion roster =================
+
+        public void OpenUpgradeTree()
+        {
+            if (upgradeTree == null) return;
+            CloseBuildMenu(); CloseBuildingPanels(); CancelModes();
+            upgradeTree.Open();
+        }
+
+        public void OpenPavilion(string area, Building b)
+        {
+            if (pavilionPanel == null || b == null) return;
+            CloseBuildMenu(); CloseRecipePicker(); CloseLinkEditor();
+            pavilionPanel.Open(area, b);
+        }
+
+        public void ClosePavilion() { if (PavilionOpen) pavilionPanel.Close(); }
 
         // ================= preview + highlight =================
 

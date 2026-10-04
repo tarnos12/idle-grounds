@@ -81,7 +81,7 @@ namespace IdleGrounds.Game
                         v.Bind(area.key, n, sprites.Node(area.key, n), space);
                     }
                     v.seenFrame = frame;
-                    v.Refresh(now, cell);
+                    v.Refresh(now, cell, !n.deco && runner.Sim.NodeAutoFlashing(n));
                 }
                 if (!runner.IsUnlocked(area.key)) continue;
                 foreach (var g in area.ground)

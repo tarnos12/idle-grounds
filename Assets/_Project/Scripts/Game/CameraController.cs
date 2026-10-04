@@ -30,6 +30,9 @@ namespace IdleGrounds.Game
         bool hasBounds;
         Vector2 centre;
 
+        /// <summary>True while a modal that owns WASD / the wheel is open (Altar tree pans its own board).</summary>
+        public static bool PanSuspended;
+
         public bool SprintActive => sprint;
         public float Zoom => zoom;
         public float ZoomTarget => zoomTarget;
@@ -101,12 +104,12 @@ namespace IdleGrounds.Game
 
             // Pan (diagonals intentionally not normalised, as in the original).
             Vector2 pan = controls.Gameplay.Pan.ReadValue<Vector2>();
-            if (pan != Vector2.zero)
+            if (pan != Vector2.zero && !PanSuspended)
                 centre += pan * (PanCellsPerSecond * (sprint ? SprintMultiplier : 1f) * dt);
 
             // Zoom: wheel up = zoom in, wheel down = zoom out.
             float wheel = controls.Gameplay.Zoom.ReadValue<float>();
-            if (Mathf.Abs(wheel) > 0.01f)
+            if (Mathf.Abs(wheel) > 0.01f && !PanSuspended)
                 zoomTarget = Mathf.Clamp(zoomTarget + (wheel < 0 ? ZoomStep : -ZoomStep), ZoomMin, ZoomMax);
 
             if (!Mathf.Approximately(zoom, zoomTarget))

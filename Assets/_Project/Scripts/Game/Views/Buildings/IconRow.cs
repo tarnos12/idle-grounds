@@ -14,7 +14,13 @@ namespace IdleGrounds.Game
         readonly List<IconCount> pool = new List<IconCount>();
         string lastKey;
 
-        public struct Entry { public string item; public int qty; public Entry(string i, int q) { item = i; qty = q; } }
+        public struct Entry
+        {
+            public string item; public int qty; public string label;
+            public Entry(string i, int q) { item = i; qty = q; label = null; }
+            /// <summary>label replaces the qty text (e.g. "3/10" installments).</summary>
+            public Entry(string i, string l) { item = i; qty = 0; label = l; }
+        }
 
         void Awake() { if (template != null) template.gameObject.SetActive(false); }
 
@@ -22,7 +28,7 @@ namespace IdleGrounds.Game
         public void Set(IList<Entry> entries, float px, Color c, SpriteCache sprites, string prefix = null, float maxWidthUnits = 0f)
         {
             var sb = new System.Text.StringBuilder(prefix);
-            foreach (var e in entries) sb.Append(e.item).Append(e.qty).Append(',');
+            foreach (var e in entries) sb.Append(e.item).Append(e.qty).Append(e.label).Append(',');
             sb.Append(px).Append(c);
             string key = sb.ToString();
             if (key == lastKey) return;
@@ -45,7 +51,7 @@ namespace IdleGrounds.Game
                 if (!on) continue;
                 bool isPrefix = !string.IsNullOrEmpty(prefix) && i == 0;
                 int ei = i - (string.IsNullOrEmpty(prefix) ? 0 : 1);
-                string txt = isPrefix ? prefix : entries[ei].qty.ToString();
+                string txt = isPrefix ? prefix : (entries[ei].label ?? entries[ei].qty.ToString());
                 ViewKit.Font(ic.a, px);
                 ic.a.fontStyle = FontStyles.Bold;
                 ic.a.color = c;

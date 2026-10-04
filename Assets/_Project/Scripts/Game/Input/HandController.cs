@@ -25,6 +25,8 @@ namespace IdleGrounds.Game
         [SerializeField] FxService fx;
         [SerializeField] BuildController build;
         [SerializeField] Camera worldCamera;
+        [Tooltip("M5: world-space region unlock signs (clicked before anything else, like the DOM buttons).")]
+        [SerializeField] UnlockSignSync unlockSigns;
 
         [Header("Debug / automation (drives the cursor without a mouse)")]
         public bool useDebugCursor;
@@ -51,6 +53,12 @@ namespace IdleGrounds.Game
         string suckFilter;
         double lastClickAt = -1e9, lastSwing, lastFullBuzz = -1e9, suctionAcc;
         readonly Dictionary<string, double> fixtureHitAt = new Dictionary<string, double>();
+
+        // ---- attack hold (M6) ----
+        bool attackHeld;
+        double lastAttack;
+        public bool AttackHoldActive => attackHeld;
+        public int Attacks { get; private set; }
 
         // ---- right state ----
         struct HoldTarget { public string region; public int id; public bool wasBuilt; public int stage; }
@@ -139,6 +147,8 @@ namespace IdleGrounds.Game
         void LeftDown()
         {
             string area = CursorArea;
+            // 0. a region unlock sign pays the hand toward that region (DOM button in the original)
+            if (TryUnlockSign()) return;
             // 1-2. placement / demolish modes capture the click
             if (build != null && build.HandleWorldLeftClick(area, Lx, Ly, BuildController.ShiftHeld)) return;
             if (area == null) return;
@@ -150,6 +160,17 @@ namespace IdleGrounds.Game
             }
             double lx = Lx, ly = Ly; int row = LRow, col = LCol;
             var areaState = S.Area(area);
+
+            // 5. enemy under the cursor (before buildings): one counted strike per 100 ms, faster = flinch only
+            var en = Sim.EnemyAt(area, lx, ly);
+            if (en != null)
+            {
+                double t = Now;
+                if (t - lastClickAt >= ClickCooldownMs) { Sim.Attack(area, en.id); Attacks++; lastClickAt = t; }
+                else Sim.FlinchEnemy(area, en.id);
+                leftHeld = true; attackHeld = true; lastAttack = t;
+                return;
+            }
 
             // 6. building under the cursor — edge-pick may redirect to vacuum
             var b = Sim.World.BuildingAt(area, row, col);
@@ -196,6 +217,16 @@ namespace IdleGrounds.Game
         void BuildingLeftClick(string area, Building b)
         {
             var def = runner.Config.Building(b.type);
+            if (b.built && b.type == "center")     // the Altar
+            {
+                if (build != null) build.OpenUpgradeTree();
+                return;
+            }
+            if (b.built && def != null && def.roster.enabled)
+            {
+                if (build != null) build.OpenPavilion(area, b);
+                return;
+            }
             if (b.built && def != null && def.IsConverter)
             {
                 if (build != null) build.OpenRecipePicker(area, b);
@@ -220,12 +251,13 @@ namespace IdleGrounds.Game
 
         void LeftUp()
         {
-            leftHeld = false; pickupMode = false; harvestHeld = false; suckFilter = null;
+            leftHeld = false; pickupMode = false; harvestHeld = false; suckFilter = null; attackHeld = false;
             withdrawId = 0; withdrawArea = null;
         }
 
         void RightDown()
         {
+            if (TryUnlockSign()) return;     // right-click on an unlock sign pays like left click
             // 1. right-click cancels placing / demolish and stops
             if (build != null && build.CancelModeFromRightClick()) return;
             string area = CursorArea;
@@ -288,6 +320,19 @@ namespace IdleGrounds.Game
                 }
             }
 
+            if (attackHeld && CursorOver && rg != null)
+            {
+                // attack-hold: re-hit-test the enemy under the cursor every enemies.attackMs (default 400)
+                int iv = Sim.AttackIntervalMs(rg);
+                if (iv <= 0) iv = 400;
+                if (now - lastAttack >= iv)
+                {
+                    var en = Sim.EnemyAt(rg, Lx, Ly);
+                    if (en != null) { Sim.Attack(rg, en.id); Attacks++; }
+                    lastAttack = Now;
+                }
+            }
+
             if (harvestHeld && CursorOver && rg != null)
             {
                 var areaState = S.Area(rg);
@@ -347,6 +392,15 @@ namespace IdleGrounds.Game
         }
 
         // ================= helpers =================
+
+        bool TryUnlockSign()
+        {
+            if (unlockSigns == null) return false;
+            var sign = unlockSigns.HitTest(CursorWorld);
+            if (sign == null) return false;
+            unlockSigns.Pay(sign, CursorWorld);
+            return true;
+        }
 
         int FloorCell(double px) => (int)System.Math.Floor(px / Cell);
 
