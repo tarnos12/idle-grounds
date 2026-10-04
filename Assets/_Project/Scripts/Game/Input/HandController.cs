@@ -154,7 +154,7 @@ namespace IdleGrounds.Game
             // 6. building under the cursor — edge-pick may redirect to vacuum
             var b = Sim.World.BuildingAt(area, row, col);
             if (b != null && !EdgePickRedirect(b, area, lx, ly)) { BuildingLeftClick(area, b); return; }
-            if (build != null) build.CloseRecipePicker();     // clicking elsewhere closes the panel
+            if (build != null) build.CloseBuildingPanels();     // clicking elsewhere closes the panel
 
             if (b == null)
             {
@@ -201,7 +201,12 @@ namespace IdleGrounds.Game
                 if (build != null) build.OpenRecipePicker(area, b);
                 return;
             }
-            if (build != null) build.CloseRecipePicker();
+            if (b.built && def != null && def.lantern.enabled)
+            {
+                if (build != null) build.OpenLinkEditor(area, b);
+                return;
+            }
+            if (build != null) build.CloseBuildingPanels();
             // (the Furnace Spirit is withdrawable in the sim but ui.js only offers it for these three)
             if (b.built && def != null && (b.type == "storehouse" || def.seal.enabled || def.gather.enabled))
             {

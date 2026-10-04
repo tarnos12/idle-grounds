@@ -53,8 +53,12 @@ PavilionSystem (disciples). Altar/Dragon/Gate feed hooks wired.
 M6 sim done (112 tests): CombatSystem (foxes, boar bait, attack/AoE/loot,
 Martial Vigor), AutomationSystem (automationTick + status).
 
-Next: M4 view (wisps, link editor — in progress), M5+M6 view, M7 sim
-(prestige, save/load, offline).
+M4 view done: Wisp/LinkLine/LinkEditor prefabs, WispViewSync, LinkLineSync,
+lantern beat bar, link editor (click a lantern; Add link → pick source →
+target). Rebuild-all menu includes `Install Logistics (M4)`.
+
+Next: M7 sim (prestige, save/load, offline — in progress), M5+M6 view
+(dragon/altar tree/quests/unlock signs/enemies/pavilion).
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -73,6 +77,7 @@ Next: M4 view (wisps, link editor — in progress), M5+M6 view, M7 sim
   tooltips, demolish.
 - M5 sim: dragon, Altar tree, quests/milestones, region unlocks, pavilion + 16 tests.
 - M6 sim: combat + automation + 14 tests.
+- M4 view: wisps, link lines + status dots, link editor.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

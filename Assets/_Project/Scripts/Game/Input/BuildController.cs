@@ -22,6 +22,7 @@ namespace IdleGrounds.Game
         [SerializeField] PlacementPreview preview;
         [SerializeField] BuildMenuView buildMenu;
         [SerializeField] RecipePickerView recipePicker;
+        [SerializeField] LinkEditorView linkEditor;
 
         IdleGroundsControls controls;
 
@@ -29,7 +30,9 @@ namespace IdleGrounds.Game
         public bool Demolishing { get; private set; }
         public bool BuildMenuOpen => buildMenu != null && buildMenu.IsOpen;
         public bool RecipePickerOpen => recipePicker != null && recipePicker.IsOpen;
-        public bool AnyPanelOpen => BuildMenuOpen || RecipePickerOpen;
+        public bool LinkEditorOpen => linkEditor != null && linkEditor.IsOpen;
+        public LinkEditorView LinkEditor => linkEditor;
+        public bool AnyPanelOpen => BuildMenuOpen || RecipePickerOpen || LinkEditorOpen;
         /// <summary>Building under the cursor (null in void / when over UI).</summary>
         public Building Hovered { get; private set; }
         public string HoveredArea { get; private set; }
@@ -82,7 +85,7 @@ namespace IdleGrounds.Game
         public void OpenBuildMenu()
         {
             Placing = null; Demolishing = false;
-            CloseRecipePicker();
+            CloseRecipePicker(); CloseLinkEditor();
             if (buildMenu != null) buildMenu.Open();
         }
 
@@ -93,7 +96,7 @@ namespace IdleGrounds.Game
         {
             if (runner.Config.Building(type) == null) return;
             CloseBuildMenu();
-            CloseRecipePicker();
+            CloseRecipePicker(); CloseLinkEditor();
             Demolishing = false;
             Placing = type;
         }
@@ -103,6 +106,7 @@ namespace IdleGrounds.Game
             bool on = !Demolishing;
             CancelModes();
             CloseBuildMenu();
+            CloseLinkEditor();
             Demolishing = on;
         }
 
@@ -112,6 +116,7 @@ namespace IdleGrounds.Game
         public void Escape()
         {
             if (RecipePickerOpen) { CloseRecipePicker(); return; }
+            if (LinkEditorOpen) { linkEditor.Escape(); return; }      // picking backs out to the menu, then closes
             CancelModes();
             CloseBuildMenu();
         }
@@ -121,6 +126,8 @@ namespace IdleGrounds.Game
         /// <summary>LMB steps 1-2 (§3.2). True = consumed (placing / demolish mode).</summary>
         public bool HandleWorldLeftClick(string area, double lx, double ly, bool shift)
         {
+            // link picking captures ALL world clicks until done / cancelled (ui.js:2972)
+            if (linkEditor != null && linkEditor.Picking) { linkEditor.HandleWorldClick(area, lx, ly); return true; }
             if (Placing != null)
             {
                 int row = (int)System.Math.Floor(ly / runner.Space.Cell), col = (int)System.Math.Floor(lx / runner.Space.Cell);
@@ -140,6 +147,7 @@ namespace IdleGrounds.Game
         /// <summary>RMB step 1: cancel placing / demolish and stop.</summary>
         public bool CancelModeFromRightClick()
         {
+            if (linkEditor != null && linkEditor.Picking) { linkEditor.Escape(); return true; }
             if (Placing == null && !Demolishing) return false;
             CancelModes();
             return true;
@@ -193,6 +201,20 @@ namespace IdleGrounds.Game
 
         public void CloseRecipePicker() { if (recipePicker != null && recipePicker.IsOpen) recipePicker.Close(); }
 
+        // ================= lantern link editor =================
+
+        public void OpenLinkEditor(string area, Building lantern)
+        {
+            if (linkEditor == null || lantern == null) return;
+            CloseBuildMenu(); CloseRecipePicker();
+            linkEditor.Open(area, lantern);
+        }
+
+        public void CloseLinkEditor() { if (linkEditor != null && linkEditor.IsOpen) linkEditor.Close(); }
+
+        /// <summary>Clicking elsewhere on the map closes the one open building panel (ui.js:3014).</summary>
+        public void CloseBuildingPanels() { CloseRecipePicker(); CloseLinkEditor(); }
+
         // ================= preview + highlight =================
 
         void UpdatePreview()
@@ -212,11 +234,22 @@ namespace IdleGrounds.Game
                 reason, def.fuel, reach, rgb, nearBottom);
         }
 
-        (bool, bool, bool) HighlightFor(BuildingView v)
+        (bool, bool, bool, bool) HighlightFor(BuildingView v)
         {
             bool hovered = Hovered != null && v.Building == Hovered && v.Area == HoveredArea && Placing == null;
             bool selected = RecipePickerOpen && recipePicker.Area == v.Area && recipePicker.BuildingId == v.Building.id;
-            return (hovered && !Demolishing && v.Building.built, selected, hovered && Demolishing);
+            bool hover = hovered && !Demolishing && v.Building.built;
+            bool reach = false;
+            if (LinkEditorOpen && linkEditor.Area == v.Area)
+            {
+                int id = v.Building.id;
+                bool cand = linkEditor.IsCandidate(id);
+                // edited lantern + chosen source gold; valid picks outlined, gold while hovered
+                selected = id == linkEditor.LanternId || (linkEditor.Picking && id == linkEditor.SourceId) || (cand && hovered);
+                hover = cand && !selected;
+                reach = v.Def != null && v.Def.gather.enabled;      // every stone of the region shows its circle
+            }
+            return (hover, selected, hovered && Demolishing, reach);
         }
 
         public static bool ShiftHeld => Keyboard.current != null && Keyboard.current.shiftKey.isPressed;

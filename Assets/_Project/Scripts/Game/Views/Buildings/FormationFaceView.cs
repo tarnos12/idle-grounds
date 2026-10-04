@@ -23,6 +23,11 @@ namespace IdleGrounds.Game
         [SerializeField] Transform reach;
         [SerializeField] SpriteRenderer reachFill;
         [SerializeField] SpriteRenderer reachRing;
+        [Tooltip("Lantern beat indicator: thin bar along the tile bottom filling toward the next beat.")]
+        [SerializeField] SpriteRenderer beatTrack;
+        [SerializeField] SpriteRenderer beatFill;
+
+        public const float BeatBarPx = 18f;
 
         public bool ReachVisible => reach != null && reach.gameObject.activeSelf;
 
@@ -34,6 +39,12 @@ namespace IdleGrounds.Game
             ViewKit.Font(badge, 9f);
             if (itemIcon != null) itemIcon.transform.localPosition = new Vector3(0.5f, ViewKit.U(8f), 0f);
             if (badgeIcon != null) ViewKit.Fit(badgeIcon, badgeIcon.sprite, 10f);
+            if (beatTrack != null)
+            {
+                ViewKit.Bar(beatTrack, 0.5f - ViewKit.U(BeatBarPx) * 0.5f, -0.9f, ViewKit.U(BeatBarPx), ViewKit.U(2f));
+                beatTrack.color = ViewKit.Rgba(255, 255, 255, 0.18f);
+                beatFill.color = UiPalette.Gold;
+            }
 
             if (reach != null)
             {
@@ -78,6 +89,22 @@ namespace IdleGrounds.Game
             }
             ViewKit.Text(badge, txt);
             ViewKit.Colour(badge, c);
+            if (beatTrack != null)
+            {
+                // beat indicator: fills toward the next beat while the lantern has links
+                bool active = kind == Kind.WispLantern && b.links != null && b.links.Count > 0;
+                ViewKit.Show(beatTrack, active);
+                ViewKit.Show(beatFill, active);
+                if (active)
+                {
+                    var sim = v.Sync.Sim;
+                    double now = v.Sync.Runner.SimNow;
+                    double beat = sim.Logistics.BeatMs(sim.State.Area(v.Area), def, now);
+                    float frac = beat > 0 ? Mathf.Clamp01(1f - (float)((b.nextSend - now) / beat)) : 1f;
+                    float w = ViewKit.U(BeatBarPx);
+                    ViewKit.Bar(beatFill, 0.5f - w * 0.5f, -0.9f, w * frac, ViewKit.U(2f));
+                }
+            }
             if (badgeIcon != null)
             {
                 ViewKit.Show(badgeIcon, kind == Kind.WispLantern);

@@ -38,6 +38,8 @@ namespace IdleGrounds.Game
         public bool Selected { get; private set; }
         /// <summary>Demolish-mode hover: outline turns red.</summary>
         public bool DemolishHover { get; private set; }
+        /// <summary>Reach circle forced on (link editor open: every stone of the region shows its circle).</summary>
+        public bool ReachForced { get; private set; }
         internal int seenFrame;
         internal GameObject sourcePrefab;
 
@@ -90,14 +92,14 @@ namespace IdleGrounds.Game
             Refresh();
         }
 
-        public void SetHighlight(bool hovered, bool selected, bool demolish)
+        public void SetHighlight(bool hovered, bool selected, bool demolish, bool reach = false)
         {
-            if (hovered == Hovered && selected == Selected && demolish == DemolishHover) return;
-            Hovered = hovered; Selected = selected; DemolishHover = demolish;
+            if (hovered == Hovered && selected == Selected && demolish == DemolishHover && reach == ReachForced) return;
+            Hovered = hovered; Selected = selected; DemolishHover = demolish; ReachForced = reach;
             bool on = hovered || selected || demolish;
             ViewKit.Show(highlight, on);
             if (on) highlight.SetColour(demolish ? UiPalette.Danger : selected ? UiPalette.Gold : new Color(1f, 1f, 1f, 0.55f));
-            foreach (var f in faces) f.SetHighlight(this, (hovered || selected) && !demolish);
+            foreach (var f in faces) f.SetHighlight(this, (hovered || selected || reach) && !demolish);
         }
 
         public void Refresh()

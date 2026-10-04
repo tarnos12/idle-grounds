@@ -28,7 +28,7 @@ namespace IdleGrounds.Editor
         const string ScenePath = "Assets/_Project/Scenes/Game.unity";
         const string Layer = "Buildings";
 
-        static Sprite square, dash, rounded, ring, circle;
+        internal static Sprite square, dash, rounded, ring, circle;
 
         // ------------------------------------------------------------------ menus
 
@@ -65,11 +65,12 @@ namespace IdleGrounds.Editor
         {
             CoreLoopBuilder.InstallMenu();
             InstallMenu();
+            LogisticsBuilder.InstallMenu();
         }
 
         // ------------------------------------------------------------------ shapes
 
-        static void EnsureShapes()
+        internal static void EnsureShapes()
         {
             Directory.CreateDirectory(ShapesDir);
             circle = EnsureCircleSprite();
@@ -130,21 +131,21 @@ namespace IdleGrounds.Editor
 
         // ------------------------------------------------------------------ world helpers
 
-        static T Child<T>(Transform parent, string name) where T : Component
+        internal static T Child<T>(Transform parent, string name) where T : Component
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             return go.AddComponent<T>();
         }
 
-        static Transform Node(Transform parent, string name)
+        internal static Transform Node(Transform parent, string name)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             return go.transform;
         }
 
-        static SpriteRenderer Sr(Transform parent, string name, int order, Sprite s = null, string layer = Layer)
+        internal static SpriteRenderer Sr(Transform parent, string name, int order, Sprite s = null, string layer = Layer)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -155,7 +156,7 @@ namespace IdleGrounds.Editor
             return sr;
         }
 
-        static TextMeshPro Text(Transform parent, string name, float px, Color c, bool bold, int order,
+        internal static TextMeshPro Text(Transform parent, string name, float px, Color c, bool bold, int order,
             TextAlignmentOptions align = TextAlignmentOptions.Center, float widthUnits = 3f, bool ellipsis = false)
         {
             var go = new GameObject(name);
@@ -175,7 +176,7 @@ namespace IdleGrounds.Editor
             return t;
         }
 
-        static EdgeFrame Frame(Transform parent, string name, int order)
+        internal static EdgeFrame Frame(Transform parent, string name, int order)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -211,14 +212,14 @@ namespace IdleGrounds.Editor
             return row;
         }
 
-        static void SetColor(Object target, string field, Color c)
+        internal static void SetColor(Object target, string field, Color c)
         {
             var so = new SerializedObject(target);
             so.FindProperty(field).colorValue = c;
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static void SetArray(Object target, string field, Object[] values)
+        internal static void SetArray(Object target, string field, Object[] values)
         {
             var so = new SerializedObject(target);
             var p = so.FindProperty(field);
@@ -227,7 +228,7 @@ namespace IdleGrounds.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static void SetEnum(Object target, string field, int v)
+        internal static void SetEnum(Object target, string field, int v)
         {
             var so = new SerializedObject(target);
             so.FindProperty(field).enumValueIndex = v;
@@ -347,6 +348,11 @@ namespace IdleGrounds.Editor
                 Set(f, "itemIcon", Sr(f.transform, "ItemIcon", 3));
                 Set(f, "badge", Text(f.transform, "Badge", 9f, UiPalette.Gold, true, 5, TextAlignmentOptions.Center, 2f));
                 Set(f, "badgeIcon", Sr(f.transform, "BadgeIcon", 5, Emoji("ui_link")));
+                if (kind == FormationFaceView.Kind.WispLantern)
+                {
+                    Set(f, "beatTrack", Sr(f.transform, "BeatTrack", 5, square));
+                    Set(f, "beatFill", Sr(f.transform, "BeatFill", 6, square));
+                }
                 if (kind == FormationFaceView.Kind.GatheringStone || kind == FormationFaceView.Kind.FurnaceSpirit)
                 {
                     var reach = Node(f.transform, "Reach");
@@ -470,14 +476,14 @@ namespace IdleGrounds.Editor
 
         // ------------------------------------------------------------------ UI prefabs (1.5x CSS px at 1080p)
 
-        static RectTransform Stretch(RectTransform rt)
+        internal static RectTransform Stretch(RectTransform rt)
         {
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
             return rt;
         }
 
-        static VerticalLayoutGroup Col(GameObject go, int pad, float spacing, TextAnchor align = TextAnchor.UpperLeft)
+        internal static VerticalLayoutGroup Col(GameObject go, int pad, float spacing, TextAnchor align = TextAnchor.UpperLeft)
         {
             var v = go.AddComponent<VerticalLayoutGroup>();
             v.padding = new RectOffset(pad, pad, pad, pad);
@@ -488,7 +494,7 @@ namespace IdleGrounds.Editor
             return v;
         }
 
-        static ContentSizeFitter Fit(GameObject go, bool h, bool v)
+        internal static ContentSizeFitter Fit(GameObject go, bool h, bool v)
         {
             var f = go.AddComponent<ContentSizeFitter>();
             f.horizontalFit = h ? ContentSizeFitter.FitMode.PreferredSize : ContentSizeFitter.FitMode.Unconstrained;

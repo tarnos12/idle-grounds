@@ -32,7 +32,7 @@ namespace IdleGrounds.Game
         public IEnumerable<BuildingView> Views => views.Values;
 
         /// <summary>Optional highlight provider (BuildController): hovered / selected / demolish-hover building.</summary>
-        public System.Func<BuildingView, (bool hover, bool selected, bool demolish)> Highlight;
+        public System.Func<BuildingView, (bool hover, bool selected, bool demolish, bool reach)> Highlight;
 
         void Awake()
         {
@@ -92,13 +92,13 @@ namespace IdleGrounds.Game
                         v.Bind(this, area.key, b, runner.Config.Building(b.type));
                     }
                     v.seenFrame = frame;
-                    if (Highlight != null) { var h = Highlight(v); v.SetHighlight(h.hover, h.selected, h.demolish); }
+                    if (Highlight != null) { var h = Highlight(v); v.SetHighlight(h.hover, h.selected, h.demolish, h.reach); }
                     v.Refresh();
                 }
             }
             releaseList.Clear();
             foreach (var kv in views) if (kv.Value.seenFrame != frame) releaseList.Add(kv.Key);
-            foreach (var k in releaseList) { var v = views[k]; v.SetHighlight(false, false, false); Pool(v.sourcePrefab).Release(v); views.Remove(k); }
+            foreach (var k in releaseList) { var v = views[k]; v.SetHighlight(false, false, false, false); Pool(v.sourcePrefab).Release(v); views.Remove(k); }
         }
     }
 }
