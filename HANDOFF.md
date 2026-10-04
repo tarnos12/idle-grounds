@@ -6,8 +6,10 @@ The repo was restructured for the Unity port. The web prototype (last version
 v52) now lives in `old-game/` — its full history/handoff is in
 `old-game/HANDOFF.md`. No Unity project exists yet.
 
-Next: decide Unity version/render pipeline and create the Unity project at the
-repo root (alongside `old-game/`), plus a Unity `.gitignore`.
+The user is creating the Unity project themselves and will connect Claude via
+the Unity MCP server. Next: once it exists, check the project layout at the
+repo root, add a Unity `.gitignore` if missing, and start porting from
+`old-game/DESIGN.md`. Work directly on `master` (no feature branches).
 
 ## Last session summary (2026-10-04)
 
