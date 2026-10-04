@@ -1,0 +1,5151 @@
+fileFormatVersion: 2
+guid: 75f89391a88c36442b26d704bddd988c
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2015490919092461202
+    second: emoji_atlas_0
+  - first:
+      213: -7624247246456371895
+    second: emoji_atlas_1
+  - first:
+      213: 7895138558914220984
+    second: emoji_atlas_2
+  - first:
+      213: 6162094259324125338
+    second: emoji_atlas_3
+  - first:
+      213: 2751384601650189625
+    second: emoji_atlas_4
+  - first:
+      213: -2341684977202726493
+    second: emoji_atlas_5
+  - first:
+      213: 4846659034557293538
+    second: emoji_atlas_6
+  - first:
+      213: 4124047996790912232
+    second: emoji_atlas_7
+  - first:
+      213: -3572226866738948435
+    second: emoji_atlas_8
+  - first:
+      213: 4015796775981386007
+    second: emoji_atlas_9
+  - first:
+      213: -5190856426529763676
+    second: emoji_atlas_10
+  - first:
+      213: -897367750766167857
+    second: emoji_atlas_11
+  - first:
+      213: 3908254193194180093
+    second: emoji_atlas_12
+  - first:
+      213: 1850985950464704802
+    second: emoji_atlas_13
+  - first:
+      213: -9198464506813144868
+    second: emoji_atlas_14
+  - first:
+      213: 4585557680140975260
+    second: emoji_atlas_15
+  - first:
+      213: 4928632852046633864
+    second: emoji_atlas_16
+  - first:
+      213: -2098351291084336895
+    second: emoji_atlas_17
+  - first:
+      213: 3545251817233399212
+    second: emoji_atlas_18
+  - first:
+      213: 2149510485858166267
+    second: emoji_atlas_19
+  - first:
+      213: -2343091858187953724
+    second: emoji_atlas_20
+  - first:
+      213: -4431825932862345465
+    second: emoji_atlas_21
+  - first:
+      213: -1780744045696634630
+    second: emoji_atlas_22
+  - first:
+      213: -8675950682341738305
+    second: emoji_atlas_23
+  - first:
+      213: -3214553479690618523
+    second: emoji_atlas_24
+  - first:
+      213: 5842090798865235059
+    second: emoji_atlas_25
+  - first:
+      213: 6616780353636573862
+    second: emoji_atlas_26
+  - first:
+      213: 20095534505947022
+    second: emoji_atlas_27
+  - first:
+      213: 1451881096275533104
+    second: emoji_atlas_28
+  - first:
+      213: 1901190819392018692
+    second: emoji_atlas_29
+  - first:
+      213: -1831269968351821682
+    second: emoji_atlas_30
+  - first:
+      213: 8445808235166256590
+    second: emoji_atlas_31
+  - first:
+      213: -343092856159679666
+    second: emoji_atlas_32
+  - first:
+      213: -9097309410035898148
+    second: emoji_atlas_33
+  - first:
+      213: -3212309245755179257
+    second: emoji_atlas_34
+  - first:
+      213: 8661119512107479786
+    second: emoji_atlas_35
+  - first:
+      213: 2110245072665882626
+    second: emoji_atlas_36
+  - first:
+      213: 1537218363994686409
+    second: emoji_atlas_37
+  - first:
+      213: 5602211049145995124
+    second: emoji_atlas_38
+  - first:
+      213: 7069199755166365358
+    second: emoji_atlas_39
+  - first:
+      213: -3958810634109284957
+    second: emoji_atlas_40
+  - first:
+      213: 7584017086760320599
+    second: emoji_atlas_41
+  - first:
+      213: 854254854969963650
+    second: emoji_atlas_42
+  - first:
+      213: -4403259519178369667
+    second: emoji_atlas_43
+  - first:
+      213: 9194525843819062216
+    second: emoji_atlas_44
+  - first:
+      213: -8016226258478343209
+    second: emoji_atlas_45
+  - first:
+      213: 4492162959653052730
+    second: emoji_atlas_46
+  - first:
+      213: 2549368854970675798
+    second: emoji_atlas_47
+  - first:
+      213: -1062359709036772220
+    second: emoji_atlas_48
+  - first:
+      213: -4976911431010062899
+    second: emoji_atlas_49
+  - first:
+      213: 3770037910166841101
+    second: emoji_atlas_50
+  - first:
+      213: -8779707671446314469
+    second: emoji_atlas_51
+  - first:
+      213: 7859320796159308095
+    second: emoji_atlas_52
+  - first:
+      213: -8319119626071997473
+    second: emoji_atlas_53
+  - first:
+      213: 2619261810242215824
+    second: emoji_atlas_54
+  - first:
+      213: -552730434926686280
+    second: emoji_atlas_55
+  - first:
+      213: 5101404755500725220
+    second: emoji_atlas_56
+  - first:
+      213: 97124241419962103
+    second: emoji_atlas_57
+  - first:
+      213: -1157596046325935435
+    second: emoji_atlas_58
+  - first:
+      213: 5025407637057681086
+    second: emoji_atlas_59
+  - first:
+      213: -2644559172202276930
+    second: emoji_atlas_60
+  - first:
+      213: 7552554541137328388
+    second: emoji_atlas_61
+  - first:
+      213: 4037800002419078201
+    second: emoji_atlas_62
+  - first:
+      213: -6748933955159930902
+    second: emoji_atlas_63
+  - first:
+      213: 837473661469845482
+    second: emoji_atlas_64
+  - first:
+      213: -307874889648565404
+    second: emoji_atlas_65
+  - first:
+      213: 7908618492300877180
+    second: emoji_atlas_66
+  - first:
+      213: -3800118490620433028
+    second: emoji_atlas_67
+  - first:
+      213: 6830433973708788517
+    second: emoji_atlas_68
+  - first:
+      213: 8569935147822190256
+    second: emoji_atlas_69
+  - first:
+      213: 422239691605047879
+    second: emoji_atlas_70
+  - first:
+      213: -2830979806239664652
+    second: emoji_atlas_71
+  - first:
+      213: -3963775648447272471
+    second: emoji_atlas_72
+  - first:
+      213: 2069472164460269366
+    second: emoji_atlas_73
+  - first:
+      213: 4144765012523802377
+    second: emoji_atlas_74
+  - first:
+      213: -2655063511960258477
+    second: emoji_atlas_75
+  - first:
+      213: 3340802508455528951
+    second: emoji_atlas_76
+  - first:
+      213: -2368054638814836883
+    second: emoji_atlas_77
+  - first:
+      213: -8456587462416363385
+    second: emoji_atlas_78
+  - first:
+      213: 2693684326183403048
+    second: emoji_atlas_79
+  - first:
+      213: -6787920708536606500
+    second: emoji_atlas_80
+  - first:
+      213: -6983499132917653275
+    second: emoji_atlas_81
+  - first:
+      213: 4020968954475010925
+    second: emoji_atlas_82
+  - first:
+      213: 1291849272308692653
+    second: emoji_atlas_83
+  - first:
+      213: 6029558996089359041
+    second: emoji_atlas_84
+  - first:
+      213: 4466347899029957050
+    second: emoji_atlas_85
+  - first:
+      213: -5825576541222553887
+    second: emoji_atlas_86
+  - first:
+      213: 6381767717670566184
+    second: emoji_atlas_87
+  - first:
+      213: 2470353991232867223
+    second: emoji_atlas_88
+  - first:
+      213: -4306318702526018153
+    second: emoji_atlas_89
+  - first:
+      213: -6582936256964102908
+    second: emoji_atlas_90
+  - first:
+      213: 8590175989976109676
+    second: emoji_atlas_91
+  - first:
+      213: -8089801175648911164
+    second: emoji_atlas_92
+  - first:
+      213: -3933383398715527210
+    second: emoji_atlas_93
+  - first:
+      213: 8872742083567689332
+    second: emoji_atlas_94
+  - first:
+      213: 1148276176436368400
+    second: emoji_atlas_95
+  - first:
+      213: -106289511636985711
+    second: emoji_atlas_96
+  - first:
+      213: -8578111685034415774
+    second: emoji_atlas_97
+  - first:
+      213: -3598956264551508730
+    second: emoji_atlas_98
+  - first:
+      213: 689563616968215649
+    second: emoji_atlas_99
+  - first:
+      213: -3595887724866236882
+    second: emoji_atlas_100
+  - first:
+      213: 6690242963785835700
+    second: emoji_atlas_101
+  - first:
+      213: -2008158826798242374
+    second: emoji_atlas_102
+  - first:
+      213: 8902603569836728593
+    second: emoji_atlas_103
+  - first:
+      213: 4948185673068976186
+    second: emoji_atlas_104
+  - first:
+      213: 4510070286671796949
+    second: emoji_atlas_105
+  - first:
+      213: -8008960065157244864
+    second: emoji_atlas_106
+  - first:
+      213: -4520388080583752474
+    second: emoji_atlas_107
+  - first:
+      213: 2907636613440623442
+    second: emoji_atlas_108
+  - first:
+      213: -5803597959994022984
+    second: emoji_atlas_109
+  - first:
+      213: 3823028303644694154
+    second: emoji_atlas_110
+  - first:
+      213: -2456531971655595034
+    second: emoji_atlas_111
+  - first:
+      213: 8220552850257156280
+    second: emoji_atlas_112
+  - first:
+      213: -5198255106118711729
+    second: emoji_atlas_113
+  - first:
+      213: -32105022274282022
+    second: emoji_atlas_114
+  - first:
+      213: 6481936179105907051
+    second: emoji_atlas_115
+  - first:
+      213: 5663184173062160630
+    second: emoji_atlas_116
+  - first:
+      213: -6504300784449861166
+    second: emoji_atlas_117
+  - first:
+      213: -8281080831740279513
+    second: emoji_atlas_118
+  - first:
+      213: 8884594700502652253
+    second: emoji_atlas_119
+  - first:
+      213: -5374181366031685700
+    second: emoji_atlas_120
+  - first:
+      213: -4125775635218672434
+    second: emoji_atlas_121
+  - first:
+      213: -7231478103530185995
+    second: emoji_atlas_122
+  - first:
+      213: 4525766430348022034
+    second: emoji_atlas_123
+  - first:
+      213: -6338844670484712886
+    second: emoji_atlas_124
+  - first:
+      213: -2083225173927070610
+    second: emoji_atlas_125
+  - first:
+      213: 2459612765131353183
+    second: emoji_atlas_126
+  - first:
+      213: 4306481726580311596
+    second: emoji_atlas_127
+  - first:
+      213: 7289566568959539610
+    second: emoji_atlas_128
+  - first:
+      213: 789992845353907946
+    second: emoji_atlas_129
+  - first:
+      213: 2120436256970049223
+    second: emoji_atlas_130
+  - first:
+      213: 5919638387100961481
+    second: emoji_atlas_131
+  - first:
+      213: 5281387960448331898
+    second: emoji_atlas_132
+  - first:
+      213: 2486748096400156063
+    second: emoji_atlas_133
+  - first:
+      213: -7804285879959501305
+    second: emoji_atlas_134
+  - first:
+      213: -705922044944147325
+    second: emoji_atlas_135
+  - first:
+      213: -8017666682367656098
+    second: emoji_atlas_136
+  - first:
+      213: -2575469619502238869
+    second: emoji_atlas_137
+  - first:
+      213: -672398327557843431
+    second: emoji_atlas_138
+  - first:
+      213: -8453889687677832860
+    second: emoji_atlas_139
+  - first:
+      213: -1132798967651495475
+    second: emoji_atlas_140
+  - first:
+      213: -5208615946239306207
+    second: emoji_atlas_141
+  - first:
+      213: -8167362546941521540
+    second: emoji_atlas_142
+  - first:
+      213: 1725713338102307459
+    second: emoji_atlas_143
+  - first:
+      213: -8993117719500215164
+    second: emoji_atlas_144
+  - first:
+      213: 5776631834282048431
+    second: emoji_atlas_145
+  - first:
+      213: -2196695655913771791
+    second: emoji_atlas_146
+  - first:
+      213: -5500356852048200286
+    second: emoji_atlas_147
+  - first:
+      213: 3420186902540521809
+    second: emoji_atlas_148
+  - first:
+      213: -4899129965471774756
+    second: emoji_atlas_149
+  - first:
+      213: 6050896972355860433
+    second: emoji_atlas_150
+  - first:
+      213: -6622527464740264897
+    second: emoji_atlas_151
+  - first:
+      213: 7845108948909118202
+    second: emoji_atlas_152
+  - first:
+      213: -704030942774396960
+    second: emoji_atlas_153
+  - first:
+      213: 727203339219800644
+    second: emoji_atlas_154
+  - first:
+      213: 412960336229397084
+    second: emoji_atlas_155
+  - first:
+      213: -5205742002920179590
+    second: emoji_atlas_156
+  - first:
+      213: -3357282634817255700
+    second: emoji_atlas_157
+  - first:
+      213: -8220247415067246685
+    second: emoji_atlas_158
+  - first:
+      213: -6106068983568928637
+    second: emoji_atlas_159
+  - first:
+      213: -7070726425230716558
+    second: emoji_atlas_160
+  - first:
+      213: -2187121021377352297
+    second: emoji_atlas_161
+  - first:
+      213: -936505239306766313
+    second: emoji_atlas_162
+  - first:
+      213: -1308222034238931235
+    second: emoji_atlas_163
+  - first:
+      213: -80397550282826162
+    second: emoji_atlas_164
+  - first:
+      213: -2561028301465667381
+    second: emoji_atlas_165
+  - first:
+      213: -8695881824677334622
+    second: emoji_atlas_166
+  - first:
+      213: -2771460068935905263
+    second: emoji_atlas_167
+  - first:
+      213: -3728826550670514264
+    second: emoji_atlas_168
+  - first:
+      213: 8019075764316170837
+    second: emoji_atlas_169
+  - first:
+      213: -5317939496749137711
+    second: emoji_atlas_170
+  - first:
+      213: -3064974054120952856
+    second: emoji_atlas_171
+  - first:
+      213: -5343995150870348316
+    second: emoji_atlas_172
+  - first:
+      213: 5626158088591407234
+    second: emoji_atlas_173
+  - first:
+      213: -929358295237733866
+    second: emoji_atlas_174
+  - first:
+      213: 2506303892334745348
+    second: emoji_atlas_175
+  - first:
+      213: 859386233495221751
+    second: emoji_atlas_176
+  - first:
+      213: 7941653218427161116
+    second: emoji_atlas_177
+  - first:
+      213: -2013165441946313660
+    second: emoji_atlas_178
+  - first:
+      213: -8956419185763245557
+    second: emoji_atlas_179
+  - first:
+      213: -2111553288279155335
+    second: emoji_atlas_180
+  - first:
+      213: -5582830582106272984
+    second: emoji_atlas_181
+  - first:
+      213: -3155950242698378867
+    second: emoji_atlas_182
+  - first:
+      213: -7631640601758173247
+    second: emoji_atlas_183
+  - first:
+      213: -5646345178166921603
+    second: emoji_atlas_184
+  - first:
+      213: 5282306581730547161
+    second: emoji_atlas_185
+  - first:
+      213: -5902425638628770473
+    second: emoji_atlas_186
+  - first:
+      213: 5056916598333774603
+    second: emoji_atlas_187
+  - first:
+      213: 24699200416486410
+    second: emoji_atlas_188
+  - first:
+      213: 6872457509893842171
+    second: emoji_atlas_189
+  - first:
+      213: 4703644567289488908
+    second: emoji_atlas_190
+  - first:
+      213: 3840235128948009148
+    second: emoji_atlas_191
+  - first:
+      213: -3510664893387032310
+    second: emoji_atlas_192
+  - first:
+      213: -4477790103108572480
+    second: emoji_atlas_193
+  - first:
+      213: -652638890460561531
+    second: emoji_atlas_194
+  - first:
+      213: 6827676770069520170
+    second: emoji_atlas_195
+  - first:
+      213: 1068520778844869023
+    second: emoji_atlas_196
+  - first:
+      213: -6384072389341450037
+    second: emoji_atlas_197
+  - first:
+      213: 7526693568299741146
+    second: emoji_atlas_198
+  - first:
+      213: -2299153381005728937
+    second: emoji_atlas_199
+  - first:
+      213: 1055342626885252700
+    second: emoji_atlas_200
+  - first:
+      213: 1648037196363102022
+    second: emoji_atlas_201
+  - first:
+      213: -3669424224668959605
+    second: emoji_atlas_202
+  - first:
+      213: -7015635677758057039
+    second: emoji_atlas_203
+  - first:
+      213: 4404700043761421778
+    second: emoji_atlas_204
+  - first:
+      213: 1823265030054171368
+    second: emoji_atlas_205
+  - first:
+      213: -3294815562730060411
+    second: emoji_atlas_206
+  - first:
+      213: 1603224645070689743
+    second: emoji_atlas_207
+  - first:
+      213: -1632904170262148211
+    second: emoji_atlas_208
+  - first:
+      213: -6472996087927526132
+    second: emoji_atlas_209
+  - first:
+      213: -6545449929177608394
+    second: emoji_atlas_210
+  - first:
+      213: 7301359449523071865
+    second: emoji_atlas_211
+  - first:
+      213: 8333487172436850840
+    second: emoji_atlas_212
+  - first:
+      213: -209685702160094551
+    second: emoji_atlas_213
+  - first:
+      213: -4113746934914312415
+    second: emoji_atlas_214
+  - first:
+      213: 7104686047082281685
+    second: emoji_atlas_215
+  - first:
+      213: 3224194727362707647
+    second: emoji_atlas_216
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 128
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: item_wood
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 983c4194747fce541802590730bf45f6
+      internalID: 1643281676
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_leaves
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a2d8103abc112e24499a2114fd7fe143
+      internalID: 1766674322
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_wheat
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6fb52dc6f82c58442bf95613fbb688e7
+      internalID: 1815806204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_cotton
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d3ca4211f5fbfc749b07674e29e562f0
+      internalID: 1907454297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_stone
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9f71c52dbda48e243a8e063dff62c495
+      internalID: 1316291070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_clay
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e319b12c8d3e15749ad8bfd5cbefa4ac
+      internalID: 134556223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_sand
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 35ab4b1c1210f924d9469b1d8ed0ef20
+      internalID: -1963020721
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_iron_ore
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6e2539bffc835de449070293cd84ad0c
+      internalID: 3776249
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_iron_bar
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85303988df1a411429dd4152615b92c3
+      internalID: -1427670751
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_fish
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 99d869f34d3f78647885b7309a48c53b
+      internalID: -1481272261
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_algae
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 699120223c0bd654f95e2598857934fb
+      internalID: -1838880202
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_water
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 886104b618d9c57499e2a47182416110
+      internalID: 2082054900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_spirit_essence
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 16035037a5691b64fa62dd82f1fb712f
+      internalID: -432392309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_spirit_herb
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1870dc8f445d8fa4192fefda639266fe
+      internalID: -212115870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_bamboo
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 92201398bd40e4642abcd6d15acefa60
+      internalID: 612587745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_jade_shard
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 1408
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 85141d5d1dfcd5240819bc82fcc2cd25
+      internalID: -977588002
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_plank
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e3befb013b08ad04a8b203355f61f5b5
+      internalID: 1176415146
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_brick
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 28e83ed2b56ce0346a53b3ebd12af2ca
+      internalID: -659951758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_paper
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9487f95726533044fba7d49341c1454a
+      internalID: -287779248
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_spirit_stone
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e11fd8f919b1c94f82b411e36e51dd2
+      internalID: 2068497302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_tools
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1b3a3c2d67bcf4a499dd3d218f311a05
+      internalID: -2036218522
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_glass
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b25bc87ea46af94785942ec809ebd94
+      internalID: 932515814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_spirit_jade
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e7628bade7933ae4c96c98274d196e4b
+      internalID: -929342336
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_cloth
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 27ce913857ce9fb4ca486517ed011c92
+      internalID: -933240243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_rope
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5d02485cd514ba84595febbcc597290d
+      internalID: 1474381993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_robe
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 59c2d71b45a5ac440a1b3abd0b7a7e3d
+      internalID: -1113194211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_flour
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c89ab71da8bc704cae1673ddbf60f6f
+      internalID: 60830123
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_spirit_buns
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 51837215ccf6f8945892082a41e16635
+      internalID: -667577448
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_spirit_wine
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5faef30aa98e0d444b1131df172aeac6
+      internalID: -618722706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_qi_elixir
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ae2dee0e1b257fc4a80152ca19e04c99
+      internalID: -493557240
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_vitality_pill
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 892c25a483dd1f845841bfbd6023c319
+      internalID: -1953571897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_beast_bait
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 1280
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a222d66ea70d8c44eb14881e553fb796
+      internalID: 1732231771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_charcoal
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ee098208ad680744aa8cc876908383e0
+      internalID: 555690103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_jade
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0c40439210c429b42879ebc244cf6c0b
+      internalID: -896423865
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_firestone
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2090636df6be23448bb1b11bafb17765
+      internalID: -1262905009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_beast_bone
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 68b26f3057163c0468bfcf087e2f4f97
+      internalID: 838356034
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_star_steel
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 42445570c7bc4ae4e9e2397a39917800
+      internalID: -31031923
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_ember_pill
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e983dbeb4eca454da9df5d33a3ea3b7
+      internalID: 1784372748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_verdant_pill
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dc8916f3ff2fc9249a7c86f8bf0d9f45
+      internalID: 714857776
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_swiftwind_pill
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d87135193de66d94abf67b9635e27f60
+      internalID: -446523461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_stoneheart_pill
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f03d98daa60e3524995a15beaf84c2d0
+      internalID: -849524122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_talisman
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a24757cdd6d58804d9b5f66bed77b316
+      internalID: 76059736
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_dragon_scale
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 374edd8a397ac6b4d9dcf3c4b1b7026a
+      internalID: 117621966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_obsidian
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 08f5957088a112f419333108b5493bc2
+      internalID: -2097637762
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_star_fragment
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b54e9c0941fb2754fa09b0a890e868d0
+      internalID: 1187896617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: item_moonpetal
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8fce93fb759a6ac4d8db4ea569c533c2
+      internalID: 1379263392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_center
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 647be0d7dde9f954aa20c8e75fc2c0df
+      internalID: -1979876596
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_dragon
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 1152
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9b9b5dd836a542b479101fb7b5686fea
+      internalID: -904241826
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_workbench
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f8693e4f0e207644db8e96b08bc932d8
+      internalID: -969931254
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_kiln
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e087d63ed40da624fbd72c179399a2b4
+      internalID: 1686312121
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_paper_mill
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a8bb7e5146090154e95009fd4c71c5ca
+      internalID: 1094710580
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_infusion_array
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: add6a8f8ff5917d4d8204029cabf440b
+      internalID: 1325120152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_loom
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 115d724d8d7f55848b27b766994debb7
+      internalID: -886931780
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_mill
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cd1108502097d6a42953dffa8682b5af
+      internalID: 1810914972
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_brewery
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f385702805874044c8204474a092ea42
+      internalID: -1647561851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_cauldron
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 858ae36a9b4897a4daa0d5dc913891ed
+      internalID: -898384007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_jade_carver
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f9b3973bade8ed445b3041b6c431e9f9
+      internalID: -529772852
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_pill_furnace
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fdc4c218689934b4b89890cd5275862c
+      internalID: -271802697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_star_anvil
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6bd3a4bccabaa424991e4069c4cfd251
+      internalID: -1630647397
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_talisman_atelier
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: db195692c12475c48a2075e88182e5d3
+      internalID: -431649843
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_dragon_shrine
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3c350bf495d53fa438441853a22e33f5
+      internalID: -378132021
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_ascension_gate
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 07461d36ee7f26647965ce39d02fdac0
+      internalID: 310685840
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_charcoal_pit
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a6017c9f77ef8804fa0911f2c546f43d
+      internalID: 1906577018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_furnace_spirit
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 1024
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bb7f9fd3fd0da8a4ea063d41dabbe142
+      internalID: -1988414181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_meditation_pavilion
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 404043722f2991c4cb03b2f2fb095cb0
+      internalID: -379178059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_forge
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3dff9c9d6ac2d014caafd8c6a84d57b0
+      internalID: -1174358089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_storehouse
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87e15e2337248c04eb49931264e163d4
+      internalID: 401289947
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_algae_farm
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f9d6d498fff21b440987a983d1f79d88
+      internalID: 101879777
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_herb_garden
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c79afaa7cb177384c8609e161c2e0379
+      internalID: 558660429
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_gathering_stone
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5640f599ca93df84fbc465a094df9e95
+      internalID: 876655831
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_wisp_lantern
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1c0534c8b0a28e849a1dfff0c462d133
+      internalID: 449270327
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: bld_warding_seal
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e999ad115f1c735448d51ed2654bc2fe
+      internalID: 1123538657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_area_center
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cde59fde64471c841a4acd021c6e0f3c
+      internalID: -1045212250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_action_center
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 00837e6a32487634f899181d9761d496
+      internalID: -1708793007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_bush
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 30ff2204636906d4591c700e36c4d83b
+      internalID: -1871362101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: fix_quarry
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cd3ca269ae5328e4aa97adfc749b1871
+      internalID: 2107810323
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: fix_spirittree
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: edd37a09aca2e6d43ab416d77fdc24c3
+      internalID: -1277693244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: enemy_fox
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 40e8eaeea209d194f924bff853ee6f17
+      internalID: -162250512
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: enemy_boar
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 306d33e72648fff49af736f6bcb350bd
+      internalID: 1744168387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_area_farm
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 896
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cf138a19f6c635440b4b8f7e12011d81
+      internalID: -386304086
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_action_farm
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9db51475a69d364488704a99e32f8e34
+      internalID: 569376657
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_crop
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dd1222db07936914494d8d0ce51a7f16
+      internalID: -380064397
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_cotton
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ec5de51dfd587e646995a28874cd0410
+      internalID: 1907465568
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_area_mine
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1e41487e2d1bd2d44837fc855b4ac8bb
+      internalID: 1091492606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_action_mine
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f06fa19c64b3224448bf409c52779262
+      internalID: 1468804644
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_ore
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 186cfafc1217a4548998954ad82064cc
+      internalID: 1147092697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_ironvein
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e739671eeb7a9ea408bec041e28958ec
+      internalID: -1433539018
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_jadevein
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 72d9a6c29b728fb49a4ab895aab41f22
+      internalID: -1548191747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_area_fishing
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c38c143122f22dc44a30ac8118150b87
+      internalID: 473041099
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_action_fishing
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5eedf2ee476ad1545b4238ac04a35031
+      internalID: -385929388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_fish
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 75d771373d783c843b5b37081745ee3b
+      internalID: 1192079518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_algae
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4f837fdb46367bf469315330bc4818b6
+      internalID: 1306688085
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: fix_spring
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 328388d76c8b54041bce9ab649d84a94
+      internalID: -911964136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_area_volcano
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 09ecc0ac238b1614bab77b51e2cc447c
+      internalID: -721989453
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_action_volcano
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6c8032c242222a9428e5f72db8df2619
+      internalID: -749212245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_obsidian
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 768
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6735c640c85278d438a4a26a91024255
+      internalID: 2032171820
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_firevein
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9e1eed379fb631647a293937ac6471fc
+      internalID: -1155112939
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_area_grove
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eccc90fe559268a4b9a6b1bde8bc4e11
+      internalID: 879606946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_action_grove
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 26d02c35a5cb7e8439ef8f5fff7a2c52
+      internalID: -2016075672
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_herbbush
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5ddc801b425278045966aa353b2a3c39
+      internalID: -777932761
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_bamboostalk
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d9c8e4e2585be554c8bd95c5efbe2fc6
+      internalID: 1344160190
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_area_celestial
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 439a314d860bdc64bbdb1f09bfa2efe2
+      internalID: -1720451904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_action_celestial
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ff092392b741ab249b96649e21707101
+      internalID: -1076005617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_starrock
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 14006bb70da127e4b8ae630f0964c001
+      internalID: -1279029670
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: node_moonshrub
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e72615f757055f14f9a741527e747435
+      internalID: 1368577071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dragon_sleeping
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 688e243815a9ab649aa45ef80dfaea42
+      internalID: 453149986
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dragon_awake
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e4c9cc7387850c44293f9df70847a313
+      internalID: -1126782508
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_haste
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0b4695a7e54a90f4f98864ed31de6938
+      internalID: -1536434394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_hall
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e50ca237bade42740ba5ba858ba72df9
+      internalID: -1164297379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_slumber
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8e9501aaee9d39f4d8ac0f54e1c05db4
+      internalID: 485935769
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_hands
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 51327453109469a44805e39a0b4f7389
+      internalID: 190913908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_frugal
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 640
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e605f3b583e79447967d4398136660b
+      internalID: 220785457
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_ember
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9c84f11bd6ca06844b907d889fe51271
+      internalID: -2009764059
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_apgain
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9da9b2ecf579fc9488af58dff0bd8e9d
+      internalID: -116471587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_autoboost
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 664caadceee98474593da89071b51758
+      internalID: -2009793850
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_regrow
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2dec35ad598483246bf43124a7e6636d
+      internalID: 1944976571
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_gale
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 20a0326d00e52344890c5984b09be0b5
+      internalID: 1347988809
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_fury
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8ee1a841110eb844d8c52f897eb09cb4
+      internalID: 274949775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_bless
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 20b2a3f9838963c44afe2081e135fc91
+      internalID: 183189656
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_bounty
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8f30d06ae192c614aa72842a0dbb7013
+      internalID: -1532268860
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_paths
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3492808ef5ffce341b7b99bf87550a0f
+      internalID: -1573087955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: perk_legacy
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cced43f900249a644810fd6864ef9ad5
+      internalID: -866238642
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_hand
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3a83f9782905192438b1abb62985a9c3
+      internalID: -1315380296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_wisps
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c97d1922d3cb953449484da348992211
+      internalID: -1151406607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_affinity
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b87f88f0a7efd964dbb8b4ea4273a39a
+      internalID: -1266497800
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_disciples
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a7cecedcd5204a44e858e368b3ddf180
+      internalID: 732544882
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_spd_c
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d8979775842a9d245818cdbdade0a45f
+      internalID: -920114286
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_auto_c
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 512
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 788ca81cb81e3ee4eb1dfe851620e5d5
+      internalID: -1770687433
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_act_fi
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6c7aed4a1118fb845bdb5d8903c27036
+      internalID: -73499810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_act_c
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c3051a13033a2f44585403617c8eee65
+      internalID: -1676567886
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_quarry
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d74dabae1d8657145b688e3045ed5f86
+      internalID: 833754093
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_act_m
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a4f0ec4126f5e7a4eaca3c97127875c9
+      internalID: 2056477975
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_spd_f
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 87ddd8d4819b366408c898b4f90741d8
+      internalID: 2036419615
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_act_f
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 461fbb31eaa256f44b96380266042eb6
+      internalID: -1375462808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_auto_f
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7133ecc177814a048bd39105aae9e97f
+      internalID: 106885422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_spd_m
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b4f8b87a81425b241b7a9a2a958d635a
+      internalID: -13711925
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_spd_fi
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1f495a00ad664b4d87fe8000d318509
+      internalID: -2146903496
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_auto_m
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ce8fccb53ddb9cd4382a0d989785af34
+      internalID: -826149223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_foe_cap
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e557b00aebc49c845bc29cbe9deaedcc
+      internalID: -1044359536
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_foe_dmg
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0ed090bc68245f141bd873d43f8d5994
+      internalID: 1481538528
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: upg_foe_aoe
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ebb2564931a4ea4439f2de401bc29f87
+      internalID: -756431861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_vow_burden
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1f49c6bab85cab74386c712a77ac0cb5
+      internalID: 1535601134
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_vow_coldhearth
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: e068101ec81e1104f864dddaccc8bcdd
+      internalID: 1074036245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_vow_restless
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 384
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4d95b2158120fcc4a9244c36b80b2cb4
+      internalID: 1874156725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_vow_solitude
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: bcfbffb6df6f65645a47ed79a4074cbe
+      internalID: 143601833
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_wood
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3aee304bd5493144abd69d0e00bf61e2
+      internalID: 1220887880
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_leaves
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: eb603ef52f1c96a46a0dc4b4116d94d0
+      internalID: -9194645
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_dragon1
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a8971d2a5f6d46e4cb7d2694369574ad
+      internalID: -421365848
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_fox
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1da4b71abdb540442b619d7e97bbc23e
+      internalID: -1722552587
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_build
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f73565cdcf6f1e942879e90ff57e0deb
+      internalID: 1415508242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_upgrade
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1d514b14d05dda4e9777478719fb823
+      internalID: 345565948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_link
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0bc6cb3e15cc75446aa427e28f9bc488
+      internalID: -541339145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_explore
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e4511ce787286f4fa1bc765c04d3f7e
+      internalID: -1811920652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_dragon2
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c3fc1d4bd2e944140aff0d3c1663408e
+      internalID: -1241137464
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_iron
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 91bd06f205353b7479dba58d239bf1c1
+      internalID: -1670308100
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_waters
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dbfccb119a09ef449b3252c286c10f13
+      internalID: 1481890909
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_dragon3
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 62b878ff8ac40db4dbff089eb3955d65
+      internalID: 1416765484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_weaver
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 66db7c04d3aff7d44b72ba0b023ebb9a
+      internalID: 1530673223
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quest_cultivate
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f1ed0c0369ab43a41a2faf39c6dca96e
+      internalID: 1877843468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_hand
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 256
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 43e7137f2a140a5419bfe12d59481595
+      internalID: -921601978
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_wisp
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 34cec498510f8fe4aa0cc1fac09d35f4
+      internalID: 699787372
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_sparkle
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b2e38571815f974499c685df6070ae4a
+      internalID: 1061949484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_lock
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ea2fa78112ca5b24aa5fdf2fdffd064d
+      internalID: 1122604880
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_unlock
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f558ed473f3d939419cfb99202c35263
+      internalID: 1290389853
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_target
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a0831a335c6a77649ba7668c18c0c462
+      internalID: 302302395
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_quests
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6213e9fd3ce9acf4796af54e53d7132d
+      internalID: -146464525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_alert
+      rect:
+        serializedVersion: 2
+        x: 768
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c97a63a45db5ad9488f63efd02f1603d
+      internalID: -1935059799
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_ascend
+      rect:
+        serializedVersion: 2
+        x: 896
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 03bdc96f1af8ec24c82c1e56dc4e0393
+      internalID: -686148592
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_disciple
+      rect:
+        serializedVersion: 2
+        x: 1024
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 91862baf5112684408c864d10d2ba80f
+      internalID: -1409155328
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_add
+      rect:
+        serializedVersion: 2
+        x: 1152
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: b96b50d972e9d9b4b9acfb2fae878910
+      internalID: 1771754445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_demolish
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 920fb055ff3ce6c48be44ba3d6973b4f
+      internalID: 1918620031
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_stats
+      rect:
+        serializedVersion: 2
+        x: 1408
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6ba60a66237c7994e99568a333b8ada6
+      internalID: 342564905
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_claim
+      rect:
+        serializedVersion: 2
+        x: 1536
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2d982e08140d3cc45a396862b523e719
+      internalID: 2110930969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_sprint
+      rect:
+        serializedVersion: 2
+        x: 1664
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f28c7e844d6243f4fa750db29c2da850
+      internalID: 55191389
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_wilds
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 68763b7c0d110e74bbf5306ae6651b35
+      internalID: -1206952201
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_controls
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 128
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9a12ce3dd788359428311adc2f1691dc
+      internalID: -513298000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_build
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1844d13e3b87e0e439e1f15fe3dfe199
+      internalID: 1733819151
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_welcome_moon
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 5c468c0c744574c41bff308a675a9ffa
+      internalID: -645665211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_link
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 887293e5a34cef44796bc5baf3f82570
+      internalID: 1603892646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ui_gathering_stone
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 0
+        width: 128
+        height: 128
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 99d73c07e89f87f4fab5a1a5b69fc566
+      internalID: -379114613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: adf421406a956964cadd073f304b71ed
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      bld_algae_farm: 101879777
+      bld_ascension_gate: 310685840
+      bld_brewery: -1647561851
+      bld_cauldron: -898384007
+      bld_center: -1979876596
+      bld_charcoal_pit: 1906577018
+      bld_dragon: -904241826
+      bld_dragon_shrine: -378132021
+      bld_forge: -1174358089
+      bld_furnace_spirit: -1988414181
+      bld_gathering_stone: 876655831
+      bld_herb_garden: 558660429
+      bld_infusion_array: 1325120152
+      bld_jade_carver: -529772852
+      bld_kiln: 1686312121
+      bld_loom: -886931780
+      bld_meditation_pavilion: -379178059
+      bld_mill: 1810914972
+      bld_paper_mill: 1094710580
+      bld_pill_furnace: -271802697
+      bld_star_anvil: -1630647397
+      bld_storehouse: 401289947
+      bld_talisman_atelier: -431649843
+      bld_warding_seal: 1123538657
+      bld_wisp_lantern: 449270327
+      bld_workbench: -969931254
+      dragon_awake: -1126782508
+      dragon_sleeping: 453149986
+      emoji_atlas_0: -2015490919092461202
+      emoji_atlas_1: -7624247246456371895
+      emoji_atlas_10: -5190856426529763676
+      emoji_atlas_100: -3595887724866236882
+      emoji_atlas_101: 6690242963785835700
+      emoji_atlas_102: -2008158826798242374
+      emoji_atlas_103: 8902603569836728593
+      emoji_atlas_104: 4948185673068976186
+      emoji_atlas_105: 4510070286671796949
+      emoji_atlas_106: -8008960065157244864
+      emoji_atlas_107: -4520388080583752474
+      emoji_atlas_108: 2907636613440623442
+      emoji_atlas_109: -5803597959994022984
+      emoji_atlas_11: -897367750766167857
+      emoji_atlas_110: 3823028303644694154
+      emoji_atlas_111: -2456531971655595034
+      emoji_atlas_112: 8220552850257156280
+      emoji_atlas_113: -5198255106118711729
+      emoji_atlas_114: -32105022274282022
+      emoji_atlas_115: 6481936179105907051
+      emoji_atlas_116: 5663184173062160630
+      emoji_atlas_117: -6504300784449861166
+      emoji_atlas_118: -8281080831740279513
+      emoji_atlas_119: 8884594700502652253
+      emoji_atlas_12: 3908254193194180093
+      emoji_atlas_120: -5374181366031685700
+      emoji_atlas_121: -4125775635218672434
+      emoji_atlas_122: -7231478103530185995
+      emoji_atlas_123: 4525766430348022034
+      emoji_atlas_124: -6338844670484712886
+      emoji_atlas_125: -2083225173927070610
+      emoji_atlas_126: 2459612765131353183
+      emoji_atlas_127: 4306481726580311596
+      emoji_atlas_128: 7289566568959539610
+      emoji_atlas_129: 789992845353907946
+      emoji_atlas_13: 1850985950464704802
+      emoji_atlas_130: 2120436256970049223
+      emoji_atlas_131: 5919638387100961481
+      emoji_atlas_132: 5281387960448331898
+      emoji_atlas_133: 2486748096400156063
+      emoji_atlas_134: -7804285879959501305
+      emoji_atlas_135: -705922044944147325
+      emoji_atlas_136: -8017666682367656098
+      emoji_atlas_137: -2575469619502238869
+      emoji_atlas_138: -672398327557843431
+      emoji_atlas_139: -8453889687677832860
+      emoji_atlas_14: -9198464506813144868
+      emoji_atlas_140: -1132798967651495475
+      emoji_atlas_141: -5208615946239306207
+      emoji_atlas_142: -8167362546941521540
+      emoji_atlas_143: 1725713338102307459
+      emoji_atlas_144: -8993117719500215164
+      emoji_atlas_145: 5776631834282048431
+      emoji_atlas_146: -2196695655913771791
+      emoji_atlas_147: -5500356852048200286
+      emoji_atlas_148: 3420186902540521809
+      emoji_atlas_149: -4899129965471774756
+      emoji_atlas_15: 4585557680140975260
+      emoji_atlas_150: 6050896972355860433
+      emoji_atlas_151: -6622527464740264897
+      emoji_atlas_152: 7845108948909118202
+      emoji_atlas_153: -704030942774396960
+      emoji_atlas_154: 727203339219800644
+      emoji_atlas_155: 412960336229397084
+      emoji_atlas_156: -5205742002920179590
+      emoji_atlas_157: -3357282634817255700
+      emoji_atlas_158: -8220247415067246685
+      emoji_atlas_159: -6106068983568928637
+      emoji_atlas_16: 4928632852046633864
+      emoji_atlas_160: -7070726425230716558
+      emoji_atlas_161: -2187121021377352297
+      emoji_atlas_162: -936505239306766313
+      emoji_atlas_163: -1308222034238931235
+      emoji_atlas_164: -80397550282826162
+      emoji_atlas_165: -2561028301465667381
+      emoji_atlas_166: -8695881824677334622
+      emoji_atlas_167: -2771460068935905263
+      emoji_atlas_168: -3728826550670514264
+      emoji_atlas_169: 8019075764316170837
+      emoji_atlas_17: -2098351291084336895
+      emoji_atlas_170: -5317939496749137711
+      emoji_atlas_171: -3064974054120952856
+      emoji_atlas_172: -5343995150870348316
+      emoji_atlas_173: 5626158088591407234
+      emoji_atlas_174: -929358295237733866
+      emoji_atlas_175: 2506303892334745348
+      emoji_atlas_176: 859386233495221751
+      emoji_atlas_177: 7941653218427161116
+      emoji_atlas_178: -2013165441946313660
+      emoji_atlas_179: -8956419185763245557
+      emoji_atlas_18: 3545251817233399212
+      emoji_atlas_180: -2111553288279155335
+      emoji_atlas_181: -5582830582106272984
+      emoji_atlas_182: -3155950242698378867
+      emoji_atlas_183: -7631640601758173247
+      emoji_atlas_184: -5646345178166921603
+      emoji_atlas_185: 5282306581730547161
+      emoji_atlas_186: -5902425638628770473
+      emoji_atlas_187: 5056916598333774603
+      emoji_atlas_188: 24699200416486410
+      emoji_atlas_189: 6872457509893842171
+      emoji_atlas_19: 2149510485858166267
+      emoji_atlas_190: 4703644567289488908
+      emoji_atlas_191: 3840235128948009148
+      emoji_atlas_192: -3510664893387032310
+      emoji_atlas_193: -4477790103108572480
+      emoji_atlas_194: -652638890460561531
+      emoji_atlas_195: 6827676770069520170
+      emoji_atlas_196: 1068520778844869023
+      emoji_atlas_197: -6384072389341450037
+      emoji_atlas_198: 7526693568299741146
+      emoji_atlas_199: -2299153381005728937
+      emoji_atlas_2: 7895138558914220984
+      emoji_atlas_20: -2343091858187953724
+      emoji_atlas_200: 1055342626885252700
+      emoji_atlas_201: 1648037196363102022
+      emoji_atlas_202: -3669424224668959605
+      emoji_atlas_203: -7015635677758057039
+      emoji_atlas_204: 4404700043761421778
+      emoji_atlas_205: 1823265030054171368
+      emoji_atlas_206: -3294815562730060411
+      emoji_atlas_207: 1603224645070689743
+      emoji_atlas_208: -1632904170262148211
+      emoji_atlas_209: -6472996087927526132
+      emoji_atlas_21: -4431825932862345465
+      emoji_atlas_210: -6545449929177608394
+      emoji_atlas_211: 7301359449523071865
+      emoji_atlas_212: 8333487172436850840
+      emoji_atlas_213: -209685702160094551
+      emoji_atlas_214: -4113746934914312415
+      emoji_atlas_215: 7104686047082281685
+      emoji_atlas_216: 3224194727362707647
+      emoji_atlas_22: -1780744045696634630
+      emoji_atlas_23: -8675950682341738305
+      emoji_atlas_24: -3214553479690618523
+      emoji_atlas_25: 5842090798865235059
+      emoji_atlas_26: 6616780353636573862
+      emoji_atlas_27: 20095534505947022
+      emoji_atlas_28: 1451881096275533104
+      emoji_atlas_29: 1901190819392018692
+      emoji_atlas_3: 6162094259324125338
+      emoji_atlas_30: -1831269968351821682
+      emoji_atlas_31: 8445808235166256590
+      emoji_atlas_32: -343092856159679666
+      emoji_atlas_33: -9097309410035898148
+      emoji_atlas_34: -3212309245755179257
+      emoji_atlas_35: 8661119512107479786
+      emoji_atlas_36: 2110245072665882626
+      emoji_atlas_37: 1537218363994686409
+      emoji_atlas_38: 5602211049145995124
+      emoji_atlas_39: 7069199755166365358
+      emoji_atlas_4: 2751384601650189625
+      emoji_atlas_40: -3958810634109284957
+      emoji_atlas_41: 7584017086760320599
+      emoji_atlas_42: 854254854969963650
+      emoji_atlas_43: -4403259519178369667
+      emoji_atlas_44: 9194525843819062216
+      emoji_atlas_45: -8016226258478343209
+      emoji_atlas_46: 4492162959653052730
+      emoji_atlas_47: 2549368854970675798
+      emoji_atlas_48: -1062359709036772220
+      emoji_atlas_49: -4976911431010062899
+      emoji_atlas_5: -2341684977202726493
+      emoji_atlas_50: 3770037910166841101
+      emoji_atlas_51: -8779707671446314469
+      emoji_atlas_52: 7859320796159308095
+      emoji_atlas_53: -8319119626071997473
+      emoji_atlas_54: 2619261810242215824
+      emoji_atlas_55: -552730434926686280
+      emoji_atlas_56: 5101404755500725220
+      emoji_atlas_57: 97124241419962103
+      emoji_atlas_58: -1157596046325935435
+      emoji_atlas_59: 5025407637057681086
+      emoji_atlas_6: 4846659034557293538
+      emoji_atlas_60: -2644559172202276930
+      emoji_atlas_61: 7552554541137328388
+      emoji_atlas_62: 4037800002419078201
+      emoji_atlas_63: -6748933955159930902
+      emoji_atlas_64: 837473661469845482
+      emoji_atlas_65: -307874889648565404
+      emoji_atlas_66: 7908618492300877180
+      emoji_atlas_67: -3800118490620433028
+      emoji_atlas_68: 6830433973708788517
+      emoji_atlas_69: 8569935147822190256
+      emoji_atlas_7: 4124047996790912232
+      emoji_atlas_70: 422239691605047879
+      emoji_atlas_71: -2830979806239664652
+      emoji_atlas_72: -3963775648447272471
+      emoji_atlas_73: 2069472164460269366
+      emoji_atlas_74: 4144765012523802377
+      emoji_atlas_75: -2655063511960258477
+      emoji_atlas_76: 3340802508455528951
+      emoji_atlas_77: -2368054638814836883
+      emoji_atlas_78: -8456587462416363385
+      emoji_atlas_79: 2693684326183403048
+      emoji_atlas_8: -3572226866738948435
+      emoji_atlas_80: -6787920708536606500
+      emoji_atlas_81: -6983499132917653275
+      emoji_atlas_82: 4020968954475010925
+      emoji_atlas_83: 1291849272308692653
+      emoji_atlas_84: 6029558996089359041
+      emoji_atlas_85: 4466347899029957050
+      emoji_atlas_86: -5825576541222553887
+      emoji_atlas_87: 6381767717670566184
+      emoji_atlas_88: 2470353991232867223
+      emoji_atlas_89: -4306318702526018153
+      emoji_atlas_9: 4015796775981386007
+      emoji_atlas_90: -6582936256964102908
+      emoji_atlas_91: 8590175989976109676
+      emoji_atlas_92: -8089801175648911164
+      emoji_atlas_93: -3933383398715527210
+      emoji_atlas_94: 8872742083567689332
+      emoji_atlas_95: 1148276176436368400
+      emoji_atlas_96: -106289511636985711
+      emoji_atlas_97: -8578111685034415774
+      emoji_atlas_98: -3598956264551508730
+      emoji_atlas_99: 689563616968215649
+      enemy_boar: 1744168387
+      enemy_fox: -162250512
+      fix_quarry: 2107810323
+      fix_spirittree: -1277693244
+      fix_spring: -911964136
+      item_algae: -1838880202
+      item_bamboo: 612587745
+      item_beast_bait: 1732231771
+      item_beast_bone: 838356034
+      item_brick: -659951758
+      item_charcoal: 555690103
+      item_clay: 134556223
+      item_cloth: -933240243
+      item_cotton: 1907454297
+      item_dragon_scale: 117621966
+      item_ember_pill: 1784372748
+      item_firestone: -1262905009
+      item_fish: -1481272261
+      item_flour: 60830123
+      item_glass: 932515814
+      item_iron_bar: -1427670751
+      item_iron_ore: 3776249
+      item_jade: -896423865
+      item_jade_shard: -977588002
+      item_leaves: 1766674322
+      item_moonpetal: 1379263392
+      item_obsidian: -2097637762
+      item_paper: -287779248
+      item_plank: 1176415146
+      item_qi_elixir: -493557240
+      item_robe: -1113194211
+      item_rope: 1474381993
+      item_sand: -1963020721
+      item_spirit_buns: -667577448
+      item_spirit_essence: -432392309
+      item_spirit_herb: -212115870
+      item_spirit_jade: -929342336
+      item_spirit_stone: 2068497302
+      item_spirit_wine: -618722706
+      item_star_fragment: 1187896617
+      item_star_steel: -31031923
+      item_stone: 1316291070
+      item_stoneheart_pill: -849524122
+      item_swiftwind_pill: -446523461
+      item_talisman: 76059736
+      item_tools: -2036218522
+      item_verdant_pill: 714857776
+      item_vitality_pill: -1953571897
+      item_water: 2082054900
+      item_wheat: 1815806204
+      item_wood: 1643281676
+      node_algae: 1306688085
+      node_bamboostalk: 1344160190
+      node_bush: -1871362101
+      node_cotton: 1907465568
+      node_crop: -380064397
+      node_firevein: -1155112939
+      node_fish: 1192079518
+      node_herbbush: -777932761
+      node_ironvein: -1433539018
+      node_jadevein: -1548191747
+      node_moonshrub: 1368577071
+      node_obsidian: 2032171820
+      node_ore: 1147092697
+      node_starrock: -1279029670
+      perk_apgain: -116471587
+      perk_autoboost: -2009793850
+      perk_bless: 183189656
+      perk_bounty: -1532268860
+      perk_ember: -2009764059
+      perk_frugal: 220785457
+      perk_fury: 274949775
+      perk_gale: 1347988809
+      perk_hall: -1164297379
+      perk_hands: 190913908
+      perk_haste: -1536434394
+      perk_legacy: -866238642
+      perk_paths: -1573087955
+      perk_regrow: 1944976571
+      perk_slumber: 485935769
+      ui_action_celestial: -1076005617
+      ui_action_center: -1708793007
+      ui_action_farm: 569376657
+      ui_action_fishing: -385929388
+      ui_action_grove: -2016075672
+      ui_action_mine: 1468804644
+      ui_action_volcano: -749212245
+      ui_add: 1771754445
+      ui_alert: -1935059799
+      ui_area_celestial: -1720451904
+      ui_area_center: -1045212250
+      ui_area_farm: -386304086
+      ui_area_fishing: 473041099
+      ui_area_grove: 879606946
+      ui_area_mine: 1091492606
+      ui_area_volcano: -721989453
+      ui_ascend: -686148592
+      ui_build: 1733819151
+      ui_claim: 2110930969
+      ui_controls: -513298000
+      ui_demolish: 1918620031
+      ui_disciple: -1409155328
+      ui_gathering_stone: -379114613
+      ui_hand: -921601978
+      ui_link: 1603892646
+      ui_lock: 1122604880
+      ui_quest_build: 1415508242
+      ui_quest_cultivate: 1877843468
+      ui_quest_dragon1: -421365848
+      ui_quest_dragon2: -1241137464
+      ui_quest_dragon3: 1416765484
+      ui_quest_explore: -1811920652
+      ui_quest_fox: -1722552587
+      ui_quest_iron: -1670308100
+      ui_quest_leaves: -9194645
+      ui_quest_link: -541339145
+      ui_quest_upgrade: 345565948
+      ui_quest_waters: 1481890909
+      ui_quest_weaver: 1530673223
+      ui_quest_wood: 1220887880
+      ui_quests: -146464525
+      ui_sparkle: 1061949484
+      ui_sprint: 55191389
+      ui_stats: 342564905
+      ui_target: 302302395
+      ui_unlock: 1290389853
+      ui_vow_burden: 1535601134
+      ui_vow_coldhearth: 1074036245
+      ui_vow_restless: 1874156725
+      ui_vow_solitude: 143601833
+      ui_welcome_moon: -645665211
+      ui_wilds: -1206952201
+      ui_wisp: 699787372
+      upg_act_c: -1676567886
+      upg_act_f: -1375462808
+      upg_act_fi: -73499810
+      upg_act_m: 2056477975
+      upg_affinity: -1266497800
+      upg_auto_c: -1770687433
+      upg_auto_f: 106885422
+      upg_auto_m: -826149223
+      upg_disciples: 732544882
+      upg_foe_aoe: -756431861
+      upg_foe_cap: -1044359536
+      upg_foe_dmg: 1481538528
+      upg_hand: -1315380296
+      upg_quarry: 833754093
+      upg_spd_c: -920114286
+      upg_spd_f: 2036419615
+      upg_spd_fi: -2146903496
+      upg_spd_m: -13711925
+      upg_wisps: -1151406607
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

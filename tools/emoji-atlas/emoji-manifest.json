@@ -1,0 +1,902 @@
+[
+ {
+  "key": "item_wood",
+  "emoji": "🪵",
+  "source": "data.js:33"
+ },
+ {
+  "key": "item_leaves",
+  "emoji": "🍃",
+  "source": "data.js:33"
+ },
+ {
+  "key": "item_wheat",
+  "emoji": "🌾",
+  "source": "data.js:34"
+ },
+ {
+  "key": "item_cotton",
+  "emoji": "☁️",
+  "source": "data.js:34"
+ },
+ {
+  "key": "item_stone",
+  "emoji": "🪨",
+  "source": "data.js:35"
+ },
+ {
+  "key": "item_clay",
+  "emoji": "🧱",
+  "source": "data.js:35"
+ },
+ {
+  "key": "item_sand",
+  "emoji": "🟡",
+  "source": "data.js:35"
+ },
+ {
+  "key": "item_iron_ore",
+  "emoji": "🔩",
+  "source": "data.js:35"
+ },
+ {
+  "key": "item_iron_bar",
+  "emoji": "🧲",
+  "source": "data.js:36"
+ },
+ {
+  "key": "item_fish",
+  "emoji": "🐟",
+  "source": "data.js:37"
+ },
+ {
+  "key": "item_algae",
+  "emoji": "🪸",
+  "source": "data.js:37"
+ },
+ {
+  "key": "item_water",
+  "emoji": "💧",
+  "source": "data.js:37"
+ },
+ {
+  "key": "item_spirit_essence",
+  "emoji": "✨",
+  "source": "data.js:38"
+ },
+ {
+  "key": "item_spirit_herb",
+  "emoji": "🌱",
+  "source": "data.js:38"
+ },
+ {
+  "key": "item_bamboo",
+  "emoji": "🎍",
+  "source": "data.js:39"
+ },
+ {
+  "key": "item_jade_shard",
+  "emoji": "🟢",
+  "source": "data.js:39"
+ },
+ {
+  "key": "item_plank",
+  "emoji": "🟫",
+  "source": "data.js:40"
+ },
+ {
+  "key": "item_brick",
+  "emoji": "🧱",
+  "source": "data.js:40"
+ },
+ {
+  "key": "item_paper",
+  "emoji": "📜",
+  "source": "data.js:40"
+ },
+ {
+  "key": "item_spirit_stone",
+  "emoji": "🔮",
+  "source": "data.js:40"
+ },
+ {
+  "key": "item_tools",
+  "emoji": "⛏️",
+  "source": "data.js:41"
+ },
+ {
+  "key": "item_glass",
+  "emoji": "🧊",
+  "source": "data.js:41"
+ },
+ {
+  "key": "item_spirit_jade",
+  "emoji": "🟩",
+  "source": "data.js:41"
+ },
+ {
+  "key": "item_cloth",
+  "emoji": "🧶",
+  "source": "data.js:42"
+ },
+ {
+  "key": "item_rope",
+  "emoji": "🪢",
+  "source": "data.js:42"
+ },
+ {
+  "key": "item_robe",
+  "emoji": "🥋",
+  "source": "data.js:42"
+ },
+ {
+  "key": "item_flour",
+  "emoji": "🍚",
+  "source": "data.js:43"
+ },
+ {
+  "key": "item_spirit_buns",
+  "emoji": "🥟",
+  "source": "data.js:43"
+ },
+ {
+  "key": "item_spirit_wine",
+  "emoji": "🍶",
+  "source": "data.js:43"
+ },
+ {
+  "key": "item_qi_elixir",
+  "emoji": "🧪",
+  "source": "data.js:44"
+ },
+ {
+  "key": "item_vitality_pill",
+  "emoji": "💊",
+  "source": "data.js:44"
+ },
+ {
+  "key": "item_beast_bait",
+  "emoji": "🪱",
+  "source": "data.js:44"
+ },
+ {
+  "key": "item_charcoal",
+  "emoji": "⚫",
+  "source": "data.js:45"
+ },
+ {
+  "key": "item_jade",
+  "emoji": "💚",
+  "source": "data.js:45"
+ },
+ {
+  "key": "item_firestone",
+  "emoji": "🌋",
+  "source": "data.js:46"
+ },
+ {
+  "key": "item_beast_bone",
+  "emoji": "🦴",
+  "source": "data.js:46"
+ },
+ {
+  "key": "item_star_steel",
+  "emoji": "⚔️",
+  "source": "data.js:46"
+ },
+ {
+  "key": "item_ember_pill",
+  "emoji": "🔴",
+  "source": "data.js:47"
+ },
+ {
+  "key": "item_verdant_pill",
+  "emoji": "🟢",
+  "source": "data.js:47"
+ },
+ {
+  "key": "item_swiftwind_pill",
+  "emoji": "🟡",
+  "source": "data.js:48"
+ },
+ {
+  "key": "item_stoneheart_pill",
+  "emoji": "🟣",
+  "source": "data.js:48"
+ },
+ {
+  "key": "item_talisman",
+  "emoji": "🧧",
+  "source": "data.js:49"
+ },
+ {
+  "key": "item_dragon_scale",
+  "emoji": "🔶",
+  "source": "data.js:49"
+ },
+ {
+  "key": "item_obsidian",
+  "emoji": "🔲",
+  "source": "data.js:50"
+ },
+ {
+  "key": "item_star_fragment",
+  "emoji": "☄️",
+  "source": "data.js:51"
+ },
+ {
+  "key": "item_moonpetal",
+  "emoji": "💮",
+  "source": "data.js:51"
+ },
+ {
+  "key": "bld_center",
+  "emoji": "🏛️",
+  "source": "data.js:101"
+ },
+ {
+  "key": "bld_dragon",
+  "emoji": "🐉",
+  "source": "data.js:329"
+ },
+ {
+  "key": "bld_workbench",
+  "emoji": "🛠️",
+  "source": "data.js:334"
+ },
+ {
+  "key": "bld_kiln",
+  "emoji": "🏺",
+  "source": "data.js:339"
+ },
+ {
+  "key": "bld_paper_mill",
+  "emoji": "📜",
+  "source": "data.js:346"
+ },
+ {
+  "key": "bld_infusion_array",
+  "emoji": "🔮",
+  "source": "data.js:352"
+ },
+ {
+  "key": "bld_loom",
+  "emoji": "🧵",
+  "source": "data.js:358"
+ },
+ {
+  "key": "bld_mill",
+  "emoji": "🌾",
+  "source": "data.js:364"
+ },
+ {
+  "key": "bld_brewery",
+  "emoji": "🍶",
+  "source": "data.js:369"
+ },
+ {
+  "key": "bld_cauldron",
+  "emoji": "⚗️",
+  "source": "data.js:373"
+ },
+ {
+  "key": "bld_jade_carver",
+  "emoji": "🗿",
+  "source": "data.js:380"
+ },
+ {
+  "key": "bld_pill_furnace",
+  "emoji": "🫕",
+  "source": "data.js:385"
+ },
+ {
+  "key": "bld_star_anvil",
+  "emoji": "⚒️",
+  "source": "data.js:393"
+ },
+ {
+  "key": "bld_talisman_atelier",
+  "emoji": "🖌️",
+  "source": "data.js:400"
+ },
+ {
+  "key": "bld_dragon_shrine",
+  "emoji": "🐲",
+  "source": "data.js:406"
+ },
+ {
+  "key": "bld_ascension_gate",
+  "emoji": "⛩️",
+  "source": "data.js:410"
+ },
+ {
+  "key": "bld_charcoal_pit",
+  "emoji": "🕳️",
+  "source": "data.js:412"
+ },
+ {
+  "key": "bld_furnace_spirit",
+  "emoji": "🕯️",
+  "source": "data.js:418"
+ },
+ {
+  "key": "bld_meditation_pavilion",
+  "emoji": "🧘",
+  "source": "data.js:425"
+ },
+ {
+  "key": "bld_forge",
+  "emoji": "🔥",
+  "source": "data.js:438"
+ },
+ {
+  "key": "bld_storehouse",
+  "emoji": "📦",
+  "source": "data.js:443"
+ },
+ {
+  "key": "bld_algae_farm",
+  "emoji": "🪸",
+  "source": "data.js:446"
+ },
+ {
+  "key": "bld_herb_garden",
+  "emoji": "🪴",
+  "source": "data.js:450"
+ },
+ {
+  "key": "bld_gathering_stone",
+  "emoji": "🧿",
+  "source": "data.js:456"
+ },
+ {
+  "key": "bld_wisp_lantern",
+  "emoji": "🏮",
+  "source": "data.js:461"
+ },
+ {
+  "key": "bld_warding_seal",
+  "emoji": "🈯",
+  "source": "data.js:465"
+ },
+ {
+  "key": "ui_area_center",
+  "emoji": "🌲",
+  "source": "data.js:101"
+ },
+ {
+  "key": "ui_action_center",
+  "emoji": "🪓",
+  "source": "data.js:101"
+ },
+ {
+  "key": "node_bush",
+  "emoji": "🌿",
+  "source": "data.js:111"
+ },
+ {
+  "key": "fix_quarry",
+  "emoji": "⛰️",
+  "source": "data.js:119"
+ },
+ {
+  "key": "fix_spirittree",
+  "emoji": "🌳",
+  "source": "data.js:126"
+ },
+ {
+  "key": "enemy_fox",
+  "emoji": "🦊",
+  "source": "data.js:143"
+ },
+ {
+  "key": "enemy_boar",
+  "emoji": "🐗",
+  "source": "data.js:150"
+ },
+ {
+  "key": "ui_area_farm",
+  "emoji": "🌱",
+  "source": "data.js:153"
+ },
+ {
+  "key": "ui_action_farm",
+  "emoji": "🌾",
+  "source": "data.js:153"
+ },
+ {
+  "key": "node_crop",
+  "emoji": "🌾",
+  "source": "data.js:160"
+ },
+ {
+  "key": "node_cotton",
+  "emoji": "☁️",
+  "source": "data.js:162"
+ },
+ {
+  "key": "ui_area_mine",
+  "emoji": "⛰️",
+  "source": "data.js:174"
+ },
+ {
+  "key": "ui_action_mine",
+  "emoji": "⛏️",
+  "source": "data.js:174"
+ },
+ {
+  "key": "node_ore",
+  "emoji": "🪨",
+  "source": "data.js:179"
+ },
+ {
+  "key": "node_ironvein",
+  "emoji": "⛓️",
+  "source": "data.js:182"
+ },
+ {
+  "key": "node_jadevein",
+  "emoji": "🟢",
+  "source": "data.js:187"
+ },
+ {
+  "key": "ui_area_fishing",
+  "emoji": "🎣",
+  "source": "data.js:194"
+ },
+ {
+  "key": "ui_action_fishing",
+  "emoji": "🎣",
+  "source": "data.js:194"
+ },
+ {
+  "key": "node_fish",
+  "emoji": "🐟",
+  "source": "data.js:202"
+ },
+ {
+  "key": "node_algae",
+  "emoji": "🪸",
+  "source": "data.js:203"
+ },
+ {
+  "key": "fix_spring",
+  "emoji": "⛲",
+  "source": "data.js:209"
+ },
+ {
+  "key": "ui_area_volcano",
+  "emoji": "🌋",
+  "source": "data.js:219"
+ },
+ {
+  "key": "ui_action_volcano",
+  "emoji": "⛏️",
+  "source": "data.js:219"
+ },
+ {
+  "key": "node_obsidian",
+  "emoji": "⬛",
+  "source": "data.js:224"
+ },
+ {
+  "key": "node_firevein",
+  "emoji": "🌋",
+  "source": "data.js:226"
+ },
+ {
+  "key": "ui_area_grove",
+  "emoji": "🎋",
+  "source": "data.js:231"
+ },
+ {
+  "key": "ui_action_grove",
+  "emoji": "🌿",
+  "source": "data.js:231"
+ },
+ {
+  "key": "node_herbbush",
+  "emoji": "🌿",
+  "source": "data.js:236"
+ },
+ {
+  "key": "node_bamboostalk",
+  "emoji": "🎋",
+  "source": "data.js:239"
+ },
+ {
+  "key": "ui_area_celestial",
+  "emoji": "☁️",
+  "source": "data.js:244"
+ },
+ {
+  "key": "ui_action_celestial",
+  "emoji": "✨",
+  "source": "data.js:244"
+ },
+ {
+  "key": "node_starrock",
+  "emoji": "☄️",
+  "source": "data.js:251"
+ },
+ {
+  "key": "node_moonshrub",
+  "emoji": "💮",
+  "source": "data.js:255"
+ },
+ {
+  "key": "dragon_sleeping",
+  "emoji": "🐉",
+  "source": "data.js:329"
+ },
+ {
+  "key": "dragon_awake",
+  "emoji": "🐲",
+  "source": "ui.js:1070"
+ },
+ {
+  "key": "perk_haste",
+  "emoji": "⚡",
+  "source": "data.js:775"
+ },
+ {
+  "key": "perk_hall",
+  "emoji": "🏯",
+  "source": "data.js:777"
+ },
+ {
+  "key": "perk_slumber",
+  "emoji": "🌙",
+  "source": "data.js:779"
+ },
+ {
+  "key": "perk_hands",
+  "emoji": "🤲",
+  "source": "data.js:781"
+ },
+ {
+  "key": "perk_frugal",
+  "emoji": "🧭",
+  "source": "data.js:783"
+ },
+ {
+  "key": "perk_ember",
+  "emoji": "🔥",
+  "source": "data.js:785"
+ },
+ {
+  "key": "perk_apgain",
+  "emoji": "🌟",
+  "source": "data.js:787"
+ },
+ {
+  "key": "perk_autoboost",
+  "emoji": "⚙️",
+  "source": "data.js:789"
+ },
+ {
+  "key": "perk_regrow",
+  "emoji": "🌿",
+  "source": "data.js:791"
+ },
+ {
+  "key": "perk_gale",
+  "emoji": "🌀",
+  "source": "data.js:793"
+ },
+ {
+  "key": "perk_fury",
+  "emoji": "⚔️",
+  "source": "data.js:795"
+ },
+ {
+  "key": "perk_bless",
+  "emoji": "🌠",
+  "source": "data.js:797"
+ },
+ {
+  "key": "perk_bounty",
+  "emoji": "☄️",
+  "source": "data.js:799"
+ },
+ {
+  "key": "perk_paths",
+  "emoji": "🗺️",
+  "source": "data.js:803"
+ },
+ {
+  "key": "perk_legacy",
+  "emoji": "🤖",
+  "source": "data.js:805"
+ },
+ {
+  "key": "upg_hand",
+  "emoji": "✋",
+  "source": "data.js:521"
+ },
+ {
+  "key": "upg_wisps",
+  "emoji": "🏮",
+  "source": "data.js:524"
+ },
+ {
+  "key": "upg_affinity",
+  "emoji": "🐲",
+  "source": "data.js:527"
+ },
+ {
+  "key": "upg_disciples",
+  "emoji": "🧘",
+  "source": "data.js:530"
+ },
+ {
+  "key": "upg_spd_c",
+  "emoji": "⏱️",
+  "source": "data.js:534"
+ },
+ {
+  "key": "upg_auto_c",
+  "emoji": "🤖",
+  "source": "data.js:537"
+ },
+ {
+  "key": "upg_act_fi",
+  "emoji": "🎣",
+  "source": "data.js:540"
+ },
+ {
+  "key": "upg_act_c",
+  "emoji": "🪓",
+  "source": "data.js:544"
+ },
+ {
+  "key": "upg_quarry",
+  "emoji": "⛏️",
+  "source": "data.js:547"
+ },
+ {
+  "key": "upg_act_m",
+  "emoji": "⚒️",
+  "source": "data.js:550"
+ },
+ {
+  "key": "upg_spd_f",
+  "emoji": "💧",
+  "source": "data.js:554"
+ },
+ {
+  "key": "upg_act_f",
+  "emoji": "🌾",
+  "source": "data.js:557"
+ },
+ {
+  "key": "upg_auto_f",
+  "emoji": "🚜",
+  "source": "data.js:560"
+ },
+ {
+  "key": "upg_spd_m",
+  "emoji": "⛰️",
+  "source": "data.js:564"
+ },
+ {
+  "key": "upg_spd_fi",
+  "emoji": "🌊",
+  "source": "data.js:567"
+ },
+ {
+  "key": "upg_auto_m",
+  "emoji": "🛠️",
+  "source": "data.js:570"
+ },
+ {
+  "key": "upg_foe_cap",
+  "emoji": "🦊",
+  "source": "data.js:574"
+ },
+ {
+  "key": "upg_foe_dmg",
+  "emoji": "⚔️",
+  "source": "data.js:577"
+ },
+ {
+  "key": "upg_foe_aoe",
+  "emoji": "💥",
+  "source": "data.js:580"
+ },
+ {
+  "key": "ui_vow_burden",
+  "emoji": "🎒",
+  "source": "data.js:816"
+ },
+ {
+  "key": "ui_vow_coldhearth",
+  "emoji": "🧊",
+  "source": "data.js:817"
+ },
+ {
+  "key": "ui_vow_restless",
+  "emoji": "🐉",
+  "source": "data.js:818"
+ },
+ {
+  "key": "ui_vow_solitude",
+  "emoji": "🕯️",
+  "source": "data.js:819"
+ },
+ {
+  "key": "ui_quest_wood",
+  "emoji": "🪵",
+  "source": "data.js:601"
+ },
+ {
+  "key": "ui_quest_leaves",
+  "emoji": "🍃",
+  "source": "data.js:606"
+ },
+ {
+  "key": "ui_quest_dragon1",
+  "emoji": "🐉",
+  "source": "data.js:609"
+ },
+ {
+  "key": "ui_quest_fox",
+  "emoji": "🦊",
+  "source": "data.js:614"
+ },
+ {
+  "key": "ui_quest_build",
+  "emoji": "🔨",
+  "source": "data.js:619"
+ },
+ {
+  "key": "ui_quest_upgrade",
+  "emoji": "🏛️",
+  "source": "data.js:624"
+ },
+ {
+  "key": "ui_quest_link",
+  "emoji": "🏮",
+  "source": "data.js:629"
+ },
+ {
+  "key": "ui_quest_explore",
+  "emoji": "🔓",
+  "source": "data.js:634"
+ },
+ {
+  "key": "ui_quest_dragon2",
+  "emoji": "🐉",
+  "source": "data.js:640"
+ },
+ {
+  "key": "ui_quest_iron",
+  "emoji": "🧲",
+  "source": "data.js:645"
+ },
+ {
+  "key": "ui_quest_waters",
+  "emoji": "🎣",
+  "source": "data.js:657"
+ },
+ {
+  "key": "ui_quest_dragon3",
+  "emoji": "🐉",
+  "source": "data.js:661"
+ },
+ {
+  "key": "ui_quest_weaver",
+  "emoji": "🪢",
+  "source": "data.js:666"
+ },
+ {
+  "key": "ui_quest_cultivate",
+  "emoji": "🧘",
+  "source": "data.js:672"
+ },
+ {
+  "key": "ui_hand",
+  "emoji": "✋",
+  "source": "data.js:521"
+ },
+ {
+  "key": "ui_wisp",
+  "emoji": "🔹",
+  "source": "ui.js:1282"
+ },
+ {
+  "key": "ui_sparkle",
+  "emoji": "✨",
+  "source": "ui.js:1242"
+ },
+ {
+  "key": "ui_lock",
+  "emoji": "🔒",
+  "source": "ui.js:1305"
+ },
+ {
+  "key": "ui_unlock",
+  "emoji": "🔓",
+  "source": "ui.js:1373"
+ },
+ {
+  "key": "ui_target",
+  "emoji": "🎯",
+  "source": "ui.js:1540"
+ },
+ {
+  "key": "ui_quests",
+  "emoji": "📜",
+  "source": "ui.js:2227"
+ },
+ {
+  "key": "ui_alert",
+  "emoji": "❗",
+  "source": "ui.js:2227"
+ },
+ {
+  "key": "ui_ascend",
+  "emoji": "☯️",
+  "source": "ui.js:502"
+ },
+ {
+  "key": "ui_disciple",
+  "emoji": "👤",
+  "source": "ui.js:1150"
+ },
+ {
+  "key": "ui_add",
+  "emoji": "➕",
+  "source": "ui.js:1912"
+ },
+ {
+  "key": "ui_demolish",
+  "emoji": "🗑️",
+  "source": "ui.js:2321"
+ },
+ {
+  "key": "ui_stats",
+  "emoji": "📊",
+  "source": "ui.js:2362"
+ },
+ {
+  "key": "ui_claim",
+  "emoji": "✔️",
+  "source": "ui.js:2249"
+ },
+ {
+  "key": "ui_sprint",
+  "emoji": "🏃",
+  "source": "ui.js:501"
+ },
+ {
+  "key": "ui_wilds",
+  "emoji": "🌫️",
+  "source": "ui.js:500"
+ },
+ {
+  "key": "ui_controls",
+  "emoji": "🕹️",
+  "source": "ui.js:2316"
+ },
+ {
+  "key": "ui_build",
+  "emoji": "🏗️",
+  "source": "ui.js:2320"
+ },
+ {
+  "key": "ui_welcome_moon",
+  "emoji": "🌙",
+  "source": "ui.js:2628"
+ },
+ {
+  "key": "ui_link",
+  "emoji": "⛓️",
+  "source": "ui.js:1098"
+ },
+ {
+  "key": "ui_gathering_stone",
+  "emoji": "🧿",
+  "source": "data.js:456"
+ }
+]
