@@ -71,7 +71,7 @@ namespace IdleGrounds.Game
 
         void Update()
         {
-            if (runner == null || runner.Sim == null) return;
+            if (runner == null || runner.Sim == null || runner.Replaying) return;
             if (controls.Gameplay.Build.WasPressedThisFrame()) ToggleBuildMenu();
             if (controls.Gameplay.Cancel.WasPressedThisFrame()) Escape();
 
@@ -122,9 +122,10 @@ namespace IdleGrounds.Game
 
         public void CancelModes() { Placing = null; Demolishing = false; if (preview != null) preview.Hide(); }
 
-        /// <summary>Esc chain (§3.1): tree → recipe picker → roster → link editor → dragon dialog → placing/demolish + build menu.</summary>
+        /// <summary>Esc chain (§3.1): M7 modals (MetaUiController) → tree → recipe picker → roster → link editor → dragon dialog → placing/demolish + build menu.</summary>
         public void Escape()
         {
+            if (MetaUiController.Instance != null && MetaUiController.Instance.Escape()) return;   // M7 modals first
             if (UpgradeTreeOpen) { upgradeTree.Close(); return; }
             if (RecipePickerOpen) { CloseRecipePicker(); return; }
             if (PavilionOpen) { pavilionPanel.Close(); return; }
@@ -180,7 +181,7 @@ namespace IdleGrounds.Game
             if (why != null)
             {
                 LastRefusal = why;
-                // TODO(M4 audio): error SFX
+                AudioService.Play("error");
                 return null;
             }
             var b = Sim.PlaceGhost(area, Placing, row, col);
@@ -195,6 +196,7 @@ namespace IdleGrounds.Game
             if (b == null) { LastRefusal = "Nothing here"; return false; }
             bool ok = Sim.Demolish(area, b.id);
             LastRefusal = ok ? null : "Can't demolish";
+            if (!ok) AudioService.Play("error");
             if (!ok && fx != null)
             {
                 var (x, y) = Sim.World.BuildingCenterPx(b);

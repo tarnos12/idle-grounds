@@ -67,6 +67,7 @@ namespace IdleGrounds.Editor
             InstallMenu();
             LogisticsBuilder.InstallMenu();
             ProgressionBuilder.InstallMenu();
+            MetaBuilder.InstallMenu();
         }
 
         // ------------------------------------------------------------------ shapes

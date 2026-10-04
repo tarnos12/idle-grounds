@@ -1,0 +1,68 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37166a4205ab2314b805204677f76dcd, type: 3}
+  m_Name: SfxLibrary
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.SfxLibrary
+  masterVolume: 1
+  entries:
+  - name: harvest
+    clip: {fileID: 8300000, guid: 2de0cda73f9cfd6469d8bea8d33609d8, type: 3}
+    volume: 1
+    pitchJitter: 0.09677419
+  - name: pickup
+    clip: {fileID: 8300000, guid: 538f49110eec19943a4c3a3fd59ced84, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: swing
+    clip: {fileID: 8300000, guid: 1ff7a199f436d0e4f8f96aa0185b18cf, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: craft
+    clip: {fileID: 8300000, guid: fbb3363dd4478c044a580f7c721488d7, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: build
+    clip: {fileID: 8300000, guid: 5a97d741a49ad764dbe7a1ed8df563ac, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: upgrade
+    clip: {fileID: 8300000, guid: d8593fa3bef988442b24bbc013ca1906, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: unlock
+    clip: {fileID: 8300000, guid: 5457e211a08228a4db611a9ccc3b011f, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: hit
+    clip: {fileID: 8300000, guid: f628b701767c7ca40838c559830b65cb, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: kill
+    clip: {fileID: 8300000, guid: 07476509a12dbde43a6845a14ee8a5d8, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: dragon
+    clip: {fileID: 8300000, guid: faf32a55d8dd789469129453dcf9c2d1, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: ascend
+    clip: {fileID: 8300000, guid: fa8d95a058fc28448af2d7d9733cda66, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: error
+    clip: {fileID: 8300000, guid: 6046ccbb448a81f4aaf1dbd1e9c5fde2, type: 3}
+    volume: 1
+    pitchJitter: 0
+  - name: click
+    clip: {fileID: 8300000, guid: bb2c3afcdca25ba4ba743e92c6c644f7, type: 3}
+    volume: 1
+    pitchJitter: 0

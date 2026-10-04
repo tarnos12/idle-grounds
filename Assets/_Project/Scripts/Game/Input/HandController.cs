@@ -96,6 +96,7 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null) return;
             UpdateCursor();
+            if (runner.Replaying) { LeftUp(); RightUp(); return; }     // offline catch-up: the world isn't live yet
 
             if (controls.Gameplay.RotateLeft.WasPressedThisFrame()) Sim.RotateHand(+1);    // Q: front stack to the back
             if (controls.Gameplay.RotateRight.WasPressedThisFrame()) Sim.RotateHand(-1);   // E: back stack to the front
@@ -140,6 +141,8 @@ namespace IdleGrounds.Game
         public void DebugLeftUp() => LeftUp();
         public void DebugRightDown() { UpdateCursor(); if (CursorOver) RightDown(); }
         public void DebugRightUp() => RightUp();
+        /// <summary>Drop every hold (RunReset / modal).</summary>
+        public void CancelHolds() { LeftUp(); RightUp(); }
         public void ReleaseDebugCursor() { LeftUp(); RightUp(); useDebugCursor = false; }
 
         // ================= press handlers =================
@@ -222,6 +225,12 @@ namespace IdleGrounds.Game
                 if (build != null) build.OpenUpgradeTree();
                 return;
             }
+            if (b.built && def != null && def.gate)       // the Ascension Gate re-opens the ascend dialog
+            {
+                if (build != null) build.CloseBuildingPanels();
+                Sim.SetAscendPrompt(true);
+                return;
+            }
             if (b.built && def != null && def.roster.enabled)
             {
                 if (build != null) build.OpenPavilion(area, b);
@@ -244,7 +253,7 @@ namespace IdleGrounds.Game
                 leftHeld = true; withdrawArea = area; withdrawId = b.id;
                 int got = Sim.Withdraw(area, b.id, 1);
                 if (got > 0) FxPickup(area, Lx, Ly, got);
-                else if (Now - lastWithdrawErr >= WithdrawErrMs) lastWithdrawErr = Now;   // TODO(M4 audio): error SFX
+                else if (Now - lastWithdrawErr >= WithdrawErrMs) { lastWithdrawErr = Now; AudioService.Play("error"); }
                 withdrawStart = Now; lastWithdraw = withdrawStart;
             }
         }
@@ -486,7 +495,7 @@ namespace IdleGrounds.Game
         {
             if (Now - lastFullBuzz < FullBuzzMs) return false;
             lastFullBuzz = Now;
-            // TODO(M4): "error" SFX via AudioService
+            AudioService.Play("error");
             if (fx != null) fx.FloaterAt(area, lx, ly - 8, "Hand full", FxService.Danger);
             return true;
         }
@@ -494,11 +503,12 @@ namespace IdleGrounds.Game
         void FxPickup(string area, double lx, double ly, int picked)
         {
             if (picked <= 0 || fx == null) return;
-            fx.FloaterAt(area, lx, ly - 8, "+" + picked, FxService.Green);
+            fx.Pickup(area, lx, ly, picked);
         }
 
         void Error(string area, double lx, double ly, string msg)
         {
+            AudioService.Play("error");
             if (fx != null) fx.FloaterAt(area, lx, ly, msg, FxService.Danger);
         }
     }

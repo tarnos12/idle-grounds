@@ -97,6 +97,30 @@ namespace IdleGrounds.Game
             Apply();
         }
 
+        /// <summary>Jump the camera centre to a world point (clamped to the unlocked bounds).</summary>
+        public void CenterOn(Vector2 world)
+        {
+            centre = world;
+            if (cam == null) return;
+            ApplyZoom();
+            Clamp();
+            Apply();
+        }
+
+        /// <summary>Alias of <see cref="CenterOn"/>.</summary>
+        public void Teleport(Vector2 world) => CenterOn(world);
+
+        /// <summary>Camera centre in world units.</summary>
+        public Vector2 Centre => centre;
+
+        /// <summary>Back to the configured start cell (new run after an ascension).</summary>
+        public void ResetToStart()
+        {
+            RecomputeBoundsFromRegions();
+            foreach (var r in FindObjectsByType<Region>(FindObjectsSortMode.None))
+                if (r.regionKey == startRegionKey) { CenterOn(r.CellToWorld(startRow, startCol)); return; }
+        }
+
         void Update()
         {
             if (cam == null) return;

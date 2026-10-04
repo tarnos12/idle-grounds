@@ -111,7 +111,7 @@ namespace IdleGrounds.Editor
 
         // ------------------------------------------------------------------ UI helpers
 
-        static LayoutElement Le(Component c, float w = -1, float h = -1, float flexW = -1)
+        internal static LayoutElement Le(Component c, float w = -1, float h = -1, float flexW = -1)
         {
             var le = c.gameObject.GetComponent<LayoutElement>() ?? c.gameObject.AddComponent<LayoutElement>();
             if (w >= 0) le.preferredWidth = w;
@@ -120,7 +120,7 @@ namespace IdleGrounds.Editor
             return le;
         }
 
-        static TextMeshProUGUI Wrap(TextMeshProUGUI t)
+        internal static TextMeshProUGUI Wrap(TextMeshProUGUI t)
         {
             t.textWrappingMode = TextWrappingModes.Normal;
             t.richText = true;
@@ -128,14 +128,14 @@ namespace IdleGrounds.Editor
             return t;
         }
 
-        static VerticalLayoutGroup ColW(GameObject go, int pad, float spacing, TextAnchor align = TextAnchor.UpperLeft)
+        internal static VerticalLayoutGroup ColW(GameObject go, int pad, float spacing, TextAnchor align = TextAnchor.UpperLeft)
         {
             var v = Col(go, pad, spacing, align);
             v.childForceExpandWidth = true;
             return v;
         }
 
-        static Button SmallButton(Transform parent, string name, string label, Color text, float w, float h)
+        internal static Button SmallButton(Transform parent, string name, string label, Color text, float w, float h)
         {
             var img = Chip(parent, name, UiPalette.Panel, UiPalette.Line, raycast: true);
             Le(img, w, h);
@@ -149,7 +149,7 @@ namespace IdleGrounds.Editor
         }
 
         /// <summary>Scrim rgba(0,0,0,.55) + centred box (bg-2, 2 px border).</summary>
-        static (GameObject modal, Image box) Modal(RectTransform root, Color border)
+        internal static (GameObject modal, Image box) Modal(RectTransform root, Color border)
         {
             var modal = Stretch(NewUi("Modal", root));
             var scrim = Stretch(NewUi("Scrim", modal)).gameObject.AddComponent<Image>();
@@ -163,7 +163,7 @@ namespace IdleGrounds.Editor
             return (modal.gameObject, box);
         }
 
-        static (RectTransform bar, Image fill) Bar(Transform parent, string name, float h)
+        internal static (RectTransform bar, Image fill) Bar(Transform parent, string name, float h)
         {
             var bar = NewUi(name, parent);
             Le(bar, h: h);
@@ -175,7 +175,7 @@ namespace IdleGrounds.Editor
             return (bar, fill);
         }
 
-        static UiIconLine IconLine(Transform parent, string name, Sprite s, float icon, float text, Color c, bool wrap)
+        internal static UiIconLine IconLine(Transform parent, string name, Sprite s, float icon, float text, Color c, bool wrap)
         {
             var rt = NewUi(name, parent);
             var h = Row(rt.gameObject, 0, 0, 6);

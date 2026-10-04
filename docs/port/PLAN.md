@@ -13,6 +13,6 @@ Each milestone ends playable/verified in `Assets/_Project/Scenes/Game.unity`.
 | 4 | Logistics | gathering stone, seal, lantern links, wisps, furnace spirit | Wisp/lantern prefabs, link editor, reach circles, status dots | ✅ |
 | 5 | Progression | dragon tributes/stages/pills/scales, Altar upgrade tree, quests + milestones, reveal, region unlocks + installments | Dragon/Altar views, upgrade-tree panel, quest panel, unlock signs | ✅ |
 | 6 | Combat & idle | enemies, beast bait, Martial Vigor, automation, disciples/pavilion, generator buildings | Enemy prefab + HP bars, pavilion panel | ✅ |
-| 7 | Prestige, save, offline | ascension gate, AP, perks, vows, ascend reset, save/load + sanitising, offline replay | perk shop, vows, ascension card, welcome-back modal, stats, ending | |
-| 8 | Juice & audio | — | floating numbers, spark bursts, 13 SFX, help, settings | |
+| 7 | Prestige, save, offline | ascension gate, AP, perks, vows, ascend reset, save/load + sanitising, offline replay | perk shop, vows, ascension card, welcome-back modal, stats, ending | ✅ |
+| 8 | Juice & audio | — | floating numbers, spark bursts, 13 SFX, help, settings | ✅ |
 | 9 | Parity pass | golden tests vs JS behaviours (spec §18.6) | side-by-side check against old-game | |

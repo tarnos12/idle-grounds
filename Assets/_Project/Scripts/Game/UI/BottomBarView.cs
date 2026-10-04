@@ -7,7 +7,7 @@ namespace IdleGrounds.Game
     /// <summary>
     /// Bottom bar (ui-input-render §4.1): title + version badge on the left; area pill (region under
     /// the camera centre, lock + sprint tags), hand pill "n/cap" (green, gold ≥90%, red at cap) and the
-    /// button row on the right. Help/Stats/Build/Demolish are placeholders until M3/M4; Reset is disabled.
+    /// button row on the right. Help/Stats/Reset/mute/Shrine pill are wired by MetaBarView (M7).
     /// </summary>
     public class BottomBarView : MonoBehaviour
     {
@@ -36,7 +36,6 @@ namespace IdleGrounds.Game
         {
             if (runner == null) runner = GameRunner.Instance;
             if (cameraController == null) cameraController = FindFirstObjectByType<CameraController>();
-            if (resetButton != null) resetButton.interactable = false;   // save/reset arrives with M5
             if (build == null) build = FindFirstObjectByType<BuildController>();
             if (build != null)
             {

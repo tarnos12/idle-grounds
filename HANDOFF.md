@@ -68,9 +68,15 @@ badges; menu `Install Progression+Combat (M5+M6)` (in rebuild-all).
 SFX WAVs rendered from audio.js: `Assets/_Project/Audio/SFX/`
 (`node tools/sfx/render.js`).
 
-Next: M7 view: GameRunner load/Boot/autosave
-(5 s + pause/quit), welcome-back modal, perk shop, vows, ascension card,
-stats, ending. Then M8 juice/audio, M9 parity.
+M7+M8 done: SaveService (persistentDataPath/idle-grounds-save.json, 5 s
+autosave + pause/quit, corrupt → .bak), offline Boot tiers + welcome-back /
+progress modals, ascend dialog + vows, perk shop, post-ascension card, help,
+stats, intro, toast, AudioService + SfxLibrary + mute, spark FX. Menu
+`Install Meta (M7+M8)` (in rebuild-all).
+
+THE GAME IS FULLY PLAYABLE IN UNITY. Next: M9 parity pass — TMP sprite
+asset from the emoji atlas (inline icons; UI font lacks emoji/☯), side-by-side
+review vs old-game, fix gaps.
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -93,6 +99,7 @@ stats, ending. Then M8 juice/audio, M9 parity.
 - M7 sim: prestige, save codec, offline replay + 21 tests.
 - M5+M6 view: enemies/combat input, unlock signs, altar tree, quest panel,
   dragon dialog, pavilion panel, buffs, AUTO badges. 13 SFX WAVs.
+- M7+M8 view: save/load, offline modals, prestige UI, help/stats, audio, FX.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

@@ -81,7 +81,7 @@ namespace IdleGrounds.Game
                 string nm = runner.Config.Region(v.Area)?.name ?? v.Area;
                 if (res.kind == UnlockResultKind.Unlocked) fx.Floater(at, nm + " unlocked!", FxService.Gold);
                 else if (res.kind == UnlockResultKind.Paid) fx.Floater(at, "Paid " + res.paid, FxService.Gold);
-                else fx.Floater(at, "Carry the cost to unlock", FxService.Danger);
+                else { fx.Floater(at, "Carry the cost to unlock", FxService.Danger); AudioService.Play("error"); }
             }
             return res;
         }
