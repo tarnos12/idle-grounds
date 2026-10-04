@@ -195,6 +195,7 @@ namespace IdleGrounds.Sim.Tests
             var sim = SimTestUtil.NewSim(out var clock);
             sim.OfflineSim = true;
             var c = sim.State.Area("center");
+            c.ground.Clear();   // M3: drop the starter-network seeds (§16)
             sim.Tick();
             Assert.AreEqual(1, SimTestUtil.CountGround(c, "clay"), "a zero clock fires once immediately");
             for (int i = 0; i < 400; i++) { clock.Advance(50); sim.Tick(); }

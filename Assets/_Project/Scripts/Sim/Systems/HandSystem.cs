@@ -36,7 +36,7 @@ namespace IdleGrounds.Sim
         /// converter, seal, gathering stone, storehouse, gate, ghost). Return
         /// true when the building handled the press (result may be null =
         /// "consumed, nothing to do"); false falls through to the ground drop.
-        /// TODO(M2): implement in a BuildingFeedSystem and assign here.
+        /// Wired to <see cref="BuildingSystem.FeedBuilding"/> by Simulation (M3).
         /// </summary>
         public delegate bool BuildingFeedHook(string areaKey, Building b, out DropResult result);
         public BuildingFeedHook FeedBuilding;

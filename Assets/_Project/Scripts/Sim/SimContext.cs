@@ -38,6 +38,9 @@ namespace IdleGrounds.Sim
         public GroundSystem Ground;
         public NodeSystem Nodes;
         public FieldGeneratorSystem FieldGenerators;
+        public FuelSystem Fuel;
+        public ConverterSystem Converters;
+        public BuildingSystem Buildings;
 
         public SimContext(GameConfig cfg, GameState state, IClock clock, IRng rng)
         {

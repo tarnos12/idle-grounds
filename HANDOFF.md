@@ -31,8 +31,13 @@ Tree / bushes / quarry to harvest, hold LMB on ground to vacuum, RMB to drop,
 Q/E rotate, WASD pan, wheel zoom. Prefabs + scene wiring are rebuilt by
 `Idle Grounds/Scene/Install Core Loop (M2)`.
 
-Next: M3 — buildings & converters (sim side in progress), then building
-prefabs/build menu/converter face.
+M3 sim done (67 EditMode tests): BuildingSystem (Altar/Dragon pre-placed,
+ghosts, construction, demolish, reveal), ConverterSystem + FuelSystem,
+storehouse/seal buffers, generator buildings, starter network (golden-tested
+vs the JS). Feeding hooks Altar/Dragon/Gate are unset delegates (M5).
+
+Next: M3 view (building prefabs, build menu, placement ghost, converter face,
+recipe picker) + M4 sim (logistics: gathering stone, lantern beat, wisps).
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -45,6 +50,7 @@ prefabs/build menu/converter face.
 - M2a: ScriptableObject data layer + JSON importer + GameDatabase tests.
 - M2b: GameRunner, pooled Node/GroundItem views, HandController (harvest,
   vacuum, drop latch/ramp, rotate), hand cursor, bottom bar HUD, sorting layers.
+- M3 sim: buildings, converters, fuel, starter network + 22 tests.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

@@ -54,5 +54,18 @@ namespace IdleGrounds.Sim
         { if (!Muted) NodeHit?.Invoke(area, n, isAuto); }
         internal void RaiseNodeDepleted(string area, Node n)
         { if (!Muted) NodeDepleted?.Invoke(area, n); }
+        // M3
+        internal void RaiseBuildingPlaced(string area, Building b)
+        { if (!Muted) BuildingPlaced?.Invoke(area, b); }
+        internal void RaiseBuildingCompleted(string area, Building b)
+        { if (!Muted) BuildingCompleted?.Invoke(area, b); }
+        internal void RaiseBuildingDemolished(string area, Building b)
+        { if (!Muted) BuildingDemolished?.Invoke(area, b); }
+        internal void RaiseBatchStarted(string area, Building b, string item, int qty)
+        { if (!Muted) BatchStarted?.Invoke(area, b, item, qty); }
+        internal void RaiseBatchFinished(string area, Building b, string item, int qty)
+        { if (!Muted) BatchFinished?.Invoke(area, b, item, qty); }
+        internal void RaiseAscendPrompt()
+        { if (!Muted) AscendPromptRequested?.Invoke(); }
     }
 }

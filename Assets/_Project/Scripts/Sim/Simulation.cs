@@ -3,8 +3,8 @@ namespace IdleGrounds.Sim
     /// <summary>
     /// The single interface the Unity layer talks to (ADR 0001). Owns the
     /// systems; <see cref="Tick"/> runs gameTick in the engine-systems §2.3
-    /// order. M1 implements steps 1-3 and 10; steps 4-9 are ordered no-op
-    /// hooks for M2+.
+    /// order. Steps 1-6 (step 6: stoker only) and 10 run; the logistics
+    /// parts of step 6 and steps 7-9 are ordered hooks for M4/M5.
     /// </summary>
     public sealed class Simulation
     {
@@ -36,13 +36,21 @@ namespace IdleGrounds.Sim
             Ctx.Ground = new GroundSystem(Ctx);
             Ctx.Nodes = new NodeSystem(Ctx);
             Ctx.FieldGenerators = new FieldGeneratorSystem(Ctx);
+            Ctx.Fuel = new FuelSystem(Ctx);
+            Ctx.Converters = new ConverterSystem(Ctx);
+            Ctx.Buildings = new BuildingSystem(Ctx);
+            Ctx.Hand.FeedBuilding = Ctx.Buildings.FeedBuilding;
         }
+
+        public BuildingSystem Buildings => Ctx.Buildings;
+        public ConverterSystem Converters => Ctx.Converters;
+        public FuelSystem Fuel => Ctx.Fuel;
 
         /// <summary>Boot step 2 (§2.1): initArea for every area (locked ones too).</summary>
         public void InitAllAreas()
         {
             foreach (var r in Config.regions) Ctx.Nodes.InitArea(r.key);
-            // TODO(M2): setupStarterNetwork() (§16) after initArea.
+            Ctx.Buildings.SetupStarterNetwork();     // §16 — no-op once starterPlaced
         }
 
         /// <summary>`gameTick()` engine.js:2325. Returns the repaint hint.</summary>
@@ -73,13 +81,13 @@ namespace IdleGrounds.Sim
             return changed;
         }
 
-        // ---- M2+ hooks (ordered no-ops) ----
-        // M2+: generator buildings §8.6
-        bool TickGeneratorBuildings(string areaKey, double now) => false;
-        // M2+: converters + burner fuel §9-10
-        bool TickConverters(string areaKey, double now) => false;
-        // M2+: per building — Gathering Stone eject+vacuum §11.2, lantern beat §11.5, stoker §10.4, pavilion §12.4
-        bool TickBuildingLogistics(string areaKey, double now) => false;
+        // ---- tick steps 4-9 ----
+        // generator buildings §8.6
+        bool TickGeneratorBuildings(string areaKey, double now) => Ctx.Buildings.TickGenBuildings(areaKey, now);
+        // converters + burner fuel §9-10
+        bool TickConverters(string areaKey, double now) => Ctx.Converters.Tick(areaKey, now);
+        // per building — Gathering Stone eject+vacuum §11.2 (M4), lantern beat §11.5 (M4), stoker §10.4, pavilion §12.4 (M5)
+        bool TickBuildingLogistics(string areaKey, double now) => Ctx.Buildings.TickLogistics(areaKey, now);
         // M2+: wisp flights/arrivals §11.6
         bool TickWisps(string areaKey, double now) => false;
         // M2+: enemies spawn + wander §7
@@ -106,5 +114,43 @@ namespace IdleGrounds.Sim
         /// <summary>Right-click dispatcher (`dropFromHand`) — building feeding is an M2 hook.</summary>
         public DropResult DropFromHand(string areaKey, double x, double y, bool noGround = false) =>
             Ctx.Hand.DropFromHand(areaKey, x, y, noGround);
+
+        // ---- M3 buildings & converters ----
+
+        /// <summary>Place an unpaid ghost (`placeBuilding`); null if locked / invalid spot.</summary>
+        public Building PlaceGhost(string areaKey, string type, int row, int col) =>
+            Ctx.Buildings.PlaceGhost(areaKey, type, row, col);
+
+        /// <summary>Why PlaceGhost would refuse ("Locked", "Off the edge", "Blocked"…); null = allowed.</summary>
+        public string PlaceReason(string areaKey, string type, int row, int col) =>
+            Ctx.Buildings.PlaceGhostReason(areaKey, type, row, col);
+
+        /// <summary>`demolishBuilding` — refunds drop at the footprint centre; false for Altar/Dragon/unknown.</summary>
+        public bool Demolish(string areaKey, int buildingId) => Ctx.Buildings.Demolish(areaKey, buildingId);
+
+        /// <summary>`setRecipe` — switch a converter's active recipe (refunds per §9.2).</summary>
+        public bool SetRecipe(string areaKey, int buildingId, int recipeIndex) =>
+            Ctx.Converters.SetRecipe(areaKey, buildingId, recipeIndex);
+
+        /// <summary>Left-click withdraw from a storehouse / seal / gathering stone / stoker; returns items taken.</summary>
+        public int Withdraw(string areaKey, int buildingId, int n = 1)
+        {
+            var b = State.Area(areaKey)?.BuildingById(buildingId);
+            return b == null || !b.built ? 0 : Ctx.Hand.WithdrawFromBuilding(b, n);
+        }
+
+        /// <summary>Building whose footprint holds the area-local px point (racks excluded).</summary>
+        public Building BuildingAt(string areaKey, double x, double y) => Ctx.Buildings.BuildingAtPx(areaKey, x, y);
+
+        /// <summary>`buildingStatus` — null for ghosts / no status.</summary>
+        public BuildingStatusInfo BuildingStatus(string areaKey, Building b) => Ctx.Buildings.Status(areaKey, b);
+
+        /// <summary>Converter face/panel read-out (inputs have/need/cap, craftable, progress, fuel); null for non-converters.</summary>
+        public ConverterFace ConverterFace(string areaKey, Building b) => Ctx.Converters.Face(areaKey, b);
+
+        /// <summary>Remaining build cost of a ghost (`buildingNeeds`).</summary>
+        public ItemCounts BuildingNeeds(Building b) => Ctx.Buildings.Needs(b);
+
+        public bool IsBuildingUnlocked(string type) => Ctx.Buildings.IsBuildingUnlocked(type);
     }
 }

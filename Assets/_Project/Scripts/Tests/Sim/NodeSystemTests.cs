@@ -119,6 +119,7 @@ namespace IdleGrounds.Sim.Tests
         {
             var sim = SimTestUtil.NewSim(out var clock);
             var c = sim.State.Area("center");
+            c.ground.Clear();   // M3: drop the starter-network seeds (§16)
             var tree = SimTestUtil.FirstOfKind(c, "spirittree");
             sim.Harvest("center", tree.id);
             sim.Harvest("center", tree.id);
