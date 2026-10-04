@@ -25,9 +25,9 @@ namespace IdleGrounds.Editor
     public static class IslandCoastBuilder
     {
         const int Cells = Island.Cells;
-        const int Pad = 24;
+        const int Pad = 48;
         const int Size = Cells + 2 * Pad;
-        const float MinMargin = 3f, MaxMargin = 12f, MaxIsletReach = 17.5f;
+        const float MinMargin = 8f, MaxMargin = 30f, MaxIsletReach = 40f;
         const string Ground = "Ground";
         const int MaskPpu = 4;
 
@@ -101,6 +101,7 @@ namespace IdleGrounds.Editor
                 RebuildDerived(isl);
                 n++;
             }
+            if (only == null) Respace();
             MarkDirty();
             Debug.Log("[IdleGrounds] Island coasts re-rolled (overwritten): " + n);
         }
@@ -191,24 +192,28 @@ namespace IdleGrounds.Editor
         {
             var rng = new System.Random(seed);
             const float perim = 4f * Cells;
-            // peninsulas and bays along the perimeter
+            // BOLD silhouette: a base margin of 8-13 cells plus 2-3 big lobes/peninsulas (up to 30 cells out) and deep bays
             var bumps = new List<(float t, float sigma, float h)>();
-            int peninsulas = 3 + rng.Next(3), bays = 3 + rng.Next(2);
-            for (int i = 0; i < peninsulas; i++) bumps.Add(((float)rng.NextDouble() * perim, 3.5f + (float)rng.NextDouble() * 4f, 3.5f + (float)rng.NextDouble() * 3f));
-            for (int c = 0; c < 4; c++) if (rng.NextDouble() < 0.75) bumps.Add((c * Cells + (c % 2 == 0 ? 0f : 0f), 12f + (float)rng.NextDouble() * 6f, -(3f + (float)rng.NextDouble() * 3f)));   // pinched corners
-            for (int i = 0; i < bays; i++) bumps.Add(((float)rng.NextDouble() * perim, 5f + (float)rng.NextDouble() * 6f, -(3.5f + (float)rng.NextDouble() * 3f)));
+            int lobes = 2 + rng.Next(2);
+            float lobePhase = (float)rng.NextDouble();
+            for (int i = 0; i < lobes; i++)
+            {
+                float t0 = ((i + lobePhase) / lobes + ((float)rng.NextDouble() - 0.5f) * 0.12f) * perim;
+                bumps.Add((t0, 7f + (float)rng.NextDouble() * 13f, 13f + (float)rng.NextDouble() * 12f));
+            }
+            int bays = 2 + rng.Next(2);
+            for (int i = 0; i < bays; i++) bumps.Add(((float)rng.NextDouble() * perim, 7f + (float)rng.NextDouble() * 8f, -(6f + (float)rng.NextDouble() * 6f)));
 
             float Margin(float t)
             {
-                float n = 0.55f * Noise1(t / perim * 12f, 12, seed) + 0.3f * Noise1(t / perim * 29f, 29, seed + 1) + 0.15f * Noise1(t / perim * 60f, 60, seed + 2);
-                float v = Mathf.Clamp01((n - 0.5f) * 3.8f + 0.5f);
-                float m = 3f + 8f * v;
+                float n = 0.55f * Noise1(t / perim * 7f, 7, seed) + 0.3f * Noise1(t / perim * 19f, 19, seed + 1) + 0.15f * Noise1(t / perim * 45f, 45, seed + 2);
+                float m = 8f + 6f * Mathf.Clamp01((n - 0.5f) * 3.2f + 0.5f);
                 foreach (var (bt, s, h) in bumps)
                 {
                     float d = Mathf.Abs(t - bt); d = Mathf.Min(d, perim - d);
                     m += h * Mathf.Exp(-d * d / (2f * s * s));
                 }
-                return 3f + 9f * Smooth(Mathf.Clamp01((m - 2f) / 16f));
+                return Mathf.Clamp(m, MinMargin, MaxMargin);
             }
 
             var land = new bool[Size, Size];
@@ -223,12 +228,12 @@ namespace IdleGrounds.Editor
                     dist[ix, iy] = d;
                     if (d <= 0f) { land[ix, iy] = true; continue; }
                     float t = cr == 0 ? cc : cc == Cells - 1 ? Cells + cr : cr == Cells - 1 ? 2f * Cells + (Cells - 1 - cc) : 3f * Cells + (Cells - 1 - cr);
-                    float th = Margin(t) + (Noise2(col * 0.17f, row * 0.17f, seed + 9) - 0.5f) * 3f + (Noise2(col * 0.06f, row * 0.06f, seed + 19) - 0.5f) * 4f;
+                    float th = Margin(t) + (Noise2(col * 0.12f, row * 0.12f, seed + 9) - 0.5f) * 4f + (Noise2(col * 0.045f, row * 0.045f, seed + 19) - 0.5f) * 8f;
                     land[ix, iy] = d <= Mathf.Clamp(th, MinMargin, MaxMargin);
                 }
 
             // cellular smoothing of the free margin (rounds jaggies, removes 1-cell spikes)
-            for (int pass = 0; pass < 1; pass++)
+            for (int pass = 0; pass < 2; pass++)
             {
                 var next = (bool[,])land.Clone();
                 for (int ix = 1; ix < Size - 1; ix++)
@@ -246,8 +251,8 @@ namespace IdleGrounds.Editor
             FillHoles(land);
 
             // satellite islets: small detached blobs a few cells off the coast
-            int islets = 1 + (rng.NextDouble() < 0.55 ? 1 : 0);
-            for (int k = 0, tries = 0; k < islets && tries < 60; tries++)
+            int islets = 2 + rng.Next(3);
+            for (int k = 0, tries = 0; k < islets && tries < 200; tries++)
                 if (TryIslet(land, rng, seed + 100 + k)) k++;
             return land;
         }
@@ -294,14 +299,14 @@ namespace IdleGrounds.Editor
             float dx = (float)System.Math.Cos(th), dy = (float)System.Math.Sin(th);
             float cx0 = (Cells - 1) * 0.5f, cy0 = (Cells - 1) * 0.5f;
             float e0 = 0f;
-            for (float r = 0f; r < 70f; r += 0.5f)
+            for (float r = 0f; r < 120f; r += 0.5f)
             {
                 int ix = Mathf.RoundToInt(cx0 + dx * r) + Pad, iy = Mathf.RoundToInt(cy0 + dy * r) + Pad;
-                if (ix < 0 || iy < 0 || ix >= Size || iy >= Size) return false;
+                if (ix < 0 || iy < 0 || ix >= Size || iy >= Size) break;
                 if (land[ix, iy]) e0 = r;
             }
-            float ri = 2.2f + (float)rng.NextDouble() * 1.4f;
-            float cx = cx0 + dx * (e0 + 3.2f + ri), cy = cy0 + dy * (e0 + 3.2f + ri);
+            float ri = 2f + (float)rng.NextDouble() * (float)rng.NextDouble() * 6f + (float)rng.NextDouble() * 1.5f;
+            float cx = cx0 + dx * (e0 + 4.5f + ri), cy = cy0 + dy * (e0 + 4.5f + ri);
             var cells = new List<Vector2Int>();
             for (int ix = 0; ix < Size; ix++)
                 for (int iy = 0; iy < Size; iy++)
@@ -314,11 +319,11 @@ namespace IdleGrounds.Editor
             if (cells.Count < 6) return false;
             foreach (var c in cells)
             {
-                if (c.x < 3 || c.y < 3 || c.x >= Size - 3 || c.y >= Size - 3) return false;
+                if (c.x < 5 || c.y < 5 || c.x >= Size - 5 || c.y >= Size - 5) return false;
                 int col = c.x - Pad, row = c.y - Pad;
                 float ddx = col - Mathf.Clamp(col, 0, Cells - 1), ddy = row - Mathf.Clamp(row, 0, Cells - 1);
                 if (Mathf.Sqrt(ddx * ddx + ddy * ddy) > MaxIsletReach) return false;
-                for (int a = -2; a <= 2; a++) for (int b = -2; b <= 2; b++) if (land[c.x + a, c.y + b]) return false;
+                for (int a = -4; a <= 4; a++) for (int b = -4; b <= 4; b++) if (land[c.x + a, c.y + b]) return false;
             }
             foreach (var c in cells) land[c.x, c.y] = true;
             return true;
@@ -493,7 +498,7 @@ namespace IdleGrounds.Editor
 
             // one big mass slightly off-centre, then smaller overlapping pieces of different widths
             float mainX = xCentre + R(-8f, 8f);
-            float mainScale = Mathf.Clamp(0.5f * span / 8f, 3.6f, 6f);
+            float mainScale = Mathf.Clamp(0.5f * span / 8f, 3.6f, 8f);
             float rockH = rock != null ? rock.bounds.size.y : 6f;
             float mainTop = Attach(mainX) + 0.45f;
             float tipY = mainTop - rockH * mainScale * 0.82f;
@@ -640,32 +645,109 @@ namespace IdleGrounds.Editor
             EditorUtility.SetDirty(veil);
         }
 
+        /// <summary>
+        /// Soft edge of the playable square: scattered rocks, shrubs and grass tufts along the boundary (no hard line),
+        /// plus a "Guide" frame that <see cref="PlacementGuide"/> shows only while a building is being placed.
+        /// </summary>
         static void BuildBoundary(Island isl)
         {
             var old = isl.transform.Find("Boundary");
             if (old != null) Object.DestroyImmediate(old.gameObject);
-            var wall = IslandArtBuilder.Single(IslandArtBuilder.BoundaryWall);
-            if (wall == null) return;
+            var props = IslandArtBuilder.Frames(IslandArtBuilder.BoundaryProps);
             var root = new GameObject("Boundary").transform;
             root.SetParent(isl.transform, false);
-            void Edge(string name, Vector3 pos, float rot)
+            var rng = new System.Random(KeySeed(isl.islandKey) ^ 0x1234567);
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            if (props.Length >= 6)
             {
-                var sr = new GameObject(name).AddComponent<SpriteRenderer>();
-                sr.transform.SetParent(root, false);
-                sr.transform.localPosition = pos;
-                sr.transform.localRotation = Quaternion.Euler(0, 0, rot);
-                sr.sprite = wall;
-                sr.drawMode = SpriteDrawMode.Tiled;
-                sr.tileMode = SpriteTileMode.Continuous;
-                sr.size = new Vector2(Cells + 0.3f, 1f);
-                sr.color = new Color(1f, 1f, 1f, 0.55f);
-                sr.sortingLayerName = Ground;
-                sr.sortingOrder = 13;
+                void Scatter(Vector2 a, Vector2 b)
+                {
+                    float len = Vector2.Distance(a, b);
+                    var dir = (b - a) / len;
+                    for (float s = R(0f, 2f); s < len; s += R(1.4f, 4.5f))
+                    {
+                        if (rng.NextDouble() < 0.18) continue;
+                        float kind = (float)rng.NextDouble();
+                        int type = kind < 0.3f ? 0 : kind < 0.58f ? 1 : 2;       // rock, shrub, tuft
+                        var p = a + dir * s + new Vector2(-dir.y, dir.x) * R(-0.9f, 0.9f);
+                        var sr = new GameObject(type == 0 ? "Rock" : type == 1 ? "Shrub" : "Tuft").AddComponent<SpriteRenderer>();
+                        sr.transform.SetParent(root, false);
+                        sr.transform.localPosition = new Vector3(p.x, p.y - 0.35f, 0f);
+                        float sc = type == 0 ? R(0.5f, 1.0f) : type == 1 ? R(0.6f, 1.1f) : R(0.6f, 1.0f);
+                        sr.transform.localScale = new Vector3(sc, sc, 1f);
+                        sr.sprite = props[type * 2 + rng.Next(2)];
+                        sr.flipX = rng.NextDouble() < 0.5;
+                        sr.sortingLayerName = Ground;
+                        sr.sortingOrder = 13;
+                    }
+                }
+                float n = Cells;
+                Scatter(new Vector2(0, 0), new Vector2(n, 0));
+                Scatter(new Vector2(0, -n), new Vector2(n, -n));
+                Scatter(new Vector2(0, 0), new Vector2(0, -n));
+                Scatter(new Vector2(n, 0), new Vector2(n, -n));
             }
-            Edge("North", new Vector3(Cells * 0.5f, 0f, 0f), 0f);
-            Edge("South", new Vector3(Cells * 0.5f, -Cells, 0f), 0f);
-            Edge("West", new Vector3(0f, -Cells * 0.5f, 0f), 90f);
-            Edge("East", new Vector3(Cells, -Cells * 0.5f, 0f), 90f);
+
+            // faint guide line, shown only while placing (PlacementGuide)
+            BuildingsBuilder.EnsureShapes();
+            var guide = BuildingsBuilder.Frame(root, "Guide", 14, Ground);
+            guide.transform.localPosition = Vector3.zero;
+            guide.Set(Cells, Cells, ViewKit.U(2f), new Color(0.45f, 0.95f, 0.6f, 0.45f), true);
+            guide.gameObject.SetActive(false);
+            var pg = root.gameObject.AddComponent<PlacementGuide>();
+            pg.guide = guide.gameObject;
+        }
+
+        // ------------------------------------------------------------------ spacing
+
+        [MenuItem("Idle Grounds/World/Respace Islands (from coasts)")]
+        public static void RespaceMenu() { Respace(); MarkDirty(); }
+
+        /// <summary>
+        /// Re-spaces the Island GameObjects on the original 3x3 neighbour layout so there are at least
+        /// <see cref="CoastGap"/> cells of open sky between neighbouring coasts (incl. islets). The Center keeps its place;
+        /// the scene stays the authority (GameRunner pushes the offsets to the sim).
+        /// </summary>
+        public static void Respace()
+        {
+            const float CoastGap = 14f, UndersideGap = 14f;
+            var byKey = new Dictionary<string, Island>();
+            foreach (var i in Islands()) byKey[i.islandKey] = i;
+            if (!byKey.ContainsKey("center")) return;
+            // grid cell (col,row) of each Island (RegionDef rx/ry in the original)
+            var grid = new Dictionary<string, Vector2Int>
+            {
+                { "farm", new Vector2Int(0, 0) }, { "center", new Vector2Int(1, 0) }, { "mine", new Vector2Int(2, 0) },
+                { "grove", new Vector2Int(0, 1) }, { "fishing", new Vector2Int(1, 1) }, { "volcano", new Vector2Int(2, 1) },
+                { "celestial", new Vector2Int(1, 2) },
+            };
+            var ext = new Dictionary<string, (float l, float r, float t, float b)>();
+            foreach (var kv in byKey)
+            {
+                var land = ReadLand(kv.Value);
+                ext[kv.Key] = (-land.x0, land.x1 - (Cells - 1), land.y1 + 1, -Cells - land.y0);
+            }
+            float MaxOver(int col, int row, bool useCol, System.Func<(float l, float r, float t, float b), float> f)
+            {
+                float m = 0f;
+                foreach (var kv in grid)
+                    if (byKey.ContainsKey(kv.Key) && (useCol ? kv.Value.x == col : kv.Value.y == row)) m = Mathf.Max(m, f(ext[kv.Key]));
+                return m;
+            }
+            var cx = new float[3]; var cy = new float[3];
+            var c0 = byKey["center"].transform.position;
+            cx[1] = c0.x; cy[0] = c0.y;
+            cx[0] = cx[1] - Cells - (MaxOver(0, 0, true, e => e.r) + MaxOver(1, 0, true, e => e.l) + CoastGap);
+            cx[2] = cx[1] + Cells + (MaxOver(1, 0, true, e => e.r) + MaxOver(2, 0, true, e => e.l) + CoastGap);
+            cy[1] = cy[0] - Cells - (MaxOver(0, 0, false, e => e.b) + MaxOver(0, 1, false, e => e.t) + CoastGap + UndersideGap);
+            cy[2] = cy[1] - Cells - (MaxOver(0, 1, false, e => e.b) + MaxOver(0, 2, false, e => e.t) + CoastGap + UndersideGap);
+            foreach (var kv in grid)
+            {
+                if (!byKey.TryGetValue(kv.Key, out var isl)) continue;
+                isl.transform.position = new Vector3(Mathf.Round(cx[kv.Value.x]), Mathf.Round(cy[kv.Value.y]), 0f);
+                EditorUtility.SetDirty(isl.transform);
+            }
+            Debug.Log("[IdleGrounds] Islands re-spaced: columns x=" + Mathf.Round(cx[0]) + "/" + Mathf.Round(cx[1]) + "/" + Mathf.Round(cx[2]) + ", rows y=" + Mathf.Round(cy[0]) + "/" + Mathf.Round(cy[1]) + "/" + Mathf.Round(cy[2]));
         }
     }
 }

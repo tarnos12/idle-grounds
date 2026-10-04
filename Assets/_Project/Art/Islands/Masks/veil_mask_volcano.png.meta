@@ -5,6 +5,9 @@ TextureImporter:
   - first:
       213: 1644184084295955908
     second: veil_mask_volcano_0
+  - first:
+      213: 6777430031013995525
+    second: veil_mask_volcano_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -130,9 +133,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 5
-        y: 17
-        width: 498
-        height: 502
+        y: 285
+        width: 30
+        height: 42
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -143,6 +146,28 @@ TextureImporter:
       bones: []
       spriteID: 4c5bfc1a6b051d610800000000000000
       internalID: 1644184084295955908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: veil_mask_volcano_1
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 33
+        width: 622
+        height: 566
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50467a074b44e0e50800000000000000
+      internalID: 6777430031013995525
       vertices: []
       indices: 
       edges: []
@@ -162,6 +187,7 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       veil_mask_volcano_0: 1644184084295955908
+      veil_mask_volcano_1: 6777430031013995525
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

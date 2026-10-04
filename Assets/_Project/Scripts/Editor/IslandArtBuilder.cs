@@ -52,7 +52,7 @@ namespace IdleGrounds.Editor
         public static string GroundTilePath(string key) => $"{TileDir}/RuleTile_{key}_ground.asset";
         /// <summary>47-blob Rule Tile painted on each Island's Coast tilemap.</summary>
         public static string CoastTilePath(string key) => $"{TileDir}/RuleTile_{key}_coast.asset";
-        public const string BoundaryWall = IslandDir + "/island_boundary_wall_32x32.png";     // placeholder-only (no spec row)
+        public const string BoundaryProps = IslandDir + "/island_boundary_props_32x32_6f.png";     // placeholder-only (no spec row)
         public const string MaskDir = IslandDir + "/Masks";
         public static string CliffTilePath(string key) => $"{TileDir}/RuleTile_{key}_cliff.asset";
 
@@ -111,7 +111,7 @@ namespace IdleGrounds.Editor
                 Make(BlobPath(key), force, () => BlobStrip(Hex(ground), key.GetHashCode()), 47, 32, Pivot.Center, true, false);
                 Make(CliffPath(key), force, () => CliffStrip(Hex(ground), Hex(rock), key.GetHashCode()), 8, 32, Pivot.Center, true, false);
             }
-            Make(BoundaryWall, force, BoundaryWall_, 1, 32, Pivot.Center, true, true);
+            Make(BoundaryProps, force, BoundaryPropsTex, 6, 32, Pivot.BottomCenter, true, false);
             Make(UndersideRock, force, () => Underside(256, 192, 1, 0.85f), 1, 256, Pivot.TopCenter, true, false);
             Make(UndersideRoots, force, Roots, 1, 192, Pivot.TopCenter, true, false);
             Make(UndersideStalactite, force, () => Underside(96, 160, 7, 0.55f), 1, 96, Pivot.TopCenter, true, false);
@@ -409,24 +409,53 @@ namespace IdleGrounds.Editor
             return t;
         }
 
-        /// <summary>Low stone wall that marks the playable square on the Island (placeholder; one 1-cell tile, tiles horizontally).</summary>
-        static Texture2D BoundaryWall_()
+        /// <summary>Boundary props (placeholder): frames 0-1 rocks, 2-3 shrubs, 4-5 grass tufts; bottom-centre pivot.</summary>
+        static Texture2D BoundaryPropsTex()
         {
             const int S = 32;
-            var t = NewTex(S, S);
-            var stone = new Color(0.62f, 0.62f, 0.66f);
-            for (int y = 0; y < S; y++)
-                for (int x = 0; x < S; x++)
-                {
-                    if (y < 11 || y > 19) continue;
-                    int row = (y - 11) / 3, off = row % 2 == 0 ? 0 : 5;
-                    bool mortar = (x + off) % 10 == 0 || (y - 11) % 3 == 2 && y != 19;
-                    var c = Shade(stone, 0.9f + (Hash(x / 10, row, 21) - 0.5f) * 0.3f);
-                    if (mortar) c = Shade(stone, 0.55f);
-                    if (y == 19) c = Shade(stone, 1.25f);            // sunlit cap
-                    if (y == 11) c = Shade(stone, 0.45f);            // shadow line
-                    t.SetPixel(x, y, c);
-                }
+            var t = NewTex(S * 6, S);
+            var rockC = new Color(0.55f, 0.55f, 0.58f);
+            var leaf = new Color(0.22f, 0.5f, 0.28f);
+            var grass = new Color(0.5f, 0.78f, 0.35f);
+            for (int f = 0; f < 6; f++)
+            {
+                int type = f / 2, v = f % 2;
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        Color? c = null;
+                        float dx = x - 15.5f;
+                        if (type == 0)
+                        {
+                            float rx = 11f - v * 2f, ry = 8f - v;
+                            float d = dx * dx / (rx * rx) + (y - 3f) * (y - 3f) / (ry * ry);
+                            if (d < 1f && y >= 0)
+                            {
+                                float lit = 1.05f - (x - 8f) * 0.012f + (y - 4f) * 0.015f + (Hash(x, y, 40 + f) - 0.5f) * 0.18f;
+                                c = d > 0.8f ? Shade(rockC, 0.5f) : Shade(rockC, lit);
+                            }
+                        }
+                        else if (type == 1)
+                        {
+                            for (int k = 0; k < 3; k++)
+                            {
+                                float bx = 15.5f + (k - 1) * (7f - v), by = 6f + (k == 1 ? 3f : 0f), br = 7f + (k == 1 ? 2f : 0f);
+                                float d = ((x - bx) * (x - bx) + (y - by) * (y - by)) / (br * br);
+                                if (d < 1f) c = d > 0.78f ? Shade(leaf, 0.55f) : Shade(leaf, 0.85f + (y - by) * 0.03f + (Hash(x, y, 50 + f) - 0.5f) * 0.25f);
+                            }
+                        }
+                        else
+                        {
+                            for (int k = 0; k < 6; k++)
+                            {
+                                float bx = 6f + k * 4f + Hash(k, v, 60) * 2f, h = 8f + Hash(k, v, 61) * 12f;
+                                float lean = (k - 2.5f) * 0.18f * (y / Mathf.Max(1f, h)) * 6f;
+                                if (y < h && Mathf.Abs(x - (bx + lean)) < 1.1f - y / h * 0.8f) c = Shade(grass, 0.7f + y / h * 0.5f);
+                            }
+                        }
+                        if (c.HasValue) t.SetPixel(f * S + x, y, c.Value);
+                    }
+            }
             t.Apply();
             return t;
         }

@@ -28,7 +28,7 @@ namespace IdleGrounds.Game
         public int coastSeed;
 
         /// <summary>Cells the painted landmass (coast + satellite islets) may extend beyond the square play area.</summary>
-        public const float VisualMargin = 18f;
+        public const float VisualMargin = 42f;
 
         public Vector3 Origin => transform.position;
 

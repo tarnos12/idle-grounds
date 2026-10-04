@@ -312,10 +312,6 @@ namespace IdleGrounds.Editor
                 if (ez != null && ez.enabled && !string.IsNullOrEmpty(ez.zone))
                     foreach (var r in cfg.ZoneRects(ez.zone)) AddZoneRect(root, "Enemy_" + ez.zone, r, EnemyFill, EnemyEdge, square);
 
-                var frame = BuildingsBuilder.Frame(root, "IslandFrame", FrameOrder, OverlayLayer);
-                frame.transform.localPosition = Vector3.zero;
-                frame.Set(Island.Cells, Island.Cells, ViewKit.U(2f), FrameColour, false);
-
                 if (region.veil != null) BuildVeilLock(region.veil.transform);
                 EditorUtility.SetDirty(region.gameObject);
                 n++;

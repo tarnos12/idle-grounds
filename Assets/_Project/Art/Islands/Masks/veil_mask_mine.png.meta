@@ -5,6 +5,9 @@ TextureImporter:
   - first:
       213: 761629074092767624
     second: veil_mask_mine_0
+  - first:
+      213: -3883533814926587164
+    second: veil_mask_mine_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -130,9 +133,9 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 5
-        y: 29
-        width: 494
-        height: 514
+        y: 249
+        width: 42
+        height: 62
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -143,6 +146,28 @@ TextureImporter:
       bones: []
       spriteID: 889b8eb8b99d19a00800000000000000
       internalID: 761629074092767624
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: veil_mask_mine_1
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 17
+        width: 510
+        height: 650
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4ea4518329aea1ac0800000000000000
+      internalID: -3883533814926587164
       vertices: []
       indices: 
       edges: []
@@ -162,6 +187,7 @@ TextureImporter:
       entries: []
     nameFileIdTable:
       veil_mask_mine_0: 761629074092767624
+      veil_mask_mine_1: -3883533814926587164
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
