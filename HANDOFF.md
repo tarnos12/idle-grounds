@@ -89,7 +89,12 @@ unlock); **offline progress removed** (world freezes when closed; Long
 Slumber → Tireless Wisps perk); wisp-delivered firestone goes to stock when
 the recipe takes it (fix the JS quirk).
 
-Next: implement the above (awaiting the user's go-ahead), then deferred UI
+ART PIPELINE: art requests live in `docs/art/ART-SPEC.md`, mirrored to Google
+Drive `AI files/Idle Grounds Art/ART-SPEC.md`; deliveries arrive in Drive
+`incoming/<category>/` (pixel art, 32 px/cell, PPU 32). Poll it (30 min x1h,
+hourly x2h, then 2-hourly; restart after spec updates) and integrate.
+
+Next: islands/bridges/no-offline sim work (in progress), then deferred UI
 lows, Sim query allocations, real art, PlayMode smoke tests.
 ## Last session summary (2026-10-04, port kickoff)
 
