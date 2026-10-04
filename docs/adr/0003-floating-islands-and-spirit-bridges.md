@@ -27,6 +27,10 @@ central hub, and wisp routes that cross the border.
   - If a pair breaks, wisps already in flight return to the sender.
 - A Spirit Bridge costs wood 10 + stone 10. It appears in the build menu once
   the player has unlocked a second Island.
+- Island silhouettes are irregular and **purely visual**: each Island's
+  painted landmass is larger than its square 93×93 playable area, with a
+  hand-painted coast extending 3–12 cells beyond it. The simulation grid stays
+  square, so there is no shape mask in the sim.
 - A locked Island shows its veil plus an unlock sign at its edge.
 - The sky between Islands is a gradient background with parallax clouds.
 

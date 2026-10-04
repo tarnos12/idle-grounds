@@ -1,4 +1,4 @@
-# Idle Grounds — Art Request / Art Bible (v1)
+# Idle Grounds — Art Request / Art Bible (v2)
 
 Self-contained brief for the artist (human or AI image tool). Everything needed to produce, name, size and deliver the art is in this file. No other document is required.
 
@@ -133,9 +133,20 @@ Footprint = what the object occupies in cells. **Canvas** = PNG size. Art may ex
 
 The world is now seven separate floating islands over a sea of clouds (see section 0). Islands are authored in a scene; each is painted on a Unity Tilemap with **Rule Tiles**. The artist supplies tile strips that map 1:1 to a Rule Tile.
 
+### 3.0 Islands are IRREGULAR — paint any shape (v2)
+
+Islands must **never look like squares**. Gameplay still uses a square 93×93-cell playable area per island, but the **painted landmass is larger**: the playable square sits inside it, and the irregular coast extends 3–12 cells (varying) beyond the square on every side. The organic outline is purely visual. Each island is painted by hand in Unity's Tilemap with these tiles, so every island gets a unique organic silhouette: bays, peninsulas, narrow necks, diagonal coastlines, small satellite islets and even holes/ponds open to the sky. The tileset therefore has to support **any** shape — which is why every biome uses the **47-tile "blob" layout** (all combinations of the 8 neighbours, the standard autotile set used by Unity Rule Tiles / Tiled "blob" terrain), not a simple 4-edge set.
+
+- Deliver the ground tileset as a **47-tile blob sheet** per biome: `island_<biome>_ground_blob_32x32_47f.png` — a 47-frame horizontal strip (1504×32) **or** the common 7×7 blob template grid (224×224, unused cells transparent); include a small reference PNG showing which neighbour mask each frame covers (the widely used "47 blob" order, e.g. as documented by cr31.co.uk/stagecast/wang/blob.html).
+- Plus **3 centre-fill variants** and **4 scatter overlays** (same as below).
+- Coastlines should look natural at every step: rounded outer corners, soft inner corners, 1-cell diagonal staircases must read as a smooth diagonal edge, not jaggies.
+- The **cliff rim (3.2)** must likewise cover every exposed edge seen from the front: under straight south edges, under outer SW/SE corners, under diagonal steps, and short "end caps" where a south edge turns north. Side (E/W) edges get a thin rock lip only (top-down ¾ view shows the underside mainly on the south side).
+- Large underside decorations (3.2) are placed by hand under each island, so their shapes should combine well (overlapping pieces of different widths), and work under narrow peninsulas as well as wide coasts.
+- The **19-tile strip below remains acceptable as a minimum** (Unity can derive many cases from it), but the 47-blob set is the preferred deliverable.
+
 ### 3.1 Per-island ground tileset (32×32 tiles, Rule Tile layout)
 
-Each biome delivers **one strip of 19 tiles**: `island_<biome>_ground_32x32_19f.png` (608×32). Frame order is fixed:
+Minimum layout (if no 47-blob set is delivered): **one strip of 19 tiles**: `island_<biome>_ground_32x32_19f.png` (608×32). Frame order is fixed:
 
 | Frame | Role | Rule (neighbours "empty" = sky/no ground) |
 |---|---|---|
@@ -754,3 +765,4 @@ Review process: files in `incoming` are imported into Unity, checked in-game, an
 | Version | Date | Change |
 |---|---|---|
 | v1 — initial request | 2026-10-04 | First full art request: 32-colour xianxia palette, technical spec, floating-island tilesets, sky, Spirit Bridge, all 183 manifest keys, UI chrome and FX. All statuses `requested`. |
+| v2 — irregular islands | 2026-10-04 | New §3.0: islands are hand-painted irregular shapes (never squares); the coast is a visual margin 3–12 cells around the square 93×93 playable area. Ground tilesets become 47-tile blob sets per biome (`island_<biome>_ground_blob_32x32_47f.png`; the 19-tile strip stays as a minimum); cliff rim must cover diagonals, corners and end caps; underside decorations must combine under any coastline. |
