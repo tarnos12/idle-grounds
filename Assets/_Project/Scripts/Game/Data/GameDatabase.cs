@@ -28,6 +28,18 @@ namespace IdleGrounds.Game.Data
 
         public Sprite missingSprite;
 
+        /// <summary>Delivered FX art (fx_* keys, e.g. fx_wisp), wired generically by ArtIntake.</summary>
+        public List<SpriteEntry> fx = new List<SpriteEntry>();
+
+        /// <summary>Animation frames of delivered fx art (1+ frames), or null when not delivered.</summary>
+        public Sprite[] FxFrames(string key)
+        {
+            foreach (var e in fx)
+                if (e != null && e.key == key && e.realArt && e.sprite != null)
+                    return e.frames != null && e.frames.Length > 0 ? e.frames : new[] { e.sprite };
+            return null;
+        }
+
         /// <summary>Assemble the sim config (list order preserved) and Build() it.</summary>
         public GameConfig BuildConfig()
         {

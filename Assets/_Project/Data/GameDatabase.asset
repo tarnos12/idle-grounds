@@ -472,3 +472,20 @@ MonoBehaviour:
     cap: 6
     perType: 2
   missingSprite: {fileID: -1935059799, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  fx:
+  - key: fx_wisp
+    sprite: {fileID: -2785000442442561768, guid: 4f755b70e9882254190703302c24efbf, type: 3}
+    frames:
+    - {fileID: -2785000442442561768, guid: 4f755b70e9882254190703302c24efbf, type: 3}
+    - {fileID: 3328684304372215786, guid: 4f755b70e9882254190703302c24efbf, type: 3}
+    - {fileID: 4703362837149398390, guid: 4f755b70e9882254190703302c24efbf, type: 3}
+    - {fileID: -441170305556697064, guid: 4f755b70e9882254190703302c24efbf, type: 3}
+    realArt: 1
+  - key: fx_wisp_returning
+    sprite: {fileID: 5853736245011250342, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
+    frames:
+    - {fileID: 5853736245011250342, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
+    - {fileID: 7547603495698574540, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
+    - {fileID: -2073842603777890662, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
+    - {fileID: -509326019664925791, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
+    realArt: 1

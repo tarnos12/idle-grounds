@@ -54,7 +54,7 @@ namespace IdleGrounds.Game
                     if (!views.TryGetValue(w.id, out var v) || v.Wisp != w)
                     {
                         if (v == null) { v = pool.Get(); views[w.id] = v; }
-                        v.Bind("sky", w, sprites.Item(w.item));
+                        v.Bind("sky", w, sprites.Item(w.item), sprites.FxFrames("fx_wisp"), sprites.FxFrames("fx_wisp_returning"));
                     }
                     v.seenFrame = frame;
                     var p = sim.SkyWispPos(w, now);

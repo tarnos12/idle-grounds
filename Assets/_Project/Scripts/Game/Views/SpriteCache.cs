@@ -56,6 +56,14 @@ namespace IdleGrounds.Game
             return s;
         }
 
+        readonly Dictionary<string, Sprite[]> fxCache = new Dictionary<string, Sprite[]>();
+        /// <summary>Delivered FX animation frames for an fx_* key, or null (callers fall back to procedural visuals).</summary>
+        public Sprite[] FxFrames(string key)
+        {
+            if (!fxCache.TryGetValue(key, out var f)) fxCache[key] = f = db.FxFrames(key);
+            return f;
+        }
+
         public Sprite Get(string key)
         {
             if (!cache.TryGetValue(key, out var s)) cache[key] = s = db.GetSprite(key);

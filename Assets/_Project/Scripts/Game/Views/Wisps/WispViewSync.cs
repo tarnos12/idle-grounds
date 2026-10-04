@@ -57,7 +57,7 @@ namespace IdleGrounds.Game
                     if (!views.TryGetValue(k, out var v) || v.Wisp != w)
                     {
                         if (v == null) { v = pool.Get(); views[k] = v; }
-                        v.Bind(area.key, w, sprites.Item(w.item));
+                        v.Bind(area.key, w, sprites.Item(w.item), sprites.FxFrames("fx_wisp"), sprites.FxFrames("fx_wisp_returning"));
                     }
                     v.seenFrame = frame;
                     var p = sim.WispPos(area.key, w, now);

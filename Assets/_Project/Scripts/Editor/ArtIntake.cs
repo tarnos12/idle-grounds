@@ -254,6 +254,20 @@ namespace IdleGrounds.Editor
             foreach (var a in db.quests) if (a && Set(map, "ui_quest_" + a.def.id, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
             if (Set(map, "ui_alert", used, s => { if (db.missingSprite == s) return false; db.missingSprite = s; EditorUtility.SetDirty(db); return true; })) wired++;
 
+            // fx_*: generic FX registry wiring by key
+            foreach (var kv in map)
+            {
+                if (!kv.Key.StartsWith("fx_")) continue;
+                frameMap.TryGetValue(kv.Key, out var fr);
+                var e = db.fx.Find(x => x.key == kv.Key);
+                if (e == null) { e = new SpriteEntry { key = kv.Key }; db.fx.Add(e); }
+                if (e.sprite != kv.Value || !e.realArt || !SameFrames(e.frames, fr))
+                { e.sprite = kv.Value; e.frames = fr; e.realArt = true; EditorUtility.SetDirty(db); wired++; }
+                used.Add(kv.Key);
+            }
+            // consumed directly by IslandArtBuilder's Rule Tiles
+            used.Add("island_center_ground_fill");
+
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)
             foreach (var key in map.Keys)
             {
@@ -266,6 +280,14 @@ namespace IdleGrounds.Editor
 
             AssetDatabase.SaveAssets();
             Debug.Log($"ArtIntake: {wired} assignment(s) changed, {replaced} placeholder file(s) replaced, {warnings} unwired key(s) of {map.Count} delivered.");
+        }
+
+        static bool SameFrames(Sprite[] a, Sprite[] b)
+        {
+            if (a == null || b == null) return a == b;
+            if (a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+            return true;
         }
 
         static bool Set(Dictionary<string, Sprite> map, string key, HashSet<string> used, Func<Sprite, bool> assign)

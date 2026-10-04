@@ -22,19 +22,40 @@ namespace IdleGrounds.Game
         public Wisp Wisp { get; private set; }
         public bool Red { get; private set; }
 
-        public void Bind(string area, Wisp w, Sprite cargoSprite)
+        const float FxFps = 8f;
+        Sprite glowCircle;
+        Sprite[] fxNormal, fxReturning;
+        bool useFx;
+        float phase;
+
+        public void Bind(string area, Wisp w, Sprite cargoSprite, Sprite[] fxFrames = null, Sprite[] fxReturningFrames = null)
         {
             Area = area; Wisp = w;
             name = $"Wisp_{area}_{w.id}";
-            float glowSize = ViewKit.U(14f), coreSize = ViewKit.U(5f);
-            glow.transform.localScale = new Vector3(glowSize, glowSize, 1f);
-            core.transform.localScale = new Vector3(coreSize, coreSize, 1f);
-            core.color = CoreColour;
+            if (glowCircle == null) glowCircle = glow.sprite;
+            fxNormal = fxFrames; fxReturning = fxReturningFrames != null ? fxReturningFrames : fxFrames;
+            useFx = fxNormal != null && fxNormal.Length > 0;
+            phase = (w.id * 0.37f) % 1f;      // per-wisp animation phase offset
+            if (useFx)
+            {
+                glow.transform.localScale = Vector3.one;   // native size (12 px at PPU 32)
+                glow.color = Color.white;
+                core.enabled = false;
+            }
+            else
+            {
+                float glowSize = ViewKit.U(14f), coreSize = ViewKit.U(5f);
+                glow.sprite = glowCircle;
+                glow.transform.localScale = new Vector3(glowSize, glowSize, 1f);
+                core.transform.localScale = new Vector3(coreSize, coreSize, 1f);
+                core.color = CoreColour;
+                core.enabled = true;
+                glow.color = new Color(0, 0, 0, 0);
+            }
             ViewKit.Fit(cargo, cargoSprite, 14f);
             cargo.transform.localPosition = new Vector3(0f, ViewKit.U(12f), 0f);
             ViewKit.Show(cargo, cargoSprite != null);
             Red = !w.returning;      // force the colour write on the first Refresh
-            glow.color = new Color(0, 0, 0, 0);
             Refresh(transform.position);
         }
 
@@ -42,6 +63,14 @@ namespace IdleGrounds.Game
         {
             transform.position = world;
             bool red = Wisp.returning;
+            if (useFx)
+            {
+                Red = red;
+                var frames = red ? fxReturning : fxNormal;
+                int i = (int)(Time.time * FxFps + phase * frames.Length) % frames.Length;
+                glow.sprite = frames[i];
+                return;
+            }
             if (red != Red || glow.color.a == 0f)
             {
                 Red = red;
