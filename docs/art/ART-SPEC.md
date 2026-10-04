@@ -258,11 +258,11 @@ Frame suffixes in the "Key / file" column show the delivered filename; static ar
 | Key / file | What it depicts (cultivation flavour) | Existing 16×16 | Pri | Status |
 |---|---|---|---|---|
 | `item_wood.png` | Short stack of two cut logs from the Spirit Tree, pale cut ends with ring, hint of jade moss | Y | P1 | integrated |
-| `item_leaves.png` | Fan of three broad green leaves, one with a golden dew spot | Y | P1 | requested |
-| `item_stone.png` | Rough grey chunk with a cleaved lighter face | Y | P1 | requested |
-| `item_clay.png` | Wet brick-red clay lump, finger marks | Y | P1 | requested |
-| `item_plank.png` | Single sawn board with grain, two nail/peg dots | Y | P1 | requested |
-| `item_brick.png` | Fired grey-blue roof brick with a cinnabar stamp | Y | P1 | requested |
+| `item_leaves.png` | Fan of three broad green leaves, one with a golden dew spot | Y | P1 | integrated |
+| `item_stone.png` | Rough grey chunk with a cleaved lighter face | Y | P1 | integrated |
+| `item_clay.png` | Wet brick-red clay lump, finger marks | Y | P1 | integrated |
+| `item_plank.png` | Single sawn board with grain, two nail/peg dots | Y | P1 | integrated |
+| `item_brick.png` | Fired grey-blue roof brick with a cinnabar stamp | Y | P1 | integrated |
 | `item_wheat.png` | (Rice) Sheaf of golden rice stalks tied with red thread | Y | P2 | requested |
 | `item_cotton.png` | White cotton boll, small leaf collar | Y | P2 | requested |
 | `item_sand.png` | Small pile of fine golden sand with a glint | Y | P2 | requested |
@@ -774,3 +774,4 @@ Intake: `node tools/art-intake/pull.js` (Drive `incoming/<category>/` -> `Assets
 | Date | File | Source zip | Status |
 |---|---|---|---|
 | 2026-10-04 | `item_wood.png` | `incoming/items/Idle-Grounds-Items-001.zip` | integrated (ItemAsset `wood` icon; ground items, hand, HUD, costs verified in Play mode) |
+| 2026-10-04 | `item_leaves.png`, `item_stone.png`, `item_clay.png`, `item_plank.png`, `item_brick.png` | `incoming/items/Idle-Grounds-Items-002.zip` | integrated (ItemAsset icons; P1 items complete). Feedback: good — keep this style. |
