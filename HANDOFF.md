@@ -94,7 +94,7 @@ Drive `AI files/Idle Grounds Art/ART-SPEC.md`; deliveries arrive in Drive
 `incoming/<category>/` (pixel art, 32 px/cell, PPU 32). Intake: `node tools/art-intake/pull.js` (copies/unzips new Drive files into
 `Assets/_Project/Art/Incoming/`, log in intake-log.json) then Unity menu
 `Idle Grounds/Art/Integrate Incoming Art` (import rules + wiring by key).
-Integrated so far: item_wood, leaves, stone, clay, plank, brick (all P1 items); bld_gathering_stone, bld_wisp_lantern, bld_warding_seal (real building art
+Integrated so far: item_wood, leaves, stone, clay, plank, brick (all P1 items); bld_gathering_stone, bld_wisp_lantern, bld_warding_seal, bld_workbench, bld_storehouse (real building art
 renders full-size as the building body via BuildingAsset.hasRealArt). Poll it (30 min x1h,
 hourly x2h, then 2-hourly; restart after spec updates) and integrate.
 
