@@ -1,0 +1,9 @@
+Use case: stylized-concept. Asset type: production pixel-art landmark building sprite for Idle Grounds, xianxia cultivation sandbox.
+
+Primary request: the central Altar: a circular raised carved-stone dais with a clearly visible golden bagua and taiji ring on its floor, supporting an elegant compact shrine with red lacquer columns, gold-trimmed double sweeping tiled eaves, and one central incense brazier. Warm gold accents; serene immortal-sect architecture; no people.
+
+Transparent background. Match the approved chunky P1 Workbench, Storehouse, and Kiln style: crisp top-down three-quarter pixel art, front faces south, roof visible, upper-left light, selective material outlines. Single isolated 5×5 landmark on an exact 160×192 logical canvas; 160×160 ground footprint plus up to 32 pixels roof height; circular dais clearly visible around shrine; base touches bottom edge; bottom-center pivot; no left/right/bottom overhang.
+
+Palette: exact 32-color ART-SPEC palette. Binary alpha; no cast shadow, scenery, ground tile, text, characters, smooth gradients, blur, anti-aliasing, tiny high-resolution detail, or colors outside the palette. Strong silhouette and major features readable at game zoom.
+
+Post-processing: nearest-neighbor resize, no-dither palette remap, 50% alpha threshold, bottom-center alignment.

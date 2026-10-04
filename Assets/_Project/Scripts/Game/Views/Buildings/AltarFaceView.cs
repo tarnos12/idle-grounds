@@ -28,6 +28,7 @@ namespace IdleGrounds.Game
             title.text = v.Def.name; ViewKit.Font(title, 24f); title.color = UiPalette.Gold;
             title.transform.localPosition = v.L(0.5f, 0.68f);
             title.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(28f));
+            ViewKit.Show(title, !v.RealArt);   // the real art is self-explanatory; the name stays in the hover tooltip
             sub.text = "Select an upgrade"; ViewKit.Font(sub, 10f); sub.color = UiPalette.Muted; ViewKit.Outline(sub, 0.2f);
             sub.transform.localPosition = new Vector3(v.W * 0.5f, -v.H - ViewKit.U(8f), 0f);   // below the footprint, out of the art
             sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(12f));
