@@ -1,17 +1,12 @@
 {
-    "name": "IdleGrounds.Editor",
-    "rootNamespace": "IdleGrounds.Editor",
+    "name": "IdleGrounds.Game",
+    "rootNamespace": "IdleGrounds.Game",
     "references": [
-        "Unity.2D.Sprite.Editor",
-        "IdleGrounds.Game",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
-        "UnityEngine.UI",
-        "Unity.RenderPipelines.Universal.Runtime"
+        "UnityEngine.UI"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

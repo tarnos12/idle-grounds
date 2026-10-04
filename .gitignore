@@ -43,3 +43,7 @@ crashlytics-build.properties
 
 # Old web game build output
 old-game/dist/
+
+# MCP screenshots
+/Assets/Screenshots/
+/Assets/Screenshots.meta
