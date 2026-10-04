@@ -187,6 +187,12 @@ namespace IdleGrounds.Sim
         [NonSerialized] public List<string> accEver;   // null = accept anything
         [NonSerialized] public bool hasAccEver;
         [NonSerialized] public int seq;
+        /// <summary>
+        /// Spirit Bridge sender: nextSend is a genuine beat due time (the last evaluation launched and had
+        /// cargo + receiver room to spare). False (fresh / just paired / loaded / idle poll) = the beat
+        /// clock restarts at now and fires once — no catch-up for time spent idle (§2.2).
+        /// </summary>
+        [NonSerialized] public bool beatArmed;
     }
 
     [Serializable]

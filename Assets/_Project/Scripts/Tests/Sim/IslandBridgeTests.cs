@@ -209,6 +209,40 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
+        public void IdleSender_FilledAfterLongIdle_LaunchesOncePerBeat_NoBurst()
+        {
+            var sim = Bare(out var clock);
+            var (send, _) = Pair(sim);
+            var launches = new List<(SkyWisp w, long at)>();
+            sim.Events.WispLaunched += (i, w) => { if (w is SkyWisp s) launches.Add((s, clock.NowMs)); };
+            double beat = sim.Logistics.BeatMs(sim.State.Area(C), sim.Config.Building("spirit_bridge"), clock.NowMs);
+
+            for (int t = 0; t < 60_000; t += 50) { clock.Advance(50); sim.Tick(); }   // a minute paired but empty
+            clock.Advance(8000);                                                       // + a long frame hitch (tick gap)
+            Fill(send, "wood", 20);
+            sim.Tick();
+            Assert.AreEqual(1, launches.Count, "a stale/idle beat clock restarts at now and fires once");
+            Assert.AreEqual(clock.NowMs, launches[0].w.t0, 1e-9, "not back-dated");
+
+            long start = clock.NowMs;
+            for (int t = 0; t < 2000; t += 50) { clock.Advance(50); sim.Tick(); }
+            int expected = 1 + (int)Math.Floor(2000 / beat);
+            Assert.That(launches.Count, Is.InRange(expected - 1, expected + 1), "then one launch per beat");
+            for (int k = 1; k < launches.Count; k++)
+                Assert.GreaterOrEqual(launches[k].w.t0 - launches[k - 1].w.t0, beat - 50 - 1e-6, "no catch-up burst");
+            Assert.Greater(launches.Last().at, start);
+
+            // re-pair after an idle spell: same rule
+            Assert.IsTrue(sim.UnpairBridge(C, send.id));
+            var recv2 = Bridge(sim, M, 20, 20);
+            clock.Advance(9000); sim.Tick();
+            Assert.IsNull(sim.PairBridges(C, send.id, M, recv2.id));
+            int before = launches.Count;
+            sim.Tick();
+            Assert.AreEqual(before + 1, launches.Count, "fresh pair fires once, not a burst");
+        }
+
+        [Test]
         public void ArrivalRefused_ReturnsToSender()
         {
             var sim = Bare(out var clock);

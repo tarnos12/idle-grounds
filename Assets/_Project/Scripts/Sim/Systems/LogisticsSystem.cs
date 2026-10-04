@@ -540,8 +540,8 @@ namespace IdleGrounds.Sim
             if (why != null) return why;
             var a = S.Area(islandA).BuildingById(bridgeA);
             var b = S.Area(islandB).BuildingById(bridgeB);
-            a.pairIsland = islandB; a.pairId = bridgeB; a.pairSends = true; a.nextSend = 0;
-            b.pairIsland = islandA; b.pairId = bridgeA; b.pairSends = false; b.nextSend = 0;
+            a.pairIsland = islandB; a.pairId = bridgeB; a.pairSends = true; a.nextSend = 0; a.beatArmed = false;
+            b.pairIsland = islandA; b.pairId = bridgeA; b.pairSends = false; b.nextSend = 0; b.beatArmed = false;
             return null;
         }
 
@@ -591,11 +591,13 @@ namespace IdleGrounds.Sim
         {
             if (!BridgeSending(b) || now < b.nextSend) return false;
             var dst = PairOf(areaKey, b);
-            if (dst == null || !dst.built) { b.nextSend = now + 250; return false; }
+            if (dst == null || !dst.built) { b.nextSend = now + 250; b.beatArmed = false; return false; }
             bool changed = false;
             double beat = BeatMs(area, def.bridge.rateMs, now);
             double speed = WispSpeed(area, def.bridge.speed, now);
-            var tm = _ctx.Timing.Periodic(b.nextSend, beat, now);
+            // An unarmed clock (fresh pair, load, or an idle poll: no cargo / no receiver room last time)
+            // restarts at now and fires once — catch-up only covers beats due while the bridge was sending.
+            var tm = _ctx.Timing.Periodic(b.beatArmed ? b.nextSend : now, beat, now);
             double due = tm.next - tm.n * beat;
             bool idle = tm.n == 0;
             int dstCap = Cfg.Building(dst.type).bridge.cap;
@@ -618,6 +620,9 @@ namespace IdleGrounds.Sim
                 _ctx.Events.RaiseWispLaunched(areaKey, w);
             }
             b.nextSend = idle ? now + 250 : tm.next;
+            // stays armed only while it still has cargo and receiver room for the next beat
+            b.beatArmed = !idle && b.inv != null && b.inv.Count > 0
+                          && BuildingSystem.GatherTotal(dst) + SkyInFlightTo(b.pairIsland, dst.id) < dstCap;
             return changed;
         }
 
