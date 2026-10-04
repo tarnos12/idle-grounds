@@ -42,6 +42,7 @@ namespace IdleGrounds.Game
         readonly Dictionary<string, UpgradeTreeNodeView> nodes = new Dictionary<string, UpgradeTreeNodeView>();
         readonly List<(Image img, string a, string b)> edges = new List<(Image, string, string)>();
         List<UpgradeNodeState> states;
+        readonly Dictionary<string, UpgradeNodeState> byId = new Dictionary<string, UpgradeNodeState>();
         UpgradeTreeNodeView hovered;
         Vector2 treeCam;
         float minX, maxX, minY, maxY;
@@ -198,10 +199,16 @@ namespace IdleGrounds.Game
 
         void ApplyCam() { if (tree != null) tree.anchoredPosition = new Vector2(treeCam.x, -treeCam.y); }
 
+        /// <summary>The tree query + strings allocate: full refresh at 5 Hz (and on hover / click / open); the pan applies every frame.</summary>
+        public const float RefreshSeconds = 0.2f;
+        float nextRefreshAt;
+
         void LateUpdate()
         {
             if (!IsOpen || runner == null || runner.Sim == null) return;
-            Refresh();
+            ApplyCam();
+            PlaceTooltip();
+            if (Time.unscaledTime >= nextRefreshAt) Refresh();
         }
 
         // ================= view =================
@@ -209,9 +216,10 @@ namespace IdleGrounds.Game
         void Refresh()
         {
             if (!IsOpen) return;
+            nextRefreshAt = Time.unscaledTime + RefreshSeconds;
             ApplyCam();
             states = Sim.UpgradeTree();
-            var byId = new Dictionary<string, UpgradeNodeState>();
+            byId.Clear();
             foreach (var st in states) byId[st.node.id] = st;
             var job = Sim.State.upgradeJob;
             foreach (var kv in nodes)
@@ -266,7 +274,15 @@ namespace IdleGrounds.Game
             }
             string s = sb.ToString();
             if (tooltipText.text != s) tooltipText.text = s;
-            // centred 12 px above the node
+            PlaceTooltip();
+        }
+
+        /// <summary>Tooltip centred 12 px above the hovered node (follows the pan every frame).</summary>
+        void PlaceTooltip()
+        {
+            if (tooltip == null || !tooltip.gameObject.activeSelf) return;
+            var v = hovered != null && hovered.isActiveAndEnabled ? hovered : null;
+            if (v == null) return;
             var p = v.Rect.anchoredPosition + new Vector2(treeCam.x, -treeCam.y);
             tooltip.anchoredPosition = new Vector2(p.x, p.y + (Half + 12f) * Scale);
         }

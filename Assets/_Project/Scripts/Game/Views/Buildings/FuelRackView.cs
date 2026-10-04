@@ -1,3 +1,4 @@
+using IdleGrounds.Sim;
 using TMPro;
 using UnityEngine;
 
@@ -24,9 +25,11 @@ namespace IdleGrounds.Game
 
         public override bool ReplacesDefault => false;   // the converter face draws the footprint
         public int ShownSlots { get; private set; }
+        ConverterFace lastFace;
 
         public override void Layout(BuildingView v)
         {
+            lastFace = null;
             transform.localPosition = new Vector3(-Cols, 0f, 0f);
             panel.transform.localPosition = new Vector3(Cols * 0.5f, -Rows * 0.5f, 0f);
             panel.transform.localScale = new Vector3(Cols, Rows, 1f);
@@ -53,7 +56,10 @@ namespace IdleGrounds.Game
         public override void Refresh(BuildingView v)
         {
             var conv = v.Faces != null ? FindConverter(v) : null;
+            // the converter face samples Sim.ConverterFace at 5 Hz; reuse it (no second allocation per frame)
             var f = conv != null ? conv.LastFace : v.Sync.Sim.ConverterFace(v.Area, v.Building);
+            if (conv != null && ReferenceEquals(f, lastFace)) return;
+            lastFace = f;
             int n = f != null ? Mathf.Min(f.fuel.Count, slots.Length) : 0;
             ShownSlots = n;
             var sprites = v.Sync.Sprites;

@@ -178,14 +178,14 @@ namespace IdleGrounds.Editor
             return t;
         }
 
-        internal static EdgeFrame Frame(Transform parent, string name, int order)
+        internal static EdgeFrame Frame(Transform parent, string name, int order, string layer = Layer)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var f = go.AddComponent<EdgeFrame>();
             foreach (var e in new[] { "top", "bottom", "left", "right" })
             {
-                var sr = Sr(go.transform, char.ToUpper(e[0]) + e.Substring(1), order, square);
+                var sr = Sr(go.transform, char.ToUpper(e[0]) + e.Substring(1), order, square, layer);
                 sr.drawMode = SpriteDrawMode.Tiled;
                 Set(f, e, sr);
             }
@@ -590,10 +590,26 @@ namespace IdleGrounds.Editor
             var bl = Label(brt, "Label", "new", 14f, UiPalette.Bg, true);
             Stretch(bl.rectTransform);
             bl.alignment = TextAlignmentOptions.Center;
+            // quest / milestone target: 🎯 (.bc-tgt: top 3px, left 5px, 12px) + gold glow (box-shadow 0 0 0 2px rgba(251,191,36,.28))
+            var tgt = Icon(cardRt, "TargetBadge", Emoji("ui_target"), 18f);
+            var trt = tgt.rectTransform;
+            tgt.GetComponent<LayoutElement>().ignoreLayout = true;
+            trt.anchorMin = trt.anchorMax = new Vector2(0f, 1f);
+            trt.pivot = new Vector2(0f, 1f);
+            trt.sizeDelta = new Vector2(18f, 18f);
+            trt.anchoredPosition = new Vector2(7f, -4f);
+            tgt.gameObject.SetActive(false);
+            var border = card.GetComponent<Outline>();
+            var glow = card.gameObject.AddComponent<Outline>();
+            glow.effectColor = new Color(251 / 255f, 191 / 255f, 36 / 255f, 0.28f);
+            glow.effectDistance = new Vector2(4f, -4f);
+            glow.enabled = false;
             var bc = card.gameObject.AddComponent<BuildCard>();
             Set(bc, "button", btn);
             Set(bc, "background", card);
-            Set(bc, "border", card.GetComponent<Outline>());
+            Set(bc, "border", border);
+            Set(bc, "targetBadge", tgt.gameObject);
+            Set(bc, "targetGlow", glow);
             Set(bc, "icon", cIcon);
             Set(bc, "nameText", cName);
             Set(bc, "costRow", costRow);

@@ -11,8 +11,8 @@ namespace IdleGrounds.Game
     ///   tier None on a fresh, intro-unseen run → the intro shape.</item>
     /// <item>Per frame: the ascend dialog follows State.ascendPrompt and the post-ascension card follows
     ///   State.justAscended — both held back while the welcome modal / replay is up.</item>
-    /// <item>Esc chain (called first by BuildController.Escape): confirm → perk shop → help / stats →
-    ///   post-ascension card → ascend dialog → welcome modal.</item>
+    /// <item>Esc chain (BuildController.Escape: confirm, then the world panels, then these): perk shop → ascend →
+    ///   stats → help → welcome → post-ascension card (ui.js order).</item>
     /// <item>RunReset (ascension): closes the world panels (BuildController) and cancels hand holds.</item>
     /// </list>
     /// </summary>
@@ -110,16 +110,19 @@ namespace IdleGrounds.Game
             ascend.Sync(!blocked && runner.State.ascendPrompt);
         }
 
-        /// <summary>Esc. True = consumed.</summary>
+        /// <summary>Esc on the confirm dialog (checked before every other layer). True = consumed.</summary>
+        public bool EscapeConfirm() => confirm != null && confirm.Escape();
+
+        /// <summary>Esc for the M7 modals in ui.js order: perk → ascend → stats → help → welcome → ending (post-ascension card). True = consumed.</summary>
         public bool Escape()
         {
-            if (confirm != null && confirm.Escape()) return true;
+            if (EscapeConfirm()) return true;
             if (perkShop != null && perkShop.Escape()) return true;
-            if (help != null && help.Escape()) return true;
-            if (stats != null && stats.Escape()) return true;
-            if (postAscension != null && postAscension.Escape()) return true;
             if (ascend != null && ascend.Escape()) return true;
+            if (stats != null && stats.Escape()) return true;
+            if (help != null && help.Escape()) return true;
             if (welcome != null && welcome.Escape()) return true;
+            if (postAscension != null && postAscension.Escape()) return true;
             return false;
         }
     }

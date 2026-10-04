@@ -153,6 +153,22 @@ namespace IdleGrounds.Editor
             var amr = autoGo.GetComponent<MeshRenderer>();
             amr.sortingLayerName = "Entities"; amr.sortingOrder = 4;
             autoGo.SetActive(false);
+            // fish surface countdown "x.xs": #f87171 800 lblPx(11), 10 px under the sprite base
+            var cdGo = new GameObject("Countdown");
+            cdGo.transform.SetParent(root.transform, false);
+            var cd = cdGo.AddComponent<TextMeshPro>();
+            cd.text = "0.9s";
+            cd.fontSize = 11f * ViewKit.FontPerPx;
+            cd.fontStyle = FontStyles.Bold;
+            cd.color = UiPalette.Hex("#f87171");
+            cd.alignment = TextAlignmentOptions.Center;
+            cd.textWrappingMode = TextWrappingModes.NoWrap;
+            cd.rectTransform.sizeDelta = new Vector2(1.5f, 0.5f);
+            cd.fontSharedMaterial = FloaterMaterial(cd.font != null ? cd.font : TMP_Settings.defaultFontAsset);
+            var cmr = cdGo.GetComponent<MeshRenderer>();
+            cmr.sortingLayerName = "Entities"; cmr.sortingOrder = 4;
+            cdGo.SetActive(false);
+            Set(view, "countdown", cd);
             var sparkles = new Object[3];
             for (int i = 0; i < 3; i++)
             {
@@ -468,6 +484,7 @@ namespace IdleGrounds.Editor
             PlayerSettings.runInBackground = true;   // an idle game keeps ticking unfocused (also keeps Play mode alive for MCP)
 
             var db = AssetDatabase.LoadAssetAtPath<GameDatabase>(DatabasePath);
+            WorldBuilder.BuildZoneOverlays(db);     // in-game zone tints + region frames + veil 🔒 (H1 / L18)
             var cam = Object.FindFirstObjectByType<CameraController>();
 
             var systems = FindOrCreate("--- Systems", null).transform;
@@ -513,6 +530,7 @@ namespace IdleGrounds.Editor
             var barView = bar.GetComponent<BottomBarView>();
             Set(barView, "runner", runner);
             Set(barView, "cameraController", cam);
+            Set(barView, "wildsIcon", Emoji("ui_wilds"));
             var cursor = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(UiPrefabDir + "/HandCursor.prefab"), canvas.transform);
             var cursorView = cursor.GetComponent<HandCursorView>();
             Set(cursorView, "runner", runner);

@@ -12,7 +12,8 @@ namespace IdleGrounds.Game
     {
         [SerializeField] IconCount template;
         readonly List<IconCount> pool = new List<IconCount>();
-        string lastKey;
+        readonly List<Entry> last = new List<Entry>();
+        float lastPx, lastMaxW; Color lastColour; string lastPrefix; bool hasLast;
 
         public struct Entry
         {
@@ -27,12 +28,10 @@ namespace IdleGrounds.Game
         /// <summary>Lay out entries centred on this transform. prefix = optional leading text (e.g. "Feed:").</summary>
         public void Set(IList<Entry> entries, float px, Color c, SpriteCache sprites, string prefix = null, float maxWidthUnits = 0f)
         {
-            var sb = new System.Text.StringBuilder(prefix);
-            foreach (var e in entries) sb.Append(e.item).Append(e.qty).Append(e.label).Append(',');
-            sb.Append(px).Append(c);
-            string key = sb.ToString();
-            if (key == lastKey) return;
-            lastKey = key;
+            if (Same(entries, px, c, prefix, maxWidthUnits)) return;     // value compare, no per-frame allocation
+            last.Clear();
+            for (int i = 0; i < entries.Count; i++) last.Add(entries[i]);
+            lastPx = px; lastColour = c; lastPrefix = prefix; lastMaxW = maxWidthUnits; hasLast = true;
             int n = entries.Count + (string.IsNullOrEmpty(prefix) ? 0 : 1);
             while (pool.Count < n)
             {
@@ -80,6 +79,17 @@ namespace IdleGrounds.Game
             }
         }
 
-        public void Clear() { lastKey = null; foreach (var p in pool) p.gameObject.SetActive(false); }
+        bool Same(IList<Entry> entries, float px, Color c, string prefix, float maxW)
+        {
+            if (!hasLast || entries.Count != last.Count || px != lastPx || c != lastColour || maxW != lastMaxW || prefix != lastPrefix) return false;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                var a = entries[i]; var b = last[i];
+                if (a.qty != b.qty || a.item != b.item || a.label != b.label) return false;
+            }
+            return true;
+        }
+
+        public void Clear() { hasLast = false; last.Clear(); foreach (var p in pool) p.gameObject.SetActive(false); }
     }
 }

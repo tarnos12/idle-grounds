@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using IdleGrounds.Sim;
 using TMPro;
 using UnityEngine;
@@ -9,14 +8,17 @@ namespace IdleGrounds.Game
     /// <summary>
     /// Build menu (ui-input-render §4.2): a horizontal strip above the bottom bar (wheel scrolls it
     /// sideways), one card per revealed building (<c>Buildings.Catalog()</c>), no categories. Sort rank
-    /// on open / reveal: "new" → affordable from the hand → rest (stable by catalogue order); quest
-    /// targets (rank 0) arrive with quests (M5). Opening marks every revealed type as listed; hovering a
-    /// card marks it seen (clears its "new" pill) and shows "{name} — {role}" in the hint line. If the
-    /// revealed set changes while open, card clicks are ignored for 400 ms. Click = placement mode.
+    /// (ui.js renderBuildMenu U:1513): quest / milestone target (<see cref="Simulation.BuildTargets"/>) →
+    /// "new" → affordable from the hand → rest (stable by catalogue order). Targets get the gold border +
+    /// glow + 🎯 badge and " (your current goal)" in the hint. Opening marks every revealed type as listed;
+    /// hovering a card marks it seen (clears its "new" pill) and shows "{name} — {role}" in the hint line.
+    /// If the revealed set changes while open, card clicks are ignored for 400 ms. Click = placement mode.
+    /// The catalogue / target signature is sampled at 4 Hz (the sim queries allocate).
     /// </summary>
     public class BuildMenuView : MonoBehaviour
     {
         public const double ClickGuardMs = 400;
+        public const string GoalSuffix = " (your current goal)";
 
         [SerializeField] GameRunner runner;
         [SerializeField] BuildController controller;
@@ -29,13 +31,16 @@ namespace IdleGrounds.Game
         [SerializeField] bool showLocked;
 
         readonly List<BuildCard> cards = new List<BuildCard>();
+        readonly List<Row> rows = new List<Row>();
+        List<string> targets = new List<string>();
         SpriteCache sprites;
-        string catalogSig;
+        long catalogSig, targetSig;
         double clickLockUntil;
-        float restyleAt;
+        float restyleAt, sigAt;
 
         public bool IsOpen => panel != null && panel.activeSelf;
         public IReadOnlyList<BuildCard> Cards => cards;
+        public IReadOnlyList<string> Targets => targets;
         public bool ClickGuardActive => Now < clickLockUntil;
         static double Now => Time.realtimeSinceStartupAsDouble * 1000.0;
 
@@ -54,40 +59,70 @@ namespace IdleGrounds.Game
             sprites ??= new SpriteCache(runner.Database, null);
             panel.SetActive(true);
             Sim.Buildings.MarkBuildListed();
-            catalogSig = Sig();
+            catalogSig = CatalogSig();
+            targets = Sim.BuildTargets();
+            targetSig = TargetSig(targets);
             clickLockUntil = 0;
+            sigAt = Time.unscaledTime + 0.25f;
             Rebuild();
             if (hintText != null) hintText.text = "";
         }
 
         public void Close() { if (panel != null) panel.SetActive(false); }
 
-        string Sig()
+        /// <summary>Bitmask of revealed building types in config order (`buildCatalogSig`), allocation-free.</summary>
+        long CatalogSig()
         {
-            var sb = new StringBuilder();
-            foreach (var d in Sim.Buildings.Catalog()) sb.Append(d.key).Append(',');
-            return sb.ToString();
+            long sig = 0, h = 17;
+            var list = runner.Config.buildings;
+            for (int i = 0; i < list.Count; i++)
+                if (Sim.Buildings.IsBuildingUnlocked(list[i].key))
+                {
+                    if (i < 63) sig |= 1L << i;
+                    else h = h * 31 + i;
+                }
+            return sig ^ (h << 1);
+        }
+
+        static long TargetSig(List<string> t)
+        {
+            long h = 23;
+            foreach (var s in t) h = h * 31 + (s != null ? s.GetHashCode() : 0);
+            return h * 31 + t.Count;
         }
 
         void Update()
         {
             if (!IsOpen || runner.Sim == null) return;
-            string sig = Sig();
-            if (sig != catalogSig)
+            float now = Time.unscaledTime;
+            if (now >= sigAt)
             {
-                catalogSig = sig;
-                clickLockUntil = Now + ClickGuardMs;     // the strip reshuffled under the pointer
-                Sim.Buildings.MarkBuildListed();          // a reveal while open counts as listed
-                Rebuild();
+                sigAt = now + 0.25f;
+                long sig = CatalogSig();
+                var tg = Sim.BuildTargets();
+                long ts = TargetSig(tg);
+                if (sig != catalogSig || ts != targetSig)
+                {
+                    if (sig != catalogSig)
+                    {
+                        clickLockUntil = Now + ClickGuardMs;     // the strip reshuffled under the pointer
+                        Sim.Buildings.MarkBuildListed();          // a reveal while open counts as listed
+                    }
+                    catalogSig = sig; targetSig = ts; targets = tg;
+                    Rebuild();
+                    return;
+                }
             }
-            else if (Time.unscaledTime >= restyleAt) { restyleAt = Time.unscaledTime + 0.25f; Restyle(); }
+            if (now >= restyleAt) { restyleAt = now + 0.25f; Restyle(); }
         }
 
         struct Row { public BuildingDef def; public int rank, order; public string locked; }
 
+        static int CompareRows(Row a, Row b) => a.rank != b.rank ? a.rank.CompareTo(b.rank) : a.order.CompareTo(b.order);
+
         void Rebuild()
         {
-            var rows = new List<Row>();
+            rows.Clear();
             var cfg = runner.Config;
             int order = 0;
             foreach (var d in cfg.buildings)
@@ -95,11 +130,11 @@ namespace IdleGrounds.Game
                 order++;
                 bool unlocked = Sim.Buildings.IsBuildingUnlocked(d.key);
                 if (!unlocked && (!showLocked || d.indestructible)) continue;
-                if (d.indestructible) continue;      // Altar / Dragon are never in the catalogue's build list
-                int rank = !unlocked ? 9 : Sim.Buildings.IsBuildingNew(d.key) ? 1 : Sim.Hand.CanAfford(d.cost) ? 2 : 3;
+                if (d.indestructible) continue;      // Altar / Dragon are never in the build list
+                int rank = !unlocked ? 9 : targets.Contains(d.key) ? 0 : Sim.Buildings.IsBuildingNew(d.key) ? 1 : Sim.Hand.CanAfford(d.cost) ? 2 : 3;
                 rows.Add(new Row { def = d, rank = rank, order = order, locked = unlocked ? null : Sim.Buildings.UnlockReason(d.key) });
             }
-            rows.Sort((a, b) => a.rank != b.rank ? a.rank.CompareTo(b.rank) : a.order.CompareTo(b.order));
+            rows.Sort(CompareRows);
             while (cards.Count < rows.Count)
             {
                 var c = Instantiate(cardTemplate, content);
@@ -120,7 +155,9 @@ namespace IdleGrounds.Game
         {
             bool isNew = locked == null && Sim.Buildings.IsBuildingNew(d.key);
             bool afford = locked == null && Sim.Hand.CanAfford(d.cost);
-            c.Bind(this, d, sprites.Building(d.key), sprites, isNew, afford, locked, d.name + " — " + Role(d));
+            bool target = locked == null && targets.Contains(d.key);
+            c.Bind(this, d, sprites.Building(d.key), sprites, isNew, afford, locked,
+                d.name + " — " + Role(d) + (target ? GoalSuffix : ""), target);
         }
 
         /// <summary>Re-evaluate new / affordable styling without reordering.</summary>

@@ -60,27 +60,42 @@ namespace IdleGrounds.Game
             ViewKit.Font(pay, 12f);
             pay.rectTransform.sizeDelta = new Vector2(W - ViewKit.U(10f), ViewKit.U(16f));
             pay.transform.localPosition = new Vector3(0f, H * 0.5f - ViewKit.U(92f), 0f);
+            nextSampleAt = 0f; lastHave = lastNeed = int.MinValue;
         }
+
+        /// <summary>Cost / pay state is sampled at 4 Hz (the sim queries allocate); <see cref="Invalidate"/> forces the next frame.</summary>
+        public const float SampleSeconds = 0.25f;
+        float nextSampleAt;
+        int lastHave = int.MinValue, lastNeed = int.MinValue;
+
+        public void Invalidate() => nextSampleAt = 0f;
 
         public void Refresh(Simulation sim, SpriteCache sprites, double nowMs)
         {
-            var costAll = sim.AreaUnlockCost(Area);
-            var paid = sim.UnlockPaid(Area);
-            entries.Clear();
-            if (costAll != null)
-                foreach (var e in costAll)
-                {
-                    int p = paid != null ? paid.Get(e.item) : 0;
-                    entries.Add(p > 0 ? new IconRow.Entry(e.item, Mathf.Min(p, e.qty) + "/" + e.qty) : new IconRow.Entry(e.item, e.qty));
-                }
-            cost.Set(entries, 13f, UiPalette.Gold, sprites, null, W - ViewKit.U(12f));
+            float t = Time.unscaledTime;
+            if (t >= nextSampleAt)
+            {
+                nextSampleAt = t + SampleSeconds;
+                var costAll = sim.AreaUnlockCost(Area);
+                var paid = sim.UnlockPaid(Area);
+                entries.Clear();
+                if (costAll != null)
+                    foreach (var e in costAll)
+                    {
+                        int p = paid != null ? paid.Get(e.item) : 0;
+                        entries.Add(p > 0 ? new IconRow.Entry(e.item, Mathf.Min(p, e.qty) + "/" + e.qty) : new IconRow.Entry(e.item, e.qty));
+                    }
+                cost.Set(entries, 13f, UiPalette.Gold, sprites, null, W - ViewKit.U(12f));
 
-            var (state, have, need) = sim.UnlockPayInfo(Area);
-            PayState = state;
+                var (st, have, need) = sim.UnlockPayInfo(Area);
+                PayState = st;
+                bool part = st == UnlockPayState.Partial;
+                ViewKit.Show(pay, part);
+                if (part && (have != lastHave || need != lastNeed)) { lastHave = have; lastNeed = need; ViewKit.Text(pay, "pay " + have + "/" + need); }
+            }
+
+            var state = PayState;
             bool partial = state == UnlockPayState.Partial;
-            ViewKit.Show(pay, partial);
-            if (partial) ViewKit.Text(pay, "pay " + have + "/" + need);
-
             float a = Hovered || state == UnlockPayState.Afford ? 1f : partial ? 0.8f : 0.6f;
             var border = state == UnlockPayState.Cant ? CantBorder : UiPalette.Gold;
             frame.Set(W, H, ViewKit.U(2f), WithA(border, a), state != UnlockPayState.Afford);

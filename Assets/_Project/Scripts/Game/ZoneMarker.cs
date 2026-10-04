@@ -15,7 +15,8 @@ namespace IdleGrounds.Game
 
     /// <summary>
     /// Named zone (data-catalog section 4) as a list of inclusive cell rects. The GameObject sits at the
-    /// region origin; gizmos make zones visible in the Scene view.
+    /// region origin; gizmos make zones visible in the Scene view. The in-game tints / dashed edges / region
+    /// frame are the "ZoneOverlay" SpriteRenderers WorldBuilder.BuildZoneOverlays builds from the config.
     /// </summary>
     public class ZoneMarker : MonoBehaviour
     {

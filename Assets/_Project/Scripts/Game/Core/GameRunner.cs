@@ -74,7 +74,11 @@ namespace IdleGrounds.Game
             SyncRegions(force: true);
         }
 
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        void OnDestroy()
+        {
+            if (Sim != null) Sim.Events.RunReset -= OnRunReset;
+            if (Instance == this) Instance = null;
+        }
 
         public Region RegionObject(string key) => regionObjects.TryGetValue(key, out var r) ? r : null;
         public bool IsUnlocked(string area) => Sim != null && Sim.World.IsAreaUnlocked(area);

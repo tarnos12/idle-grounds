@@ -70,7 +70,7 @@ namespace IdleGrounds.Game
             if (U("farm") || U("mine") || U("fishing")) S.Add(("🗺️ Regions",
                 "Each region has unique resources (Farm: rice & cotton & sand; Mine: iron ore; Fishing: fish, algae & spring water). Jade shards drop from the Center quarry rock and Mine jade veins. Unlock buttons appear on the side of the screen where the new region lies, only for regions bordering the one you're viewing."));
             else S.Add(("🗺️ Regions",
-                "Locked regions wait beyond the borders — gather wood and pay at a glowing 🔓 button on the edge facing a region to expand."));
+                "Locked regions wait beyond the borders — gather wood and pay at the glowing 🔓 sign in the gap on the border facing a region to expand."));
             S.Add(("📊 Stats",
                 "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, ascensions and more."));
             return S;

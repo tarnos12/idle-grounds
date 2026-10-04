@@ -123,7 +123,9 @@ namespace IdleGrounds.Game
             if (!b.built)
             {
                 needs.Clear();
-                foreach (var e in Sync.Sim.BuildingNeeds(b)) needs.Add(new IconRow.Entry(e.item, e.qty));
+                // = Sim.BuildingNeeds(b) (cost − paid) without the per-frame ItemCounts allocation
+                if (Def != null)
+                    foreach (var c in Def.cost) { int r = c.qty - b.paid.Get(c.item); if (r > 0) needs.Add(new IconRow.Entry(c.item, r)); }
                 needsRow.Set(needs, 10f, UiPalette.Gold, Sync.Sprites, null, W - ViewKit.U(4f));
                 return;
             }

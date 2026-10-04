@@ -17,6 +17,7 @@ namespace IdleGrounds.Game
 
         public override void Layout(BuildingView v)
         {
+            lastQty = -1; lastLabelItem = "?";
             itemIcon.transform.localPosition = v.L(0.5f, 0.40f);
             label.transform.localPosition = v.L(0.5f, 0.78f);
             label.rectTransform.sizeDelta = new Vector2(v.W - ViewKit.U(4f), ViewKit.U(14f));
@@ -25,6 +26,8 @@ namespace IdleGrounds.Game
             ViewKit.Fit(lockIcon, lockIcon.sprite, 10f);
             lastItem = "?";
         }
+
+        int lastQty = -1; string lastLabelItem = "?";
 
         public override void Refresh(BuildingView v)
         {
@@ -38,7 +41,7 @@ namespace IdleGrounds.Game
             }
             int cap = v.Sync.Sim.Buildings.StorehouseCap();
             string name = item != null ? (v.Sync.Sim.Config.Item(item)?.name ?? item) : null;
-            ViewKit.Text(label, b.qty > 0 && name != null ? name + " ×" + b.qty : "empty");
+            if (b.qty != lastQty || item != lastLabelItem) { lastQty = b.qty; lastLabelItem = item; ViewKit.Text(label, b.qty > 0 && name != null ? name + " ×" + b.qty : "empty"); }
             ViewKit.Colour(label, b.qty >= cap ? UiPalette.Danger : UiPalette.Text);
             ViewKit.Show(lockIcon, b.locked);
         }

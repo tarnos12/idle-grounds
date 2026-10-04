@@ -20,8 +20,8 @@ namespace IdleGrounds.Game
         [SerializeField] FxService fx;
         [SerializeField] HandController hand;
 
-        readonly Dictionary<string, UnlockSignView> views = new Dictionary<string, UnlockSignView>();
-        readonly List<string> releaseList = new List<string>();
+        readonly Dictionary<int, UnlockSignView> views = new Dictionary<int, UnlockSignView>();
+        readonly List<int> releaseList = new List<int>();
         ObjectPool<UnlockSignView> pool;
         SpriteCache sprites;
         int frame;
@@ -76,6 +76,7 @@ namespace IdleGrounds.Game
         public UnlockResult Pay(UnlockSignView v, Vector2 at)
         {
             var res = runner.Sim.UnlockArea(v.Area);
+            v.Invalidate();
             if (fx != null)
             {
                 string nm = runner.Config.Region(v.Area)?.name ?? v.Area;
@@ -92,13 +93,15 @@ namespace IdleGrounds.Game
             frame++;
             var regions = runner.Config.regions;
             double now = runner.SimNow;
-            foreach (var l in regions)
+            for (int li = 0; li < regions.Count; li++)
             {
+                var l = regions[li];
                 if (runner.IsUnlocked(l.key)) continue;
-                foreach (var u in regions)
+                for (int ui = 0; ui < regions.Count; ui++)
                 {
+                    var u = regions[ui];
                     if (!runner.IsUnlocked(u.key) || Mathf.Abs(u.rx - l.rx) + Mathf.Abs(u.ry - l.ry) != 1) continue;
-                    string k = l.key + "|" + u.key;
+                    int k = li * 64 + ui;      // (locked, neighbour) pair key — no per-frame string
                     if (!views.TryGetValue(k, out var v))
                     {
                         v = pool.Get();
@@ -107,6 +110,7 @@ namespace IdleGrounds.Game
                     }
                     v.seenFrame = frame;
                     v.Hovered = hand != null && hand.CursorOver && v.WorldRect.Contains(hand.CursorWorld);
+                    if (!ViewCull.Visible(v.transform.position, UnlockSignView.W)) continue;
                     v.Refresh(runner.Sim, sprites, now);
                 }
             }

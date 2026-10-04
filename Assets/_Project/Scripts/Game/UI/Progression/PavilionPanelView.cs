@@ -76,13 +76,17 @@ namespace IdleGrounds.Game
             if (!IsOpen || runner == null || runner.Sim == null) return;
             var b = Pavilion;
             if (b == null || !b.built) { Close(); return; }
-            Refresh();
+            if (Time.unscaledTime >= nextRefreshAt) Refresh();     // strings + recruit check: 5 Hz (and on open / recruit)
         }
+
+        float nextRefreshAt;
+        string hintFor;
 
         void Refresh()
         {
             var b = Pavilion;
             if (b == null) return;
+            nextRefreshAt = Time.unscaledTime + 0.2f;
             var r = runner.Config.Building(b.type).roster;
             int cap = Sim.RosterCap(b);
             int foodCap = r.foodCap > 0 ? r.foodCap : 20;
@@ -90,11 +94,15 @@ namespace IdleGrounds.Game
             if (foodIcon != null) foodIcon.sprite = sprites.Item(r.food ?? "spirit_buns");
             ViewKit.SetText(foodText, b.buns + "/" + foodCap);
             if (foodText != null) foodText.color = b.buns > 0 ? UiPalette.Text : UiPalette.Danger;
-            var sb = new StringBuilder("Each cultivates ").Append(ItemName(r.produce)).Append(" while fed ");
-            for (int i = 0; i < r.foodValues.Count; i++) { if (i > 0) sb.Append(" / "); sb.Append(ItemName(r.foodValues[i].item)); }
-            if (r.foodValues.Count == 0) sb.Append(ItemName(r.food));
-            sb.Append(" (feed by hand or wisp).");
-            ViewKit.SetText(hintText, UiText.StripEmoji(sb.ToString()));
+            if (hintFor != b.type)
+            {
+                hintFor = b.type;
+                var sb = new StringBuilder("Each cultivates ").Append(ItemName(r.produce)).Append(" while fed ");
+                for (int i = 0; i < r.foodValues.Count; i++) { if (i > 0) sb.Append(" / "); sb.Append(ItemName(r.foodValues[i].item)); }
+                if (r.foodValues.Count == 0) sb.Append(ItemName(r.food));
+                sb.Append(" (feed by hand or wisp).");
+                ViewKit.SetText(hintText, UiText.StripEmoji(sb.ToString()));
+            }
             if (recruitItemIcon != null) recruitItemIcon.sprite = sprites.Item(r.recruit);
             ViewKit.SetText(recruitLabel, "Recruit (1 " + ItemName(r.recruit) + ")");
             string why = Sim.RecruitReason(Area, BuildingId);

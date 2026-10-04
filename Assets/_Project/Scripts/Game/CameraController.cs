@@ -21,6 +21,8 @@ namespace IdleGrounds.Game
         [SerializeField] string startRegionKey = "center";
         [SerializeField] int startRow = 12;
         [SerializeField] int startCol = 46;
+        [Tooltip("Original recentre: view top = start region top, centred horizontally (startRow/startCol ignored).")]
+        [SerializeField] bool startTopAligned = true;
 
         Camera cam;
         IdleGroundsControls controls;
@@ -62,6 +64,7 @@ namespace IdleGrounds.Game
 
         void Awake()
         {
+            PanSuspended = false;      // static: survives Enter-Play-Mode without a domain reload
             cam = GetComponent<Camera>();
             cam.orthographic = true;
             controls = new IdleGroundsControls();
@@ -83,14 +86,19 @@ namespace IdleGrounds.Game
 
         void OnDestroy() => controls?.Dispose();
 
-        void OnSprint(InputAction.CallbackContext ctx) => sprint = !sprint;
+        void OnSprint(InputAction.CallbackContext ctx)
+        {
+            var r = GameRunner.Instance;
+            if (r != null && r.Replaying) return;      // offline catch-up: only WASD is live (ui.js:3153)
+            sprint = !sprint;
+        }
 
         void Start()
         {
             RecomputeBoundsFromRegions();
             Vector2 start = transform.position;
             foreach (var r in FindObjectsByType<Region>(FindObjectsSortMode.None))
-                if (r.regionKey == startRegionKey) { start = r.CellToWorld(startRow, startCol); break; }
+                if (r.regionKey == startRegionKey) { start = startTopAligned ? StartCentre(r) : (Vector2)r.CellToWorld(startRow, startCol); break; }
             centre = start;
             ApplyZoom();
             Clamp();
@@ -118,7 +126,7 @@ namespace IdleGrounds.Game
         {
             RecomputeBoundsFromRegions();
             foreach (var r in FindObjectsByType<Region>(FindObjectsSortMode.None))
-                if (r.regionKey == startRegionKey) { CenterOn(r.CellToWorld(startRow, startCol)); return; }
+                if (r.regionKey == startRegionKey) { CenterOn(startTopAligned ? StartCentre(r) : (Vector2)r.CellToWorld(startRow, startCol)); return; }
         }
 
         void Update()
@@ -133,7 +141,7 @@ namespace IdleGrounds.Game
 
             // Zoom: wheel up = zoom in, wheel down = zoom out.
             float wheel = controls.Gameplay.Zoom.ReadValue<float>();
-            if (Mathf.Abs(wheel) > 0.01f && !PanSuspended)
+            if (Mathf.Abs(wheel) > 0.01f && !PanSuspended && !WheelOverUi())
                 zoomTarget = Mathf.Clamp(zoomTarget + (wheel < 0 ? ZoomStep : -ZoomStep), ZoomMin, ZoomMax);
 
             if (!Mathf.Approximately(zoom, zoomTarget))
@@ -145,6 +153,26 @@ namespace IdleGrounds.Game
             ApplyZoom();
             Clamp();
             Apply();
+        }
+
+        /// <summary>
+        /// The wheel zooms only over the world viewport (ui.js binds onWheel to #world-viewport): not over
+        /// UI (build strip, perk shop, help, quest panel…) and not while a modal is up.
+        /// </summary>
+        static bool WheelOverUi()
+        {
+            var es = UnityEngine.EventSystems.EventSystem.current;
+            if (es != null && es.IsPointerOverGameObject()) return true;
+            var meta = MetaUiController.Instance;
+            return meta != null && meta.AnyOpen;
+        }
+
+        /// <summary>recenterCamera (ui.js:283): the view's TOP edge on the start region's top, centred horizontally.</summary>
+        Vector2 StartCentre(Region r)
+        {
+            ApplyZoom();
+            var o = r.Origin;
+            return new Vector2(o.x + Region.Cells * 0.5f, o.y - ViewHeight * 0.5f);
         }
 
         float ViewWidth => BaseViewWidthCells * zoom;

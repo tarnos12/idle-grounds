@@ -20,6 +20,8 @@ namespace IdleGrounds.Game
         [SerializeField] SortingGroup sortingGroup;
         [Tooltip("Gold AUTO badge, shown while the automation bot just swung this node (autoFlash).")]
         [SerializeField] TMPro.TextMeshPro autoBadge;
+        [Tooltip("Fish surface countdown \"x.xs\" (#f87171 800 11 px, 10 px under the sprite base): last second or while hovered.")]
+        [SerializeField] TMPro.TextMeshPro countdown;
         [Tooltip("Three sparkles over the Spirit Tree (§2.5).")]
         [SerializeField] SpriteRenderer[] sparkles;
 
@@ -83,13 +85,14 @@ namespace IdleGrounds.Game
                 autoBadge.gameObject.SetActive(false);
                 autoBadge.transform.localPosition = new Vector3(spriteUnits * 0.42f, spriteUnits + ViewKit.U(4f), 0f);
             }
+            if (countdown != null) { countdown.gameObject.SetActive(false); lastTenths = -1; }
             transform.position = basePos;
             sortingGroup.sortingOrder = node.row;      // back-to-front by row (§2.1)
             squash.localScale = Vector3.one;
         }
 
         /// <summary>Per-frame animation from sim state: hit squash, fish bob.</summary>
-        public void Refresh(double now, int cell, bool autoFlash = false)
+        public void Refresh(double now, int cell, bool autoFlash = false, bool unlocked = true, bool hovered = false)
         {
             var n = Node;
             if (autoBadge != null && autoBadge.gameObject.activeSelf != autoFlash) autoBadge.gameObject.SetActive(autoFlash);
@@ -106,9 +109,39 @@ namespace IdleGrounds.Game
             squash.localScale = new Vector3(sx, sy, 1f);
 
             float bob = 0f;
-            if (n.interaction == NodeInteraction.Surface && n.surfaceUntil > now)
+            bool surfaced = unlocked && n.interaction == NodeInteraction.Surface && n.surfaceUntil > now;
+            if (surfaced)
                 bob = Mathf.Abs(Mathf.Sin((float)(now % 1_000_000d / 300d))) * 5f / cell;
             spriteRenderer.transform.localPosition = spriteLocal + new Vector3(0f, bob, 0f);
+
+            // fishing countdown (ui.js:1257): only in the last second, or while hovered
+            if (countdown != null)
+            {
+                double left = n.surfaceUntil - now;
+                bool show = surfaced && (left < 1000 || hovered);
+                if (countdown.gameObject.activeSelf != show) countdown.gameObject.SetActive(show);
+                if (show)
+                {
+                    int tenths = (int)System.Math.Round(left / 100.0);
+                    if (tenths != lastTenths)
+                    {
+                        lastTenths = tenths;
+                        countdown.text = TenthsLabel(tenths);
+                    }
+                    countdown.transform.localPosition = new Vector3(0f, bob - 10f / cell, 0f);
+                }
+            }
+        }
+
+        int lastTenths = -1;
+        static string[] tenthsCache;
+        /// <summary>"x.xs" for a count of tenths (cached, no per-frame allocation).</summary>
+        static string TenthsLabel(int tenths)
+        {
+            if (tenths < 0) tenths = 0;
+            if (tenths >= 600) return (tenths / 10.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "s";
+            tenthsCache ??= new string[600];
+            return tenthsCache[tenths] ??= (tenths / 10.0).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "s";
         }
     }
 }

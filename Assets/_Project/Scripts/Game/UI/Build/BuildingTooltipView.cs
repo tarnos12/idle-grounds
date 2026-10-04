@@ -5,10 +5,11 @@ using UnityEngine;
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// Hover name (spec §3.3) + status: the building under the cursor, bottom-centre above the bar —
-    /// name 800, then the <see cref="Simulation.BuildingStatus"/> line (green working, red starved / no
-    /// fuel, amber full, muted idle); a ghost shows "Under construction". Hidden while the build menu or
-    /// recipe picker is up, or while placing.
+    /// Hover name (spec §3.3, ui.js updateHoverName U:2881): the BUILT building under the cursor in an
+    /// UNLOCKED region, bottom-centre above the bar ("Awakened Dragon" once won). Shown while placing too;
+    /// hidden while the build menu / recipe picker / link editor / roster (or any other world panel) is up.
+    /// C# extra: a <see cref="Simulation.BuildingStatus"/> line under the name (green working + crafts/min,
+    /// red starved / no fuel, amber full, muted idle), sampled at 4 Hz (the status queries allocate).
     /// </summary>
     public class BuildingTooltipView : MonoBehaviour
     {
@@ -21,6 +22,9 @@ namespace IdleGrounds.Game
         public string ShownName => panel != null && panel.activeSelf ? nameText.text : null;
         public string ShownStatus => panel != null && panel.activeSelf && statusText.gameObject.activeSelf ? statusText.text : null;
 
+        Building lastBuilding;
+        float nextStatusAt;
+
         void Awake()
         {
             if (runner == null) runner = GameRunner.Instance;
@@ -31,35 +35,34 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null || controller == null || panel == null) return;
             var b = controller.Hovered;
-            bool show = b != null && !controller.AnyPanelOpen && controller.Placing == null;
+            bool show = b != null && b.built && runner.IsUnlocked(controller.HoveredArea) && !controller.AnyPanelOpen;
             if (panel.activeSelf != show) panel.SetActive(show);
-            if (!show) return;
+            if (!show) { lastBuilding = null; return; }
             var sim = runner.Sim;
             var def = runner.Config.Building(b.type);
             string nm = def != null ? def.name : b.type;
             if (b.type == "dragon" && runner.State.won) nm = "Awakened Dragon";
             if (nameText.text != nm) nameText.text = nm;
 
+            float t = Time.unscaledTime;
+            if (b == lastBuilding && t < nextStatusAt) return;
+            lastBuilding = b; nextStatusAt = t + 0.25f;
             string line = null; Color c = UiPalette.Muted;
-            if (!b.built) { line = "Under construction"; c = UiPalette.Gold; }
-            else
+            var st = sim.BuildingStatus(controller.HoveredArea, b);
+            if (st != null)
             {
-                var st = sim.BuildingStatus(controller.HoveredArea, b);
-                if (st != null)
+                line = st.label;
+                switch (st.state)
                 {
-                    line = st.label;
-                    switch (st.state)
-                    {
-                        case BuildingState.Working:
-                            c = UiPalette.Accent;
-                            var f = def != null && def.IsConverter ? sim.ConverterFace(controller.HoveredArea, b) : null;
-                            if (f != null && f.craftsPerMin > 0) line += " · " + ViewKit.Fmt(f.craftsPerMin) + "/min";
-                            break;
-                        case BuildingState.Starved:
-                        case BuildingState.NoFuel: c = UiPalette.Danger; break;
-                        case BuildingState.Full: c = UiPalette.Amber; break;
-                        default: c = UiPalette.Muted; break;
-                    }
+                    case BuildingState.Working:
+                        c = UiPalette.Accent;
+                        var f = def != null && def.IsConverter ? sim.ConverterFace(controller.HoveredArea, b) : null;
+                        if (f != null && f.craftsPerMin > 0) line += " · " + ViewKit.Fmt(f.craftsPerMin) + "/min";
+                        break;
+                    case BuildingState.Starved:
+                    case BuildingState.NoFuel: c = UiPalette.Danger; break;
+                    case BuildingState.Full: c = UiPalette.Amber; break;
+                    default: c = UiPalette.Muted; break;
                 }
             }
             bool hasLine = !string.IsNullOrEmpty(line);

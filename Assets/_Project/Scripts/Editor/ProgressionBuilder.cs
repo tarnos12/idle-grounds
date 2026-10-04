@@ -562,6 +562,17 @@ namespace IdleGrounds.Editor
             Set(us, "hand", hand);
             Set(hand, "unlockSigns", us);
 
+            // quest target ring (H2): Runtime/QuestRing — circle segments are created at runtime from the square sprite
+            EnsureShapes();
+            var ringGo = FindOrCreate("QuestRing", runtime);
+            for (int i = ringGo.transform.childCount - 1; i >= 0; i--) Object.DestroyImmediate(ringGo.transform.GetChild(i).gameObject);
+            var ring = Ensure<QuestRingView>(ringGo);
+            var ringFrame = Frame(ringGo.transform, "ZoneFrame", 5, "Overlay");
+            ringFrame.gameObject.SetActive(false);
+            Set(ring, "runner", runner);
+            Set(ring, "segmentSprite", square);
+            Set(ring, "zoneFrame", ringFrame);
+
             var canvas = GameObject.Find("UI/Canvas");
             if (canvas == null) { Debug.LogError("[IdleGrounds] UI/Canvas missing."); return; }
             foreach (var n in new[] { "AutoSkipChips", "QuestPanel", "PavilionPanel", "UpgradeTree", "DragonDialog" })

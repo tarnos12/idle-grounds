@@ -17,11 +17,14 @@ namespace IdleGrounds.Game
 
         public override void Layout(BuildingView v)
         {
+            lastNear = -1; lastCap = -1;
             count.transform.localPosition = v.L(0.5f, 0.86f) + new Vector3(ViewKit.U(7f), 0f, 0f);
             ViewKit.Font(count, 10f);
             itemIcon.transform.localPosition = v.L(0.5f, 0.86f) - new Vector3(ViewKit.U(14f), 0f, 0f);
             if (v.Def.gen.enabled) ViewKit.Fit(itemIcon, v.Sync.Sprites.Item(v.Def.gen.item), 13f);
         }
+
+        int lastNear = -1, lastCap = -1;
 
         public override void Refresh(BuildingView v)
         {
@@ -34,7 +37,7 @@ namespace IdleGrounds.Game
             foreach (var gi in area.ground)
                 if (gi.item == g.item && (gi.x - bx) * (gi.x - bx) + (gi.y - by) * (gi.y - by) <= R * R) near++;
             Near = near;
-            ViewKit.Text(count, near + "/" + g.cap);
+            if (near != lastNear || g.cap != lastCap) { lastNear = near; lastCap = g.cap; ViewKit.Text(count, near + "/" + g.cap); }
             ViewKit.Colour(count, near >= g.cap || v.Building.pileFull ? UiPalette.Danger : UiPalette.Gold);
         }
     }

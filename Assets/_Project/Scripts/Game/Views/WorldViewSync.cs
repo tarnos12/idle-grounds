@@ -19,6 +19,8 @@ namespace IdleGrounds.Game
         [SerializeField] Transform groundRoot;
         [Tooltip("Sprite for the inert deco border trees (the pine emoji has no atlas entry yet).")]
         [SerializeField] Sprite decoSprite;
+        [Tooltip("Cursor source for the fish countdown hover (found at runtime when empty).")]
+        [SerializeField] HandController hand;
 
         readonly Dictionary<long, NodeView> nodeViews = new Dictionary<long, NodeView>();
         readonly Dictionary<long, GroundItemView> groundViews = new Dictionary<long, GroundItemView>();
@@ -69,9 +71,15 @@ namespace IdleGrounds.Game
             double now = runner.SimNow;
             int cell = space.Cell;
             var areas = runner.State.areas;
+            // node under the cursor (the fish countdown also shows while hovered, ui.js:1259)
+            Node hoveredNode = null;
+            if (hand == null) hand = FindFirstObjectByType<HandController>();
+            if (hand != null && hand.CursorOver && hand.CursorArea != null && runner.IsUnlocked(hand.CursorArea))
+                hoveredNode = HandController.NodeAtCell(runner.State.Area(hand.CursorArea), hand.LRow, hand.LCol);
             for (int ai = 0; ai < areas.Count; ai++)
             {
                 var area = areas[ai];
+                bool unlocked = runner.IsUnlocked(area.key);
                 foreach (var n in area.nodes)
                 {
                     long k = Key(ai, n.id);
@@ -81,9 +89,10 @@ namespace IdleGrounds.Game
                         v.Bind(area.key, n, sprites.Node(area.key, n), space);
                     }
                     v.seenFrame = frame;
-                    v.Refresh(now, cell, !n.deco && runner.Sim.NodeAutoFlashing(n));
+                    if (!ViewCull.Visible(v.transform.position, n.size + 3f)) continue;     // off-camera: skip the animation
+                    v.Refresh(now, cell, !n.deco && runner.Sim.NodeAutoFlashing(n), unlocked, n == hoveredNode);
                 }
-                if (!runner.IsUnlocked(area.key)) continue;
+                if (!unlocked) continue;
                 foreach (var g in area.ground)
                 {
                     long k = Key(ai, g.id);

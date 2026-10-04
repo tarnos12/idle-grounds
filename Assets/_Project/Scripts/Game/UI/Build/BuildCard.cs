@@ -24,6 +24,9 @@ namespace IdleGrounds.Game
         [SerializeField] TextMeshProUGUI lockedText;
         [SerializeField] GameObject newBadge;
         [SerializeField] CanvasGroup group;
+        [Tooltip("Quest / milestone target: 🎯 badge (top-left) + a soft gold glow ring (box-shadow 0 0 0 2px rgba(251,191,36,.28)).")]
+        [SerializeField] GameObject targetBadge;
+        [SerializeField] Outline targetGlow;
 
         readonly List<UiIconCount> costs = new List<UiIconCount>();
         BuildMenuView menu;
@@ -32,15 +35,16 @@ namespace IdleGrounds.Game
         public bool Locked { get; private set; }
         public bool IsNew { get; private set; }
         public bool Affordable { get; private set; }
+        public bool IsTarget { get; private set; }
         public string Tooltip { get; private set; }
         public Button Button => button;
 
         void Awake() { if (costTemplate != null) costTemplate.gameObject.SetActive(false); }
 
         public void Bind(BuildMenuView m, BuildingDef def, Sprite iconSprite, SpriteCache sprites,
-            bool isNew, bool affordable, string lockedReason, string tooltip)
+            bool isNew, bool affordable, string lockedReason, string tooltip, bool target = false)
         {
-            menu = m; Type = def.key; IsNew = isNew; Affordable = affordable; Locked = lockedReason != null; Tooltip = tooltip;
+            menu = m; Type = def.key; IsNew = isNew; IsTarget = target && lockedReason == null; Affordable = affordable; Locked = lockedReason != null; Tooltip = tooltip;
             name = "Card_" + def.key;
             icon.sprite = iconSprite;
             nameText.text = def.name;
@@ -60,8 +64,10 @@ namespace IdleGrounds.Game
                 costs[i].gameObject.SetActive(on);
                 if (on) costs[i].Set(sprites.Item(def.cost[i].item), def.cost[i].qty.ToString());
             }
-            border.effectColor = Locked ? UiPalette.Line : isNew ? UiPalette.Gold : affordable ? UiPalette.Accent : UiPalette.Line;
-            group.alpha = Locked ? 0.45f : isNew || affordable ? 1f : 0.62f;
+            border.effectColor = Locked ? UiPalette.Line : IsTarget || isNew ? UiPalette.Gold : affordable ? UiPalette.Accent : UiPalette.Line;
+            if (targetBadge != null) targetBadge.SetActive(IsTarget);
+            if (targetGlow != null) targetGlow.enabled = IsTarget;
+            group.alpha = Locked ? 0.45f : IsTarget || isNew || affordable ? 1f : 0.62f;
             button.interactable = !Locked;
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() => menu.CardClicked(this));

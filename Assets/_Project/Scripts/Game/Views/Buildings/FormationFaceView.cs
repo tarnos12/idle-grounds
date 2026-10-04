@@ -35,6 +35,8 @@ namespace IdleGrounds.Game
         {
             ViewKit.Fit(icon, v.Sync.Sprites.Building(v.Building.type), 20f);
             icon.transform.localPosition = v.L(0.5f, 0.5f);
+            shownAcceptCount = -1; nextAcceptsAt = 0f; lastA = lastB = int.MinValue;
+            foreach (var a in accepts) if (a != null) ViewKit.Show(a, false);
             badge.transform.localPosition = new Vector3(0.5f, -1f - ViewKit.U(8f), 0f);
             ViewKit.Font(badge, 9f);
             if (itemIcon != null) itemIcon.transform.localPosition = new Vector3(0.5f, ViewKit.U(8f), 0f);
@@ -64,30 +66,39 @@ namespace IdleGrounds.Game
             if (reach != null && (kind == Kind.GatheringStone || kind == Kind.FurnaceSpirit)) ViewKit.Show(reach, on);
         }
 
+        int lastA = int.MinValue, lastB = int.MinValue;
+
         public override void Refresh(BuildingView v)
         {
             var b = v.Building; var def = v.Def;
-            string txt; Color c = UiPalette.Gold;
+            int a, cap2 = 0; Color c = UiPalette.Gold;
             switch (kind)
             {
                 case Kind.GatheringStone:
                 case Kind.FurnaceSpirit:
-                {
-                    int cap = kind == Kind.GatheringStone ? def.gather.cap : def.stoker.cap;
-                    int n = BuildingSystem.GatherTotal(b);
-                    txt = n + "/" + cap;
-                    if (n >= cap) c = UiPalette.Danger;
+                    cap2 = kind == Kind.GatheringStone ? def.gather.cap : def.stoker.cap;
+                    a = BuildingSystem.GatherTotal(b);
+                    if (a >= cap2) c = UiPalette.Danger;
                     break;
-                }
                 case Kind.WardingSeal:
-                    txt = b.qty.ToString();
+                    a = b.qty;
                     if (b.qty >= v.Sync.Sim.Buildings.SealCap(def)) c = UiPalette.Danger;
                     break;
                 default:
-                    txt = (b.links != null ? b.links.Count : 0).ToString();
+                    a = b.links != null ? b.links.Count : 0;
                     break;
             }
-            ViewKit.Text(badge, txt);
+            if (a != lastA || cap2 != lastB)       // the badge string is only rebuilt when its numbers change
+            {
+                lastA = a; lastB = cap2;
+                string txt = kind == Kind.GatheringStone || kind == Kind.FurnaceSpirit ? a + "/" + cap2 : a.ToString();
+                ViewKit.Text(badge, txt);
+                if (badgeIcon != null)
+                {
+                    float tw = badge.GetPreferredValues(txt).x;
+                    badgeIcon.transform.localPosition = badge.transform.localPosition + new Vector3(tw * 0.5f + ViewKit.U(6f), 0f, 0f);
+                }
+            }
             ViewKit.Colour(badge, c);
             if (beatTrack != null)
             {
@@ -105,18 +116,63 @@ namespace IdleGrounds.Game
                     ViewKit.Bar(beatFill, 0.5f - w * 0.5f, -0.9f, w * frac, ViewKit.U(2f));
                 }
             }
-            if (badgeIcon != null)
-            {
-                ViewKit.Show(badgeIcon, kind == Kind.WispLantern);
-                float tw = badge.GetPreferredValues(txt).x;
-                badgeIcon.transform.localPosition = badge.transform.localPosition + new Vector3(tw * 0.5f + ViewKit.U(6f), 0f, 0f);
-            }
+            if (badgeIcon != null) ViewKit.Show(badgeIcon, kind == Kind.WispLantern);
             if (itemIcon != null)
             {
                 bool show = kind == Kind.WardingSeal && b.item != null;
                 ViewKit.Show(itemIcon, show);
                 if (show) ViewKit.Fit(itemIcon, v.Sync.Sprites.Item(b.item), 13f);
             }
+            if (kind == Kind.GatheringStone) RefreshAccepts(v);
+        }
+
+        // ---- linked Gathering Stone: what its link targets use (ui.js:1100-1107) ----
+        // Up to 4 icons round(9*1.2)=11 px, 1 px apart, centred under the badge. StoneAccepts allocates,
+        // so it is sampled at 4 Hz; the renderers are pooled children created on first use.
+        public const int MaxAccepts = 4;
+        const float AcceptPx = 11f;
+        readonly SpriteRenderer[] accepts = new SpriteRenderer[MaxAccepts];
+        readonly string[] shownAccepts = new string[MaxAccepts];
+        int shownAcceptCount = -1;
+        float nextAcceptsAt;
+
+        public int AcceptIconCount => shownAcceptCount < 0 ? 0 : shownAcceptCount;
+
+        void RefreshAccepts(BuildingView v)
+        {
+            float t = Time.unscaledTime;
+            if (t < nextAcceptsAt && shownAcceptCount >= 0) return;
+            nextAcceptsAt = t + 0.25f;
+            var acc = v.Sync.Sim.Logistics.StoneAccepts(v.Area, v.Building);
+            int n = acc != null ? Mathf.Min(acc.Count, MaxAccepts) : 0;
+            bool same = n == shownAcceptCount;
+            for (int i = 0; same && i < n; i++) if (acc[i] != shownAccepts[i]) same = false;
+            if (same) return;
+            shownAcceptCount = n;
+            float ip = ViewKit.U(AcceptPx), step = ViewKit.U(AcceptPx + 1f);
+            // badge centre is 8 px under the tile; icons sit bpx*0.5 + ip*0.5 + 1 px lower (bpx = 10 floor)
+            float y = badge.transform.localPosition.y - ViewKit.U(5f + AcceptPx * 0.5f + 1f);
+            float x0 = 0.5f - (n - 1) * step * 0.5f;
+            for (int i = 0; i < MaxAccepts; i++)
+            {
+                bool on = i < n;
+                shownAccepts[i] = on ? acc[i] : null;
+                if (!on) { if (accepts[i] != null) ViewKit.Show(accepts[i], false); continue; }
+                if (accepts[i] == null) accepts[i] = NewAcceptIcon(i);
+                ViewKit.Show(accepts[i], true);
+                ViewKit.Fit(accepts[i], v.Sync.Sprites.Item(acc[i]), AcceptPx);
+                accepts[i].transform.localPosition = new Vector3(x0 + i * step, y, 0f);
+            }
+        }
+
+        SpriteRenderer NewAcceptIcon(int i)
+        {
+            var go = new GameObject("Accept" + i);
+            go.transform.SetParent(transform, false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            var mr = badge.GetComponent<MeshRenderer>();
+            if (mr != null) { sr.sortingLayerID = mr.sortingLayerID; sr.sortingOrder = mr.sortingOrder; }
+            return sr;
         }
     }
 }

@@ -122,15 +122,21 @@ namespace IdleGrounds.Game
 
         public void CancelModes() { Placing = null; Demolishing = false; if (preview != null) preview.Hide(); }
 
-        /// <summary>Esc chain (§3.1): M7 modals (MetaUiController) → tree → recipe picker → roster → link editor → dragon dialog → placing/demolish + build menu.</summary>
+        /// <summary>
+        /// Esc chain (ui.js onKeyDown U:3178): (the C#-only confirm dialog) → tree → recipe picker → roster →
+        /// link editor → dragon dialog → perk shop → ascend → stats → help → welcome → post-ascension card
+        /// (MetaUiController) → placing/demolish + build menu.
+        /// </summary>
         public void Escape()
         {
-            if (MetaUiController.Instance != null && MetaUiController.Instance.Escape()) return;   // M7 modals first
+            var meta = MetaUiController.Instance;
+            if (meta != null && meta.EscapeConfirm()) return;          // a yes/no confirm sits above everything
             if (UpgradeTreeOpen) { upgradeTree.Close(); return; }
             if (RecipePickerOpen) { CloseRecipePicker(); return; }
             if (PavilionOpen) { pavilionPanel.Close(); return; }
             if (LinkEditorOpen) { linkEditor.Escape(); return; }      // picking backs out to the menu, then closes
             if (DragonDialogOpen) { dragonDialog.Continue(); return; }
+            if (meta != null && meta.Escape()) return;                 // M7 modals
             CancelModes();
             CloseBuildMenu();
         }
@@ -141,7 +147,8 @@ namespace IdleGrounds.Game
         public bool HandleWorldLeftClick(string area, double lx, double ly, bool shift)
         {
             // link picking captures ALL world clicks until done / cancelled (ui.js:2972)
-            if (linkEditor != null && linkEditor.Picking) { linkEditor.HandleWorldClick(area, lx, ly); return true; }
+            // (only clicks inside an unlocked region: void / locked clicks fall through like ui.js:2963-2970)
+            if (linkEditor != null && linkEditor.Picking && area != null && runner.IsUnlocked(area)) { linkEditor.HandleWorldClick(area, lx, ly); return true; }
             if (Placing != null)
             {
                 int row = (int)System.Math.Floor(ly / runner.Space.Cell), col = (int)System.Math.Floor(lx / runner.Space.Cell);

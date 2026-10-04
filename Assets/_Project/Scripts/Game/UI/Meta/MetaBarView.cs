@@ -30,7 +30,6 @@ namespace IdleGrounds.Game
         [SerializeField] PerkShopView perkShop;
         [SerializeField] ConfirmDialogView confirm;
 
-        string lastKey;
 
         void Awake()
         {
@@ -66,6 +65,11 @@ namespace IdleGrounds.Game
                 img.color = a != null && a.Muted ? new Color(0.45f, 0.12f, 0.12f) : UiPalette.Panel;
         }
 
+        // last painted values (compared every frame; strings only rebuilt on change)
+        bool lastShow, lastAfford, painted;
+        int lastAp = -1, lastAsc = -1, lastVowCount = -1, lastVowHash;
+        float lastSpeed = -1f;
+
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
@@ -75,9 +79,15 @@ namespace IdleGrounds.Game
             bool showShrine = s.ascensions > 0 || s.ascendPoints > 0 || gateExists;
             bool afford = false;
             foreach (var p in sim.Config.perks) if (sim.Prestige.CanAfford(p.id)) { afford = true; break; }
-            string key = showShrine + "|" + s.ascendPoints + "|" + afford + "|" + s.ascensions + "|" + sim.Prestige.WorldSpeed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-            if (key == lastKey) return;
-            lastKey = key;
+            float speed = (float)System.Math.Round(sim.Prestige.WorldSpeed, 2);
+            var vows = s.vows.active;
+            int vowHash = 17;
+            foreach (var id in vows) vowHash = vowHash * 31 + (id != null ? id.GetHashCode() : 0);
+            if (painted && showShrine == lastShow && s.ascendPoints == lastAp && afford == lastAfford && s.ascensions == lastAsc
+                && speed == lastSpeed && vows.Count == lastVowCount && vowHash == lastVowHash) return;
+            painted = true;
+            lastShow = showShrine; lastAp = s.ascendPoints; lastAfford = afford; lastAsc = s.ascensions; lastSpeed = speed;
+            lastVowCount = vows.Count; lastVowHash = vowHash;
             if (shrinePill != null)
             {
                 shrinePill.gameObject.SetActive(showShrine);
@@ -87,8 +97,17 @@ namespace IdleGrounds.Game
             }
             if (ascTag != null)
             {
-                ascTag.SetActive(s.ascensions > 0);
-                ascText.text = "☯" + s.ascensions + "  ×" + sim.Prestige.WorldSpeed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+                // "☯N" (the tag's icon is the ☯) + world speed, then the vow chip (ui.js vowChipHTML: vow icons)
+                var vowDefs = MetaText.ActiveVows(sim);
+                ascTag.SetActive(s.ascensions > 0 || vowDefs.Count > 0);
+                var sb = new System.Text.StringBuilder();
+                sb.Append(s.ascensions).Append("  ×").Append(sim.Prestige.WorldSpeed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+                if (vowDefs.Count > 0)
+                {
+                    sb.Append("   ");
+                    foreach (var v in vowDefs) sb.Append(UiText.StripEmoji(v.icon));
+                }
+                ascText.text = sb.ToString();
             }
         }
     }

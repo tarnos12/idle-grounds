@@ -10,7 +10,7 @@ namespace IdleGrounds.Game
     /// One-shot world FX (ui-input-render §5): pooled floaters (cap 60) and spark bursts (cap 240).
     /// GroundDropped → "+qty" item floater (unlocked + on-screen only), prized (gold) loot also pops 8 gold
     /// sparks; <see cref="Pickup"/> = green "+N" + 5 sparks + "pickup" SFX; player node swings / enemy strikes
-    /// (NodeHit !isAuto, EnemyHit/EnemyKilled) = 4 light sparks. Sparks: random angle, 30-100 px/s, extra
+    /// (HandController: at the cursor on every node click / auto-swing, at the enemy on every strike) = 4 light sparks. Sparks: random angle, 30-100 px/s, extra
     /// -30 px/s up, gravity 90 px/s², radius 1.5-3.5 px shrinking 40 %, life 380-640 ms, alpha 1→0.
     /// Sim events are muted during the offline replay and nothing spawns while <see cref="GameRunner.Replaying"/>.
     /// Everything clears on RunReset (ascension).
@@ -65,12 +65,10 @@ namespace IdleGrounds.Game
 
         void Start()
         {
+            if (runner == null || runner.Sim == null) return;     // GameRunner disabled itself (no database)
             sprites = new SpriteCache(runner.Database, null);
             var ev = runner.Sim.Events;
             ev.GroundDropped += OnGroundDropped;
-            ev.NodeHit += OnNodeHit;
-            ev.EnemyHit += OnEnemyStruck;
-            ev.EnemyKilled += OnEnemyStruck;
             ev.RunReset += ClearAll;
         }
 
@@ -79,9 +77,6 @@ namespace IdleGrounds.Game
             if (runner == null || runner.Sim == null) return;
             var ev = runner.Sim.Events;
             ev.GroundDropped -= OnGroundDropped;
-            ev.NodeHit -= OnNodeHit;
-            ev.EnemyHit -= OnEnemyStruck;
-            ev.EnemyKilled -= OnEnemyStruck;
             ev.RunReset -= ClearAll;
         }
 
@@ -93,18 +88,6 @@ namespace IdleGrounds.Game
             var col = ItemColour(item);
             Floater(w, "+" + qty, col, sprites.Item(item));
             if (col == Gold) Burst(runner.Space.PxToWorld(area, x, y), Gold, 8);   // prized loot pops
-        }
-
-        void OnNodeHit(string area, Node n, bool isAuto)
-        {
-            if (isAuto || n == null || Suppressed) return;
-            float c = Cell;
-            Swing(area, (n.col + n.size * 0.5) * c, (n.row + n.size * 0.5) * c);
-        }
-
-        void OnEnemyStruck(string area, Enemy e)
-        {
-            if (e != null) Swing(area, e.x, e.y);
         }
 
         public bool OnScreen(Vector3 w)

@@ -117,7 +117,7 @@ namespace IdleGrounds.Game
             string outName = runner.Config.Item(r.output)?.name ?? r.output;
             detailName.text = string.IsNullOrEmpty(r.name) ? outName : r.name;
             double secs = r.timeMs * Sim.Timing.PrestigeFactor(Sim.State) / 1000.0;
-            detailYield.text = $"→ {r.outputQty}× {outName} · " + secs.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture) + "s";   
+            detailYield.text = $"→ {r.outputQty}× {outName} · " + System.Math.Round(secs, 1, System.MidpointRounding.AwayFromZero).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "s";   
             while (rows.Count < r.inputs.Count) rows.Add(Instantiate(rowTemplate, detailRows));
             for (int i = 0; i < rows.Count; i++)
             {

@@ -5,8 +5,9 @@ namespace IdleGrounds.Game
 {
     /// <summary>
     /// Built Ascension Gate (spec §2.4): pulsing gold border p = 0.5+0.5 sin(now/500) (width (2.5+p) px,
-    /// glow alpha 0.35+0.4p), icon 56 px at 36%, gold name 16 px at 64%, "Ascend" 12 px #fde68a at 84%
-    /// (the "+N AP" preview arrives with ascension, M5).
+    /// glow alpha 0.35+0.4p), icon 56 px at 36%, gold name 16 px at 64%, "Ascend · +N ☯" 12 px #fde68a
+    /// at 84% (N = <see cref="IdleGrounds.Sim.Simulation.AscendReward"/>, ui.js:1121; sampled at 4 Hz, text
+    /// rebuilt only when N changes).
     /// </summary>
     public class GateFaceView : BuildingFace
     {
@@ -14,6 +15,11 @@ namespace IdleGrounds.Game
         [SerializeField] TextMeshPro title;
         [SerializeField] TextMeshPro sub;
         [SerializeField] EdgeFrame glow;
+
+        int lastReward = int.MinValue;
+        float nextRewardAt;
+
+        public string SubText => sub != null ? sub.text : null;
 
         public override void Layout(BuildingView v)
         {
@@ -24,10 +30,23 @@ namespace IdleGrounds.Game
             title.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(20f));
             sub.text = "Ascend"; ViewKit.Font(sub, 12f); sub.color = UiPalette.Hex("#fde68a");
             sub.transform.localPosition = v.L(0.5f, 0.84f);
+            sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(16f));
+            lastReward = int.MinValue; nextRewardAt = 0f;
         }
 
         public override void Refresh(BuildingView v)
         {
+            float t = Time.unscaledTime;
+            if (t >= nextRewardAt)
+            {
+                nextRewardAt = t + 0.25f;
+                int n = v.Sync.Sim.AscendReward();
+                if (n != lastReward)
+                {
+                    lastReward = n;
+                    ViewKit.Text(sub, "Ascend · +" + n + " ☯");
+                }
+            }
             float p = 0.5f + 0.5f * Mathf.Sin(Time.realtimeSinceStartup * 1000f / 500f);
             var g = UiPalette.Gold;
             v.Border.Set(v.W, v.H, ViewKit.U(2.5f + p), g, false);

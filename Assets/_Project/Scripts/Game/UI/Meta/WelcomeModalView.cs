@@ -237,7 +237,8 @@ namespace IdleGrounds.Game
         public override bool Escape()
         {
             if (!IsOpen) return false;
-            Continue();
+            // dismissWelcome (ui.js:2762): just hides — only the Continue button marks the intro seen
+            if (!runner.Replaying) base.Close();
             return true;        // swallowed even while replaying
         }
     }

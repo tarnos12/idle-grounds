@@ -17,6 +17,8 @@ namespace IdleGrounds.Game
         [SerializeField] TextMeshProUGUI areaText;
         [SerializeField] Image areaIcon;
         [SerializeField] GameObject areaLock;
+        [Tooltip("🌫 icon for the void between regions (\"Wilds\").")]
+        [SerializeField] Sprite wildsIcon;
         [SerializeField] GameObject sprintTag;
         [SerializeField] TextMeshProUGUI handText;
         [SerializeField] Image handPill;
@@ -29,7 +31,7 @@ namespace IdleGrounds.Game
 
         bool lastBuildOn, lastDemolishOn;
 
-        string lastArea;
+        string lastArea; bool areaPainted;
         int lastTotal = -1, lastCap = -1;
 
         void Awake()
@@ -79,13 +81,19 @@ namespace IdleGrounds.Game
             if (runner == null || runner.Sim == null) return;
             SyncBuildButtons();
             var cam =cameraController != null ? cameraController.transform.position : Vector3.zero;
-            string area = runner.Space.RegionAtOrNearest(cam);
-            if (area != lastArea && area != null)
+            // regionAtCamCentre (ui.js:377): the region under the view centre, "🌫 Wilds" in the void gaps
+            string area = runner.Space.WorldToArea(cam, out var hit, out _, out _) ? hit : null;
+            if (area != lastArea || !areaPainted)
             {
-                lastArea = area;
-                var def = runner.Config.Region(area);
-                if (areaText != null) areaText.text = def != null ? def.name : area;
-                if (areaIcon != null) areaIcon.sprite = runner.Database.RegionIcon(area);
+                lastArea = area; areaPainted = true;
+                var def = area != null ? runner.Config.Region(area) : null;
+                if (areaText != null) areaText.text = area == null ? "Wilds" : def != null ? def.name : area;
+                if (areaIcon != null)
+                {
+                    var icon = area != null ? runner.Database.RegionIcon(area) : wildsIcon;
+                    areaIcon.sprite = icon;
+                    areaIcon.enabled = icon != null;
+                }
             }
             if (areaLock != null)
             {

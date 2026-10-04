@@ -62,12 +62,30 @@ namespace IdleGrounds.Game
             progressTrack.color = Track;
             progressFill.color = UiPalette.Gold;
             lastRecipe = -2;
+            LastFace = null;
         }
+
+        /// <summary>
+        /// <see cref="Simulation.ConverterFace"/> allocates a face + lists, so it is sampled at 5 Hz (and at
+        /// once when the recipe changes); the progress bar is extrapolated per frame from the cached batch
+        /// time; text is only rebuilt when its value changes.
+        /// </summary>
+        public const float FaceSampleSeconds = 0.2f;
+        float nextFaceAt;
+        int[] lastHave = new int[0], lastNeed = new int[0];
+        int lastCraftable = int.MinValue;
+        BuildingState lastState = (BuildingState)(-1);
+        string lastStatusItem, lastStatusLabel; double lastCpm = -1; bool lastHadStatus;
 
         public override void Refresh(BuildingView v)
         {
-            var f = v.Sync.Sim.ConverterFace(v.Area, v.Building);
-            LastFace = f;
+            float t = Time.unscaledTime;
+            if (LastFace == null || t >= nextFaceAt || v.Building.recipe != LastFace.recipeIndex)
+            {
+                LastFace = v.Sync.Sim.ConverterFace(v.Area, v.Building);
+                nextFaceAt = t + FaceSampleSeconds;
+            }
+            var f = LastFace;
             if (f == null) { ViewKit.Show(inputsRoot, false); ViewKit.Show(result, false); return; }
             ViewKit.Show(inputsRoot, true); ViewKit.Show(result, true);
             var sprites = v.Sync.Sprites;
@@ -94,48 +112,72 @@ namespace IdleGrounds.Game
                     ic.b.transform.localPosition = new Vector3(ViewKit.U(9f), -ViewKit.U(8f), 0f);
                 }
                 ViewKit.Fit(result.icon, sprites.Item(f.recipe.output), 22f);
+                lastHave = new int[f.inputs.Count]; lastNeed = new int[f.inputs.Count];
+                for (int i = 0; i < lastHave.Length; i++) lastHave[i] = lastNeed[i] = int.MinValue;
+                lastCraftable = int.MinValue;
+                lastHadStatus = false; lastState = (BuildingState)(-1);
             }
-            for (int i = 0; i < f.inputs.Count; i++)
+            for (int i = 0; i < f.inputs.Count && i < lastHave.Length; i++)
             {
                 var iv = f.inputs[i];
-                ViewKit.Text(inputs[i].a, iv.have.ToString());
-                ViewKit.Colour(inputs[i].a, iv.have >= iv.need ? UiPalette.Accent : UiPalette.Danger);
-                ViewKit.Text(inputs[i].b, iv.need.ToString());
-                ViewKit.Colour(inputs[i].b, UiPalette.Gold);
-            }
-            ViewKit.Text(result.b, f.craftable.ToString());
-            ViewKit.Colour(result.b, UiPalette.Gold);
-
-            // status line
-            string txt = ""; Color c = UiPalette.Muted; string icon = null;
-            var st = f.status;
-            if (st != null)
-            {
-                switch (st.state)
+                if (iv.have != lastHave[i] || iv.need != lastNeed[i])
                 {
-                    case BuildingState.Starved: txt = "Needs"; c = UiPalette.Danger; icon = st.item; break;
-                    case BuildingState.NoFuel: txt = "No fuel"; c = UiPalette.Danger; break;
-                    case BuildingState.Full: txt = st.label; c = UiPalette.Amber; break;
-                    case BuildingState.Working:
-                        txt = f.craftsPerMin > 0 ? "Working · " + ViewKit.Fmt(f.craftsPerMin) + "/min" : "Working";
-                        c = UiPalette.Accent; break;
-                    default: txt = ""; break;
+                    lastHave[i] = iv.have; lastNeed[i] = iv.need;
+                    ViewKit.Text(inputs[i].a, iv.have.ToString());
+                    ViewKit.Colour(inputs[i].a, iv.have >= iv.need ? UiPalette.Accent : UiPalette.Danger);
+                    ViewKit.Text(inputs[i].b, iv.need.ToString());
+                    ViewKit.Colour(inputs[i].b, UiPalette.Gold);
                 }
             }
-            ViewKit.Text(statusText, txt);
-            ViewKit.Colour(statusText, c);
-            ViewKit.Show(statusIcon, icon != null);
-            if (icon != null)
+            if (f.craftable != lastCraftable)
             {
-                ViewKit.Fit(statusIcon, sprites.Item(icon), 12f);
-                float tw = statusText.GetPreferredValues(txt).x;
-                statusText.transform.localPosition = v.L(0.5f, 0.755f) - new Vector3(ViewKit.U(7f), 0f, 0f);
-                statusIcon.transform.localPosition = v.L(0.5f, 0.755f) + new Vector3(tw * 0.5f, 0f, 0f);
+                lastCraftable = f.craftable;
+                ViewKit.Text(result.b, f.craftable.ToString());
+                ViewKit.Colour(result.b, UiPalette.Gold);
             }
-            else statusText.transform.localPosition = v.L(0.5f, 0.755f);
 
-            ViewKit.Bar(progressFill, barX0, barY, barW * (float)f.progress, barH);
-            ViewKit.Show(progressFill, f.progress > 0);
+            // status line (rebuilt only when the status / rate changes)
+            var st = f.status;
+            bool changed = (st != null) != lastHadStatus || st != null &&
+                (st.state != lastState || st.item != lastStatusItem || st.label != lastStatusLabel || f.craftsPerMin != lastCpm);
+            if (changed)
+            {
+                lastHadStatus = st != null;
+                lastState = st != null ? st.state : (BuildingState)(-1);
+                lastStatusItem = st?.item; lastStatusLabel = st?.label; lastCpm = f.craftsPerMin;
+                string txt = ""; Color c = UiPalette.Muted; string icon = null;
+                if (st != null)
+                {
+                    switch (st.state)
+                    {
+                        case BuildingState.Starved: txt = "Needs"; c = UiPalette.Danger; icon = st.item; break;
+                        case BuildingState.NoFuel: txt = "No fuel"; c = UiPalette.Danger; break;
+                        case BuildingState.Full: txt = st.label; c = UiPalette.Amber; break;
+                        case BuildingState.Working:
+                            txt = f.craftsPerMin > 0 ? "Working · " + ViewKit.Fmt(f.craftsPerMin) + "/min" : "Working";
+                            c = UiPalette.Accent; break;
+                        default: txt = ""; break;
+                    }
+                }
+                ViewKit.Text(statusText, txt);
+                ViewKit.Colour(statusText, c);
+                ViewKit.Show(statusIcon, icon != null);
+                if (icon != null)
+                {
+                    ViewKit.Fit(statusIcon, sprites.Item(icon), 12f);
+                    float tw = statusText.GetPreferredValues(txt).x;
+                    statusText.transform.localPosition = v.L(0.5f, 0.755f) - new Vector3(ViewKit.U(7f), 0f, 0f);
+                    statusIcon.transform.localPosition = v.L(0.5f, 0.755f) + new Vector3(tw * 0.5f, 0f, 0f);
+                }
+                else statusText.transform.localPosition = v.L(0.5f, 0.755f);
+            }
+
+            // progress: extrapolated every frame from the batch end time and the sampled batch length
+            var b = v.Building;
+            double now = v.Sync.Runner.SimNow;
+            float progress = b.smeltDoneAt > now && f.batchMs > 0 ? Mathf.Clamp01((float)(1 - (b.smeltDoneAt - now) / f.batchMs)) : 0f;
+            ViewKit.Bar(progressFill, barX0, barY, barW * progress, barH);
+            ViewKit.Show(progressFill, progress > 0);
         }
     }
 }

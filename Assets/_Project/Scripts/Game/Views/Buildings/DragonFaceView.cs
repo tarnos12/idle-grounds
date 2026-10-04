@@ -25,6 +25,20 @@ namespace IdleGrounds.Game
 
         readonly List<IconRow.Entry> entries = new List<IconRow.Entry>();
         int lastStage = -1; bool lastAwake;
+        string lastMsg; float murmurHalfW;
+
+        /// <summary>drawDragonSpeech (ui.js:826): the murmur's centre x is clamped so the text stays 6 px inside the view.</summary>
+        void ClampMurmur(BuildingView v)
+        {
+            float cx = v.transform.position.x + v.W * 0.5f;
+            if (ViewCull.TryGetView(out var view))
+            {
+                float pad = murmurHalfW + ViewKit.U(6f);
+                cx = Mathf.Clamp(cx, view.xMin + pad, Mathf.Max(view.xMin + pad, view.xMax - pad));
+            }
+            var p = murmur.transform.position;
+            if (!Mathf.Approximately(p.x, cx)) murmur.transform.position = new Vector3(cx, p.y, p.z);
+        }
 
         public bool IsAwake { get; private set; }
 
@@ -48,7 +62,7 @@ namespace IdleGrounds.Game
                 murmur.transform.localPosition = new Vector3(v.W * 0.5f, ViewKit.U(12f), 0f);
                 murmur.gameObject.SetActive(false);
             }
-            lastStage = -1;
+            lastStage = -1; lastMsg = null;
         }
 
         /// <summary>Word-wrap at <paramref name="cols"/> chars, at most <paramref name="lines"/> lines (ui.js murmur).</summary>
@@ -74,7 +88,16 @@ namespace IdleGrounds.Game
             {
                 string m = s.dragon.dialog == null ? sim.DragonMessage() : null;
                 ViewKit.Show(murmur, m != null);
-                if (m != null) ViewKit.Text(murmur, Wrap(UiText.StripEmoji(m), 42, 3));
+                if (m != null)
+                {
+                    if (!ReferenceEquals(m, lastMsg) && m != lastMsg)      // wrap only when the message changes
+                    {
+                        lastMsg = m;
+                        ViewKit.Text(murmur, Wrap(UiText.StripEmoji(m), 42, 3));
+                        murmurHalfW = murmur.GetPreferredValues(murmur.text).x * 0.5f;
+                    }
+                    ClampMurmur(v);
+                }
             }
             int stage = s.dragon.stage;
             bool awake = s.won || stage >= sim.Config.dragonStages.Count;

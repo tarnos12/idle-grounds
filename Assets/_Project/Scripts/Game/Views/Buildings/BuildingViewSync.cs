@@ -92,6 +92,8 @@ namespace IdleGrounds.Game
                         v.Bind(this, area.key, b, runner.Config.Building(b.type));
                     }
                     v.seenFrame = frame;
+                    // cull: only views within the camera rect + 4 cells refresh (ui.js:597 paint margin)
+                    if (!ViewCull.Visible(v.transform.position, v.W, v.H)) continue;
                     if (Highlight != null) { var h = Highlight(v); v.SetHighlight(h.hover, h.selected, h.demolish, h.reach); }
                     v.Refresh();
                 }

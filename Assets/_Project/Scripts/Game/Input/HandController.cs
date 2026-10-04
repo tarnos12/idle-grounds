@@ -98,8 +98,11 @@ namespace IdleGrounds.Game
             UpdateCursor();
             if (runner.Replaying) { LeftUp(); RightUp(); return; }     // offline catch-up: the world isn't live yet
 
-            if (controls.Gameplay.RotateLeft.WasPressedThisFrame()) Sim.RotateHand(+1);    // Q: front stack to the back
-            if (controls.Gameplay.RotateRight.WasPressedThisFrame()) Sim.RotateHand(-1);   // E: back stack to the front
+            // Q / E without ctrl / alt (ui.js onKeyDown ignores modified keys)
+            var kb = Keyboard.current;
+            bool mod = kb != null && (kb.ctrlKey.isPressed || kb.altKey.isPressed);
+            if (!mod && controls.Gameplay.RotateLeft.WasPressedThisFrame()) Sim.RotateHand(+1);    // Q: front stack to the back
+            if (!mod && controls.Gameplay.RotateRight.WasPressedThisFrame()) Sim.RotateHand(-1);   // E: back stack to the front
 
             if (!useDebugCursor)
             {
@@ -171,16 +174,18 @@ namespace IdleGrounds.Game
                 double t = Now;
                 if (t - lastClickAt >= ClickCooldownMs) { Sim.Attack(area, en.id); Attacks++; lastClickAt = t; }
                 else Sim.FlinchEnemy(area, en.id);
+                if (fx != null) fx.Swing(area, en.x, en.y);     // strike spark, counted or not (ui.js:3006)
                 leftHeld = true; attackHeld = true; lastAttack = t;
                 return;
             }
 
-            // 6. building under the cursor — edge-pick may redirect to vacuum
+            // 6. building under the cursor — edge-pick may redirect to vacuum. Only the Altar / Gate /
+            //    panel / withdraw buildings consume the click; any other building (Dragon, ghosts, plain
+            //    buildings) falls through to the node / vacuum checks (ui.js:3020-3071).
             var b = Sim.World.BuildingAt(area, row, col);
-            if (b != null && !EdgePickRedirect(b, area, lx, ly)) { BuildingLeftClick(area, b); return; }
+            if (b != null && !EdgePickRedirect(b, area, lx, ly) && BuildingLeftClick(area, b)) return;
             if (build != null) build.CloseBuildingPanels();     // clicking elsewhere closes the panel
 
-            if (b == null)
             {
                 var node = NodeAtCell(areaState, row, col);
                 if (node != null && !node.deco)
@@ -196,6 +201,7 @@ namespace IdleGrounds.Game
                         if (node.isFixed) fixtureHitAt[fk] = t;
                     }
                     else node.hitAt = runner.SimNow;    // too fast to count — still show the hit
+                    if (fx != null) fx.Swing(area, lx, ly);    // swing spark at the cursor on every click (ui.js:3062)
                     leftHeld = true; harvestHeld = true; lastSwing = t;
                     return;
                 }
@@ -215,36 +221,37 @@ namespace IdleGrounds.Game
         /// <summary>
         /// Building click (ui.js U:3020-3045): converter → recipe picker; storehouse / seal / gathering stone
         /// → immediate withdraw of 1, then the 1 → 5 per second hold. Altar, Gate,
-        /// lantern and pavilion panels are M4/M5 (no-op). Anything else closes the open panel.
+        /// lantern and pavilion open their panels. Anything else closes the open panel and returns false
+        /// (not consumed: the click falls through to the node / vacuum checks).
         /// </summary>
-        void BuildingLeftClick(string area, Building b)
+        bool BuildingLeftClick(string area, Building b)
         {
             var def = runner.Config.Building(b.type);
             if (b.built && b.type == "center")     // the Altar
             {
                 if (build != null) build.OpenUpgradeTree();
-                return;
+                return true;
             }
             if (b.built && def != null && def.gate)       // the Ascension Gate re-opens the ascend dialog
             {
                 if (build != null) build.CloseBuildingPanels();
                 Sim.SetAscendPrompt(true);
-                return;
+                return true;
             }
             if (b.built && def != null && def.roster.enabled)
             {
                 if (build != null) build.OpenPavilion(area, b);
-                return;
+                return true;
             }
             if (b.built && def != null && def.IsConverter)
             {
                 if (build != null) build.OpenRecipePicker(area, b);
-                return;
+                return true;
             }
             if (b.built && def != null && def.lantern.enabled)
             {
                 if (build != null) build.OpenLinkEditor(area, b);
-                return;
+                return true;
             }
             if (build != null) build.CloseBuildingPanels();
             // (the Furnace Spirit is withdrawable in the sim but ui.js only offers it for these three)
@@ -255,7 +262,9 @@ namespace IdleGrounds.Game
                 if (got > 0) FxPickup(area, Lx, Ly, got);
                 else if (Now - lastWithdrawErr >= WithdrawErrMs) { lastWithdrawErr = Now; AudioService.Play("error"); }
                 withdrawStart = Now; lastWithdraw = withdrawStart;
+                return true;
             }
+            return false;
         }
 
         void LeftUp()
@@ -324,7 +333,7 @@ namespace IdleGrounds.Game
                 if (now - lastWithdraw >= 1000.0 / rate)
                 {
                     if (Sim.Withdraw(withdrawArea, withdrawId, 1) > 0) { if (rg != null) FxPickup(rg, Lx, Ly, 1); }
-                    else if (now - lastWithdrawErr >= WithdrawErrMs) lastWithdrawErr = now;   // emptied: buzz once (M4 audio)
+                    else if (now - lastWithdrawErr >= WithdrawErrMs) { lastWithdrawErr = now; AudioService.Play("error"); }   // emptied: buzz once
                     lastWithdraw = Now;
                 }
             }
@@ -337,7 +346,7 @@ namespace IdleGrounds.Game
                 if (now - lastAttack >= iv)
                 {
                     var en = Sim.EnemyAt(rg, Lx, Ly);
-                    if (en != null) { Sim.Attack(rg, en.id); Attacks++; }
+                    if (en != null) { Sim.Attack(rg, en.id); Attacks++; if (fx != null) fx.Swing(rg, en.x, en.y); }
                     lastAttack = Now;
                 }
             }
@@ -357,11 +366,18 @@ namespace IdleGrounds.Game
                         else
                         {
                             Sim.Harvest(rg, n.id, false, true);
+                            if (fx != null) fx.Swing(rg, Lx, Ly);
                             lastSwing = Now;
                             if (n.isFixed) fixtureHitAt[fk] = lastSwing;
                         }
                     }
                 }
+            }
+
+            // a modal popping up (dragon stage story, ascend, help...) ends a right-hold (ui.js:3262)
+            if (rightHeld && (hasHoldTarget || holdFront != null) && !holdDone && AnyModalOpen())
+            {
+                holdDone = true; holdFront = null;
             }
 
             if (rightHeld && CursorOver && rg != null && hasHoldTarget && !holdDone)
@@ -401,6 +417,11 @@ namespace IdleGrounds.Game
         }
 
         // ================= helpers =================
+
+        /// <summary>Any modal overlay up (M7 modals, the dragon dialog, the Altar tree) — the `.modal:not(.hidden)` test.</summary>
+        bool AnyModalOpen() =>
+            (MetaUiController.Instance != null && MetaUiController.Instance.AnyOpen) ||
+            (build != null && (build.DragonDialogOpen || build.UpgradeTreeOpen));
 
         bool TryUnlockSign()
         {
