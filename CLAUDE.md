@@ -26,6 +26,16 @@ and the ▶ NEXT SESSION pointer.
    It still runs: `node old-game/server.js` → `http://localhost:5174`
    (launch config `idle-grounds`).
 
+## Unity project + MCP
+
+- Unity **6000.3.12f1**, URP, 2D packages. The project lives at the repo
+  root (`Assets/`, `Packages/`, `ProjectSettings/`).
+- Editor access is through **MCP for Unity** (`unityMCP` in `.mcp.json`,
+  HTTP `127.0.0.1:8080/mcp`). That server is **shared with another project**
+  ("Monster Catching Game 2D"), so first call `set_active_instance` with this
+  project's instance (`mcpforunity://instances` lists them; ours is named
+  `idle-grounds` or `idle grounds`). Never act on the other instance.
+
 ## Agent skills
 
 ### Issue tracker
