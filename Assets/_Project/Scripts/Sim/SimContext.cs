@@ -46,6 +46,8 @@ namespace IdleGrounds.Sim
         public UpgradeSystem Upgrades;
         public ProgressionSystem Progression;
         public PavilionSystem Pavilions;
+        public CombatSystem Combat;
+        public AutomationSystem Automation;
 
         public SimContext(GameConfig cfg, GameState state, IClock clock, IRng rng)
         {

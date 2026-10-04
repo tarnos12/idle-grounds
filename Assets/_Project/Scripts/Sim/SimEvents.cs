@@ -93,6 +93,13 @@ namespace IdleGrounds.Sim
         { if (!Muted) RegionUnlocked?.Invoke(area); }
         internal void RaiseQuestClaimed(string id)
         { if (!Muted) QuestClaimed?.Invoke(id); }
+        // M6 — EnemySpawned (fox spawn / boar lure), EnemyHit (struck, survived), EnemyKilled (removed, loot dropped)
+        internal void RaiseEnemySpawned(string area, Enemy e)
+        { if (!Muted) EnemySpawned?.Invoke(area, e); }
+        internal void RaiseEnemyHit(string area, Enemy e)
+        { if (!Muted) EnemyHit?.Invoke(area, e); }
+        internal void RaiseEnemyKilled(string area, Enemy e)
+        { if (!Muted) EnemyKilled?.Invoke(area, e); }
         internal void RaiseDiscipleRecruited(string area, Building b)
         { if (!Muted) DiscipleRecruited?.Invoke(area, b); }
     }

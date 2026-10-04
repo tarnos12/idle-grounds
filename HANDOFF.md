@@ -50,7 +50,11 @@ scales), UpgradeSystem (Altar tree + jobs), ProgressionSystem (quests,
 milestone walker, region unlock installments, gate offerings, AP),
 PavilionSystem (disciples). Altar/Dragon/Gate feed hooks wired.
 
-Next: M4 view (wisps, link editor — in progress), M5 view, M6 sim.
+M6 sim done (112 tests): CombatSystem (foxes, boar bait, attack/AoE/loot,
+Martial Vigor), AutomationSystem (automationTick + status).
+
+Next: M4 view (wisps, link editor — in progress), M5+M6 view, M7 sim
+(prestige, save/load, offline).
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -68,6 +72,7 @@ Next: M4 view (wisps, link editor — in progress), M5 view, M6 sim.
 - M3 view: building prefab variants, build menu, placement, recipe picker,
   tooltips, demolish.
 - M5 sim: dragon, Altar tree, quests/milestones, region unlocks, pavilion + 16 tests.
+- M6 sim: combat + automation + 14 tests.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

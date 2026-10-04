@@ -211,11 +211,13 @@ namespace IdleGrounds.Sim
                     Take("beast_bait", 1);
                     var bs = ecfg.baitSpawn;
                     var area = s.Area(areaKey);
-                    area.enemies.Add(new Enemy
+                    var boar = new Enemy
                     {
                         id = area.nextEnemyId++, x = x, y = y, hp = bs.hp, maxHp = bs.hp, tx = x, ty = y,
                         hitAt = 0, kind = "boss", sprite = bs.sprite, spd = bs.speed,
-                    });
+                    };
+                    area.enemies.Add(boar);
+                    _ctx.Events.RaiseEnemySpawned(areaKey, boar);
                     return new DropResult { kind = DropResultKind.Fed, item = "beast_bait", lured = true, once = true };
                 }
             }

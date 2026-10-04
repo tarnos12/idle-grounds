@@ -44,6 +44,8 @@ namespace IdleGrounds.Sim
             Ctx.Upgrades = new UpgradeSystem(Ctx);
             Ctx.Progression = new ProgressionSystem(Ctx);
             Ctx.Pavilions = new PavilionSystem(Ctx);
+            Ctx.Combat = new CombatSystem(Ctx);
+            Ctx.Automation = new AutomationSystem(Ctx);
             Ctx.Hand.FeedBuilding = Ctx.Buildings.FeedBuilding;
             Ctx.Buildings.AltarFeed = Ctx.Upgrades.AltarFeed;
             Ctx.Buildings.DragonFeed = Ctx.Dragon.Feed;
@@ -99,13 +101,13 @@ namespace IdleGrounds.Sim
         bool TickBuildingLogistics(string areaKey, double now) => Ctx.Buildings.TickLogistics(areaKey, now);
         // wisp flights/arrivals §11.6
         bool TickWisps(string areaKey, double now) => Ctx.Logistics.TickWisps(areaKey, now);
-        // M2+: enemies spawn + wander §7
-        bool TickEnemies(string areaKey, double now) => false;
+        // enemies spawn + wander §7 (M6)
+        bool TickEnemies(string areaKey, double now) => Ctx.Combat.Tick(areaKey, now);
         // dragon scales (center, after awakening) §12.2
         bool TickDragonScales(string areaKey, double now) => Ctx.Dragon.TickScales(areaKey, now);
 
-        /// <summary>`automationTick()` (§13.1) — M2+.</summary>
-        public int AutomationTick() => 0;
+        /// <summary>`automationTick()` (§13.1) — bot swings over every unlocked area; returns total clicks.</summary>
+        public int AutomationTick() => Ctx.Automation.Tick();
 
         // ---- commands ----
 
@@ -264,5 +266,32 @@ namespace IdleGrounds.Sim
         /// <summary>Null when recruiting is possible, else the reason.</summary>
         public string RecruitReason(string areaKey, int buildingId) => Ctx.Pavilions.RecruitReason(areaKey, buildingId);
         public int RosterCap(Building b) => Ctx.Pavilions.RosterCap(b);
+
+        // ---- M6 combat & automation (§7, §13.1) ----
+
+        public CombatSystem Combat => Ctx.Combat;
+        public AutomationSystem Automation => Ctx.Automation;
+
+        /// <summary>`attackEnemy(area,id)` — one strike (+ Spirit Wave splash). Unpaced: the input layer paces
+        /// clicks (100 ms cooldown, else <see cref="FlinchEnemy"/>) and holds (<see cref="AttackIntervalMs"/>,
+        /// re-hit-testing <see cref="EnemyAt"/> each swing). False if no such enemy.</summary>
+        public bool Attack(string areaKey, int enemyId) => Ctx.Combat.Attack(areaKey, enemyId);
+        /// <summary>Too-fast click: flinch only (hitAt = now), no damage.</summary>
+        public void FlinchEnemy(string areaKey, int enemyId) => Ctx.Combat.Flinch(areaKey, enemyId);
+        /// <summary>`enemyAt` — first enemy within 22 px of the area-local px point, or null.</summary>
+        public Enemy EnemyAt(string areaKey, double x, double y) => Ctx.Combat.EnemyAt(areaKey, x, y);
+        /// <summary>Hold-attack cadence (enemies.attackMs, default 400); 0 = area has no enemies.</summary>
+        public int AttackIntervalMs(string areaKey) => Ctx.Combat.AttackIntervalMs(areaKey);
+        /// <summary>Current strike damage (1 + Spirit Blade + Martial Vigor + Fury).</summary>
+        public int AttackDamage(string areaKey) => Ctx.Combat.Damage(areaKey, Ctx.Now);
+        /// <summary>Spirit Wave splash radius in px (0 = no splash).</summary>
+        public double AoeRadius(string areaKey) => Ctx.Combat.AoeRadius(areaKey);
+        /// <summary>Live enemies of an area (x/y, tx/ty wander target, hp/maxHp, hitAt, kind "boss", sprite).</summary>
+        public System.Collections.Generic.IReadOnlyList<Enemy> Enemies(string areaKey) =>
+            (System.Collections.Generic.IReadOnlyList<Enemy>)State.Area(areaKey)?.enemies ?? System.Array.Empty<Enemy>();
+        /// <summary>Automation read-out: level, budget, paused, skipped (saturated) types.</summary>
+        public AutomationStatus AutomationStatus(string areaKey) => Ctx.Automation.Status(areaKey);
+        /// <summary>The node's AUTO badge should be shown now (autoFlash &gt; now).</summary>
+        public bool NodeAutoFlashing(Node n) => Ctx.Automation.AutoFlashing(n, Ctx.Now);
     }
 }
