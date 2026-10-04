@@ -81,6 +81,8 @@ namespace IdleGrounds.Editor
 
             foreach (var s in Specs)
                 BuildRegion(s, grid.transform, whiteSprite);
+            CoreLoopBuilder.EnsureSortingLayers();
+            CoreLoopBuilder.ApplyWorldSortingLayers();
 
             EditorUtility.SetDirty(world);
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());

@@ -87,6 +87,10 @@ namespace IdleGrounds.Editor
             var module = es.AddComponent<InputSystemUIInputModule>();
             AssignUiActions(module);
 
+            // M2 core loop: prefabs, runner, views, input, HUD
+            CoreLoopBuilder.BuildCorePrefabs();
+            CoreLoopBuilder.InstallIntoActiveScene();
+
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
             Debug.Log("[IdleGrounds] Game scene saved to " + ScenePath);

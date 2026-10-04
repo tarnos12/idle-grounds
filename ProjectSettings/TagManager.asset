@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!78 &1
 TagManager:
-  serializedVersion: 2
+  serializedVersion: 3
   tags: []
   layers:
   - Default
@@ -41,3 +41,23 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Ground
+    uniqueID: 521662635
+    locked: 0
+  - name: Buildings
+    uniqueID: 595320441
+    locked: 0
+  - name: Entities
+    uniqueID: 2033678342
+    locked: 0
+  - name: Items
+    uniqueID: 885532026
+    locked: 0
+  - name: Overlay
+    uniqueID: 992626631
+    locked: 0
+  - name: FX
+    uniqueID: 2019995964
+    locked: 0
+  m_RenderingLayers:
+  - Default

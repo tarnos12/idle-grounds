@@ -8,7 +8,7 @@ Each milestone ends playable/verified in `Assets/_Project/Scenes/Game.unity`.
 |---|---|---|---|---|
 | 0 | Specs + placeholder art | — | emoji atlas sprites, data export | ✅ |
 | 1 | Foundation | config POCOs + JSON loader, state, clock/RNG, periodic, world/zones/occupancy, nodes + harvest, ground, hand, field generators, tests | Game scene, Input actions, camera pan/zoom/clamp, 7 Region GameObjects (tilemaps, zones, veils) | ✅ |
-| 2 | Core loop playable | Simulation facade wiring | ScriptableObject defs + importer, `GameRunner`, Node/Fixture/GroundItem prefabs + pooled views, `HandController` (hold/latch/ramp), hand cursor, HUD bottom bar | |
+| 2 | Core loop playable | Simulation facade wiring | ScriptableObject defs + importer, `GameRunner`, Node/Fixture/GroundItem prefabs + pooled views, `HandController` (hold/latch/ramp), hand cursor, HUD bottom bar | ✅ |
 | 3 | Buildings & converters | ghosts, construction, demolish, placement, converters, recipes, fuel, output piles, storehouse | Building prefab variants, build menu, placement ghost, recipe picker, converter face (inputs/progress/fuel rack) | |
 | 4 | Logistics | gathering stone, seal, lantern links, wisps, furnace spirit | Wisp/lantern prefabs, link editor, reach circles, status dots | |
 | 5 | Progression | dragon tributes/stages/pills/scales, Altar upgrade tree, quests + milestones, reveal, region unlocks + installments | Dragon/Altar views, upgrade-tree panel, quest panel, unlock signs | |
