@@ -65,6 +65,15 @@ namespace IdleGrounds.Sim
         { if (!Muted) BatchStarted?.Invoke(area, b, item, qty); }
         internal void RaiseBatchFinished(string area, Building b, string item, int qty)
         { if (!Muted) BatchFinished?.Invoke(area, b, item, qty); }
+        // M4
+        internal void RaiseWispLaunched(string area, Wisp w)
+        { if (!Muted) WispLaunched?.Invoke(area, w); }
+        internal void RaiseWispArrived(string area, Wisp w)
+        { if (!Muted) WispArrived?.Invoke(area, w); }
+        internal void RaiseWispReturned(string area, Wisp w)
+        { if (!Muted) WispReturned?.Invoke(area, w); }
+        internal void RaiseWispDropped(string area, Wisp w)
+        { if (!Muted) WispDropped?.Invoke(area, w); }
         internal void RaiseAscendPrompt()
         { if (!Muted) AscendPromptRequested?.Invoke(); }
     }

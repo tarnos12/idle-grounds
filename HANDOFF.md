@@ -36,8 +36,12 @@ ghosts, construction, demolish, reveal), ConverterSystem + FuelSystem,
 storehouse/seal buffers, generator buildings, starter network (golden-tested
 vs the JS). Feeding hooks Altar/Dragon/Gate are unset delegates (M5).
 
-Next: M3 view (building prefabs, build menu, placement ghost, converter face,
-recipe picker) + M4 sim (logistics: gathering stone, lantern beat, wisps).
+M4 sim done (78 tests): LogisticsSystem — gathering stones, lantern beats,
+wisp flights/returns, AddLink/RemoveLink/LinkStatus/WispPos; the starter
+network now moves items.
+
+Next: M3 view (building prefabs, build menu, placement, converter face,
+recipe picker — in progress), M4 view (wisps, link editor), M5 sim.
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -51,6 +55,7 @@ recipe picker) + M4 sim (logistics: gathering stone, lantern beat, wisps).
 - M2b: GameRunner, pooled Node/GroundItem views, HandController (harvest,
   vacuum, drop latch/ramp, rotate), hand cursor, bottom bar HUD, sorting layers.
 - M3 sim: buildings, converters, fuel, starter network + 22 tests.
+- M4 sim: logistics (stones, lanterns, wisps) + 11 tests.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

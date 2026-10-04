@@ -196,6 +196,7 @@ namespace IdleGrounds.Sim.Tests
             sim.OfflineSim = true;
             var c = sim.State.Area("center");
             c.ground.Clear();   // M3: drop the starter-network seeds (§16)
+            foreach (var b in c.buildings) if (b.type == "gathering_stone") b.built = false;   // M4: keep starter stones from vacuuming the fields
             sim.Tick();
             Assert.AreEqual(1, SimTestUtil.CountGround(c, "clay"), "a zero clock fires once immediately");
             for (int i = 0; i < 400; i++) { clock.Advance(50); sim.Tick(); }
@@ -214,6 +215,7 @@ namespace IdleGrounds.Sim.Tests
             var sim2 = SimTestUtil.NewSim(out var clock2);
             sim2.OfflineSim = true;
             var c2 = sim2.State.Area("center");
+            foreach (var b in c2.buildings) if (b.type == "gathering_stone") b.built = false;
             sim2.Tick();
             c2.ground.Clear();
             clock2.Advance(1800); sim2.Tick();   // clay 300 ms ⇒ 6 events (gap capped by previous tick? first gap = 1800)

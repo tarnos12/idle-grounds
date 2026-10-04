@@ -39,12 +39,14 @@ namespace IdleGrounds.Sim
             Ctx.Fuel = new FuelSystem(Ctx);
             Ctx.Converters = new ConverterSystem(Ctx);
             Ctx.Buildings = new BuildingSystem(Ctx);
+            Ctx.Logistics = new LogisticsSystem(Ctx);
             Ctx.Hand.FeedBuilding = Ctx.Buildings.FeedBuilding;
         }
 
         public BuildingSystem Buildings => Ctx.Buildings;
         public ConverterSystem Converters => Ctx.Converters;
         public FuelSystem Fuel => Ctx.Fuel;
+        public LogisticsSystem Logistics => Ctx.Logistics;
 
         /// <summary>Boot step 2 (§2.1): initArea for every area (locked ones too).</summary>
         public void InitAllAreas()
@@ -88,8 +90,8 @@ namespace IdleGrounds.Sim
         bool TickConverters(string areaKey, double now) => Ctx.Converters.Tick(areaKey, now);
         // per building — Gathering Stone eject+vacuum §11.2 (M4), lantern beat §11.5 (M4), stoker §10.4, pavilion §12.4 (M5)
         bool TickBuildingLogistics(string areaKey, double now) => Ctx.Buildings.TickLogistics(areaKey, now);
-        // M2+: wisp flights/arrivals §11.6
-        bool TickWisps(string areaKey, double now) => false;
+        // wisp flights/arrivals §11.6
+        bool TickWisps(string areaKey, double now) => Ctx.Logistics.TickWisps(areaKey, now);
         // M2+: enemies spawn + wander §7
         bool TickEnemies(string areaKey, double now) => false;
         // M2+: dragon scales (center, after awakening) §12.2
@@ -152,5 +154,35 @@ namespace IdleGrounds.Sim
         public ItemCounts BuildingNeeds(Building b) => Ctx.Buildings.Needs(b);
 
         public bool IsBuildingUnlocked(string type) => Ctx.Buildings.IsBuildingUnlocked(type);
+
+        // ---- M4 logistics (§11) ----
+
+        /// <summary>`addLink` — wire from→to onto a lantern. Returns null when added, else the refusal reason text.</summary>
+        public string AddLink(string areaKey, int lanternId, int fromId, int toId) =>
+            Ctx.Logistics.AddLink(areaKey, lanternId, fromId, toId)?.text;
+
+        /// <summary>`linkRefusal` — why from→to could never carry anything (null = allowed). Code: source|target|self|types.</summary>
+        public LinkRefusal LinkRefusal(string areaKey, int fromId, int toId) => Ctx.Logistics.Refusal(areaKey, fromId, toId);
+
+        /// <summary>`removeLink(area, lanternId, index)`.</summary>
+        public bool RemoveLink(string areaKey, int lanternId, int index) => Ctx.Logistics.RemoveLink(areaKey, lanternId, index);
+
+        /// <summary>Status dot of link #index on a lantern (ui.js linkDot); null if no such link.</summary>
+        public LinkStatusInfo LinkStatus(string areaKey, int lanternId, int index)
+        {
+            var lb = State.Area(areaKey)?.BuildingById(lanternId);
+            if (lb?.links == null || index < 0 || index >= lb.links.Count) return null;
+            return Ctx.Logistics.Status(lb.links[index], Ctx.Now);
+        }
+
+        public bool CanBeLinkSource(Building b) => Ctx.Logistics.CanBeLinkSource(b);
+        public bool CanBeLinkTarget(Building b) => Ctx.Logistics.CanBeLinkTarget(b);
+        /// <summary>Link editor: buildings that can be picked as a source.</summary>
+        public System.Collections.Generic.List<Building> LinkSources(string areaKey) => Ctx.Logistics.ValidSources(areaKey);
+        /// <summary>Link editor: targets the source could be linked to without refusal.</summary>
+        public System.Collections.Generic.List<Building> LinkTargets(string areaKey, int fromId) => Ctx.Logistics.ValidTargets(areaKey, fromId);
+
+        /// <summary>`wispPos` — smooth wisp position at <paramref name="now"/> (frac ≥ 1 = arrived). Wisp.returning ⇒ draw red.</summary>
+        public WispPosition WispPos(string areaKey, Wisp w, double now) => Ctx.Logistics.WispPos(areaKey, w, now);
     }
 }

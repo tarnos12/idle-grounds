@@ -41,6 +41,7 @@ namespace IdleGrounds.Sim
         public FuelSystem Fuel;
         public ConverterSystem Converters;
         public BuildingSystem Buildings;
+        public LogisticsSystem Logistics;
 
         public SimContext(GameConfig cfg, GameState state, IClock clock, IRng rng)
         {
