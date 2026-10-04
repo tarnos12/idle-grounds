@@ -81,16 +81,20 @@ THE GAME IS FULLY PLAYABLE IN UNITY. TMP emoji sprite asset
 M9 parity: `docs/port/parity-audit-sim.md` (0 high/0 medium; L1+L2 fixed)
 and `parity-audit-ui.md` (all high/medium fixed; resolution table inside).
 
-OPEN DECISION for the user: the JS firestone quirk (wisp-delivered firestone
-always goes to a burner's fuel rack, so wisp-fed Ember Pill / Star Steel
-lines can't get it into stock) is kept for parity — fix it or keep it?
+DESIGN DECISIONS (grilling session 2026-10-04, see CONTEXT.md glossary +
+ADRs 0002/0003): regions become floating **Islands** at authored positions
+with sky + parallax clouds; cross-island logistics via one-way paired
+**Spirit Bridges** (wood 10 + stone 10, revealed after the 2nd island
+unlock); **offline progress removed** (world freezes when closed; Long
+Slumber → Tireless Wisps perk); wisp-delivered firestone goes to stock when
+the recipe takes it (fix the JS quirk).
 
-Next candidates: deferred UI lows (generic hover tooltips, Debug panel,
-F9), Sim query allocations (ConverterFace etc. reuse buffers), real sprite
-art to replace emoji placeholders, PlayMode smoke tests, then the old-game
-roadmap (Spirit Vault cross-region logistics, flow ledger, real balance pass
-with TEST off).
+Next: implement the above (awaiting the user's go-ahead), then deferred UI
+lows, Sim query allocations, real art, PlayMode smoke tests.
 ## Last session summary (2026-10-04, port kickoff)
+
+- Grilling session: CONTEXT.md glossary, ADR 0002 (no offline), ADR 0003
+  (floating islands + Spirit Bridges).
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
   serves "Monster Catching Game 2D" — never touch it).
