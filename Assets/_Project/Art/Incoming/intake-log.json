@@ -201,6 +201,22 @@
       "source": "Idle-Grounds-Islands-004.zip"
     },
     {
+      "path": "_notes/islands-Idle-Grounds-Islands-005-generation-prompt.txt",
+      "name": "generation-prompt.txt",
+      "size": 265,
+      "sha1": "1b7fc9a9c40f5292d764ac9c347adeb225378269",
+      "date": "2026-10-04T23:42:44.865Z",
+      "source": "Idle-Grounds-Islands-005.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-005-README.md",
+      "name": "README.md",
+      "size": 1316,
+      "sha1": "ca0485970bccc55d877853b03aec42dcecd3742c",
+      "date": "2026-10-04T23:42:44.868Z",
+      "source": "Idle-Grounds-Islands-005.zip"
+    },
+    {
       "path": "_notes/items-Idle-Grounds-Items-001-README.md",
       "name": "README.md",
       "size": 846,
@@ -387,18 +403,22 @@
     {
       "path": "islands/island_center_ground_blob_32x32_47f.png",
       "name": "island_center_ground_blob_32x32_47f.png",
-      "size": 4840,
-      "sha1": "7a62c1c199407ada5743c7d19923c90a4dd5c511",
-      "date": "2026-10-04T19:49:21.641Z",
-      "source": "Idle-Grounds-Islands-003.zip"
+      "size": 3303,
+      "sha1": "db871c535cba2a8e7ff405f7983e611778a3735d",
+      "date": "2026-10-04T23:42:44.866Z",
+      "source": "Idle-Grounds-Islands-005.zip",
+      "pinned": "v3 (Islands-003) — v4 rejected 2026-10-05",
+      "rejected": [
+        "db871c535cba"
+      ]
     },
     {
       "path": "islands/island_center_ground_fill_32x32_3f.png",
       "name": "island_center_ground_fill_32x32_3f.png",
-      "size": 411,
-      "sha1": "76492364076a44683698b73d4a0f9912639f3416",
-      "date": "2026-10-04T22:50:29.569Z",
-      "source": "Idle-Grounds-Islands-004.zip"
+      "size": 438,
+      "sha1": "5fcdfbdc355b5d8823feb62bc094e94a7e2e3bde",
+      "date": "2026-10-04T23:42:44.867Z",
+      "source": "Idle-Grounds-Islands-005.zip"
     },
     {
       "path": "items/item_brick.png",
