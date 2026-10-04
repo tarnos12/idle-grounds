@@ -38,6 +38,7 @@ namespace IdleGrounds.Game
                 lastItem = item;
                 if (item != null) ViewKit.Fit(itemIcon, v.Sync.Sprites.Item(item), 26f);
                 else ViewKit.Fit(itemIcon, v.Sync.Sprites.Building(b.type), 24f);
+                ViewKit.Show(itemIcon, item != null || !v.RealArt);
             }
             int cap = v.Sync.Sim.Buildings.StorehouseCap();
             string name = item != null ? (v.Sync.Sim.Config.Item(item)?.name ?? item) : null;

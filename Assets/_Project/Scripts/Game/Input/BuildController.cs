@@ -286,7 +286,7 @@ namespace IdleGrounds.Game
             bool nearBottom = row + def.sizeH >= runner.Space.Cells - 1;
             preview.Show(runner.Space.PxToWorld(area, col * cell, row * cell), def.sizeW, def.sizeH,
                 buildings != null && buildings.Sprites != null ? buildings.Sprites.Building(Placing) : runner.Database.BuildingIcon(Placing),
-                reason, def.fuel, reach, rgb, nearBottom);
+                reason, def.fuel, reach, rgb, nearBottom, runner.Database.BuildingArt(Placing));
         }
 
         (bool, bool, bool, bool) HighlightFor(BuildingView v)

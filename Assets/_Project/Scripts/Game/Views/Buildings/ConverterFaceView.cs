@@ -25,6 +25,7 @@ namespace IdleGrounds.Game
         [SerializeField] SpriteRenderer progressTrack;
         [SerializeField] SpriteRenderer progressFill;
 
+        SpriteRenderer backing;
         readonly List<IconCount> inputs = new List<IconCount>();
         int lastRecipe = -2;
         float barX0, barW, barY, barH;
@@ -36,6 +37,24 @@ namespace IdleGrounds.Game
         public override void Layout(BuildingView v)
         {
             float wU = v.W;
+            // delivered art is the body: the face overlays the footprint on a translucent dark backing so it stays legible
+            if (v.RealArt)
+            {
+                if (backing == null)
+                {
+                    var go = new GameObject("Backing");
+                    go.transform.SetParent(transform, false);
+                    backing = go.AddComponent<SpriteRenderer>();
+                    backing.sprite = progressTrack.sprite;      // 1-unit square
+                    backing.sortingLayerID = progressTrack.sortingLayerID;
+                    backing.sortingOrder = progressTrack.sortingOrder - 2;
+                    backing.color = new Color(0.04f, 0.05f, 0.07f, 0.55f);
+                }
+                backing.gameObject.SetActive(true);
+                backing.transform.localPosition = v.L(0.5f, 0.6f);
+                backing.transform.localScale = new Vector3(wU - ViewKit.U(4f), v.H * 0.8f, 1f);
+            }
+            else if (backing != null) backing.gameObject.SetActive(false);
             // name row (emoji + muted name 9.5 px), y + 8 px
             var nameY = -ViewKit.U(8f);
             ViewKit.Fit(nameIcon, v.Sync.Sprites.Building(v.Building.type), 11f);

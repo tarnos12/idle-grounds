@@ -57,6 +57,7 @@ namespace IdleGrounds.Editor
                 var a = Get<BuildingAsset>(Root + "Buildings/Building_" + d.key + ".asset");
                 // TODO(ADR 0003): spirit_bridge has no atlas emoji yet — the Wisp Lantern icon stands in
                 a.def = d; a.icon = Atlas("bld_" + d.key) ?? (d.key == "spirit_bridge" ? Atlas("bld_wisp_lantern") : null);
+                a.hasRealArt = false;   // ArtIntake re-flags delivered art
                 Dirty(a); db.buildings.Add(a);
             }
             db.regions.Clear();

@@ -24,6 +24,7 @@ namespace IdleGrounds.Game
         {
             ViewKit.Fit(icon, v.Sync.Sprites.Building(v.Building.type), 56f);
             icon.transform.localPosition = v.L(0.5f, 0.38f);
+            ViewKit.Show(icon, !v.RealArt);
             title.text = v.Def.name; ViewKit.Font(title, 24f); title.color = UiPalette.Gold;
             title.transform.localPosition = v.L(0.5f, 0.68f);
             title.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(28f));

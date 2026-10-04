@@ -39,7 +39,8 @@ namespace IdleGrounds.Game
             foreach (var a in accepts) if (a != null) ViewKit.Show(a, false);
             badge.transform.localPosition = new Vector3(0.5f, -1f - ViewKit.U(8f), 0f);
             ViewKit.Font(badge, 9f);
-            if (itemIcon != null) itemIcon.transform.localPosition = new Vector3(0.5f, ViewKit.U(8f), 0f);
+            ViewKit.Show(icon, !v.RealArt);     // delivered art is the body
+            if (itemIcon != null) itemIcon.transform.localPosition = new Vector3(0.5f, v.ArtTop + ViewKit.U(8f), 0f);
             if (badgeIcon != null) ViewKit.Fit(badgeIcon, badgeIcon.sprite, 10f);
             if (beatTrack != null)
             {

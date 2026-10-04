@@ -204,7 +204,7 @@ namespace IdleGrounds.Editor
                 if (a && Set(map, "item_" + a.def.key, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
 
             foreach (var a in db.buildings)
-                if (a && Set(map, "bld_" + a.def.key, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
+                if (a && Set(map, "bld_" + a.def.key, used, s => { if (a.icon == s && a.hasRealArt) return false; a.icon = s; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
 
             // building variants: longest building key that prefixes "bld_<key>_<variant>"
             foreach (var kv in map)

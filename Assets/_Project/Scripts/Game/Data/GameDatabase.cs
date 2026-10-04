@@ -57,6 +57,8 @@ namespace IdleGrounds.Game.Data
 
         public Sprite ItemIcon(string itemKey) => Or(FindItem(itemKey)?.icon);
         public Sprite BuildingIcon(string key) => Or(FindBuilding(key)?.icon);
+        /// <summary>Delivered body art for the building, or null when it only has the placeholder emoji.</summary>
+        public Sprite BuildingArt(string key) { var a = FindBuilding(key); return a != null && a.hasRealArt ? a.icon : null; }
         public Sprite RegionIcon(string regionKey) => Or(FindRegion(regionKey)?.icon);
         public Sprite RegionActionIcon(string regionKey) => Or(FindRegion(regionKey)?.actionIcon);
         public Sprite NodeSprite(string regionKey, string kind) => Or(FindRegion(regionKey)?.Find("node_" + kind));

@@ -181,7 +181,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 6065264086720830155}
   m_maskType: 0
---- !u!1 &453533632675061971
+--- !u!1 &602872040291239208
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -189,8 +189,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4809994254580248262}
-  - component: {fileID: 2254228541787359080}
+  - component: {fileID: 866064896399618473}
+  - component: {fileID: 2326671273100645462}
   m_Layer: 0
   m_Name: Icon
   m_TagString: Untagged
@@ -198,29 +198,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4809994254580248262
+--- !u!4 &866064896399618473
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 453533632675061971}
+  m_GameObject: {fileID: 602872040291239208}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 858411606227443685}
+  m_Father: {fileID: 3082214188356962550}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &2254228541787359080
+--- !u!212 &2326671273100645462
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 453533632675061971}
+  m_GameObject: {fileID: 602872040291239208}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -272,55 +272,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
---- !u!1 &1516613026758938938
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7721395271544144157}
-  - component: {fileID: 1081041795977579154}
-  m_Layer: 0
-  m_Name: Template
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &7721395271544144157
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1516613026758938938}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 2355639720321526726}
-  - {fileID: 2740442907817274574}
-  m_Father: {fileID: 775594167215925658}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1081041795977579154
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1516613026758938938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6eaf9603f6ea56b429ca07977135ea0c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.IconCount
-  icon: {fileID: 7897135972091677861}
-  a: {fileID: 742367373576912682}
-  b: {fileID: 0}
 --- !u!1 &2581607627904917436
 GameObject:
   m_ObjectHideFlags: 0
@@ -351,7 +302,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4809994254580248262}
+  - {fileID: 5173244681986453756}
   - {fileID: 6103594032562204040}
   - {fileID: 4015694574361684710}
   - {fileID: 775594167215925658}
@@ -369,7 +320,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a66ec071999e6a347a1cdfcb0ab60043, type: 3}
   m_Name: 
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.AltarFaceView
-  icon: {fileID: 2254228541787359080}
+  icon: {fileID: 7201038147637116282}
   title: {fileID: 5421436971005745393}
   sub: {fileID: 146717784178866225}
   jobRow: {fileID: 7651908004555329677}
@@ -403,7 +354,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7721395271544144157}
+  - {fileID: 3082214188356962550}
   m_Father: {fileID: 858411606227443685}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7651908004555329677
@@ -418,8 +369,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9fbb7cfe530ce34d91ead5cc8607663, type: 3}
   m_Name: 
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.IconRow
-  template: {fileID: 1081041795977579154}
---- !u!1 &4657311058890148594
+  template: {fileID: 4058689673513085452}
+--- !u!1 &4422957496815232660
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -427,9 +378,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2740442907817274574}
-  - component: {fileID: 5755669936285490843}
-  - component: {fileID: 742367373576912682}
+  - component: {fileID: 4111050899526526928}
+  - component: {fileID: 3929255995269899200}
+  - component: {fileID: 2874848026884164231}
   m_Layer: 0
   m_Name: A
   m_TagString: Untagged
@@ -437,32 +388,32 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &2740442907817274574
+--- !u!224 &4111050899526526928
 RectTransform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4657311058890148594}
+  m_GameObject: {fileID: 4422957496815232660}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7721395271544144157}
+  m_Father: {fileID: 3082214188356962550}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1, y: 0.4375}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!23 &5755669936285490843
+--- !u!23 &3929255995269899200
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4657311058890148594}
+  m_GameObject: {fileID: 4422957496815232660}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -505,13 +456,13 @@ MeshRenderer:
   m_SortingOrder: 5
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &742367373576912682
+--- !u!114 &2874848026884164231
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4657311058890148594}
+  m_GameObject: {fileID: 4422957496815232660}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9541d86e2fd84c1d9990edf0852d74ab, type: 3}
@@ -598,7 +549,7 @@ MonoBehaviour:
   _SortingLayerID: 0
   _SortingOrder: 0
   m_hasFontAssetChanged: 0
-  m_renderer: {fileID: 5755669936285490843}
+  m_renderer: {fileID: 3929255995269899200}
   m_maskType: 0
 --- !u!1 &5279022160972249806
 GameObject:
@@ -781,7 +732,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 2883026150877524678}
   m_maskType: 0
---- !u!1 &8659067825118514110
+--- !u!1 &5293966670919835211
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -789,8 +740,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2355639720321526726}
-  - component: {fileID: 7897135972091677861}
+  - component: {fileID: 5173244681986453756}
+  - component: {fileID: 7201038147637116282}
   m_Layer: 0
   m_Name: Icon
   m_TagString: Untagged
@@ -798,29 +749,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2355639720321526726
+--- !u!4 &5173244681986453756
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8659067825118514110}
+  m_GameObject: {fileID: 5293966670919835211}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7721395271544144157}
+  m_Father: {fileID: 858411606227443685}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &7897135972091677861
+--- !u!212 &7201038147637116282
 SpriteRenderer:
   serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8659067825118514110}
+  m_GameObject: {fileID: 5293966670919835211}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -872,6 +823,55 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
+--- !u!1 &8994772177851218453
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3082214188356962550}
+  - component: {fileID: 4058689673513085452}
+  m_Layer: 0
+  m_Name: Template
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &3082214188356962550
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8994772177851218453}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 866064896399618473}
+  - {fileID: 4111050899526526928}
+  m_Father: {fileID: 775594167215925658}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4058689673513085452
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8994772177851218453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eaf9603f6ea56b429ca07977135ea0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.IconCount
+  icon: {fileID: 2326671273100645462}
+  a: {fileID: 2874848026884164231}
+  b: {fileID: 0}
 --- !u!1001 &2017814617966462896
 PrefabInstance:
   m_ObjectHideFlags: 0

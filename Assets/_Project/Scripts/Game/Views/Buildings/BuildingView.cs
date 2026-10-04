@@ -40,6 +40,12 @@ namespace IdleGrounds.Game
         public bool DemolishHover { get; private set; }
         /// <summary>Reach circle forced on (link editor open: every stone of the region shows its circle).</summary>
         public bool ReachForced { get; private set; }
+        /// <summary>Delivered pixel art is drawn as the body (grey panel + small icon hidden).</summary>
+        public bool RealArt { get; private set; }
+        /// <summary>World size of the body art (units; 1 unit = 1 cell at PPU 32) and how far it rises above the footprint top.</summary>
+        public Vector2 ArtSize { get; private set; }
+        public float ArtTop { get; private set; }
+        SpriteRenderer art;
         internal int seenFrame;
         internal GameObject sourcePrefab;
 
@@ -71,8 +77,36 @@ namespace IdleGrounds.Game
             panel.drawMode = SpriteDrawMode.Simple;
             panel.transform.localPosition = new Vector3(W * 0.5f, -H * 0.5f, 0f);
             panel.transform.localScale = new Vector3(W, H, 1f);
-            highlight.transform.localPosition = new Vector3(-ViewKit.U(3f), ViewKit.U(3f), 0f);
-            highlight.Set(W + ViewKit.U(6f), H + ViewKit.U(6f), ViewKit.U(2f), Color.white, false);
+
+            var artSprite = sync.Sprites.BuildingArt(b.type);
+            RealArt = artSprite != null;
+            if (RealArt)
+            {
+                if (art == null)
+                {
+                    var go = new GameObject("Art");
+                    go.transform.SetParent(transform, false);
+                    art = go.AddComponent<SpriteRenderer>();
+                    art.sortingLayerID = panel.sortingLayerID;
+                    art.sortingOrder = panel.sortingOrder + 1;
+                }
+                art.sprite = artSprite;
+                float k = artSprite.pixelsPerUnit / ViewKit.Cell;      // native pixels: PPU 32 = 1 unit per cell
+                art.transform.localScale = new Vector3(k, k, 1f);
+                art.transform.localPosition = new Vector3(W * 0.5f, -H, 0f);   // bottom-centre pivot on the footprint's bottom edge
+                ArtSize = new Vector2(artSprite.bounds.size.x * k, artSprite.bounds.size.y * k);
+                ArtTop = Mathf.Max(0f, ArtSize.y - H);
+                float pad = ViewKit.U(2f);
+                highlight.transform.localPosition = new Vector3(W * 0.5f - ArtSize.x * 0.5f - pad, -H + ArtSize.y + pad, 0f);
+                highlight.Set(ArtSize.x + 2f * pad, ArtSize.y + 2f * pad, ViewKit.U(2f), Color.white, false);
+            }
+            else
+            {
+                ArtSize = Vector2.zero; ArtTop = 0f;
+                highlight.transform.localPosition = new Vector3(-ViewKit.U(3f), ViewKit.U(3f), 0f);
+                highlight.Set(W + ViewKit.U(6f), H + ViewKit.U(6f), ViewKit.U(2f), Color.white, false);
+            }
+            if (art != null) ViewKit.Show(art, RealArt);
             ViewKit.Show(highlight, false);
 
             var sprite = sync.Sprites.Building(b.type);
@@ -83,7 +117,8 @@ namespace IdleGrounds.Game
             nameText.text = def != null ? def.name : b.type;
             nameText.rectTransform.sizeDelta = new Vector2(W - ViewKit.U(4f), ViewKit.U(14f));
             nameText.transform.localPosition = L(0.5f, 0.66f);
-            needsRow.transform.localPosition = L(0.5f, small ? 1.4f : 0.86f);
+            // real art covers the footprint: the ghost's remaining-cost line sits just below it
+            needsRow.transform.localPosition = RealArt ? new Vector3(W * 0.5f, -H - ViewKit.U(9f), 0f) : L(0.5f, small ? 1.4f : 0.86f);
             needsRow.Clear();
 
             foreach (var f in faces) f.Layout(this);
@@ -113,8 +148,11 @@ namespace IdleGrounds.Game
                 border.transform.localPosition = Vector3.zero;
                 border.Set(W, H, BorderUnits, b.built ? builtBorder : GhostBorder, !b.built);
                 bool showDefault = !b.built || !replaces;
-                ViewKit.Show(icon, showDefault);
-                ViewKit.Show(nameText, showDefault && !(W <= 1 && H <= 1));
+                ViewKit.Show(panel, !RealArt);
+                ViewKit.Show(border, !RealArt || !b.built);       // real art: only the ghost keeps its dashed footprint outline
+                if (RealArt) { var ac = art.color; ac.a = b.built ? 1f : 0.5f; art.color = ac; }
+                ViewKit.Show(icon, showDefault && !RealArt);
+                ViewKit.Show(nameText, showDefault && !RealArt && !(W <= 1 && H <= 1));
                 var ic = icon.color; ic.a = b.built ? 1f : 0.7f; icon.color = ic;
                 ViewKit.Show(needsRow, !b.built);
                 foreach (var f in faces) ViewKit.Show(f.gameObject, b.built);

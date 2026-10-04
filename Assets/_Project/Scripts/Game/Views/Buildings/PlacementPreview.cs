@@ -29,7 +29,7 @@ namespace IdleGrounds.Game
         public bool Valid => Reason == null;
 
         /// <summary>Show the preview: world top-left of the footprint, size in cells, reason (null = ok).</summary>
-        public void Show(Vector3 topLeft, int w, int h, Sprite iconSprite, string reason, bool burner, float reachCells, Color reachRgb, bool nearBottom)
+        public void Show(Vector3 topLeft, int w, int h, Sprite iconSprite, string reason, bool burner, float reachCells, Color reachRgb, bool nearBottom, Sprite art = null)
         {
             gameObject.SetActive(true);
             Reason = reason;
@@ -43,6 +43,7 @@ namespace IdleGrounds.Game
             ViewKit.Fit(icon, iconSprite, w <= 1 && h <= 1 ? 20f : 24f);
             icon.transform.localPosition = new Vector3(w * 0.5f, -h * (w <= 1 && h <= 1 ? 0.5f : 0.38f), 0f);
             var ic = icon.color; ic.a = 0.7f; icon.color = ic;
+            ShowArt(art, w, h, ok);
 
             ViewKit.Show(rackFill, burner);
             ViewKit.Show(rackFrame, burner);
@@ -77,6 +78,29 @@ namespace IdleGrounds.Game
                 pill.size = new Vector2(tw, ph);
                 reasonText.transform.localPosition = new Vector3(w * 0.5f, y, 0f);
             }
+        }
+
+        SpriteRenderer artSr;
+
+        /// <summary>Delivered body art: drawn semi-transparent (red-tinted when blocked) bottom-aligned on the footprint; replaces the small icon.</summary>
+        void ShowArt(Sprite art, int w, int h, bool ok)
+        {
+            if (art != null && artSr == null)
+            {
+                var go = new GameObject("Art");
+                go.transform.SetParent(transform, false);
+                artSr = go.AddComponent<SpriteRenderer>();
+                artSr.sortingLayerID = icon.sortingLayerID;
+                artSr.sortingOrder = icon.sortingOrder - 1;
+            }
+            if (artSr != null) ViewKit.Show(artSr, art != null);
+            ViewKit.Show(icon, art == null);
+            if (art == null) return;
+            artSr.sprite = art;
+            float k = art.pixelsPerUnit / ViewKit.Cell;
+            artSr.transform.localScale = new Vector3(k, k, 1f);
+            artSr.transform.localPosition = new Vector3(w * 0.5f, -h, 0f);
+            artSr.color = ok ? new Color(1f, 1f, 1f, 0.6f) : new Color(1f, 0.6f, 0.6f, 0.6f);
         }
 
         public void Hide() { if (gameObject.activeSelf) gameObject.SetActive(false); Reason = null; }

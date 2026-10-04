@@ -24,6 +24,7 @@ namespace IdleGrounds.Game
             lastDisc = -1; lastCap = -1; nextStatusAt = 0f; st = null;
             ViewKit.Fit(icon, v.Sync.Sprites.Building(v.Building.type), 24f);
             icon.transform.localPosition = v.L(0.5f, 0.28f);
+            ViewKit.Show(icon, !v.RealArt);
             ViewKit.Fit(discipleIcon, discipleIcon.sprite, 12f);
             discipleIcon.transform.localPosition = v.L(0.5f, 0.5f) - new Vector3(ViewKit.U(14f), 0f, 0f);
             disciples.transform.localPosition = v.L(0.5f, 0.5f) + new Vector3(ViewKit.U(6f), 0f, 0f);
