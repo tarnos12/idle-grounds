@@ -1,0 +1,7 @@
+Built-in image generation was used separately for each asset.
+
+fix_spirittree.png: Large sacred Spirit Tree for a xianxia game. Ancient gnarled trunk and exposed roots, cinnabar prayer ribbons, pale paper charms, broad layered jade canopy, gold-green highlights, and restrained gold qi motes. Crisp chunky top-down three-quarter pixel art; upper-left light; selective outlines; transparent background. Exact logical canvas 160×192, trunk base within the central 128×128 footprint, canopy allowed 16 px left/right and 64 px above, bottom-center pivot.
+
+fix_quarry.png: Large grey quarry boulder face with clear chisel marks, a small leaning pickaxe, pale stone chips at the foot, and one subtle jade glint. Crisp chunky top-down three-quarter pixel art; upper-left light; selective outlines; transparent background. Exact logical canvas 64×80 for a 2×2 footprint, bottom-center pivot.
+
+Shared constraints: use only the exact 32-color ART-SPEC palette; binary alpha; no cast shadow, scenery, ground tile, text, people, smooth gradients, blur, anti-aliasing, or off-palette colors. Post-processing used nearest-neighbor resize, no-dither palette remap, 50% alpha threshold, and bottom alignment.

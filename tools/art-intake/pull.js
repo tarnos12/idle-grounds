@@ -35,7 +35,7 @@ function importFile(file, category, source) {
   const base = path.basename(file);
   const hash = sha1(file), size = fs.statSync(file).size;
   let rel, destPath;
-  const isPreview = /^preview/i.test(base); // contact sheets for review, not game sprites
+  const isPreview = /preview/i.test(base); // contact sheets for review, not game sprites
   if (ART_EXT.has(ext) && !isPreview) { rel = category + '/' + base; }
   else if (NOTE_EXT.has(ext) || (ART_EXT.has(ext) && isPreview)) { rel = '_notes/' + category + '-' + source.replace(/\.zip$/i, '') + '-' + base; }
   else { stats.ignored++; console.log('  ignored (unsupported type): ' + base); return; }
