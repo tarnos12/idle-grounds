@@ -22,6 +22,13 @@ namespace IdleGrounds.Game
         public bool unlocked;
         public Tilemap tilemap;
         public GameObject veil;
+        [Tooltip("Visual-only coastline (ADR 0003): ground blob tiles painted around AND under the square play area. Authored scene data - the generator never overwrites it once painted.")]
+        public Tilemap coast;
+        [Tooltip("Seed of the last procedural coast roll (0 = derive from the key). 'Regenerate Island Coasts' re-rolls it.")]
+        public int coastSeed;
+
+        /// <summary>Cells the painted landmass (coast + satellite islets) may extend beyond the square play area.</summary>
+        public const float VisualMargin = 18f;
 
         public Vector3 Origin => transform.position;
 
@@ -36,6 +43,12 @@ namespace IdleGrounds.Game
         public Rect WorldRect
         {
             get { var o = Origin; return new Rect(o.x, o.y - Cells, Cells, Cells); }
+        }
+
+        /// <summary>World rect of the whole painted landmass incl. the coast margin (camera bounds).</summary>
+        public Rect VisualRect
+        {
+            get { var r = WorldRect; return Rect.MinMaxRect(r.xMin - VisualMargin, r.yMin - VisualMargin - 2f, r.xMax + VisualMargin, r.yMax + VisualMargin); }
         }
 
         public Vector2 Centre => new Vector2(Origin.x + Cells * 0.5f, Origin.y - Cells * 0.5f);

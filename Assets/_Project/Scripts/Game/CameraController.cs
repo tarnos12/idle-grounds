@@ -76,7 +76,7 @@ namespace IdleGrounds.Game
                                            Mathf.Max(box.xMax, wr.xMax), Mathf.Max(box.yMax, wr.yMax));
             }
             foreach (var r in FindObjectsByType<Island>(FindObjectsSortMode.None))
-                if (r.unlocked) Add(r.WorldRect);
+                if (r.unlocked) Add(r.VisualRect);
             foreach (var r in extraBounds) Add(r);
             if (any) SetUnlockedBounds(box); else hasBounds = false;
         }

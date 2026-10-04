@@ -46,7 +46,14 @@ namespace IdleGrounds.Editor
 
         public static string GroundPath(string key) => $"{IslandDir}/island_{key}_ground_32x32_19f.png";
         public static string CliffPath(string key) => $"{IslandDir}/island_{key}_cliff_32x32_8f.png";
+        /// <summary>ART-SPEC 3.0: 47-frame blob coastline sheet per biome (1504x32 strip).</summary>
+        public static string BlobPath(string key) => $"{IslandDir}/island_{key}_ground_blob_32x32_47f.png";
+        /// <summary>Playable-area fill Rule Tile (random centre variants only; the coast blob tile draws the edges).</summary>
         public static string GroundTilePath(string key) => $"{TileDir}/RuleTile_{key}_ground.asset";
+        /// <summary>47-blob Rule Tile painted on each Island's Coast tilemap.</summary>
+        public static string CoastTilePath(string key) => $"{TileDir}/RuleTile_{key}_coast.asset";
+        public const string BoundaryWall = IslandDir + "/island_boundary_wall_32x32.png";     // placeholder-only (no spec row)
+        public const string MaskDir = IslandDir + "/Masks";
         public static string CliffTilePath(string key) => $"{TileDir}/RuleTile_{key}_cliff.asset";
 
         public const string UndersideRock = IslandDir + "/island_underside_rock_256x192.png";
@@ -97,11 +104,14 @@ namespace IdleGrounds.Editor
             Directory.CreateDirectory(SkyDir);
             Directory.CreateDirectory(BridgeDir);
             Directory.CreateDirectory(TileDir);
+            Directory.CreateDirectory(MaskDir);
             foreach (var (key, ground, rock) in Biomes)
             {
                 Make(GroundPath(key), force, () => GroundStrip(Hex(ground), key.GetHashCode()), 19, 32, Pivot.Center, true, false);
+                Make(BlobPath(key), force, () => BlobStrip(Hex(ground), key.GetHashCode()), 47, 32, Pivot.Center, true, false);
                 Make(CliffPath(key), force, () => CliffStrip(Hex(ground), Hex(rock), key.GetHashCode()), 8, 32, Pivot.Center, true, false);
             }
+            Make(BoundaryWall, force, BoundaryWall_, 1, 32, Pivot.Center, true, true);
             Make(UndersideRock, force, () => Underside(256, 192, 1, 0.85f), 1, 256, Pivot.TopCenter, true, false);
             Make(UndersideRoots, force, Roots, 1, 192, Pivot.TopCenter, true, false);
             Make(UndersideStalactite, force, () => Underside(96, 160, 7, 0.55f), 1, 96, Pivot.TopCenter, true, false);
@@ -204,28 +214,37 @@ namespace IdleGrounds.Editor
             foreach (var (key, _, _) in Biomes)
             {
                 var g = Frames(GroundPath(key));
-                if (g.Length >= 15)
+                if (g.Length >= 3)
                 {
-                    var tile = LoadOrCreate(GroundTilePath(key));
-                    tile.m_DefaultSprite = g[0];
-                    tile.m_DefaultColliderType = Tile.ColliderType.None;
-                    var rules = tile.m_TilingRules;
+                    // playable-area fill: centre variants only (the coast blob underneath draws every edge)
+                    var fill = LoadOrCreate(GroundTilePath(key));
+                    fill.m_DefaultSprite = g[0];
+                    fill.m_DefaultColliderType = Tile.ColliderType.None;
+                    fill.m_TilingRules.Clear();
+                    fill.m_TilingRules.Add(Rule(new[] { g[0], g[1], g[2] }, O, O, O, O, O, O, O, O));
+                    EditorUtility.SetDirty(fill);
+
+                    // 47-blob coast tile: one exact rule per reduced neighbour mask (corner bits are don't-care
+                    // unless both adjacent edges are ground); the all-ground mask uses the random fill variants
+                    var b = Frames(BlobPath(key));
+                    var coast = LoadOrCreate(CoastTilePath(key));
+                    coast.m_DefaultSprite = g[0];
+                    coast.m_DefaultColliderType = Tile.ColliderType.None;
+                    var rules = coast.m_TilingRules;
                     rules.Clear();
-                    // outer corners (two sides open), then edges, then inner corners, then random fill
-                    rules.Add(Rule(new[] { g[7] }, O, N, O, N, O, O, O, O));      // NW
-                    rules.Add(Rule(new[] { g[8] }, O, N, O, O, N, O, O, O));      // NE
-                    rules.Add(Rule(new[] { g[9] }, O, O, O, O, N, O, N, O));      // SE
-                    rules.Add(Rule(new[] { g[10] }, O, O, O, N, O, O, N, O));     // SW
-                    rules.Add(Rule(new[] { g[3] }, O, N, O, O, O, O, O, O));      // N
-                    rules.Add(Rule(new[] { g[4] }, O, O, O, O, N, O, O, O));      // E
-                    rules.Add(Rule(new[] { g[5] }, O, O, O, O, O, O, N, O));      // S
-                    rules.Add(Rule(new[] { g[6] }, O, O, O, N, O, O, O, O));      // W
-                    rules.Add(Rule(new[] { g[11] }, N, T, O, T, T, O, T, O));     // inner NW
-                    rules.Add(Rule(new[] { g[12] }, O, T, N, T, T, O, T, O));     // inner NE
-                    rules.Add(Rule(new[] { g[13] }, O, T, O, T, T, O, T, N));     // inner SE
-                    rules.Add(Rule(new[] { g[14] }, O, T, O, T, T, N, T, O));     // inner SW
-                    rules.Add(Rule(new[] { g[0], g[1], g[2] }, O, O, O, O, O, O, O, O));
-                    EditorUtility.SetDirty(tile);
+                    var masks = BlobMasks();
+                    if (b.Length >= masks.Length)
+                        for (int i = 0; i < masks.Length; i++)
+                        {
+                            int m = masks[i];
+                            bool Has(int bit) => (m & bit) != 0;
+                            int Edge(int bit) => Has(bit) ? T : N;
+                            int Corner(int bit, int e1, int e2) => Has(e1) && Has(e2) ? (Has(bit) ? T : N) : O;
+                            // order: NW, N, NE, W, E, SW, S, SE
+                            var sprites = m == 255 ? new[] { g[0], g[1], g[2] } : new[] { b[i] };
+                            rules.Add(Rule(sprites, Corner(128, 1, 64), Edge(1), Corner(2, 1, 4), Edge(64), Edge(4), Corner(32, 16, 64), Edge(16), Corner(8, 16, 4)));
+                        }
+                    EditorUtility.SetDirty(coast);
                 }
                 var c = Frames(CliffPath(key));
                 if (c.Length >= 8)
@@ -235,8 +254,13 @@ namespace IdleGrounds.Editor
                     tile.m_DefaultColliderType = Tile.ColliderType.None;
                     var rules = tile.m_TilingRules;
                     rules.Clear();
-                    rules.Add(Rule(new[] { c[3] }, O, O, O, N, O, O, O, O));      // left end (under the SW corner)
-                    rules.Add(Rule(new[] { c[4] }, O, O, O, O, N, O, O, O));      // right end (under the SE corner)
+                    // Cliff cells hang under every south-facing edge of the landmass; staircases give single cells
+                    // with a higher neighbour diagonally (NW / NE). Order matters: first match wins.
+                    rules.Add(Rule(new[] { c[0], c[1], c[2] }, N, O, N, N, N, O, O, O));      // lone cell
+                    rules.Add(Rule(new[] { c[3] }, N, O, O, N, O, O, O, O));                  // left end (under the SW corner)
+                    rules.Add(Rule(new[] { c[4] }, O, O, N, O, N, O, O, O));                  // right end (under the SE corner)
+                    rules.Add(Rule(new[] { c[5] }, T, O, O, N, O, O, O, O));                  // inner left: steps down from a higher cliff
+                    rules.Add(Rule(new[] { c[6] }, O, O, T, O, N, O, O, O));                  // inner right
                     rules.Add(Rule(new[] { c[0], c[1], c[2], c[0], c[1], c[2], c[7] }, O, O, O, O, O, O, O, O));   // mid, rare waterfall spout
                     EditorUtility.SetDirty(tile);
                 }
@@ -306,6 +330,107 @@ namespace IdleGrounds.Editor
         static readonly float[] Bayer4 = { 0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5 };
         static float Dither(int x, int y) => (Bayer4[(y & 3) * 4 + (x & 3)] + 0.5f) / 16f;
 
+        // ------------------------------------------------------------------ 47-blob ground sheet (ART-SPEC 3.0)
+
+        /// <summary>
+        /// Neighbour bits of the 47-blob layout: N=1, NE=2, E=4, SE=8, S=16, SW=32, W=64, NW=128 (1 = ground there).
+        /// A corner bit only counts when both adjacent edges are set. The 47 valid masks, in ASCENDING order, are
+        /// the frame order of <c>island_&lt;biome&gt;_ground_blob_32x32_47f.png</c> (frame 0 = isolated cell, frame 46 = all
+        /// eight neighbours).
+        /// </summary>
+        public static int[] BlobMasks()
+        {
+            var list = new List<int>();
+            for (int m = 0; m < 256; m++)
+            {
+                bool n = (m & 1) != 0, e = (m & 4) != 0, s = (m & 16) != 0, w = (m & 64) != 0;
+                if ((m & 2) != 0 && !(n && e)) continue;
+                if ((m & 8) != 0 && !(s && e)) continue;
+                if ((m & 32) != 0 && !(s && w)) continue;
+                if ((m & 128) != 0 && !(n && w)) continue;
+                list.Add(m);
+            }
+            return list.ToArray();
+        }
+
+        /// <summary>Is the pixel (float coords, y up, may lie outside the tile) ground in blob frame <paramref name="m"/>?</summary>
+        static bool BlobInside(int m, float px, float py)
+        {
+            const float e = 4f, R = 12f, S = 32f;           // coast inset on N/E/W edges (the S edge runs to the cliff rim), corner radius
+            bool mN = (m & 1) == 0, mE = (m & 4) == 0, mS = (m & 16) == 0, mW = (m & 64) == 0;
+            if (mW && px < e) return false;
+            if (mE && px > S - e) return false;
+            if (mN && py > S - e) return false;
+            if (mS && py < 0f) return false;
+            bool Out(float cx, float cy, bool right, bool top)
+            {
+                if ((right ? px > cx : px < cx) && (top ? py > cy : py < cy)) { float dx = px - cx, dy = py - cy; return dx * dx + dy * dy > R * R; }
+                return false;
+            }
+            if (mN && mE && Out(S - e - R, S - e - R, true, true)) return false;
+            if (mN && mW && Out(e + R, S - e - R, false, true)) return false;
+            if (mS && mE && Out(S - e - R, R, true, false)) return false;
+            if (mS && mW && Out(e + R, R, false, false)) return false;
+            // soft inner corners (north side only: the cliff rim fills the south diagonals)
+            if (!mN && !mE && (m & 2) == 0 && (px - S) * (px - S) + (py - S) * (py - S) < e * e) return false;
+            if (!mN && !mW && (m & 128) == 0 && px * px + (py - S) * (py - S) < e * e) return false;
+            return true;
+        }
+
+        static Texture2D BlobStrip(Color baseC, int seed)
+        {
+            const int S = 32;
+            var masks = BlobMasks();
+            var t = NewTex(S * masks.Length, S);
+            Color lip = Shade(baseC, 1.45f), outline = Shade(baseC, 0.5f), dark = Shade(baseC, 0.72f), grid = Color.Lerp(baseC, Color.white, 0.05f);
+            for (int f = 0; f < masks.Length; f++)
+            {
+                int m = masks[f];
+                for (int y = 0; y < S; y++)
+                    for (int x = 0; x < S; x++)
+                    {
+                        if (!BlobInside(m, x + 0.5f, y + 0.5f)) continue;
+                        float n = (Hash(x, y, seed + (f % 3)) - 0.5f) * 0.08f;
+                        var c = Shade(baseC, 1f + n);
+                        if (Hash(x, y, seed + 7 + (f % 3)) > 0.975f) c = Shade(baseC, 1.35f);
+                        if (x == 0 || y == S - 1) c = grid;
+                        for (int d = 1; d <= 3; d++)
+                        {
+                            bool up = !BlobInside(m, x + 0.5f, y + 0.5f + d), dn = !BlobInside(m, x + 0.5f, y + 0.5f - d);
+                            bool side = !BlobInside(m, x + 0.5f - d, y + 0.5f) || !BlobInside(m, x + 0.5f + d, y + 0.5f);
+                            if (!(up || dn || side)) continue;
+                            c = d == 1 ? outline : (dn && !up && !side) ? dark : lip;
+                            break;
+                        }
+                        t.SetPixel(f * S + x, y, c);
+                    }
+            }
+            t.Apply();
+            return t;
+        }
+
+        /// <summary>Low stone wall that marks the playable square on the Island (placeholder; one 1-cell tile, tiles horizontally).</summary>
+        static Texture2D BoundaryWall_()
+        {
+            const int S = 32;
+            var t = NewTex(S, S);
+            var stone = new Color(0.62f, 0.62f, 0.66f);
+            for (int y = 0; y < S; y++)
+                for (int x = 0; x < S; x++)
+                {
+                    if (y < 11 || y > 19) continue;
+                    int row = (y - 11) / 3, off = row % 2 == 0 ? 0 : 5;
+                    bool mortar = (x + off) % 10 == 0 || (y - 11) % 3 == 2 && y != 19;
+                    var c = Shade(stone, 0.9f + (Hash(x / 10, row, 21) - 0.5f) * 0.3f);
+                    if (mortar) c = Shade(stone, 0.55f);
+                    if (y == 19) c = Shade(stone, 1.25f);            // sunlit cap
+                    if (y == 11) c = Shade(stone, 0.45f);            // shadow line
+                    t.SetPixel(x, y, c);
+                }
+            t.Apply();
+            return t;
+        }
+
         // ------------------------------------------------------------------ ground + cliff strips
 
         static Texture2D GroundStrip(Color baseC, int seed)
@@ -359,8 +484,8 @@ namespace IdleGrounds.Editor
                         // jagged bottom edge (transparent below), tapering ends
                         float jag = 5f + 4f * Noise((f * S + x) * 0.25f, 0, seed + 3);
                         if (y < jag) continue;
-                        if ((f == 3 || f == 5) && x < (S - 1 - y) * 0.6f) continue;          // left end slopes in
-                        if ((f == 4 || f == 6) && (S - 1 - x) < (S - 1 - y) * 0.6f) continue; // right end slopes in
+                        if (f == 3 && x < (S - 1 - y) * 0.6f) continue;          // left end slopes in
+                        if (f == 4 && (S - 1 - x) < (S - 1 - y) * 0.6f) continue; // right end slopes in
                         Color c;
                         if (top < 4) c = top == 3 ? Shade(ground, 0.6f) : Shade(ground, 0.9f);            // earth lip
                         else

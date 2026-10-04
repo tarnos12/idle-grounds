@@ -52,6 +52,21 @@ namespace IdleGrounds.Editor
             { "sandField", new CellRect(42, 14, 50, 22) },
         };
 
+        struct CoastKeep
+        {
+            public BoundsInt bounds;
+            public TileBase[] tiles;
+            public int seed;
+        }
+
+        /// <summary>Underside rock tint of an Island (see <see cref="IslandCoastBuilder"/>).</summary>
+        public static Color UndersideTint(string key)
+        {
+            foreach (var s in Specs)
+                if (s.key == key) { ColorUtility.TryParseHtmlString(s.tint, out var c); return c; }
+            return new Color(0.54f, 0.48f, 0.4f);
+        }
+
         static readonly IslandSpec[] Specs =
         {
             new IslandSpec { key = "farm", label = "Farm", col = 0, row = 6, ground = "#3a3318", tint = "#8a7550", zones = new[] {
@@ -85,6 +100,16 @@ namespace IdleGrounds.Editor
                 if (!string.IsNullOrEmpty(isl.islandKey) && isl.name == "Island_" + isl.islandKey)     // not legacy Region_* grid objects
                     keep[isl.islandKey] = isl.transform.position;
 
+            // the painted Coast is authored scene data: capture it so the rebuild restores it untouched
+            var keepCoasts = new Dictionary<string, CoastKeep>();
+            foreach (var isl in Object.FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (string.IsNullOrEmpty(isl.islandKey) || isl.name != "Island_" + isl.islandKey || isl.coast == null) continue;
+                isl.coast.CompressBounds();
+                var b = isl.coast.cellBounds;
+                keepCoasts[isl.islandKey] = new CoastKeep { bounds = b, tiles = b.size.x > 0 && b.size.y > 0 ? isl.coast.GetTilesBlock(b) : null, seed = isl.coastSeed };
+            }
+
             var existing = GameObject.Find("World");
             if (existing != null) Object.DestroyImmediate(existing);
 
@@ -102,10 +127,12 @@ namespace IdleGrounds.Editor
                 var def = cfg?.Region(s.key);
                 Vector3 pos = keep.TryGetValue(s.key, out var kp) ? kp
                     : def != null ? new Vector3(def.islandCol, -def.islandRow, 0f) : new Vector3(s.col, -s.row, 0f);
-                BuildIsland(s, grid.transform, pos);
+                BuildIsland(s, grid.transform, pos, keepCoasts.TryGetValue(s.key, out var kc) ? kc : (CoastKeep?)null);
             }
             CoreLoopBuilder.EnsureSortingLayers();
             CoreLoopBuilder.ApplyWorldSortingLayers();
+            // paint a coast only where none exists, then derive rim / underside / veil / boundary from it
+            IslandCoastBuilder.GenerateMissing();
 
             EditorUtility.SetDirty(world);
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
@@ -141,7 +168,7 @@ namespace IdleGrounds.Editor
             }
         }
 
-        static SpriteRenderer Deco(Transform parent, string name, Sprite s, Vector3 local, float scale, Color tint, int order, string layer)
+        internal static SpriteRenderer Deco(Transform parent, string name, Sprite s, Vector3 local, float scale, Color tint, int order, string layer)
         {
             var sr = new GameObject(name).AddComponent<SpriteRenderer>();
             sr.transform.SetParent(parent, false);
@@ -154,7 +181,7 @@ namespace IdleGrounds.Editor
             return sr;
         }
 
-        static void BuildIsland(IslandSpec s, Transform parent, Vector3 position)
+        static void BuildIsland(IslandSpec s, Transform parent, Vector3 position, CoastKeep? keepCoast)
         {
             int n = Island.Cells;
             var go = new GameObject("Island_" + s.key);
@@ -165,7 +192,11 @@ namespace IdleGrounds.Editor
             island.islandKey = s.key;
             island.unlocked = s.unlocked;
 
-            // Ground tilemap (Rule Tile: edges / corners / random fill — ART-SPEC 3.1).
+            // Coast: the visual-only landmass (square + irregular margin, 47-blob Rule Tile), drawn UNDER the
+            // playable ground. Painted by IslandCoastBuilder; kept as authored scene data on rebuilds.
+            var coast = IslandCoastBuilder.EnsureCoastTilemap(island);
+
+            // Ground tilemap: the 93x93 playable area, centre-fill Rule Tile only (the coast blob draws the edges).
             var tmGo = new GameObject("Ground");
             tmGo.transform.SetParent(go.transform, false);
             var tilemap = tmGo.AddComponent<Tilemap>();
@@ -179,41 +210,18 @@ namespace IdleGrounds.Editor
             tilemap.SetTilesBlock(new BoundsInt(0, -n, 0, n, n, 1), tiles);
             island.tilemap = tilemap;
 
-            // Cliff rim: one row of cliff Rule Tiles hanging under the bottom edge (ART-SPEC 3.2).
-            var cliffGo = new GameObject("CliffRim");
-            cliffGo.transform.SetParent(go.transform, false);
-            var cliff = cliffGo.AddComponent<Tilemap>();
-            var cr = cliffGo.AddComponent<TilemapRenderer>();
-            cr.sortingOrder = -1;
-            var cliffTile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(s.key));
-            if (cliffTile != null)
+            if (keepCoast != null)
             {
-                var row = new TileBase[n];
-                for (int i = 0; i < n; i++) row[i] = cliffTile;
-                cliff.SetTilesBlock(new BoundsInt(0, -n - 1, 0, n, 1, 1), row);
+                island.coastSeed = keepCoast.Value.seed;
+                if (keepCoast.Value.tiles != null) coast.SetTilesBlock(keepCoast.Value.bounds, keepCoast.Value.tiles);
             }
 
-            // Underside: hanging rock mass + accents (pivot top-centre), tinted per Island; mist at the base.
-            // Slots are named so real art (ART-SPEC 3.2) can be swapped per Island in the Scene view.
-            ColorUtility.TryParseHtmlString(s.tint, out var tint);
-            var under = new GameObject("Underside").transform;
-            under.SetParent(go.transform, false);
-            under.localPosition = new Vector3(n * 0.5f, -n - 0.6f, 0f);
-            var rock = IslandArtBuilder.Single(IslandArtBuilder.UndersideRock);
-            var spike = IslandArtBuilder.Single(IslandArtBuilder.UndersideStalactite);
-            var roots = IslandArtBuilder.Single(IslandArtBuilder.UndersideRoots);
-            var mist = IslandArtBuilder.Single(IslandArtBuilder.BaseMist);
-            float jitter = (H01(s.key, 1) - 0.5f) * 10f;
-            float rockScale = 4.6f + H01(s.key, 2) * 0.8f;
-            Deco(under, "Rock", rock, new Vector3(jitter, 0.4f, 0f), rockScale, tint, 40, SkyLayer);
-            Deco(under, "SpikeL", spike, new Vector3(-30f + H01(s.key, 3) * 6f, 0.2f, 0f), 2.4f + H01(s.key, 4), Color.Lerp(tint, Color.black, 0.15f), 39, SkyLayer);
-            Deco(under, "SpikeR", spike, new Vector3(26f + H01(s.key, 5) * 8f, 0.2f, 0f), 2.0f + H01(s.key, 6), Color.Lerp(tint, Color.black, 0.1f), 39, SkyLayer);
-            Deco(under, "Roots", roots, new Vector3(-12f + H01(s.key, 7) * 24f, 0.1f, 0f), 2.2f, Color.white, 41, SkyLayer);
-            float tipY = -(rock != null ? rock.bounds.size.y * rockScale : 30f) * 0.82f;
-            Deco(under, "MistA", mist, new Vector3(jitter - 8f, tipY, 0f), 9f, new Color(1, 1, 1, 0.5f), 45, SkyLayer);
-            Deco(under, "MistB", mist, new Vector3(jitter + 10f, tipY - 2f, 0f), 7f, new Color(1, 1, 1, 0.4f), 45, SkyLayer);
-            Deco(under, "MistC", mist, new Vector3(-34f, -5f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, SkyLayer);
-            Deco(under, "MistD", mist, new Vector3(34f, -6f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, SkyLayer);
+            // Cliff rim + Underside (+ mist) are DERIVED from the Coast outline by IslandCoastBuilder.RebuildDerived.
+            var cliffGo = new GameObject("CliffRim");
+            cliffGo.transform.SetParent(go.transform, false);
+            cliffGo.AddComponent<Tilemap>();
+            cliffGo.AddComponent<TilemapRenderer>().sortingOrder = -1;
+            new GameObject("Underside").transform.SetParent(go.transform, false);
 
             // Zones.
             var zonesGo = new GameObject("Zones");
@@ -229,27 +237,10 @@ namespace IdleGrounds.Editor
                 zm.rects.Add(ZoneRects[zone]);
             }
 
-            // Veil (enabled while locked): tiled fog over the Island + its cliff row (ART-SPEC 3.5).
+            // Veil (enabled while locked): fog masked to the whole landmass; sized/masked by IslandCoastBuilder.RebuildDerived.
             var veil = new GameObject("Veil");
             veil.transform.SetParent(go.transform, false);
-            veil.transform.localPosition = new Vector3(n * 0.5f, -(n + 1) * 0.5f, 0f);
-            var sr = veil.AddComponent<SpriteRenderer>();
-            var fog = IslandArtBuilder.Frames(IslandArtBuilder.VeilMist);
-            if (fog.Length > 0)
-            {
-                sr.sprite = fog[0];
-                sr.drawMode = SpriteDrawMode.Tiled;
-                sr.tileMode = SpriteTileMode.Continuous;
-                sr.size = new Vector2(n, n + 1f);
-                sr.color = new Color(0.72f, 0.7f, 0.8f, 0.85f);
-            }
-            else
-            {
-                sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(TileDir + "/white.png");
-                veil.transform.localScale = new Vector3(n, n + 1, 1f);
-                sr.color = new Color(0f, 0f, 0f, 0.55f);
-            }
-            sr.sortingOrder = 100;
+            veil.AddComponent<SpriteRenderer>();
             veil.SetActive(!s.unlocked);
             island.veil = veil;
 
@@ -367,7 +358,9 @@ namespace IdleGrounds.Editor
             float m = Mathf.Max(s.bounds.size.x, s.bounds.size.y);
             float k = ViewKit.U(64f) / Mathf.Max(0.0001f, m);
             var vs = veil.localScale;
-            sr.transform.localPosition = Vector3.zero;
+            // the veil spans the whole irregular landmass: keep the lock at the play area's centre
+            var isl = veil.parent;
+            sr.transform.position = isl != null ? isl.TransformPoint(new Vector3(Island.Cells * 0.5f, -Island.Cells * 0.5f, 0f)) : veil.position;
             sr.transform.localScale = new Vector3(k / Mathf.Max(0.0001f, vs.x), k / Mathf.Max(0.0001f, vs.y), 1f);
         }
 

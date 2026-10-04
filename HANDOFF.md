@@ -102,7 +102,10 @@ PairableBridges / SkyWisps). Island/bridge UI done: Island GameObjects
 cliff rims, unlock steles, bridge panel, qi trail, sky wisps; placeholder
 art under Art/Islands|Sky|Bridges (real art with the same names replaces it).
 Rebuild menu: `Idle Grounds/Scene/Rebuild All (World + M2-M8 + Islands)`.
-Camera max zoom-out is now 6.
+Camera max zoom-out is now 6. Irregular visual coasts: per-Island `Coast`
+tilemap (authored once, never overwritten; re-roll via `Idle Grounds/World/
+Regenerate Island Coasts (overwrites)`), rim/underside derived from it,
+low stone wall marks the 93x93 playable square.
 
 Next: then deferred UI
 lows, Sim query allocations, real art, PlayMode smoke tests.
