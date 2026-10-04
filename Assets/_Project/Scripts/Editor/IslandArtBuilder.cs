@@ -41,6 +41,21 @@ namespace IdleGrounds.Editor
         [MenuItem("Idle Grounds/Art/Regenerate Placeholder Island Art")]
         public static void RegenerateAll() { Generate(true); BuildRuleTiles(); AssetDatabase.SaveAssets(); }
 
+        /// <summary>Force-regenerates the placeholder blob sheets (after a frame-order change), skipping any whose
+        /// file is byte-identical to a delivered one under Art/Incoming (real art), then rebuilds the Rule Tiles.</summary>
+        [MenuItem("Idle Grounds/Art/Regenerate Placeholder Blob Sheets")]
+        public static void RegenerateBlobSheets()
+        {
+            foreach (var (key, ground, _) in Biomes)
+            {
+                var path = BlobPath(key);
+                string inc = "Assets/_Project/Art/Incoming/islands/" + Path.GetFileName(path);
+                if (File.Exists(inc) && File.Exists(path) && System.Linq.Enumerable.SequenceEqual(File.ReadAllBytes(inc), File.ReadAllBytes(path))) { Debug.Log("Blob sheet kept (delivered): " + path); continue; }
+                Make(path, true, () => BlobStrip(Hex(ground), key.GetHashCode()), 47, 32, Pivot.Center, true, false);
+            }
+            BuildRuleTiles(); AssetDatabase.SaveAssets();
+        }
+
         /// <summary>Writes only missing placeholder files, (re)slices, and (re)builds the Rule Tiles.</summary>
         public static void EnsureArt() { Generate(false); BuildRuleTiles(); AssetDatabase.SaveAssets(); }
 

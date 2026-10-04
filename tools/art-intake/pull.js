@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Art intake pull: Drive "incoming/<category>/" -> Assets/_Project/Art/Incoming/<category>/
 // - unzips zips (PowerShell Expand-Archive), loose files are copied as-is
+// - *mask*.json / *reference*.json companions (e.g. blob_mask_reference.json) are copied next to the art
 // - README/NOTES (.md/.txt) go to Incoming/_notes/ (prefixed with the source name)
 // - Incoming/intake-log.json records every imported file (name,size,sha1,date,source); reruns only bring new/changed files
 // Usage: node tools/art-intake/pull.js [--src <incoming dir>] [--dry]
@@ -19,6 +20,7 @@ const DRY = args.includes('--dry');
 const SRC = argv('--src') || process.env.ART_INCOMING || 'G:/Mój dysk/AI files/Idle Grounds Art/incoming';
 const ART_EXT = new Set(['.png', '.aseprite', '.ase']);
 const NOTE_EXT = new Set(['.md', '.txt']);
+const isCompanionJson = (base) => /.json$/i.test(base) && /(mask|reference)/i.test(base); // e.g. blob_mask_reference.json: lives beside the art
 
 const sha1 = (p) => crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex');
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap(e =>
@@ -36,7 +38,7 @@ function importFile(file, category, source) {
   const hash = sha1(file), size = fs.statSync(file).size;
   let rel, destPath;
   const isPreview = /preview/i.test(base); // contact sheets for review, not game sprites
-  if (ART_EXT.has(ext) && !isPreview) { rel = category + '/' + base; }
+  if ((ART_EXT.has(ext) && !isPreview) || isCompanionJson(base)) { rel = category + '/' + base; }
   else if (NOTE_EXT.has(ext) || (ART_EXT.has(ext) && isPreview)) { rel = '_notes/' + category + '-' + source.replace(/\.zip$/i, '') + '-' + base; }
   else { stats.ignored++; console.log('  ignored (unsupported type): ' + base); return; }
   destPath = path.join(DEST, rel);
