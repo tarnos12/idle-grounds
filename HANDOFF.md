@@ -95,7 +95,7 @@ Drive `AI files/Idle Grounds Art/ART-SPEC.md`; deliveries arrive in Drive
 `Assets/_Project/Art/Incoming/`, log in intake-log.json) then Unity menu
 `Idle Grounds/Art/Integrate Incoming Art` (import rules + wiring by key).
 Integrated so far: item_wood, leaves, stone, clay, plank, brick (all P1 items); bld_gathering_stone, bld_wisp_lantern, bld_warding_seal, bld_workbench, bld_storehouse, bld_center (Altar), bld_kiln, fix_spirittree, fix_quarry, node_bush, island_center_cliff (center ground blob v3 + fill accepted; fx_wisp + returning (GameDatabase.fx registry); enemy_fox idle/move/hit
-(GameDatabase.enemyAnims); fill v2 requested (grid pattern); v1 rejected;
+(GameDatabase.enemyAnims); fill v2 accepted; blob v4 requested (edge grass must match fill v2); v1 rejected;
 feedback sheet in Drive feedback/ + docs/art/rejected/; blob bit convention =
 artist's N,E,S,W,NE,SE,SW,NW ascending) (real building art
 renders full-size as the building body via BuildingAsset.hasRealArt; info
