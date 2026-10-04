@@ -316,9 +316,9 @@ Static art is the idle state. Facing: front face toward the viewer (south), roof
 | `bld_dragon.png` | 5×5 → **160×192** | **Sleeping Dragon building** — same art as `dragon_sleeping` frame 1 (see 4.4); a coiled stone-grey dragon resting on a rocky nest. Placeholder key kept; deliver a copy of `dragon_sleeping` frame 1. | P1 | requested |
 | `bld_workbench.png` | 3×3 → 96×128 | **Workbench** — open carpenter's shed: thick wooden table with saw, plane and plank stack, bamboo scaffold beams, small red cloth awning. | P1 | requested |
 | `bld_kiln.png` | **3×5** → 96×192 | **Kiln** (Burner) — stepped dragon-kiln (long, rising brick chambers) with a chimney, glowing mouth at the base, stacked bricks/clay jars at the side. Terracotta/dark grey. | P1 | requested |
-| `bld_gathering_stone.png` | 1×1 → 32×48 | **Gathering Stone** — a standing carved spirit stone with a glowing green swirl rune; floats slightly above a base ring. Green qi (matches its green reach circle). | P1 | requested |
-| `bld_wisp_lantern.png` | 1×1 → 32×48 | **Wisp Lantern** — red-and-gold hanging paper lantern on a short carved post with a tiny glowing wisp inside. Gold circle-glow. | P1 | requested |
-| `bld_warding_seal.png` | 1×1 → 32×48 | **Warding Seal** — a small stone tablet with a red cinnabar seal circle and talisman paper stuck on it, standing on a stake. | P1 | requested |
+| `bld_gathering_stone.png` | 1×1 → 32×48 | **Gathering Stone** — a standing carved spirit stone with a glowing green swirl rune; floats slightly above a base ring. Green qi (matches its green reach circle). | P1 | integrated |
+| `bld_wisp_lantern.png` | 1×1 → 32×48 | **Wisp Lantern** — red-and-gold hanging paper lantern on a short carved post with a tiny glowing wisp inside. Gold circle-glow. | P1 | integrated |
+| `bld_warding_seal.png` | 1×1 → 32×48 | **Warding Seal** — a small stone tablet with a red cinnabar seal circle and talisman paper stuck on it, standing on a stake. | P1 | integrated |
 | `bld_storehouse.png` | 3×3 → 96×128 | **Storehouse** — wooden granary on stilts with a sloped tiled roof, round carved door, rope-bound crates. | P1 | requested |
 | `bld_paper_mill.png` | 3×3 → 96×128 | **Paper Mill** — bamboo-slatted hut with a water-wheel/press, drying racks of white paper sheets hanging out. | P2 | requested |
 | `bld_infusion_array.png` | 3×3 → 96×128 | **Infusion Array** — circular flagstone formation with glowing cyan runes and four small pillars, floating crystal in the middle. | P2 | requested |
@@ -775,3 +775,4 @@ Intake: `node tools/art-intake/pull.js` (Drive `incoming/<category>/` -> `Assets
 |---|---|---|---|
 | 2026-10-04 | `item_wood.png` | `incoming/items/Idle-Grounds-Items-001.zip` | integrated (ItemAsset `wood` icon; ground items, hand, HUD, costs verified in Play mode) |
 | 2026-10-04 | `item_leaves.png`, `item_stone.png`, `item_clay.png`, `item_plank.png`, `item_brick.png` | `incoming/items/Idle-Grounds-Items-002.zip` | integrated (ItemAsset icons; P1 items complete). Feedback: good — keep this style. |
+| 2026-10-04 | `bld_gathering_stone.png`, `bld_wisp_lantern.png`, `bld_warding_seal.png` | `incoming/buildings/Idle-Grounds-Buildings-001.zip` | integrated (BuildingAsset icons; full-size in-world rendering in progress). Feedback: great style — keep going with the remaining P1 buildings (Altar, Workbench, Kiln, Storehouse), the Spirit Tree, bush, quarry rock and the Center island tiles. |
