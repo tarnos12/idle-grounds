@@ -43,6 +43,8 @@ namespace IdleGrounds.Sim
         public event Action RunReset;
         public event Action<double> OfflineProgress;
 #pragma warning restore 67
+        /// <summary>M5: (area, pavilion) after a disciple joined.</summary>
+        public event Action<string, Building> DiscipleRecruited;
 
         internal void RaiseGroundDropped(string area, string item, int qty, double x, double y)
         { if (!Muted) GroundDropped?.Invoke(area, item, qty, x, y); }
@@ -76,5 +78,22 @@ namespace IdleGrounds.Sim
         { if (!Muted) WispDropped?.Invoke(area, w); }
         internal void RaiseAscendPrompt()
         { if (!Muted) AscendPromptRequested?.Invoke(); }
+        // M5
+        internal void RaiseDragonStageAdvanced(int stage, string text)
+        { if (!Muted) DragonStageAdvanced?.Invoke(stage, text); }
+        internal void RaiseDragonAwakened()
+        { if (!Muted) DragonAwakened?.Invoke(); }
+        internal void RaiseBlessingStarted(string kind, double until)
+        { if (!Muted) BlessingStarted?.Invoke(kind, until); }
+        internal void RaiseCombatBuffStarted(double until)
+        { if (!Muted) CombatBuffStarted?.Invoke(until); }
+        internal void RaiseUpgradeApplied(string area, string type)
+        { if (!Muted) UpgradeApplied?.Invoke(area, type); }
+        internal void RaiseRegionUnlocked(string area)
+        { if (!Muted) RegionUnlocked?.Invoke(area); }
+        internal void RaiseQuestClaimed(string id)
+        { if (!Muted) QuestClaimed?.Invoke(id); }
+        internal void RaiseDiscipleRecruited(string area, Building b)
+        { if (!Muted) DiscipleRecruited?.Invoke(area, b); }
     }
 }

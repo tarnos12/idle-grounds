@@ -42,6 +42,10 @@ namespace IdleGrounds.Sim
         public ConverterSystem Converters;
         public BuildingSystem Buildings;
         public LogisticsSystem Logistics;
+        public DragonSystem Dragon;
+        public UpgradeSystem Upgrades;
+        public ProgressionSystem Progression;
+        public PavilionSystem Pavilions;
 
         public SimContext(GameConfig cfg, GameState state, IClock clock, IRng rng)
         {

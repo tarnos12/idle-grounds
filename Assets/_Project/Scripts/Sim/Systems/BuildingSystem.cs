@@ -640,7 +640,7 @@ namespace IdleGrounds.Sim
         /// <summary>
         /// gameTick step 6 — the per-building logistics pass. Order per built
         /// building: Gathering Stone eject+vacuum → lantern beat →
-        /// Furnace Spirit stoking (§10.4, here) → pavilion cultivation (M5).
+        /// Furnace Spirit stoking (§10.4, here) → pavilion cultivation (§12.4).
         /// </summary>
         public bool TickLogistics(string areaKey, double now)
         {
@@ -654,7 +654,7 @@ namespace IdleGrounds.Sim
                 if (def.gather.enabled) changed |= _ctx.Logistics.TickStone(areaKey, area, b, def, now);     // §11.2
                 if (def.lantern.enabled) changed |= _ctx.Logistics.TickLantern(areaKey, area, b, def, now);  // §11.5
                 if (def.stoker.enabled) changed |= Stoke(area, b, def);
-                // TODO(M5): pavilion cultivation (§12.4)
+                if (def.roster.enabled) changed |= _ctx.Pavilions.Tick(areaKey, area, b, def, now);           // §12.4
             }
             return changed;
         }

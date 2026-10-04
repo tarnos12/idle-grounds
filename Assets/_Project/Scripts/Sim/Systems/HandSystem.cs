@@ -197,6 +197,7 @@ namespace IdleGrounds.Sim
             {
                 Take(Cfg.vitality.item, 1);
                 s.combatBuff = new CombatBuffState { until = now + Cfg.vitality.ms * _ctx.Timing.BuffScale };
+                _ctx.Events.RaiseCombatBuffStarted(s.combatBuff.until);
                 return new DropResult { kind = DropResultKind.Used, item = Cfg.vitality.item, once = true };
             }
             // 2. Beast Bait inside the enemy zone lures a boss
