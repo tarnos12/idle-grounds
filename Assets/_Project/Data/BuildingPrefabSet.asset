@@ -25,6 +25,7 @@ MonoBehaviour:
   ascensionGate: {fileID: 3417318820931048896, guid: fd598abc3a63e654699901b40daa220d, type: 3}
   altar: {fileID: 6178716484569919784, guid: f2fc56723b16f69448ba63f28f3a047a, type: 3}
   dragon: {fileID: 1761070528920596416, guid: c98cb8a1b3adaa446873d139bad561ed, type: 3}
+  spiritBridge: {fileID: 5269814933747387364, guid: 742c0ff1af845c54c9ab855267114f44, type: 3}
   entries:
   - type: center
     prefab: {fileID: 6178716484569919784, guid: f2fc56723b16f69448ba63f28f3a047a, type: 3}
@@ -78,3 +79,5 @@ MonoBehaviour:
     prefab: {fileID: 5870811081662143205, guid: e6edf1f0dc9e0ae4fafcabe88b847a69, type: 3}
   - type: warding_seal
     prefab: {fileID: 2073641354572226874, guid: 16a0159790786ab4e8f5822e311250e6, type: 3}
+  - type: spirit_bridge
+    prefab: {fileID: 5269814933747387364, guid: 742c0ff1af845c54c9ab855267114f44, type: 3}

@@ -17,7 +17,7 @@ namespace IdleGrounds.Game
         [SerializeField] TextMeshProUGUI areaText;
         [SerializeField] Image areaIcon;
         [SerializeField] GameObject areaLock;
-        [Tooltip("🌫 icon for the void between regions (\"Wilds\").")]
+        [Tooltip("🌫 icon for the open sky between Islands.")]
         [SerializeField] Sprite wildsIcon;
         [SerializeField] GameObject sprintTag;
         [SerializeField] TextMeshProUGUI handText;
@@ -81,13 +81,13 @@ namespace IdleGrounds.Game
             if (runner == null || runner.Sim == null) return;
             SyncBuildButtons();
             var cam =cameraController != null ? cameraController.transform.position : Vector3.zero;
-            // regionAtCamCentre (ui.js:377): the region under the view centre, "🌫 Wilds" in the void gaps
+            // regionAtCamCentre (ui.js:377): the Island under the view centre, "🌫 Open sky" between Islands
             string area = runner.Space.WorldToArea(cam, out var hit, out _, out _) ? hit : null;
             if (area != lastArea || !areaPainted)
             {
                 lastArea = area; areaPainted = true;
                 var def = area != null ? runner.Config.Region(area) : null;
-                if (areaText != null) areaText.text = area == null ? "Wilds" : def != null ? def.name : area;
+                if (areaText != null) areaText.text = area == null ? "Open sky" : def != null ? def.name : area;
                 if (areaIcon != null)
                 {
                     var icon = area != null ? runner.Database.RegionIcon(area) : wildsIcon;

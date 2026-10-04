@@ -484,7 +484,7 @@ namespace IdleGrounds.Editor
             PlayerSettings.runInBackground = true;   // an idle game keeps ticking unfocused (also keeps Play mode alive for MCP)
 
             var db = AssetDatabase.LoadAssetAtPath<GameDatabase>(DatabasePath);
-            WorldBuilder.BuildZoneOverlays(db);     // in-game zone tints + region frames + veil 🔒 (H1 / L18)
+            WorldBuilder.BuildZoneOverlays(db);     // in-game zone tints + Island frames + veil 🔒 (H1 / L18)
             var cam = Object.FindFirstObjectByType<CameraController>();
 
             var systems = FindOrCreate("--- Systems", null).transform;
@@ -540,10 +540,10 @@ namespace IdleGrounds.Editor
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         }
 
-        /// <summary>Tilemaps on Ground; veils + region labels on Overlay (above locked-region nodes).</summary>
+        /// <summary>Tilemaps on Ground; veils + Island labels on Overlay (above locked-Island nodes).</summary>
         public static void ApplyWorldSortingLayers()
         {
-            foreach (var r in Object.FindObjectsByType<Region>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var r in Object.FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 foreach (var tr in r.GetComponentsInChildren<TilemapRenderer>(true)) tr.sortingLayerName = "Ground";
                 if (r.veil != null) { var sr = r.veil.GetComponent<SpriteRenderer>(); if (sr != null) { sr.sortingLayerName = "Overlay"; sr.sortingOrder = 0; } }

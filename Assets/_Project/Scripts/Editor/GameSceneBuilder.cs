@@ -52,8 +52,7 @@ namespace IdleGrounds.Editor
             cam.orthographic = true;
             cam.orthographicSize = 9.84f;
             cam.clearFlags = CameraClearFlags.SolidColor;
-            ColorUtility.TryParseHtmlString("#161b16", out var voidColour);
-            cam.backgroundColor = voidColour;
+            cam.backgroundColor = IslandArtBuilder.SkyBase;     // the sky gradient's base (ADR 0003)
             cam.nearClipPlane = -50f;
             cam.farClipPlane = 50f;
             camGo.AddComponent<AudioListener>();
@@ -62,7 +61,7 @@ namespace IdleGrounds.Editor
             camGo.transform.position = new Vector3(144.5f, -12.5f, -10f);
 
             // World
-            WorldBuilder.BuildRegions();
+            WorldBuilder.BuildIslands();
 
             // Runtime containers
             var runtime = new GameObject("Runtime");
@@ -90,6 +89,7 @@ namespace IdleGrounds.Editor
             // M2 core loop: prefabs, runner, views, input, HUD
             CoreLoopBuilder.BuildCorePrefabs();
             CoreLoopBuilder.InstallIntoActiveScene();
+            IslandsBuilder.InstallIntoActiveScene();
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };

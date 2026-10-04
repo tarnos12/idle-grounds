@@ -254,7 +254,7 @@ namespace IdleGrounds.Game
                 hint = nm + " > click the TARGET building... Esc cancels";
             }
             SetLabel(hintText, hint);
-            string warn = voidHint ? "Wisps can't cross the void between regions"
+            string warn = voidHint ? "Wisps can't cross the sky between Islands - pair Spirit Bridges"
                 : (refuse != null && State == Mode.PickTarget) ? refuse + " - pick another target" : null;
             SetLabel(warnText, warn);
 

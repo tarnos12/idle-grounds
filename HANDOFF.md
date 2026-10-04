@@ -97,7 +97,12 @@ hourly x2h, then 2-hourly; restart after spec updates) and integrate.
 Sim done (139 tests): offline progress removed; Tireless Wisps perk (save id
 `slumber` kept); firestone routing fixed; island world offsets
 (`SetIslandOffsets`); Spirit Bridges (`spirit_bridge` 2x1, PairBridges /
-PairableBridges / SkyWisps). Island/bridge UI next (in progress).
+PairableBridges / SkyWisps). Island/bridge UI done: Island GameObjects
+(scene = authority for positions via SetIslandOffsets), Sky + parallax,
+cliff rims, unlock steles, bridge panel, qi trail, sky wisps; placeholder
+art under Art/Islands|Sky|Bridges (real art with the same names replaces it).
+Rebuild menu: `Idle Grounds/Scene/Rebuild All (World + M2-M8 + Islands)`.
+Camera max zoom-out is now 6.
 
 Next: then deferred UI
 lows, Sim query allocations, real art, PlayMode smoke tests.

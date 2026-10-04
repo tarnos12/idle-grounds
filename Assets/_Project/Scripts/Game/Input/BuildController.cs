@@ -27,6 +27,8 @@ namespace IdleGrounds.Game
         [SerializeField] UpgradeTreeView upgradeTree;
         [SerializeField] PavilionPanelView pavilionPanel;
         [SerializeField] DragonDialogView dragonDialog;
+        [Header("ADR 0003 Spirit Bridges")]
+        [SerializeField] BridgePanelView bridgePanel;
 
         IdleGroundsControls controls;
 
@@ -39,10 +41,12 @@ namespace IdleGrounds.Game
         public bool UpgradeTreeOpen => upgradeTree != null && upgradeTree.IsOpen;
         public bool PavilionOpen => pavilionPanel != null && pavilionPanel.IsOpen;
         public bool DragonDialogOpen => dragonDialog != null && dragonDialog.IsOpen;
+        public bool BridgePanelOpen => bridgePanel != null && bridgePanel.IsOpen;
+        public BridgePanelView BridgePanel => bridgePanel;
         public UpgradeTreeView UpgradeTree => upgradeTree;
         public PavilionPanelView PavilionPanel => pavilionPanel;
         public DragonDialogView DragonDialog => dragonDialog;
-        public bool AnyPanelOpen => BuildMenuOpen || RecipePickerOpen || LinkEditorOpen || PavilionOpen || UpgradeTreeOpen || DragonDialogOpen;
+        public bool AnyPanelOpen => BuildMenuOpen || RecipePickerOpen || LinkEditorOpen || PavilionOpen || BridgePanelOpen || UpgradeTreeOpen || DragonDialogOpen;
         /// <summary>Building under the cursor (null in void / when over UI).</summary>
         public Building Hovered { get; private set; }
         public string HoveredArea { get; private set; }
@@ -95,7 +99,7 @@ namespace IdleGrounds.Game
         public void OpenBuildMenu()
         {
             Placing = null; Demolishing = false;
-            CloseRecipePicker(); CloseLinkEditor(); ClosePavilion();
+            CloseRecipePicker(); CloseLinkEditor(); ClosePavilion(); CloseBridgePanel();
             if (buildMenu != null) buildMenu.Open();
         }
 
@@ -134,6 +138,7 @@ namespace IdleGrounds.Game
             if (UpgradeTreeOpen) { upgradeTree.Close(); return; }
             if (RecipePickerOpen) { CloseRecipePicker(); return; }
             if (PavilionOpen) { pavilionPanel.Close(); return; }
+            if (BridgePanelOpen) { bridgePanel.Close(); return; }
             if (LinkEditorOpen) { linkEditor.Escape(); return; }      // picking backs out to the menu, then closes
             if (DragonDialogOpen) { dragonDialog.Continue(); return; }
             if (meta != null && meta.Escape()) return;                 // M7 modals
@@ -177,7 +182,7 @@ namespace IdleGrounds.Game
         public string ReasonAt(string area, string type, int row, int col)
         {
             if (area == null) return "Off the edge";
-            if (!runner.IsUnlocked(area)) return "Region locked";
+            if (!runner.IsUnlocked(area)) return "Island locked";
             return Sim.PlaceReason(area, type, row, col);
         }
 
@@ -217,7 +222,7 @@ namespace IdleGrounds.Game
         public void OpenRecipePicker(string area, Building b)
         {
             if (recipePicker == null || b == null) return;
-            CloseBuildMenu();
+            CloseBuildMenu(); CloseBridgePanel();
             recipePicker.Open(area, b);
         }
 
@@ -228,14 +233,24 @@ namespace IdleGrounds.Game
         public void OpenLinkEditor(string area, Building lantern)
         {
             if (linkEditor == null || lantern == null) return;
-            CloseBuildMenu(); CloseRecipePicker();
+            CloseBuildMenu(); CloseRecipePicker(); CloseBridgePanel();
             linkEditor.Open(area, lantern);
         }
 
         public void CloseLinkEditor() { if (linkEditor != null && linkEditor.IsOpen) linkEditor.Close(); }
 
         /// <summary>Clicking elsewhere on the map closes the one open building panel (ui.js:3014).</summary>
-        public void CloseBuildingPanels() { CloseRecipePicker(); CloseLinkEditor(); ClosePavilion(); }
+        public void CloseBuildingPanels() { CloseRecipePicker(); CloseLinkEditor(); ClosePavilion(); CloseBridgePanel(); }
+
+        /// <summary>Spirit Bridge panel (ADR 0003): pairing list / partner + Unpair.</summary>
+        public void OpenBridgePanel(string area, Building b)
+        {
+            if (bridgePanel == null || b == null) return;
+            CloseBuildMenu(); CloseRecipePicker(); CloseLinkEditor(); ClosePavilion();
+            bridgePanel.Open(area, b);
+        }
+
+        public void CloseBridgePanel() { if (BridgePanelOpen) bridgePanel.Close(); }
 
         // ================= M5: Altar tree + pavilion roster =================
 
@@ -249,7 +264,7 @@ namespace IdleGrounds.Game
         public void OpenPavilion(string area, Building b)
         {
             if (pavilionPanel == null || b == null) return;
-            CloseBuildMenu(); CloseRecipePicker(); CloseLinkEditor();
+            CloseBuildMenu(); CloseRecipePicker(); CloseLinkEditor(); CloseBridgePanel();
             pavilionPanel.Open(area, b);
         }
 

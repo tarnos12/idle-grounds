@@ -1,34 +1,44 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Tilemaps;
 
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// One 93x93 play region. 1 cell = 1 world unit, +y up. The GameObject sits at the region's
-    /// top-left corner; region row r maps to y = origin.y - r, column c to x = origin.x + c.
+    /// One 93×93-cell floating Island (CONTEXT.md). 1 cell = 1 world unit, +y up. The GameObject sits at
+    /// the Island's top-left corner; Island row r maps to y = origin.y - r, column c to x = origin.x + c.
+    /// The SCENE is the authority for where Islands float (ADR 0003): at boot <see cref="GameRunner"/>
+    /// reads every Island's transform and hands the offsets to the sim (<c>Simulation.SetIslandOffsets</c>),
+    /// so moving an Island in the Scene view moves it in-game (bridges' sky distance included).
     /// </summary>
     [ExecuteAlways]
-    public class Region : MonoBehaviour
+    public class Island : MonoBehaviour
     {
         public const int Cells = 93;
-        public const int Gap = 5;
-        public const int Stride = Cells + Gap;
-        public const int Margin = 10;
 
-        public string regionKey;
-        public int rx;
-        public int ry;
+        [Tooltip("Sim area key (farm, center, mine, grove, fishing, volcano, celestial).")]
+        [FormerlySerializedAs("regionKey")]
+        public string islandKey;
         public bool unlocked;
         public Tilemap tilemap;
         public GameObject veil;
 
         public Vector3 Origin => transform.position;
 
+        /// <summary>Sim world offset in px (top-left corner, x right, y down), snapped to whole px.</summary>
+        public (double x, double y) OffsetPx(int cellPx)
+        {
+            var o = Origin;
+            return (System.Math.Round(o.x * cellPx), System.Math.Round(-o.y * cellPx));
+        }
+
         /// <summary>World rect of the play area (x,y = bottom-left).</summary>
         public Rect WorldRect
         {
             get { var o = Origin; return new Rect(o.x, o.y - Cells, Cells, Cells); }
         }
+
+        public Vector2 Centre => new Vector2(Origin.x + Cells * 0.5f, Origin.y - Cells * 0.5f);
 
         /// <summary>World position of the centre of the cell (row, col).</summary>
         public Vector3 CellToWorld(int row, int col)

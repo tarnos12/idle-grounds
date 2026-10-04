@@ -5,8 +5,10 @@ namespace IdleGrounds.Game
 {
     /// <summary>
     /// Orthographic pan / sprint-toggle / stepped zoom camera (ui-input-render section 1).
-    /// View width = 17.5 cells * zoom; zoom 1..3 in 0.25 steps, smoothed; centre-anchored; clamped to the
-    /// bounding box of unlocked regions expanded by one gap (5 cells), intersected with the world.
+    /// View width = 17.5 cells * zoom; zoom 1..zoomMax in 0.25 steps, smoothed; centre-anchored. Floating
+    /// Islands (ADR 0003): clamped to the bounding box of the unlocked Islands plus any extra rects (the
+    /// unlock steles of frontier Islands), expanded by <see cref="skyMargin"/> cells — so the view can pan
+    /// over the open sky between unlocked Islands.
     /// </summary>
     [RequireComponent(typeof(Camera))]
     public class CameraController : MonoBehaviour
@@ -14,14 +16,19 @@ namespace IdleGrounds.Game
         const float BaseViewWidthCells = 17.5f;          // 560 px / 32
         const float PanCellsPerSecond = 12f * 60f / 32f; // 12 px/frame at 60 fps
         const float SprintMultiplier = 2f;
-        const float ZoomStep = 0.25f, ZoomMin = 1f, ZoomMax = 3f;
+        const float ZoomStep = 0.25f, ZoomMin = 1f;
 
         [SerializeField] float startZoom = 2f;
-        [Tooltip("Initial camera centre: region key + local row/col.")]
-        [SerializeField] string startRegionKey = "center";
+        [Tooltip("Furthest zoom-out (view width = 17.5 cells x this). The original stopped at 3; Islands float far apart.")]
+        [SerializeField] float zoomMax = 6f;
+        [Tooltip("Cells of open sky the view may show beyond the unlocked Islands / steles.")]
+        [SerializeField] float skyMargin = 12f;
+        [Tooltip("Initial camera centre: Island key + local row/col.")]
+        [UnityEngine.Serialization.FormerlySerializedAs("startRegionKey")]
+        [SerializeField] string startIslandKey = "center";
         [SerializeField] int startRow = 12;
         [SerializeField] int startCol = 46;
-        [Tooltip("Original recentre: view top = start region top, centred horizontally (startRow/startCol ignored).")]
+        [Tooltip("Original recentre: view top = start Island top, centred horizontally (startRow/startCol ignored).")]
         [SerializeField] bool startTopAligned = true;
 
         Camera cam;
@@ -29,6 +36,8 @@ namespace IdleGrounds.Game
         float zoom, zoomTarget;
         bool sprint;
         Rect unlockedBounds;
+        readonly System.Collections.Generic.List<Rect> extraBounds = new System.Collections.Generic.List<Rect>();
+        float ZoomMax => Mathf.Max(ZoomMin, zoomMax);
         bool hasBounds;
         Vector2 centre;
 
@@ -39,7 +48,7 @@ namespace IdleGrounds.Game
         public float Zoom => zoom;
         public float ZoomTarget => zoomTarget;
 
-        /// <summary>Raw bounding box (world units) of unlocked regions' play rects.</summary>
+        /// <summary>Raw bounding box (world units) the view may roam (before the sky margin).</summary>
         public void SetUnlockedBounds(Rect bounds)
         {
             unlockedBounds = bounds;
@@ -47,18 +56,28 @@ namespace IdleGrounds.Game
             if (cam != null) Clamp();
         }
 
-        public void RecomputeBoundsFromRegions()
+        /// <summary>Extra world rects the view must be able to reach (frontier unlock steles). Re-clamps.</summary>
+        public void SetExtraBounds(System.Collections.Generic.IEnumerable<Rect> rects)
+        {
+            extraBounds.Clear();
+            if (rects != null) extraBounds.AddRange(rects);
+            RecomputeBounds();
+        }
+
+        /// <summary>Union of the unlocked Islands' play rects and the extra rects.</summary>
+        public void RecomputeBounds()
         {
             bool any = false;
             Rect box = default;
-            foreach (var r in FindObjectsByType<Region>(FindObjectsSortMode.None))
+            void Add(Rect wr)
             {
-                if (!r.unlocked) continue;
-                var wr = r.WorldRect;
                 if (!any) { box = wr; any = true; }
                 else box = Rect.MinMaxRect(Mathf.Min(box.xMin, wr.xMin), Mathf.Min(box.yMin, wr.yMin),
                                            Mathf.Max(box.xMax, wr.xMax), Mathf.Max(box.yMax, wr.yMax));
             }
+            foreach (var r in FindObjectsByType<Island>(FindObjectsSortMode.None))
+                if (r.unlocked) Add(r.WorldRect);
+            foreach (var r in extraBounds) Add(r);
             if (any) SetUnlockedBounds(box); else hasBounds = false;
         }
 
@@ -93,10 +112,10 @@ namespace IdleGrounds.Game
 
         void Start()
         {
-            RecomputeBoundsFromRegions();
+            RecomputeBounds();
             Vector2 start = transform.position;
-            foreach (var r in FindObjectsByType<Region>(FindObjectsSortMode.None))
-                if (r.regionKey == startRegionKey) { start = startTopAligned ? StartCentre(r) : (Vector2)r.CellToWorld(startRow, startCol); break; }
+            foreach (var r in FindObjectsByType<Island>(FindObjectsSortMode.None))
+                if (r.islandKey == startIslandKey) { start = startTopAligned ? StartCentre(r) : (Vector2)r.CellToWorld(startRow, startCol); break; }
             centre = start;
             ApplyZoom();
             Clamp();
@@ -122,9 +141,9 @@ namespace IdleGrounds.Game
         /// <summary>Back to the configured start cell (new run after an ascension).</summary>
         public void ResetToStart()
         {
-            RecomputeBoundsFromRegions();
-            foreach (var r in FindObjectsByType<Region>(FindObjectsSortMode.None))
-                if (r.regionKey == startRegionKey) { CenterOn(startTopAligned ? StartCentre(r) : (Vector2)r.CellToWorld(startRow, startCol)); return; }
+            RecomputeBounds();
+            foreach (var r in FindObjectsByType<Island>(FindObjectsSortMode.None))
+                if (r.islandKey == startIslandKey) { CenterOn(startTopAligned ? StartCentre(r) : (Vector2)r.CellToWorld(startRow, startCol)); return; }
         }
 
         void Update()
@@ -165,12 +184,20 @@ namespace IdleGrounds.Game
             return meta != null && meta.AnyOpen;
         }
 
-        /// <summary>recenterCamera (ui.js:283): the view's TOP edge on the start region's top, centred horizontally.</summary>
-        Vector2 StartCentre(Region r)
+        /// <summary>recenterCamera (ui.js:283): the view's TOP edge on the start Island's top, centred horizontally.</summary>
+        Vector2 StartCentre(Island r)
         {
             ApplyZoom();
             var o = r.Origin;
-            return new Vector2(o.x + Region.Cells * 0.5f, o.y - ViewHeight * 0.5f);
+            return new Vector2(o.x + Island.Cells * 0.5f, o.y - ViewHeight * 0.5f);
+        }
+
+        /// <summary>Set the zoom at once (no smoothing), clamped to 1..zoomMax (automation / screenshots).</summary>
+        public void SetZoomImmediate(float z)
+        {
+            zoom = zoomTarget = Mathf.Clamp(z, ZoomMin, ZoomMax);
+            if (cam == null) return;
+            ApplyZoom(); Clamp(); Apply();
         }
 
         float ViewWidth => BaseViewWidthCells * zoom;
@@ -183,20 +210,13 @@ namespace IdleGrounds.Game
         void Clamp()
         {
             if (cam == null || !hasBounds) return;
-            const float gap = Region.Gap;
-            float worldMin = -Region.Margin;
-            float worldMax = 3 * Region.Cells + 2 * Region.Gap + Region.Margin; // 299
-            float x0 = Mathf.Max(unlockedBounds.xMin - gap, worldMin);
-            float x1 = Mathf.Min(unlockedBounds.xMax + gap, worldMax);
-            float yTop = Mathf.Min(unlockedBounds.yMax + gap, Region.Margin);
-            float yBot = Mathf.Max(unlockedBounds.yMin - gap, -worldMax);
-
+            float m = skyMargin;
+            float x0 = unlockedBounds.xMin - m, x1 = unlockedBounds.xMax + m;
+            float y0 = unlockedBounds.yMin - m, y1 = unlockedBounds.yMax + m;
             float w = ViewWidth, h = ViewHeight;
-            float left = centre.x - w * 0.5f;
-            float top = centre.y + h * 0.5f;
-            left = Mathf.Clamp(left, x0, Mathf.Max(x0, x1 - w));
-            top = Mathf.Clamp(top, Mathf.Min(yBot + h, yTop), yTop);
-            centre = new Vector2(left + w * 0.5f, top - h * 0.5f);
+            // a view wider/taller than the bounds is centred on them; otherwise it stays inside
+            centre.x = w >= x1 - x0 ? (x0 + x1) * 0.5f : Mathf.Clamp(centre.x, x0 + w * 0.5f, x1 - w * 0.5f);
+            centre.y = h >= y1 - y0 ? (y0 + y1) * 0.5f : Mathf.Clamp(centre.y, y0 + h * 0.5f, y1 - h * 0.5f);
         }
     }
 }

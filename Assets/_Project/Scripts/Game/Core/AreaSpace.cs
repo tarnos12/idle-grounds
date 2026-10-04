@@ -5,52 +5,69 @@ using UnityEngine;
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// Maps area-local sim pixels (32 px/cell, +y down) to world units (1 cell = 1 unit, +y up) and back.
-    /// Region top-left sits at world (rx*stride, -ry*stride) — the same layout <see cref="Region"/> uses.
+    /// Maps Island-local sim pixels (32 px/cell, +y down) to world units (1 cell = 1 unit, +y up) and back.
+    /// An Island's top-left corner sits at world (offsetPx.x / cell, -offsetPx.y / cell) — the sim's Island
+    /// offsets, which <see cref="GameRunner"/> fills from the scene's <see cref="Island"/> transforms (ADR 0003).
+    /// Also converts the sim's WORLD px (sky wisps, bridge flights) to world units.
     /// </summary>
     public sealed class AreaSpace
     {
-        readonly int cell, cells, stride;
-        readonly List<RegionDef> regions;
+        readonly int cell, cells;
+        readonly List<RegionDef> islands;
         readonly Dictionary<string, Vector2> origins = new Dictionary<string, Vector2>();
 
-        public AreaSpace(GameConfig cfg)
+        /// <summary>Origins from the sim's Island offsets (scene authority once GameRunner applied them).</summary>
+        public AreaSpace(GameConfig cfg, Simulation sim)
         {
             cell = cfg.grid.cell;
             cells = cfg.grid.cells;
-            stride = cfg.grid.cells + cfg.grid.gap;
-            regions = cfg.regions;
-            foreach (var r in regions) origins[r.key] = new Vector2(r.rx * stride, -r.ry * stride);
+            islands = cfg.regions;
+            foreach (var r in islands)
+            {
+                var (ox, oy) = sim != null ? sim.IslandOffsetPx(r.key) : ((double)r.islandCol * cell, (double)r.islandRow * cell);
+                origins[r.key] = new Vector2((float)(ox / cell), -(float)(oy / cell));
+            }
         }
+
+        /// <summary>Config default origins (no scene / sim).</summary>
+        public AreaSpace(GameConfig cfg) : this(cfg, null) { }
 
         public int Cell => cell;
         public int Cells => cells;
 
-        /// <summary>World position of the region's top-left corner.</summary>
+        /// <summary>World position of the Island's top-left corner.</summary>
         public Vector2 Origin(string area) => origins.TryGetValue(area, out var o) ? o : Vector2.zero;
+
+        /// <summary>World centre of the Island.</summary>
+        public Vector2 IslandCentre(string area) => Origin(area) + new Vector2(cells * 0.5f, -cells * 0.5f);
+
+        /// <summary>World rect (x,y = bottom-left) of the Island's play area.</summary>
+        public Rect IslandRect(string area) { var o = Origin(area); return new Rect(o.x, o.y - cells, cells, cells); }
 
         public float PxToUnits(double px) => (float)(px / cell);
 
-        /// <summary>Area-local px (x right, y down) -> world point (z = 0).</summary>
+        /// <summary>Island-local px (x right, y down) -> world point (z = 0).</summary>
         public Vector3 PxToWorld(string area, double x, double y)
         {
             var o = Origin(area);
             return new Vector3(o.x + (float)(x / cell), o.y - (float)(y / cell), 0f);
         }
 
-        /// <summary>World -> (area, local px). False in the void/gaps. Locked regions are returned too.</summary>
+        /// <summary>Sim WORLD px (Island offset + local px; sky wisps) -> world point.</summary>
+        public Vector3 WorldPxToWorld(double x, double y) => new Vector3((float)(x / cell), -(float)(y / cell), 0f);
+
+        /// <summary>World -> (Island, local px). False over open sky. Locked Islands are returned too.</summary>
         public bool WorldToArea(Vector2 w, out string area, out double x, out double y)
         {
-            int gCol = Mathf.FloorToInt(w.x), gRow = Mathf.FloorToInt(-w.y);
-            foreach (var r in regions)
+            foreach (var r in islands)
             {
-                int r0 = r.ry * stride, c0 = r.rx * stride;
-                if (gRow >= r0 && gRow < r0 + cells && gCol >= c0 && gCol < c0 + cells)
+                var o = origins[r.key];
+                float lx = w.x - o.x, ly = o.y - w.y;
+                if (lx >= 0 && lx < cells && ly >= 0 && ly < cells)
                 {
-                    var o = origins[r.key];
                     area = r.key;
-                    x = (w.x - o.x) * cell;
-                    y = (o.y - w.y) * cell;
+                    x = lx * cell;
+                    y = ly * cell;
                     return true;
                 }
             }
@@ -58,15 +75,14 @@ namespace IdleGrounds.Game
             return false;
         }
 
-        /// <summary>Region under a world point, else the region whose centre is nearest (location pill rule).</summary>
-        public string RegionAtOrNearest(Vector2 w)
+        /// <summary>Island under a world point, else the Island whose centre is nearest (location pill rule).</summary>
+        public string IslandAtOrNearest(Vector2 w)
         {
             if (WorldToArea(w, out var a, out _, out _)) return a;
             string best = null; float bd = float.MaxValue;
-            foreach (var r in regions)
+            foreach (var r in islands)
             {
-                var c = origins[r.key] + new Vector2(cells * 0.5f, -cells * 0.5f);
-                float d = (c - w).sqrMagnitude;
+                float d = (IslandCentre(r.key) - w).sqrMagnitude;
                 if (d < bd) { bd = d; best = r.key; }
             }
             return best;

@@ -11,19 +11,26 @@ using UnityEngine.Tilemaps;
 namespace IdleGrounds.Editor
 {
     /// <summary>
-    /// Builds the static world (World/Grid/Region_* with tilemaps, zone markers, veils, labels) in the
-    /// active scene. Idempotent: an existing "World" object is replaced.
+    /// Builds the static world of floating Islands (ADR 0003) in the active scene: World/Grid/Island_&lt;key&gt;
+    /// each with the ground Rule-Tile tilemap, the cliff-rim row under its bottom edge, underside rock
+    /// decorations + base mist, zone markers, the veil (fog) and a small label. Positions: an existing
+    /// Island_&lt;key&gt; keeps the position it has in the scene (the scene is the authority — designers move
+    /// Islands in the Scene view); new ones start at the config default offsets (WORLD.islands col/row).
+    /// Idempotent: the "World" object is replaced. Placeholder art comes from <see cref="IslandArtBuilder"/>.
     /// </summary>
     public static class WorldBuilder
     {
         const string TileDir = "Assets/_Project/Art/Tiles";
+        const string DatabasePath = "Assets/_Project/Data/GameDatabase.asset";
+        public const string SkyLayer = "Sky";
         const int TileTexSize = 32;
 
-        struct RegionSpec
+        struct IslandSpec
         {
             public string key, label;
-            public int rx, ry;
+            public int col, row;          // fallback default offset (cells) when the config has none
             public string ground;
+            public string tint;           // underside rock tint
             public bool unlocked;
             public (string zone, string role)[] zones;
         }
@@ -45,34 +52,44 @@ namespace IdleGrounds.Editor
             { "sandField", new CellRect(42, 14, 50, 22) },
         };
 
-        static readonly RegionSpec[] Specs =
+        static readonly IslandSpec[] Specs =
         {
-            new RegionSpec { key = "farm", label = "Farm", rx = 0, ry = 0, ground = "#3a3318", zones = new[] {
+            new IslandSpec { key = "farm", label = "Farm", col = 0, row = 6, ground = "#3a3318", tint = "#8a7550", zones = new[] {
                 ("centre", "noBuild/spawner"), ("midLeft", "noBuild"), ("sandField", "generator:sand") } },
-            new RegionSpec { key = "center", label = "Center", rx = 1, ry = 0, ground = "#25351f", unlocked = true, zones = new[] {
+            new IslandSpec { key = "center", label = "Center", col = 123, row = 0, ground = "#25351f", tint = "#8a7a66", unlocked = true, zones = new[] {
                 ("cornerTL", "noBuild"), ("cornerTR", "noBuild/enemy:Fox Spirit"), ("cornerBL", "noBuild/fixture:quarry"),
                 ("cornerBR", "noBuild"), ("midTop", "noBuild/fixture:spirittree"), ("centre", "spawner:bush"),
                 ("clayField", "generator:clay"), ("quarryField", "generator:stone"), ("woodField", "generator:wood") } },
-            new RegionSpec { key = "mine", label = "Mine", rx = 2, ry = 0, ground = "#2c2c33", zones = new[] {
+            new IslandSpec { key = "mine", label = "Mine", col = 249, row = 4, ground = "#2c2c33", tint = "#6d6d78", zones = new[] {
                 ("centre", "noBuild/spawner") } },
-            new RegionSpec { key = "grove", label = "Spirit Grove", rx = 0, ry = 1, ground = "#1e3a2b", zones = new[] {
+            new IslandSpec { key = "grove", label = "Spirit Grove", col = 8, row = 131, ground = "#1e3a2b", tint = "#5f6650", zones = new[] {
                 ("centre", "noBuild/spawner") } },
-            new RegionSpec { key = "fishing", label = "Fishing", rx = 1, ry = 1, ground = "#16323b", zones = new[] {
+            new IslandSpec { key = "fishing", label = "Fishing", col = 125, row = 126, ground = "#16323b", tint = "#5d7480", zones = new[] {
                 ("centre", "noBuild/spawner"), ("cornerTL", "fixture:spring"), ("springField", "generator:water") } },
-            new RegionSpec { key = "volcano", label = "Volcano", rx = 2, ry = 1, ground = "#3a1c17", zones = new[] {
+            new IslandSpec { key = "volcano", label = "Volcano", col = 252, row = 122, ground = "#3a1c17", tint = "#4a3438", zones = new[] {
                 ("centre", "noBuild/spawner") } },
-            new RegionSpec { key = "celestial", label = "Celestial Peak", rx = 1, ry = 2, ground = "#231d40", zones = new[] {
+            new IslandSpec { key = "celestial", label = "Celestial Peak", col = 127, row = 252, ground = "#231d40", tint = "#c9c4e6", zones = new[] {
                 ("centre", "noBuild/spawner") } },
         };
 
-        [MenuItem("Idle Grounds/World/Build Regions")]
-        public static void BuildRegions()
+        [MenuItem("Idle Grounds/World/Build Islands")]
+        public static void BuildIslands()
         {
             EnsureTiles();
-            var whiteSprite = AssetDatabase.LoadAssetAtPath<Sprite>(TileDir + "/white.png");
+            EnsureSkySortingLayer();
+            IslandArtBuilder.EnsureArt();
+
+            // the scene is the authority: remember where existing Islands float before rebuilding
+            var keep = new Dictionary<string, Vector3>();
+            foreach (var isl in Object.FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (!string.IsNullOrEmpty(isl.islandKey) && isl.name == "Island_" + isl.islandKey)     // not legacy Region_* grid objects
+                    keep[isl.islandKey] = isl.transform.position;
 
             var existing = GameObject.Find("World");
             if (existing != null) Object.DestroyImmediate(existing);
+
+            var db = AssetDatabase.LoadAssetAtPath<GameDatabase>(DatabasePath);
+            var cfg = db != null ? db.BuildConfig() : null;
 
             var world = new GameObject("World");
             var grid = new GameObject("Grid");
@@ -81,39 +98,122 @@ namespace IdleGrounds.Editor
             g.cellSize = Vector3.one;
 
             foreach (var s in Specs)
-                BuildRegion(s, grid.transform, whiteSprite);
+            {
+                var def = cfg?.Region(s.key);
+                Vector3 pos = keep.TryGetValue(s.key, out var kp) ? kp
+                    : def != null ? new Vector3(def.islandCol, -def.islandRow, 0f) : new Vector3(s.col, -s.row, 0f);
+                BuildIsland(s, grid.transform, pos);
+            }
             CoreLoopBuilder.EnsureSortingLayers();
             CoreLoopBuilder.ApplyWorldSortingLayers();
 
             EditorUtility.SetDirty(world);
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            Debug.Log("[IdleGrounds] World built: " + Specs.Length + " regions.");
+            Debug.Log("[IdleGrounds] World built: " + Specs.Length + " Islands.");
         }
 
-        static void BuildRegion(RegionSpec s, Transform parent, Sprite white)
+        /// <summary>The "Sky" sorting layer, inserted at the very back (before Default): sky, clouds, undersides.</summary>
+        public static void EnsureSkySortingLayer()
         {
-            var go = new GameObject("Region_" + s.key);
+            var tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            var layers = tagManager.FindProperty("m_SortingLayers");
+            for (int i = 0; i < layers.arraySize; i++)
+                if (layers.GetArrayElementAtIndex(i).FindPropertyRelative("name").stringValue == SkyLayer) return;
+            layers.InsertArrayElementAtIndex(0);
+            var e = layers.GetArrayElementAtIndex(0);
+            e.FindPropertyRelative("name").stringValue = SkyLayer;
+            e.FindPropertyRelative("uniqueID").uintValue = (uint)(Animator.StringToHash("SortingLayer_" + SkyLayer) & 0x7FFFFFFF);
+            var locked = e.FindPropertyRelative("locked");
+            if (locked != null && locked.propertyType == SerializedPropertyType.Boolean) locked.boolValue = false;
+            else if (locked != null) locked.intValue = 0;
+            tagManager.ApplyModifiedProperties();
+            AssetDatabase.SaveAssets();
+        }
+
+        static float H01(string key, int i)
+        {
+            unchecked
+            {
+                int h = 17;
+                foreach (char ch in key) h = h * 31 + ch;
+                h = h * 7919 + i * 104729;
+                return (Mathf.Abs(h) % 1000) / 1000f;
+            }
+        }
+
+        static SpriteRenderer Deco(Transform parent, string name, Sprite s, Vector3 local, float scale, Color tint, int order, string layer)
+        {
+            var sr = new GameObject(name).AddComponent<SpriteRenderer>();
+            sr.transform.SetParent(parent, false);
+            sr.transform.localPosition = local;
+            sr.transform.localScale = new Vector3(scale, scale, 1f);
+            sr.sprite = s;
+            sr.color = tint;
+            sr.sortingLayerName = layer;
+            sr.sortingOrder = order;
+            return sr;
+        }
+
+        static void BuildIsland(IslandSpec s, Transform parent, Vector3 position)
+        {
+            int n = Island.Cells;
+            var go = new GameObject("Island_" + s.key);
             go.transform.SetParent(parent, false);
-            go.transform.position = new Vector3(s.rx * Region.Stride, -s.ry * Region.Stride, 0f);
+            go.transform.position = position;
 
-            var region = go.AddComponent<Region>();
-            region.regionKey = s.key;
-            region.rx = s.rx;
-            region.ry = s.ry;
-            region.unlocked = s.unlocked;
+            var island = go.AddComponent<Island>();
+            island.islandKey = s.key;
+            island.unlocked = s.unlocked;
 
-            // Ground tilemap.
+            // Ground tilemap (Rule Tile: edges / corners / random fill — ART-SPEC 3.1).
             var tmGo = new GameObject("Ground");
             tmGo.transform.SetParent(go.transform, false);
             var tilemap = tmGo.AddComponent<Tilemap>();
             var tr = tmGo.AddComponent<TilemapRenderer>();
             tr.sortingOrder = 0;
-            var tile = AssetDatabase.LoadAssetAtPath<Tile>($"{TileDir}/Ground_{s.key}.asset");
-            var tiles = new TileBase[Region.Cells * Region.Cells];
+            TileBase tile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.GroundTilePath(s.key));
+            if (tile == null) tile = AssetDatabase.LoadAssetAtPath<Tile>($"{TileDir}/Ground_{s.key}.asset");
+            var tiles = new TileBase[n * n];
             for (int i = 0; i < tiles.Length; i++) tiles[i] = tile;
             // Cell (col,row) -> tilemap cell (col, -row-1).
-            tilemap.SetTilesBlock(new BoundsInt(0, -Region.Cells, 0, Region.Cells, Region.Cells, 1), tiles);
-            region.tilemap = tilemap;
+            tilemap.SetTilesBlock(new BoundsInt(0, -n, 0, n, n, 1), tiles);
+            island.tilemap = tilemap;
+
+            // Cliff rim: one row of cliff Rule Tiles hanging under the bottom edge (ART-SPEC 3.2).
+            var cliffGo = new GameObject("CliffRim");
+            cliffGo.transform.SetParent(go.transform, false);
+            var cliff = cliffGo.AddComponent<Tilemap>();
+            var cr = cliffGo.AddComponent<TilemapRenderer>();
+            cr.sortingOrder = -1;
+            var cliffTile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(s.key));
+            if (cliffTile != null)
+            {
+                var row = new TileBase[n];
+                for (int i = 0; i < n; i++) row[i] = cliffTile;
+                cliff.SetTilesBlock(new BoundsInt(0, -n - 1, 0, n, 1, 1), row);
+            }
+
+            // Underside: hanging rock mass + accents (pivot top-centre), tinted per Island; mist at the base.
+            // Slots are named so real art (ART-SPEC 3.2) can be swapped per Island in the Scene view.
+            ColorUtility.TryParseHtmlString(s.tint, out var tint);
+            var under = new GameObject("Underside").transform;
+            under.SetParent(go.transform, false);
+            under.localPosition = new Vector3(n * 0.5f, -n - 0.6f, 0f);
+            var rock = IslandArtBuilder.Single(IslandArtBuilder.UndersideRock);
+            var spike = IslandArtBuilder.Single(IslandArtBuilder.UndersideStalactite);
+            var roots = IslandArtBuilder.Single(IslandArtBuilder.UndersideRoots);
+            var mist = IslandArtBuilder.Single(IslandArtBuilder.BaseMist);
+            float jitter = (H01(s.key, 1) - 0.5f) * 10f;
+            float rockScale = 4.6f + H01(s.key, 2) * 0.8f;
+            Deco(under, "Rock", rock, new Vector3(jitter, 0.4f, 0f), rockScale, tint, 40, SkyLayer);
+            Deco(under, "SpikeL", spike, new Vector3(-30f + H01(s.key, 3) * 6f, 0.2f, 0f), 2.4f + H01(s.key, 4), Color.Lerp(tint, Color.black, 0.15f), 39, SkyLayer);
+            Deco(under, "SpikeR", spike, new Vector3(26f + H01(s.key, 5) * 8f, 0.2f, 0f), 2.0f + H01(s.key, 6), Color.Lerp(tint, Color.black, 0.1f), 39, SkyLayer);
+            Deco(under, "Roots", roots, new Vector3(-12f + H01(s.key, 7) * 24f, 0.1f, 0f), 2.2f, Color.white, 41, SkyLayer);
+            float tipY = -(rock != null ? rock.bounds.size.y * rockScale : 30f) * 0.82f;
+            Deco(under, "MistA", mist, new Vector3(jitter - 8f, tipY, 0f), 9f, new Color(1, 1, 1, 0.5f), 45, SkyLayer);
+            Deco(under, "MistB", mist, new Vector3(jitter + 10f, tipY - 2f, 0f), 7f, new Color(1, 1, 1, 0.4f), 45, SkyLayer);
+            Deco(under, "MistC", mist, new Vector3(-34f, -5f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, SkyLayer);
+            Deco(under, "MistD", mist, new Vector3(34f, -6f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, SkyLayer);
 
             // Zones.
             var zonesGo = new GameObject("Zones");
@@ -129,29 +229,42 @@ namespace IdleGrounds.Editor
                 zm.rects.Add(ZoneRects[zone]);
             }
 
-            // Veil (enabled when locked).
+            // Veil (enabled while locked): tiled fog over the Island + its cliff row (ART-SPEC 3.5).
             var veil = new GameObject("Veil");
             veil.transform.SetParent(go.transform, false);
-            veil.transform.localPosition = new Vector3(Region.Cells * 0.5f, -Region.Cells * 0.5f, 0f);
-            veil.transform.localScale = new Vector3(Region.Cells, Region.Cells, 1f);
+            veil.transform.localPosition = new Vector3(n * 0.5f, -(n + 1) * 0.5f, 0f);
             var sr = veil.AddComponent<SpriteRenderer>();
-            sr.sprite = white;
-            sr.color = new Color(0f, 0f, 0f, 0.55f);
+            var fog = IslandArtBuilder.Frames(IslandArtBuilder.VeilMist);
+            if (fog.Length > 0)
+            {
+                sr.sprite = fog[0];
+                sr.drawMode = SpriteDrawMode.Tiled;
+                sr.tileMode = SpriteTileMode.Continuous;
+                sr.size = new Vector2(n, n + 1f);
+                sr.color = new Color(0.72f, 0.7f, 0.8f, 0.85f);
+            }
+            else
+            {
+                sr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(TileDir + "/white.png");
+                veil.transform.localScale = new Vector3(n, n + 1, 1f);
+                sr.color = new Color(0f, 0f, 0f, 0.55f);
+            }
             sr.sortingOrder = 100;
             veil.SetActive(!s.unlocked);
-            region.veil = veil;
+            island.veil = veil;
 
-            // Label.
+            // Label: small and subtle, just above the Island's top edge.
             var label = new GameObject("Label");
             label.transform.SetParent(go.transform, false);
-            label.transform.localPosition = new Vector3(Region.Cells * 0.5f, 4f, 0f);
+            label.transform.localPosition = new Vector3(n * 0.5f, 1.1f, 0f);
             var t = label.AddComponent<TextMeshPro>();
             t.text = s.label;
-            t.fontSize = 48;
+            t.fontSize = 14f;
             t.alignment = TextAlignmentOptions.Center;
-            t.color = new Color(0.9f, 0.93f, 0.95f);
+            t.color = new Color(0.9f, 0.93f, 0.95f, 0.6f);
             t.fontStyle = FontStyles.Bold;
-            t.rectTransform.sizeDelta = new Vector2(40f, 8f);
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.rectTransform.sizeDelta = new Vector2(30f, 2f);
             t.GetComponent<MeshRenderer>().sortingOrder = 101;
             t.ForceMeshUpdate();
         }
@@ -175,7 +288,7 @@ namespace IdleGrounds.Editor
         const int FillOrder = 10, EdgeOrder = 11, FrameOrder = 12;
 
         /// <summary>
-        /// Builds each Region's "ZoneOverlay" child from the GameDatabase config: no-build zones (green 5% +
+        /// Builds each Island's "ZoneOverlay" child from the GameDatabase config: no-build zones (green 5% +
         /// dashed 18% edge), generator fields (FIELD_TINT by item), the enemy zone (red 7% / 30%), all 1 px
         /// dashed edges, and the 2 px region frame rgba(74,222,128,.30) — SpriteRenderers on the Ground
         /// sorting layer above the tilemap (under link lines / reach circles). Also puts the 64 px 🔒 at the
@@ -188,11 +301,11 @@ namespace IdleGrounds.Editor
             var square = BuildingsBuilder.square;
             var cfg = db.BuildConfig();
             int n = 0;
-            foreach (var region in Object.FindObjectsByType<Region>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var region in Object.FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 var old = region.transform.Find(OverlayName);
                 if (old != null) Object.DestroyImmediate(old.gameObject);
-                var def = cfg.Region(region.regionKey);
+                var def = cfg.Region(region.islandKey);
                 if (def == null) continue;
                 var root = new GameObject(OverlayName).transform;
                 root.SetParent(region.transform, false);
@@ -208,16 +321,16 @@ namespace IdleGrounds.Editor
                 if (ez != null && ez.enabled && !string.IsNullOrEmpty(ez.zone))
                     foreach (var r in cfg.ZoneRects(ez.zone)) AddZoneRect(root, "Enemy_" + ez.zone, r, EnemyFill, EnemyEdge, square);
 
-                var frame = BuildingsBuilder.Frame(root, "RegionFrame", FrameOrder, OverlayLayer);
+                var frame = BuildingsBuilder.Frame(root, "IslandFrame", FrameOrder, OverlayLayer);
                 frame.transform.localPosition = Vector3.zero;
-                frame.Set(Region.Cells, Region.Cells, ViewKit.U(2f), FrameColour, false);
+                frame.Set(Island.Cells, Island.Cells, ViewKit.U(2f), FrameColour, false);
 
                 if (region.veil != null) BuildVeilLock(region.veil.transform);
                 EditorUtility.SetDirty(region.gameObject);
                 n++;
             }
             UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            Debug.Log("[IdleGrounds] Zone overlays built for " + n + " regions.");
+            Debug.Log("[IdleGrounds] Zone overlays built for " + n + " Islands.");
         }
 
         static void AddZoneRect(Transform root, string name, IdleGrounds.Sim.ZoneRect r, Color fill, Color edge, Sprite square)

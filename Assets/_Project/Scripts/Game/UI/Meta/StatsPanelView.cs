@@ -42,7 +42,7 @@ namespace IdleGrounds.Game
             list.Add(("Ascension Points", G.ascendPoints.ToString()));
             int unlocked = 0;
             foreach (var r in Sim.Config.regions) if (G.world.IsUnlocked(r.key)) unlocked++;
-            list.Add(("Regions unlocked", unlocked + " / " + Sim.Config.regions.Count));
+            list.Add(("Islands unlocked", unlocked + " / " + Sim.Config.regions.Count));
             list.Add(("Carry capacity", Sim.Hand.Cap().ToString()));
             return list;
         }

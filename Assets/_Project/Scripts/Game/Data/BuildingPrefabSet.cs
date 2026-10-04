@@ -23,7 +23,7 @@ namespace IdleGrounds.Game.Data
         [Tooltip("Base Building prefab (default face).")]
         public GameObject fallback;
         public GameObject converter, burner, storehouse, wardingSeal, gatheringStone, furnaceSpirit,
-            wispLantern, generator, pavilion, ascensionGate, altar, dragon;
+            wispLantern, generator, pavilion, ascensionGate, altar, dragon, spiritBridge;
         [Tooltip("Per-type rows (filled by the editor builder; edit freely).")]
         public List<Entry> entries = new List<Entry>();
 
@@ -49,6 +49,7 @@ namespace IdleGrounds.Game.Data
             if (def.seal.enabled) return wardingSeal;
             if (def.gather.enabled) return gatheringStone;
             if (def.stoker.enabled) return furnaceSpirit;
+            if (def.bridge.enabled) return spiritBridge;
             if (def.lantern.enabled) return wispLantern;
             if (def.gen.enabled) return generator;
             if (def.roster.enabled) return pavilion;

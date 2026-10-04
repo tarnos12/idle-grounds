@@ -9,8 +9,8 @@ namespace IdleGrounds.Game
     /// Owns the <see cref="Simulation"/>: builds config from the <see cref="GameDatabase"/>, loads the save
     /// (<see cref="SaveService.LoadOrNull"/>, fresh state otherwise) and runs <see cref="Simulation.Boot"/>
     /// (engine-systems §2.1; no offline catch-up — ADR 0002). Live: gameTick on a 50 ms
-    /// accumulator, automationTick every 1000 ms; region unlock state is mirrored onto the scene's
-    /// <see cref="Region"/> objects (veils + camera bounds). Ascension swaps the run in place (RunReset).
+    /// accumulator, automationTick every 1000 ms; Island unlock state is mirrored onto the scene's
+    /// <see cref="Island"/> objects (veils + camera bounds); Island positions come from the scene (ADR 0003). Ascension swaps the run in place (RunReset).
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class GameRunner : MonoBehaviour
@@ -38,7 +38,7 @@ namespace IdleGrounds.Game
         /// <summary>True when this boot started a brand-new run (no save file / a bad one).</summary>
         public bool FreshRun { get; private set; }
 
-        readonly Dictionary<string, Region> regionObjects = new Dictionary<string, Region>();
+        readonly Dictionary<string, Island> islandObjects = new Dictionary<string, Island>();
         double tickAcc, autoAcc;
 
         void Awake()
@@ -53,15 +53,26 @@ namespace IdleGrounds.Game
             ulong s = seed != 0 ? seed : (ulong)clock.NowMs;
             Sim = new Simulation(Config, state, clock, new XorShiftRng(s));
             Sim.Events.RunReset += OnRunReset;
+            // ADR 0003: the scene is the authority for where Islands float — read every Island transform
+            foreach (var r in FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (!string.IsNullOrEmpty(r.islandKey)) islandObjects[r.islandKey] = r;
+            ApplyIslandOffsets();
             try { Sim.Boot(); }
             catch (System.Exception e) { Debug.LogException(e); }
-            // TODO(ADR 0003): read the Island GameObjects' positions and call Sim.SetIslandOffsets(...) here once
-            // the floating-island scene exists; until then the sim uses the config default offsets (WORLD.islands).
-            Space = new AreaSpace(Config);
+            Space = new AreaSpace(Config, Sim);
 
-            foreach (var r in FindObjectsByType<Region>(FindObjectsSortMode.None)) regionObjects[r.regionKey] = r;
             if (cameraController == null) cameraController = FindFirstObjectByType<CameraController>();
-            SyncRegions(force: true);
+            SyncIslands(force: true);
+        }
+
+        /// <summary>Scene → sim: every Island GameObject's top-left corner becomes its world offset (px).</summary>
+        void ApplyIslandOffsets()
+        {
+            if (Sim == null || islandObjects.Count == 0) return;
+            int cell = Config.grid.cell;
+            var list = new List<KeyValuePair<string, (double x, double y)>>();
+            foreach (var kv in islandObjects) list.Add(new KeyValuePair<string, (double x, double y)>(kv.Key, kv.Value.OffsetPx(cell)));
+            Sim.SetIslandOffsets(list);
         }
 
         void OnDestroy()
@@ -70,7 +81,8 @@ namespace IdleGrounds.Game
             if (Instance == this) Instance = null;
         }
 
-        public Region RegionObject(string key) => regionObjects.TryGetValue(key, out var r) ? r : null;
+        public Island IslandObject(string key) => islandObjects.TryGetValue(key, out var r) ? r : null;
+        public IEnumerable<Island> Islands => islandObjects.Values;
         public bool IsUnlocked(string area) => Sim != null && Sim.World.IsAreaUnlocked(area);
 
         void Update()
@@ -91,7 +103,7 @@ namespace IdleGrounds.Game
             autoAcc += dt;
             if (autoAcc >= AutomationMs) { Sim.AutomationTick(); autoAcc = autoAcc >= 2 * AutomationMs ? 0 : autoAcc - AutomationMs; }
 
-            SyncRegions(force: false);
+            SyncIslands(force: false);
         }
 
         // ------------------------------------------------------------------ prestige
@@ -108,20 +120,21 @@ namespace IdleGrounds.Game
         void OnRunReset()
         {
             tickAcc = autoAcc = 0;
-            SyncRegions(force: true);
+            ApplyIslandOffsets();
+            SyncIslands(force: true);
             if (cameraController != null) cameraController.ResetToStart();
         }
 
-        /// <summary>Mirror sim unlock flags onto Region objects; re-clamp the camera when anything changed.</summary>
-        void SyncRegions(bool force)
+        /// <summary>Mirror sim unlock flags onto Island objects; re-clamp the camera when anything changed.</summary>
+        void SyncIslands(bool force)
         {
             bool changed = false;
-            foreach (var kv in regionObjects)
+            foreach (var kv in islandObjects)
             {
                 bool u = Sim.World.IsAreaUnlocked(kv.Key);
                 if (force || kv.Value.unlocked != u) { kv.Value.SetUnlocked(u); changed = true; }
             }
-            if (changed && cameraController != null) cameraController.RecomputeBoundsFromRegions();
+            if (changed && cameraController != null) cameraController.RecomputeBounds();
         }
     }
 }

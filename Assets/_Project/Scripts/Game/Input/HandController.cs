@@ -25,7 +25,7 @@ namespace IdleGrounds.Game
         [SerializeField] FxService fx;
         [SerializeField] BuildController build;
         [SerializeField] Camera worldCamera;
-        [Tooltip("M5: world-space region unlock signs (clicked before anything else, like the DOM buttons).")]
+        [Tooltip("World-space Island unlock steles (clicked before anything else, like the DOM buttons).")]
         [SerializeField] UnlockSignSync unlockSigns;
 
         [Header("Debug / automation (drives the cursor without a mouse)")]
@@ -37,7 +37,7 @@ namespace IdleGrounds.Game
         public bool PointerOverUI { get; private set; }
         public Vector2 CursorScreen { get; private set; }
         public Vector2 CursorWorld { get; private set; }
-        public string CursorArea { get; private set; }     // region under the cursor (locked too), null in void
+        public string CursorArea { get; private set; }     // Island under the cursor (locked too), null over open sky
         public double Lx { get; private set; }
         public double Ly { get; private set; }
         public int LRow => (int)System.Math.Floor(Ly / Cell);
@@ -152,15 +152,15 @@ namespace IdleGrounds.Game
         void LeftDown()
         {
             string area = CursorArea;
-            // 0. a region unlock sign pays the hand toward that region (DOM button in the original)
+            // 0. an Island unlock stele pays the hand toward that Island (DOM button in the original)
             if (TryUnlockSign()) return;
             // 1-2. placement / demolish modes capture the click
             if (build != null && build.HandleWorldLeftClick(area, Lx, Ly, BuildController.ShiftHeld)) return;
             if (area == null) return;
             if (!runner.IsUnlocked(area))
             {
-                // clicking a real but still-locked region: nudge toward the unlock border
-                Error(area, Lx, Ly, "Unlock this border first");
+                // clicking a still-locked Island: nudge toward its unlock stele
+                Error(area, Lx, Ly, "Unlock this Island first");
                 return;
             }
             double lx = Lx, ly = Ly; int row = LRow, col = LCol;
@@ -245,6 +245,11 @@ namespace IdleGrounds.Game
             if (b.built && def != null && def.IsConverter)
             {
                 if (build != null) build.OpenRecipePicker(area, b);
+                return true;
+            }
+            if (b.built && def != null && def.bridge.enabled)     // Spirit Bridge: pairing panel (ADR 0003)
+            {
+                if (build != null) build.OpenBridgePanel(area, b);
                 return true;
             }
             if (b.built && def != null && def.lantern.enabled)

@@ -15,7 +15,7 @@ namespace IdleGrounds.Editor
     /// <summary>
     /// M3 "Buildings & converters" view side, reproducible: shape sprites, the base Building prefab +
     /// one prefab VARIANT per family (Converter → Burner, Storehouse, WardingSeal, GatheringStone,
-    /// FurnaceSpirit, WispLantern, Generator, Pavilion, AscensionGate, Altar, Dragon), the
+    /// FurnaceSpirit, WispLantern, Generator, Pavilion, AscensionGate, Altar, Dragon, SpiritBridge), the
     /// BuildingPrefabSet table, the PlacementGhost, the BuildMenu / RecipePicker / BuildingTooltip UI
     /// prefabs, and the scene wiring (BuildingViewSync, BuildController, HUD instances).
     /// </summary>
@@ -60,14 +60,20 @@ namespace IdleGrounds.Editor
             Debug.Log("[IdleGrounds] M3 buildings installed into " + ScenePath);
         }
 
-        [MenuItem("Idle Grounds/Scene/Rebuild Core Loop + Buildings (M2+M3)")]
+        /// <summary>Rebuild-all: the Islands (positions kept from the scene), then every install step, then the sky / bridges.</summary>
+        [MenuItem("Idle Grounds/Scene/Rebuild All (World + M2-M8 + Islands)")]
         public static void RebuildAll()
         {
+            var scene = SceneManager.GetActiveScene();
+            if (scene.path != ScenePath) scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            WorldBuilder.BuildIslands();
+            EditorSceneManager.SaveScene(scene);
             CoreLoopBuilder.InstallMenu();
             InstallMenu();
             LogisticsBuilder.InstallMenu();
             ProgressionBuilder.InstallMenu();
             MetaBuilder.InstallMenu();
+            IslandsBuilder.InstallMenu();
         }
 
         // ------------------------------------------------------------------ shapes
@@ -426,6 +432,19 @@ namespace IdleGrounds.Editor
             Set(f, "murmur", murmur);
         }
 
+        /// <summary>Spirit Bridge (ADR 0003): state art (unpaired / sending / receiving frames), status + buffer lines.</summary>
+        static void AddBridge(GameObject go)
+        {
+            IslandArtBuilder.EnsureArt();
+            var f = Child<BridgeFaceView>(go.transform, "Bridge");
+            Set(f, "art", Sr(f.transform, "Art", 3, IslandArtBuilder.Single(IslandArtBuilder.BridgeUnpaired)));
+            Set(f, "unpairedSprite", IslandArtBuilder.Single(IslandArtBuilder.BridgeUnpaired));
+            SetArray(f, "sendingFrames", IslandArtBuilder.Frames(IslandArtBuilder.BridgeSending));
+            SetArray(f, "receivingFrames", IslandArtBuilder.Frames(IslandArtBuilder.BridgeReceiving));
+            Set(f, "status", Text(f.transform, "Status", 9f, UiPalette.Muted, true, 5, TextAlignmentOptions.Center, 3f));
+            Set(f, "buffer", Text(f.transform, "Buffer", 9f, UiPalette.Text, true, 5, TextAlignmentOptions.Center, 2f));
+        }
+
         static void BuildBuildingPrefabs()
         {
             var bas = BuildBase();
@@ -441,12 +460,14 @@ namespace IdleGrounds.Editor
             var gate = Variant(bas, "AscensionGate", AddGate);
             var altar = Variant(bas, "Altar", AddAltar);
             var dragon = Variant(bas, "Dragon", AddDragon);
+            var bridge = Variant(bas, "SpiritBridge", AddBridge);
 
             var set = AssetDatabase.LoadAssetAtPath<BuildingPrefabSet>(PrefabSetPath);
             if (set == null) { set = ScriptableObject.CreateInstance<BuildingPrefabSet>(); AssetDatabase.CreateAsset(set, PrefabSetPath); }
             set.fallback = bas; set.converter = conv; set.burner = burner; set.storehouse = store; set.wardingSeal = seal;
             set.gatheringStone = stone; set.furnaceSpirit = spirit; set.wispLantern = lantern; set.generator = gen;
             set.pavilion = pav; set.ascensionGate = gate; set.altar = altar; set.dragon = dragon;
+            set.spiritBridge = bridge;
             set.entries.Clear();
             var db = AssetDatabase.LoadAssetAtPath<GameDatabase>(DatabasePath);
             if (db != null)

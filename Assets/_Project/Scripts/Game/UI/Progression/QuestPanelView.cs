@@ -218,11 +218,11 @@ namespace IdleGrounds.Game
                     var off = m.offerings;
                     if (m.allRegionsOpen)
                     {
-                        Add(null, "Click the Ascension Gate to ascend - every region is open.", UiPalette.Muted);
+                        Add(null, "Click the Ascension Gate to ascend - every Island is open.", UiPalette.Muted);
                         if (off != null) Add(null, "Offerings " + off.count + "/" + off.cap + (off.count >= off.cap ? "" : " - right-click spares onto the Gate (+1 AP each)"), UiPalette.Text);
                     }
                     else
-                        Add(null, "Click the Ascension Gate to ascend - each region unlocked (+2 AP) or gate offering (" +
+                        Add(null, "Click the Ascension Gate to ascend - each Island unlocked (+2 AP) or gate offering (" +
                                   (off != null ? off.count + "/" + off.cap : "0") + ") = more Ascension Points.", UiPalette.Muted);
                     break;
             }

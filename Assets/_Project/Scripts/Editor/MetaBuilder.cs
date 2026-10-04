@@ -14,7 +14,7 @@ using static IdleGrounds.Editor.ProgressionBuilder;
 namespace IdleGrounds.Editor
 {
     /// <summary>
-    /// M7 "Prestige, save, offline" + M8 "Juice &amp; audio" view side, reproducible: the SfxLibrary asset; UI
+    /// M7 "Prestige, save" + M8 "Juice &amp; audio" view side, reproducible: the SfxLibrary asset; UI
     /// prefabs HelpModal, StatsPanel, PerkShop, AscendDialog, PostAscension, WelcomeModal, Toast, ConfirmDialog;
     /// scene wiring — SaveService / AudioService / MetaUiController under "--- Systems", the modals under
     /// UI/Canvas (above the M5 panels, below the hand cursor), the bottom-bar additions (Shrine pill, mute
@@ -383,63 +383,20 @@ namespace IdleGrounds.Editor
             var view = root.gameObject.AddComponent<WelcomeModalView>();
             var (modal, box, _) = FitBox(root, UiPalette.Line, 840f);
             var brt = box.rectTransform;
-            var icon = Icon(brt, "Icon", Emoji("ui_welcome_moon"), 72);
+            var icon = Icon(brt, "Icon", Emoji("ui_area_farm"), 72);     // 🌱
             icon.GetComponent<LayoutElement>().preferredHeight = 72;
-            var title = Text(brt, "Title", "Welcome back", 28f, UiPalette.Text, true, true, TextAlignmentOptions.Center);
-            var away = Text(brt, "Away", "", 19.5f, UiPalette.Text, false, true, TextAlignmentOptions.Center);
-
-            var prog = NewUi("Progress", brt);
-            ColW(prog.gameObject, 0, 8, TextAnchor.UpperCenter);
-            var (bar, fill) = Bar(prog, "Bar", 18);
-            fill.color = UiPalette.Accent;
-            var plabel = Text(prog, "Label", "Catching up… 0%", 18f, UiPalette.Muted, true, true, TextAlignmentOptions.Center);
-            var skipRow = ButtonRow(prog);
-            var skip = SmallButton(skipRow, "Skip", "Skip", UiPalette.Text, 420, 45);
-
-            var gains = NewUi("Gains", brt);
-            var grid = gains.gameObject.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(250f, 36f);
-            grid.spacing = new Vector2(10f, 6f);
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 3;
-            grid.childAlignment = TextAnchor.UpperCenter;
-            var none = Text(brt, "None", "", 18f, UiPalette.Muted, false, true, TextAlignmentOptions.Center);
-
-            var why = NewUi("Why", brt);
-            ColW(why.gameObject, 0, 6);
-            Text(why, "Head", "Why it stopped", 19.5f, UiPalette.Gold, true, true);
-            var whyRows = NewUi("Rows", why);
-            ColW(whyRows.gameObject, 0, 6);
-
+            var title = Text(brt, "Title", "Welcome to Idle Grounds", 28f, UiPalette.Text, true, true, TextAlignmentOptions.Center);
+            var body = Text(brt, "Body", "", 19.5f, UiPalette.Text, false, true, TextAlignmentOptions.Center);
+            var hint = Text(brt, "Hint", "", 18f, UiPalette.Muted, false, true, TextAlignmentOptions.Center);
             var row = ButtonRow(brt);
             var cont = BigButton(row, "Continue", "Continue >", UiPalette.Text);
 
-            var tpl = Templates(root);
-            var gainChip = Chip(tpl, "GainTemplate", UiPalette.Panel, UiPalette.Line);
-            Row(gainChip.gameObject, 9, 3, 6);
-            var gl = gainChip.gameObject.AddComponent<UiIconLine>();
-            gl.icon = Icon(gainChip.rectTransform, "Icon", Emoji("item_wood"), 27);
-            gl.text = Label(gainChip.rectTransform, "Text", "+1 Wood", 18f, UiPalette.Text, false);
-            gl.text.richText = true;
-            var whyTpl = Text(tpl, "WhyTemplate", "", 18f, UiPalette.Text, false, true);
-
             Set(view, "modal", modal);
             Set(view, "icon", icon);
-            Set(view, "moonSprite", Emoji("ui_welcome_moon"));
-            Set(view, "introSprite", Emoji("ui_area_farm"));     // 🌱
+            Set(view, "introSprite", Emoji("ui_area_farm"));
             Set(view, "titleText", title);
-            Set(view, "awayText", away);
-            Set(view, "progressGroup", prog.gameObject);
-            Set(view, "progressFill", fill);
-            Set(view, "progressLabel", plabel);
-            Set(view, "skipButton", skip);
-            Set(view, "skipLabel", skip.GetComponentInChildren<TextMeshProUGUI>());
-            Set(view, "gainsRoot", gains);
-            Set(view, "gainTemplate", gl);
-            Set(view, "noneText", none);
-            Set(view, "whyGroup", why.gameObject);
-            Set(view, "whyRoot", whyRows);
-            Set(view, "whyTemplate", whyTpl);
+            Set(view, "bodyText", body);
+            Set(view, "hintText", hint);
             Set(view, "continueButton", cont);
             modal.SetActive(false);
             Save(root.gameObject, UiPrefabDir + "/WelcomeModal.prefab");
@@ -459,7 +416,7 @@ namespace IdleGrounds.Editor
             Fit(chip.gameObject, true, true);
             var cg = chip.gameObject.AddComponent<CanvasGroup>();
             cg.blocksRaycasts = false; cg.interactable = false;
-            var t = Label(crt, "Text", "Welcome back", 21f, UiPalette.Text, true);
+            var t = Label(crt, "Text", "", 21f, UiPalette.Text, true);
             Set(view, "root", chip.gameObject);
             Set(view, "group", cg);
             Set(view, "text", t);

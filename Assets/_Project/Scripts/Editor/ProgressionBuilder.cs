@@ -98,6 +98,8 @@ namespace IdleGrounds.Editor
             var title = BuildingsBuilder.Text(root.transform, "Title", 15f, UiPalette.Gold, true, 33, TextAlignmentOptions.Center, 4f);
             var cost = IconRowNode(root.transform, "Cost", 32);
             var pay = BuildingsBuilder.Text(root.transform, "Pay", 12f, UiPalette.Gold, true, 33, TextAlignmentOptions.Center, 4f);
+            IslandArtBuilder.EnsureArt();
+            var stele = Sr(root.transform, "Stele", 28, IslandArtBuilder.Single(IslandArtBuilder.SteleLocked), L);
             foreach (var r in root.GetComponentsInChildren<Renderer>(true)) r.sortingLayerName = L;
             Set(v, "panel", panel);
             Set(v, "frame", frame);
@@ -106,6 +108,10 @@ namespace IdleGrounds.Editor
             Set(v, "title", title);
             Set(v, "cost", cost);
             Set(v, "pay", pay);
+            Set(v, "stele", stele);
+            Set(v, "steleLocked", IslandArtBuilder.Single(IslandArtBuilder.SteleLocked));
+            Set(v, "stelePartial", IslandArtBuilder.Single(IslandArtBuilder.StelePartial));
+            SetArray(v, "steleReady", IslandArtBuilder.Frames(IslandArtBuilder.SteleReady));
             Save(root, WorldPrefabDir + "/UnlockSign.prefab");
         }
 
@@ -560,6 +566,7 @@ namespace IdleGrounds.Editor
             Set(us, "root", signsRoot.transform);
             Set(us, "fx", fx);
             Set(us, "hand", hand);
+            Set(us, "cameraController", cam);
             Set(hand, "unlockSigns", us);
 
             // quest target ring (H2): Runtime/QuestRing — circle segments are created at runtime from the square sprite
