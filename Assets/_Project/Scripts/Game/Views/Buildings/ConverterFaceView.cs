@@ -34,27 +34,81 @@ namespace IdleGrounds.Game
 
         void Awake() { if (inputTemplate != null) inputTemplate.gameObject.SetActive(false); }
 
+        // ---- real-art variant: one compact strip BELOW the footprint (inputs have/need → result ×n, thin bar, status dot) ----
+        SpriteRenderer dot;
+        bool real, relayout;
+        BuildingView view;
+        static readonly string HaveOk = ColorUtility.ToHtmlStringRGB(UiPalette.Accent), HaveLow = ColorUtility.ToHtmlStringRGB(UiPalette.Danger), NeedCol = ColorUtility.ToHtmlStringRGB(UiPalette.Gold);
+
+        void LayoutReal(BuildingView v)
+        {
+            view = v;
+            var like = progressTrack.GetComponent<SpriteRenderer>();
+            if (backing == null) backing = ViewKit.NewSquare(transform, "Backing", like, -2, ViewKit.PlateColour);
+            backing.gameObject.SetActive(true);
+            if (dot == null) dot = ViewKit.NewSquare(transform, "StatusDot", like, 1, UiPalette.Muted);
+            dot.gameObject.SetActive(true);
+            ViewKit.Show(nameIcon, false); ViewKit.Show(statusText, false); ViewKit.Show(statusIcon, false);
+            // the (hidden-name) text doubles as the "→" between inputs and result
+            ViewKit.Show(nameText, true);
+            nameText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            nameText.rectTransform.sizeDelta = new Vector2(ViewKit.U(20f), ViewKit.U(12f));
+            nameText.text = "→"; ViewKit.Font(nameText, 9f); nameText.color = UiPalette.Muted; ViewKit.Outline(nameText);
+            ViewKit.Font(result.b, 9f); ViewKit.Outline(result.b);
+            result.b.rectTransform.sizeDelta = new Vector2(ViewKit.U(40f), ViewKit.U(12f));
+            ViewKit.Show(inputsRoot, true);
+            inputsRoot.localPosition = Vector3.zero;
+            result.transform.localPosition = Vector3.zero;
+            result.b.transform.localPosition = Vector3.zero;
+            barH = ViewKit.U(2f); barY = -v.H - ViewKit.U(14f);
+            progressTrack.color = Track;
+            progressFill.color = UiPalette.Gold;
+            ViewKit.ToOverlay(this);
+            lastRecipe = -2; LastFace = null; relayout = true; lastHadStatus = false;
+        }
+
+        float TextW(TextMeshPro t, string s) => t.GetPreferredValues(s).x + ViewKit.U(2f);
+
+        void RelayoutReal(BuildingView v, ConverterFace f)
+        {
+            relayout = false;
+            float gap = ViewKit.U(5f), ic = ViewKit.U(12f), ig = ViewKit.U(2f), dotW = ViewKit.U(5f);
+            float y = -v.H - ViewKit.U(7f);
+            int n = f.inputs.Count;
+            float total = dotW + gap;
+            var iw = new float[n];
+            for (int i = 0; i < n; i++) { iw[i] = TextW(inputs[i].a, inputs[i].a.text); total += ic + ig + iw[i] + gap; }
+            float aw = TextW(nameText, "→");
+            float rw = TextW(result.b, result.b.text);
+            total += aw + gap + ic + ig + rw;
+            float x = v.W * 0.5f - total * 0.5f;
+            dot.transform.localPosition = new Vector3(x + dotW * 0.5f, y, 0f);
+            dot.transform.localScale = new Vector3(dotW, dotW, 1f);
+            x += dotW + gap;
+            for (int i = 0; i < n; i++)
+            {
+                var c = inputs[i];
+                c.icon.transform.localPosition = new Vector3(x + ic * 0.5f, y, 0f); x += ic + ig;
+                c.a.transform.localPosition = new Vector3(x + iw[i] * 0.5f, y, 0f); x += iw[i] + gap;
+            }
+            nameText.transform.localPosition = new Vector3(x + aw * 0.5f, y, 0f); x += aw + gap;
+            result.icon.transform.localPosition = new Vector3(x + ic * 0.5f, y, 0f); x += ic + ig;
+            result.b.transform.localPosition = new Vector3(x + rw * 0.5f, y, 0f);
+            float pw = total + ViewKit.U(10f);
+            backing.transform.localPosition = new Vector3(v.W * 0.5f, -v.H - ViewKit.U(8.75f), 0f);
+            backing.transform.localScale = new Vector3(pw, ViewKit.U(16.5f), 1f);
+            barW = pw - ViewKit.U(4f); barX0 = v.W * 0.5f - barW * 0.5f;
+            ViewKit.Bar(progressTrack, barX0, barY, barW, barH);
+        }
+
         public override void Layout(BuildingView v)
         {
+            real = v.RealArt;
+            if (real) { LayoutReal(v); return; }
+            if (backing != null) backing.gameObject.SetActive(false);
+            if (dot != null) dot.gameObject.SetActive(false);
+            ViewKit.Show(nameIcon, true); ViewKit.Show(nameText, true); ViewKit.Show(statusText, true);
             float wU = v.W;
-            // delivered art is the body: the face overlays the footprint on a translucent dark backing so it stays legible
-            if (v.RealArt)
-            {
-                if (backing == null)
-                {
-                    var go = new GameObject("Backing");
-                    go.transform.SetParent(transform, false);
-                    backing = go.AddComponent<SpriteRenderer>();
-                    backing.sprite = progressTrack.sprite;      // 1-unit square
-                    backing.sortingLayerID = progressTrack.sortingLayerID;
-                    backing.sortingOrder = progressTrack.sortingOrder - 2;
-                    backing.color = new Color(0.04f, 0.05f, 0.07f, 0.55f);
-                }
-                backing.gameObject.SetActive(true);
-                backing.transform.localPosition = v.L(0.5f, 0.6f);
-                backing.transform.localScale = new Vector3(wU - ViewKit.U(4f), v.H * 0.8f, 1f);
-            }
-            else if (backing != null) backing.gameObject.SetActive(false);
             // name row (emoji + muted name 9.5 px), y + 8 px
             var nameY = -ViewKit.U(8f);
             ViewKit.Fit(nameIcon, v.Sync.Sprites.Building(v.Building.type), 11f);
@@ -115,6 +169,7 @@ namespace IdleGrounds.Game
                 {
                     var ic = Instantiate(inputTemplate, inputsRoot);
                     ic.name = "Input" + inputs.Count;
+                    if (real) ViewKit.ToOverlay(ic);
                     inputs.Add(ic);
                 }
                 float sp = ViewKit.U(24f), x = -(f.inputs.Count - 1) * sp * 0.5f;
@@ -124,13 +179,22 @@ namespace IdleGrounds.Game
                     inputs[i].gameObject.SetActive(on);
                     if (!on) continue;
                     var ic = inputs[i];
+                    if (real)
+                    {
+                        ViewKit.Fit(ic.icon, sprites.Item(f.inputs[i].item), 12f);
+                        ViewKit.Font(ic.a, 8.5f); ViewKit.Outline(ic.a); ViewKit.Show(ic.b, false);
+                        ic.a.rectTransform.sizeDelta = new Vector2(ViewKit.U(44f), ViewKit.U(12f));
+                        ic.transform.localPosition = Vector3.zero; ic.a.transform.localPosition = Vector3.zero; ic.icon.transform.localPosition = Vector3.zero;
+                        continue;
+                    }
                     ic.transform.localPosition = new Vector3(x + i * sp, 0f, 0f);
                     ViewKit.Fit(ic.icon, sprites.Item(f.inputs[i].item), 18f);
                     ViewKit.Font(ic.a, 9f); ViewKit.Font(ic.b, 9f);
                     ic.a.transform.localPosition = new Vector3(-ViewKit.U(9f), ViewKit.U(8f), 0f);
                     ic.b.transform.localPosition = new Vector3(ViewKit.U(9f), -ViewKit.U(8f), 0f);
                 }
-                ViewKit.Fit(result.icon, sprites.Item(f.recipe.output), 22f);
+                ViewKit.Fit(result.icon, sprites.Item(f.recipe.output), real ? 12f : 22f);
+                relayout = true;
                 lastHave = new int[f.inputs.Count]; lastNeed = new int[f.inputs.Count];
                 for (int i = 0; i < lastHave.Length; i++) lastHave[i] = lastNeed[i] = int.MinValue;
                 lastCraftable = int.MinValue;
@@ -142,6 +206,11 @@ namespace IdleGrounds.Game
                 if (iv.have != lastHave[i] || iv.need != lastNeed[i])
                 {
                     lastHave[i] = iv.have; lastNeed[i] = iv.need;
+                    if (real)
+                    {
+                        ViewKit.Text(inputs[i].a, "<color=#" + (iv.have >= iv.need ? HaveOk : HaveLow) + ">" + iv.have + "</color><color=#" + NeedCol + ">/" + iv.need + "</color>");
+                        relayout = true; continue;
+                    }
                     ViewKit.Text(inputs[i].a, iv.have.ToString());
                     ViewKit.Colour(inputs[i].a, iv.have >= iv.need ? UiPalette.Accent : UiPalette.Danger);
                     ViewKit.Text(inputs[i].b, iv.need.ToString());
@@ -151,7 +220,8 @@ namespace IdleGrounds.Game
             if (f.craftable != lastCraftable)
             {
                 lastCraftable = f.craftable;
-                ViewKit.Text(result.b, f.craftable.ToString());
+                ViewKit.Text(result.b, real ? "×" + f.craftable : f.craftable.ToString());
+                relayout = true;
                 ViewKit.Colour(result.b, UiPalette.Gold);
             }
 
@@ -178,6 +248,7 @@ namespace IdleGrounds.Game
                         default: txt = ""; break;
                     }
                 }
+                if (real) { dot.color = c; ViewKit.Text(statusText, txt); goto afterStatus; }   // strip: status is a coloured dot (full text lives in the hover tooltip)
                 ViewKit.Text(statusText, txt);
                 ViewKit.Colour(statusText, c);
                 ViewKit.Show(statusIcon, icon != null);
@@ -190,6 +261,9 @@ namespace IdleGrounds.Game
                 }
                 else statusText.transform.localPosition = v.L(0.5f, 0.755f);
             }
+
+        afterStatus:
+            if (real && relayout) RelayoutReal(v, f);
 
             // progress: extrapolated every frame from the batch end time and the sampled batch length
             var b = v.Building;

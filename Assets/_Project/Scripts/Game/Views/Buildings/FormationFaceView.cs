@@ -39,8 +39,10 @@ namespace IdleGrounds.Game
             foreach (var a in accepts) if (a != null) ViewKit.Show(a, false);
             badge.transform.localPosition = new Vector3(0.5f, -1f - ViewKit.U(8f), 0f);
             ViewKit.Font(badge, 9f);
+            if (v.RealArt) ViewKit.Outline(badge);
+            lastTw = 0f;
             ViewKit.Show(icon, !v.RealArt);     // delivered art is the body
-            if (itemIcon != null) itemIcon.transform.localPosition = new Vector3(0.5f, v.ArtTop + ViewKit.U(8f), 0f);
+            if (itemIcon != null) itemIcon.transform.localPosition = v.RealArt ? badge.transform.localPosition : new Vector3(0.5f, v.ArtTop + ViewKit.U(8f), 0f);
             if (badgeIcon != null) ViewKit.Fit(badgeIcon, badgeIcon.sprite, 10f);
             if (beatTrack != null)
             {
@@ -67,7 +69,7 @@ namespace IdleGrounds.Game
             if (reach != null && (kind == Kind.GatheringStone || kind == Kind.FurnaceSpirit)) ViewKit.Show(reach, on);
         }
 
-        int lastA = int.MinValue, lastB = int.MinValue;
+        int lastA = int.MinValue, lastB = int.MinValue; float lastTw;
 
         public override void Refresh(BuildingView v)
         {
@@ -96,7 +98,7 @@ namespace IdleGrounds.Game
                 ViewKit.Text(badge, txt);
                 if (badgeIcon != null)
                 {
-                    float tw = badge.GetPreferredValues(txt).x;
+                    float tw = badge.GetPreferredValues(txt).x; lastTw = tw;
                     badgeIcon.transform.localPosition = badge.transform.localPosition + new Vector3(tw * 0.5f + ViewKit.U(6f), 0f, 0f);
                 }
             }
@@ -122,7 +124,12 @@ namespace IdleGrounds.Game
             {
                 bool show = kind == Kind.WardingSeal && b.item != null;
                 ViewKit.Show(itemIcon, show);
-                if (show) ViewKit.Fit(itemIcon, v.Sync.Sprites.Item(b.item), 13f);
+                if (show)
+                {
+                    ViewKit.Fit(itemIcon, v.Sync.Sprites.Item(b.item), v.RealArt ? 11f : 13f);
+                    // real art: the tuned item sits beside the count in the badge below the tile
+                    if (v.RealArt) itemIcon.transform.localPosition = badge.transform.localPosition - new Vector3(lastTw * 0.5f + ViewKit.U(7f), 0f, 0f);
+                }
             }
             if (kind == Kind.GatheringStone) RefreshAccepts(v);
         }

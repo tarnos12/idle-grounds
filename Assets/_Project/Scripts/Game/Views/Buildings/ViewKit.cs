@@ -50,6 +50,48 @@ namespace IdleGrounds.Game
             sr.transform.localScale = new Vector3(Mathf.Max(0f, w), h, 1f);
         }
 
+        static Sprite square;
+        /// <summary>1-unit white square sprite (centre pivot) for plates / dots / bars made at runtime.</summary>
+        public static Sprite Square()
+        {
+            if (square == null)
+            {
+                var t = new Texture2D(1, 1, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+                t.SetPixel(0, 0, Color.white); t.Apply();
+                square = Sprite.Create(t, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
+            }
+            return square;
+        }
+
+        /// <summary>A runtime square renderer under <paramref name="parent"/>, sorted like <paramref name="like"/> (+ delta).</summary>
+        public static SpriteRenderer NewSquare(Transform parent, string name, Renderer like, int orderDelta, Color c)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = Square();
+            if (like != null) { sr.sortingLayerID = like.sortingLayerID; sr.sortingOrder = like.sortingOrder + orderDelta; }
+            sr.color = c;
+            return sr;
+        }
+
+        /// <summary>Dark outline so overlay text stays legible on top of pixel art.</summary>
+        public static void Outline(TextMeshPro t, float width = 0.28f)
+        {
+            if (t == null) return;
+            t.outlineWidth = width;
+            t.outlineColor = new Color32(8, 10, 14, 255);
+        }
+
+        /// <summary>Move every renderer under <paramref name="root"/> to the Overlay sorting layer (info strips draw above ground items).</summary>
+        public static void ToOverlay(Component root)
+        {
+            if (root == null) return;
+            foreach (var r in root.GetComponentsInChildren<Renderer>(true)) { r.sortingLayerName = "Overlay"; if (r.sortingOrder < 30) r.sortingOrder += 30; }
+        }
+
+        public static readonly Color PlateColour = new Color(0.04f, 0.05f, 0.07f, 0.62f);
+
         public static string Fmt(double v) => v >= 10 ? System.Math.Round(v).ToString("0", System.Globalization.CultureInfo.InvariantCulture) : v.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
     }
 }

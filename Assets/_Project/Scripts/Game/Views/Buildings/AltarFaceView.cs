@@ -28,10 +28,10 @@ namespace IdleGrounds.Game
             title.text = v.Def.name; ViewKit.Font(title, 24f); title.color = UiPalette.Gold;
             title.transform.localPosition = v.L(0.5f, 0.68f);
             title.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(28f));
-            sub.text = "Select an upgrade"; ViewKit.Font(sub, 16f); sub.color = UiPalette.Muted;
-            sub.transform.localPosition = v.L(0.5f, 0.86f);
-            sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(20f));
-            if (jobRow != null) { jobRow.transform.localPosition = v.L(0.5f, 0.86f); jobRow.Clear(); }
+            sub.text = "Select an upgrade"; ViewKit.Font(sub, 10f); sub.color = UiPalette.Muted; ViewKit.Outline(sub, 0.2f);
+            sub.transform.localPosition = new Vector3(v.W * 0.5f, -v.H - ViewKit.U(8f), 0f);   // below the footprint, out of the art
+            sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(12f));
+            if (jobRow != null) { jobRow.transform.localPosition = new Vector3(v.W * 0.5f, -v.H - ViewKit.U(12f), 0f); jobRow.Clear(); }
         }
 
         public override void Refresh(BuildingView v)
@@ -46,7 +46,7 @@ namespace IdleGrounds.Game
             if (jobRow != null)
             {
                 ViewKit.Show(jobRow, on);
-                if (on) jobRow.Set(entries, 20f, UiPalette.Gold, v.Sync.Sprites, null, v.W - ViewKit.U(8f));
+                if (on) jobRow.Set(entries, 12f, UiPalette.Gold, v.Sync.Sprites, null, v.W - ViewKit.U(8f));
             }
         }
     }
