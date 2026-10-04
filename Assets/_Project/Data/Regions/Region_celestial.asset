@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b0f8d98f3f5d274da2659e71724e7a5, type: 3}
+  m_Name: Region_celestial
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.RegionAsset
+  def:
+    key: celestial
+    name: Celestial Peak
+    icon: "\u2601\uFE0F"
+    verb: Gather
+    actionIcon: "\u2728"
+    baseItem: star_fragment
+    noBuild:
+    - centre
+    speedLabel: Reform Speed
+    timerLabel: Reform
+    surfaceWindow: 0
+    tierSprite: 
+    rx: 1
+    ry: 2
+    unlockSide: down
+    unlockCost:
+    - item: spirit_stone
+      qty: 6
+    - item: jade
+      qty: 3
+    - item: glass
+      qty: 3
+    tiers:
+    - name: Star Fragment
+      hits: 3
+      perHit: []
+      drops:
+      - item: star_fragment
+        min: 1
+        max: 2
+      timer: 16
+    spawners:
+    - kind: starrock
+      zone: centre
+      sizes: 0100000002000000
+      target: 8
+      scaleWithArea: 1
+      spacing: 0
+      interaction: 3
+      useTiers: 0
+      swingMs: 550
+      sprite: "\u2604\uFE0F"
+      hits: 3
+      regrow: 16
+      perHit: []
+      drops:
+      - item: star_fragment
+        min: 1
+        max: 2
+      rareDrop:
+        item: firestone
+        chance: 0.05
+    - kind: moonshrub
+      zone: centre
+      sizes: 01000000
+      target: 10
+      scaleWithArea: 1
+      spacing: 0
+      interaction: 1
+      useTiers: 0
+      swingMs: 350
+      sprite: "\U0001F4AE"
+      hits: 2
+      regrow: 18
+      perHit:
+      - item: moonpetal
+        min: 1
+        max: 1
+      drops:
+      - item: moonpetal
+        min: 1
+        max: 2
+      rareDrop:
+        item: 
+        chance: 0
+    fixtures: []
+    generators: []
+    enemies:
+      enabled: 0
+      zone: 
+      name: 
+      sprite: 
+      cap: 0
+      hp: 0
+      speed: 0
+      respawnMs: 0
+      attackMs: 0
+      drops: []
+      baitSpawn:
+        enabled: 0
+        name: 
+        sprite: 
+        hp: 0
+        speed: 0
+        drops: []
+  icon: {fileID: -1720451904, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  actionIcon: {fileID: -1076005617, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  groundColor: {r: 0.3, g: 0.28, b: 0.5, a: 1}
+  sprites:
+  - key: node_starrock
+    sprite: {fileID: -1279029670, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: node_moonshrub
+    sprite: {fileID: 1368577071, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

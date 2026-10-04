@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccecf84903c16844692964029249ab82, type: 3}
+  m_Name: Item_qi_elixir
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.ItemAsset
+  def:
+    key: qi_elixir
+    name: Qi Elixir
+    emoji: "\U0001F9EA"
+    fuelMs: 0
+    sourceHint: "Cauldron \u2190 Spirit Herb + Water + Essence"
+  icon: {fileID: -493557240, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

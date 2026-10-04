@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_waters
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: waters
+    icon: "\U0001F3A3"
+    name: Unlock the waters
+    desc: "Fishing is where Algae and Spring Water come from \u2014 carry wood to
+      the glowing border button and unlock Fishing."
+    goalKind: 5
+    goalItem: 
+    goalStat: 
+    goalStage: 0
+    goalNeed: 1
+    goalRegions:
+    - fishing
+    goalItems: []
+    goalSource: '() => ({ cur: window.GS.world.unlocked.fishing ? 1 : 0, need: 1
+      })'
+    rewardReveal:
+    - loom
+    - mill
+    - brewery
+    rewardItems: []
+    builds: []
+    target:
+      area: 
+      kind: 
+      id: 
+  icon: {fileID: 1481890909, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

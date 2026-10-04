@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 079d93f14a7c8ca43abaaad3e024aca3, type: 3}
+  m_Name: DragonStage_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.DragonStageAsset
+  def:
+    needs:
+    - item: iron_bar
+      qty: 8
+    - item: algae
+      qty: 15
+    - item: water
+      qty: 10
+    text: "The dragon tastes forged iron and rumbles approval. \"You shape the earth
+      well, little cultivator. Grow me the herbs of spirit \u2014 I will teach you
+      to garden what cannot be farmed.\" (Herb Garden unlocked)"
+  icon: {fileID: -1126782508, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

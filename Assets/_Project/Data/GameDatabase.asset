@@ -1,0 +1,446 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1585e96db0c9319448d129a121611ffe, type: 3}
+  m_Name: GameDatabase
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.GameDatabase
+  items:
+  - {fileID: 11400000, guid: c92ef69aa1042474db501057a84f023b, type: 2}
+  - {fileID: 11400000, guid: 5d9f047a8dc3c7149a311bed519dbd44, type: 2}
+  - {fileID: 11400000, guid: 415a2a5ebb5fb9e47ade47724cd2510b, type: 2}
+  - {fileID: 11400000, guid: d87ad3db43545314784102542a872511, type: 2}
+  - {fileID: 11400000, guid: a12f35b4ee6b5334393c66527d571838, type: 2}
+  - {fileID: 11400000, guid: 3de6802770e425444b342ecb0ee27010, type: 2}
+  - {fileID: 11400000, guid: 551f0d6527ecbce4a9554f920dba8b77, type: 2}
+  - {fileID: 11400000, guid: 7604633c70aaaa14fa891351c5d1adac, type: 2}
+  - {fileID: 11400000, guid: 9c701ecf6ff40494393c64ff7f8d8c6c, type: 2}
+  - {fileID: 11400000, guid: 6dc38c8778e485747af09695b99b68e2, type: 2}
+  - {fileID: 11400000, guid: acbdd6b1084d1f84086d4a14421883fb, type: 2}
+  - {fileID: 11400000, guid: 9f608ef7f39469347b7a1e9f17ae93ff, type: 2}
+  - {fileID: 11400000, guid: 7e9b5093fd872934eaeecc9efc5d901d, type: 2}
+  - {fileID: 11400000, guid: 03b1b10e7a6313147b4f46a7e63b94a9, type: 2}
+  - {fileID: 11400000, guid: fae555354587f0a42be275049b09dda4, type: 2}
+  - {fileID: 11400000, guid: d86820c8c72f32d40a51bd9ef8106d4b, type: 2}
+  - {fileID: 11400000, guid: dd33f4929d80d3544a8283b7ad0f7336, type: 2}
+  - {fileID: 11400000, guid: 7c25f6c6eb102234aaf859a1ff8fb2b1, type: 2}
+  - {fileID: 11400000, guid: 9ca54a659e576e448aa792569f315a0d, type: 2}
+  - {fileID: 11400000, guid: bf02a12f6b80b794e97dd488aa9b7a56, type: 2}
+  - {fileID: 11400000, guid: 3c95fe68ce1adb0479f3d8f2f7173353, type: 2}
+  - {fileID: 11400000, guid: 5941f83028bbda04fba6808a842b65a2, type: 2}
+  - {fileID: 11400000, guid: 77a57548027adec448b5bddb12e6da7b, type: 2}
+  - {fileID: 11400000, guid: 294c45a8e2c0dda4f8f9f08ba530875e, type: 2}
+  - {fileID: 11400000, guid: 724be658b670f5c4994f6e012ef281f0, type: 2}
+  - {fileID: 11400000, guid: 002e24a44e21d544a8f7ca7b91a6cf52, type: 2}
+  - {fileID: 11400000, guid: 905b663e1f62ed142bd77f9374ac8d93, type: 2}
+  - {fileID: 11400000, guid: 0b35fa65fd7a6cd4db431123bc5617d2, type: 2}
+  - {fileID: 11400000, guid: cfd1aac03646ab1428e7ad011fcacbf2, type: 2}
+  - {fileID: 11400000, guid: 59b08224f0e3f4341b637796b390eed5, type: 2}
+  - {fileID: 11400000, guid: e5c865314c420204084122f393fed9cb, type: 2}
+  - {fileID: 11400000, guid: 921173a2515ea5943a42f6c823ceafd9, type: 2}
+  - {fileID: 11400000, guid: 4b0a61bccf923b841b1b728aaa7a88af, type: 2}
+  - {fileID: 11400000, guid: fd0ffba6bcf33e1489e358b4cd632abb, type: 2}
+  - {fileID: 11400000, guid: d1ee69c873158aa4ba62d11d83a71049, type: 2}
+  - {fileID: 11400000, guid: e9ea6df4fad6d1f4299fbfcf120c658e, type: 2}
+  - {fileID: 11400000, guid: 915ce8376588b994b8127ecb74255145, type: 2}
+  - {fileID: 11400000, guid: c40bb6c452cb9ca49be4b9e34a96890c, type: 2}
+  - {fileID: 11400000, guid: 90cbf93d18d8ea348af87c40b3ff53a4, type: 2}
+  - {fileID: 11400000, guid: 8c501894c97da2e4e9ca842ca40b3723, type: 2}
+  - {fileID: 11400000, guid: 3215c16b0668761438b0774e07e53879, type: 2}
+  - {fileID: 11400000, guid: 6049b5a8d9248284dabdf02ef5e53e70, type: 2}
+  - {fileID: 11400000, guid: fc1a6a8927bd50943809ed3a35d8e122, type: 2}
+  - {fileID: 11400000, guid: b9029386960b357478103087b57f8b33, type: 2}
+  - {fileID: 11400000, guid: 44ccb5f9c617f9f4ca4eaa09ec8fafce, type: 2}
+  - {fileID: 11400000, guid: f8f6c4f009bf7dc4b8256c24e1249cce, type: 2}
+  regions:
+  - {fileID: 11400000, guid: 3b80cd6ad67a9e642a70f41576189d4e, type: 2}
+  - {fileID: 11400000, guid: 840e8671a4a1a2343af54fdc2330cde6, type: 2}
+  - {fileID: 11400000, guid: 71738038173c61c4386d8466324ca210, type: 2}
+  - {fileID: 11400000, guid: 9651e4dd28f144c498d7fe212621a371, type: 2}
+  - {fileID: 11400000, guid: 9c221ae2e7b90a742a89ac370941bc37, type: 2}
+  - {fileID: 11400000, guid: baafa780aa0c15e40b3cb157518632a2, type: 2}
+  - {fileID: 11400000, guid: a3203f0e95febe1488d166e1ef880220, type: 2}
+  buildings:
+  - {fileID: 11400000, guid: 9e8c7f6de6b2e2844ae22cf53dfd25a8, type: 2}
+  - {fileID: 11400000, guid: b3cb1789638480140955296ce300c765, type: 2}
+  - {fileID: 11400000, guid: 530a54985d897224ab4cef3fb9524d54, type: 2}
+  - {fileID: 11400000, guid: dd41451ea8d7f3a4094040d9309e3f23, type: 2}
+  - {fileID: 11400000, guid: fcac0af29e6597f4eadd16eced46742c, type: 2}
+  - {fileID: 11400000, guid: c5d9f897d52b2554f9b7af4a583e29a7, type: 2}
+  - {fileID: 11400000, guid: d25be13dd799c6d4e974ee1452bcdb59, type: 2}
+  - {fileID: 11400000, guid: d11dbb2354b6e8241afb920d0d281a78, type: 2}
+  - {fileID: 11400000, guid: 65f6ae5eed098244ca5b2bb43b44d851, type: 2}
+  - {fileID: 11400000, guid: 312e5abacd3cff246ab8281898c4584c, type: 2}
+  - {fileID: 11400000, guid: eb6017997c2794849b05eed7e9c42db2, type: 2}
+  - {fileID: 11400000, guid: 861c6ee8d72249c4fab06ce488272b05, type: 2}
+  - {fileID: 11400000, guid: d0a75546ec983f1448d74448aae052ec, type: 2}
+  - {fileID: 11400000, guid: 82990ff1e1b705844aebf7026a00c1a2, type: 2}
+  - {fileID: 11400000, guid: 4859e612839072347a4c1cd7028da2b7, type: 2}
+  - {fileID: 11400000, guid: dc8741fba5a2ba24c84da211c2a78da0, type: 2}
+  - {fileID: 11400000, guid: 4d8804fcf6c795f49899378f786ca548, type: 2}
+  - {fileID: 11400000, guid: 741fa4268c8504d468a06d1649557c03, type: 2}
+  - {fileID: 11400000, guid: 8f25449a10ae9ab49b31d13e5aa7cdea, type: 2}
+  - {fileID: 11400000, guid: 0d0bdeae19f11e84a9399de779eb4612, type: 2}
+  - {fileID: 11400000, guid: ae84c707d21358f498267bfcb6fc04ad, type: 2}
+  - {fileID: 11400000, guid: 1d011974a2c67c740bb39af316d15732, type: 2}
+  - {fileID: 11400000, guid: 814763110e952ec488a80eba22b46ad0, type: 2}
+  - {fileID: 11400000, guid: aa18adbf5aec2fe42acc43fdbcbcc0df, type: 2}
+  - {fileID: 11400000, guid: 4db29e8af73a05f4fbdccc98e225e806, type: 2}
+  - {fileID: 11400000, guid: ed262a5b98e3c7b47ae2010f9f1a4343, type: 2}
+  upgrades:
+  - {fileID: 11400000, guid: be076977e3f8d814889cce170ede02da, type: 2}
+  - {fileID: 11400000, guid: af5c9d3ff6d226d45a06931132149091, type: 2}
+  - {fileID: 11400000, guid: 68370466efc1f1c43b97f87e5f2c099a, type: 2}
+  - {fileID: 11400000, guid: a193ab54f7e0ad844b0c35399d3229cd, type: 2}
+  - {fileID: 11400000, guid: 3f3c466600cc55c4fb501e9e22848c0a, type: 2}
+  - {fileID: 11400000, guid: cb479c5a79cf1db4a9ee9db2d222c2b7, type: 2}
+  - {fileID: 11400000, guid: 79d2cbb011380dc48a4d21c41bbef8ae, type: 2}
+  - {fileID: 11400000, guid: d1fdac689a60579478b52f1be59bcee4, type: 2}
+  - {fileID: 11400000, guid: 5c4460af87919444b93f06ce64d9330d, type: 2}
+  - {fileID: 11400000, guid: 92f91c72da6f5f64690bb13dba681a3c, type: 2}
+  - {fileID: 11400000, guid: f006aae51f1c3284f8bd149f72216ea3, type: 2}
+  - {fileID: 11400000, guid: fba7501e2cbdb0f4aa03325e03a8a46f, type: 2}
+  - {fileID: 11400000, guid: 6ff25ebcc085cf44ca296e12f3ab5f4f, type: 2}
+  - {fileID: 11400000, guid: cad1ab1dd6e23374390eb29055bfbecc, type: 2}
+  - {fileID: 11400000, guid: a180e9b771b4fd34cbe0c9f32b4cf65b, type: 2}
+  - {fileID: 11400000, guid: 3a8cd399c92e11646809d46aca83d2e1, type: 2}
+  - {fileID: 11400000, guid: cc271ed50a2817349a567db75ac2f96d, type: 2}
+  - {fileID: 11400000, guid: 74454fd896da81947996b3d35176432e, type: 2}
+  - {fileID: 11400000, guid: 52e50d502977a9e4cbcbbdc4dc6c7f37, type: 2}
+  perks:
+  - {fileID: 11400000, guid: 7c01c45a4dfbc2d409e82198d3ae0556, type: 2}
+  - {fileID: 11400000, guid: 999b71d4380571c4db25c4f6ff99bec5, type: 2}
+  - {fileID: 11400000, guid: 1df55351b2dfa7440afc950347ae5d38, type: 2}
+  - {fileID: 11400000, guid: fbbaebf786957e341a88d2d16b769eb3, type: 2}
+  - {fileID: 11400000, guid: 7ff42fd050909ef4da89cb660badf97f, type: 2}
+  - {fileID: 11400000, guid: 1192c1b824cc3fb48ace6cd9d266e277, type: 2}
+  - {fileID: 11400000, guid: 573bffee206083a469236d760011e800, type: 2}
+  - {fileID: 11400000, guid: 2efb8b9628dabe7428c0834446160e02, type: 2}
+  - {fileID: 11400000, guid: 80acc092481d7e947a4687e48f38b1a6, type: 2}
+  - {fileID: 11400000, guid: d6ef55c4a307165459dbbd00185d8b01, type: 2}
+  - {fileID: 11400000, guid: d78ca3ff4f71d0f4fa2a4a3764102445, type: 2}
+  - {fileID: 11400000, guid: c38c134abaa385d419218fef17393b9c, type: 2}
+  - {fileID: 11400000, guid: aed40550bafcbed47b9816648b90b1fa, type: 2}
+  - {fileID: 11400000, guid: 2f35e44ad9b81894bad8554fc76cfae1, type: 2}
+  - {fileID: 11400000, guid: 7d2b0d1fff263a140a74f4790399ecfd, type: 2}
+  vows:
+  - {fileID: 11400000, guid: 6c98822a34916e143abf862526c24739, type: 2}
+  - {fileID: 11400000, guid: b139aa09f9fcbf44994ade778d718ba8, type: 2}
+  - {fileID: 11400000, guid: be1c498a28a66674c9d67c51de1a9c5c, type: 2}
+  - {fileID: 11400000, guid: 1753768b87556814dabbf2ce721a2744, type: 2}
+  quests:
+  - {fileID: 11400000, guid: 1f96a72c4cea3e646add6222c9fd36e5, type: 2}
+  - {fileID: 11400000, guid: bade1d10609ade7428983dc083b13a65, type: 2}
+  - {fileID: 11400000, guid: 48fed52d134345f45ad7cc3e8ec01719, type: 2}
+  - {fileID: 11400000, guid: 296ff3845a7232c4e871465c5b38ee5b, type: 2}
+  - {fileID: 11400000, guid: d41f4e20b4f92444b9d7300c27dfb51b, type: 2}
+  - {fileID: 11400000, guid: 095e7ff60fa7cd544afa092b7cf0fe5b, type: 2}
+  - {fileID: 11400000, guid: 2c37c909c95599b4695eaa14ab17220f, type: 2}
+  - {fileID: 11400000, guid: 0030622fd0e0cb9499fd29d8975d94ed, type: 2}
+  - {fileID: 11400000, guid: 974384dc7af17b743b9bd8d0bfee9d4c, type: 2}
+  - {fileID: 11400000, guid: 1e5c01703bcd27a4db8ef03e1820ada8, type: 2}
+  - {fileID: 11400000, guid: edc21594aa4e9594bb45524ff22c794f, type: 2}
+  - {fileID: 11400000, guid: 7eb9a1045ca10b747a9747124152d09c, type: 2}
+  - {fileID: 11400000, guid: c6004c4a7f315534e98073d5c717f617, type: 2}
+  - {fileID: 11400000, guid: 74ddcfec6efdd824896aee89c931fb7c, type: 2}
+  dragonStages:
+  - {fileID: 11400000, guid: 1bb498f8878e0f540b441a21b36d6f27, type: 2}
+  - {fileID: 11400000, guid: e7a8477c3cb2ffa47bfc11d3d2103eea, type: 2}
+  - {fileID: 11400000, guid: 90757227de498c24790fde18a1ee557c, type: 2}
+  - {fileID: 11400000, guid: e4137c9129ded9749bc69489714b1669, type: 2}
+  balance:
+    handCap: 20
+    fuelSlots: 6
+    fuelCap: 60000
+    automationClicks: 020000000600000014000000
+    vowMult:
+    - 1
+    - 1.15
+    - 1.3
+    - 1.5
+    - 1.75
+    questChain: 2
+    versionNum: 52
+    versionDesc: 'Design pass 2: idle loop that runs, reveal+quests, vows & legacy
+      perks, readable logistics'
+    worldCols: 3
+    worldRows: 3
+    groundCap: 600
+    groundHardCap: 900
+    protectedShare: 480
+    manualGraceMs: 4000
+    fixtureGraceMs: 8000
+    genRareIdle: 2
+    outputPileMax: 12
+    outputPileCells: 3
+    pileRecheckMs: 500
+    craftWindowMs: 60000
+    maxTickGap: 10000
+    maxTickEvents: 400
+    autoSkipLoose: 120
+    offlineMaxTicks: 45000
+    offlineMinMs: 90000
+    offlineModalMs: 600000
+    offlinePlateauMs: 900000
+    dropJitterPx: 16
+    pickupCollectPx: 12
+    settleMinPx: 18
+    respawnRetryMs: 500
+    spawnAttempts: 40
+    defaultSurfaceWindowSec: 3
+    defaultStockCap: 20
+    storehouseDefaultCap: 200
+  grid:
+    cell: 32
+    cells: 93
+    margin: 10
+    gap: 5
+    buildingW: 3
+    buildingH: 3
+  test:
+    enabled: 1
+    timeScale: 0.2
+    costScale: 0.5
+  zones:
+  - key: corners
+    rects:
+    - r0: 0
+      c0: 0
+      r1: 24
+      c1: 24
+    - r0: 0
+      c0: 68
+      r1: 24
+      c1: 92
+    - r0: 68
+      c0: 0
+      r1: 92
+      c1: 24
+    - r0: 68
+      c0: 68
+      r1: 92
+      c1: 92
+  - key: cornerTL
+    rects:
+    - r0: 0
+      c0: 0
+      r1: 24
+      c1: 24
+  - key: cornerTR
+    rects:
+    - r0: 0
+      c0: 68
+      r1: 24
+      c1: 92
+  - key: cornerBL
+    rects:
+    - r0: 68
+      c0: 0
+      r1: 92
+      c1: 24
+  - key: cornerBR
+    rects:
+    - r0: 68
+      c0: 68
+      r1: 92
+      c1: 92
+  - key: centre
+    rects:
+    - r0: 25
+      c0: 25
+      r1: 67
+      c1: 67
+  - key: midTop
+    rects:
+    - r0: 0
+      c0: 25
+      r1: 24
+      c1: 67
+  - key: midLeft
+    rects:
+    - r0: 25
+      c0: 0
+      r1: 67
+      c1: 24
+  - key: clayField
+    rects:
+    - r0: 76
+      c0: 76
+      r1: 84
+      c1: 84
+  - key: quarryField
+    rects:
+    - r0: 76
+      c0: 8
+      r1: 84
+      c1: 16
+  - key: springField
+    rects:
+    - r0: 8
+      c0: 8
+      r1: 16
+      c1: 16
+  - key: woodField
+    rects:
+    - r0: 12
+      c0: 40
+      r1: 20
+      c1: 48
+  - key: sandField
+    rects:
+    - r0: 42
+      c0: 14
+      r1: 50
+      c1: 22
+  dragonBuffs:
+  - item: ember_pill
+    name: Ember Blessing
+    desc: Burners work twice as fast.
+  - item: verdant_pill
+    name: Verdant Blessing
+    desc: Nodes regrow twice as fast.
+  - item: swiftwind_pill
+    name: Swiftwind Blessing
+    desc: Wisps fly and send twice as fast.
+  - item: stoneheart_pill
+    name: Stoneheart Blessing
+    desc: Mining and quarry drops doubled.
+  vitality:
+    item: vitality_pill
+    name: Martial Vigor
+    ms: 45000
+    bonusDamage: 2
+    lootMult: 2
+  reveal:
+  - building: storehouse
+    any:
+    - kind: 0
+      key: wood
+      stage: 0
+  - building: gathering_stone
+    any:
+    - kind: 0
+      key: build
+      stage: 0
+  - building: wisp_lantern
+    any:
+    - kind: 0
+      key: build
+      stage: 0
+  - building: warding_seal
+    any:
+    - kind: 0
+      key: build
+      stage: 0
+  - building: workbench
+    any:
+    - kind: 0
+      key: build
+      stage: 0
+  - building: kiln
+    any:
+    - kind: 0
+      key: build
+      stage: 0
+  - building: paper_mill
+    any:
+    - kind: 0
+      key: build
+      stage: 0
+  - building: charcoal_pit
+    any:
+    - kind: 0
+      key: build
+      stage: 0
+  - building: infusion_array
+    any:
+    - kind: 0
+      key: fox
+      stage: 0
+  - building: furnace_spirit
+    any:
+    - kind: 0
+      key: link
+      stage: 0
+  - building: loom
+    any:
+    - kind: 1
+      key: farm
+      stage: 0
+    - kind: 0
+      key: waters
+      stage: 0
+  - building: mill
+    any:
+    - kind: 1
+      key: farm
+      stage: 0
+    - kind: 0
+      key: waters
+      stage: 0
+  - building: brewery
+    any:
+    - kind: 1
+      key: farm
+      stage: 0
+    - kind: 0
+      key: waters
+      stage: 0
+  - building: jade_carver
+    any:
+    - kind: 1
+      key: mine
+      stage: 0
+  - building: cauldron
+    any:
+    - kind: 1
+      key: mine
+      stage: 0
+  - building: meditation_pavilion
+    any:
+    - kind: 0
+      key: weaver
+      stage: 0
+    - kind: 1
+      key: grove
+      stage: 0
+  - building: pill_furnace
+    any:
+    - kind: 2
+      key: 
+      stage: 3
+  - building: star_anvil
+    any:
+    - kind: 2
+      key: 
+      stage: 3
+  - building: talisman_atelier
+    any:
+    - kind: 2
+      key: 
+      stage: 3
+  - building: dragon_shrine
+    any:
+    - kind: 2
+      key: 
+      stage: 4
+  - building: ascension_gate
+    any:
+    - kind: 2
+      key: 
+      stage: 4
+  gateOfferings:
+    items:
+    - talisman
+    - star_steel
+    - dragon_scale
+    cap: 6
+    perType: 2
+  missingSprite: {fileID: -1935059799, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

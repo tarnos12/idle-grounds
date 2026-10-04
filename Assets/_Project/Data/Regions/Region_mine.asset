@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b0f8d98f3f5d274da2659e71724e7a5, type: 3}
+  m_Name: Region_mine
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.RegionAsset
+  def:
+    key: mine
+    name: Mine
+    icon: "\u26F0\uFE0F"
+    verb: Mine
+    actionIcon: "\u26CF\uFE0F"
+    baseItem: stone
+    noBuild:
+    - centre
+    speedLabel: Mining Speed
+    timerLabel: Respawn
+    surfaceWindow: 0
+    tierSprite: 
+    rx: 2
+    ry: 0
+    unlockSide: right
+    unlockCost:
+    - item: wood
+      qty: 16
+    tiers:
+    - name: Stone
+      hits: 2
+      perHit: []
+      drops:
+      - item: stone
+        min: 3
+        max: 3
+      - item: clay
+        min: 1
+        max: 1
+      timer: 10
+    spawners:
+    - kind: ore
+      zone: centre
+      sizes: 0100000002000000
+      target: 10
+      scaleWithArea: 1
+      spacing: 0
+      interaction: 3
+      useTiers: 1
+      swingMs: 450
+      sprite: 
+      hits: 0
+      regrow: 0
+      perHit: []
+      drops: []
+      rareDrop:
+        item: firestone
+        chance: 0.05
+    - kind: ironvein
+      zone: centre
+      sizes: 02000000
+      target: 2
+      scaleWithArea: 1
+      spacing: 0
+      interaction: 3
+      useTiers: 0
+      swingMs: 500
+      sprite: "\u26D3\uFE0F"
+      hits: 3
+      regrow: 12
+      perHit: []
+      drops:
+      - item: iron_ore
+        min: 1
+        max: 2
+      rareDrop:
+        item: firestone
+        chance: 0.15
+    - kind: jadevein
+      zone: centre
+      sizes: 02000000
+      target: 1
+      scaleWithArea: 1
+      spacing: 0
+      interaction: 3
+      useTiers: 0
+      swingMs: 500
+      sprite: "\U0001F7E2"
+      hits: 3
+      regrow: 14
+      perHit: []
+      drops:
+      - item: jade_shard
+        min: 1
+        max: 2
+      rareDrop:
+        item: 
+        chance: 0
+    fixtures: []
+    generators: []
+    enemies:
+      enabled: 0
+      zone: 
+      name: 
+      sprite: 
+      cap: 0
+      hp: 0
+      speed: 0
+      respawnMs: 0
+      attackMs: 0
+      drops: []
+      baitSpawn:
+        enabled: 0
+        name: 
+        sprite: 
+        hp: 0
+        speed: 0
+        drops: []
+  icon: {fileID: 1091492606, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  actionIcon: {fileID: 1468804644, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  groundColor: {r: 0.38, g: 0.38, b: 0.42, a: 1}
+  sprites:
+  - key: node_ore
+    sprite: {fileID: 1147092697, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: node_ironvein
+    sprite: {fileID: -1433539018, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: node_jadevein
+    sprite: {fileID: -1548191747, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

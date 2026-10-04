@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 910c5fc70431b9d479d3214ef68cfd4f, type: 3}
+  m_Name: Building_brewery
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.BuildingAsset
+  def:
+    key: brewery
+    name: Brewery
+    icon: "\U0001F376"
+    sizeW: 3
+    sizeH: 3
+    cost:
+    - item: wood
+      qty: 8
+    - item: clay
+      qty: 6
+    unlocked: 1
+    stageUnlock: -1
+    indestructible: 0
+    fuel: 0
+    anyZone: 0
+    waterOnly: 0
+    cap: 0
+    shrine: 0
+    gate: 0
+    recipes:
+    - name: Spirit Wine
+      inputs:
+      - item: wheat
+        qty: 2
+      - item: water
+        qty: 2
+      - item: leaves
+        qty: 1
+      output: spirit_wine
+      outputQty: 1
+      timeMs: 8000
+      stockCap: 0
+    gather:
+      enabled: 0
+      radius: 0
+      cap: 0
+    stoker:
+      enabled: 0
+      radius: 0
+      cap: 0
+    lantern:
+      enabled: 0
+      rateMs: 0
+      speed: 0
+    seal:
+      enabled: 0
+      cap: 0
+    roster:
+      enabled: 0
+      cap: 0
+      recruit: 
+      food: 
+      foodCap: 0
+      foodValues: []
+      produce: 
+      produceMs: 0
+    gen:
+      enabled: 0
+      item: 
+      intervalMs: 0
+      cap: 0
+  icon: {fileID: -1647561851, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  prefabOverride: {fileID: 0}

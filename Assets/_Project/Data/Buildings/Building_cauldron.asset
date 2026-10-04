@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 910c5fc70431b9d479d3214ef68cfd4f, type: 3}
+  m_Name: Building_cauldron
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.BuildingAsset
+  def:
+    key: cauldron
+    name: Cauldron
+    icon: "\u2697\uFE0F"
+    sizeW: 3
+    sizeH: 3
+    cost:
+    - item: stone
+      qty: 8
+    - item: iron_bar
+      qty: 2
+    unlocked: 1
+    stageUnlock: -1
+    indestructible: 0
+    fuel: 0
+    anyZone: 0
+    waterOnly: 0
+    cap: 0
+    shrine: 0
+    gate: 0
+    recipes:
+    - name: Qi Elixir
+      inputs:
+      - item: spirit_herb
+        qty: 1
+      - item: water
+        qty: 2
+      - item: spirit_essence
+        qty: 1
+      output: qi_elixir
+      outputQty: 2
+      timeMs: 8000
+      stockCap: 0
+    - name: Vitality Pill
+      inputs:
+      - item: fish
+        qty: 1
+      - item: spirit_herb
+        qty: 1
+      - item: water
+        qty: 1
+      output: vitality_pill
+      outputQty: 1
+      timeMs: 7000
+      stockCap: 0
+    - name: Beast Bait
+      inputs:
+      - item: fish
+        qty: 2
+      - item: algae
+        qty: 2
+      output: beast_bait
+      outputQty: 1
+      timeMs: 6000
+      stockCap: 0
+    - name: Moon Elixir
+      inputs:
+      - item: moonpetal
+        qty: 2
+      - item: water
+        qty: 1
+      output: qi_elixir
+      outputQty: 2
+      timeMs: 8000
+      stockCap: 0
+    gather:
+      enabled: 0
+      radius: 0
+      cap: 0
+    stoker:
+      enabled: 0
+      radius: 0
+      cap: 0
+    lantern:
+      enabled: 0
+      rateMs: 0
+      speed: 0
+    seal:
+      enabled: 0
+      cap: 0
+    roster:
+      enabled: 0
+      cap: 0
+      recruit: 
+      food: 
+      foodCap: 0
+      foodValues: []
+      produce: 
+      produceMs: 0
+    gen:
+      enabled: 0
+      item: 
+      intervalMs: 0
+      cap: 0
+  icon: {fileID: -898384007, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  prefabOverride: {fileID: 0}

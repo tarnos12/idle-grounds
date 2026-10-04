@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2bac380d1533b043be02869d6cb106e, type: 3}
+  m_Name: Upgrade_foe_dmg
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.UpgradeNodeAsset
+  def:
+    id: foe_dmg
+    icon: "\u2694\uFE0F"
+    name: Spirit Blade
+    x: 315
+    y: 205
+    area: center
+    type: damage
+    desc: +1 damage per strike on beasts.
+    links:
+    - foe_aoe
+    costs:
+    - items:
+      - item: spirit_essence
+        qty: 5
+      - item: stone
+        qty: 20
+    - items:
+      - item: spirit_essence
+        qty: 15
+      - item: iron_ore
+        qty: 10
+    - items:
+      - item: spirit_essence
+        qty: 30
+      - item: iron_bar
+        qty: 8
+  icon: {fileID: 1481538528, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

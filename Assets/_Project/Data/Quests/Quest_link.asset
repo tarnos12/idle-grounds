@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_link
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: link
+    icon: "\U0001F3EE"
+    name: Wisp wrangler
+    desc: "Wisps already ferry items along the dashed threads. Click a Wisp Lantern,
+      press \u2795 Add link, then click a source (\U0001F9FF/\U0001F4E6) and a target
+      building."
+    goalKind: 4
+    goalItem: 
+    goalStat: linksAdded
+    goalStage: 0
+    goalNeed: 1
+    goalRegions: []
+    goalItems: []
+    goalSource: '() => ({ cur: window.GS.stats.linksAdded || 0, need: 1 })'
+    rewardReveal:
+    - furnace_spirit
+    rewardItems: []
+    builds: []
+    target:
+      area: center
+      kind: building
+      id: wisp_lantern
+  icon: {fileID: -541339145, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

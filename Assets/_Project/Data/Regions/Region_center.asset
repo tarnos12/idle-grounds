@@ -1,0 +1,163 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b0f8d98f3f5d274da2659e71724e7a5, type: 3}
+  m_Name: Region_center
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.RegionAsset
+  def:
+    key: center
+    name: Center
+    icon: "\U0001F332"
+    verb: Chop
+    actionIcon: "\U0001FA93"
+    baseItem: wood
+    noBuild:
+    - corners
+    - midTop
+    speedLabel: Regrow Speed
+    timerLabel: Regrow
+    surfaceWindow: 0
+    tierSprite: 
+    rx: 1
+    ry: 0
+    unlockSide: 
+    unlockCost: []
+    tiers:
+    - name: Oak
+      hits: 3
+      perHit:
+      - item: wood
+        min: 1
+        max: 2
+      drops: []
+      timer: 15
+    spawners:
+    - kind: bush
+      zone: centre
+      sizes: 01000000
+      target: 10
+      scaleWithArea: 0
+      spacing: 6
+      interaction: 1
+      useTiers: 0
+      swingMs: 300
+      sprite: "\U0001F33F"
+      hits: 2
+      regrow: 12
+      perHit:
+      - item: leaves
+        min: 1
+        max: 1
+      drops:
+      - item: leaves
+        min: 1
+        max: 2
+      rareDrop:
+        item: 
+        chance: 0
+    fixtures:
+    - kind: quarry
+      zone: cornerBL
+      size: 2
+      interaction: 5
+      swingMs: 350
+      sprite: "\u26F0\uFE0F"
+      clicksPerDrop: 5
+      drop: stone
+      dropMin: 0
+      dropMax: 0
+      autoTap: 0
+      rareDrop:
+        item: jade_shard
+        chance: 0.12
+    - kind: spirittree
+      zone: midTop
+      size: 4
+      interaction: 5
+      swingMs: 350
+      sprite: "\U0001F333"
+      clicksPerDrop: 3
+      drop: wood
+      dropMin: 2
+      dropMax: 3
+      autoTap: 1
+      rareDrop:
+        item: bamboo
+        chance: 0.12
+    generators:
+    - kind: clay
+      zone: clayField
+      item: clay
+      intervalMs: 1500
+      cap: 10
+      upgrade: 
+      rareDrop:
+        item: 
+        chance: 0
+    - kind: stone
+      zone: quarryField
+      item: stone
+      intervalMs: 1500
+      cap: 10
+      upgrade: quarry
+      rareDrop:
+        item: jade_shard
+        chance: 0.08
+    - kind: wood
+      zone: woodField
+      item: wood
+      intervalMs: 3000
+      cap: 10
+      upgrade: 
+      rareDrop:
+        item: 
+        chance: 0
+    enemies:
+      enabled: 1
+      zone: cornerTR
+      name: Fox Spirit
+      sprite: "\U0001F98A"
+      cap: 1
+      hp: 3
+      speed: 30
+      respawnMs: 6000
+      attackMs: 400
+      drops:
+      - item: spirit_essence
+        min: 1
+        max: 2
+      baitSpawn:
+        enabled: 1
+        name: Spirit Boar
+        sprite: "\U0001F417"
+        hp: 8
+        speed: 18
+        drops:
+        - item: beast_bone
+          min: 1
+          max: 2
+        - item: spirit_essence
+          min: 1
+          max: 1
+  icon: {fileID: -1045212250, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  actionIcon: {fileID: -1708793007, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  groundColor: {r: 0.3, g: 0.45, b: 0.28, a: 1}
+  sprites:
+  - key: node_bush
+    sprite: {fileID: -1871362101, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: fix_quarry
+    sprite: {fileID: 2107810323, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: fix_spirittree
+    sprite: {fileID: -1277693244, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: enemy
+    sprite: {fileID: -162250512, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: enemy_bait
+    sprite: {fileID: 1744168387, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

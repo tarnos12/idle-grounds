@@ -1,0 +1,108 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 910c5fc70431b9d479d3214ef68cfd4f, type: 3}
+  m_Name: Building_pill_furnace
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.BuildingAsset
+  def:
+    key: pill_furnace
+    name: Pill Furnace
+    icon: "\U0001FAD5"
+    sizeW: 3
+    sizeH: 5
+    cost:
+    - item: brick
+      qty: 6
+    - item: iron_bar
+      qty: 4
+    - item: tools
+      qty: 2
+    unlocked: 1
+    stageUnlock: -1
+    indestructible: 0
+    fuel: 1
+    anyZone: 0
+    waterOnly: 0
+    cap: 0
+    shrine: 0
+    gate: 0
+    recipes:
+    - name: Ember Pill
+      inputs:
+      - item: qi_elixir
+        qty: 1
+      - item: firestone
+        qty: 1
+      output: ember_pill
+      outputQty: 1
+      timeMs: 9000
+      stockCap: 0
+    - name: Verdant Pill
+      inputs:
+      - item: qi_elixir
+        qty: 1
+      - item: spirit_herb
+        qty: 1
+      output: verdant_pill
+      outputQty: 1
+      timeMs: 9000
+      stockCap: 0
+    - name: Swiftwind Pill
+      inputs:
+      - item: qi_elixir
+        qty: 1
+      - item: cotton
+        qty: 1
+      output: swiftwind_pill
+      outputQty: 1
+      timeMs: 9000
+      stockCap: 0
+    - name: Stoneheart Pill
+      inputs:
+      - item: qi_elixir
+        qty: 1
+      - item: spirit_stone
+        qty: 1
+      output: stoneheart_pill
+      outputQty: 1
+      timeMs: 9000
+      stockCap: 0
+    gather:
+      enabled: 0
+      radius: 0
+      cap: 0
+    stoker:
+      enabled: 0
+      radius: 0
+      cap: 0
+    lantern:
+      enabled: 0
+      rateMs: 0
+      speed: 0
+    seal:
+      enabled: 0
+      cap: 0
+    roster:
+      enabled: 0
+      cap: 0
+      recruit: 
+      food: 
+      foodCap: 0
+      foodValues: []
+      produce: 
+      produceMs: 0
+    gen:
+      enabled: 0
+      item: 
+      intervalMs: 0
+      cap: 0
+  icon: {fileID: -271802697, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  prefabOverride: {fileID: 0}

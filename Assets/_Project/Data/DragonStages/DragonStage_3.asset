@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 079d93f14a7c8ca43abaaad3e024aca3, type: 3}
+  m_Name: DragonStage_3
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.DragonStageAsset
+  def:
+    needs:
+    - item: spirit_herb
+      qty: 20
+    - item: spirit_essence
+      qty: 15
+    - item: iron_bar
+      qty: 5
+    text: "The dragon breathes in the herbs, the essence, the iron \u2014 and OPENS
+      ITS EYES. \"I dreamed a thousand years, and you woke me with patience, not
+      swords. Cultivate on, little one. I will watch over these grounds.\" \U0001F432
+      THE DRAGON IS AWAKE."
+  icon: {fileID: -1126782508, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

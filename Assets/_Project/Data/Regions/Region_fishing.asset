@@ -1,0 +1,133 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b0f8d98f3f5d274da2659e71724e7a5, type: 3}
+  m_Name: Region_fishing
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.RegionAsset
+  def:
+    key: fishing
+    name: Fishing
+    icon: "\U0001F3A3"
+    verb: Reel
+    actionIcon: "\U0001F3A3"
+    baseItem: fish
+    noBuild:
+    - centre
+    speedLabel: Fishing Speed
+    timerLabel: Bite
+    surfaceWindow: 3
+    tierSprite: 
+    rx: 1
+    ry: 1
+    unlockSide: down
+    unlockCost:
+    - item: wood
+      qty: 20
+    tiers:
+    - name: Koi
+      hits: 0
+      perHit: []
+      drops:
+      - item: fish
+        min: 1
+        max: 2
+      timer: 12
+    spawners:
+    - kind: fish
+      zone: centre
+      sizes: 01000000
+      target: 4
+      scaleWithArea: 1
+      spacing: 0
+      interaction: 4
+      useTiers: 1
+      swingMs: 350
+      sprite: 
+      hits: 0
+      regrow: 0
+      perHit: []
+      drops: []
+      rareDrop:
+        item: 
+        chance: 0
+    - kind: algae
+      zone: centre
+      sizes: 01000000
+      target: 10
+      scaleWithArea: 1
+      spacing: 0
+      interaction: 4
+      useTiers: 0
+      swingMs: 350
+      sprite: "\U0001FAB8"
+      hits: 0
+      regrow: 8
+      perHit: []
+      drops:
+      - item: algae
+        min: 1
+        max: 2
+      rareDrop:
+        item: 
+        chance: 0
+    fixtures:
+    - kind: spring
+      zone: cornerTL
+      size: 2
+      interaction: 5
+      swingMs: 350
+      sprite: "\u26F2"
+      clicksPerDrop: 3
+      drop: water
+      dropMin: 0
+      dropMax: 0
+      autoTap: 0
+      rareDrop:
+        item: 
+        chance: 0
+    generators:
+    - kind: water
+      zone: springField
+      item: water
+      intervalMs: 2000
+      cap: 10
+      upgrade: 
+      rareDrop:
+        item: 
+        chance: 0
+    enemies:
+      enabled: 0
+      zone: 
+      name: 
+      sprite: 
+      cap: 0
+      hp: 0
+      speed: 0
+      respawnMs: 0
+      attackMs: 0
+      drops: []
+      baitSpawn:
+        enabled: 0
+        name: 
+        sprite: 
+        hp: 0
+        speed: 0
+        drops: []
+  icon: {fileID: 473041099, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  actionIcon: {fileID: -385929388, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  groundColor: {r: 0.25, g: 0.45, b: 0.55, a: 1}
+  sprites:
+  - key: node_fish
+    sprite: {fileID: 1192079518, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: node_algae
+    sprite: {fileID: 1306688085, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: fix_spring
+    sprite: {fileID: -911964136, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

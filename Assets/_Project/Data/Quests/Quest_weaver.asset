@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_weaver
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: weaver
+    icon: "\U0001FAA2"
+    name: Weaver's path
+    desc: "Build a Loom (B), then click the Loom and pick Rope (Cotton + Algae);
+      switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth in hand. Cotton grows
+      on the Farm \u2014 unlock it if you haven't."
+    goalKind: 2
+    goalItem: 
+    goalStat: 
+    goalStage: 0
+    goalNeed: 8
+    goalRegions: []
+    goalItems:
+    - item: rope
+      qty: 2
+    - item: cloth
+      qty: 6
+    goalSource: '() => ({ cur: Math.min(window.ENGINE.handCount("rope"), 2) + Math.min(window.ENGINE.handCount("cloth"),
+      6), need: 8 })'
+    rewardReveal:
+    - meditation_pavilion
+    rewardItems:
+    - item: spirit_herb
+      qty: 2
+    builds:
+    - loom
+    target:
+      area: center
+      kind: building
+      id: loom
+  icon: {fileID: 1530673223, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

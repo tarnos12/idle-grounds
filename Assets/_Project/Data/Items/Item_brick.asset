@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccecf84903c16844692964029249ab82, type: 3}
+  m_Name: Item_brick
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.ItemAsset
+  def:
+    key: brick
+    name: Brick
+    emoji: "\U0001F9F1"
+    fuelMs: 0
+    sourceHint: "Kiln \u2190 Clay"
+  icon: {fileID: 21300000, guid: 02442a48c0f76f44283c4c3b90daef3f, type: 3}

@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2bac380d1533b043be02869d6cb106e, type: 3}
+  m_Name: Upgrade_foe_cap
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.UpgradeNodeAsset
+  def:
+    id: foe_cap
+    icon: "\U0001F98A"
+    name: Spirit Call
+    x: 160
+    y: 120
+    area: center
+    type: enemyCap
+    desc: +1 Fox Spirit roams the grove per level.
+    links:
+    - foe_dmg
+    costs:
+    - items:
+      - item: leaves
+        qty: 25
+      - item: wood
+        qty: 15
+    - items:
+      - item: spirit_essence
+        qty: 10
+      - item: wood
+        qty: 40
+    - items:
+      - item: spirit_essence
+        qty: 25
+      - item: iron_bar
+        qty: 5
+  icon: {fileID: -1044359536, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

@@ -2,6 +2,7 @@
     "name": "IdleGrounds.Editor",
     "rootNamespace": "IdleGrounds.Editor",
     "references": [
+        "IdleGrounds.Sim",
         "Unity.2D.Sprite.Editor",
         "IdleGrounds.Game",
         "Unity.InputSystem",

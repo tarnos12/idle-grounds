@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2bac380d1533b043be02869d6cb106e, type: 3}
+  m_Name: Upgrade_auto_f
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.UpgradeNodeAsset
+  def:
+    id: auto_f
+    icon: "\U0001F69C"
+    name: Farm Automation
+    x: 55
+    y: -430
+    area: farm
+    type: automation
+    desc: Auto-harvests Farm crops.
+    links: []
+    costs:
+    - items:
+      - item: wheat
+        qty: 60
+      - item: wood
+        qty: 40
+    - items:
+      - item: wheat
+        qty: 120
+      - item: cotton
+        qty: 30
+    - items:
+      - item: cotton
+        qty: 60
+      - item: water
+        qty: 40
+      - item: iron_ore
+        qty: 20
+  icon: {fileID: 106885422, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

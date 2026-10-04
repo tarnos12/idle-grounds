@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_upgrade
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: upgrade
+    icon: "\U0001F3DB\uFE0F"
+    name: First insight
+    desc: Click the Altar to open the upgrade tree, pick an upgrade, then RIGHT-click-feed
+      the Altar the cost it shows.
+    goalKind: 4
+    goalItem: 
+    goalStat: upgradesApplied
+    goalStage: 0
+    goalNeed: 1
+    goalRegions: []
+    goalItems: []
+    goalSource: '() => ({ cur: window.GS.stats.upgradesApplied || 0, need: 1 })'
+    rewardReveal: []
+    rewardItems:
+    - item: wood
+      qty: 10
+    builds: []
+    target:
+      area: center
+      kind: altar
+      id: 
+  icon: {fileID: 345565948, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

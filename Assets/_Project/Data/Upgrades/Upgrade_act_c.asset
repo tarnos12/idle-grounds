@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2bac380d1533b043be02869d6cb106e, type: 3}
+  m_Name: Upgrade_act_c
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.UpgradeNodeAsset
+  def:
+    id: act_c
+    icon: "\U0001FA93"
+    name: Action Speed
+    x: -150
+    y: -35
+    area: center
+    type: harvestSpeed
+    desc: Faster chop/hold swings in the Center.
+    links:
+    - quarry
+    costs:
+    - items:
+      - item: wood
+        qty: 15
+      - item: stone
+        qty: 5
+    - items:
+      - item: stone
+        qty: 40
+      - item: leaves
+        qty: 20
+    - items:
+      - item: stone
+        qty: 80
+      - item: spirit_essence
+        qty: 15
+  icon: {fileID: -1676567886, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

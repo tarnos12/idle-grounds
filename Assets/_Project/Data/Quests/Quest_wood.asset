@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_wood
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: wood
+    icon: "\U0001FAB5"
+    name: First timber
+    desc: "Hold left-click on the big Spirit Tree \U0001F333 (top of the Center)
+      to chop it, then hold left-click near the fallen wood to vacuum 5 into your
+      hand. (WASD to look around, mouse-wheel to zoom.)"
+    goalKind: 1
+    goalItem: wood
+    goalStat: 
+    goalStage: 0
+    goalNeed: 5
+    goalRegions: []
+    goalItems: []
+    goalSource: '() => ({ cur: window.ENGINE.handCount("wood"), need: 5 })'
+    rewardReveal:
+    - storehouse
+    rewardItems: []
+    builds: []
+    target:
+      area: center
+      kind: fixture
+      id: spirittree
+  icon: {fileID: 1220887880, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

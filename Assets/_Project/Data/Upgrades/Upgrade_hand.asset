@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2bac380d1533b043be02869d6cb106e, type: 3}
+  m_Name: Upgrade_hand
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.UpgradeNodeAsset
+  def:
+    id: hand
+    icon: "\u270B"
+    name: Hand Size
+    x: 0
+    y: 0
+    area: center
+    type: hand
+    desc: +5 carry capacity per level.
+    links:
+    - spd_c
+    - act_c
+    - spd_f
+    - spd_m
+    - foe_cap
+    - wisps
+    costs:
+    - items:
+      - item: wood
+        qty: 10
+    - items:
+      - item: wood
+        qty: 25
+      - item: leaves
+        qty: 10
+    - items:
+      - item: cotton
+        qty: 15
+      - item: wood
+        qty: 40
+  icon: {fileID: -1315380296, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

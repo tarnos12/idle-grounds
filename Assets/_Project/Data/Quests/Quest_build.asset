@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_build
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: build
+    icon: "\U0001F528"
+    name: Raise a building
+    desc: Press B, place a Storehouse ghost somewhere open, then RIGHT-click it while
+      carrying the wood it asks for.
+    goalKind: 4
+    goalItem: 
+    goalStat: buildingsBuilt
+    goalStage: 0
+    goalNeed: 1
+    goalRegions: []
+    goalItems: []
+    goalSource: '() => ({ cur: window.GS.stats.buildingsBuilt || 0, need: 1 })'
+    rewardReveal:
+    - gathering_stone
+    - wisp_lantern
+    - warding_seal
+    - workbench
+    - kiln
+    - paper_mill
+    - charcoal_pit
+    rewardItems: []
+    builds:
+    - storehouse
+    target:
+      area: 
+      kind: 
+      id: 
+  icon: {fileID: 1415508242, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

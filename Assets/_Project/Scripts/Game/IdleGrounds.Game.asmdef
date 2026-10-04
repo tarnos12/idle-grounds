@@ -2,6 +2,7 @@
     "name": "IdleGrounds.Game",
     "rootNamespace": "IdleGrounds.Game",
     "references": [
+        "IdleGrounds.Sim",
         "Unity.InputSystem",
         "Unity.TextMeshPro",
         "UnityEngine.UI"

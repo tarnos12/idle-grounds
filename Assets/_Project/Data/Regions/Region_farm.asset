@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b0f8d98f3f5d274da2659e71724e7a5, type: 3}
+  m_Name: Region_farm
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.RegionAsset
+  def:
+    key: farm
+    name: Farm
+    icon: "\U0001F331"
+    verb: Harvest
+    actionIcon: "\U0001F33E"
+    baseItem: wheat
+    noBuild:
+    - centre
+    - midLeft
+    speedLabel: Growth Speed
+    timerLabel: Growth
+    surfaceWindow: 0
+    tierSprite: 
+    rx: 0
+    ry: 0
+    unlockSide: left
+    unlockCost:
+    - item: wood
+      qty: 10
+    tiers:
+    - name: Rice
+      hits: 0
+      perHit: []
+      drops:
+      - item: wheat
+        min: 2
+        max: 3
+      timer: 20
+    spawners:
+    - kind: crop
+      zone: centre
+      sizes: 03000000
+      target: 8
+      scaleWithArea: 0
+      spacing: 0
+      interaction: 2
+      useTiers: 1
+      swingMs: 300
+      sprite: 
+      hits: 0
+      regrow: 0
+      perHit: []
+      drops: []
+      rareDrop:
+        item: 
+        chance: 0
+    - kind: cotton
+      zone: centre
+      sizes: 02000000
+      target: 5
+      scaleWithArea: 0
+      spacing: 0
+      interaction: 2
+      useTiers: 0
+      swingMs: 300
+      sprite: "\u2601\uFE0F"
+      hits: 0
+      regrow: 18
+      perHit: []
+      drops:
+      - item: cotton
+        min: 1
+        max: 2
+      rareDrop:
+        item: 
+        chance: 0
+    fixtures: []
+    generators:
+    - kind: sand
+      zone: sandField
+      item: sand
+      intervalMs: 1500
+      cap: 10
+      upgrade: 
+      rareDrop:
+        item: 
+        chance: 0
+    enemies:
+      enabled: 0
+      zone: 
+      name: 
+      sprite: 
+      cap: 0
+      hp: 0
+      speed: 0
+      respawnMs: 0
+      attackMs: 0
+      drops: []
+      baitSpawn:
+        enabled: 0
+        name: 
+        sprite: 
+        hp: 0
+        speed: 0
+        drops: []
+  icon: {fileID: -386304086, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  actionIcon: {fileID: 569376657, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  groundColor: {r: 0.55, g: 0.5, b: 0.25, a: 1}
+  sprites:
+  - key: node_crop
+    sprite: {fileID: -380064397, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  - key: node_cotton
+    sprite: {fileID: 1907465568, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

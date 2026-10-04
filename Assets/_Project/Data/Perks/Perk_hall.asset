@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcc8adf1c99e6964a93ec3b43c5760d8, type: 3}
+  m_Name: Perk_hall
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.PerkAsset
+  def:
+    id: hall
+    name: Master's Hall
+    icon: "\U0001F3EF"
+    max: 5
+    cost: 0100000002000000030000000400000006000000
+    desc: +1 disciple capacity at every Meditation Pavilion, per level.
+  icon: {fileID: -1164297379, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

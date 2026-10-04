@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b2bac380d1533b043be02869d6cb106e, type: 3}
+  m_Name: Upgrade_disciples
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.UpgradeNodeAsset
+  def:
+    id: disciples
+    icon: "\U0001F9D8"
+    name: Disciple Mastery
+    x: -230
+    y: 300
+    area: center
+    type: discipleCap
+    desc: +2 disciple capacity per Meditation Pavilion, per level.
+    links: []
+    costs:
+    - items:
+      - item: robe
+        qty: 2
+      - item: spirit_stone
+        qty: 2
+    - items:
+      - item: spirit_stone
+        qty: 4
+      - item: spirit_buns
+        qty: 20
+    - items:
+      - item: spirit_jade
+        qty: 2
+      - item: robe
+        qty: 5
+  icon: {fileID: 732544882, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

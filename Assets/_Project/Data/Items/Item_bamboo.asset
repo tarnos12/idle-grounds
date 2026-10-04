@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccecf84903c16844692964029249ab82, type: 3}
+  m_Name: Item_bamboo
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.ItemAsset
+  def:
+    key: bamboo
+    name: Bamboo
+    emoji: "\U0001F38D"
+    fuelMs: 6000
+    sourceHint: "Spirit Tree rare drop \xB7 Spirit Grove stalks"
+  icon: {fileID: 21300000, guid: 7391c6dbe8ccbd849a634a0bd3b33d81, type: 3}

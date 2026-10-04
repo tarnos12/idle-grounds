@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64be89ba0fad6114bae862481f0ef81d, type: 3}
+  m_Name: Vow_burden
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.VowAsset
+  def:
+    id: burden
+    name: Vow of Burden
+    icon: "\U0001F392"
+    desc: Your hands carry half as much.
+  icon: {fileID: 1535601134, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_iron
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: iron
+    icon: "\U0001F9F2"
+    name: Iron for the dragon
+    desc: "Unlock the Mine, break \u26D3\uFE0F iron veins for Iron Ore, then build
+      a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the dragon's
+      third tribute asks for (bars already fed to it count)."
+    goalKind: 6
+    goalItem: iron_bar
+    goalStat: 
+    goalStage: 2
+    goalNeed: 1
+    goalRegions: []
+    goalItems: []
+    goalSource: "() => {\r\n      const E = window.ENGINE, dr = window.GS.dragon;\r\n     
+      const need = Math.max(1, E.dragonTribute(2).iron_bar || 1);\r\n      if (dr.stage
+      >= 3) return { cur: need, need };\r\n      const paid = dr.stage === 2 ? (dr.paid.iron_bar
+      || 0) : 0;\r\n      return { cur: Math.min(need, E.handCount(\"iron_bar\")
+      + paid), need };\r\n    }"
+    rewardReveal: []
+    rewardItems: []
+    builds:
+    - forge
+    target:
+      area: 
+      kind: 
+      id: 
+  icon: {fileID: -1670308100, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
