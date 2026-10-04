@@ -15,4 +15,4 @@ Each milestone ends playable/verified in `Assets/_Project/Scenes/Game.unity`.
 | 6 | Combat & idle | enemies, beast bait, Martial Vigor, automation, disciples/pavilion, generator buildings | Enemy prefab + HP bars, pavilion panel | ✅ |
 | 7 | Prestige, save, offline | ascension gate, AP, perks, vows, ascend reset, save/load + sanitising, offline replay | perk shop, vows, ascension card, welcome-back modal, stats, ending | ✅ |
 | 8 | Juice & audio | — | floating numbers, spark bursts, 13 SFX, help, settings | ✅ |
-| 9 | Parity pass | golden tests vs JS behaviours (spec §18.6) | side-by-side check against old-game | |
+| 9 | Parity pass | golden tests vs JS behaviours (spec §18.6) | side-by-side check against old-game | ✅ (audits + fixes) |

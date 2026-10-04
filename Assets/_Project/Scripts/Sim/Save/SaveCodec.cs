@@ -355,7 +355,7 @@ namespace IdleGrounds.Sim
             ScrubCounts(s.dragon.paid, Live, positiveOnly: false);
             s.dragon.stage = Math.Max(0, Math.Min(s.dragon.stage, cfg.dragonStages.Count));
             if (!Finite(s.dragon.msgUntil)) s.dragon.msgUntil = 0;
-            if (!Finite(s.dragonScaleAt)) s.dragonScaleAt = 0;
+            s.dragonScaleAt = 0;   // JS loadState never restores it: the scale timer restarts on every load (parity-audit-sim L1)
 
             // buffs
             if (s.buff != null && (!Finite(s.buff.until) || cfg.DragonBuff(s.buff.kind) == null)) s.buff = null;

@@ -74,7 +74,9 @@ namespace IdleGrounds.Sim
             if (job == null) return new OfflineBoot { tier = OfflineTier.None };
             if (job.awayMs < Config.balance.offlineModalMs)
             {
+                // JS main.js:83-88 catches a failed replay and still shows the (failed) summary.
                 try { Offline.Step(job); }
+                catch (System.Exception) { /* Step marked job.failed */ }
                 finally { Offline.Finish(job); }
                 return new OfflineBoot { tier = OfflineTier.Toast, summary = job.summary };
             }

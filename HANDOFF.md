@@ -78,8 +78,18 @@ THE GAME IS FULLY PLAYABLE IN UNITY. TMP emoji sprite asset
 (`Art/Sprites/Emoji/EmojiSprites.asset`, default in TMP Settings; menu
 `Idle Grounds/Art/Build TMP Emoji Sprite Asset`) renders emoji inline.
 
-Next: M9 parity — audits in `docs/port/parity-audit-*.md` (in progress),
-then fix confirmed findings.
+M9 parity: `docs/port/parity-audit-sim.md` (0 high/0 medium; L1+L2 fixed)
+and `parity-audit-ui.md` (all high/medium fixed; resolution table inside).
+
+OPEN DECISION for the user: the JS firestone quirk (wisp-delivered firestone
+always goes to a burner's fuel rack, so wisp-fed Ember Pill / Star Steel
+lines can't get it into stock) is kept for parity — fix it or keep it?
+
+Next candidates: deferred UI lows (generic hover tooltips, Debug panel,
+F9), Sim query allocations (ConverterFace etc. reuse buffers), real sprite
+art to replace emoji placeholders, PlayMode smoke tests, then the old-game
+roadmap (Spirit Vault cross-region logistics, flow ledger, real balance pass
+with TEST off).
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -103,6 +113,9 @@ then fix confirmed findings.
 - M5+M6 view: enemies/combat input, unlock signs, altar tree, quest panel,
   dragon dialog, pavilion panel, buffs, AUTO badges. 13 SFX WAVs.
 - M7+M8 view: save/load, offline modals, prestige UI, help/stats, audio, FX.
+- TMP emoji sprite asset; M9 parity audits + fixes (zone overlays, quest
+  ring, build-goal ranking, culling, dragon-scale timer reset on load,
+  failed short replay still summarises).
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)
