@@ -1,0 +1,1703 @@
+fileFormatVersion: 2
+guid: 8c5498f6ea3a6194994cdaf5302a5f53
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4183049889608243324
+    second: ring_dashed_0
+  - first:
+      213: 5073612438355180306
+    second: ring_dashed_1
+  - first:
+      213: -3964978523011064351
+    second: ring_dashed_2
+  - first:
+      213: -3047787010638659621
+    second: ring_dashed_3
+  - first:
+      213: -3996667718507749628
+    second: ring_dashed_4
+  - first:
+      213: 102040995884905058
+    second: ring_dashed_5
+  - first:
+      213: -8802365022090756140
+    second: ring_dashed_6
+  - first:
+      213: 1353371908413949052
+    second: ring_dashed_7
+  - first:
+      213: -1362477467898502802
+    second: ring_dashed_8
+  - first:
+      213: 2514499296224144003
+    second: ring_dashed_9
+  - first:
+      213: 8147694797466894355
+    second: ring_dashed_10
+  - first:
+      213: -5318393024929051498
+    second: ring_dashed_11
+  - first:
+      213: -1910227369426089233
+    second: ring_dashed_12
+  - first:
+      213: 1968773294619974437
+    second: ring_dashed_13
+  - first:
+      213: -3842192117676836012
+    second: ring_dashed_14
+  - first:
+      213: -2935517773705943338
+    second: ring_dashed_15
+  - first:
+      213: -8270363596555097494
+    second: ring_dashed_16
+  - first:
+      213: -2240213704892624148
+    second: ring_dashed_17
+  - first:
+      213: -3315005561245761787
+    second: ring_dashed_18
+  - first:
+      213: -2546724838347788154
+    second: ring_dashed_19
+  - first:
+      213: -1302816706099703747
+    second: ring_dashed_20
+  - first:
+      213: -3738810661264002704
+    second: ring_dashed_21
+  - first:
+      213: 8909510040099525569
+    second: ring_dashed_22
+  - first:
+      213: 8467749041652018949
+    second: ring_dashed_23
+  - first:
+      213: -709613888052618256
+    second: ring_dashed_24
+  - first:
+      213: -3393558578868394906
+    second: ring_dashed_25
+  - first:
+      213: -1202268167592391741
+    second: ring_dashed_26
+  - first:
+      213: 4454274178677476460
+    second: ring_dashed_27
+  - first:
+      213: 1730783344339603785
+    second: ring_dashed_28
+  - first:
+      213: 7910636768262769221
+    second: ring_dashed_29
+  - first:
+      213: -4760461079008104388
+    second: ring_dashed_30
+  - first:
+      213: -7121419149161222063
+    second: ring_dashed_31
+  - first:
+      213: 3824784296875214245
+    second: ring_dashed_32
+  - first:
+      213: 1291085877956985250
+    second: ring_dashed_33
+  - first:
+      213: 7544334731318643672
+    second: ring_dashed_34
+  - first:
+      213: 5382661893437351967
+    second: ring_dashed_35
+  - first:
+      213: 5942546673042859213
+    second: ring_dashed_36
+  - first:
+      213: 1046605540331293704
+    second: ring_dashed_37
+  - first:
+      213: -2667382549379399292
+    second: ring_dashed_38
+  - first:
+      213: -3546942808157901838
+    second: ring_dashed_39
+  - first:
+      213: 5168636542044343055
+    second: ring_dashed_40
+  - first:
+      213: 2108525660992176321
+    second: ring_dashed_41
+  - first:
+      213: 8310268955747496313
+    second: ring_dashed_42
+  - first:
+      213: 2782377881483221865
+    second: ring_dashed_43
+  - first:
+      213: -684838737215418163
+    second: ring_dashed_44
+  - first:
+      213: -2028030356563938160
+    second: ring_dashed_45
+  - first:
+      213: 3835560774862682009
+    second: ring_dashed_46
+  - first:
+      213: 3557159424805518920
+    second: ring_dashed_47
+  - first:
+      213: -8838271033967388847
+    second: ring_dashed_48
+  - first:
+      213: -8783666347762286570
+    second: ring_dashed_49
+  - first:
+      213: -4721061983433026454
+    second: ring_dashed_50
+  - first:
+      213: 181166369042864643
+    second: ring_dashed_51
+  - first:
+      213: 4481009586279404987
+    second: ring_dashed_52
+  - first:
+      213: -2420555558417192385
+    second: ring_dashed_53
+  - first:
+      213: -1099838115376107551
+    second: ring_dashed_54
+  - first:
+      213: -7220602415238456994
+    second: ring_dashed_55
+  - first:
+      213: -4903782929879682811
+    second: ring_dashed_56
+  - first:
+      213: 1370118090308037700
+    second: ring_dashed_57
+  - first:
+      213: 4789846305523936774
+    second: ring_dashed_58
+  - first:
+      213: -8521061607907268711
+    second: ring_dashed_59
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 256
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ring_dashed_0
+      rect:
+        serializedVersion: 2
+        x: 84
+        y: 244
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 487e924c942d2f5c0800000000000000
+      internalID: -4183049889608243324
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_1
+      rect:
+        serializedVersion: 2
+        x: 95
+        y: 248
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 21bf92ca1a7196640800000000000000
+      internalID: 5073612438355180306
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_2
+      rect:
+        serializedVersion: 2
+        x: 108
+        y: 250
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ed5fd96a0199f8c0800000000000000
+      internalID: -3964978523011064351
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_3
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 251
+        width: 9
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bdf35d79cd514b5d0800000000000000
+      internalID: -3047787010638659621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_4
+      rect:
+        serializedVersion: 2
+        x: 133
+        y: 249
+        width: 21
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40f1311a2ebf888c0800000000000000
+      internalID: -3996667718507749628
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_5
+      rect:
+        serializedVersion: 2
+        x: 157
+        y: 246
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2623f30ceb58a6100800000000000000
+      internalID: 102040995884905058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_6
+      rect:
+        serializedVersion: 2
+        x: 72
+        y: 239
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4dff4fa36a7b7d580800000000000000
+      internalID: -8802365022090756140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_7
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 242
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c74810a849428c210800000000000000
+      internalID: 1353371908413949052
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_8
+      rect:
+        serializedVersion: 2
+        x: 180
+        y: 237
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e61af6f26f1871de0800000000000000
+      internalID: -1362477467898502802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_9
+      rect:
+        serializedVersion: 2
+        x: 51
+        y: 227
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38ae86b99cb45e220800000000000000
+      internalID: 2514499296224144003
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_10
+      rect:
+        serializedVersion: 2
+        x: 61
+        y: 233
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 310005dff3d621170800000000000000
+      internalID: 8147694797466894355
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_11
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 231
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69c403dc8b54136b0800000000000000
+      internalID: -5318393024929051498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_12
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 219
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fea012d04528d75e0800000000000000
+      internalID: -1910227369426089233
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_13
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 224
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 52b591561ec725b10800000000000000
+      internalID: 1968773294619974437
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_14
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 215
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45bf01330aacdaac0800000000000000
+      internalID: -3842192117676836012
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_15
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 201
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d6696a4322f247d0800000000000000
+      internalID: -2935517773705943338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_16
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 210
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6ae2009024c93d80800000000000000
+      internalID: -8270363596555097494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_17
+      rect:
+        serializedVersion: 2
+        x: 219
+        y: 206
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ce2d9ea218929e0e0800000000000000
+      internalID: -2240213704892624148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_18
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 191
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50f7085710cbef1d0800000000000000
+      internalID: -3315005561245761787
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_19
+      rect:
+        serializedVersion: 2
+        x: 227
+        y: 196
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 680bd9da04738acd0800000000000000
+      internalID: -2546724838347788154
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_20
+      rect:
+        serializedVersion: 2
+        x: 12
+        y: 180
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d309b71cb177bede0800000000000000
+      internalID: -1302816706099703747
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_21
+      rect:
+        serializedVersion: 2
+        x: 233
+        y: 186
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0717aec33831d1cc0800000000000000
+      internalID: -3738810661264002704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_22
+      rect:
+        serializedVersion: 2
+        x: 7
+        y: 168
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c398e64d20f4ab70800000000000000
+      internalID: 8909510040099525569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_23
+      rect:
+        serializedVersion: 2
+        x: 239
+        y: 175
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 50fa2daa3ec738570800000000000000
+      internalID: 8467749041652018949
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_24
+      rect:
+        serializedVersion: 2
+        x: 3
+        y: 157
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0fb90f2bde1f626f0800000000000000
+      internalID: -709613888052618256
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_25
+      rect:
+        serializedVersion: 2
+        x: 244
+        y: 163
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 664e11ec378a7e0d0800000000000000
+      internalID: -3393558578868394906
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_26
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 145
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3cb45e1b87fa05fe0800000000000000
+      internalID: -1202268167592391741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_27
+      rect:
+        serializedVersion: 2
+        x: 248
+        y: 151
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6c044804c2c0dd30800000000000000
+      internalID: 4454274178677476460
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_28
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 120
+        width: 5
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9415686184af40810800000000000000
+      internalID: 1730783344339603785
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_29
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 139
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54a42777a3a38cd60800000000000000
+      internalID: 7910636768262769221
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_30
+      rect:
+        serializedVersion: 2
+        x: 251
+        y: 127
+        width: 5
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3036a2eed17fedb0800000000000000
+      internalID: -4760461079008104388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_31
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 108
+        width: 6
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 150b495c303ab2d90800000000000000
+      internalID: -7121419149161222063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_32
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 102
+        width: 7
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5a54dbdad0d541530800000000000000
+      internalID: 3824784296875214245
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_33
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 95
+        width: 6
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a1462af3cbdae110800000000000000
+      internalID: 1291085877956985250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_34
+      rect:
+        serializedVersion: 2
+        x: 246
+        y: 90
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8dbc3ee677cd2b860800000000000000
+      internalID: 7544334731318643672
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_35
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 84
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f186d58397e03ba40800000000000000
+      internalID: 5382661893437351967
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_36
+      rect:
+        serializedVersion: 2
+        x: 242
+        y: 78
+        width: 7
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc426e3d6ba287250800000000000000
+      internalID: 5942546673042859213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_37
+      rect:
+        serializedVersion: 2
+        x: 9
+        y: 72
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 80c076b913a468e00800000000000000
+      internalID: 1046605540331293704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_38
+      rect:
+        serializedVersion: 2
+        x: 237
+        y: 67
+        width: 7
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4814a2824bd8bfad0800000000000000
+      internalID: -2667382549379399292
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_39
+      rect:
+        serializedVersion: 2
+        x: 15
+        y: 61
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2fb2f19fe4ab6cec0800000000000000
+      internalID: -3546942808157901838
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_40
+      rect:
+        serializedVersion: 2
+        x: 231
+        y: 57
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0b08a5ec8faab740800000000000000
+      internalID: 5168636542044343055
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_41
+      rect:
+        serializedVersion: 2
+        x: 21
+        y: 51
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1c00c3fcaecf24d10800000000000000
+      internalID: 2108525660992176321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_42
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 46
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9713947e591045370800000000000000
+      internalID: 8310268955747496313
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_43
+      rect:
+        serializedVersion: 2
+        x: 29
+        y: 41
+        width: 8
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96b16b801fdfc9620800000000000000
+      internalID: 2782377881483221865
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_44
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 32
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc019d30cc6fe76f0800000000000000
+      internalID: -684838737215418163
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_45
+      rect:
+        serializedVersion: 2
+        x: 215
+        y: 37
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0943c4bb22dfad3e0800000000000000
+      internalID: -2028030356563938160
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_46
+      rect:
+        serializedVersion: 2
+        x: 46
+        y: 24
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 997bc1cf336aa3530800000000000000
+      internalID: 3835560774862682009
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_47
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 21
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84e37f476a19d5130800000000000000
+      internalID: 3557159424805518920
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_48
+      rect:
+        serializedVersion: 2
+        x: 206
+        y: 29
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 157dfbf5257285580800000000000000
+      internalID: -8838271033967388847
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_49
+      rect:
+        serializedVersion: 2
+        x: 57
+        y: 17
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 610831c9ef52a1680800000000000000
+      internalID: -8783666347762286570
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_50
+      rect:
+        serializedVersion: 2
+        x: 67
+        y: 12
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a649fdaa32b6b7eb0800000000000000
+      internalID: -4721061983433026454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_51
+      rect:
+        serializedVersion: 2
+        x: 175
+        y: 9
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30a1c005ad1a38200800000000000000
+      internalID: 181166369042864643
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_52
+      rect:
+        serializedVersion: 2
+        x: 186
+        y: 15
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb5dd413a7ebf2e30800000000000000
+      internalID: 4481009586279404987
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_53
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 7
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f3a22755b85786ed0800000000000000
+      internalID: -2420555558417192385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_54
+      rect:
+        serializedVersion: 2
+        x: 90
+        y: 3
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ef629eaf079cb0f0800000000000000
+      internalID: -1099838115376107551
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_55
+      rect:
+        serializedVersion: 2
+        x: 102
+        y: 1
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e5952671c544bcb90800000000000000
+      internalID: -7220602415238456994
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_56
+      rect:
+        serializedVersion: 2
+        x: 151
+        y: 2
+        width: 10
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 501b5e8186342fbb0800000000000000
+      internalID: -4903782929879682811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_57
+      rect:
+        serializedVersion: 2
+        x: 163
+        y: 5
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 44ca529d423a30310800000000000000
+      internalID: 1370118090308037700
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_58
+      rect:
+        serializedVersion: 2
+        x: 115
+        y: 0
+        width: 21
+        height: 5
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 60ea87156d3f87240800000000000000
+      internalID: 4789846305523936774
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ring_dashed_59
+      rect:
+        serializedVersion: 2
+        x: 139
+        y: 0
+        width: 9
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 997e7773d9b1fb980800000000000000
+      internalID: -8521061607907268711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ring_dashed_0: -4183049889608243324
+      ring_dashed_1: 5073612438355180306
+      ring_dashed_10: 8147694797466894355
+      ring_dashed_11: -5318393024929051498
+      ring_dashed_12: -1910227369426089233
+      ring_dashed_13: 1968773294619974437
+      ring_dashed_14: -3842192117676836012
+      ring_dashed_15: -2935517773705943338
+      ring_dashed_16: -8270363596555097494
+      ring_dashed_17: -2240213704892624148
+      ring_dashed_18: -3315005561245761787
+      ring_dashed_19: -2546724838347788154
+      ring_dashed_2: -3964978523011064351
+      ring_dashed_20: -1302816706099703747
+      ring_dashed_21: -3738810661264002704
+      ring_dashed_22: 8909510040099525569
+      ring_dashed_23: 8467749041652018949
+      ring_dashed_24: -709613888052618256
+      ring_dashed_25: -3393558578868394906
+      ring_dashed_26: -1202268167592391741
+      ring_dashed_27: 4454274178677476460
+      ring_dashed_28: 1730783344339603785
+      ring_dashed_29: 7910636768262769221
+      ring_dashed_3: -3047787010638659621
+      ring_dashed_30: -4760461079008104388
+      ring_dashed_31: -7121419149161222063
+      ring_dashed_32: 3824784296875214245
+      ring_dashed_33: 1291085877956985250
+      ring_dashed_34: 7544334731318643672
+      ring_dashed_35: 5382661893437351967
+      ring_dashed_36: 5942546673042859213
+      ring_dashed_37: 1046605540331293704
+      ring_dashed_38: -2667382549379399292
+      ring_dashed_39: -3546942808157901838
+      ring_dashed_4: -3996667718507749628
+      ring_dashed_40: 5168636542044343055
+      ring_dashed_41: 2108525660992176321
+      ring_dashed_42: 8310268955747496313
+      ring_dashed_43: 2782377881483221865
+      ring_dashed_44: -684838737215418163
+      ring_dashed_45: -2028030356563938160
+      ring_dashed_46: 3835560774862682009
+      ring_dashed_47: 3557159424805518920
+      ring_dashed_48: -8838271033967388847
+      ring_dashed_49: -8783666347762286570
+      ring_dashed_5: 102040995884905058
+      ring_dashed_50: -4721061983433026454
+      ring_dashed_51: 181166369042864643
+      ring_dashed_52: 4481009586279404987
+      ring_dashed_53: -2420555558417192385
+      ring_dashed_54: -1099838115376107551
+      ring_dashed_55: -7220602415238456994
+      ring_dashed_56: -4903782929879682811
+      ring_dashed_57: 1370118090308037700
+      ring_dashed_58: 4789846305523936774
+      ring_dashed_59: -8521061607907268711
+      ring_dashed_6: -8802365022090756140
+      ring_dashed_7: 1353371908413949052
+      ring_dashed_8: -1362477467898502802
+      ring_dashed_9: 2514499296224144003
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

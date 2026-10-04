@@ -40,8 +40,12 @@ M4 sim done (78 tests): LogisticsSystem — gathering stones, lantern beats,
 wisp flights/returns, AddLink/RemoveLink/LinkStatus/WispPos; the starter
 network now moves items.
 
-Next: M3 view (building prefabs, build menu, placement, converter face,
-recipe picker — in progress), M4 view (wisps, link editor), M5 sim.
+M3 view done: Building.prefab + 12 family variants (type→prefab in
+`Data/BuildingPrefabSet.asset`), BuildingViewSync, PlacementGhost, BuildMenu
+(B), RecipePicker, BuildingTooltip, Demolish mode, storehouse withdraw.
+Rebuild: `Idle Grounds/Scene/Rebuild Core Loop + Buildings (M2+M3)`.
+
+Next: M5 sim (in progress), M4 view (wisps, link editor), then M5 view.
 ## Last session summary (2026-10-04, port kickoff)
 
 - Connected MCP to the `idle-grounds` instance (the shared server also
@@ -56,6 +60,8 @@ recipe picker — in progress), M4 view (wisps, link editor), M5 sim.
   vacuum, drop latch/ramp, rotate), hand cursor, bottom bar HUD, sorting layers.
 - M3 sim: buildings, converters, fuel, starter network + 22 tests.
 - M4 sim: logistics (stones, lanterns, wisps) + 11 tests.
+- M3 view: building prefab variants, build menu, placement, recipe picker,
+  tooltips, demolish.
 - `engine-systems.md` spec, ADR 0001 (architecture), PLAN.md, data exporter.
 
 ## Earlier session summary (2026-10-04)

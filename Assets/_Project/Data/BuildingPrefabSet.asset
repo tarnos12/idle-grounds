@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b56b2fccc47bee9469c8c63ae2d078d6, type: 3}
+  m_Name: BuildingPrefabSet
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.BuildingPrefabSet
+  fallback: {fileID: 5314109418191238808, guid: 4312cb64b566f8143bfeb3592874222c, type: 3}
+  converter: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  burner: {fileID: 7249230654438003578, guid: 76c78e748fc903847a755970684c6fb7, type: 3}
+  storehouse: {fileID: 5028985695284054018, guid: 8d7bcad949e760f41ad5325f921e7086, type: 3}
+  wardingSeal: {fileID: 2073641354572226874, guid: 16a0159790786ab4e8f5822e311250e6, type: 3}
+  gatheringStone: {fileID: 9078130445870629924, guid: 2960e984661f50b4c958de6c2379cc21, type: 3}
+  furnaceSpirit: {fileID: 2171984450659673471, guid: aae483fb6b4bbe148bb67c01a2596d24, type: 3}
+  wispLantern: {fileID: 5870811081662143205, guid: e6edf1f0dc9e0ae4fafcabe88b847a69, type: 3}
+  generator: {fileID: 6657290988448432561, guid: c24d9243ffdacb243b7c78eb6cb990a8, type: 3}
+  pavilion: {fileID: 7279245925484001574, guid: 324121b6db960734088678f8a423bbf9, type: 3}
+  ascensionGate: {fileID: 3417318820931048896, guid: fd598abc3a63e654699901b40daa220d, type: 3}
+  altar: {fileID: 6178716484569919784, guid: f2fc56723b16f69448ba63f28f3a047a, type: 3}
+  dragon: {fileID: 1761070528920596416, guid: c98cb8a1b3adaa446873d139bad561ed, type: 3}
+  entries:
+  - type: center
+    prefab: {fileID: 6178716484569919784, guid: f2fc56723b16f69448ba63f28f3a047a, type: 3}
+  - type: dragon
+    prefab: {fileID: 1761070528920596416, guid: c98cb8a1b3adaa446873d139bad561ed, type: 3}
+  - type: workbench
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: kiln
+    prefab: {fileID: 7249230654438003578, guid: 76c78e748fc903847a755970684c6fb7, type: 3}
+  - type: paper_mill
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: infusion_array
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: loom
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: mill
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: brewery
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: cauldron
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: jade_carver
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: pill_furnace
+    prefab: {fileID: 7249230654438003578, guid: 76c78e748fc903847a755970684c6fb7, type: 3}
+  - type: star_anvil
+    prefab: {fileID: 7249230654438003578, guid: 76c78e748fc903847a755970684c6fb7, type: 3}
+  - type: talisman_atelier
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: dragon_shrine
+    prefab: {fileID: 5314109418191238808, guid: 4312cb64b566f8143bfeb3592874222c, type: 3}
+  - type: ascension_gate
+    prefab: {fileID: 3417318820931048896, guid: fd598abc3a63e654699901b40daa220d, type: 3}
+  - type: charcoal_pit
+    prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
+  - type: furnace_spirit
+    prefab: {fileID: 2171984450659673471, guid: aae483fb6b4bbe148bb67c01a2596d24, type: 3}
+  - type: meditation_pavilion
+    prefab: {fileID: 7279245925484001574, guid: 324121b6db960734088678f8a423bbf9, type: 3}
+  - type: forge
+    prefab: {fileID: 7249230654438003578, guid: 76c78e748fc903847a755970684c6fb7, type: 3}
+  - type: storehouse
+    prefab: {fileID: 5028985695284054018, guid: 8d7bcad949e760f41ad5325f921e7086, type: 3}
+  - type: algae_farm
+    prefab: {fileID: 6657290988448432561, guid: c24d9243ffdacb243b7c78eb6cb990a8, type: 3}
+  - type: herb_garden
+    prefab: {fileID: 6657290988448432561, guid: c24d9243ffdacb243b7c78eb6cb990a8, type: 3}
+  - type: gathering_stone
+    prefab: {fileID: 9078130445870629924, guid: 2960e984661f50b4c958de6c2379cc21, type: 3}
+  - type: wisp_lantern
+    prefab: {fileID: 5870811081662143205, guid: e6edf1f0dc9e0ae4fafcabe88b847a69, type: 3}
+  - type: warding_seal
+    prefab: {fileID: 2073641354572226874, guid: 16a0159790786ab4e8f5822e311250e6, type: 3}

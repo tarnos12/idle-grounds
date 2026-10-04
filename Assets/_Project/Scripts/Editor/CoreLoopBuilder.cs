@@ -70,7 +70,7 @@ namespace IdleGrounds.Editor
             Debug.Log("[IdleGrounds] Core prefabs built.");
         }
 
-        static Sprite EnsureCircleSprite()
+        internal static Sprite EnsureCircleSprite()
         {
             Directory.CreateDirectory(ShapesDir);
             if (!File.Exists(CirclePath))
@@ -101,7 +101,7 @@ namespace IdleGrounds.Editor
             return AssetDatabase.LoadAssetAtPath<Sprite>(CirclePath);
         }
 
-        static void Set(Object target, string field, Object value)
+        internal static void Set(Object target, string field, Object value)
         {
             var so = new SerializedObject(target);
             var p = so.FindProperty(field);
@@ -110,7 +110,7 @@ namespace IdleGrounds.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        static GameObject Save(GameObject go, string path)
+        internal static GameObject Save(GameObject go, string path)
         {
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
@@ -207,10 +207,10 @@ namespace IdleGrounds.Editor
         // ---- UI helpers
 
         static Sprite uiSprite;
-        static Sprite UiSprite => uiSprite != null ? uiSprite : uiSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+        internal static Sprite UiSprite => uiSprite != null ? uiSprite : uiSprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
 
         static Dictionary<string, Sprite> emoji;
-        static Sprite Emoji(string key)
+        internal static Sprite Emoji(string key)
         {
             if (emoji == null)
             {
@@ -221,7 +221,7 @@ namespace IdleGrounds.Editor
             return emoji.TryGetValue(key, out var sp) ? sp : null;
         }
 
-        static RectTransform NewUi(string name, Transform parent)
+        internal static RectTransform NewUi(string name, Transform parent)
         {
             var go = new GameObject(name, typeof(RectTransform));
             go.layer = LayerMask.NameToLayer("UI");
@@ -230,7 +230,7 @@ namespace IdleGrounds.Editor
             return rt;
         }
 
-        static TextMeshProUGUI Label(Transform parent, string name, string text, float size, Color c, bool bold)
+        internal static TextMeshProUGUI Label(Transform parent, string name, string text, float size, Color c, bool bold)
         {
             var rt = NewUi(name, parent);
             var t = rt.gameObject.AddComponent<TextMeshProUGUI>();
@@ -244,7 +244,7 @@ namespace IdleGrounds.Editor
             return t;
         }
 
-        static Image Icon(Transform parent, string name, Sprite s, float size)
+        internal static Image Icon(Transform parent, string name, Sprite s, float size)
         {
             var rt = NewUi(name, parent);
             var img = rt.gameObject.AddComponent<Image>();
@@ -256,7 +256,7 @@ namespace IdleGrounds.Editor
             return img;
         }
 
-        static HorizontalLayoutGroup Row(GameObject go, int padH, int padV, float spacing)
+        internal static HorizontalLayoutGroup Row(GameObject go, int padH, int padV, float spacing)
         {
             var h = go.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(padH, padH, padV, padV);
@@ -268,7 +268,7 @@ namespace IdleGrounds.Editor
         }
 
         /// <summary>Rounded panel chip: fill + 1 px border (Outline effect).</summary>
-        static Image Chip(Transform parent, string name, Color fill, Color border, bool raycast = false)
+        internal static Image Chip(Transform parent, string name, Color fill, Color border, bool raycast = false)
         {
             var rt = NewUi(name, parent);
             var img = rt.gameObject.AddComponent<Image>();
@@ -313,7 +313,7 @@ namespace IdleGrounds.Editor
             Save(root.gameObject, UiPrefabDir + "/HandCursor.prefab");
         }
 
-        static Button BarButton(Transform parent, string name, string label, Sprite icon, Color textColour)
+        internal static Button BarButton(Transform parent, string name, string label, Sprite icon, Color textColour)
         {
             var img = Chip(parent, name, UiPalette.Panel, UiPalette.Line, raycast: true);
             Row(img.gameObject, 12, 6, 6);
@@ -374,8 +374,23 @@ namespace IdleGrounds.Editor
             // buttons (placeholders until M3/M4; Reset disabled until saves exist)
             BarButton(root, "HelpButton", "Help", null, UiPalette.Text);
             BarButton(root, "StatsButton", "Stats", Emoji("ui_stats"), UiPalette.Text);
-            BarButton(root, "BuildButton", "Build", Emoji("ui_build"), UiPalette.Text);
-            BarButton(root, "DemolishButton", "Demolish", Emoji("ui_demolish"), UiPalette.Text);
+            var buildBtn = BarButton(root, "BuildButton", "Build", Emoji("ui_build"), UiPalette.Text);
+            var demolishBtn = BarButton(root, "DemolishButton", "Demolish", Emoji("ui_demolish"), UiPalette.Text);
+            // gold "unseen revealed buildings" dot, top-right of the Build button (§4.1)
+            var dot = NewUi("NewDot", buildBtn.transform);
+            dot.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            dot.anchorMin = dot.anchorMax = new Vector2(1f, 1f);
+            dot.pivot = new Vector2(0.5f, 0.5f);
+            dot.sizeDelta = new Vector2(12f, 12f);
+            dot.anchoredPosition = new Vector2(-4f, -4f);
+            var dotImg = dot.gameObject.AddComponent<Image>();
+            dotImg.sprite = EnsureCircleSprite();
+            dotImg.color = UiPalette.Gold;
+            dotImg.raycastTarget = false;
+            dot.gameObject.SetActive(false);
+            Set(view, "buildButton", buildBtn);
+            Set(view, "demolishButton", demolishBtn);
+            Set(view, "buildNewDot", dot.gameObject);
             var reset = BarButton(root, "ResetButton", "Reset", null, UiPalette.Danger);
             reset.interactable = false;
 
@@ -404,7 +419,7 @@ namespace IdleGrounds.Editor
             Debug.Log("[IdleGrounds] Core loop installed into " + ScenePath);
         }
 
-        static GameObject FindOrCreate(string name, Transform parent)
+        internal static GameObject FindOrCreate(string name, Transform parent)
         {
             var t = parent != null ? parent.Find(name) : null;
             if (t == null && parent == null) { var go = GameObject.Find(name); if (go != null && go.transform.parent == null) t = go.transform; }
@@ -414,7 +429,7 @@ namespace IdleGrounds.Editor
             return n;
         }
 
-        static T Ensure<T>(GameObject go) where T : Component => go.GetComponent<T>() ?? go.AddComponent<T>();
+        internal static T Ensure<T>(GameObject go) where T : Component => go.GetComponent<T>() ?? go.AddComponent<T>();
 
         /// <summary>Adds/refreshes every M2 object in the active (Game) scene. Idempotent.</summary>
         public static void InstallIntoActiveScene()

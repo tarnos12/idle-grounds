@@ -21,6 +21,13 @@ namespace IdleGrounds.Game
         [SerializeField] TextMeshProUGUI handText;
         [SerializeField] Image handPill;
         [SerializeField] Button resetButton;
+        [Header("M3 build / demolish")]
+        [SerializeField] BuildController build;
+        [SerializeField] Button buildButton;
+        [SerializeField] Button demolishButton;
+        [SerializeField] GameObject buildNewDot;
+
+        bool lastBuildOn, lastDemolishOn;
 
         string lastArea;
         int lastTotal = -1, lastCap = -1;
@@ -30,6 +37,35 @@ namespace IdleGrounds.Game
             if (runner == null) runner = GameRunner.Instance;
             if (cameraController == null) cameraController = FindFirstObjectByType<CameraController>();
             if (resetButton != null) resetButton.interactable = false;   // save/reset arrives with M5
+            if (build == null) build = FindFirstObjectByType<BuildController>();
+            if (build != null)
+            {
+                if (buildButton != null) buildButton.onClick.AddListener(build.ToggleBuildMenu);
+                if (demolishButton != null) demolishButton.onClick.AddListener(build.ToggleDemolish);
+            }
+        }
+
+        /// <summary>"On" toggle styling (§4.1): accent-dk fill + accent border; Demolish turns red when on.</summary>
+        static void Toggle(Button b, bool on, bool danger)
+        {
+            if (b == null) return;
+            var img = b.targetGraphic as Image;
+            if (img != null) img.color = on ? (danger ? new Color(0.45f, 0.12f, 0.12f) : UiPalette.AccentDk) : UiPalette.Panel;
+            var ol = b.GetComponent<Outline>();
+            if (ol != null) ol.effectColor = on ? (danger ? UiPalette.Danger : UiPalette.Accent) : UiPalette.Line;
+        }
+
+        void SyncBuildButtons()
+        {
+            if (build == null) return;
+            bool bOn = build.BuildMenuOpen, dOn = build.Demolishing;
+            if (bOn != lastBuildOn) { lastBuildOn = bOn; Toggle(buildButton, bOn, false); }
+            if (dOn != lastDemolishOn) { lastDemolishOn = dOn; Toggle(demolishButton, dOn, true); }
+            if (buildNewDot != null)
+            {
+                bool dot = !bOn && runner.Sim.Buildings.BuildMenuHasNew();
+                if (buildNewDot.activeSelf != dot) buildNewDot.SetActive(dot);
+            }
         }
 
         void Start()
@@ -42,7 +78,8 @@ namespace IdleGrounds.Game
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
-            var cam = cameraController != null ? cameraController.transform.position : Vector3.zero;
+            SyncBuildButtons();
+            var cam =cameraController != null ? cameraController.transform.position : Vector3.zero;
             string area = runner.Space.RegionAtOrNearest(cam);
             if (area != lastArea && area != null)
             {

@@ -31,6 +31,13 @@ namespace IdleGrounds.Game
             return s;
         }
 
+        public Sprite Building(string type)
+        {
+            string k = "b:" + type;
+            if (!cache.TryGetValue(k, out var s)) cache[k] = s = db.BuildingIcon(type);
+            return s;
+        }
+
         public Sprite Get(string key)
         {
             if (!cache.TryGetValue(key, out var s)) cache[key] = s = db.GetSprite(key);

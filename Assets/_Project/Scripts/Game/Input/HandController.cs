@@ -11,7 +11,9 @@ namespace IdleGrounds.Game
     /// left press/hold = harvest (node swing pacing, fixture throttle) or vacuum (type-locked when
     /// the press starts on an item); right press/hold = drop / feed with the latch + ramp rules;
     /// Q / E rotate the hand. Picking is sim geometry (cells / px) — no colliders.
-    /// M2 scope: placement, demolish, link picking, enemies and building panels/withdraw are M3+.
+    /// M3: placement / demolish clicks route to <see cref="BuildController"/> first; a converter click
+    /// opens the recipe picker; storehouse / seal / gathering stone clicks withdraw (1 → 5 per
+    /// second hold ramp). Link picking, lantern/pavilion/altar panels and enemies are M4+.
     /// </summary>
     public class HandController : MonoBehaviour
     {
@@ -21,6 +23,7 @@ namespace IdleGrounds.Game
 
         [SerializeField] GameRunner runner;
         [SerializeField] FxService fx;
+        [SerializeField] BuildController build;
         [SerializeField] Camera worldCamera;
 
         [Header("Debug / automation (drives the cursor without a mouse)")]
@@ -40,6 +43,11 @@ namespace IdleGrounds.Game
 
         // ---- left state ----
         bool leftHeld, pickupMode, harvestHeld;
+        // withdraw hold (ui.js withdrawSH): building being emptied into the hand
+        string withdrawArea; int withdrawId;
+        double withdrawStart, lastWithdraw, lastWithdrawErr = -1e9;
+        public const double WithdrawErrMs = 500;
+        public bool WithdrawHoldActive => leftHeld && withdrawId > 0;
         string suckFilter;
         double lastClickAt = -1e9, lastSwing, lastFullBuzz = -1e9, suctionAcc;
         readonly Dictionary<string, double> fixtureHitAt = new Dictionary<string, double>();
@@ -131,6 +139,8 @@ namespace IdleGrounds.Game
         void LeftDown()
         {
             string area = CursorArea;
+            // 1-2. placement / demolish modes capture the click
+            if (build != null && build.HandleWorldLeftClick(area, Lx, Ly, BuildController.ShiftHeld)) return;
             if (area == null) return;
             if (!runner.IsUnlocked(area))
             {
@@ -141,9 +151,10 @@ namespace IdleGrounds.Game
             double lx = Lx, ly = Ly; int row = LRow, col = LCol;
             var areaState = S.Area(area);
 
-            // building under the cursor (panels/withdraw are M3) — edge-pick may redirect to vacuum
+            // 6. building under the cursor — edge-pick may redirect to vacuum
             var b = Sim.World.BuildingAt(area, row, col);
-            if (b != null && !EdgePickRedirect(b, area, lx, ly)) return;
+            if (b != null && !EdgePickRedirect(b, area, lx, ly)) { BuildingLeftClick(area, b); return; }
+            if (build != null) build.CloseRecipePicker();     // clicking elsewhere closes the panel
 
             if (b == null)
             {
@@ -177,13 +188,41 @@ namespace IdleGrounds.Game
             }
         }
 
+        /// <summary>
+        /// Building click (ui.js U:3020-3045): converter → recipe picker; storehouse / seal / gathering stone
+        /// → immediate withdraw of 1, then the 1 → 5 per second hold. Altar, Gate,
+        /// lantern and pavilion panels are M4/M5 (no-op). Anything else closes the open panel.
+        /// </summary>
+        void BuildingLeftClick(string area, Building b)
+        {
+            var def = runner.Config.Building(b.type);
+            if (b.built && def != null && def.IsConverter)
+            {
+                if (build != null) build.OpenRecipePicker(area, b);
+                return;
+            }
+            if (build != null) build.CloseRecipePicker();
+            // (the Furnace Spirit is withdrawable in the sim but ui.js only offers it for these three)
+            if (b.built && def != null && (b.type == "storehouse" || def.seal.enabled || def.gather.enabled))
+            {
+                leftHeld = true; withdrawArea = area; withdrawId = b.id;
+                int got = Sim.Withdraw(area, b.id, 1);
+                if (got > 0) FxPickup(area, Lx, Ly, got);
+                else if (Now - lastWithdrawErr >= WithdrawErrMs) lastWithdrawErr = Now;   // TODO(M4 audio): error SFX
+                withdrawStart = Now; lastWithdraw = withdrawStart;
+            }
+        }
+
         void LeftUp()
         {
             leftHeld = false; pickupMode = false; harvestHeld = false; suckFilter = null;
+            withdrawId = 0; withdrawArea = null;
         }
 
         void RightDown()
         {
+            // 1. right-click cancels placing / demolish and stops
+            if (build != null && build.CancelModeFromRightClick()) return;
             string area = CursorArea;
             if (area == null || !runner.IsUnlocked(area)) return;
             rightHeld = true; holdStart = Now; holdDone = false;
@@ -230,6 +269,18 @@ namespace IdleGrounds.Game
                 if (picked > 0) FxPickup(rg, Lx, Ly, picked);
                 else if (Sim.Hand.Space() <= 0 && now - lastFullBuzz >= FullBuzzMs && GroundNear(S.Area(rg), Lx, Ly, PickupR, suckFilter))
                     HandFullNudge(rg, Lx, Ly);
+            }
+
+            if (leftHeld && withdrawId > 0)
+            {
+                // withdraw rate ramps 1/s -> 5/s over the first 0.2 s of the hold
+                double rate = 1 + System.Math.Min((now - withdrawStart) / 200.0, 1) * 4;
+                if (now - lastWithdraw >= 1000.0 / rate)
+                {
+                    if (Sim.Withdraw(withdrawArea, withdrawId, 1) > 0) { if (rg != null) FxPickup(rg, Lx, Ly, 1); }
+                    else if (now - lastWithdrawErr >= WithdrawErrMs) lastWithdrawErr = now;   // emptied: buzz once (M4 audio)
+                    lastWithdraw = Now;
+                }
             }
 
             if (harvestHeld && CursorOver && rg != null)
