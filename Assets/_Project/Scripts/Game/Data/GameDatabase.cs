@@ -100,6 +100,20 @@ namespace IdleGrounds.Game.Data
         public Sprite BuildingIcon(string key) => Or(FindBuilding(key)?.icon);
         /// <summary>Delivered body art for the building, or null when it only has the placeholder emoji.</summary>
         public Sprite BuildingArt(string key) { var a = FindBuilding(key); return a != null && a.hasRealArt ? a.icon : null; }
+        public Sprite[] BuildingFrames(string key) { var a = FindBuilding(key); return a != null && a.hasRealArt ? a.frames : null; }
+        /// <summary>Animation frames of a delivered building variant (working / glow / pulse / occupied), or null.</summary>
+        public Sprite[] BuildingVariantFrames(string key, string variant)
+        {
+            var a = FindBuilding(key); if (a == null) return null;
+            foreach (var v in a.variants) if (v.key == variant) return v.frames != null && v.frames.Length > 1 ? v.frames : (v.sprite != null ? new[] { v.sprite } : null);
+            return null;
+        }
+        /// <summary>Delivered awake-dragon art frames (last dragon stage asset), or null.</summary>
+        public Sprite[] DragonAwakeFrames()
+        {
+            if (dragonStages.Count < 2) return null; var a = dragonStages[dragonStages.Count - 1];
+            return a != null && a.hasRealArt ? (a.frames != null && a.frames.Length > 0 ? a.frames : new[] { a.icon }) : null;
+        }
         public Sprite RegionIcon(string regionKey) => Or(FindRegion(regionKey)?.icon);
         public Sprite RegionActionIcon(string regionKey) => Or(FindRegion(regionKey)?.actionIcon);
         public Sprite NodeSprite(string regionKey, string kind) => Or(FindRegion(regionKey)?.Find("node_" + kind));

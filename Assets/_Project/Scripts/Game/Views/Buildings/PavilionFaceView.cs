@@ -38,6 +38,8 @@ namespace IdleGrounds.Game
         }
 
         int lastDisc = -1, lastCap = -1; float nextStatusAt; BuildingStatusInfo st;
+        public override bool IsActive(BuildingView v) => v.Building.disciples > 0;
+
 
         public override void Refresh(BuildingView v)
         {

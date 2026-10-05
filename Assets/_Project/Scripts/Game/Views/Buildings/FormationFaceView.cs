@@ -70,6 +70,8 @@ namespace IdleGrounds.Game
         }
 
         int lastA = int.MinValue, lastB = int.MinValue; float lastTw;
+        public override bool IsActive(BuildingView v) => kind == Kind.GatheringStone && v.Building.links != null && v.Building.links.Count > 0 && BuildingSystem.GatherTotal(v.Building) < v.Def.gather.cap;
+
 
         public override void Refresh(BuildingView v)
         {

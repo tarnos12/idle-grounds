@@ -63,5 +63,12 @@ MonoBehaviour:
       cap: 20
       rateMs: 1000
       speed: 170
-  icon: {fileID: -904241826, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  icon: {fileID: 6168315964129227473, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
+  hasRealArt: 1
+  frames:
+  - {fileID: 6168315964129227473, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
+  - {fileID: -5132903327860737518, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
+  - {fileID: 9174511186781902755, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
+  - {fileID: -4468560326479900658, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
+  variants: []
   prefabOverride: {fileID: 0}

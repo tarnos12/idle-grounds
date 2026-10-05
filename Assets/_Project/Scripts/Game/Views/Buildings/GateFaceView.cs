@@ -34,6 +34,8 @@ namespace IdleGrounds.Game
             sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(16f));
             lastReward = int.MinValue; nextRewardAt = 0f;
         }
+        public override bool IsActive(BuildingView v) => true;
+
 
         public override void Refresh(BuildingView v)
         {

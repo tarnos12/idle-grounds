@@ -46,6 +46,9 @@ namespace IdleGrounds.Game
         public Vector2 ArtSize { get; private set; }
         public float ArtTop { get; private set; }
         SpriteRenderer art;
+        Sprite[] baseFrames, activeFrames;
+        static readonly string[] ActiveVariants = { "working", "glow", "pulse", "occupied" };
+        const float IdleFps = 6f, ActiveFps = 8f;
         internal int seenFrame;
         internal GameObject sourcePrefab;
 
@@ -91,6 +94,10 @@ namespace IdleGrounds.Game
                     art.sortingOrder = panel.sortingOrder + 1;
                 }
                 art.sprite = artSprite;
+                var bf = sync.Sprites.BuildingFrames(b.type);
+                baseFrames = bf != null && bf.Length > 0 ? bf : null;
+                activeFrames = null;
+                foreach (var vn in ActiveVariants) { activeFrames = sync.Sprites.BuildingVariant(b.type, vn); if (activeFrames != null) break; }
                 float k = artSprite.pixelsPerUnit / ViewKit.Cell;      // native pixels: PPU 32 = 1 unit per cell
                 art.transform.localScale = new Vector3(k, k, 1f);
                 art.transform.localPosition = new Vector3(W * 0.5f, -H, 0f);   // bottom-centre pivot on the footprint's bottom edge
@@ -125,6 +132,24 @@ namespace IdleGrounds.Game
             lastBuilt = -1;
             Hovered = Selected = DemolishHover = false;
             Refresh();
+        }
+
+        /// <summary>Swap the (animated) body art, e.g. the Dragon waking up. Cheap: no allocation.</summary>
+        public void SetBodyFrames(Sprite[] frames)
+        {
+            if (!RealArt || frames == null || frames.Length == 0 || ReferenceEquals(baseFrames, frames)) return;
+            baseFrames = frames; art.sprite = frames[0];
+        }
+
+        /// <summary>Plays the body strip at 6 fps, or the working/glow/pulse/occupied variant at 8 fps while a face reports the building active; static art otherwise.</summary>
+        void AnimateArt()
+        {
+            bool act = false;
+            if (activeFrames != null) foreach (var f in faces) if (f.IsActive(this)) { act = true; break; }
+            var set = act ? activeFrames : baseFrames;
+            if (set == null || set.Length == 0) return;
+            var s = set.Length > 1 ? set[(int)(Time.unscaledTime * (act ? ActiveFps : IdleFps)) % set.Length] : set[0];
+            if (art.sprite != s) art.sprite = s;
         }
 
         public void SetHighlight(bool hovered, bool selected, bool demolish, bool reach = false)
@@ -168,6 +193,7 @@ namespace IdleGrounds.Game
                 return;
             }
             foreach (var f in faces) f.Refresh(this);
+            if (RealArt) AnimateArt();
         }
     }
 }

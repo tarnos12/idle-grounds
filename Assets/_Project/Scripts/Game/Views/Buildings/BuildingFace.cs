@@ -13,6 +13,9 @@ namespace IdleGrounds.Game
         /// <summary>True = hide the base icon + name when built (the face draws its own).</summary>
         public virtual bool ReplacesDefault => true;
 
+        /// <summary>True while the building is working (converter batch running, pavilion occupied, gate built, stone pulling): plays the animated "working" art variant.</summary>
+        public virtual bool IsActive(BuildingView v) => false;
+
         /// <summary>Called on bind (footprint size known via view.W/H).</summary>
         public abstract void Layout(BuildingView v);
 

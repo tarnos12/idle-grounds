@@ -149,6 +149,8 @@ namespace IdleGrounds.Game
         int lastCraftable = int.MinValue;
         BuildingState lastState = (BuildingState)(-1);
         string lastStatusItem, lastStatusLabel; double lastCpm = -1; bool lastHadStatus;
+        public override bool IsActive(BuildingView v) => v.Building.smeltDoneAt > v.Sync.Runner.SimNow;
+
 
         public override void Refresh(BuildingView v)
         {

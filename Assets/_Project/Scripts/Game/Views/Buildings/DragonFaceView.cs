@@ -40,6 +40,7 @@ namespace IdleGrounds.Game
             if (!Mathf.Approximately(p.x, cx)) murmur.transform.position = new Vector3(cx, p.y, p.z);
         }
 
+        SpriteRenderer pill;
         public bool IsAwake { get; private set; }
 
         public override void Layout(BuildingView v)
@@ -52,6 +53,27 @@ namespace IdleGrounds.Game
             sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(16f));
             ViewKit.Font(sub, 12f);
             feedRow.transform.localPosition = v.L(0.5f, 0.84f);
+            float murmurY = ViewKit.U(12f);
+            if (v.RealArt)
+            {
+                // real art is the body: no title/sub/icon; the tribute line is a compact pill under the footprint, the murmur floats above the art
+                ViewKit.Show(icon, false); ViewKit.Show(title, false); ViewKit.Show(sub, false);
+                var pos = new Vector3(v.W * 0.5f, -v.H - ViewKit.U(10f), 0f);
+                feedRow.transform.localPosition = pos;
+                if (pill == null)
+                {
+                    var go = new GameObject("TributePill");
+                    go.transform.SetParent(transform, false);
+                    pill = go.AddComponent<SpriteRenderer>();
+                    pill.sprite = v.Panel.sprite;
+                    pill.sortingLayerID = v.Panel.sortingLayerID;
+                    pill.sortingOrder = v.Panel.sortingOrder + 1;
+                    pill.color = new Color(0.08f, 0.07f, 0.12f, 0.8f);
+                }
+                pill.transform.localPosition = pos;
+                pill.transform.localScale = new Vector3(Mathf.Max(1f, v.W * 0.85f), ViewKit.U(16f), 1f);
+                murmurY = v.ArtTop + ViewKit.U(12f);
+            }
             if (murmur != null)
             {
                 ViewKit.Font(murmur, 14f);
@@ -59,7 +81,7 @@ namespace IdleGrounds.Game
                 murmur.alignment = TextAlignmentOptions.Bottom;
                 murmur.rectTransform.pivot = new Vector2(0.5f, 0f);
                 murmur.rectTransform.sizeDelta = new Vector2(Mathf.Max(v.W + 2f, 9f), ViewKit.U(60f));
-                murmur.transform.localPosition = new Vector3(v.W * 0.5f, ViewKit.U(12f), 0f);
+                murmur.transform.localPosition = new Vector3(v.W * 0.5f, murmurY, 0f);
                 murmur.gameObject.SetActive(false);
             }
             lastStage = -1; lastMsg = null;
@@ -105,14 +127,16 @@ namespace IdleGrounds.Game
             if (stage != lastStage || awake != lastAwake)
             {
                 lastStage = stage; lastAwake = awake;
-                ViewKit.Fit(icon, awake ? awakeSprite : sleepingSprite, 64f);
+                if (v.RealArt) v.SetBodyFrames(awake ? v.Sync.Sprites.DragonAwakeFrames() : null);
+                else ViewKit.Fit(icon, awake ? awakeSprite : sleepingSprite, 64f);
                 title.text = awake ? "Awakened Dragon" : "Sleeping Dragon";
                 title.color = awake ? UiPalette.Gold : UiPalette.Hex("#d8b4fe");
                 v.Border.Set(v.W, v.H, v.BorderUnits, awake ? UiPalette.Gold : UiPalette.Purple, false);
                 sub.text = "watches over the grounds";
                 sub.color = UiPalette.Muted;
-                ViewKit.Show(sub, awake);
+                ViewKit.Show(sub, awake && !v.RealArt);
                 ViewKit.Show(feedRow, !awake);
+                ViewKit.Show(pill, !awake);
             }
             if (awake) return;
             entries.Clear();

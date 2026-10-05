@@ -56,6 +56,26 @@ namespace IdleGrounds.Game
             return s;
         }
 
+        readonly Dictionary<string, Sprite[]> framesCache = new Dictionary<string, Sprite[]>();
+        /// <summary>Body-art animation frames (null = static).</summary>
+        public Sprite[] BuildingFrames(string type)
+        {
+            string k = "bf:" + type;
+            if (!framesCache.TryGetValue(k, out var f)) framesCache[k] = f = db.BuildingFrames(type);
+            return f;
+        }
+        public Sprite[] BuildingVariant(string type, string variant)
+        {
+            string k = "bv:" + type + ":" + variant;
+            if (!framesCache.TryGetValue(k, out var f)) framesCache[k] = f = db.BuildingVariantFrames(type, variant);
+            return f;
+        }
+        public Sprite[] DragonAwakeFrames()
+        {
+            if (!framesCache.TryGetValue("dragon_awake", out var f)) framesCache["dragon_awake"] = f = db.DragonAwakeFrames();
+            return f;
+        }
+
         readonly Dictionary<string, Sprite[]> fxCache = new Dictionary<string, Sprite[]>();
         /// <summary>Delivered FX animation frames for an fx_* key, or null (callers fall back to procedural visuals).</summary>
         public Sprite[] FxFrames(string key)
