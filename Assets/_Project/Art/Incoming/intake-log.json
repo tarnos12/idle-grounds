@@ -81,6 +81,22 @@
       "source": "Idle-Grounds-Buildings-004.zip"
     },
     {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-005-generation-prompts.txt",
+      "name": "generation-prompts.txt",
+      "size": 241,
+      "sha1": "bb3f26027cf5a92163716882da56b6bc543675f9",
+      "date": "2026-10-05T05:42:49.785Z",
+      "source": "Idle-Grounds-Buildings-005.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-005-README.md",
+      "name": "README.md",
+      "size": 454,
+      "sha1": "47ade33af815f22a7937c03a27c0f614c0fc1134",
+      "date": "2026-10-05T05:42:49.785Z",
+      "source": "Idle-Grounds-Buildings-005.zip"
+    },
+    {
       "path": "_notes/creatures-Idle-Grounds-Creatures-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 472,
@@ -329,12 +345,36 @@
       "source": "Idle-Grounds-Sky-002 (1).zip"
     },
     {
+      "path": "_notes/sky-Idle-Grounds-Sky-003-generation-prompts.txt",
+      "name": "generation-prompts.txt",
+      "size": 444,
+      "sha1": "5f0214f1034cc984094f0b875a50e1a2694a289d",
+      "date": "2026-10-05T05:42:55.543Z",
+      "source": "Idle-Grounds-Sky-003.zip"
+    },
+    {
+      "path": "_notes/sky-Idle-Grounds-Sky-003-README.md",
+      "name": "README.md",
+      "size": 1000,
+      "sha1": "26ab9085dc593e966eedf9cbb1aee107dfb68d70",
+      "date": "2026-10-05T05:42:55.544Z",
+      "source": "Idle-Grounds-Sky-003.zip"
+    },
+    {
       "path": "buildings/bld_center.png",
       "name": "bld_center.png",
       "size": 23686,
       "sha1": "1a61c680b8bb9feda4c530979672248e0150f26e",
       "date": "2026-10-04T13:42:33.970Z",
       "source": "Idle-Grounds-Buildings-004.zip"
+    },
+    {
+      "path": "buildings/bld_dragon.png",
+      "name": "bld_dragon.png",
+      "size": 24854,
+      "sha1": "fd727a8604a45c9139f0b453661128ff2945fc8a",
+      "date": "2026-10-05T05:42:49.783Z",
+      "source": "Idle-Grounds-Buildings-005.zip"
     },
     {
       "path": "buildings/bld_gathering_stone.png",
@@ -555,37 +595,42 @@
     {
       "path": "sky/sky_clouds_far_1024x256.png",
       "name": "sky_clouds_far_1024x256.png",
-      "size": 2139,
-      "sha1": "9595f5ebf0362caa798d47ea8ea7ce1dbbdccee2",
-      "date": "2026-10-05T03:42:49.083Z",
-      "source": "Idle-Grounds-Sky-002 (1).zip",
-      "rejected": "v1 rejected 2026-10-05 (kept out of Incoming; placeholder restored)"
+      "size": 35882,
+      "sha1": "a6ceec2186bcb2943b6871ed23f766a61a12b059",
+      "date": "2026-10-05T05:42:55.544Z",
+      "source": "Idle-Grounds-Sky-003.zip"
     },
     {
       "path": "sky/sky_clouds_mid_1024x256.png",
       "name": "sky_clouds_mid_1024x256.png",
-      "size": 4470,
-      "sha1": "69a226ec8850b7c05c423fe84a682066ee8d9e29",
-      "date": "2026-10-05T03:42:49.083Z",
-      "source": "Idle-Grounds-Sky-002 (1).zip",
-      "rejected": "v1 rejected 2026-10-05 (kept out of Incoming; placeholder restored)"
+      "size": 50594,
+      "sha1": "62cc0c46bea4bbc1f99098a85f44d643827ae826",
+      "date": "2026-10-05T05:42:55.545Z",
+      "source": "Idle-Grounds-Sky-003.zip"
     },
     {
       "path": "sky/sky_clouds_near_1024x256.png",
       "name": "sky_clouds_near_1024x256.png",
-      "size": 3906,
-      "sha1": "fce4f0ccd6e257db9b4cb689b29b24df01f53a0e",
-      "date": "2026-10-05T03:42:49.084Z",
-      "source": "Idle-Grounds-Sky-002 (1).zip",
-      "rejected": "v1 rejected 2026-10-05 (kept out of Incoming; placeholder restored)"
+      "size": 50491,
+      "sha1": "8f76acd022b2721421a1f2b507ae07bcc7ba99b3",
+      "date": "2026-10-05T05:42:55.545Z",
+      "source": "Idle-Grounds-Sky-003.zip"
     },
     {
       "path": "sky/sky_gradient_512x1024.png",
       "name": "sky_gradient_512x1024.png",
-      "size": 7757,
-      "sha1": "07034b80af14528aed0f8b161191f07bfa574eee",
-      "date": "2026-10-05T03:42:48.620Z",
-      "source": "Idle-Grounds-Sky-001.zip"
+      "size": 6901,
+      "sha1": "bf670f39d0ba1dd848489774aea6ee119a34167e",
+      "date": "2026-10-05T05:42:55.546Z",
+      "source": "Idle-Grounds-Sky-003.zip"
+    },
+    {
+      "path": "sky/sky_moon_96x96.png",
+      "name": "sky_moon_96x96.png",
+      "size": 990,
+      "sha1": "845b2d6b5981b0db25f8d69d326d39f666ecdc7e",
+      "date": "2026-10-05T05:42:55.546Z",
+      "source": "Idle-Grounds-Sky-003.zip"
     }
   ]
 }
