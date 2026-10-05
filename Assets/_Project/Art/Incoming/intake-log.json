@@ -297,6 +297,38 @@
       "source": "Idle-Grounds-Nodes-001.zip"
     },
     {
+      "path": "_notes/sky-Idle-Grounds-Sky-001-generation-prompt.txt",
+      "name": "generation-prompt.txt",
+      "size": 269,
+      "sha1": "03d34d55bf8d59add859fa24eb652ef6c8f22efa",
+      "date": "2026-10-05T03:42:48.619Z",
+      "source": "Idle-Grounds-Sky-001.zip"
+    },
+    {
+      "path": "_notes/sky-Idle-Grounds-Sky-001-README.md",
+      "name": "README.md",
+      "size": 1058,
+      "sha1": "4703fbe3214c5fa0a92a1f707fd93d9e2b998a5a",
+      "date": "2026-10-05T03:42:48.620Z",
+      "source": "Idle-Grounds-Sky-001.zip"
+    },
+    {
+      "path": "_notes/sky-Idle-Grounds-Sky-002 (1)-generation-prompts.txt",
+      "name": "generation-prompts.txt",
+      "size": 669,
+      "sha1": "38163d87d4ca3f914562fbb6ef7b9bb557a005ce",
+      "date": "2026-10-05T03:42:49.082Z",
+      "source": "Idle-Grounds-Sky-002 (1).zip"
+    },
+    {
+      "path": "_notes/sky-Idle-Grounds-Sky-002 (1)-README.md",
+      "name": "README.md",
+      "size": 748,
+      "sha1": "4c2e5a0ed31c1a4aa5a7bf874659eb3f5f82f823",
+      "date": "2026-10-05T03:42:49.082Z",
+      "source": "Idle-Grounds-Sky-002 (1).zip"
+    },
+    {
       "path": "buildings/bld_center.png",
       "name": "bld_center.png",
       "size": 23686,
@@ -519,6 +551,41 @@
       "sha1": "47fb4ab7aafe0dee74bc6a452e8755f5f25ef092",
       "date": "2026-10-04T15:42:34.217Z",
       "source": "Idle-Grounds-Nodes-001.zip"
+    },
+    {
+      "path": "sky/sky_clouds_far_1024x256.png",
+      "name": "sky_clouds_far_1024x256.png",
+      "size": 2139,
+      "sha1": "9595f5ebf0362caa798d47ea8ea7ce1dbbdccee2",
+      "date": "2026-10-05T03:42:49.083Z",
+      "source": "Idle-Grounds-Sky-002 (1).zip",
+      "rejected": "v1 rejected 2026-10-05 (kept out of Incoming; placeholder restored)"
+    },
+    {
+      "path": "sky/sky_clouds_mid_1024x256.png",
+      "name": "sky_clouds_mid_1024x256.png",
+      "size": 4470,
+      "sha1": "69a226ec8850b7c05c423fe84a682066ee8d9e29",
+      "date": "2026-10-05T03:42:49.083Z",
+      "source": "Idle-Grounds-Sky-002 (1).zip",
+      "rejected": "v1 rejected 2026-10-05 (kept out of Incoming; placeholder restored)"
+    },
+    {
+      "path": "sky/sky_clouds_near_1024x256.png",
+      "name": "sky_clouds_near_1024x256.png",
+      "size": 3906,
+      "sha1": "fce4f0ccd6e257db9b4cb689b29b24df01f53a0e",
+      "date": "2026-10-05T03:42:49.084Z",
+      "source": "Idle-Grounds-Sky-002 (1).zip",
+      "rejected": "v1 rejected 2026-10-05 (kept out of Incoming; placeholder restored)"
+    },
+    {
+      "path": "sky/sky_gradient_512x1024.png",
+      "name": "sky_gradient_512x1024.png",
+      "size": 7757,
+      "sha1": "07034b80af14528aed0f8b161191f07bfa574eee",
+      "date": "2026-10-05T03:42:48.620Z",
+      "source": "Idle-Grounds-Sky-001.zip"
     }
   ]
 }

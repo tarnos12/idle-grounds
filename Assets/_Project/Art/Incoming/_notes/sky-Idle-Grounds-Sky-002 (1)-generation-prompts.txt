@@ -1,0 +1,8 @@
+IMAGE GENERATION STUDIES USED
+
+far: Seamless horizontal pixel-art parallax cloud strip; low pale flat banks of cloud sea, small shapes, lowest contrast, transparent background.
+mid: Seamless horizontal pixel-art parallax cloud strip; billowing cumulus, lilac-grey shadow undersides, medium contrast, transparent background.
+near: Seamless horizontal pixel-art parallax cloud strip; large bright sparse cloud wisps with ragged ends, high foreground contrast, transparent background.
+
+POST-PROCESS
+Reconstructed on a 4 px-aligned hard-edge grid with approved palette colors, binary alpha, exact 1024×256 canvas, modular wrap drawing, and exact boundary-column equality.
