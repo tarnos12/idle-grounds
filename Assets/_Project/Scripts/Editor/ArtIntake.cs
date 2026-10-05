@@ -288,6 +288,7 @@ namespace IdleGrounds.Editor
             }
             // consumed directly by IslandArtBuilder's Rule Tiles
             used.Add("island_center_ground_fill");
+            used.Add("sky_moon");   // Sky/Moon renderer (IslandsBuilder.BuildSky); delivered bytes replace the Art/Sky placeholder
 
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)
             foreach (var key in map.Keys)

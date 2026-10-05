@@ -152,6 +152,9 @@ namespace IdleGrounds.Editor
             if (old != null && old.transform.parent == null) Object.DestroyImmediate(old);
             var root = new GameObject("Sky").transform;
             Layer(root, "Gradient", IslandArtBuilder.Single(IslandArtBuilder.SkyGradient), -100, ParallaxLayer.Mode.Fill, 0f, 1f, 0f, 0f, cam, Color.white);
+            // moon: screen-anchored upper-left, native 3 units wide at the start view, scales with the view like the gradient
+            var moon = Layer(root, "Moon", IslandArtBuilder.Single(IslandArtBuilder.Moon), -95, ParallaxLayer.Mode.Fixed, 0f, 1f, 0.01f, 0f, cam, Color.white);
+            moon.anchorX = 0.18f; moon.anchorY = 0.15f; moon.refViewWidth = 35f;
             Layer(root, "Peaks", IslandArtBuilder.Single(IslandArtBuilder.Peaks), -90, ParallaxLayer.Mode.Band, -0.18f, 0.32f, 0.02f, 0f, cam, Color.white);
             Layer(root, "CloudsFar", IslandArtBuilder.Single(IslandArtBuilder.CloudsFar), -80, ParallaxLayer.Mode.Band, -0.30f, 0.30f, 0.05f, 0.15f, cam, Color.white);
             Layer(root, "CloudsMid", IslandArtBuilder.Single(IslandArtBuilder.CloudsMid), -70, ParallaxLayer.Mode.Band, -0.36f, 0.34f, 0.10f, 0.3f, cam, Color.white);

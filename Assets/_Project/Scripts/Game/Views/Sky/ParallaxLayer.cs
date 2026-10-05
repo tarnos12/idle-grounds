@@ -17,7 +17,7 @@ namespace IdleGrounds.Game
     [RequireComponent(typeof(SpriteRenderer))]
     public class ParallaxLayer : MonoBehaviour
     {
-        public enum Mode { Fill, Band }
+        public enum Mode { Fill, Band, Fixed }
 
         public Mode mode = Mode.Band;
         [Tooltip("Band: vertical centre as a fraction of the view height from the view centre (-0.5 = bottom edge).")]
@@ -30,6 +30,12 @@ namespace IdleGrounds.Game
         [Range(0f, 0.2f)] public float verticalScroll = 0.02f;
         [Tooltip("Band: constant drift in screen-widths per minute (wind).")]
         public float drift = 0.05f;
+        [Tooltip("Fixed (moon): anchor from the left edge of the view (0..1); scroll = tiny parallax.")]
+        public float anchorX = 0.18f;
+        [Tooltip("Fixed: anchor from the top edge of the view (0..1).")]
+        public float anchorY = 0.15f;
+        [Tooltip("Fixed: view width (world units) at which the sprite is drawn at native size; it scales with the view.")]
+        public float refViewWidth = 35f;
         [Tooltip("Z of the layer (in front of the camera's near plane).")]
         public float z = 10f;
 
@@ -56,6 +62,16 @@ namespace IdleGrounds.Game
                 sr.drawMode = SpriteDrawMode.Simple;
                 transform.position = new Vector3(cp.x, cp.y, z);
                 transform.localScale = new Vector3(w * 1.02f / Mathf.Max(0.0001f, sb.x), h * 1.02f / Mathf.Max(0.0001f, sb.y), 1f);
+                return;
+            }
+
+            if (mode == Mode.Fixed)
+            {
+                sr.drawMode = SpriteDrawMode.Simple;
+                float k1 = w / Mathf.Max(0.01f, refViewWidth);
+                transform.localScale = new Vector3(k1, k1, 1f);
+                float px = Mathf.Clamp(-cp.x * scroll, -0.05f * w, 0.05f * w), py = Mathf.Clamp(-cp.y * scroll, -0.05f * h, 0.05f * h);
+                transform.position = new Vector3(cp.x + (anchorX - 0.5f) * w + px, cp.y + (0.5f - anchorY) * h + py, z);
                 return;
             }
 

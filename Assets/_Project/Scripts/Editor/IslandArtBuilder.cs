@@ -84,6 +84,7 @@ namespace IdleGrounds.Editor
         public const string CloudsMid = SkyDir + "/sky_clouds_mid_1024x256.png";
         public const string CloudsNear = SkyDir + "/sky_clouds_near_1024x256.png";
         public const string Peaks = SkyDir + "/sky_peaks_1024x256.png";
+        public const string Moon = SkyDir + "/sky_moon_96x96.png";
         public const string QiTrail = BridgeDir + "/fx_qi_trail_64x16_4f.png";
         public const string BridgeUnpaired = BridgeDir + "/bld_spirit_bridge_unpaired.png";
         public const string BridgeSending = BridgeDir + "/bld_spirit_bridge_sending_64x64_4f.png";
@@ -140,6 +141,7 @@ namespace IdleGrounds.Editor
             Make(CloudsMid, force, () => Clouds(23, 16, 0.85f, 0.45f, new Color(0.92f, 0.94f, 0.98f), new Color(0.66f, 0.62f, 0.76f), 0.70f), 1, 1024, Pivot.Center, false, true);
             Make(CloudsNear, force, () => Clouds(37, 7, 1.25f, 0.5f, new Color(1f, 1f, 1f), new Color(0.82f, 0.84f, 0.92f), 0.62f), 1, 1024, Pivot.Center, false, true);
             Make(Peaks, force, PeaksTex, 1, 1024, Pivot.Center, false, true);
+            Make(Moon, force, MoonTex, 1, 96, Pivot.Center, true, false);
             Make(QiTrail, force, Trail, 4, 64, Pivot.Center, false, true);
             Make(BridgeUnpaired, force, () => Bridge(0, 0), 1, 64, Pivot.Center, true, false);
             Make(BridgeSending, force, () => BridgeStrip(1), 4, 64, Pivot.Center, true, false);
@@ -699,6 +701,20 @@ namespace IdleGrounds.Editor
         }
 
         // ------------------------------------------------------------------ sky
+
+        static Texture2D MoonTex()
+        {
+            const int n = 96;
+            var t = NewTex(n, n);
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = x + 0.5f - n * 0.5f, dy = y + 0.5f - n * 0.5f;
+                    if (dx * dx + dy * dy <= 46f * 46f) t.SetPixel(x, y, Hex("#e8eef4"));
+                }
+            t.Apply();
+            return t;
+        }
 
         static Texture2D Gradient()
         {
