@@ -1,0 +1,1 @@
+Change only P13/P14/P15 grass pixels in the accepted Drive v3 blob strip to the accepted calm sparse fill texture. Preserve silhouettes, rim, alpha and mask order exactly. Frame 46 must equal a fill variant; forbid P10/P11/P12.
