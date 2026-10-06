@@ -22,6 +22,9 @@ namespace IdleGrounds.Sim
         public string fail;
         public string text;
         public LinkStatusInfo(LinkDot dot, string fail, string text) { this.dot = dot; this.fail = fail; this.text = text; }
+        /// <summary>Empty instance for the non-allocating status query.</summary>
+        public LinkStatusInfo() { }
+        public LinkStatusInfo Set(LinkDot dot, string fail, string text) { this.dot = dot; this.fail = fail; this.text = text; return this; }
         public override string ToString() => dot + " " + text;
     }
 
@@ -64,52 +67,82 @@ namespace IdleGrounds.Sim
         /// <summary>`targetTypes(t, room)` engine.js:1509 — null = any.</summary>
         public List<string> TargetTypes(Building t, bool room)
         {
-            if (t == null || !t.built) return new List<string>();
+            var l = new List<string>();
+            return TargetTypes(t, room, l) ? l : null;
+        }
+
+        /// <summary>
+        /// Non-allocating <see cref="TargetTypes(Building, bool)"/>: clears and fills <paramref name="into"/>
+        /// and returns true, or returns false for "any" (null) — into is then left empty.
+        /// </summary>
+        public bool TargetTypes(Building t, bool room, List<string> into)
+        {
+            into.Clear();
+            if (t == null || !t.built) return true;
             var cfg = Cfg.Building(t.type);
-            if (cfg == null) return new List<string>();
-            if (cfg.gather.enabled) return null;
+            if (cfg == null) return true;
+            if (cfg.gather.enabled) return false;
             if (cfg.bridge.enabled)
             {
                 // a receiving bridge is only emptied by local lanterns; a sending/unpaired one takes anything
-                if (BridgeReceiving(t)) return new List<string>();
-                return room && BuildingSystem.GatherTotal(t) >= cfg.bridge.cap ? new List<string>() : null;
+                if (BridgeReceiving(t)) return true;
+                return room && BuildingSystem.GatherTotal(t) >= cfg.bridge.cap;
             }
             if (cfg.seal.enabled)
             {
-                if (t.item == null) return null;
-                return room && t.qty >= B.SealCap(cfg) ? new List<string>() : new List<string> { t.item };
+                if (t.item == null) return false;
+                if (!(room && t.qty >= B.SealCap(cfg))) into.Add(t.item);
+                return true;
             }
             if (t.type == "storehouse")
             {
-                if (room && t.qty >= B.StorehouseCap()) return new List<string>();
-                return t.item != null ? new List<string> { t.item } : null;
+                if (room && t.qty >= B.StorehouseCap()) return true;
+                if (t.item == null) return false;
+                into.Add(t.item);
+                return true;
             }
-            if (cfg.stoker.enabled) return new List<string>(Cfg.FuelKeys);
+            var fuelKeys = Cfg.FuelKeys;
+            if (cfg.stoker.enabled)
+            {
+                for (int i = 0; i < fuelKeys.Count; i++) into.Add(fuelKeys[i]);
+                return true;
+            }
             if (cfg.roster.enabled)
             {
-                var r = new List<string>();
-                if (cfg.roster.foodValues != null && cfg.roster.foodValues.Count > 0) foreach (var f in cfg.roster.foodValues) r.Add(f.item);
-                else r.Add(cfg.roster.food);
-                return r;
+                if (cfg.roster.foodValues != null && cfg.roster.foodValues.Count > 0) foreach (var f in cfg.roster.foodValues) into.Add(f.item);
+                else into.Add(cfg.roster.food);
+                return true;
             }
             if (cfg.IsConverter)
             {
                 var rec = _ctx.Converters.RecipeOf(t);
-                var outL = new List<string>();
-                if (rec != null) foreach (var i in rec.inputs) outL.Add(i.item);
-                if (cfg.fuel) foreach (var f in Cfg.FuelKeys) if (!outL.Contains(f)) outL.Add(f);
-                return outL;
+                if (rec != null) foreach (var i in rec.inputs) into.Add(i.item);
+                if (cfg.fuel) for (int i = 0; i < fuelKeys.Count; i++) if (!into.Contains(fuelKeys[i])) into.Add(fuelKeys[i]);
+                return true;
             }
-            return new List<string>();
+            return true;
         }
+
+        readonly List<string> _typesScratch = new List<string>();
 
         /// <summary>`stoneAccepts(area,b,ever)` — null = collects everything.</summary>
         public List<string> StoneAccepts(string areaKey, Building b, bool ever = false)
         {
-            if (b == null || Cfg.Building(b.type)?.gather.enabled != true) return null;
+            var l = new List<string>();
+            return StoneAccepts(areaKey, b, l, ever) ? l : null;
+        }
+
+        /// <summary>
+        /// Non-allocating <see cref="StoneAccepts(string, Building, bool)"/>: clears and fills
+        /// <paramref name="into"/> and returns true, or returns false for null ("collects everything").
+        /// </summary>
+        public bool StoneAccepts(string areaKey, Building b, List<string> into, bool ever = false)
+        {
+            into.Clear();
+            if (b == null || Cfg.Building(b.type)?.gather.enabled != true) return false;
             var area = S.Area(areaKey);
-            List<string> outL = null;
             bool linked = false;
+            var types = _typesScratch;
             foreach (var lb in area.buildings)
             {
                 if (lb.links == null || lb.links.Count == 0) continue;
@@ -117,13 +150,11 @@ namespace IdleGrounds.Sim
                 {
                     if (l.from != b.id) continue;
                     linked = true;
-                    var types = TargetTypes(area.BuildingById(l.to), !ever);
-                    if (types == null) return null;
-                    outL ??= new List<string>();
-                    foreach (var it in types) if (!outL.Contains(it)) outL.Add(it);
+                    if (!TargetTypes(area.BuildingById(l.to), !ever, types)) { into.Clear(); return false; }
+                    foreach (var it in types) if (!into.Contains(it)) into.Add(it);
                 }
             }
-            return linked ? outL : null;
+            return linked;
         }
 
         /// <summary>`sourceHolds(src)`.</summary>
@@ -253,14 +284,17 @@ namespace IdleGrounds.Sim
         }
 
         /// <summary>Status dot of a link (ui.js `linkDot`); green = sent within 3 s of <paramref name="now"/>.</summary>
-        public LinkStatusInfo Status(Link l, double now)
+        public LinkStatusInfo Status(Link l, double now) => Status(l, now, new LinkStatusInfo());
+
+        /// <summary>Non-allocating <see cref="Status(Link, double)"/>: overwrites and returns <paramref name="into"/>.</summary>
+        public LinkStatusInfo Status(Link l, double now, LinkStatusInfo into)
         {
             var st = l?.stat;
-            if (st != null && st.fail == "refused") return new LinkStatusInfo(LinkDot.Red, "refused", "Target refused the item");
-            if (st != null && st.fail == "empty") return new LinkStatusInfo(LinkDot.Amber, "empty", "Source is empty");
-            if (st != null && st.fail == "nomatch") return new LinkStatusInfo(LinkDot.Amber, "nomatch", "Source holds nothing this target uses");
-            if (st != null && st.sentAt > 0 && now - st.sentAt < 3000) return new LinkStatusInfo(LinkDot.Green, null, "Sent an item just now");
-            return new LinkStatusInfo(LinkDot.Grey, null, "Idle");
+            if (st != null && st.fail == "refused") return into.Set(LinkDot.Red, "refused", "Target refused the item");
+            if (st != null && st.fail == "empty") return into.Set(LinkDot.Amber, "empty", "Source is empty");
+            if (st != null && st.fail == "nomatch") return into.Set(LinkDot.Amber, "nomatch", "Source holds nothing this target uses");
+            if (st != null && st.sentAt > 0 && now - st.sentAt < 3000) return into.Set(LinkDot.Green, null, "Sent an item just now");
+            return into.Set(LinkDot.Grey, null, "Idle");
         }
 
         /// <summary>Built buildings in the area that may anchor a link as source (link editor picking).</summary>
@@ -562,6 +596,19 @@ namespace IdleGrounds.Sim
         public List<BridgeCandidate> PairableBridges(string island, int bridgeId)
         {
             var res = new List<BridgeCandidate>();
+            PairableBridges(island, bridgeId, res);
+            return res;
+        }
+
+        /// <summary>
+        /// Non-allocating <see cref="PairableBridges(string, int)"/>: refills <paramref name="into"/>,
+        /// reusing the <see cref="BridgeCandidate"/> objects already in it (extra ones go to an internal pool).
+        /// </summary>
+        public void PairableBridges(string island, int bridgeId, List<BridgeCandidate> into)
+        {
+            var pool = _candidatePool;
+            for (int i = 0; i < into.Count; i++) if (into[i] != null) pool.Add(into[i]);
+            into.Clear();
             var self = S.Area(island)?.BuildingById(bridgeId);
             (double x, double y) from = self != null ? _ctx.World.BuildingWorldCenterPx(island, self) : (0, 0);
             foreach (var r in Cfg.regions)
@@ -572,15 +619,17 @@ namespace IdleGrounds.Sim
                     if (!b.built || !IsBridge(b) || b.pairIsland != null) continue;
                     var (lx, ly) = _ctx.World.BuildingCenterPx(b);
                     var (wx, wy) = _ctx.World.BuildingWorldCenterPx(r.key, b);
-                    res.Add(new BridgeCandidate
-                    {
-                        island = r.key, building = b, x = lx, y = ly,
-                        distancePx = self != null ? Math.Sqrt((wx - from.x) * (wx - from.x) + (wy - from.y) * (wy - from.y)) : 0,
-                    });
+                    BridgeCandidate c;
+                    if (pool.Count > 0) { c = pool[pool.Count - 1]; pool.RemoveAt(pool.Count - 1); }
+                    else c = new BridgeCandidate();
+                    c.island = r.key; c.building = b; c.x = lx; c.y = ly;
+                    c.distancePx = self != null ? Math.Sqrt((wx - from.x) * (wx - from.x) + (wy - from.y) * (wy - from.y)) : 0;
+                    into.Add(c);
                 }
             }
-            return res;
         }
+
+        readonly List<BridgeCandidate> _candidatePool = new List<BridgeCandidate>();
 
         /// <summary>
         /// Sending bridge beat (tick step 6): lantern beat rules (Wisp Haste of the sending Island,

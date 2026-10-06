@@ -16,6 +16,15 @@ namespace IdleGrounds.Sim
         public BuildingStatusInfo(BuildingState state, string item, string label, bool pile = false)
         { this.state = state; this.item = item; this.label = label; this.pile = pile; }
 
+        /// <summary>Empty instance for the non-allocating <c>Status(area, b, into)</c> queries.</summary>
+        public BuildingStatusInfo() { }
+
+        /// <summary>Overwrite every field (reuse); returns this.</summary>
+        public BuildingStatusInfo Set(BuildingState state, string item, string label, bool pile = false)
+        { this.state = state; this.item = item; this.label = label; this.pile = pile; return this; }
+        public BuildingStatusInfo SetPile(string item) => Set(BuildingState.Full, item, "Output pile full", true);
+        public BuildingStatusInfo SetIdle(string item) => Set(BuildingState.Idle, item, "Idle");
+
         public static BuildingStatusInfo Pile(string item) => new BuildingStatusInfo(BuildingState.Full, item, "Output pile full", true);
         public static BuildingStatusInfo Idle(string item) => new BuildingStatusInfo(BuildingState.Idle, item, "Idle");
         public override string ToString() => state + (item != null ? "(" + item + ")" : "") + " " + label;
@@ -199,10 +208,17 @@ namespace IdleGrounds.Sim
         public ItemCounts Needs(Building b)
         {
             var needs = new ItemCounts();
-            var def = Cfg.Building(b.type);
-            if (def == null) return needs;
-            foreach (var c in def.cost) { int r = c.qty - b.paid.Get(c.item); if (r > 0) needs.Set(c.item, r); }
+            NeedsInto(b, needs);
             return needs;
+        }
+
+        /// <summary>Non-allocating <see cref="Needs(Building)"/> into a caller-owned map (cleared with reuse).</summary>
+        public void NeedsInto(Building b, ItemCounts into)
+        {
+            into.ClearReuse();
+            var def = Cfg.Building(b.type);
+            if (def == null) return;
+            foreach (var c in def.cost) { int r = c.qty - b.paid.Get(c.item); if (r > 0) into.Set(c.item, r); }
         }
 
         /// <summary>Ghost completion (§5.5 step 12).</summary>
@@ -716,26 +732,58 @@ namespace IdleGrounds.Sim
         /// <summary>`buildingStatus(area,b)` — null for ghosts/unknown/no status.</summary>
         public BuildingStatusInfo Status(string areaKey, Building b)
         {
-            if (b == null || !b.built) return null;
+            var st = new BuildingStatusInfo();
+            return Status(areaKey, b, st) ? st : null;
+        }
+
+        /// <summary>
+        /// Non-allocating `buildingStatus`: fills <paramref name="into"/> and returns true, or returns
+        /// false where <see cref="Status(string, Building)"/> would return null (into left untouched).
+        /// </summary>
+        public bool Status(string areaKey, Building b, BuildingStatusInfo into)
+        {
+            if (b == null || !b.built) return false;
             var def = Cfg.Building(b.type);
-            if (def == null) return null;
-            if (def.IsConverter) return Conv.Status(areaKey, b);
+            if (def == null) return false;
+            if (def.IsConverter) return Conv.Status(areaKey, b, into);
             if (def.gather.enabled || def.stoker.enabled || def.bridge.enabled)
             {
                 int cap = def.gather.enabled ? def.gather.cap : def.stoker.enabled ? def.stoker.cap : def.bridge.cap;
-                return GatherTotal(b) >= cap ? new BuildingStatusInfo(BuildingState.Full, null, "Full") : null;
+                if (GatherTotal(b) < cap) return false;
+                into.Set(BuildingState.Full, null, "Full");
+                return true;
             }
-            if (def.seal.enabled) return b.qty >= SealCap(def) ? new BuildingStatusInfo(BuildingState.Full, b.item, "Full") : null;
-            if (b.type == "storehouse") return b.qty >= StorehouseCap() ? new BuildingStatusInfo(BuildingState.Full, b.item, "Full") : null;
+            if (def.seal.enabled)
+            {
+                if (b.qty < SealCap(def)) return false;
+                into.Set(BuildingState.Full, b.item, "Full");
+                return true;
+            }
+            if (b.type == "storehouse")
+            {
+                if (b.qty < StorehouseCap()) return false;
+                into.Set(BuildingState.Full, b.item, "Full");
+                return true;
+            }
             if (def.roster.enabled)
             {
-                if (b.disciples > 0 && !(b.buns > 0))
-                    return new BuildingStatusInfo(BuildingState.Starved, "spirit_buns", "Needs " + (Cfg.Item("spirit_buns")?.name ?? "spirit_buns"));
-                if (b.disciples > 0 && b.pileFull) return BuildingStatusInfo.Pile(def.roster.produce);
-                return null;
+                if (b.disciples > 0 && !(b.buns > 0)) { into.Set(BuildingState.Starved, "spirit_buns", NeedsLabel("spirit_buns")); return true; }
+                if (b.disciples > 0 && b.pileFull) { into.SetPile(def.roster.produce); return true; }
+                return false;
             }
-            if (def.gen.enabled && b.pileFull) return BuildingStatusInfo.Pile(def.gen.item);
-            return null;
+            if (def.gen.enabled && b.pileFull) { into.SetPile(def.gen.item); return true; }
+            return false;
+        }
+
+        readonly Dictionary<string, string> _needsLabels = new Dictionary<string, string>();
+
+        /// <summary>"Needs &lt;item name&gt;" status label, cached per item (no per-call string concat).</summary>
+        public string NeedsLabel(string item)
+        {
+            string key = item ?? "";
+            if (!_needsLabels.TryGetValue(key, out var s))
+                _needsLabels[key] = s = "Needs " + (Cfg.Item(item)?.name ?? item);
+            return s;
         }
     }
 }

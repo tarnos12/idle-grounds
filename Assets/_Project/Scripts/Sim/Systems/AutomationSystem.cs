@@ -105,16 +105,25 @@ namespace IdleGrounds.Sim
         /// <summary>Automation read-out for an area (null for unknown areas).</summary>
         public AutomationStatus Status(string areaKey)
         {
+            if (S.Area(areaKey) == null) return null;
+            var st = new AutomationStatus();
+            Status(areaKey, st);
+            return st;
+        }
+
+        /// <summary>Non-allocating <see cref="Status(string)"/>: refills <paramref name="into"/> (skipped list reused). False for unknown areas.</summary>
+        public bool Status(string areaKey, AutomationStatus into)
+        {
             var area = S.Area(areaKey);
-            if (area == null) return null;
+            if (area == null) return false;
             int level = area.upgrades.automation;
-            return new AutomationStatus
-            {
-                level = level,
-                budget = level <= 0 ? 0 : Cfg.balance.AutomationClicks(level) + S.PerkLevel("autoboost"),
-                paused = area.autoPaused,
-                skipped = new List<string>(area.autoSkip ?? new List<string>()),
-            };
+            into.level = level;
+            into.budget = level <= 0 ? 0 : Cfg.balance.AutomationClicks(level) + S.PerkLevel("autoboost");
+            into.paused = area.autoPaused;
+            into.skipped ??= new List<string>();
+            into.skipped.Clear();
+            if (area.autoSkip != null) into.skipped.AddRange(area.autoSkip);
+            return true;
         }
 
         /// <summary>The node's AUTO badge is lit (autoFlash in the future).</summary>

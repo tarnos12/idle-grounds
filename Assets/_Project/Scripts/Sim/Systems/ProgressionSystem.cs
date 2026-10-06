@@ -132,7 +132,14 @@ namespace IdleGrounds.Sim
         /// <summary>`questProgress(i)` — live goal; null for an unknown index.</summary>
         public QuestProgressInfo Progress(int i)
         {
-            if (i < 0 || i >= Cfg.quests.Count) return null;
+            var p = new QuestProgressInfo();
+            return Progress(i, p) ? p : null;
+        }
+
+        /// <summary>Non-allocating <see cref="Progress(int)"/> into <paramref name="into"/>; false = unknown index (null).</summary>
+        public bool Progress(int i, QuestProgressInfo into)
+        {
+            if (i < 0 || i >= Cfg.quests.Count) return false;
             var q = Cfg.quests[i];
             int cur = 0, need = Math.Max(1, q.goalNeed);
             switch (q.goalKind)
@@ -149,7 +156,7 @@ namespace IdleGrounds.Sim
                     break;
                 case QuestGoalKind.DragonTributeItem:
                 {
-                    int t = _ctx.Dragon.Tribute(q.goalStage).Get(q.goalItem);
+                    int t = _ctx.Dragon.TributeOf(q.goalStage, q.goalItem);
                     need = Math.Max(1, t > 0 ? t : 1);
                     if (S.dragon.stage > q.goalStage) cur = need;
                     else
@@ -161,8 +168,14 @@ namespace IdleGrounds.Sim
                 }
                 default: cur = 0; break;
             }
-            return new QuestProgressInfo { cur = Math.Min(cur, need), need = need, done = cur >= need };
+            into.cur = Math.Min(cur, need); into.need = need; into.done = cur >= need;
+            return true;
         }
+
+        readonly QuestProgressInfo _progressScratch = new QuestProgressInfo();
+
+        /// <summary>Active quest exists and is unfinished (= CurrentProgress() is non-null and not done), without allocating.</summary>
+        bool CurrentQuestUnfinished() => Progress(S.quest.idx, _progressScratch) && !_progressScratch.done;
 
         public QuestProgressInfo CurrentProgress() => Progress(S.quest.idx);
 
@@ -217,30 +230,41 @@ namespace IdleGrounds.Sim
         /// <summary>`questTargetRect` source — null when no target / done / region locked / missing.</summary>
         public QuestTargetInfo Target()
         {
+            var t = new QuestTargetInfo();
+            return Target(t) ? t : null;
+        }
+
+        /// <summary>
+        /// Non-allocating <see cref="Target()"/>: overwrites every field of <paramref name="into"/> and
+        /// returns true, or returns false where Target() would return null (into contents then undefined).
+        /// </summary>
+        public bool Target(QuestTargetInfo into)
+        {
             var q = CurrentQuest;
-            if (q?.target == null || string.IsNullOrEmpty(q.target.kind)) return null;
+            if (q?.target == null || string.IsNullOrEmpty(q.target.kind)) return false;
             string area = string.IsNullOrEmpty(q.target.area) ? "center" : q.target.area;
-            if (Cfg.Region(area) == null || !S.world.IsUnlocked(area)) return null;
-            var p = CurrentProgress();
-            if (p == null || p.done) return null;
+            if (Cfg.Region(area) == null || !S.world.IsUnlocked(area)) return false;
+            if (!CurrentQuestUnfinished()) return false;
             var st = S.Area(area);
-            var t = new QuestTargetInfo { area = area, kind = q.target.kind };
+            var t = into;
+            t.area = area; t.kind = q.target.kind; t.node = null; t.building = null; t.zone = null;
             if (q.target.kind == "fixture")
             {
-                t.node = st.nodes.Find(n => n.isFixed && n.kind == q.target.id);
-                return t.node != null ? t : null;
+                foreach (var n in st.nodes) if (n.isFixed && n.kind == q.target.id) { t.node = n; break; }
+                return t.node != null;
             }
             if (q.target.kind == "enemyZone")
             {
                 var ez = Cfg.Region(area).enemies;
                 var rects = ez != null && ez.enabled ? Cfg.ZoneRects(ez.zone) : null;
-                if (rects == null || rects.Count == 0) return null;
+                if (rects == null || rects.Count == 0) return false;
                 t.zone = rects[0];
-                return t;
+                return true;
             }
             string type = q.target.kind == "dragon" ? "dragon" : q.target.kind == "altar" ? "center" : q.target.id;
-            t.building = st.buildings.Find(b => b.built && b.type == type) ?? st.buildings.Find(b => b.type == type);
-            return t.building != null ? t : null;
+            foreach (var b in st.buildings) if (b.built && b.type == type) { t.building = b; break; }
+            if (t.building == null) foreach (var b in st.buildings) if (b.type == type) { t.building = b; break; }
+            return t.building != null;
         }
 
         /// <summary>`buildTargets()` — active quest's unbuilt `builds` (while unfinished), then milestone builds.</summary>
@@ -257,6 +281,19 @@ namespace IdleGrounds.Sim
             return res;
         }
 
+        readonly List<string> _mbScratch = new List<string>();
+
+        /// <summary>Non-allocating <see cref="BuildTargets()"/>: clears and refills <paramref name="into"/> (same order).</summary>
+        public void BuildTargets(List<string> into)
+        {
+            into.Clear();
+            var q = CurrentQuest;
+            if (q != null && q.builds.Count > 0 && CurrentQuestUnfinished())
+                foreach (var t in q.builds) if (!S.builtTypes.Contains(t)) into.Add(t);
+            MilestoneBuilds(_mbScratch);
+            foreach (var mb in _mbScratch) if (!into.Contains(mb)) into.Add(mb);
+        }
+
         // ================================================================
         // region unlocks (§3.6)
         // ================================================================
@@ -264,12 +301,19 @@ namespace IdleGrounds.Sim
         /// <summary>`areaUnlockCost(k)` — null when the region has no cost (Center).</summary>
         public ItemCounts UnlockCost(string k)
         {
-            var reg = Cfg.Region(k);
-            if (reg == null || reg.unlockCost.Count == 0) return null;
-            double frugal = Math.Pow(0.8, S.PerkLevel("frugal"));
             var res = new ItemCounts();
-            foreach (var c in reg.unlockCost) res.Set(c.item, Math.Max(1, (int)Math.Ceiling(_ctx.Timing.Scaled(c.qty) * frugal)));
-            return res;
+            return UnlockCost(k, res) ? res : null;
+        }
+
+        /// <summary>Non-allocating <see cref="UnlockCost(string)"/> into <paramref name="into"/> (cleared with reuse); false = null (no cost).</summary>
+        public bool UnlockCost(string k, ItemCounts into)
+        {
+            into.ClearReuse();
+            var reg = Cfg.Region(k);
+            if (reg == null || reg.unlockCost.Count == 0) return false;
+            double frugal = Math.Pow(0.8, S.PerkLevel("frugal"));
+            foreach (var c in reg.unlockCost) into.Set(c.item, Math.Max(1, (int)Math.Ceiling(_ctx.Timing.Scaled(c.qty) * frugal)));
+            return true;
         }
 
         RegionPaid PaidEntry(string k, bool create)
@@ -285,6 +329,9 @@ namespace IdleGrounds.Sim
 
         /// <summary>`unlockPaidOf(k)` — installments paid so far (copy-free view; empty when none).</summary>
         public ItemCounts UnlockPaid(string k) => PaidEntry(k, false)?.paid ?? new ItemCounts();
+
+        /// <summary>Non-allocating <see cref="UnlockPaid(string)"/>: copies the installments into <paramref name="into"/> (empty when none).</summary>
+        public void UnlockPaid(string k, ItemCounts into) => into.CopyFromReuse(PaidEntry(k, false)?.paid);
 
         /// <summary>`unlockRemaining(k)` — null when no cost.</summary>
         public ItemCounts UnlockRemaining(string k)
@@ -620,6 +667,133 @@ namespace IdleGrounds.Sim
             foreach (var e in rem)
                 rows.Add(new MilestoneNeedRow { item = e.item, have = Hand.Count(e.item), need = e.qty, sourceHint = SrcHint(e.item) });
             return rows;
+        }
+
+        // ---- non-allocating milestone build targets (mirrors Milestone().builds; strings never built) ----
+
+        readonly ItemCounts _remScratch = new ItemCounts();
+        readonly List<Prod> _prodScratch = new List<Prod>();
+        readonly List<(Building b, int p)> _runScratch = new List<(Building b, int p)>();
+
+        /// <summary>
+        /// Non-allocating <c>Milestone().builds</c>: clears and refills <paramref name="into"/> with the same
+        /// building types in the same order, without building the milestone text / need rows.
+        /// </summary>
+        public void MilestoneBuilds(List<string> into)
+        {
+            into.Clear();
+            string build = null;
+            var builds = into;
+            var dragon = _ctx.Dragon;
+            if (dragon.CurrentStage != null)
+            {
+                var rem = _remScratch;
+                dragon.RemainingInto(rem);
+                foreach (var e in rem)
+                {
+                    if (Hand.Count(e.item) >= e.qty) continue;
+                    // ProducerTypes(e.item): Exists(BuiltAnywhere) → skip; else first unlocked type
+                    bool anyBuilt = false;
+                    string firstUnlocked = null;
+                    foreach (var bc in Cfg.buildings)
+                    {
+                        if (!Produces(bc, e.item)) continue;
+                        if (BuiltAnywhere(bc.key)) { anyBuilt = true; break; }
+                        if (firstUnlocked == null && _ctx.Buildings.IsBuildingUnlocked(bc.key)) firstUnlocked = bc.key;
+                    }
+                    if (anyBuilt) continue;
+                    if (firstUnlocked != null && !builds.Contains(firstUnlocked)) builds.Add(firstUnlocked);
+                }
+            }
+            else
+            {
+                Building gate = null;
+                foreach (var a in S.areas)
+                    foreach (var b in a.buildings)
+                        if (Cfg.Building(b.type)?.gate == true && (gate == null || b.built)) gate = b;
+                if (gate == null || !gate.built)
+                {
+                    string gType = null;
+                    foreach (var bc in Cfg.buildings) if (bc.gate) { gType = bc.key; break; }
+                    var rem = _remScratch;
+                    if (gate != null) _ctx.Buildings.NeedsInto(gate, rem);
+                    else
+                    {
+                        rem.ClearReuse();
+                        if (gType != null) foreach (var c in Cfg.Building(gType).cost) rem.Set(c.item, c.qty);
+                    }
+                    string miss = null;
+                    foreach (var e in rem) if (Hand.Count(e.item) < e.qty) { miss = e.item; break; }
+                    if (gate == null && miss == null) build = gType;
+                    else if (miss != null) build = StepTowardBuild(miss, 0, rem.Get(miss));
+                }
+            }
+            if (!BuiltAnywhere("mill") && !BuiltAnywhere("brewery"))
+            {
+                bool hungry = false;
+                foreach (var a in S.areas)
+                    foreach (var b in a.buildings)
+                        if (b.built && Cfg.Building(b.type)?.roster.enabled == true && b.disciples > 0) hungry = true;
+                if (hungry && !builds.Contains("mill")) builds.Add("mill");
+            }
+            if (build != null && !builds.Contains(build)) builds.Insert(0, build);
+        }
+
+        static bool Produces(BuildingDef bc, string item)
+        {
+            if (bc.gen.enabled && bc.gen.item == item) return true;
+            foreach (var r in bc.recipes) if (r.output == item) return true;
+            return false;
+        }
+
+        /// <summary>
+        /// <c>StepToward(item, path, need)</c> reduced to its Build answer: the building type when the
+        /// resulting step is <see cref="MilestoneStepKind.Build"/>, else null. <paramref name="depth"/> = path.Count.
+        /// Scratch lists are only read before the (tail) recursive call, so sharing them is safe.
+        /// </summary>
+        string StepTowardBuild(string item, int depth, int need)
+        {
+            if (need <= 0) need = 1;
+            var st = StoredCount(item);
+            if (st.qty > 0 && Hand.Count(item) + st.qty >= need) return null;                 // Withdraw
+            var prods = _prodScratch; prods.Clear();
+            foreach (var bc in Cfg.buildings)
+                for (int ri = 0; ri < bc.recipes.Count; ri++)
+                    if (bc.recipes[ri].output == item) prods.Add(new Prod { bc = bc, r = bc.recipes[ri], ri = ri });
+            if (prods.Count == 0 || depth >= 4) return null;                                    // Gather
+            var running = _runScratch; running.Clear();
+            bool anyIdle = false;
+            foreach (var a in S.areas)
+                foreach (var b in a.buildings)
+                {
+                    if (!b.built) continue;
+                    int firstMine = -1, on = -1;
+                    for (int i = 0; i < prods.Count; i++)
+                    {
+                        if (prods[i].bc.key != b.type) continue;
+                        if (firstMine < 0) firstMine = i;
+                        if (on < 0 && prods[i].ri == b.recipe) on = i;
+                    }
+                    if (firstMine < 0) continue;
+                    if (on >= 0) running.Add((b, on)); else anyIdle = true;
+                }
+            if (running.Count == 0 && anyIdle) return null;                                     // SwitchRecipe
+            if (running.Count == 0)
+            {
+                var pick = prods[0];
+                foreach (var p in prods) if (_ctx.Buildings.IsBuildingUnlocked(p.bc.key)) { pick = p; break; }
+                return pick.bc.key;                                                              // Build
+            }
+            int pi = running[0].p;
+            var pk = prods[pi];
+            foreach (var inp in pk.r.inputs)
+            {
+                int inStock = 0;
+                foreach (var (b, p) in running) if (p == pi) inStock += b.stock?.Get(inp.item) ?? 0;
+                int have = Hand.Count(inp.item) + StoredCount(inp.item).qty + inStock;
+                if (have < inp.qty) return StepTowardBuild(inp.item, depth + 1, inp.qty);
+            }
+            return null;                                                                         // Collect / Feed
         }
 
         /// <summary>`milestoneInfo()` — the next big goal (dragon tribute → raise the Gate → ascend) + side lines.</summary>

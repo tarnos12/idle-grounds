@@ -33,6 +33,10 @@ namespace IdleGrounds.Sim
         public BuildingStatusInfo status;
         /// <summary>`craftRate(b, true)` — crafts per minute.</summary>
         public double craftsPerMin;
+
+        // reuse buffers for the non-allocating ConverterSystem.Face(area, b, into)
+        internal BuildingStatusInfo statusBuffer;
+        internal List<FuelSlot> fuelPool;
     }
 
     /// <summary>
@@ -277,59 +281,106 @@ namespace IdleGrounds.Sim
         /// <summary>The converter part of `buildingStatus` (engine.js:1641).</summary>
         public BuildingStatusInfo Status(string areaKey, Building b)
         {
+            var st = new BuildingStatusInfo();
+            Status(areaKey, b, st);
+            return st;
+        }
+
+        /// <summary>Non-allocating converter status into <paramref name="into"/>; always true (a converter always has a status).</summary>
+        public bool Status(string areaKey, Building b, BuildingStatusInfo into)
+        {
             var rec = RecipeOf(b);
-            if (rec == null) return BuildingStatusInfo.Idle(null);
+            if (rec == null) { into.SetIdle(null); return true; }
             var stock = Stock(b);
             int cap = StockCap(rec);
             bool atCap = true;
             foreach (var i in rec.inputs) if (stock.Get(i.item) < cap) { atCap = false; break; }
             if (b.smeltDoneAt > 0)
-                return atCap ? new BuildingStatusInfo(BuildingState.Full, null, "Stock full")
-                             : new BuildingStatusInfo(BuildingState.Working, null, "Working");
+            {
+                if (atCap) into.Set(BuildingState.Full, null, "Stock full");
+                else into.Set(BuildingState.Working, null, "Working");
+                return true;
+            }
             string missing = null;
             foreach (var i in rec.inputs) if (stock.Get(i.item) < i.qty) { missing = i.item; break; }
             if (missing == null)
             {
-                if (b.pileFull && b.pileItem == rec.output) return BuildingStatusInfo.Pile(rec.output);
-                if (IsBurner(b) && !(Fuel.Total(b) > 0)) return new BuildingStatusInfo(BuildingState.NoFuel, null, "No fuel");
-                return new BuildingStatusInfo(BuildingState.Working, null, "Working");
+                if (b.pileFull && b.pileItem == rec.output) into.SetPile(rec.output);
+                else if (IsBurner(b) && !(Fuel.Total(b) > 0)) into.Set(BuildingState.NoFuel, null, "No fuel");
+                else into.Set(BuildingState.Working, null, "Working");
+                return true;
             }
             bool any = false;
             foreach (var i in rec.inputs) if (stock.Get(i.item) > 0) { any = true; break; }
-            if (!any && !_ctx.Buildings.IsLinkTarget(areaKey, b)) return BuildingStatusInfo.Idle(missing);
-            return new BuildingStatusInfo(BuildingState.Starved, missing, "Needs " + (Cfg.Item(missing)?.name ?? missing));
+            if (!any && !_ctx.Buildings.IsLinkTarget(areaKey, b)) into.SetIdle(missing);
+            else into.Set(BuildingState.Starved, missing, _ctx.Buildings.NeedsLabel(missing));
+            return true;
         }
 
         /// <summary>Everything the converter face / panel needs; null for non-converters.</summary>
         public ConverterFace Face(string areaKey, Building b)
         {
+            if (RecipeOf(b) == null) return null;
+            var f = new ConverterFace();
+            Face(areaKey, b, f);
+            return f;
+        }
+
+        /// <summary>
+        /// Non-allocating <see cref="Face(string, Building)"/>: refills the caller-owned
+        /// <paramref name="into"/> (its lists / fuel slots / status object are reused).
+        /// Returns false (into untouched) for non-converters.
+        /// </summary>
+        public bool Face(string areaKey, Building b, ConverterFace into)
+        {
             var rec = RecipeOf(b);
-            if (rec == null) return null;
+            if (rec == null) return false;
             double now = _ctx.Now;
             var stock = Stock(b);
             int cap = StockCap(rec);
-            var f = new ConverterFace
-            {
-                recipeIndex = b.recipe,
-                recipe = rec,
-                craftable = CraftsPossible(b),
-                running = b.smeltDoneAt > 0,
-                batchMs = BatchMs(b, now),
-                isBurner = IsBurner(b),
-                fuelSlots = Fuel.Slots,
-                status = b.built ? Status(areaKey, b) : null,
-                craftsPerMin = CraftRate(b, true),
-            };
+            var f = into;
+            f.recipeIndex = b.recipe;
+            f.recipe = rec;
+            f.craftable = CraftsPossible(b);
+            f.running = b.smeltDoneAt > 0;
+            f.batchMs = BatchMs(b, now);
+            f.isBurner = IsBurner(b);
+            f.fuelSlots = Fuel.Slots;
+            if (b.built) { f.statusBuffer ??= new BuildingStatusInfo(); Status(areaKey, b, f.statusBuffer); f.status = f.statusBuffer; }
+            else f.status = null;
+            f.craftsPerMin = CraftRate(b, true);
+            f.inputs ??= new List<ConverterInputView>();
+            f.inputs.Clear();
             foreach (var i in rec.inputs)
                 f.inputs.Add(new ConverterInputView { item = i.item, have = stock.Get(i.item), need = i.qty, cap = cap });
             f.progress = b.smeltDoneAt > now && f.batchMs > 0 ? Math.Max(0, Math.Min(1, 1 - (b.smeltDoneAt - now) / f.batchMs)) : 0;
+            f.fuel ??= new List<FuelSlot>();
+            f.fuelTotal = 0;
+            int nf = 0;
             if (f.isBurner)
             {
                 var q = Fuel.Queue(b);
-                for (int i = q.Count - 1; i >= 0; i--) f.fuel.Add(new FuelSlot { item = q[i].item, rem = q[i].rem, total = q[i].total });
+                for (int i = q.Count - 1; i >= 0; i--, nf++)
+                {
+                    FuelSlot s;
+                    if (nf < f.fuel.Count) s = f.fuel[nf];
+                    else
+                    {
+                        if (f.fuelPool != null && f.fuelPool.Count > 0) { s = f.fuelPool[f.fuelPool.Count - 1]; f.fuelPool.RemoveAt(f.fuelPool.Count - 1); }
+                        else s = new FuelSlot();
+                        f.fuel.Add(s);
+                    }
+                    s.item = q[i].item; s.rem = q[i].rem; s.total = q[i].total;
+                }
                 f.fuelTotal = Fuel.Total(b);
             }
-            return f;
+            if (f.fuel.Count > nf)
+            {
+                f.fuelPool ??= new List<FuelSlot>();
+                for (int i = nf; i < f.fuel.Count; i++) f.fuelPool.Add(f.fuel[i]);
+                f.fuel.RemoveRange(nf, f.fuel.Count - nf);
+            }
+            return true;
         }
     }
 }

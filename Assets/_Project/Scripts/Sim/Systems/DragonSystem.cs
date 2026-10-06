@@ -37,27 +37,64 @@ namespace IdleGrounds.Sim
         /// <summary>`dragonNeeds()` — full per-item tribute of the current stage.</summary>
         public ItemCounts Needs()
         {
-            var st = CurrentStage;
             var res = new ItemCounts();
-            if (st == null) return res;
+            NeedsInto(res);
+            return res;
+        }
+
+        /// <summary>Non-allocating <see cref="Needs"/> into a caller-owned map (cleared with reuse).</summary>
+        public void NeedsInto(ItemCounts into)
+        {
+            into.ClearReuse();
+            var st = CurrentStage;
+            if (st == null) return;
             double m = TributeMult();
             foreach (var n in st.needs)
-                res.Set(n.item, Math.Max(1, (int)Math.Ceiling(_ctx.Timing.Scaled(n.qty) * m)) * RestlessMult);
-            return res;
+                into.Set(n.item, Math.Max(1, (int)Math.Ceiling(_ctx.Timing.Scaled(n.qty) * m)) * RestlessMult);
         }
 
         /// <summary>`dragonRemaining()` — what the current stage still wants.</summary>
         public ItemCounts Remaining()
         {
             var rem = new ItemCounts();
-            if (CurrentStage == null) return rem;
-            foreach (var e in Needs())
-            {
-                int r = e.qty - S.dragon.paid.Get(e.item);
-                if (r > 0) rem.Set(e.item, r);
-            }
+            RemainingInto(rem);
             return rem;
         }
+
+        readonly ItemCounts _needsScratch = new ItemCounts();
+
+        /// <summary>Non-allocating <see cref="Remaining"/> into a caller-owned map (cleared with reuse).</summary>
+        public void RemainingInto(ItemCounts into)
+        {
+            into.ClearReuse();
+            if (CurrentStage == null) return;
+            NeedsInto(_needsScratch);
+            foreach (var e in _needsScratch)
+            {
+                int r = e.qty - S.dragon.paid.Get(e.item);
+                if (r > 0) into.Set(e.item, r);
+            }
+        }
+
+        /// <summary>Non-allocating <c>Tribute(stage).Get(item)</c>.</summary>
+        public int TributeOf(int i, string item)
+        {
+            if (i < 0 || i >= Cfg.dragonStages.Count) return 0;
+            var st = Cfg.dragonStages[i];
+            bool listed = false;
+            foreach (var n in st.needs) if (n.item == item) { listed = true; break; }
+            if (!listed) return 0;
+            if (i == S.dragon.stage)
+            {
+                RemainingInto(_needsScratch2);
+                return S.dragon.paid.Get(item) + _needsScratch2.Get(item);
+            }
+            int v = 0;
+            foreach (var n in st.needs) if (n.item == item) v = _ctx.Timing.Scaled(n.qty) * RestlessMult;
+            return v;
+        }
+
+        readonly ItemCounts _needsScratch2 = new ItemCounts();
 
         /// <summary>
         /// `dragonTribute(i)` — full tribute of stage i. Current stage = paid + remaining;

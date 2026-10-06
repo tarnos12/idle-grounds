@@ -206,9 +206,15 @@ namespace IdleGrounds.Sim
 
         /// <summary>`buildingStatus` — null for ghosts / no status.</summary>
         public BuildingStatusInfo BuildingStatus(string areaKey, Building b) => Ctx.Buildings.Status(areaKey, b);
+        /// <summary>Non-allocating <see cref="BuildingStatus(string, Building)"/>: fills <paramref name="into"/>; false where the allocating form returns null.</summary>
+        public bool BuildingStatus(string areaKey, Building b, BuildingStatusInfo into) => Ctx.Buildings.Status(areaKey, b, into);
+        /// <summary>Gathering-stone accepted types (non-allocating): fills <paramref name="into"/>; false = collects everything (Logistics.StoneAccepts null).</summary>
+        public bool StoneAccepts(string areaKey, Building b, System.Collections.Generic.List<string> into, bool ever = false) => Ctx.Logistics.StoneAccepts(areaKey, b, into, ever);
 
         /// <summary>Converter face/panel read-out (inputs have/need/cap, craftable, progress, fuel); null for non-converters.</summary>
         public ConverterFace ConverterFace(string areaKey, Building b) => Ctx.Converters.Face(areaKey, b);
+        /// <summary>Non-allocating <see cref="ConverterFace(string, Building)"/>: refills the caller-owned <paramref name="into"/> (lists/slots/status reused). False (into untouched) for non-converters.</summary>
+        public bool ConverterFace(string areaKey, Building b, ConverterFace into) => Ctx.Converters.Face(areaKey, b, into);
 
         /// <summary>Remaining build cost of a ghost (`buildingNeeds`).</summary>
         public ItemCounts BuildingNeeds(Building b) => Ctx.Buildings.Needs(b);
@@ -233,6 +239,14 @@ namespace IdleGrounds.Sim
             var lb = State.Area(areaKey)?.BuildingById(lanternId);
             if (lb?.links == null || index < 0 || index >= lb.links.Count) return null;
             return Ctx.Logistics.Status(lb.links[index], Ctx.Now);
+        }
+        /// <summary>Non-allocating <see cref="LinkStatus(string, int, int)"/>: overwrites <paramref name="into"/>; false where that returns null.</summary>
+        public bool LinkStatus(string areaKey, int lanternId, int index, LinkStatusInfo into)
+        {
+            var lb = State.Area(areaKey)?.BuildingById(lanternId);
+            if (lb?.links == null || index < 0 || index >= lb.links.Count) return false;
+            Ctx.Logistics.Status(lb.links[index], Ctx.Now, into);
+            return true;
         }
 
         public bool CanBeLinkSource(Building b) => Ctx.Logistics.CanBeLinkSource(b);
@@ -271,6 +285,8 @@ namespace IdleGrounds.Sim
         public bool UnpairBridge(string island, int bridgeId) => Ctx.Logistics.Unpair(island, bridgeId);
         /// <summary>Bridge panel pairing list: unpaired built bridges on OTHER unlocked Islands.</summary>
         public System.Collections.Generic.List<BridgeCandidate> PairableBridges(string island, int bridgeId) => Ctx.Logistics.PairableBridges(island, bridgeId);
+        /// <summary>Non-allocating <see cref="PairableBridges(string, int)"/>: refills <paramref name="into"/>, reusing its candidate objects.</summary>
+        public void PairableBridges(string island, int bridgeId, System.Collections.Generic.List<BridgeCandidate> into) => Ctx.Logistics.PairableBridges(island, bridgeId, into);
         /// <summary>The intact partner of a paired bridge (null = unpaired / broken).</summary>
         public Building BridgePartner(string island, Building bridge) => Ctx.Logistics.PairOf(island, bridge);
         /// <summary>Wisps crossing the sky (world px; draw with <see cref="SkyWispPos"/>).</summary>
@@ -318,6 +334,8 @@ namespace IdleGrounds.Sim
         public ItemCounts UpgradeJobRemaining() => Ctx.Upgrades.JobRemaining(State.upgradeJob);
         /// <summary>Every node's tier/selectable/level/cost/links for the tree panel.</summary>
         public System.Collections.Generic.List<UpgradeNodeState> UpgradeTree() => Ctx.Upgrades.TreeStates();
+        /// <summary>Non-allocating <see cref="UpgradeTree()"/>: refills <paramref name="into"/>, reusing its node-state objects (neighbours / nextCost reused).</summary>
+        public void UpgradeTree(System.Collections.Generic.List<UpgradeNodeState> into) => Ctx.Upgrades.TreeStates(into);
 
         // quests + milestone
         public QuestProgressInfo QuestProgress(int index) => Ctx.Progression.Progress(index);
@@ -328,15 +346,23 @@ namespace IdleGrounds.Sim
         public (System.Collections.Generic.List<BuildingDef> reveals, System.Collections.Generic.List<ItemQty> items) QuestRewardPreview(int index) =>
             Ctx.Progression.RewardPreview(index);
         public QuestTargetInfo QuestTarget() => Ctx.Progression.Target();
+        /// <summary>Non-allocating <see cref="QuestTarget()"/>: overwrites <paramref name="into"/>; false where that returns null.</summary>
+        public bool QuestTarget(QuestTargetInfo into) => Ctx.Progression.Target(into);
         public MilestoneInfo Milestone() => Ctx.Progression.Milestone();
         /// <summary>Build-menu 🎯 targets (quest builds then milestone builds).</summary>
         public System.Collections.Generic.List<string> BuildTargets() => Ctx.Progression.BuildTargets();
+        /// <summary>Non-allocating <see cref="BuildTargets()"/>: clears and refills <paramref name="into"/> (same order).</summary>
+        public void BuildTargets(System.Collections.Generic.List<string> into) => Ctx.Progression.BuildTargets(into);
 
         // regions
         /// <summary>`unlockArea(k)` — pays installments from the hand.</summary>
         public UnlockResult UnlockArea(string areaKey) => Ctx.Progression.UnlockArea(areaKey);
         public ItemCounts AreaUnlockCost(string areaKey) => Ctx.Progression.UnlockCost(areaKey);
         public ItemCounts UnlockPaid(string areaKey) => Ctx.Progression.UnlockPaid(areaKey);
+        /// <summary>Non-allocating <see cref="AreaUnlockCost(string)"/>: fills <paramref name="into"/>; false where that returns null (no cost).</summary>
+        public bool AreaUnlockCost(string areaKey, ItemCounts into) => Ctx.Progression.UnlockCost(areaKey, into);
+        /// <summary>Non-allocating <see cref="UnlockPaid(string)"/>: copies the installments into <paramref name="into"/> (empty when none).</summary>
+        public void UnlockPaid(string areaKey, ItemCounts into) => Ctx.Progression.UnlockPaid(areaKey, into);
         public ItemCounts UnlockRemaining(string areaKey) => Ctx.Progression.UnlockRemaining(areaKey);
         public bool CanPayUnlock(string areaKey) => Ctx.Progression.CanPayUnlock(areaKey);
         public (UnlockPayState state, int have, int need) UnlockPayInfo(string areaKey) => Ctx.Progression.PayState(areaKey);
@@ -375,6 +401,8 @@ namespace IdleGrounds.Sim
             (System.Collections.Generic.IReadOnlyList<Enemy>)State.Area(areaKey)?.enemies ?? System.Array.Empty<Enemy>();
         /// <summary>Automation read-out: level, budget, paused, skipped (saturated) types.</summary>
         public AutomationStatus AutomationStatus(string areaKey) => Ctx.Automation.Status(areaKey);
+        /// <summary>Non-allocating <see cref="AutomationStatus(string)"/>: refills <paramref name="into"/> (skipped list reused); false for unknown areas.</summary>
+        public bool AutomationStatus(string areaKey, AutomationStatus into) => Ctx.Automation.Status(areaKey, into);
         /// <summary>The node's AUTO badge should be shown now (autoFlash &gt; now).</summary>
         public bool NodeAutoFlashing(Node n) => Ctx.Automation.AutoFlashing(n, Ctx.Now);
     }

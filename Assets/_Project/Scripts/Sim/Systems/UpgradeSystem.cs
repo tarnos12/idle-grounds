@@ -25,6 +25,8 @@ namespace IdleGrounds.Sim
         public bool selected;
         /// <summary>Undirected neighbour ids (edges to draw: node.links).</summary>
         public List<string> neighbours = new List<string>();
+        /// <summary>Reused cost map for the non-allocating UpgradeSystem.TreeStates(into).</summary>
+        internal ItemCounts costBuffer;
     }
 
     /// <summary>
@@ -78,13 +80,20 @@ namespace IdleGrounds.Sim
         /// <summary>`upgradeCost(area,type)` — scaled next-level cost, null when maxed / no data.</summary>
         public ItemCounts Cost(string areaKey, string type)
         {
-            var (lvl, max) = Level(areaKey, type);
-            if (max <= 0 || lvl >= max) return null;
-            var node = Node(areaKey, type);
-            if (node?.costs == null || lvl >= node.costs.Count || node.costs[lvl] == null) return null;
             var res = new ItemCounts();
-            foreach (var c in node.costs[lvl].items) res.Set(c.item, _ctx.Timing.Scaled(c.qty));
-            return res;
+            return Cost(areaKey, type, res) ? res : null;
+        }
+
+        /// <summary>Non-allocating <see cref="Cost(string, string)"/> into <paramref name="into"/> (cleared with reuse); false = null (maxed / no data).</summary>
+        public bool Cost(string areaKey, string type, ItemCounts into)
+        {
+            into.ClearReuse();
+            var (lvl, max) = Level(areaKey, type);
+            if (max <= 0 || lvl >= max) return false;
+            var node = Node(areaKey, type);
+            if (node?.costs == null || lvl >= node.costs.Count || node.costs[lvl] == null) return false;
+            foreach (var c in node.costs[lvl].items) into.Set(c.item, _ctx.Timing.Scaled(c.qty));
+            return true;
         }
 
         // ---- the Altar job ----
@@ -212,6 +221,76 @@ namespace IdleGrounds.Sim
                 });
             }
             return res;
+        }
+
+        // scratch for the non-allocating TreeStates(into)
+        readonly Dictionary<string, List<string>> _adj = new Dictionary<string, List<string>>();
+        readonly List<List<string>> _adjPool = new List<List<string>>();
+        readonly HashSet<string> _owned = new HashSet<string>();
+        readonly Dictionary<string, int> _dist = new Dictionary<string, int>();
+        readonly Queue<string> _bfs = new Queue<string>();
+
+        /// <summary>
+        /// Non-allocating <see cref="TreeStates()"/> (same values, config order): refills
+        /// <paramref name="into"/>, reusing its <see cref="UpgradeNodeState"/> objects, their
+        /// <c>neighbours</c> lists and their <c>nextCost</c> maps (nextCost is null when maxed, as before).
+        /// </summary>
+        public void TreeStates(List<UpgradeNodeState> into)
+        {
+            var nodes = Cfg.upgradeTree;
+            var adj = _adj;
+            foreach (var kv in adj) { kv.Value.Clear(); _adjPool.Add(kv.Value); }
+            adj.Clear();
+            foreach (var n in nodes)
+            {
+                List<string> l;
+                if (_adjPool.Count > 0) { l = _adjPool[_adjPool.Count - 1]; _adjPool.RemoveAt(_adjPool.Count - 1); }
+                else l = new List<string>();
+                if (adj.TryGetValue(n.id, out var old)) { old.Clear(); _adjPool.Add(old); }
+                adj[n.id] = l;
+            }
+            foreach (var n in nodes)
+                foreach (var l in n.links)
+                {
+                    if (!adj.ContainsKey(l)) continue;
+                    if (!adj[n.id].Contains(l)) adj[n.id].Add(l);
+                    if (!adj[l].Contains(n.id)) adj[l].Add(n.id);
+                }
+            var owned = _owned; owned.Clear();
+            foreach (var n in nodes) if (Level(n.area, n.type).lvl > 0) owned.Add(n.id);
+            var dist = _dist; dist.Clear();
+            var q = _bfs; q.Clear();
+            foreach (var n in nodes) if (owned.Contains(n.id)) { dist[n.id] = 0; q.Enqueue(n.id); }
+            if (adj.ContainsKey(RootId) && !dist.ContainsKey(RootId)) { dist[RootId] = 0; q.Enqueue(RootId); }
+            while (q.Count > 0)
+            {
+                var id = q.Dequeue();
+                foreach (var nb in adj[id]) if (!dist.ContainsKey(nb)) { dist[nb] = dist[id] + 1; q.Enqueue(nb); }
+            }
+            var job = S.upgradeJob;
+            if (into.Count > nodes.Count) into.RemoveRange(nodes.Count, into.Count - nodes.Count);
+            for (int k = 0; k < nodes.Count; k++)
+            {
+                var n = nodes[k];
+                UpgradeNodeState s;
+                if (k < into.Count && into[k] != null) s = into[k];
+                else { s = new UpgradeNodeState(); if (k < into.Count) into[k] = s; else into.Add(s); }
+                int d = dist.TryGetValue(n.id, out var dv) ? dv : 99;
+                var tier = d <= 1 ? UpgradeNodeTier.Full : d == 2 ? UpgradeNodeTier.Mystery : UpgradeNodeTier.Hidden;
+                bool adjOwned = false;
+                var nbs = adj[n.id];
+                foreach (var a in nbs) if (owned.Contains(a)) { adjOwned = true; break; }
+                var (lvl, max) = Level(n.area, n.type);
+                s.node = n; s.distance = d; s.tier = tier; s.visible = tier != UpgradeNodeTier.Hidden;
+                s.selectable = tier == UpgradeNodeTier.Full && (n.id == RootId || owned.Contains(n.id) || adjOwned);
+                s.owned = owned.Contains(n.id); s.level = lvl; s.max = max; s.maxed = max > 0 && lvl >= max;
+                s.costBuffer ??= new ItemCounts();
+                s.nextCost = Cost(n.area, n.type, s.costBuffer) ? s.costBuffer : null;
+                s.selected = job != null && job.area == n.area && job.type == n.type;
+                if (s.neighbours == null || ReferenceEquals(s.neighbours, nbs)) s.neighbours = new List<string>();
+                s.neighbours.Clear();
+                s.neighbours.AddRange(nbs);
+            }
         }
 
         // ---- derived effect values for systems not yet ported (M6) ----
