@@ -73,7 +73,23 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null) return;
             var bal = runner.Config.balance;
-            if (versionText != null) versionText.text = "v" + bal.versionNum;
+            if (versionText != null)
+            {
+                versionText.text = "v" + bal.versionNum;
+                versionText.raycastTarget = true;
+                TooltipTrigger.Attach(versionText, "v" + bal.versionNum + (string.IsNullOrEmpty(bal.versionDesc) ? "" : " - " + bal.versionDesc));
+            }
+            TooltipTrigger.Attach(handPill, null, HandTip);
+            TooltipTrigger.Attach(buildButton, "Build: place buildings");
+            TooltipTrigger.Attach(demolishButton, "Destroy a building (refunds its resources)");
+        }
+
+        string HandTip()
+        {
+            var sb = new System.Text.StringBuilder("Carried items. Q: send the front stack to the back · E: bring the back stack to the front");
+            foreach (var h in runner.State.hand)
+                sb.Append('\n').Append(h.qty).Append("× ").Append(runner.Config.Item(h.item)?.name ?? h.item);
+            return sb.ToString();
         }
 
         void LateUpdate()

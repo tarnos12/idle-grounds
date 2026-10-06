@@ -689,6 +689,10 @@ namespace IdleGrounds.Editor
             var old = isl.transform.Find("Boundary");
             if (old != null) Object.DestroyImmediate(old.gameObject);
             var props = IslandArtBuilder.Frames(IslandArtBuilder.BoundaryProps);
+            var incoming = ArtIntake.LoadIncoming(out var incomingFrames);
+            Sprite stone = incoming.TryGetValue("item_stone", out var st0) ? st0 : null;
+            Sprite bush = incomingFrames.TryGetValue("node_bush", out var bf) && bf.Length > 0 ? bf[0] : (incoming.TryGetValue("node_bush", out var b0) ? b0 : null);
+            Sprite[] trees = incomingFrames.TryGetValue("deco_tree", out var tf) && tf.Length > 0 ? tf : null;
             var root = new GameObject("Boundary").transform;
             root.SetParent(isl.transform, false);
             var rng = new System.Random(KeySeed(isl.islandKey) ^ 0x1234567);
@@ -703,14 +707,20 @@ namespace IdleGrounds.Editor
                     {
                         if (rng.NextDouble() < 0.18) continue;
                         float kind = (float)rng.NextDouble();
-                        int type = kind < 0.3f ? 0 : kind < 0.58f ? 1 : 2;       // rock, shrub, tuft
+                        int type = kind < 0.3f ? 0 : kind < 0.58f ? 1 : kind < 0.9f || trees == null ? 2 : 3;       // rock, shrub, tuft, tree
                         var p = a + dir * s + new Vector2(-dir.y, dir.x) * R(-0.9f, 0.9f);
-                        var sr = new GameObject(type == 0 ? "Rock" : type == 1 ? "Shrub" : "Tuft").AddComponent<SpriteRenderer>();
+                        var sr = new GameObject(type == 0 ? "Rock" : type == 1 ? "Shrub" : type == 2 ? "Tuft" : "Tree").AddComponent<SpriteRenderer>();
                         sr.transform.SetParent(root, false);
-                        sr.transform.localPosition = new Vector3(p.x, p.y - 0.35f, 0f);
                         float sc = type == 0 ? R(0.5f, 1.0f) : type == 1 ? R(0.6f, 1.1f) : R(0.6f, 1.0f);
-                        sr.transform.localScale = new Vector3(sc, sc, 1f);
-                        sr.sprite = props[type * 2 + rng.Next(2)];
+                        Sprite pick = props[Mathf.Min(type, 2) * 2 + rng.Next(2)];
+                        // delivered art stays at native PPU-32 scale (1x); only the placeholder frames are jittered
+                        if (type == 0 && stone != null) { pick = stone; sc = 1f; }
+                        else if (type == 1 && bush != null) { pick = bush; sc = 1f; }
+                        else if (type == 3) { pick = trees[rng.Next(trees.Length)]; sc = 1f; }
+                        float k = pick.pixelsPerUnit / 32f;
+                        sr.transform.localPosition = new Vector3(p.x, p.y - 0.35f - pick.bounds.min.y * (sc / k), 0f);   // sprite bottom sits on the edge line (any pivot)
+                        sr.transform.localScale = new Vector3(sc / k, sc / k, 1f);
+                        sr.sprite = pick;
                         sr.flipX = rng.NextDouble() < 0.5;
                         sr.sortingLayerName = Ground;
                         sr.sortingOrder = 13;

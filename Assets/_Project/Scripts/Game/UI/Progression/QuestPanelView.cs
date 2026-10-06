@@ -110,9 +110,43 @@ namespace IdleGrounds.Game
             return res;
         }
 
+        // ---- stele vs quest panel: fade the panel while an unlock stele sits under it (so its cost label stays
+        //      readable); hovering the panel itself restores it so it can still be used.
+        UnlockSignSync signs;
+        CanvasGroup fadeGroup;
+        readonly Vector3[] corners = new Vector3[4];
+
+        void FadeOverSteles()
+        {
+            if (signs == null) signs = FindFirstObjectByType<UnlockSignSync>();
+            if (worldCamera == null || signs == null) return;
+            var target = panel != null && panel.activeSelf ? (RectTransform)panel.transform : chip != null ? (RectTransform)chip.transform : null;
+            if (target == null) return;
+            if (fadeGroup == null) { if (!TryGetComponent(out fadeGroup)) fadeGroup = gameObject.AddComponent<CanvasGroup>(); }
+            target.GetWorldCorners(corners);
+            var canvas = target.GetComponentInParent<Canvas>();
+            var cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+            var a = RectTransformUtility.WorldToScreenPoint(cam, corners[0]);
+            var b = RectTransformUtility.WorldToScreenPoint(cam, corners[2]);
+            var ui = Rect.MinMaxRect(Mathf.Min(a.x, b.x), Mathf.Min(a.y, b.y), Mathf.Max(a.x, b.x), Mathf.Max(a.y, b.y));
+            bool over = false;
+            foreach (var s in signs.Signs)
+            {
+                var r = s.WorldRect;
+                var p0 = worldCamera.WorldToScreenPoint(new Vector3(r.xMin, r.yMin, 0f));
+                var p1 = worldCamera.WorldToScreenPoint(new Vector3(r.xMax, r.yMax, 0f));
+                if (ui.Overlaps(Rect.MinMaxRect(Mathf.Min(p0.x, p1.x), Mathf.Min(p0.y, p1.y), Mathf.Max(p0.x, p1.x), Mathf.Max(p0.y, p1.y)))) { over = true; break; }
+            }
+            var mouse = UnityEngine.InputSystem.Mouse.current;
+            bool pointerOnPanel = mouse != null && ui.Contains(mouse.position.ReadValue());
+            float goal = over && !pointerOnPanel ? 0.18f : 1f;
+            fadeGroup.alpha = Mathf.MoveTowards(fadeGroup.alpha, goal, Time.unscaledDeltaTime * 6f);
+        }
+
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null || sprites == null) return;
+            FadeOverSteles();
             if (Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + RefreshEvery;
             Rebuild(false);

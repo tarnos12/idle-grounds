@@ -60,7 +60,7 @@ namespace IdleGrounds.Game
             inputsRoot.localPosition = Vector3.zero;
             result.transform.localPosition = Vector3.zero;
             result.b.transform.localPosition = Vector3.zero;
-            barH = ViewKit.U(2f); barY = -v.H - ViewKit.U(14f);
+            barH = ViewKit.U(2f); barY = v.ArtTop + ViewKit.U(3.5f);   // strip sits ABOVE the art so the dumped output pile (below the footprint) never covers it
             progressTrack.color = Track;
             progressFill.color = UiPalette.Gold;
             ViewKit.ToOverlay(this);
@@ -73,7 +73,7 @@ namespace IdleGrounds.Game
         {
             relayout = false;
             float gap = ViewKit.U(5f), ic = ViewKit.U(12f), ig = ViewKit.U(2f), dotW = ViewKit.U(5f);
-            float y = -v.H - ViewKit.U(7f);
+            float y = v.ArtTop + ViewKit.U(10.5f);
             int n = f.inputs.Count;
             float total = dotW + gap;
             var iw = new float[n];
@@ -95,7 +95,7 @@ namespace IdleGrounds.Game
             result.icon.transform.localPosition = new Vector3(x + ic * 0.5f, y, 0f); x += ic + ig;
             result.b.transform.localPosition = new Vector3(x + rw * 0.5f, y, 0f);
             float pw = total + ViewKit.U(10f);
-            backing.transform.localPosition = new Vector3(v.W * 0.5f, -v.H - ViewKit.U(8.75f), 0f);
+            backing.transform.localPosition = new Vector3(v.W * 0.5f, v.ArtTop + ViewKit.U(8.75f), 0f);
             backing.transform.localScale = new Vector3(pw, ViewKit.U(16.5f), 1f);
             barW = pw - ViewKit.U(4f); barX0 = v.W * 0.5f - barW * 0.5f;
             ViewKit.Bar(progressTrack, barX0, barY, barW, barH);

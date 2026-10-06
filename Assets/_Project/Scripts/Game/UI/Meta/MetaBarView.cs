@@ -41,7 +41,31 @@ namespace IdleGrounds.Game
             if (shrinePill != null) shrinePill.onClick.AddListener(() => perkShop.Open());
         }
 
-        void Start() => PaintMute();
+        void Start()
+        {
+            PaintMute();
+            TooltipTrigger.Attach(helpButton, "How to play");
+            TooltipTrigger.Attach(statsButton, "Your progress so far");
+            TooltipTrigger.Attach(resetButton, "Wipe the save and start over");
+            TooltipTrigger.Attach(muteButton, "Mute / unmute sound");
+            TooltipTrigger.Attach(shrinePill, "Ascension Shrine - spend Ascension Points on permanent perks");
+            if (ascTag != null)
+            {
+                Graphic g = ascTag.GetComponent<Graphic>(); if (g == null) g = ascText;
+                if (g != null) { g.raycastTarget = true; TooltipTrigger.Attach(g, null, AscTip); }
+            }
+        }
+
+        string AscTip()
+        {
+            if (runner == null || runner.Sim == null) return null;
+            var s = runner.Sim.State;
+            var sb = new System.Text.StringBuilder("Ascensions: ").Append(s.ascensions).Append(" · world speed ×")
+                .Append(runner.Sim.Prestige.WorldSpeed.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture));
+            var vows = MetaText.ActiveVows(runner.Sim);
+            if (vows.Count > 0) sb.Append("\nVows this run: ").Append(string.Join(", ", vows.ConvertAll(v => v.name)));
+            return sb.ToString();
+        }
 
         public void AskReset()
         {
