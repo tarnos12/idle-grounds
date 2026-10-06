@@ -551,6 +551,60 @@ namespace IdleGrounds.Editor
             return t;
         }
 
+        // ------------------------------------------------------------------ underside fill (solid body behind the hanging pieces)
+
+        public const string UndersideFill = IslandDir + "/island_underside_fill_32x32_3f.png";
+        public const string UndersideFillTilePath = TileDir + "/RuleTile_underside_fill.asset";
+
+        /// <summary>Placeholder 3-variant seamless rock fill (P02-P04 + P20/P21 earth, dithered); real art replaces it by name.</summary>
+        public static TileBase EnsureUndersideFillTile()
+        {
+            Directory.CreateDirectory(IslandDir);
+            Directory.CreateDirectory(TileDir);
+            Make(UndersideFill, false, UndersideFillStrip, 3, 32, Pivot.Center, true, false);
+            var f = Frames(UndersideFill);
+            if (f.Length < 3) return null;
+            var tile = LoadOrCreate(UndersideFillTilePath);
+            tile.m_DefaultSprite = f[0];
+            tile.m_DefaultColliderType = Tile.ColliderType.None;
+            tile.m_TilingRules.Clear();
+            tile.m_TilingRules.Add(Rule(new[] { f[0], f[1], f[2] }, O, O, O, O, O, O, O, O));
+            EditorUtility.SetDirty(tile);
+            AssetDatabase.SaveAssets();
+            return tile;
+        }
+
+        static Texture2D UndersideFillStrip()
+        {
+            var pal = new[] { Hex("#1B1F2B"), Hex("#2E3345"), Hex("#4A5068"), Hex("#3D2616"), Hex("#6E4524") };
+            var t = NewTex(96, 32);
+            for (int v = 0; v < 3; v++)
+                for (int y = 0; y < 32; y++)
+                    for (int x = 0; x < 32; x++)
+                    {
+                        // periodic value noise (wraps at 32 so tiles join seamlessly)
+                        float n = 0f, amp = 0.6f, sum = 0f;
+                        for (int o = 0; o < 3; o++)
+                        {
+                            int cell = 4 << o; // 4, 8, 16
+                            int gx = x / cell, gy = y / cell, m = 32 / cell;
+                            float fx = (x % cell) / (float)cell, fy = (y % cell) / (float)cell;
+                            float a = Hash(gx % m, gy % m, 31 + v * 7 + o), b = Hash((gx + 1) % m, gy % m, 31 + v * 7 + o);
+                            float c = Hash(gx % m, (gy + 1) % m, 31 + v * 7 + o), d = Hash((gx + 1) % m, (gy + 1) % m, 31 + v * 7 + o);
+                            n += Mathf.Lerp(Mathf.Lerp(a, b, fx), Mathf.Lerp(c, d, fx), fy) * amp; sum += amp; amp *= 0.5f;
+                        }
+                        n /= sum;
+                        float level = n * 4f + (Dither(x, y) - 0.5f) * 0.9f;
+                        int i = Mathf.Clamp(Mathf.FloorToInt(level), 0, 4);
+                        // earth patches (P20/P21) in the brighter noise, slate elsewhere
+                        Color col = n > 0.58f ? (Dither(x, y) > 0.5f ? pal[3] : pal[4]) : pal[Mathf.Min(i, 2)];
+                        if (Hash(x, y, 77 + v) > 0.985f) col = pal[2];
+                        t.SetPixel(v * 32 + x, y, col);
+                    }
+            t.Apply();
+            return t;
+        }
+
         // ------------------------------------------------------------------ underside + mist + veil
 
         static Texture2D Underside(int w, int h, int seed, float bulge)

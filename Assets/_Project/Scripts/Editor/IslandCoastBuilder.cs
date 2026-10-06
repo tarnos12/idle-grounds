@@ -434,6 +434,11 @@ namespace IdleGrounds.Editor
             return set;
         }
 
+        const float UndersideDepthK = 0.35f, UndersideDepthMax = 40f;   // body depth = 35% of the coast width, capped
+        static float UndersideDepth(float span) => Mathf.Min(UndersideDepthMax, UndersideDepthK * span);
+        /// <summary>Total cells the underside reaches below the coast bottom: body + hanging pieces (~6) + mist (~10).</summary>
+        public static float UndersideExtent(float span) => UndersideDepth(span) + 16f;
+
         static void BuildUnderside(Island isl, Land land, out float xCentre, out float halfWidth)
         {
             int w = land.x1 - land.x0 + 1;
@@ -489,43 +494,73 @@ namespace IdleGrounds.Editor
             var rock = IslandArtBuilder.Single(IslandArtBuilder.UndersideRock);
             var spike = IslandArtBuilder.Single(IslandArtBuilder.UndersideStalactite);
             var roots = IslandArtBuilder.Single(IslandArtBuilder.UndersideRoots);
+            var vines = IslandArtBuilder.Single("Assets/_Project/Art/Islands/island_underside_vines_128x128.png");
             var mist = IslandArtBuilder.Single(IslandArtBuilder.BaseMist);
-            var tint = WorldBuilder.UndersideTint(isl.islandKey);
+            // subtle per-island tint: the delivered art already carries colour
+            var tint = Color.Lerp(Color.white, WorldBuilder.UndersideTint(isl.islandKey), 0.3f);
             var rng = new System.Random(KeySeed(isl.islandKey) ^ (isl.coastSeed * 7919) ^ 0x2545F49);
             float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
             const string Sky = WorldBuilder.SkyLayer;
             float span = xMax - xMin;
 
-            // one big mass slightly off-centre, then smaller overlapping pieces of different widths
-            float mainX = xCentre + R(-8f, 8f);
-            float mainScale = Mathf.Clamp(0.5f * span / 8f, 3.6f, 8f);
-            float rockH = rock != null ? rock.bounds.size.y : 6f;
-            float mainTop = Attach(mainX) + 0.45f;
-            float tipY = mainTop - rockH * mainScale * 0.82f;
-            WorldBuilder.Deco(root, "Rock", rock, new Vector3(mainX, mainTop, 0f), mainScale, tint, 40, Sky);
+            // ---- solid body: an inverted mountain of rock tiles under the coast (full width, tapering to a point)
+            var fillTile = IslandArtBuilder.EnsureUndersideFillTile();
+            var bodyT = new GameObject("Body").transform;
+            bodyT.SetParent(root, false);
+            var body = bodyT.gameObject.AddComponent<Tilemap>();
+            var bodyR = bodyT.gameObject.AddComponent<TilemapRenderer>();
+            bodyR.sortingLayerName = Sky;
+            bodyR.sortingOrder = 30;
+            body.color = tint;
+            var bottom = new float[w];                       // lowest filled y (world, cell top edge) per column; NaN outside
+            for (int i = 0; i < w; i++) bottom[i] = float.NaN;
+            float walk = 0f;
+            var cells = new List<Vector3Int>();
+            for (int i = first; i <= last; i++)
+            {
+                int x = land.x0 + i;
+                float k = Mathf.Clamp01(1f - Mathf.Abs(x + 0.5f - xCentre) / (halfWidth + 0.5f));
+                walk = Mathf.Clamp(walk + R(-0.9f, 0.9f), -2.5f, 2.5f);          // ragged edge
+                int depth = Mathf.Max(3, Mathf.RoundToInt(UndersideDepth(2f * halfWidth) * Mathf.Pow(k, 1.15f) + walk * (0.3f + k)));
+                int topCell = Mathf.FloorToInt(att[i]);
+                for (int d = 0; d < depth; d++)
+                {
+                    int rowsFromEnd = depth - 1 - d;                              // dither the lowest rows into the mist
+                    if (rowsFromEnd < 5 && rng.NextDouble() < (5 - rowsFromEnd) / 6.0 * 0.9) continue;
+                    cells.Add(new Vector3Int(x, topCell - d, 0));
+                }
+                bottom[i] = topCell - depth + 1;
+            }
+            var arr = new TileBase[cells.Count];
+            for (int i = 0; i < arr.Length; i++) arr[i] = fillTile;
+            if (fillTile != null) body.SetTiles(cells.ToArray(), arr);
+            float BottomAt(float x) { float b = bottom[Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1)]; return float.IsNaN(b) ? Attach(x) : b; }
 
-            int rocks = 3 + (span > 115f ? 1 : 0);
-            for (int i = 0; i < rocks; i++)
+            // ---- native-scale pieces (scale 1, PPU 32; only flipX) hung over the body: lower edge, taper, flanks
+            int pieceN = 0;
+            float tipY = BottomAt(xCentre);
+            void Piece(float x, float topY, int order)
             {
-                float x = Mathf.Lerp(xMin + 10f, xMax - 10f, (i + 0.5f) / rocks + R(-0.1f, 0.1f));
-                var sr = WorldBuilder.Deco(root, "RockPiece" + i, rock, new Vector3(x, Attach(x) + 0.45f + R(0f, 1f), 0f), R(1.9f, 3.1f), Color.Lerp(tint, Color.black, R(0f, 0.15f)), 39, Sky);
+                float r = rng.Next(100) / 100f;
+                Sprite sp = r < 0.4f ? rock : r < 0.62f ? spike : r < 0.82f ? roots : vines;
+                if (sp == null) sp = rock;
+                if (sp == null) return;
+                float y = topY + R(-0.4f, 0.5f);
+                var col = Color.Lerp(tint, Color.black, R(0f, 0.12f));
+                var sr = WorldBuilder.Deco(root, "Piece" + pieceN++, sp, new Vector3(x, y, 0f), 1f, col, order + pieceN % 3, Sky);
                 sr.flipX = rng.NextDouble() < 0.5;
+                tipY = Mathf.Min(tipY, y - sp.bounds.size.y);
             }
-            int spikes = 4 + rng.Next(3);
-            for (int i = 0; i < spikes; i++)
+            for (float x = xMin + 1f; x < xMax; x += R(4.5f, 6.5f))      // along the lower edge (overlaps it, hangs below)
+                Piece(x, BottomAt(x) + R(1.5f, 3.5f), 38);
+            for (float x = xMin + 2f; x < xMax; x += R(8f, 12f))         // mid-flank pieces breaking up the body silhouette
             {
-                float x = R(xMin + 4f, xMax - 4f);
-                var sr = WorldBuilder.Deco(root, "Spike" + i, spike, new Vector3(x, Attach(x) + 0.3f, 0f), R(0.9f, 2.4f), Color.Lerp(tint, Color.black, R(0.05f, 0.25f)), 38, Sky);
-                sr.flipX = rng.NextDouble() < 0.5;
+                float t0 = Attach(x), b0 = BottomAt(x);
+                if (t0 - b0 > 8f) Piece(x, Mathf.Lerp(t0, b0, R(0.35f, 0.75f)), 36);
             }
-            int rootN = 1 + rng.Next(2);
-            for (int i = 0; i < rootN; i++)
-            {
-                float x = R(xCentre - span * 0.3f, xCentre + span * 0.3f);
-                WorldBuilder.Deco(root, "Roots" + i, roots, new Vector3(x, Attach(x) + 0.2f, 0f), R(1.5f, 2.4f), Color.white, 41, Sky);
-            }
-            WorldBuilder.Deco(root, "MistA", mist, new Vector3(mainX - 8f, tipY, 0f), 9f, new Color(1, 1, 1, 0.5f), 45, Sky);
-            WorldBuilder.Deco(root, "MistB", mist, new Vector3(mainX + 10f, tipY - 2f, 0f), 7f, new Color(1, 1, 1, 0.4f), 45, Sky);
+            Piece(xCentre + R(-1f, 1f), BottomAt(xCentre) + 2f, 39);     // the point
+            WorldBuilder.Deco(root, "MistA", mist, new Vector3(xCentre - 8f, tipY, 0f), 9f, new Color(1, 1, 1, 0.5f), 45, Sky);
+            WorldBuilder.Deco(root, "MistB", mist, new Vector3(xCentre + 10f, tipY - 2f, 0f), 7f, new Color(1, 1, 1, 0.4f), 45, Sky);
             WorldBuilder.Deco(root, "MistC", mist, new Vector3(xMin + 3f, Attach(xMin + 3f) - 4f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, Sky);
             WorldBuilder.Deco(root, "MistD", mist, new Vector3(xMax - 3f, Attach(xMax - 3f) - 5f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, Sky);
             for (int i = 0; i < 2; i++)
@@ -539,7 +574,7 @@ namespace IdleGrounds.Editor
         static void BuildVeil(Island isl, Land land, HashSet<Vector2Int> cliff, float xc, float halfW)
         {
             // cell mask of everything the fog must cover: ground + cliff rim + the hanging underside
-            int gx0 = land.x0 - 3, gx1 = land.x1 + 3, gy0 = land.y0 - 16, gy1 = land.y1 + 3;
+            int gx0 = land.x0 - 3, gx1 = land.x1 + 3, gy0 = land.y0 - Mathf.CeilToInt(UndersideDepth(2f * halfW)) - 14, gy1 = land.y1 + 3;
             int gw = gx1 - gx0 + 1, gh = gy1 - gy0 + 1;
             var m = new bool[gw, gh];
             var minY = new Dictionary<int, int>();
@@ -554,7 +589,7 @@ namespace IdleGrounds.Editor
             foreach (var kv in minY)
             {
                 float k = Mathf.Clamp01(1f - Mathf.Abs(kv.Key + 0.5f - xc) / (halfW + 1f));
-                int depth = Mathf.Max(2, Mathf.RoundToInt(9f * Mathf.Pow(k, 0.6f)));
+                int depth = Mathf.Max(3, Mathf.RoundToInt(UndersideDepth(2f * halfW) * Mathf.Pow(k, 1.15f)) + 6);
                 for (int d = 1; d <= depth; d++) { int y = kv.Value - 1 - d; if (y >= gy0) m[kv.Key - gx0, y - gy0] = true; }
             }
             var dil = new bool[gw, gh];                      // 1-cell dilation so the fog hugs the coast softly
@@ -710,7 +745,7 @@ namespace IdleGrounds.Editor
         /// </summary>
         public static void Respace()
         {
-            const float CoastGap = 14f, UndersideGap = 14f;
+            const float CoastGap = 14f, SkyGap = 12f;   // horizontal coast gap; open sky under the upper row's underside
             var byKey = new Dictionary<string, Island>();
             foreach (var i in Islands()) byKey[i.islandKey] = i;
             if (!byKey.ContainsKey("center")) return;
@@ -734,13 +769,24 @@ namespace IdleGrounds.Editor
                     if (byKey.ContainsKey(kv.Key) && (useCol ? kv.Value.x == col : kv.Value.y == row)) m = Mathf.Max(m, f(ext[kv.Key]));
                 return m;
             }
+            var undersideExt = new Dictionary<string, float>();
+            foreach (var kv in byKey)
+            {
+                var land = ReadLand(kv.Value);
+                int c0x = int.MaxValue, c1x = int.MinValue;
+                for (int x = land.x0; x <= land.x1; x++)
+                    for (int y = land.y0; y <= land.y1; y++)
+                        if (land[x, y]) { c0x = Mathf.Min(c0x, x); c1x = Mathf.Max(c1x, x); break; }
+                undersideExt[kv.Key] = c1x >= c0x ? UndersideExtent(c1x - c0x + 1) : 0f;
+            }
+            float MaxUnder(int row) { float m = 0f; foreach (var kv in grid) if (kv.Value.y == row && undersideExt.TryGetValue(kv.Key, out var u)) m = Mathf.Max(m, u); return m; }
             var cx = new float[3]; var cy = new float[3];
             var c0 = byKey["center"].transform.position;
             cx[1] = c0.x; cy[0] = c0.y;
             cx[0] = cx[1] - Cells - (MaxOver(0, 0, true, e => e.r) + MaxOver(1, 0, true, e => e.l) + CoastGap);
             cx[2] = cx[1] + Cells + (MaxOver(1, 0, true, e => e.r) + MaxOver(2, 0, true, e => e.l) + CoastGap);
-            cy[1] = cy[0] - Cells - (MaxOver(0, 0, false, e => e.b) + MaxOver(0, 1, false, e => e.t) + CoastGap + UndersideGap);
-            cy[2] = cy[1] - Cells - (MaxOver(0, 1, false, e => e.b) + MaxOver(0, 2, false, e => e.t) + CoastGap + UndersideGap);
+            cy[1] = cy[0] - Cells - (MaxOver(0, 0, false, e => e.b) + MaxOver(0, 1, false, e => e.t) + SkyGap + MaxUnder(0));
+            cy[2] = cy[1] - Cells - (MaxOver(0, 1, false, e => e.b) + MaxOver(0, 2, false, e => e.t) + SkyGap + MaxUnder(1));
             foreach (var kv in grid)
             {
                 if (!byKey.TryGetValue(kv.Key, out var isl)) continue;
