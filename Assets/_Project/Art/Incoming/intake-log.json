@@ -129,6 +129,22 @@
       "source": "Idle-Grounds-Creatures-002.zip"
     },
     {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-003-generation-prompts.txt",
+      "name": "generation-prompts.txt",
+      "size": 418,
+      "sha1": "cf411d83cb89af269fd2f0482d6ffbd6c154396b",
+      "date": "2026-10-06T14:01:15.567Z",
+      "source": "Idle-Grounds-Creatures-003.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-003-README.md",
+      "name": "README.md",
+      "size": 526,
+      "sha1": "48428eb3747939ec49bafe7b1f1e5d6377dc3edb",
+      "date": "2026-10-06T14:01:15.567Z",
+      "source": "Idle-Grounds-Creatures-003.zip"
+    },
+    {
       "path": "_notes/fixtures-Idle-Grounds-Fixtures-001-fixture_preview.png",
       "name": "fixture_preview.png",
       "size": 15980,
@@ -151,6 +167,14 @@
       "sha1": "30e4f2bb739fce4febbb7f785367dcf975d15689",
       "date": "2026-10-04T14:14:18.628Z",
       "source": "Idle-Grounds-Fixtures-001.zip"
+    },
+    {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-002-README.md",
+      "name": "README.md",
+      "size": 1090,
+      "sha1": "16d930d5dc6b722abd7554a44e3c0c3fb2909b6d",
+      "date": "2026-10-06T14:01:14.277Z",
+      "source": "Idle-Grounds-Fixtures-002.zip"
     },
     {
       "path": "_notes/fx-Idle-Grounds-FX-001-generation-prompt.txt",
@@ -393,6 +417,22 @@
       "source": "Idle-Grounds-Sky-003.zip"
     },
     {
+      "path": "_notes/sky-Idle-Grounds-Sky-004-generation-prompts.txt",
+      "name": "generation-prompts.txt",
+      "size": 400,
+      "sha1": "4c60c2759fbdc899f77ed23b439818728d393307",
+      "date": "2026-10-06T14:01:20.868Z",
+      "source": "Idle-Grounds-Sky-004.zip"
+    },
+    {
+      "path": "_notes/sky-Idle-Grounds-Sky-004-README.md",
+      "name": "README.md",
+      "size": 477,
+      "sha1": "7ee7953ec06f737bb439877658cfb9761344922c",
+      "date": "2026-10-06T14:01:20.869Z",
+      "source": "Idle-Grounds-Sky-004.zip"
+    },
+    {
       "path": "buildings/bld_center.png",
       "name": "bld_center.png",
       "size": 23686,
@@ -465,6 +505,14 @@
       "source": "Idle-Grounds-Buildings-001.zip"
     },
     {
+      "path": "creatures/dragon_awake_160x192_4f.png",
+      "name": "dragon_awake_160x192_4f.png",
+      "size": 141121,
+      "sha1": "6dee8970acca6c77768f7faae96f1a4127cdc206",
+      "date": "2026-10-06T14:01:15.552Z",
+      "source": "Idle-Grounds-Creatures-003.zip"
+    },
+    {
       "path": "creatures/dragon_sleeping_160x192_4f.png",
       "name": "dragon_sleeping_160x192_4f.png",
       "size": 42873,
@@ -495,6 +543,14 @@
       "sha1": "9d6945188cc1834df9c4304dcc232574db3d373c",
       "date": "2026-10-04T21:42:38.051Z",
       "source": "Idle-Grounds-Creatures-001.zip"
+    },
+    {
+      "path": "fixtures/deco_tree_32x48_3f.png",
+      "name": "deco_tree_32x48_3f.png",
+      "size": 2914,
+      "sha1": "e29f1e92e71ebd441f1e06a72805946910129db6",
+      "date": "2026-10-06T14:01:14.276Z",
+      "source": "Idle-Grounds-Fixtures-002.zip"
     },
     {
       "path": "fixtures/fix_quarry.png",
@@ -695,6 +751,14 @@
       "sha1": "845b2d6b5981b0db25f8d69d326d39f666ecdc7e",
       "date": "2026-10-05T05:42:55.546Z",
       "source": "Idle-Grounds-Sky-003.zip"
+    },
+    {
+      "path": "sky/sky_peaks_1024x256.png",
+      "name": "sky_peaks_1024x256.png",
+      "size": 36584,
+      "sha1": "837a1e2bc85f153cd4f80925cbbd0619ce289604",
+      "date": "2026-10-06T14:01:20.870Z",
+      "source": "Idle-Grounds-Sky-004.zip"
     }
   ]
 }
