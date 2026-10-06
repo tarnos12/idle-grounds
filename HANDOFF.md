@@ -30,7 +30,7 @@ Next candidates:
    UI icons/FX. Center path/plaza tiles are stored but not painted in game yet
    (they read plain; needs a pass).
 3. Deferred: remaining low UI parity items (`docs/port/parity-audit-ui.md`),
-   PlayMode smoke tests, Spirit Bridge / Island art once delivered.
+   Spirit Bridge / Island art once delivered.
 
 ## How things work
 
@@ -115,6 +115,9 @@ the active scene after MCP editor work.
 (EditMode) or Test Runner.
 
 ## Known issues / gotchas
+
+- PlayMode smoke tests:  (6 tests; back up + restore the real save). Run via Test Runner (PlayMode).
+- Watch  : keep 0 (domain reload ON) — tooling once flipped it to 1; revert if it shows up in git status.
 
 - The TMP fallback font asset gets dirtied when entering Play — revert it
   before committing.
