@@ -186,6 +186,8 @@ namespace IdleGrounds.Sim
         [NonSerialized] public string pileItem;
         [NonSerialized] public List<string> accEver;   // null = accept anything
         [NonSerialized] public bool hasAccEver;
+        /// <summary>Runtime buffer <see cref="accEver"/> points at when non-null (refilled each tick, never saved).</summary>
+        [NonSerialized] public List<string> accEverBuf;
         [NonSerialized] public int seq;
         /// <summary>
         /// Spirit Bridge sender: nextSend is a genuine beat due time (the last evaluation launched and had

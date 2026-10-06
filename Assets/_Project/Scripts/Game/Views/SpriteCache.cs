@@ -14,10 +14,15 @@ namespace IdleGrounds.Game
 
         public SpriteCache(GameDatabase db, Sprite decoSprite) { this.db = db; this.decoSprite = decoSprite; }
 
+        // per-kind maps keyed by the raw key: no "prefix:" + key string per lookup
+        readonly Dictionary<string, Sprite> itemCache = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> buildingCache = new Dictionary<string, Sprite>();
+        readonly Dictionary<string, Sprite> buildingArtCache = new Dictionary<string, Sprite>();
+
         public Sprite Item(string item)
         {
-            string k = "i:" + item;
-            if (!cache.TryGetValue(k, out var s)) cache[k] = s = db.ItemIcon(item);
+            if (item == null) return db.ItemIcon(item);
+            if (!itemCache.TryGetValue(item, out var s)) itemCache[item] = s = db.ItemIcon(item);
             return s;
         }
 
@@ -49,24 +54,25 @@ namespace IdleGrounds.Game
 
         public Sprite Building(string type)
         {
-            string k = "b:" + type;
-            if (!cache.TryGetValue(k, out var s)) cache[k] = s = db.BuildingIcon(type);
+            if (type == null) return db.BuildingIcon(type);
+            if (!buildingCache.TryGetValue(type, out var s)) buildingCache[type] = s = db.BuildingIcon(type);
             return s;
         }
 
         public Sprite BuildingArt(string type)
         {
-            string k = "ba:" + type;
-            if (!cache.TryGetValue(k, out var s)) cache[k] = s = db.BuildingArt(type);
+            if (type == null) return db.BuildingArt(type);
+            if (!buildingArtCache.TryGetValue(type, out var s)) buildingArtCache[type] = s = db.BuildingArt(type);
             return s;
         }
 
         readonly Dictionary<string, Sprite[]> framesCache = new Dictionary<string, Sprite[]>();
         /// <summary>Body-art animation frames (null = static).</summary>
+        readonly Dictionary<string, Sprite[]> buildingFramesCache = new Dictionary<string, Sprite[]>();
         public Sprite[] BuildingFrames(string type)
         {
-            string k = "bf:" + type;
-            if (!framesCache.TryGetValue(k, out var f)) framesCache[k] = f = db.BuildingFrames(type);
+            if (type == null) return db.BuildingFrames(type);
+            if (!buildingFramesCache.TryGetValue(type, out var f)) buildingFramesCache[type] = f = db.BuildingFrames(type);
             return f;
         }
         public Sprite[] BuildingVariant(string type, string variant)

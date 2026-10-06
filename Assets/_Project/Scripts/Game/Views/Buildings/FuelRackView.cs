@@ -81,7 +81,8 @@ namespace IdleGrounds.Game
 
         static ConverterFaceView FindConverter(BuildingView v)
         {
-            foreach (var x in v.Faces) if (x is ConverterFaceView c) return c;
+            var faces = v.Faces;   // index loop: foreach over IReadOnlyList boxes its enumerator
+            for (int i = 0; i < faces.Count; i++) if (faces[i] is ConverterFaceView c) return c;
             return null;
         }
     }

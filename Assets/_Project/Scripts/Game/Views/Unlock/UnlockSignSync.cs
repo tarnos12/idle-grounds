@@ -29,11 +29,12 @@ namespace IdleGrounds.Game
         ObjectPool<UnlockSignView> pool;
         SpriteCache sprites;
         int frame;
-        string boundsSig;
+        readonly List<int> boundsSig = new List<int>(), sigNow = new List<int>();
+        bool boundsSet;
         readonly List<Rect> boundsRects = new List<Rect>();
-        readonly System.Text.StringBuilder sigBuilder = new System.Text.StringBuilder();
 
-        public IEnumerable<UnlockSignView> Signs => views.Values;
+        /// <summary>Live steles (struct enumerator — foreach does not allocate).</summary>
+        public Dictionary<int, UnlockSignView>.ValueCollection Signs => views.Values;
         public int Count => views.Count;
 
         void Awake()
@@ -92,6 +93,13 @@ namespace IdleGrounds.Game
             }
         }
 
+        static bool SameSig(List<int> a, List<int> b)
+        {
+            if (a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++) if (a[i] != b[i]) return false;
+            return true;
+        }
+
         static bool Neighbours(RegionDef a, RegionDef b) => Mathf.Abs(a.rx - b.rx) + Mathf.Abs(a.ry - b.ry) == 1;
 
         /// <summary>Sign under a world point (null = none).</summary>
@@ -122,7 +130,7 @@ namespace IdleGrounds.Game
             frame++;
             var islands = runner.Config.regions;
             double now = runner.SimNow;
-            sigBuilder.Clear();
+            sigNow.Clear();
             for (int li = 0; li < islands.Count; li++)
             {
                 var l = islands[li];
@@ -137,7 +145,7 @@ namespace IdleGrounds.Game
                     views[li] = v;
                     v.Bind(l.key, from, StelePoint(l.key), l.name);
                 }
-                sigBuilder.Append(li).Append(';');
+                sigNow.Add(li);
                 v.seenFrame = frame;
                 v.Hovered = hand != null && hand.CursorOver && v.WorldRect.Contains(hand.CursorWorld);
                 if (!ViewCull.Visible(v.transform.position, UnlockSignView.W)) continue;
@@ -148,10 +156,10 @@ namespace IdleGrounds.Game
             foreach (var k in releaseList) { pool.Release(views[k]); views.Remove(k); }
 
             // the camera may always pan over the sky to every stele
-            string sig = sigBuilder.ToString();
-            if (sig != boundsSig && cameraController != null)
+            if ((!boundsSet || !SameSig(sigNow, boundsSig)) && cameraController != null)
             {
-                boundsSig = sig;
+                boundsSet = true;
+                boundsSig.Clear(); boundsSig.AddRange(sigNow);
                 boundsRects.Clear();
                 foreach (var v in views.Values) boundsRects.Add(v.WorldRect);
                 cameraController.SetExtraBounds(boundsRects);

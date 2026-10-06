@@ -239,16 +239,38 @@ namespace IdleGrounds.Sim
         {
             var area = S.Area(areaKey);
             bool changed = false;
-            foreach (var node in area.nodes.ToArray())
+            var nodes = area.nodes;
+            int first = -1;
+            for (int i = 0; i < nodes.Count; i++)
+                if (nodes[i].surfaceUntil != 0 && now >= nodes[i].surfaceUntil) { first = i; break; }
+            if (first < 0) return false;            // nothing surfaced is due — no snapshot needed
+            // snapshot (DepleteNode may mutate the list) into a reused buffer
+            var snap = _nodeSnap;
+            snap.Clear(); snap.AddRange(nodes);
+            for (int i = first; i < snap.Count; i++)
+            {
+                var node = snap[i];
                 if (node.surfaceUntil != 0 && now >= node.surfaceUntil) { DepleteNode(areaKey, node); changed = true; }
+            }
+            snap.Clear();
             return changed;
         }
+        readonly List<Node> _nodeSnap = new List<Node>();
 
         /// <summary>Step 2: due respawns (failure ⇒ re-queue at now+500).</summary>
         public bool TickRespawnQueue(string areaKey, double now)
         {
             var area = S.Area(areaKey);
             if (area.spawnQueue.Count == 0) return false;
+            bool anyDue = false;
+            for (int i = 0; i < area.spawnQueue.Count && !anyDue; i++) if (area.spawnQueue[i].at <= now) anyDue = true;
+            if (!anyDue) return false;             // nothing due: skip the FindAll/RemoveAll closures
+            return SpawnDue(areaKey, area, now);
+        }
+
+        // split out so the lambdas' closure over `now` is only allocated when something is due
+        bool SpawnDue(string areaKey, AreaState area, double now)
+        {
             var cfg = Cfg.Region(areaKey);
             var due = area.spawnQueue.FindAll(e => e.at <= now);
             area.spawnQueue.RemoveAll(e => e.at <= now);

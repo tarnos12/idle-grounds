@@ -108,7 +108,8 @@ Nf loops; SpriteEntry.realArt). Converter info strips sit ABOVE the art (output 
 generic Tooltip/TooltipTrigger (Game/UI/Tooltip.cs) on HUD pills/buttons;
 quest panel fades over unlock steles; boundary props use delivered art.
 Views use the non-alloc Sim queries and refresh every frame (no 4-5 Hz
-throttles). Still ~270 GC.Alloc calls/frame from elsewhere — profile next. Poll it (30 min x1h,
+throttles). GC: game code ~1 alloc/frame, Sim.Tick ~0.9 allocs/tick (SimTickAllocTests);
+the remaining ~190/frame in the editor is the Game View toolbar (editor-only). Poll it (30 min x1h,
 hourly x2h, then 2-hourly; restart after spec updates) and integrate.
 
 Sim done (139 tests): offline progress removed; Tireless Wisps perk (save id

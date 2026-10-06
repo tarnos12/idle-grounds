@@ -153,7 +153,7 @@ namespace IdleGrounds.Sim
                 g.y += dy / d * Math.Min(pull, d);
                 res.moved++;
             }
-            if (taken != null) area.ground.RemoveAll(g => taken.Contains(g.id));
+            if (taken != null) RemoveIds(area.ground, taken);
             return res;
         }
 
@@ -176,7 +176,7 @@ namespace IdleGrounds.Sim
                 if (_ctx.Hand.Space() <= 0) break;
                 if (_ctx.Hand.Add(o.g.item, 1) > 0) { taken.Add(o.g.id); picked++; }
             }
-            if (taken.Count > 0) area.ground.RemoveAll(g => taken.Contains(g.id));
+            if (taken.Count > 0) RemoveIds(area.ground, taken);
             return picked;
         }
 
@@ -202,10 +202,12 @@ namespace IdleGrounds.Sim
             if (n < 2) return 0;
             double MIN = Bal.settleMinPx, MIN2 = MIN * MIN + 1e-6;
             int G = (_ctx.PlayPx >> 6) + 1;
-            var head = new int[G * G];
-            for (int i = 0; i < head.Length; i++) head[i] = -1;
-            var next = new int[n];
-            var cellOf = new int[n];
+            // reused bucket arrays (grown on demand; only the first G*G / n slots are used)
+            int GG = G * G;
+            if (_head.Length < GG) _head = new int[GG];
+            if (_next.Length < n) { int cap = Math.Max(n, _next.Length * 2); _next = new int[cap]; _cellOf = new int[cap]; }
+            var head = _head; var next = _next; var cellOf = _cellOf;
+            for (int i = 0; i < GG; i++) head[i] = -1;
             for (int i = n - 1; i >= 0; i--)
             {
                 int cx = Bucket(items[i].x, G), cy = Bucket(items[i].y, G);
@@ -268,7 +270,16 @@ namespace IdleGrounds.Sim
             return c < 0 ? 0 : c >= G ? G - 1 : c;
         }
 
+        /// <summary>ground.RemoveAll(g => ids.Contains(g.id)) — in its own method so callers don't hoist a closure on every call.</summary>
+        static void RemoveIds(List<GroundItem> ground, HashSet<int> ids) => ground.RemoveAll(g => ids.Contains(g.id));
+
         struct Rect { public double x0, y0, x1, y1; }
+
+        // reusable scratch for SettleGround / PushOutOfColliders (single-threaded sim, no nesting)
+        int[] _head = new int[0], _next = new int[0], _cellOf = new int[0];
+        readonly List<Rect> _rects = new List<Rect>();
+        readonly List<(double d, double x, double y)> _exits = new List<(double d, double x, double y)>(4);
+        static readonly Func<(double d, double x, double y), double> ByExitDistance = e => e.d;
 
         /// <summary>`pushOutOfColliders(area)` engine.js:911. Returns visible moves.</summary>
         public int PushOutOfColliders(string areaKey)
@@ -277,7 +288,8 @@ namespace IdleGrounds.Sim
             if (area.ground.Count == 0) return 0;
             int CELL = _ctx.Cell;
             var cfg = _ctx.Config;
-            var rects = new List<Rect>();
+            var rects = _rects;
+            rects.Clear();
             foreach (var b in area.buildings)
             {
                 var (w, h) = cfg.BuildingSize(b.type);
@@ -297,7 +309,8 @@ namespace IdleGrounds.Sim
             var wd = _ctx.World;
             double now = _ctx.Now;
             int moved = 0;
-            var exits = new List<(double d, double x, double y)>(4);
+            var exits = _exits;
+            exits.Clear();
             foreach (var g in area.ground)
             {
                 if (g.pullAt != 0 && now - g.pullAt < 200) continue;
@@ -309,7 +322,7 @@ namespace IdleGrounds.Sim
                     exits.Add((r.x1 - g.x, wd.ClampPx(r.x1 + 8), wd.ClampPx(g.y)));
                     exits.Add((g.y - r.y0, wd.ClampPx(g.x), wd.ClampPx(r.y0 - 8)));
                     exits.Add((r.y1 - g.y, wd.ClampPx(g.x), wd.ClampPx(r.y1 + 8)));
-                    StableSort(exits, e => e.d);
+                    StableSort(exits, ByExitDistance);
                     if (g.hasPullTo && now - g.pullAt < 5000)
                     {
                         double px = g.pullToX, py = g.pullToY;

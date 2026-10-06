@@ -373,6 +373,14 @@ namespace IdleGrounds.Sim
         public int SealCap(BuildingDef def) => def.seal.cap > 0 ? def.seal.cap : 5;
 
         /// <summary>`gatherTotal(b)` = Σ inv qty.</summary>
+        /// <summary>First stack holding <paramref name="item"/> (List.Find without a per-call closure; null list ⇒ null).</summary>
+        static HandStack FindStack(List<HandStack> inv, string item)
+        {
+            if (inv == null) return null;
+            for (int i = 0; i < inv.Count; i++) if (inv[i].item == item) return inv[i];
+            return null;
+        }
+
         public static int GatherTotal(Building b)
         {
             int t = 0;
@@ -405,6 +413,24 @@ namespace IdleGrounds.Sim
                 r.n++; r.by.Add(w.item, 1);
             }
             return r ?? InFlight.None;
+        }
+
+        /// <summary>
+        /// Non-allocating <see cref="InFlightTo(AreaState, Building)"/>: refills and returns <paramref name="into"/>
+        /// (same counts, same item order), or <see cref="InFlight.None"/> when nothing is heading for dst.
+        /// </summary>
+        public InFlight InFlightTo(AreaState area, Building dst, InFlight into)
+        {
+            if (dst == null || area?.wisps == null || area.wisps.Count == 0) return InFlight.None;
+            into.n = 0; into.by.ClearReuse();
+            var ws = area.wisps;
+            for (int i = 0; i < ws.Count; i++)
+            {
+                var w = ws[i];
+                if (w.toId != dst.id) continue;
+                into.n++; into.by.Add(w.item, 1);
+            }
+            return into.n > 0 ? into : InFlight.None;
         }
 
         /// <summary>`endpointAccepts(b,item,fly)` engine.js:1452.</summary>
@@ -462,7 +488,7 @@ namespace IdleGrounds.Sim
             if (def.gather.enabled || def.stoker.enabled || def.bridge.enabled)
             {
                 b.inv ??= new List<HandStack>();
-                var st = b.inv.Find(s => s.item == item);
+                var st = FindStack(b.inv, item);
                 if (st != null) st.qty++; else b.inv.Add(new HandStack(item, 1));
                 return true;
             }
@@ -491,7 +517,7 @@ namespace IdleGrounds.Sim
             if (def == null) return false;
             if (def.gather.enabled || def.stoker.enabled || def.bridge.enabled)
             {
-                var st = b.inv?.Find(s => s.item == item);
+                var st = FindStack(b.inv, item);
                 if (st == null || st.qty <= 0) return false;
                 st.qty--; if (st.qty <= 0) b.inv.Remove(st);
                 return true;

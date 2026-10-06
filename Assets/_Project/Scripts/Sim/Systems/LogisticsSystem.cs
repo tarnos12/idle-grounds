@@ -124,6 +124,9 @@ namespace IdleGrounds.Sim
         }
 
         readonly List<string> _typesScratch = new List<string>();
+        readonly List<string> _matchScratch = new List<string>();
+        readonly List<string> _stoneAccScratch = new List<string>();
+        readonly InFlight _flyScratch = new InFlight();
 
         /// <summary>`stoneAccepts(area,b,ever)` — null = collects everything.</summary>
         public List<string> StoneAccepts(string areaKey, Building b, bool ever = false)
@@ -168,8 +171,8 @@ namespace IdleGrounds.Sim
         /// <summary>`sourceMatches(src,dst)` — could dst EVER take anything src holds?</summary>
         public bool SourceMatches(Building src, Building dst)
         {
-            var types = TargetTypes(dst, false);
-            if (types == null) return true;
+            var types = _matchScratch;
+            if (!TargetTypes(dst, false, types)) return true;   // null = any
             var cfg = Cfg.Building(src.type);
             if (cfg.gather.enabled || cfg.stoker.enabled || cfg.bridge.enabled)
             {
@@ -321,9 +324,14 @@ namespace IdleGrounds.Sim
         /// <summary>`ejectUnwanted(area,b)` — drops stock no link target could ever take; records accEver.</summary>
         public bool EjectUnwanted(string areaKey, Building b)
         {
-            var ever = StoneAccepts(areaKey, b, true);
+            // accEver is refilled in place (the building's own runtime buffer) — no list per tick
+            var buf = b.accEverBuf ??= new List<string>();
+            var ever = StoneAccepts(areaKey, b, buf, true) ? buf : null;
             b.accEver = ever; b.hasAccEver = true;
             if (ever == null || b.inv == null || b.inv.Count == 0) return false;
+            bool any = false;
+            for (int i = 0; i < b.inv.Count && !any; i++) if (!ever.Contains(b.inv[i].item)) any = true;
+            if (!any) return false;                 // nothing unwanted: same result, no rebuild
             var keep = new List<HandStack>();
             bool ejected = false;
             var (cx, cy) = _ctx.World.BuildingCenterPx(b);
@@ -341,13 +349,13 @@ namespace IdleGrounds.Sim
         public bool TickStone(string areaKey, AreaState area, Building b, BuildingDef def, double now)
         {
             bool changed = EjectUnwanted(areaKey, b);
-            int stoneFly = B.InFlightTo(area, b).n;
+            int stoneFly = B.InFlightTo(area, b, _flyScratch).n;
             int cap = def.gather.cap;
             if (BuildingSystem.GatherTotal(b) + stoneFly >= cap) return changed;
             var (cx, cy) = _ctx.World.BuildingCenterPx(b);
             double R = def.gather.radius * _ctx.Cell;
             HashSet<int> taken = null;
-            var acc = StoneAccepts(areaKey, b);
+            var acc = StoneAccepts(areaKey, b, _stoneAccScratch) ? _stoneAccScratch : null;
             double gap = _ctx.Timing.TickGap;
             double mul = Math.Min(13, Math.Max(1, (gap > 0 ? gap : 50) / 50));
             foreach (var g in area.ground)
@@ -359,7 +367,7 @@ namespace IdleGrounds.Sim
                 if (d <= 22)
                 {
                     if (BuildingSystem.GatherTotal(b) + stoneFly < cap && B.EndpointGive(b, g.item))
-                    { (taken ??= new HashSet<int>()).Add(g.id); changed = true; }
+                    { (taken ??= ClearedTaken()).Add(g.id); changed = true; }
                     continue;
                 }
                 double pull = (2 + (1 - d / R) * 4) * mul;
@@ -368,7 +376,7 @@ namespace IdleGrounds.Sim
                 g.y += dy / d * step;
                 g.pullAt = now; g.hasPullTo = true; g.pullToX = cx; g.pullToY = cy;
             }
-            if (taken != null) area.ground.RemoveAll(g => taken.Contains(g.id));
+            if (taken != null) area.ground.RemoveAll(_isTakenGround ??= g => _taken.Contains(g.id));
             return changed;
         }
 
@@ -432,7 +440,7 @@ namespace IdleGrounds.Sim
                     var src = area.BuildingById(l.from);
                     var dst = area.BuildingById(l.to);
                     if (src == null || dst == null || !src.built) continue;
-                    string item = PickTransfer(src, dst, B.InFlightTo(area, dst));
+                    string item = PickTransfer(src, dst, B.InFlightTo(area, dst, _flyScratch));
                     l.stat ??= new LinkStat();
                     if (item == null)
                     {
@@ -485,15 +493,17 @@ namespace IdleGrounds.Sim
             if (area.wisps == null || area.wisps.Count == 0) return false;
             bool changed = false;
             HashSet<int> done = null;
-            // snapshot: event handlers must not mutate the list mid-pass
-            var list = area.wisps.ToArray();
-            foreach (var w in list)
+            // snapshot: event handlers must not mutate the list mid-pass (reused buffer, no per-tick array)
+            var list = _wispSnap;
+            list.Clear(); list.AddRange(area.wisps);
+            for (int wi = 0; wi < list.Count; wi++)
             {
+                var w = list[wi];
                 var dst = area.BuildingById(w.toId);
                 if (dst == null || !dst.built)
                 {
                     _ctx.Ground.DropGround(areaKey, w.item, 1, w.x, w.y);
-                    (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                    (done ??= ClearedDone()).Add(w.id); changed = true;
                     _ctx.Events.RaiseWispDropped(areaKey, w);
                     continue;
                 }
@@ -503,7 +513,7 @@ namespace IdleGrounds.Sim
                 {
                     if (B.EndpointGive(dst, w.item))
                     {
-                        (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                        (done ??= ClearedDone()).Add(w.id); changed = true;
                         _ctx.Events.RaiseWispArrived(areaKey, w);
                     }
                     else if (!w.returning && w.fromId != 0 && area.BuildingById(w.fromId) != null)
@@ -517,14 +527,25 @@ namespace IdleGrounds.Sim
                     else
                     {
                         _ctx.Ground.DropGround(areaKey, w.item, 1, p.x, p.y + 24);
-                        (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                        (done ??= ClearedDone()).Add(w.id); changed = true;
                         _ctx.Events.RaiseWispDropped(areaKey, w);
                     }
                 }
             }
-            if (done != null) area.wisps.RemoveAll(w => done.Contains(w.id));
+            list.Clear();
+            if (done != null) area.wisps.RemoveAll(_isDoneWisp ??= w => _done.Contains(w.id));
             return changed;
         }
+
+        // reusable tick scratch (the sim is single-threaded; none of these passes nest)
+        readonly List<Wisp> _wispSnap = new List<Wisp>();
+        readonly List<SkyWisp> _skySnap = new List<SkyWisp>();
+        readonly HashSet<int> _done = new HashSet<int>(), _taken = new HashSet<int>();
+        Predicate<Wisp> _isDoneWisp;
+        Predicate<SkyWisp> _isDoneSky;
+        Predicate<GroundItem> _isTakenGround;
+        HashSet<int> ClearedDone() { _done.Clear(); return _done; }
+        HashSet<int> ClearedTaken() { _taken.Clear(); return _taken; }
 
         // ================================================================
         // Spirit Bridges (ADR 0003) — one-way cross-Island pairs
@@ -705,8 +726,11 @@ namespace IdleGrounds.Sim
             if (S.skyWisps == null || S.skyWisps.Count == 0) return false;
             bool changed = false;
             HashSet<int> done = null;
-            foreach (var w in S.skyWisps.ToArray())
+            var snap = _skySnap;
+            snap.Clear(); snap.AddRange(S.skyWisps);
+            for (int si = 0; si < snap.Count; si++)
             {
+                var w = snap[si];
                 var p = SkyWispPos(w, now);
                 w.x = p.x; w.y = p.y;
                 if (!w.returning)
@@ -718,7 +742,7 @@ namespace IdleGrounds.Sim
                     if (p.frac < 1) continue;
                     if (B.EndpointGive(dst, w.item))
                     {
-                        (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                        (done ??= ClearedDone()).Add(w.id); changed = true;
                         _ctx.Events.RaiseWispArrived(w.toIsland, w);
                     }
                     else { SendBack(w, p.x, p.y, now); changed = true; }
@@ -728,7 +752,7 @@ namespace IdleGrounds.Sim
                 var home = S.Area(w.fromIsland)?.BuildingById(w.fromId);
                 if (home != null && home.built && IsBridge(home) && B.EndpointGive(home, w.item))
                 {
-                    (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                    (done ??= ClearedDone()).Add(w.id); changed = true;
                     _ctx.Events.RaiseWispArrived(w.fromIsland, w);
                     continue;
                 }
@@ -737,10 +761,11 @@ namespace IdleGrounds.Sim
                     var (ox, oy) = _ctx.World.IslandOffsetPx(w.fromIsland);
                     _ctx.Ground.DropGround(w.fromIsland, w.item, 1, _ctx.World.ClampPx(w.sx - ox), _ctx.World.ClampPx(w.sy - oy + 24));
                 }
-                (done ??= new HashSet<int>()).Add(w.id); changed = true;
+                (done ??= ClearedDone()).Add(w.id); changed = true;
                 _ctx.Events.RaiseWispDropped(w.fromIsland, w);
             }
-            if (done != null) S.skyWisps.RemoveAll(w => done.Contains(w.id));
+            snap.Clear();
+            if (done != null) S.skyWisps.RemoveAll(_isDoneSky ??= w => _done.Contains(w.id));
             return changed;
         }
     }
