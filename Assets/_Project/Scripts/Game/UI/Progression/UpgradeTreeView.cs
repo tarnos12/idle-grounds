@@ -41,7 +41,7 @@ namespace IdleGrounds.Game
 
         readonly Dictionary<string, UpgradeTreeNodeView> nodes = new Dictionary<string, UpgradeTreeNodeView>();
         readonly List<(Image img, string a, string b)> edges = new List<(Image, string, string)>();
-        List<UpgradeNodeState> states;
+        readonly List<UpgradeNodeState> states = new List<UpgradeNodeState>();
         readonly Dictionary<string, UpgradeNodeState> byId = new Dictionary<string, UpgradeNodeState>();
         UpgradeTreeNodeView hovered;
         Vector2 treeCam;
@@ -199,29 +199,34 @@ namespace IdleGrounds.Game
 
         void ApplyCam() { if (tree != null) tree.anchoredPosition = new Vector2(treeCam.x, -treeCam.y); }
 
-        /// <summary>The tree query + strings allocate: full refresh at 5 Hz (and on hover / click / open); the pan applies every frame.</summary>
-        public const float RefreshSeconds = 0.2f;
-        float nextRefreshAt;
+        long lastSig = long.MinValue;
 
         void LateUpdate()
         {
             if (!IsOpen || runner == null || runner.Sim == null) return;
             ApplyCam();
             PlaceTooltip();
-            if (Time.unscaledTime >= nextRefreshAt) Refresh();
+            Refresh(false);
         }
 
         // ================= view =================
 
-        void Refresh()
+        /// <summary>Full refresh; <paramref name="force"/> false (the per-frame path) bails unless the tree/job/hover signature changed.</summary>
+        void Refresh(bool force = true)
         {
             if (!IsOpen) return;
-            nextRefreshAt = Time.unscaledTime + RefreshSeconds;
             ApplyCam();
-            states = Sim.UpgradeTree();
+            Sim.UpgradeTree(states);
             byId.Clear();
             foreach (var st in states) byId[st.node.id] = st;
             var job = Sim.State.upgradeJob;
+            long sig = 17;
+            foreach (var st in states)
+                sig = sig * 31 + ((st.visible ? 1 : 0) | (st.owned ? 2 : 0) | (st.selected ? 4 : 0) | (st.selectable ? 8 : 0) | (st.maxed ? 16 : 0) | ((int)st.tier << 5) | (st.level << 10) | (st.max << 18))
+                     + (st.nextCost != null ? st.nextCost.Total() * 7919L : 0L);
+            sig = sig * 31 + (job != null ? job.paid.Total() + 1 : 0) + (RevealAll ? 1 : 0) + (hovered != null ? hovered.GetInstanceID() * 13L : 0L);
+            if (!force && sig == lastSig) return;
+            lastSig = sig;
             foreach (var kv in nodes)
             {
                 if (!byId.TryGetValue(kv.Key, out var st)) { kv.Value.gameObject.SetActive(false); continue; }

@@ -42,6 +42,8 @@ namespace IdleGrounds.Game
 
         static long Key(int areaIdx, int lanternId, int idx) => ((long)areaIdx << 44) | ((long)lanternId << 16) | (uint)idx;
 
+        readonly IdleGrounds.Sim.LinkStatusInfo stBuf = new IdleGrounds.Sim.LinkStatusInfo();
+
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
@@ -70,8 +72,8 @@ namespace IdleGrounds.Game
                         var (fx, fy) = sim.World.BuildingCenterPx(f);
                         var (tx, ty) = sim.World.BuildingCenterPx(t);
                         v.Set(space.PxToWorld(area.key, fx, fy), space.PxToWorld(area.key, tx, ty), col, WidthPx);
-                        var st = editing ? sim.LinkStatus(area.key, lb.id, i) : null;
-                        v.SetDot(st != null, st != null ? LinkLineView.DotColour(st.dot) : default);
+                        bool hasSt = editing && sim.LinkStatus(area.key, lb.id, i, stBuf);
+                        v.SetDot(hasSt, hasSt ? LinkLineView.DotColour(stBuf.dot) : default);
                     }
                 }
             }

@@ -32,8 +32,8 @@ namespace IdleGrounds.Game
 
         readonly List<BridgeRow> rows = new List<BridgeRow>();
         SpriteCache sprites;
-        float nextRefreshAt;
-        string listSig;
+        readonly List<BridgeCandidate> candBuf = new List<BridgeCandidate>();
+        long listSig = long.MinValue, panelKey = long.MinValue;
 
         public bool IsOpen => panel != null && panel.activeSelf;
         public string Area { get; private set; }
@@ -60,7 +60,7 @@ namespace IdleGrounds.Game
             if (b == null || !b.built) return;
             sprites ??= new SpriteCache(runner.Database, null);
             Area = area; BuildingId = b.id;
-            Reason = null; listSig = null;
+            Reason = null; listSig = long.MinValue; panelKey = long.MinValue;
             panel.SetActive(true);
             var def = runner.Config.Building(b.type);
             if (icon != null) icon.sprite = sprites.Building(b.type);
@@ -79,7 +79,7 @@ namespace IdleGrounds.Game
             string why = send ? Sim.PairBridges(Area, BuildingId, island, bridgeId) : Sim.PairBridges(island, bridgeId, Area, BuildingId);
             Reason = why;
             if (why == null) AudioService.Play("unlock"); else AudioService.Play("error");
-            listSig = null;
+            listSig = long.MinValue; panelKey = long.MinValue;
             Refresh();
             return why;
         }
@@ -88,7 +88,7 @@ namespace IdleGrounds.Game
         {
             if (!IsOpen) return false;
             bool ok = Sim.UnpairBridge(Area, BuildingId);
-            Reason = null; listSig = null;
+            Reason = null; listSig = long.MinValue; panelKey = long.MinValue;
             Refresh();
             return ok;
         }
@@ -98,20 +98,25 @@ namespace IdleGrounds.Game
             if (!IsOpen || runner == null || runner.Sim == null) return;
             var b = Bridge;
             if (b == null || !b.built) { Close(); return; }
-            if (Time.unscaledTime >= nextRefreshAt) Refresh();     // 5 Hz (and on open / pair / unpair)
+            Refresh(false);     // every frame; early-outs unless the panel state changed
         }
 
         static string Cells(double px, int cell) => Mathf.RoundToInt((float)(px / cell)) + " cells";
 
-        void Refresh()
+        void Refresh(bool force = true)
         {
             var b = Bridge;
             if (b == null) return;
-            nextRefreshAt = Time.unscaledTime + 0.2f;
+
             int cell = runner.Config.grid.cell;
             var partner = Sim.BridgePartner(Area, b);
             int cap = runner.Config.Building(b.type)?.bridge.cap ?? 20;
             int n = BuildingSystem.GatherTotal(b);
+            if (partner == null) Sim.PairableBridges(Area, BuildingId, candBuf); else candBuf.Clear();
+            long key = n * 1000003L + cap * 31L + (partner != null ? partner.id + 1 : 0) * 7919L + (b.pairSends ? 1 : 0) + (b.pairIsland != null ? b.pairIsland.GetHashCode() : 0) * 13L + (Reason != null ? Reason.GetHashCode() : 0) * 17L;
+            key = key * 31 + CandSig(candBuf, cell);
+            if (!force && key == panelKey) return;
+            panelKey = key;
             ViewKit.SetText(bufferText, "Buffer " + n + "/" + cap);
             if (bufferText != null) bufferText.color = n >= cap ? UiPalette.Danger : UiPalette.Text;
 
@@ -135,9 +140,16 @@ namespace IdleGrounds.Game
                 if (statusText != null) statusText.color = UiPalette.Muted;
                 ViewKit.SetText(hintText, "Pair with a Spirit Bridge on another unlocked Island. Each pair is one-way: pick whether this bridge sends or receives.");
                 if (unpairButton != null) unpairButton.gameObject.SetActive(false);
-                SetRows(Sim.PairableBridges(Area, BuildingId));
+                SetRows(candBuf);
             }
             ViewKit.SetText(reasonText, Reason ?? "");
+        }
+
+        static long CandSig(List<BridgeCandidate> list, int cell)
+        {
+            long h = 7;
+            if (list != null) foreach (var c in list) h = h * 131 + (c.island != null ? c.island.GetHashCode() : 0) + c.building.id * 7919L + (int)(c.distancePx / cell) * 104729L;
+            return h;
         }
 
         void SetRows(List<BridgeCandidate> list)
@@ -145,9 +157,7 @@ namespace IdleGrounds.Game
             int cell = runner.Config.grid.cell;
             CandidateCount = list?.Count ?? 0;
             // rebuild only when the candidate set changes (buttons keep their listeners)
-            var sig = new System.Text.StringBuilder();
-            if (list != null) foreach (var c in list) sig.Append(c.island).Append(':').Append(c.building.id).Append(':').Append((int)(c.distancePx / cell)).Append(';');
-            string s = sig.ToString();
+            long s = CandSig(list, cell);
             bool showEmpty = list != null && list.Count == 0;
             if (emptyText != null)
             {

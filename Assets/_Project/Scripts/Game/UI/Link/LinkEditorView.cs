@@ -188,6 +188,11 @@ namespace IdleGrounds.Game
         static string Name(Building b, BuildingDef def) => def != null ? def.name : b.type;
 
         /// <summary>ui.js bLabel: a stone reads as its fullest buffer item + live count; others by name (+ typed item).</summary>
+        readonly LinkStatusInfo stBuf = new LinkStatusInfo();
+        static readonly string[] xCounts = new string[512];
+        static string XCount(int n) => n >= 0 && n < xCounts.Length ? (xCounts[n] ??= "x" + n) : "x" + n;
+        int hintSrcId = -1; string hintSrcText;
+
         void Describe(Building b, LinkRow.Endpoint e)
         {
             if (b == null) { LinkRow.SetEndpoint(e, null, null, "?"); return; }
@@ -199,7 +204,7 @@ namespace IdleGrounds.Game
                 HandStack top = null;
                 if (b.inv != null) foreach (var s in b.inv) if (s.qty > 0 && (top == null || s.qty > top.qty)) top = s;
                 if (top != null) item = sprites.Item(top.item);
-                text = top != null ? "x" + BuildingSystem.GatherTotal(b) : "(empty)";
+                text = top != null ? XCount(BuildingSystem.GatherTotal(b)) : "(empty)";
             }
             else
             {
@@ -251,7 +256,8 @@ namespace IdleGrounds.Game
             {
                 var src = runner.State.Area(Area)?.BuildingById(SourceId);
                 string nm = src != null ? Name(src, runner.Config.Building(src.type)) : "?";
-                hint = nm + " > click the TARGET building... Esc cancels";
+                if (hintSrcText == null || hintSrcId != SourceId || !hintSrcText.StartsWith(nm)) { hintSrcId = SourceId; hintSrcText = nm + " > click the TARGET building... Esc cancels"; }
+                hint = hintSrcText;
             }
             SetLabel(hintText, hint);
             string warn = voidHint ? "Wisps can't cross the sky between Islands - pair Spirit Bridges"
@@ -275,7 +281,8 @@ namespace IdleGrounds.Game
                 var l = lan.links[i];
                 var row = rows[i];
                 row.SetIndex(i);
-                var st = Sim.LinkStatus(Area, LanternId, i);
+                Sim.LinkStatus(Area, LanternId, i, stBuf);
+                var st = stBuf;
                 row.SetStatus(LinkLineView.DotColour(st.dot), st.text);
                 Describe(area.BuildingById(l.from), row.Source);
                 Describe(area.BuildingById(l.to), row.Target);

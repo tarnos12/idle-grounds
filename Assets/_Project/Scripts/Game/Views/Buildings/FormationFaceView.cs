@@ -35,7 +35,7 @@ namespace IdleGrounds.Game
         {
             ViewKit.Fit(icon, v.Sync.Sprites.Building(v.Building.type), 20f);
             icon.transform.localPosition = v.L(0.5f, 0.5f);
-            shownAcceptCount = -1; nextAcceptsAt = 0f; lastA = lastB = int.MinValue;
+            shownAcceptCount = -1; lastA = lastB = int.MinValue;
             foreach (var a in accepts) if (a != null) ViewKit.Show(a, false);
             badge.transform.localPosition = new Vector3(0.5f, -1f - ViewKit.U(8f), 0f);
             ViewKit.Font(badge, 9f);
@@ -137,23 +137,20 @@ namespace IdleGrounds.Game
         }
 
         // ---- linked Gathering Stone: what its link targets use (ui.js:1100-1107) ----
-        // Up to 4 icons round(9*1.2)=11 px, 1 px apart, centred under the badge. StoneAccepts allocates,
-        // so it is sampled at 4 Hz; the renderers are pooled children created on first use.
+        // Up to 4 icons round(9*1.2)=11 px, 1 px apart, centred under the badge. StoneAccepts fills a cached list every frame (non-allocating),
+        // the renderers are pooled children created on first use.
         public const int MaxAccepts = 4;
         const float AcceptPx = 11f;
         readonly SpriteRenderer[] accepts = new SpriteRenderer[MaxAccepts];
         readonly string[] shownAccepts = new string[MaxAccepts];
         int shownAcceptCount = -1;
-        float nextAcceptsAt;
+        readonly System.Collections.Generic.List<string> accBuf = new System.Collections.Generic.List<string>();
 
         public int AcceptIconCount => shownAcceptCount < 0 ? 0 : shownAcceptCount;
 
         void RefreshAccepts(BuildingView v)
         {
-            float t = Time.unscaledTime;
-            if (t < nextAcceptsAt && shownAcceptCount >= 0) return;
-            nextAcceptsAt = t + 0.25f;
-            var acc = v.Sync.Sim.Logistics.StoneAccepts(v.Area, v.Building);
+            var acc = v.Sync.Sim.StoneAccepts(v.Area, v.Building, accBuf, false) ? accBuf : null;
             int n = acc != null ? Mathf.Min(acc.Count, MaxAccepts) : 0;
             bool same = n == shownAcceptCount;
             for (int i = 0; same && i < n; i++) if (acc[i] != shownAccepts[i]) same = false;

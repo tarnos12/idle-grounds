@@ -106,7 +106,9 @@ renders full-size as the building body via BuildingAsset.hasRealArt; info
 moves to compact strips/pills below the footprint). Real-art nodes/fixtures render native-size with frame use (2f: intact/hit,
 Nf loops; SpriteEntry.realArt). Converter info strips sit ABOVE the art (output piles no longer cover them);
 generic Tooltip/TooltipTrigger (Game/UI/Tooltip.cs) on HUD pills/buttons;
-quest panel fades over unlock steles; boundary props use delivered art. Poll it (30 min x1h,
+quest panel fades over unlock steles; boundary props use delivered art.
+Views use the non-alloc Sim queries and refresh every frame (no 4-5 Hz
+throttles). Still ~270 GC.Alloc calls/frame from elsewhere — profile next. Poll it (30 min x1h,
 hourly x2h, then 2-hourly; restart after spec updates) and integrate.
 
 Sim done (139 tests): offline progress removed; Tireless Wisps perk (save id

@@ -9,7 +9,7 @@ namespace IdleGrounds.Game
     /// UNLOCKED region, bottom-centre above the bar ("Awakened Dragon" once won). Shown while placing too;
     /// hidden while the build menu / recipe picker / link editor / roster (or any other world panel) is up.
     /// C# extra: a <see cref="Simulation.BuildingStatus"/> line under the name (green working + crafts/min,
-    /// red starved / no fuel, amber full, muted idle), sampled at 4 Hz (the status queries allocate).
+    /// red starved / no fuel, amber full, muted idle), refreshed every frame via the non-allocating queries (text rebuilt only on change).
     /// </summary>
     public class BuildingTooltipView : MonoBehaviour
     {
@@ -23,7 +23,9 @@ namespace IdleGrounds.Game
         public string ShownStatus => panel != null && panel.activeSelf && statusText.gameObject.activeSelf ? statusText.text : null;
 
         Building lastBuilding;
-        float nextStatusAt;
+        readonly BuildingStatusInfo stBuf = new BuildingStatusInfo();
+        readonly ConverterFace faceBuf = new ConverterFace();
+        BuildingState lastState = (BuildingState)(-1); string lastLabel; double lastCpm = -1; bool lastHas;
 
         void Awake()
         {
@@ -44,20 +46,21 @@ namespace IdleGrounds.Game
             if (b.type == "dragon" && runner.State.won) nm = "Awakened Dragon";
             if (nameText.text != nm) nameText.text = nm;
 
-            float t = Time.unscaledTime;
-            if (b == lastBuilding && t < nextStatusAt) return;
-            lastBuilding = b; nextStatusAt = t + 0.25f;
+            bool has = sim.BuildingStatus(controller.HoveredArea, b, stBuf);
+            double cpm = 0;
+            if (has && stBuf.state == BuildingState.Working && def != null && def.IsConverter
+                && sim.ConverterFace(controller.HoveredArea, b, faceBuf)) cpm = faceBuf.craftsPerMin;
+            if (b == lastBuilding && has == lastHas && (!has || (stBuf.state == lastState && stBuf.label == lastLabel)) && cpm == lastCpm) return;
+            lastBuilding = b; lastHas = has; lastState = has ? stBuf.state : (BuildingState)(-1); lastLabel = has ? stBuf.label : null; lastCpm = cpm;
             string line = null; Color c = UiPalette.Muted;
-            var st = sim.BuildingStatus(controller.HoveredArea, b);
-            if (st != null)
+            if (has)
             {
-                line = st.label;
-                switch (st.state)
+                line = stBuf.label;
+                switch (stBuf.state)
                 {
                     case BuildingState.Working:
                         c = UiPalette.Accent;
-                        var f = def != null && def.IsConverter ? sim.ConverterFace(controller.HoveredArea, b) : null;
-                        if (f != null && f.craftsPerMin > 0) line += " · " + ViewKit.Fmt(f.craftsPerMin) + "/min";
+                        if (cpm > 0) line += " · " + ViewKit.Fmt(cpm) + "/min";
                         break;
                     case BuildingState.Starved:
                     case BuildingState.NoFuel: c = UiPalette.Danger; break;

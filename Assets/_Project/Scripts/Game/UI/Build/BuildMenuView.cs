@@ -36,7 +36,7 @@ namespace IdleGrounds.Game
         SpriteCache sprites;
         long catalogSig, targetSig;
         double clickLockUntil;
-        float restyleAt, sigAt;
+        readonly List<string> tgBuf = new List<string>();
 
         public bool IsOpen => panel != null && panel.activeSelf;
         public IReadOnlyList<BuildCard> Cards => cards;
@@ -60,10 +60,9 @@ namespace IdleGrounds.Game
             panel.SetActive(true);
             Sim.Buildings.MarkBuildListed();
             catalogSig = CatalogSig();
-            targets = Sim.BuildTargets();
+            Sim.BuildTargets(targets);
             targetSig = TargetSig(targets);
             clickLockUntil = 0;
-            sigAt = Time.unscaledTime + 0.25f;
             Rebuild();
             if (hintText != null) hintText.text = "";
         }
@@ -94,13 +93,10 @@ namespace IdleGrounds.Game
         void Update()
         {
             if (!IsOpen || runner.Sim == null) return;
-            float now = Time.unscaledTime;
-            if (now >= sigAt)
             {
-                sigAt = now + 0.25f;
                 long sig = CatalogSig();
-                var tg = Sim.BuildTargets();
-                long ts = TargetSig(tg);
+                Sim.BuildTargets(tgBuf);
+                long ts = TargetSig(tgBuf);
                 if (sig != catalogSig || ts != targetSig)
                 {
                     if (sig != catalogSig)
@@ -108,12 +104,12 @@ namespace IdleGrounds.Game
                         clickLockUntil = Now + ClickGuardMs;     // the strip reshuffled under the pointer
                         Sim.Buildings.MarkBuildListed();          // a reveal while open counts as listed
                     }
-                    catalogSig = sig; targetSig = ts; targets = tg;
+                    catalogSig = sig; targetSig = ts; targets.Clear(); targets.AddRange(tgBuf);
                     Rebuild();
                     return;
                 }
             }
-            if (now >= restyleAt) { restyleAt = now + 0.25f; Restyle(); }
+            Restyle();
         }
 
         struct Row { public BuildingDef def; public int rank, order; public string locked; }

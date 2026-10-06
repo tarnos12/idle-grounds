@@ -51,6 +51,8 @@ namespace IdleGrounds.Game
             return chips[i];
         }
 
+        readonly IdleGrounds.Sim.AutomationStatus stBuf = new IdleGrounds.Sim.AutomationStatus();
+
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null || worldCamera == null || chipTemplate == null) return;
@@ -62,8 +64,9 @@ namespace IdleGrounds.Game
             foreach (var r in runner.Config.regions)
             {
                 if (!runner.IsUnlocked(r.key)) continue;
-                var st = runner.Sim.AutomationStatus(r.key);
-                if (st == null || !st.paused || st.skipped.Count == 0) continue;
+                if (!runner.Sim.AutomationStatus(r.key, stBuf)) continue;
+                var st = stBuf;
+                if (!st.paused || st.skipped.Count == 0) continue;
                 var o = runner.Space.Origin(r.key);
                 Vector2 tl = worldCamera.WorldToScreenPoint(new Vector3(o.x, o.y, 0f));
                 Vector2 br = worldCamera.WorldToScreenPoint(new Vector3(o.x + cells, o.y - cells, 0f));

@@ -28,7 +28,6 @@ namespace IdleGrounds.Game
 
         SpriteRenderer[] segs;
         Transform circleRoot;
-        float nextResolveAt;
         bool has, isZone;
         Vector3 topLeft;          // world, +y up
         float wU, hU;             // size in units
@@ -57,10 +56,12 @@ namespace IdleGrounds.Game
             if (zoneFrame != null) zoneFrame.gameObject.SetActive(false);
         }
 
+        readonly QuestTargetInfo targetBuf = new QuestTargetInfo();
+
         void Resolve()
         {
             has = false; TargetKind = null;
-            var t = runner.Sim.QuestTarget();
+            var t = runner.Sim.QuestTarget(targetBuf) ? targetBuf : null;
             if (t == null) return;
             var space = runner.Space;
             int cell = space.Cell;
@@ -88,8 +89,7 @@ namespace IdleGrounds.Game
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
-            float now = Time.unscaledTime;
-            if (now >= nextResolveAt) { nextResolveAt = now + 0.25f; Resolve(); }
+            Resolve();
             bool on = has && ViewCull.Visible(topLeft, wU, hU);
             Showing = on;
             if (circleRoot.gameObject.activeSelf != (on && !isZone)) circleRoot.gameObject.SetActive(on && !isZone);

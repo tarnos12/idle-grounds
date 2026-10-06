@@ -21,7 +21,7 @@ namespace IdleGrounds.Game
 
         public override void Layout(BuildingView v)
         {
-            lastDisc = -1; lastCap = -1; nextStatusAt = 0f; st = null;
+            lastDisc = -1; lastCap = -1;
             ViewKit.Fit(icon, v.Sync.Sprites.Building(v.Building.type), 24f);
             icon.transform.localPosition = v.L(0.5f, 0.28f);
             ViewKit.Show(icon, !v.RealArt);
@@ -37,7 +37,7 @@ namespace IdleGrounds.Game
             barTrack.color = new Color(1f, 1f, 1f, 0.12f);
         }
 
-        int lastDisc = -1, lastCap = -1; float nextStatusAt; BuildingStatusInfo st;
+        int lastDisc = -1, lastCap = -1; readonly BuildingStatusInfo stBuf = new BuildingStatusInfo();
         public override bool IsActive(BuildingView v) => v.Building.disciples > 0;
 
 
@@ -45,8 +45,7 @@ namespace IdleGrounds.Game
         {
             var b = v.Building; var r = v.Def.roster;
             if (b.disciples != lastDisc || r.cap != lastCap) { lastDisc = b.disciples; lastCap = r.cap; ViewKit.Text(disciples, b.disciples + "/" + r.cap); }
-            float t = Time.unscaledTime;
-            if (t >= nextStatusAt) { nextStatusAt = t + 0.25f; st = v.Sync.Sim.BuildingStatus(v.Area, b); }   // allocates: 4 Hz
+            var st = v.Sync.Sim.BuildingStatus(v.Area, b, stBuf) ? stBuf : null;
             ViewKit.Text(status, st != null ? st.label : "");
             ViewKit.Colour(status, st == null ? UiPalette.Muted : st.state == BuildingState.Full ? UiPalette.Amber : UiPalette.Danger);
             int cap = r.foodCap > 0 ? r.foodCap : 20;

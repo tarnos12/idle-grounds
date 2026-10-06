@@ -138,13 +138,9 @@ namespace IdleGrounds.Game
             LastFace = null;
         }
 
-        /// <summary>
-        /// <see cref="Simulation.ConverterFace"/> allocates a face + lists, so it is sampled at 5 Hz (and at
-        /// once when the recipe changes); the progress bar is extrapolated per frame from the cached batch
-        /// time; text is only rebuilt when its value changes.
-        /// </summary>
-        public const float FaceSampleSeconds = 0.2f;
-        float nextFaceAt;
+        /// <summary>Per-view reusable face (non-allocating Sim.ConverterFace(.., into)), refreshed every frame;
+        /// text is only rebuilt when its value changes.</summary>
+        readonly ConverterFace faceBuf = new ConverterFace();
         int[] lastHave = new int[0], lastNeed = new int[0];
         int lastCraftable = int.MinValue;
         BuildingState lastState = (BuildingState)(-1);
@@ -154,12 +150,7 @@ namespace IdleGrounds.Game
 
         public override void Refresh(BuildingView v)
         {
-            float t = Time.unscaledTime;
-            if (LastFace == null || t >= nextFaceAt || v.Building.recipe != LastFace.recipeIndex)
-            {
-                LastFace = v.Sync.Sim.ConverterFace(v.Area, v.Building);
-                nextFaceAt = t + FaceSampleSeconds;
-            }
+            LastFace = v.Sync.Sim.ConverterFace(v.Area, v.Building, faceBuf) ? faceBuf : null;
             var f = LastFace;
             if (f == null) { ViewKit.Show(inputsRoot, false); ViewKit.Show(result, false); return; }
             ViewKit.Show(inputsRoot, true); ViewKit.Show(result, true);

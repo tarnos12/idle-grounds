@@ -79,35 +79,40 @@ namespace IdleGrounds.Game
             ViewKit.Font(pay, 12f);
             pay.rectTransform.sizeDelta = new Vector2(W - ViewKit.U(10f), ViewKit.U(16f));
             pay.transform.localPosition = new Vector3(0f, H * 0.5f - ViewKit.U(92f), 0f);
-            nextSampleAt = 0f; lastHave = lastNeed = int.MinValue;
+            lastSig = long.MinValue; lastHave = lastNeed = int.MinValue;
         }
 
-        /// <summary>Cost / pay state is sampled at 4 Hz (the sim queries allocate); <see cref="Invalidate"/> forces the next frame.</summary>
-        public const float SampleSeconds = 0.25f;
-        float nextSampleAt;
+        /// <summary>Cost / pay state is read every frame (non-allocating queries into cached buffers); the icon row and
+        /// pay text only rebuild when a value changes. <see cref="Invalidate"/> forces a rebuild next frame.</summary>
+        readonly ItemCounts costBuf = new ItemCounts(), paidBuf = new ItemCounts();
+        long lastSig = long.MinValue;
         int lastHave = int.MinValue, lastNeed = int.MinValue;
 
-        public void Invalidate() => nextSampleAt = 0f;
+        public void Invalidate() { lastSig = long.MinValue; }
 
         public void Refresh(Simulation sim, SpriteCache sprites, double nowMs)
         {
-            float t = Time.unscaledTime;
-            if (t >= nextSampleAt)
+            bool hasCost = sim.AreaUnlockCost(Area, costBuf);
+            sim.UnlockPaid(Area, paidBuf);
+            long sig = hasCost ? 31 : 17;
+            if (hasCost)
+                foreach (var e in costBuf)
+                    sig = sig * 131 + (e.item != null ? e.item.GetHashCode() : 0) + e.qty * 7919L + paidBuf.Get(e.item) * 104729L;
+            if (sig != lastSig)
             {
-                nextSampleAt = t + SampleSeconds;
-                var costAll = sim.AreaUnlockCost(Area);
-                var paid = sim.UnlockPaid(Area);
+                lastSig = sig;
                 PartlyPaid = false;
                 entries.Clear();
-                if (costAll != null)
-                    foreach (var e in costAll)
+                if (hasCost)
+                    foreach (var e in costBuf)
                     {
-                        int p = paid != null ? paid.Get(e.item) : 0;
+                        int p = paidBuf.Get(e.item);
                         if (p > 0) PartlyPaid = true;
                         entries.Add(p > 0 ? new IconRow.Entry(e.item, Mathf.Min(p, e.qty) + "/" + e.qty) : new IconRow.Entry(e.item, e.qty));
                     }
                 cost.Set(entries, 13f, UiPalette.Gold, sprites, null, W - ViewKit.U(12f));
-
+            }
+            {
                 var (st, have, need) = sim.UnlockPayInfo(Area);
                 PayState = st;
                 bool part = st == UnlockPayState.Partial;
