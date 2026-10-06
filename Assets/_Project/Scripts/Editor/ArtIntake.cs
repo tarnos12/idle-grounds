@@ -267,7 +267,7 @@ namespace IdleGrounds.Editor
             // fx_*: generic FX registry wiring by key
             foreach (var kv in map)
             {
-                if (!kv.Key.StartsWith("fx_")) continue;
+                if (!kv.Key.StartsWith("fx_") && kv.Key != "deco_tree") continue;
                 frameMap.TryGetValue(kv.Key, out var fr);
                 var e = db.fx.Find(x => x.key == kv.Key);
                 if (e == null) { e = new SpriteEntry { key = kv.Key }; db.fx.Add(e); }
@@ -288,6 +288,8 @@ namespace IdleGrounds.Editor
             }
             // consumed directly by IslandArtBuilder's Rule Tiles
             used.Add("island_center_ground_fill");
+            used.Add("island_center_path");     // stored, not yet consumed
+            used.Add("island_center_plaza");    // stored, not yet consumed
             used.Add("sky_moon");   // Sky/Moon renderer (IslandsBuilder.BuildSky); delivered bytes replace the Art/Sky placeholder
 
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)

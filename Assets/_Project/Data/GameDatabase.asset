@@ -489,6 +489,13 @@ MonoBehaviour:
     - {fileID: -2073842603777890662, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
     - {fileID: -509326019664925791, guid: 8f78be97180c91440b969b873f16ef2c, type: 3}
     realArt: 1
+  - key: deco_tree
+    sprite: {fileID: 2472738611648518449, guid: d5b93b9c65e32ed489af7bdf666e7d37, type: 3}
+    frames:
+    - {fileID: 2472738611648518449, guid: d5b93b9c65e32ed489af7bdf666e7d37, type: 3}
+    - {fileID: 5603866904561099452, guid: d5b93b9c65e32ed489af7bdf666e7d37, type: 3}
+    - {fileID: -6625133227797554688, guid: d5b93b9c65e32ed489af7bdf666e7d37, type: 3}
+    realArt: 1
   enemyAnims:
   - key: enemy_fox_hit
     sprite: {fileID: 7469885723045225228, guid: 07b4045cda90aec4ca1e0fe488591685, type: 3}

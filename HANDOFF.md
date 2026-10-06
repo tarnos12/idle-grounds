@@ -97,7 +97,7 @@ Drive `AI files/Idle Grounds Art/ART-SPEC.md`; deliveries arrive in Drive
 Integrated so far: item_wood, leaves, stone, clay, plank, brick (all P1 items); bld_gathering_stone, bld_wisp_lantern, bld_warding_seal, bld_workbench, bld_storehouse, bld_center (Altar), bld_kiln, fix_spirittree, fix_quarry, node_bush, island_center_cliff (center ground blob v3 + fill accepted; fx_wisp + returning (GameDatabase.fx registry); enemy_fox idle/move/hit
 (GameDatabase.enemyAnims); Center ground tileset COMPLETE (blob v5 + fill v2.1 + cliff); dragon_sleeping
 (full-size animated Dragon building); building working/glow variants supported; sky gradient v2 + clouds v2 accepted
-+ moon (Sky/Moon, ParallaxLayer.Mode.Fixed); SKY COMPLETE (peaks in); dragon_awake in; island undersides =
++ moon (Sky/Moon, ParallaxLayer.Mode.Fixed); SKY COMPLETE (peaks in); dragon_awake in; deco_tree ring (3 variants, hashed); island undersides =
 solid tapering tilemap body (35% of width, cap 40) + native-scale delivered
 rock/roots pieces; Respace leaves underside + 12 cells of sky between rows; v1 rejected;
 feedback sheet in Drive feedback/ + docs/art/rejected/; blob bit convention =

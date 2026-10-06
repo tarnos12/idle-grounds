@@ -52,10 +52,21 @@ namespace IdleGrounds.Game
             Area = area; Node = node;
             name = $"Node_{area}_{node.id}_{(node.isFixed ? node.kind : node.spawnerKind ?? node.kind)}";
             int cell = space.Cell;
-            realArt = art != null && art.realArt && art.sprite != null && !node.deco;
-            artFrames = realArt && art.frames != null && art.frames.Length > 1 ? art.frames : null;
+            realArt = art != null && art.realArt && art.sprite != null;
+            bool decoArt = realArt && node.deco;
+            // deco trees: frames are 3 static variants, picked by hash of id/position (not animated)
+            artFrames = realArt && !decoArt && art.frames != null && art.frames.Length > 1 ? art.frames : null;
             maxHits = Mathf.Max(1, node.hitsLeft);
             if (realArt) sprite = art.sprite;
+            bool flipX = false;
+            if (decoArt)
+            {
+                var vf = art.frames != null && art.frames.Length > 0 ? art.frames : new[] { art.sprite };
+                uint h0 = unchecked((uint)(node.id * 73856093) ^ (uint)(node.col * 19349663) ^ (uint)(node.row * 83492791));
+                h0 ^= h0 >> 13; h0 *= 0x5bd1e995u; h0 ^= h0 >> 15;
+                sprite = vf[(int)(h0 % (uint)vf.Length)];
+                flipX = ((h0 >> 8) & 1u) != 0;
+            }
             // anchor: bottom-centre of the node square, 2 px up
             basePos = space.PxToWorld(area, (node.col + node.size / 2.0) * cell, (node.row + node.size) * cell - 2);
             float px = node.deco ? 30f * (float)(node.decoScale > 0 ? node.decoScale : 1.8) : SpriteSizePx(node.size);
@@ -86,7 +97,8 @@ namespace IdleGrounds.Game
             }
             if (node.deco) spriteLocal += new Vector3(node.decoDx / (float)cell, -node.decoDy / (float)cell, 0f);
             spriteRenderer.transform.localPosition = spriteLocal;
-            var c = spriteRenderer.color; c.a = node.deco ? 0.55f : 1f; spriteRenderer.color = c;
+            spriteRenderer.flipX = flipX;
+            var c = spriteRenderer.color; c.a = node.deco && !decoArt ? 0.55f : 1f; spriteRenderer.color = c;
 
             pad.gameObject.SetActive(!node.deco && !realArt);
             if (!node.deco && !realArt)

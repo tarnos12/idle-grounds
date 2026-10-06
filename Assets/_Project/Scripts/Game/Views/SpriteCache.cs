@@ -35,7 +35,12 @@ namespace IdleGrounds.Game
         /// <summary>Real-art entry (sprite + frames) for a node/fixture, or null for the emoji placeholder.</summary>
         public SpriteEntry NodeArt(string area, Node n)
         {
-            if (n.deco && !n.isFixed) return null;
+            if (n.deco && !n.isFixed)
+            {
+                if (!artCache.TryGetValue("deco_tree", out var d))
+                    artCache["deco_tree"] = d = db.fx.Find(x => x != null && x.key == "deco_tree" && x.realArt && x.sprite != null);
+                return d;
+            }
             string key = (n.isFixed ? "fix_" : "node_") + (n.isFixed ? n.kind : n.spawnerKind ?? n.kind);
             string k = area + ":" + key;
             if (!artCache.TryGetValue(k, out var e)) artCache[k] = e = db.RealNodeArt(area, key);
