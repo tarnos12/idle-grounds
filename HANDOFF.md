@@ -116,8 +116,8 @@ the active scene after MCP editor work.
 
 ## Known issues / gotchas
 
-- PlayMode smoke tests:  (6 tests; back up + restore the real save). Run via Test Runner (PlayMode).
-- Watch  : keep 0 (domain reload ON) — tooling once flipped it to 1; revert if it shows up in git status.
+- PlayMode smoke tests: `Assets/_Project/Scripts/Tests/PlayMode/GameSmokeTests.cs` (6 tests; they back up + restore the real save). Run via Test Runner (PlayMode).
+- Watch `ProjectSettings/EditorSettings.asset` `m_EnterPlayModeOptions`: keep 0 (domain reload ON) — tooling once flipped it to 1; revert if it shows up in git status.
 
 - The TMP fallback font asset gets dirtied when entering Play — revert it
   before committing.
