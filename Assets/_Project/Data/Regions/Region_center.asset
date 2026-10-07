@@ -184,7 +184,11 @@ MonoBehaviour:
     realArt: 1
     overlay: []
   - key: enemy_bait
-    sprite: {fileID: 1744168387, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: 1093742558393487552, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
+    frames:
+    - {fileID: 1093742558393487552, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
+    - {fileID: -478341959553124567, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
+    - {fileID: -6496391634586327411, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
+    - {fileID: 7042042739380084074, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
+    realArt: 1
     overlay: []

@@ -18,7 +18,7 @@ Play. Hold LMB on nodes to harvest / on ground to vacuum, RMB drop, Q/E rotate,
 WASD pan, wheel zoom (max out 6), B build menu, click Altar/Dragon/lanterns for
 their panels.
 
-**Current focus: the art integration loop** (last check 2026-10-07: big batch integrated; awaiting Fishing ground v3, enemy_boar_*, remaining P2) (poll Drive, pull, integrate,
+**Current focus: the art integration loop** (last check 2026-10-07 late: 23 items, crop/cotton nodes, boar, Fishing ground v3 integrated; awaiting remaining P2 buildings/nodes/items, UI chrome, FX) (poll Drive, pull, integrate,
 review, give feedback in ART-SPEC Delivery log).
 Next candidates:
 1. Poll Drive `incoming/` (30 min x1h, hourly x2h, then 2-hourly; restart after
@@ -136,6 +136,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-07 art (2): 23 items, node_crop/node_cotton, enemy_boar idle/move/hit and Fishing ground v3 (pale shingle) integrated and accepted; 0 unwired keys.
 
 - 2026-10-07 art: 17 items, Mill/Loom/Paper Mill/Infusion Array (+ working loops), Spirit Tree sparkle overlay, spring + flow loop, Farm/Grove ground redo and the Celestial set integrated and accepted. Fishing ground v3 requested (it reads as open water). New ArtIntake conventions for region sprites: `<key>_flow` = full-sprite animation frames, `<key>_sparkle` = overlay strip (SpriteEntry.overlay), which NodeView draws one sorting order above at 8 fps.
 
