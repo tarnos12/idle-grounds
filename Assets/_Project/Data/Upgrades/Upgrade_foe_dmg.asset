@@ -26,17 +26,17 @@ MonoBehaviour:
     costs:
     - items:
       - item: spirit_essence
-        qty: 5
-      - item: stone
-        qty: 20
-    - items:
-      - item: spirit_essence
         qty: 15
-      - item: iron_ore
-        qty: 10
+      - item: stone
+        qty: 60
     - items:
       - item: spirit_essence
+        qty: 45
+      - item: iron_ore
         qty: 30
+    - items:
+      - item: spirit_essence
+        qty: 90
       - item: iron_bar
-        qty: 8
+        qty: 24
   icon: {fileID: 1481538528, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

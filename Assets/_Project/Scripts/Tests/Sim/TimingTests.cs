@@ -98,13 +98,14 @@ namespace IdleGrounds.Sim.Tests
             var s = GameState.CreateInitial(cfg, 0);
             Assert.AreEqual(1.0, t.PrestigeFactor(s), 1e-12);
             s.ascensions = 1;
-            Assert.AreEqual(1 / 1.2, t.PrestigeFactor(s), 1e-12);
+            Assert.AreEqual(1.0, t.PrestigeFactor(s), 1e-12);        // ascensions no longer speed the run
             s.perks.Set("haste", 2);
             s.won = true;
             s.vows.done.Set("burden", 1);
-            Assert.AreEqual(1 / 1.2 * 0.9025 * 0.9 * 0.96, t.PrestigeFactor(s), 1e-12);
+            double hs = cfg.balance.hasteStep, aw = cfg.balance.awakenedSpeed, vm = cfg.balance.vowMarkStep;
+            Assert.AreEqual(hs * hs * aw * vm, t.PrestigeFactor(s), 1e-12);
             s.vows.active.Add("restless");
-            Assert.AreEqual(1 / 1.4 * 0.9025 * 0.9 * 0.96 * 0.96, t.NextPrestigeFactor(s), 1e-12);
+            Assert.AreEqual(hs * hs * aw * vm * vm, t.NextPrestigeFactor(s), 1e-12);
 
             Assert.AreEqual(5, t.Scaled(10));
             Assert.AreEqual(1, t.Scaled(1));

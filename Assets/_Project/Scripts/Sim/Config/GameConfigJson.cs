@@ -215,7 +215,7 @@ namespace IdleGrounds.Sim
                     var ln = Obj(b, "lantern");
                     if (ln != null) d.lantern = new LanternConfig { enabled = true, rateMs = Int(ln, "rateMs", 1000), speed = Num(ln, "speed", 170) };
                     var br = Obj(b, "bridge");
-                    if (br != null) d.bridge = new BridgeConfig { enabled = true, cap = Int(br, "cap", 20), rateMs = Int(br, "rateMs", 1000), speed = Num(br, "speed", 170) };
+                    if (br != null) d.bridge = new BridgeConfig { enabled = true, cap = Int(br, "cap", 20), rateMs = Int(br, "rateMs", 1000), speed = Num(br, "speed", 170), carry = Math.Max(1, Int(br, "carry", 1)) };
                     var sl = Obj(b, "seal");
                     if (sl != null) d.seal = new SealConfig { enabled = true, cap = Int(sl, "cap", 0) };
                     var gn = Obj(b, "gen");

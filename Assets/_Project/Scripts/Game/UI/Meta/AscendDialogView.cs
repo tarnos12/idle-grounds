@@ -15,7 +15,7 @@ namespace IdleGrounds.Game
     /// </summary>
     public class AscendDialogView : ModalView
     {
-        public const string ConfirmText = "Ascend and begin the grounds anew? (+20% world speed per ascension, kept forever)";
+        public const string ConfirmText = "Ascend and begin the grounds anew? (Ascension Points and perks are kept forever)";
 
         [SerializeField] TextMeshProUGUI countText;
         [SerializeField] GameObject vowsBox;

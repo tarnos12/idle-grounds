@@ -610,6 +610,7 @@ namespace IdleGrounds.Sim
                 if (!Finite(w.t0)) { w.x0 = w.x; w.y0 = w.y; w.t0 = now; }
                 if (!Finite(w.x0) || !Finite(w.y0)) { w.x0 = w.x; w.y0 = w.y; }
                 if (!Finite(w.sp) || w.sp < 50) w.sp = 170;
+                if (w.qty < 1) w.qty = 1;
                 if (w.id >= s.nextSkyWispId) s.nextSkyWispId = w.id + 1;
             }
             if (s.nextSkyWispId < 1) s.nextSkyWispId = 1;

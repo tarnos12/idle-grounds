@@ -20,11 +20,11 @@ MonoBehaviour:
     sizeH: 3
     cost:
     - item: wood
-      qty: 10
+      qty: 40
     - item: water
-      qty: 5
+      qty: 20
     - item: clay
-      qty: 5
+      qty: 20
     unlocked: 0
     stageUnlock: 3
     indestructible: 0
@@ -62,12 +62,16 @@ MonoBehaviour:
     gen:
       enabled: 1
       item: spirit_herb
-      intervalMs: 2500
+      intervalMs: 6000
       cap: 24
     bridge:
       enabled: 0
       cap: 20
       rateMs: 1000
       speed: 170
+      carry: 1
   icon: {fileID: 558660429, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  hasRealArt: 0
+  frames: []
+  variants: []
   prefabOverride: {fileID: 0}

@@ -570,7 +570,7 @@ namespace IdleGrounds.Sim
         public int SkyInFlightTo(string island, int bridgeId)
         {
             int n = 0;
-            foreach (var w in S.skyWisps) if (!w.returning && w.toIsland == island && w.toId == bridgeId) n++;
+            foreach (var w in S.skyWisps) if (!w.returning && w.toIsland == island && w.toId == bridgeId) n += Math.Max(1, w.qty);
             return n;
         }
 
@@ -654,8 +654,9 @@ namespace IdleGrounds.Sim
 
         /// <summary>
         /// Sending bridge beat (tick step 6): lantern beat rules (Wisp Haste of the sending Island,
-        /// Swiftwind, prestige, Wisp Gale, Tireless Wisps). Each beat launches one sky wisp with the
-        /// buffer's first item if the receiver has room counting wisps already on the way.
+        /// Swiftwind, prestige, Wisp Gale, Tireless Wisps). Each beat launches one sky wisp carrying up to
+        /// <c>bridge.carry</c> of the buffer's first item, as many as the receiver has room for counting
+        /// items already on the way.
         /// </summary>
         public bool TickBridge(string areaKey, AreaState area, Building b, BuildingDef def, double now)
         {
@@ -674,16 +675,19 @@ namespace IdleGrounds.Sim
             for (int ev = 0; ev < tm.n; ev++, due += beat)
             {
                 if (b.inv == null || b.inv.Count == 0) { idle = true; break; }
-                if (BuildingSystem.GatherTotal(dst) + SkyInFlightTo(b.pairIsland, dst.id) >= dstCap) { idle = true; break; }
+                int room = dstCap - BuildingSystem.GatherTotal(dst) - SkyInFlightTo(b.pairIsland, dst.id);
+                if (room <= 0) { idle = true; break; }
                 string item = b.inv[0].item;
-                if (!B.EndpointTake(b, item)) { idle = true; break; }
+                int carry = Math.Min(Math.Max(1, def.bridge.carry), room), qty = 0;
+                while (qty < carry && B.EndpointTake(b, item)) qty++;
+                if (qty == 0) { idle = true; break; }
                 var (sx, sy) = _ctx.World.BuildingWorldCenterPx(areaKey, b);
                 var (tx, ty) = _ctx.World.BuildingWorldCenterPx(b.pairIsland, dst);
                 var w = new SkyWisp
                 {
                     id = S.nextSkyWispId++, item = item, x0 = sx, y0 = sy, x = sx, y = sy, sx = sx, sy = sy, tx = tx, ty = ty,
                     fromIsland = areaKey, fromId = b.id, toIsland = b.pairIsland, toId = dst.id,
-                    t0 = Math.Min(now, due), sp = speed,
+                    t0 = Math.Min(now, due), sp = speed, qty = qty,
                 };
                 S.skyWisps.Add(w);
                 changed = true;
@@ -703,6 +707,20 @@ namespace IdleGrounds.Sim
             double sp = w.sp > 0 ? w.sp : 170;
             double frac = D > 0 ? Math.Min(1, Math.Max(0, (now - w.t0) / 1000 * sp / D)) : 1;
             return new WispPosition(w.x0 + (w.tx - w.x0) * frac, w.y0 + (w.ty - w.y0) * frac, frac);
+        }
+
+        /// <summary>
+        /// Hand a sky wisp's load to a bridge one item at a time. True = all of it was taken (w.qty is left as
+        /// the delivered load for the arrival event); false = w.qty is now what is still aboard.
+        /// </summary>
+        bool GiveAll(Building b, SkyWisp w)
+        {
+            if (w.qty < 1) w.qty = 1;
+            int n = 0;
+            while (n < w.qty && B.EndpointGive(b, w.item)) n++;
+            if (n == w.qty) return true;
+            w.qty -= n;
+            return false;
         }
 
         /// <summary>Turn a sky wisp around towards its sending bridge (WispReturned on the sending Island).</summary>
@@ -740,17 +758,17 @@ namespace IdleGrounds.Sim
                     bool intact = src != null && src.built && dst != null && dst.built && src.pairSends && PairOf(w.fromIsland, src) == dst;
                     if (!intact) { SendBack(w, p.x, p.y, now); changed = true; continue; }
                     if (p.frac < 1) continue;
-                    if (B.EndpointGive(dst, w.item))
+                    if (GiveAll(dst, w))
                     {
                         (done ??= ClearedDone()).Add(w.id); changed = true;
                         _ctx.Events.RaiseWispArrived(w.toIsland, w);
                     }
-                    else { SendBack(w, p.x, p.y, now); changed = true; }
+                    else { SendBack(w, p.x, p.y, now); changed = true; }   // what the receiver refused flies home
                     continue;
                 }
                 if (p.frac < 1) continue;
                 var home = S.Area(w.fromIsland)?.BuildingById(w.fromId);
-                if (home != null && home.built && IsBridge(home) && B.EndpointGive(home, w.item))
+                if (home != null && home.built && IsBridge(home) && GiveAll(home, w))
                 {
                     (done ??= ClearedDone()).Add(w.id); changed = true;
                     _ctx.Events.RaiseWispArrived(w.fromIsland, w);
@@ -759,7 +777,7 @@ namespace IdleGrounds.Sim
                 if (S.Area(w.fromIsland) != null)
                 {
                     var (ox, oy) = _ctx.World.IslandOffsetPx(w.fromIsland);
-                    _ctx.Ground.DropGround(w.fromIsland, w.item, 1, _ctx.World.ClampPx(w.sx - ox), _ctx.World.ClampPx(w.sy - oy + 24));
+                    _ctx.Ground.DropGround(w.fromIsland, w.item, w.qty, _ctx.World.ClampPx(w.sx - ox), _ctx.World.ClampPx(w.sy - oy + 24));
                 }
                 (done ??= ClearedDone()).Add(w.id); changed = true;
                 _ctx.Events.RaiseWispDropped(w.fromIsland, w);

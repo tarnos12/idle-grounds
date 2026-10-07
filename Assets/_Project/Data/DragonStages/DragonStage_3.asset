@@ -15,11 +15,11 @@ MonoBehaviour:
   def:
     needs:
     - item: spirit_herb
-      qty: 20
+      qty: 450
     - item: spirit_essence
-      qty: 15
+      qty: 180
     - item: iron_bar
-      qty: 5
+      qty: 70
     text: "The dragon breathes in the herbs, the essence, the iron \u2014 and OPENS
       ITS EYES. \"I dreamed a thousand years, and you woke me with patience, not
       swords. Cultivate on, little one. I will watch over these grounds.\" \U0001F432

@@ -32,11 +32,11 @@ MonoBehaviour:
     unlockSide: down
     unlockCost:
     - item: spirit_stone
-      qty: 6
+      qty: 40
     - item: jade
-      qty: 3
-    - item: glass
-      qty: 3
+      qty: 20
+    - item: obsidian
+      qty: 60
     tiers:
     - name: Star Fragment
       hits: 3
@@ -116,5 +116,9 @@ MonoBehaviour:
   sprites:
   - key: node_starrock
     sprite: {fileID: -1279029670, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0
   - key: node_moonshrub
     sprite: {fileID: 1368577071, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0

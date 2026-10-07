@@ -173,6 +173,13 @@ MonoBehaviour:
       perks, readable logistics'
     worldCols: 3
     worldRows: 3
+    ascensionSpeedPerRun: 0
+    hasteStep: 0.98
+    vowMarkStep: 0.99
+    awakenedSpeed: 0.9
+    tributeShrinkPerRun: 0
+    tributeShrinkFloor: 0.4
+    restlessTributeMult: 1.5
     groundCap: 600
     groundHardCap: 900
     protectedShare: 480
@@ -202,7 +209,7 @@ MonoBehaviour:
     buildingW: 3
     buildingH: 3
   test:
-    enabled: 1
+    enabled: 0
     timeScale: 0.2
     costScale: 0.5
   zones:

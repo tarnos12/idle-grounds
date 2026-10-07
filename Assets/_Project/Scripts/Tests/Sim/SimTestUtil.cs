@@ -10,8 +10,20 @@ namespace IdleGrounds.Sim.Tests
 
         public static string Json => _json ??= File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), DataPath));
 
-        /// <summary>Fresh config each call (tests may mutate it).</summary>
-        public static GameConfig LoadConfig() => GameConfigJson.Load(Json);
+        /// <summary>
+        /// Fresh config each call (tests may mutate it), with TEST scaling ON (timers ×0.2, costs ×0.5): the unit
+        /// tests' expected numbers are written for it. The data itself ships with TEST off (ADR 0004) — use
+        /// <see cref="LoadDataConfig"/> for the config exactly as the game loads it.
+        /// </summary>
+        public static GameConfig LoadConfig()
+        {
+            var cfg = GameConfigJson.Load(Json);
+            cfg.test.enabled = true;
+            return cfg;
+        }
+
+        /// <summary>Fresh config exactly as shipped (TEST off since balance pass 1).</summary>
+        public static GameConfig LoadDataConfig() => GameConfigJson.Load(Json);
 
         public static Simulation NewSim(out ManualClock clock, ulong seed = 12345, GameConfig cfg = null, bool init = true)
         {

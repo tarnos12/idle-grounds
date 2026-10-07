@@ -25,17 +25,17 @@ MonoBehaviour:
     costs:
     - items:
       - item: fish
-        qty: 10
-      - item: algae
-        qty: 15
-    - items:
+        qty: 30
       - item: algae
         qty: 40
+    - items:
+      - item: algae
+        qty: 100
       - item: wood
-        qty: 30
+        qty: 90
     - items:
       - item: fish
-        qty: 40
+        qty: 100
       - item: iron_ore
-        qty: 15
+        qty: 40
   icon: {fileID: -73499810, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

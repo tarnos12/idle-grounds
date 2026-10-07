@@ -27,8 +27,8 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(10, SimTestUtil.CountSpawner(c, "bush"));
             Assert.AreEqual(8, SimTestUtil.CountSpawner(sim.State.Area("farm"), "crop"));
             Assert.AreEqual(5, SimTestUtil.CountSpawner(sim.State.Area("farm"), "cotton"));
-            Assert.AreEqual(150, SimTestUtil.CountSpawner(sim.State.Area("mine"), "ore"));
-            Assert.AreEqual(30, SimTestUtil.CountSpawner(sim.State.Area("mine"), "ironvein"));
+            Assert.AreEqual(105, SimTestUtil.CountSpawner(sim.State.Area("mine"), "ore"));       // target 7 x 15
+            Assert.AreEqual(45, SimTestUtil.CountSpawner(sim.State.Area("mine"), "ironvein"));   // target 3 x 15
             Assert.AreEqual(3, c.genTimers.Count);
             // every spawner node sits inside its zone and no two nodes overlap
             foreach (var reg in sim.Config.regions)
@@ -103,7 +103,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(1, bush.hitsLeft);
             Assert.IsTrue(sim.Harvest("center", bush.id));
             int leaves = SimTestUtil.CountGround(c, "leaves");
-            Assert.That(leaves, Is.InRange(2, 3));                 // pending 1 + drops 1-2
+            Assert.That(leaves, Is.InRange(3, 4));                 // pending 2 (1 per hit) + drops 1-2
             Assert.IsNull(c.NodeById(bush.id));
             Assert.AreEqual(leaves, sim.State.stats.totalGathered);
             var g = c.ground.First(x => x.item == "leaves");
@@ -230,13 +230,14 @@ namespace IdleGrounds.Sim.Tests
             var c = sim.State.Area("center");
             var bush = c.nodes.First(n => n.spawnerKind == "bush");
             Assert.AreEqual(2400, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
-            sim.State.ascensions = 1;                                   // prestige ×1/1.2
-            Assert.AreEqual(2000, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
+            sim.State.perks.Set("haste", 1);                            // prestige x hasteStep
+            double pf = sim.Config.balance.hasteStep;
+            Assert.AreEqual(2400 * pf, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
             c.upgrades.speed = 1;                                        // ×0.8
             sim.State.perks.Set("regrow", 1);                            // ×0.9
-            Assert.AreEqual(2000 * 0.8 * 0.9, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
+            Assert.AreEqual(2400 * pf * 0.8 * 0.9, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
             sim.Config.test.enabled = false;                             // no TEST timeScale
-            Assert.AreEqual(10000 * 0.8 * 0.9, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
+            Assert.AreEqual(12000 * pf * 0.8 * 0.9, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
         }
 
         [Test]

@@ -114,6 +114,8 @@ namespace IdleGrounds.Sim
     {
         public string fromIsland, toIsland;
         public double sx, sy, tx, ty;
+        /// <summary>Items of <see cref="Wisp.item"/> this wisp carries (bridge <c>carry</c>; ≥ 1, older saves load as 1).</summary>
+        public int qty = 1;
     }
 
     [Serializable]

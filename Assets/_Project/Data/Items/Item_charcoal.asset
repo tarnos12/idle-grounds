@@ -16,6 +16,6 @@ MonoBehaviour:
     key: charcoal
     name: Charcoal
     emoji: "\u26AB"
-    fuelMs: 40000
+    fuelMs: 20000
     sourceHint: "Charcoal Pit \u2190 Wood"
   icon: {fileID: 555690103, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

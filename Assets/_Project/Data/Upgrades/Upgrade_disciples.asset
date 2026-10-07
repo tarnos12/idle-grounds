@@ -25,17 +25,17 @@ MonoBehaviour:
     costs:
     - items:
       - item: robe
-        qty: 2
+        qty: 4
       - item: spirit_stone
-        qty: 2
+        qty: 6
     - items:
       - item: spirit_stone
-        qty: 4
+        qty: 12
       - item: spirit_buns
-        qty: 20
+        qty: 40
     - items:
       - item: spirit_jade
-        qty: 2
-      - item: robe
         qty: 5
+      - item: robe
+        qty: 10
   icon: {fileID: 732544882, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

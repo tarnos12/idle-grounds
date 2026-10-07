@@ -15,9 +15,9 @@ MonoBehaviour:
   def:
     needs:
     - item: stone
-      qty: 25
+      qty: 120
     - item: clay
-      qty: 10
+      qty: 60
     text: "The dragon yawns a plume of steam\u2026 and teaches you the Algae Farm."
   icon: {fileID: 1077955523449404062, guid: 8ee863e28cfc16c46bc851c70310d2eb, type: 3}
   frames:

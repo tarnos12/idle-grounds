@@ -131,17 +131,18 @@ namespace IdleGrounds.Sim.Tests
             Assert.IsTrue(sim.Fuel.AddItem(k, "charcoal"));
             Assert.IsFalse(sim.Fuel.AddItem(k, "stone"));
             Assert.AreEqual("charcoal", sim.Fuel.Queue(k)[0].item, "newest at the front");
-            sim.Fuel.Burn(k, 5000);
-            Assert.AreEqual(5000, sim.Fuel.Queue(k)[1].rem, 1e-9, "oldest burns first");
-            sim.Fuel.Burn(k, 6000);
+            double W = sim.Config.FuelMs("wood"), C = sim.Config.FuelMs("charcoal");
+            sim.Fuel.Burn(k, W / 2);
+            Assert.AreEqual(W / 2, sim.Fuel.Queue(k)[1].rem, 1e-9, "oldest burns first");
+            sim.Fuel.Burn(k, W / 2 + 1000);
             Assert.AreEqual(1, sim.Fuel.Queue(k).Count);
-            Assert.AreEqual(39000, sim.Fuel.Total(k), 1e-9);
+            Assert.AreEqual(C - 1000, sim.Fuel.Total(k), 1e-9);
             for (int i = 0; i < 5; i++) sim.Fuel.AddItem(k, "wood");
             Assert.AreEqual(0, sim.Fuel.Space(k));
             Assert.IsFalse(sim.Fuel.AddItem(k, "wood"));
             sim.State.vows.active.Add("coldhearth");
             sim.Fuel.Burn(k, 2500);
-            Assert.AreEqual(34000, sim.Fuel.Queue(k)[5].rem, 1e-9, "Cold Hearth burns double — from the back (the old charcoal)");
+            Assert.AreEqual(C - 1000 - 5000, sim.Fuel.Queue(k)[5].rem, 1e-9, "Cold Hearth burns double — from the back (the old charcoal)");
         }
 
         [Test]
@@ -155,7 +156,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(0, k.smeltDoneAt, "no fuel: no batch");
             Assert.AreEqual(BuildingState.NoFuel, sim.BuildingStatus(V, k).state);
             sim.Fuel.AddItem(k, "wood");
-            sim.Fuel.Burn(k, 9700);                       // a 300 ms sliver
+            sim.Fuel.Burn(k, sim.Config.FuelMs("wood") - 300);   // a 300 ms sliver
             clock.Advance(50); sim.Tick();
             Assert.Greater(k.smeltDoneAt, 0);
             for (int i = 0; i < 20; i++) { clock.Advance(50); sim.Tick(); }
@@ -172,17 +173,18 @@ namespace IdleGrounds.Sim.Tests
             var sim = M3Util.Volcano(out var clock);
             var k = sim.Buildings.PlaceBuilt(V, "kiln", 5, 40, starter: false);
             sim.Fuel.AddItem(k, "charcoal");
+            double C = sim.Config.FuelMs("charcoal");
             sim.Tick();
             for (int i = 0; i < 40; i++) { clock.Advance(50); sim.Tick(); }   // idle: nothing burns
-            Assert.AreEqual(40000, sim.Fuel.Total(k), 1e-9);
+            Assert.AreEqual(C, sim.Fuel.Total(k), 1e-9);
             k.stock = new ItemCounts(); k.stock.Set("clay", 2);
             clock.Advance(50); sim.Tick();                                      // batch starts (1000 ms)
             for (int i = 0; i < 40; i++) { clock.Advance(50); sim.Tick(); }
-            Assert.AreEqual(39000, sim.Fuel.Total(k), 1e-6, "exactly one batch duration burned");
+            Assert.AreEqual(C - 1000, sim.Fuel.Total(k), 1e-6, "exactly one batch duration burned");
             sim.State.perks.Set("ember", 2);
             k.stock.Set("clay", 2);
             for (int i = 0; i < 40; i++) { clock.Advance(50); sim.Tick(); }
-            Assert.AreEqual(39000 - 1000 * 0.85 * 0.85, sim.Fuel.Total(k), 1e-6, "Ember Heart perk");
+            Assert.AreEqual(C - 1000 - 1000 * 0.85 * 0.85, sim.Fuel.Total(k), 1e-6, "Ember Heart perk");
         }
 
         [Test]

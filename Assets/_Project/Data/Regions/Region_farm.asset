@@ -33,7 +33,7 @@ MonoBehaviour:
     unlockSide: left
     unlockCost:
     - item: wood
-      qty: 10
+      qty: 50
     tiers:
     - name: Rice
       hits: 0
@@ -86,9 +86,9 @@ MonoBehaviour:
     - kind: sand
       zone: sandField
       item: sand
-      intervalMs: 1500
+      intervalMs: 4000
       cap: 10
-      upgrade: 
+      upgrade: speed
       rareDrop:
         item: 
         chance: 0
@@ -116,5 +116,9 @@ MonoBehaviour:
   sprites:
   - key: node_crop
     sprite: {fileID: -380064397, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0
   - key: node_cotton
     sprite: {fileID: 1907465568, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0

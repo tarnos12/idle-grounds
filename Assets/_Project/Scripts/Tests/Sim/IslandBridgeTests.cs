@@ -11,10 +11,15 @@ namespace IdleGrounds.Sim.Tests
     {
         const string C = "center", M = "mine", F = "farm";
 
-        /// <summary>No spawners / field generators, no starter network, no ground physics; Mine unlocked.</summary>
-        static Simulation Bare(out ManualClock clock, bool unlockMine = true)
+        /// <summary>
+        /// No spawners / field generators, no starter network, no ground physics; Mine unlocked.
+        /// <paramref name="carry"/> overrides bridge.carry: the default 1 keeps the original one-item-per-wisp
+        /// mechanic these tests were written for; the shipped value (5) is exercised by the Carry_* tests.
+        /// </summary>
+        static Simulation Bare(out ManualClock clock, bool unlockMine = true, int carry = 1)
         {
             var cfg = SimTestUtil.LoadConfig();
+            cfg.Building("spirit_bridge").bridge.carry = carry;
             foreach (var r in cfg.regions) { r.spawners.Clear(); r.generators.Clear(); }
             var sim = SimTestUtil.NewSim(out clock, cfg: cfg, init: false);
             sim.State.quest.idx = cfg.quests.Count;
@@ -98,8 +103,9 @@ namespace IdleGrounds.Sim.Tests
             var g = sim.PlaceGhost(C, "spirit_bridge", 10, 10);
             Assert.IsNotNull(g);
             Assert.AreEqual((2, 1), sim.World.BuildingSize("spirit_bridge"));
-            Assert.AreEqual(10, sim.BuildingNeeds(g).Get("wood"));
-            Assert.AreEqual(10, sim.BuildingNeeds(g).Get("stone"));
+            var bridgeCost = sim.Config.Building("spirit_bridge").cost;
+            Assert.AreEqual(bridgeCost.Single(q => q.item == "wood").qty, sim.BuildingNeeds(g).Get("wood"));
+            Assert.AreEqual(bridgeCost.Single(q => q.item == "stone").qty, sim.BuildingNeeds(g).Get("stone"));
         }
 
         // ---------------------------------------------------------------- pairing
@@ -155,7 +161,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(C, launches[0].island);
             var w0 = launches[0].w;
             Assert.AreEqual(1, sim.SkyWisps.Count);
-            Assert.AreEqual(170, w0.sp, 1e-9, "base wisp speed");
+            Assert.AreEqual(sim.Config.Building("spirit_bridge").bridge.speed, w0.sp, 1e-9, "base wisp speed");
             double D = Dist(sim, send, C, recv, M);
             Assert.Greater(D, 120 * 30, "the sky gap makes this a long flight");
             double expectedArrive = w0.t0 + D / w0.sp * 1000;
@@ -198,14 +204,52 @@ namespace IdleGrounds.Sim.Tests
         {
             var sim = Bare(out var clock);
             var (send, recv) = Pair(sim);
+            int cap = sim.Config.Building("spirit_bridge").bridge.cap;
             Fill(send, "wood", 30);
-            Fill(recv, "stone", 18);
+            Fill(recv, "stone", cap - 2);
             int maxFly = 0;
             for (int t = 0; t < 120_000; t += 50) { clock.Advance(50); sim.Tick(); maxFly = Math.Max(maxFly, sim.SkyWisps.Count); }
             Assert.AreEqual(2, maxFly, "only the 2 free receiver slots are reserved");
-            Assert.AreEqual(20, Total(recv));
+            Assert.AreEqual(cap, Total(recv));
             Assert.AreEqual(28, Total(send));
             Assert.AreEqual(BuildingState.Full, sim.BuildingStatus(M, recv).state);
+        }
+
+        [Test]
+        public void Carry_Capacity_ReservationsCountItems_NotWisps()
+        {
+            var sim = Bare(out var clock, carry: 5);
+            var (send, recv) = Pair(sim);
+            int cap = sim.Config.Building("spirit_bridge").bridge.cap;
+            Fill(send, "wood", 30);
+            Fill(recv, "stone", cap - 7);                   // room for 7 items: a wisp of 5, then a wisp of 2
+            int maxItems = 0, maxWisps = 0;
+            for (int t = 0; t < 120_000; t += 50)
+            {
+                clock.Advance(50); sim.Tick();
+                maxWisps = Math.Max(maxWisps, sim.SkyWisps.Count);
+                maxItems = Math.Max(maxItems, sim.SkyWisps.Sum(w => w.qty));
+                Assert.LessOrEqual(sim.Logistics.SkyInFlightTo(M, recv.id), 7);
+            }
+            Assert.AreEqual(7, maxItems, "in-flight reservation counts items");
+            Assert.AreEqual(2, maxWisps);
+            Assert.AreEqual(cap, Total(recv));
+            Assert.AreEqual(23, Total(send), "nothing lost or duplicated: 30 - 7 delivered");
+            Assert.AreEqual(BuildingState.Full, sim.BuildingStatus(M, recv).state);
+        }
+
+        [Test]
+        public void Carry_WispTakesUpToCarryItems_AndAllArrive()
+        {
+            var sim = Bare(out var clock, carry: 5);
+            var (send, recv) = Pair(sim);
+            Fill(send, "wood", 12);
+            var launched = new List<int>();
+            sim.Events.WispLaunched += (i, w) => { if (w is SkyWisp s) launched.Add(s.qty); };
+            RunUntil(sim, clock, () => Total(recv) == 12);
+            CollectionAssert.AreEqual(new[] { 5, 5, 2 }, launched);
+            Assert.AreEqual(0, Total(send));
+            Assert.AreEqual(0, sim.SkyWisps.Count);
         }
 
         [Test]
@@ -216,6 +260,7 @@ namespace IdleGrounds.Sim.Tests
             var launches = new List<(SkyWisp w, long at)>();
             sim.Events.WispLaunched += (i, w) => { if (w is SkyWisp s) launches.Add((s, clock.NowMs)); };
             double beat = sim.Logistics.BeatMs(sim.State.Area(C), sim.Config.Building("spirit_bridge"), clock.NowMs);
+            Assert.Less(2000 / beat + 2, sim.Config.Building("spirit_bridge").bridge.cap, "enough receiver room that beats, not room, limit the launches");
 
             for (int t = 0; t < 60_000; t += 50) { clock.Advance(50); sim.Tick(); }   // a minute paired but empty
             clock.Advance(8000);                                                       // + a long frame hitch (tick gap)
@@ -251,11 +296,30 @@ namespace IdleGrounds.Sim.Tests
             int returned = 0;
             sim.Events.WispReturned += (i, w) => { if (w is SkyWisp) returned++; };
             RunUntil(sim, clock, () => sim.SkyWisps.Count > 0);
-            Fill(recv, "stone", 20);                    // full by the time it lands (the player stuffed it)
+            Fill(recv, "stone", sim.Config.Building("spirit_bridge").bridge.cap);   // full by the time it lands (the player stuffed it)
             RunUntil(sim, clock, () => returned > 0);
             Assert.IsTrue(sim.SkyWisps[0].returning);
             RunUntil(sim, clock, () => sim.SkyWisps.Count == 0);
             Assert.AreEqual(1, send.inv.Where(s => s.item == "wood").Sum(s => s.qty), "back in the sender's buffer");
+        }
+
+        [Test]
+        public void Carry_ArrivalPartlyRefused_RemainderReturnsToSender()
+        {
+            var sim = Bare(out var clock, carry: 5);
+            var (send, recv) = Pair(sim);
+            int cap = sim.Config.Building("spirit_bridge").bridge.cap;
+            Fill(send, "wood", 5);
+            int returned = 0;
+            sim.Events.WispReturned += (i, w) => { if (w is SkyWisp) returned++; };
+            RunUntil(sim, clock, () => sim.SkyWisps.Count > 0);
+            Assert.AreEqual(5, sim.SkyWisps[0].qty);
+            Fill(recv, "stone", cap - 2);               // only 2 slots left when it lands
+            RunUntil(sim, clock, () => returned > 0);
+            Assert.AreEqual(3, sim.SkyWisps[0].qty, "the 3 refused items fly home");
+            RunUntil(sim, clock, () => sim.SkyWisps.Count == 0);
+            Assert.AreEqual(2, recv.inv.Where(s => s.item == "wood").Sum(s => s.qty));
+            Assert.AreEqual(3, send.inv.Where(s => s.item == "wood").Sum(s => s.qty), "back in the sender's buffer");
         }
 
         [Test]
@@ -326,7 +390,7 @@ namespace IdleGrounds.Sim.Tests
             var (send, _) = Pair(sim);
             Fill(send, "wood", 1);
             RunUntil(sim, clock, () => sim.SkyWisps.Count > 0);
-            Assert.AreEqual(170 * 1.3, sim.SkyWisps[0].sp, 1e-9);
+            Assert.AreEqual(def.bridge.speed * 1.3, sim.SkyWisps[0].sp, 1e-9);
         }
 
         // ---------------------------------------------------------------- save
@@ -360,6 +424,24 @@ namespace IdleGrounds.Sim.Tests
             sim2.Boot();
             RunUntil(sim2, clock, () => BuildingSystem.GatherTotal(r2) == 3);
             Assert.AreEqual(0, s2.skyWisps.Count);
+        }
+
+        [Test]
+        public void SaveRoundTrip_KeepsCarriedQty()
+        {
+            var sim = Bare(out var clock, carry: 5);
+            var (send, recv) = Pair(sim);
+            Fill(send, "wood", 3);
+            RunUntil(sim, clock, () => sim.SkyWisps.Count > 0);
+            Assert.AreEqual(3, sim.SkyWisps[0].qty);
+            string j1 = sim.SaveJson();
+            var s2 = Simulation.LoadJson(j1, sim.Config, clock.NowMs, out var reason);
+            Assert.IsNotNull(s2, reason);
+            Assert.AreEqual(3, s2.skyWisps[0].qty);
+            var sim2 = new Simulation(sim.Config, s2, clock, new XorShiftRng(7)) { NoGroundPhysics = true };
+            sim2.Boot();
+            var r2 = s2.Area(M).BuildingById(recv.id);
+            RunUntil(sim2, clock, () => BuildingSystem.GatherTotal(r2) == 3);
         }
 
         [Test]

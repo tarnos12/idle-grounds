@@ -26,17 +26,17 @@ MonoBehaviour:
     costs:
     - items:
       - item: qi_elixir
-        qty: 2
+        qty: 4
       - item: wood
-        qty: 40
+        qty: 120
     - items:
       - item: spirit_stone
-        qty: 3
+        qty: 8
       - item: qi_elixir
-        qty: 3
+        qty: 8
     - items:
       - item: spirit_jade
-        qty: 1
+        qty: 3
       - item: qi_elixir
-        qty: 5
+        qty: 12
   icon: {fileID: -1266497800, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

@@ -188,12 +188,14 @@ namespace IdleGrounds.Sim.Tests
             var g = sim.PlaceGhost("center", "workbench", 30, 30);
             Assert.IsNotNull(g); Assert.IsFalse(g.built); Assert.AreEqual(1, placed);
             Assert.IsTrue(sim.Occupancy.IsOccupied(sim.State.Area("center"), 31, 31), "ghosts occupy");
+            int wbCost = sim.Config.Building("workbench").cost.First(q => q.item == "wood").qty;
+            sim.State.handCap = 100;                      // the shipped workbench cost exceeds the starting hand
             sim.Hand.Add("stone", 2);
-            sim.Hand.Add("wood", 10);
+            sim.Hand.Add("wood", wbCost + 2);
             var r = M3Util.Click(sim, "center", g);
             Assert.AreEqual(DropResultKind.Reordered, r.kind);
             Assert.AreEqual("wood", sim.Hand.Front);
-            for (int i = 0; i < 7; i++)
+            for (int i = 0; i < wbCost - 1; i++)
             {
                 r = M3Util.Click(sim, "center", g);
                 Assert.AreEqual(DropResultKind.Fed, r.kind); Assert.AreEqual(g.id, r.buildingId);
@@ -221,13 +223,16 @@ namespace IdleGrounds.Sim.Tests
             var a = sim.State.Area("volcano");
             var k = sim.PlaceGhost("volcano", "kiln", 5, 40);
             Assert.IsFalse(sim.Occupancy.IsOccupied(a, 6, 37));
-            sim.Hand.Add("wood", 10); sim.Hand.Add("clay", 5);
-            for (int i = 0; i < 20 && !k.built; i++) M3Util.Click(sim, "volcano", k);
+            sim.State.handCap = 200;
+            sim.Hand.Add("wood", Cost(sim, "kiln", "wood") + 5); sim.Hand.Add("clay", Cost(sim, "kiln", "clay"));
+            for (int i = 0; i < 200 && !k.built; i++) M3Util.Click(sim, "volcano", k);
             Assert.IsTrue(k.built);
             Assert.IsTrue(sim.Occupancy.IsOccupied(a, 6, 37));
             var snap = sim.Occupancy.Snapshot(a);
             CollectionAssert.AreEqual(sim.Occupancy.Recompute(a), snap);
         }
+
+        static int Cost(Simulation sim, string type, string item) => sim.Config.Building(type).cost.First(q => q.item == item).qty;
 
         [Test]
         public void Demolish_Refunds()
@@ -250,7 +255,7 @@ namespace IdleGrounds.Sim.Tests
             bench.smeltDoneAt = sim.Clock().NowMs + 500;
             var lanT = c.buildings.First(b => b.type == "wisp_lantern" && b.links.Any(l => l.to == bench.id));
             Assert.IsTrue(sim.Demolish("center", bench.id));
-            Assert.AreEqual(8 + 5 + 3, SimTestUtil.CountGround(c, "wood"));
+            Assert.AreEqual(Cost(sim, "workbench", "wood") + 5 + 3, SimTestUtil.CountGround(c, "wood"));
             Assert.IsFalse(lanT.links.Any(l => l.to == bench.id || l.from == bench.id));
             Assert.AreEqual(5, lanT.links.Count);
             Assert.IsNull(c.BuildingById(bench.id));
@@ -259,15 +264,15 @@ namespace IdleGrounds.Sim.Tests
             var sh = c.buildings.First(b => b.type == "storehouse" && b.item == "stone");
             sh.qty = 7;
             sim.Demolish("center", sh.id);
-            Assert.AreEqual(12, SimTestUtil.CountGround(c, "wood"));
+            Assert.AreEqual(Cost(sim, "storehouse", "wood"), SimTestUtil.CountGround(c, "wood"));
             Assert.AreEqual(7, SimTestUtil.CountGround(c, "stone"));
             c.ground.Clear();
             var kiln = c.buildings.First(b => b.type == "kiln");
             sim.Fuel.AddItem(kiln, "charcoal");
             sim.Demolish("center", kiln.id);
             Assert.AreEqual(0, SimTestUtil.CountGround(c, "charcoal"));
-            Assert.AreEqual(10, SimTestUtil.CountGround(c, "wood"));
-            Assert.AreEqual(5, SimTestUtil.CountGround(c, "clay"));
+            Assert.AreEqual(Cost(sim, "kiln", "wood"), SimTestUtil.CountGround(c, "wood"));
+            Assert.AreEqual(Cost(sim, "kiln", "clay"), SimTestUtil.CountGround(c, "clay"));
             Assert.AreEqual(4, demolished);
         }
 
@@ -311,8 +316,9 @@ namespace IdleGrounds.Sim.Tests
             sim.Tick();
             Assert.AreEqual(1, SimTestUtil.CountGround(a, "spirit_herb"));
             Assert.IsTrue(a.ground[0].crafted);
-            // 2500 ms × 0.2 = 500 ms
-            for (int i = 0; i < 10; i++) { clock.Advance(50); sim.Tick(); }
+            // herb_garden gen.intervalMs × 0.2 (TEST)
+            int ticks = (int)System.Math.Ceiling(sim.Config.Building("herb_garden").gen.intervalMs * 0.2 / 50);
+            for (int i = 0; i < ticks; i++) { clock.Advance(50); sim.Tick(); }
             Assert.AreEqual(2, SimTestUtil.CountGround(a, "spirit_herb"));
             for (int i = 0; i < 400; i++) { clock.Advance(50); sim.Tick(); }
             Assert.AreEqual(12, SimTestUtil.CountGround(a, "spirit_herb"), "output pile caps it at 12");

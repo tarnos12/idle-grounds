@@ -16,6 +16,6 @@ MonoBehaviour:
     key: wood
     name: Wood
     emoji: "\U0001FAB5"
-    fuelMs: 10000
+    fuelMs: 5000
     sourceHint: "Spirit Tree \U0001F333 (Center, top) + fallen logs"
   icon: {fileID: 21300000, guid: 91f89578b4907c54391e56d3aecf91e2, type: 3}

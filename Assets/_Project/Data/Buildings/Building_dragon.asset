@@ -63,6 +63,7 @@ MonoBehaviour:
       cap: 20
       rateMs: 1000
       speed: 170
+      carry: 1
   icon: {fileID: 6168315964129227473, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
   hasRealArt: 1
   frames:

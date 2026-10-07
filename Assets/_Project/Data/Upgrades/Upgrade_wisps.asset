@@ -26,17 +26,17 @@ MonoBehaviour:
     costs:
     - items:
       - item: wood
-        qty: 40
-      - item: spirit_stone
-        qty: 1
-    - items:
+        qty: 120
       - item: spirit_stone
         qty: 3
-      - item: plank
-        qty: 8
     - items:
       - item: spirit_stone
-        qty: 6
-      - item: brick
         qty: 8
+      - item: plank
+        qty: 24
+    - items:
+      - item: spirit_stone
+        qty: 16
+      - item: brick
+        qty: 24
   icon: {fileID: -1151406607, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

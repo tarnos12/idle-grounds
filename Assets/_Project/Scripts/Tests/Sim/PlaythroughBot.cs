@@ -93,7 +93,7 @@ namespace IdleGrounds.Sim.Tests
             ev.UpgradeApplied += (a, t) => Log("altar upgrade: " + a + "/" + t + " → " + Sim.UpgradeLevel(a, t).lvl);
             ev.DiscipleRecruited += (a, b) => Log("disciple recruited (" + b.disciples + ")");
             ev.BlessingStarted += (k, _) => Log("dragon blessing: " + k);
-            ev.WispArrived += (a, w) => { if (w is SkyWisp sw && !sw.returning) SkyDelivered++; };
+            ev.WispArrived += (a, w) => { if (w is SkyWisp sw && !sw.returning) SkyDelivered += Math.Max(1, sw.qty); };
         }
 
         // ================================================================ runner
@@ -137,13 +137,17 @@ namespace IdleGrounds.Sim.Tests
             while (!Finished && Elapsed < capMs)
             {
                 _clock.Advance(TickMs);
+                SnapFlow();
                 Sim.Tick();
                 Ticks++;
                 if (_clock.NowMs >= _nextAuto) { Sim.AutomationTick(); _nextAuto += AutoMs; }
+                CountFlow(false);
                 if (Ticks % 10 == 0) TryClaim();
                 if (CheckInvariants) Invariants();
                 if (Trace != null && Ticks % TraceEvery == 0) Trace(Fmt(Elapsed) + " [" + StackText() + "] hand: " + HandText() + " stage " + S.dragon.stage + " quest " + S.quest.idx);
+                SnapFlow();
                 Step();
+                CountFlow(true);
                 string top = _names.Count > 0 ? _names[0] : null;
                 if (top != phase)
                 {
@@ -185,6 +189,82 @@ namespace IdleGrounds.Sim.Tests
         }
 
         sealed class Box<TV> { public TV v; }
+
+        // ================================================================ production share (FlowLedger)
+
+        /// <summary>Length of one production-share window.</summary>
+        public const long ShareWindowMs = 5 * 60000;
+        /// <summary>
+        /// Items produced per window (FlowLedger "produced" deltas), split by who made them:
+        /// <c>hand</c> = during the bot's own actions (harvest swings, attacks); <c>auto</c> = raw items made
+        /// during the world tick (field generators, generator buildings, Automation, disciples, dragon
+        /// scales); <c>crafted</c> = converter outputs made during the world tick.
+        /// </summary>
+        public sealed class ShareWindow { public int run; public long startMs; public long hand, auto, crafted; }
+        public readonly List<ShareWindow> Share = new List<ShareWindow>();
+        public long ProdHand, ProdAuto, ProdCrafted;
+        /// <summary>Raw items made automatically, by item (whole session).</summary>
+        public readonly Dictionary<string, long> AutoByItem = new Dictionary<string, long>();
+        public readonly Dictionary<string, long> HandByItem = new Dictionary<string, long>();
+        long[] _flowSnap = new long[64];
+        int _flowSnapN;
+        HashSet<string> _craftedItems;
+        long _runStartMs;
+
+        void SnapFlow()
+        {
+            var it = S.flow.items;
+            if (_flowSnap.Length < it.Count) Array.Resize(ref _flowSnap, it.Count * 2);
+            for (int i = 0; i < it.Count; i++) _flowSnap[i] = it[i].runProduced;
+            _flowSnapN = it.Count;
+        }
+
+        void CountFlow(bool byHand)
+        {
+            if (_craftedItems == null)
+            {
+                _craftedItems = new HashSet<string>();
+                foreach (var b in Cfg.buildings) foreach (var r in b.recipes) _craftedItems.Add(r.output);
+            }
+            var it = S.flow.items;
+            for (int i = 0; i < it.Count; i++)
+            {
+                long d = it[i].runProduced - (i < _flowSnapN ? _flowSnap[i] : 0);
+                if (d <= 0) continue;
+                var w = CurWindow();
+                string item = it[i].item;
+                if (byHand) { w.hand += d; ProdHand += d; HandByItem[item] = (HandByItem.TryGetValue(item, out long h) ? h : 0) + d; }
+                else if (_craftedItems.Contains(item)) { w.crafted += d; ProdCrafted += d; }
+                else { w.auto += d; ProdAuto += d; AutoByItem[item] = (AutoByItem.TryGetValue(item, out long a) ? a : 0) + d; }
+            }
+        }
+
+        ShareWindow CurWindow()
+        {
+            long t = Elapsed - _runStartMs;
+            long start = _runStartMs + t / ShareWindowMs * ShareWindowMs;
+            if (Share.Count == 0 || Share[Share.Count - 1].startMs != start || Share[Share.Count - 1].run != RunIndex)
+                Share.Add(new ShareWindow { run = RunIndex, startMs = start });
+            return Share[Share.Count - 1];
+        }
+
+        /// <summary>auto ÷ hand over the windows of run <paramref name="run"/> whose start lies in [from, to) of that run's length (fractions).</summary>
+        public double AutoRatio(int run, double from, double to, bool withCrafted = false)
+        {
+            long h = 0, a = 0;
+            long rs = RunStart(run), len = RunLength(run);
+            foreach (var w in Share)
+            {
+                if (w.run != run) continue;
+                double f = len > 0 ? (double)(w.startMs - rs) / len : 0;
+                if (f < from || f >= to) continue;
+                h += w.hand; a += w.auto + (withCrafted ? w.crafted : 0);
+            }
+            return h == 0 ? (a > 0 ? double.PositiveInfinity : 0) : (double)a / h;
+        }
+
+        public long RunStart(int run) => run <= 1 ? 0 : AscendedAt[run - 2];
+        public long RunLength(int run) => run - 1 < AscendedAt.Count ? AscendedAt[run - 1] - RunStart(run) : Elapsed - RunStart(run);
 
         // ================================================================ invariants
 
@@ -263,16 +343,22 @@ namespace IdleGrounds.Sim.Tests
                     yield return null;
                 }
             }
-            // 2. post-tutorial: grow the base
+            // 2. post-tutorial: grow the base — bigger hands, then machines (Automation, generator buildings).
+            //    Veterans skip the tutorial chain, so they wake the dragon to stage 3 first (Forge, Algae Farm, Herb Garden).
+            if (S.dragon.stage < 3) yield return T("dragon stages 1-3", FeedDragon(3));
             yield return T("hand upgrades", Upgrades());
+            yield return T("invest 1", Invest(1));
             yield return T("spirit bridge", BridgeSetup());
+            yield return T("invest 2", Invest(2));
             // 3. awaken the dragon
             yield return T("dragon stage 4", FeedDragon(Cfg.dragonStages.Count));
+            yield return T("invest 3", Invest(3));
             // 4. remaining islands (more AP on ascending; volcano firestone / celestial)
             foreach (var r in Cfg.regions)
                 if (!Sim.World.IsAreaUnlocked(r.key)) yield return T("unlock " + r.key, Unlock(r.key));
             // 5. a dragon pill blessing (Pill Furnace) — exercises the firestone-as-ingredient path
             yield return T("pill", PillBlessing());
+            yield return T("invest 4", Invest(4));
             // 6. raise the Ascension Gate, fill offerings, ascend, buy a perk
             yield return T("gate", RaiseGate());
             yield return T("offerings", Offerings());
@@ -294,9 +380,18 @@ namespace IdleGrounds.Sim.Tests
                 case "dragon2": yield return FeedDragon(2); break;
                 case "iron":
                 {
-                    int need = Math.Max(1, Sim.Dragon.TributeOf(2, "iron_bar"));
+                    // bars already fed to the dragon count: when the tribute is bigger than the hand, feed as you go
                     _keep.Add("iron_bar");
-                    yield return Acquire("iron_bar", need);
+                    var dragon = S.Area(C).buildings.Find(b => b.type == "dragon");
+                    long st = Elapsed;
+                    while (!(Sim.CurrentQuestProgress()?.done ?? true) && Elapsed - st < 30 * 60000)
+                    {
+                        int need = Math.Max(1, Sim.Dragon.TributeOf(2, "iron_bar")) - (S.dragon.stage == 2 ? S.dragon.paid.Get("iron_bar") : 0);
+                        if (need <= Hand.Cap()) { yield return Acquire("iron_bar", need); break; }
+                        yield return Acquire("iron_bar", Hand.Cap());
+                        yield return RotateTo("iron_bar");
+                        yield return Press(C, dragon, () => Hand.Count("iron_bar") == 0);
+                    }
                     _keep.Remove("iron_bar");
                     break;
                 }
@@ -350,6 +445,118 @@ namespace IdleGrounds.Sim.Tests
             yield return BuyUpgrade("hand");
             yield return BuyUpgrade("hand");
             yield return BuyUpgrade("spd_c");
+        }
+
+        // ================================================================ investment (idle-hybrid player)
+
+        /// <summary>
+        /// Off = the old hands-only planner (Hand Size + Regrow Speed only). On (default) = at each phase boundary
+        /// the bot buys the machines an idle-hybrid player would: Automation for the Islands it harvests, the
+        /// speed nodes on the way, and generator buildings (Herb Gardens, an Algae Farm).
+        /// </summary>
+        public bool Invests = true;
+        /// <summary>Altar upgrades / generator buildings bought by <see cref="Invest"/> (for the report).</summary>
+        public readonly List<string> Investments = new List<string>();
+
+        static readonly (int round, string what, int level)[] Plan =
+        {
+            (1, "spd_c", 1), (1, "auto_c", 1), (1, "spd_m", 1), (1, "spd_fi", 1), (1, "auto_m", 1),
+            (1, "build:herb_garden", 2),
+            (2, "auto_m", 2), (2, "auto_c", 2), (2, "spd_f", 1), (2, "act_f", 1), (2, "auto_f", 1), (2, "build:algae_farm", 1), (2, "disciples", 3),
+            (3, "spd_m", 2), (3, "auto_f", 2), (3, "build:herb_garden", 3), (3, "act_c", 1), (3, "quarry", 1),
+            (4, "spd_m", 3), (4, "auto_m", 3),
+        };
+
+        IEnumerator Invest(int round)
+        {
+            if (!Invests) yield break;
+            foreach (var (r, what, level) in Plan)
+            {
+                if (r != round) continue;
+                if (what == "disciples")
+                {
+                    var pav = FindBuilt("meditation_pavilion");
+                    if (pav.b == null) continue;
+                    while (pav.b.disciples < Math.Min(level, Sim.Pavilions.RosterCap(pav.b)))
+                    {
+                        int before = pav.b.disciples;
+                        _keep.Add("robe");
+                        yield return Acquire("robe", 1);
+                        _keep.Remove("robe");
+                        yield return Travel(pav.area);
+                        if (!Sim.RecruitDisciple(pav.area, pav.b.id)) break;
+                        yield return null;
+                        Investments.Add(Fmt(Elapsed) + " disciple #" + pav.b.disciples);
+                    }
+                    continue;
+                }
+                if (what.StartsWith("build:"))
+                {
+                    string type = what.Substring(6);
+                    var def = Cfg.Building(type);
+                    string area = def != null && def.waterOnly ? "fishing" : C;
+                    if (!Sim.World.IsAreaUnlocked(area) || !Sim.IsBuildingUnlocked(type)) continue;
+                    while (CountBuilt(type) < level)
+                    {
+                        int before = CountBuilt(type);
+                        var bx = new Box<Building>();
+                        yield return BuildBuilding(type, area, bx);
+                        if (CountBuilt(type) <= before) break;
+                        Investments.Add(Fmt(Elapsed) + " " + type + " #" + CountBuilt(type));
+                    }
+                    continue;
+                }
+                var nd = Sim.Upgrades.NodeById(what);
+                if (nd == null || !Sim.World.IsAreaUnlocked(nd.area) || !Selectable(what)) continue;
+                while (Sim.UpgradeLevel(nd.area, nd.type).lvl < level)
+                {
+                    int before = Sim.UpgradeLevel(nd.area, nd.type).lvl;
+                    yield return BuyUpgrade(what);
+                    if (Sim.UpgradeLevel(nd.area, nd.type).lvl <= before) break;
+                    Investments.Add(Fmt(Elapsed) + " " + what + " L" + (before + 1));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Spirit Essence: with ≥ 2 disciples the bot keeps their pavilion fed (Spirit Wine from a Brewery) and
+        /// collects what they cultivate; otherwise it hunts a fox by hand.
+        /// </summary>
+        IEnumerator Cultivate()
+        {
+            var pav = FindBuilt("meditation_pavilion");
+            if (pav.b == null || pav.b.disciples < 2) { yield return HuntFox(); yield break; }
+            var roster = Cfg.Building(pav.b.type).roster;
+            if (pav.b.buns < roster.foodCap / 3)
+            {
+                string food = "spirit_wine";
+                int want = Math.Max(1, Math.Min(6, (roster.foodCap - pav.b.buns) / Math.Max(1, Sim.Buildings.FoodValue(pav.b, food))));
+                _keep.Add(food);
+                yield return Acquire(food, want);
+                _keep.Remove(food);
+                if (Hand.Count(food) > 0)
+                {
+                    yield return RotateTo(food);
+                    var b = pav.b;
+                    yield return Press(pav.area, b, () => Hand.Count(food) == 0 || b.buns + Sim.Buildings.FoodValue(b, food) > roster.foodCap);
+                }
+                yield break;
+            }
+            yield return Travel(pav.area);
+            yield return Wait(500, "waiting for disciples");
+        }
+
+        bool Selectable(string id)
+        {
+            foreach (var st in Sim.Upgrades.TreeStates()) if (st.node.id == id) return st.selectable;
+            return false;
+        }
+
+        int CountBuilt(string type)
+        {
+            int n = 0;
+            foreach (var r in Cfg.regions) foreach (var b in S.Area(r.key).buildings) if (b.built && b.type == type) n++;
+            return n;
         }
 
         IEnumerator LinkQuest()
@@ -523,6 +730,7 @@ namespace IdleGrounds.Sim.Tests
             Ascended = true;
             RunsDone++;
             AscendedAt.Add(Elapsed);
+            _runStartMs = Elapsed;
             Log($"ASCENDED (+{reward} AP, total {S.ascendPoints})" + (S.vows.active.Count > 0 ? " — next run vows: " + string.Join(",", S.vows.active) : ""));
             yield return null;
             // perk shop: spend AP on the most useful perks (one level per pass, preference order)
@@ -559,7 +767,7 @@ namespace IdleGrounds.Sim.Tests
             {
                 if (Ticks == lt) { if (++spin == 3) Spin(); yield return null; } else spin = 0;
                 lt = Ticks;
-                if (Elapsed - st > 45 * 60000) { StuckAt(what + " never completed"); yield break; }
+                if (Elapsed - st > 120 * 60000) { StuckAt(what + " never completed"); yield break; }
                 var rem = remaining();
                 if (rem == null || rem.Count == 0) { yield return null; continue; }
                 bool carry = false;
@@ -627,7 +835,7 @@ namespace IdleGrounds.Sim.Tests
                 yield break;
             }
             if (item == "beast_bone") { yield return HuntBoar(); yield break; }
-            if (item == "spirit_essence") { yield return HuntFox(); yield break; }
+            if (item == "spirit_essence") { yield return Cultivate(); yield break; }
             if (IsCrafted(item)) { yield return Craft(item, target); yield break; }
             yield return Gather(item);
         }
@@ -915,7 +1123,15 @@ namespace IdleGrounds.Sim.Tests
             yield return Travel(area);
             var ghost = Sim.PlaceGhost(area, type, spot.Value.r, spot.Value.c);
             yield return null;
-            if (ghost == null) { StuckAt("ghost refused: " + Sim.PlaceReason(area, type, spot.Value.r, spot.Value.c)); yield break; }
+            for (int retry = 0; ghost == null && retry < 5; retry++)
+            {
+                // something moved in while the camera panned (a fish surfacing, a drop): look again
+                spot = FindSpot(area, type, anchorR, anchorC);
+                if (spot == null) break;
+                ghost = Sim.PlaceGhost(area, type, spot.Value.r, spot.Value.c);
+                yield return null;
+            }
+            if (ghost == null) { StuckAt("ghost refused: " + (spot == null ? "no spot" : Sim.PlaceReason(area, type, spot.Value.r, spot.Value.c))); yield break; }
             yield return Deliver(area, ghost, () => Sim.BuildingNeeds(ghost), () => ghost.built, "build " + type);
             res.v = ghost.built ? ghost : null;
         }
@@ -961,7 +1177,7 @@ namespace IdleGrounds.Sim.Tests
             {
                 if (Ticks == lt) { if (++spin == 3) Spin(); yield return null; } else spin = 0;
                 lt = Ticks;
-                if (Elapsed - st > 45 * 60000) { StuckAt("unlock " + k + " never completed"); yield break; }
+                if (Elapsed - st > 120 * 60000) { StuckAt("unlock " + k + " never completed"); yield break; }
                 var rem = Sim.UnlockRemaining(k);
                 if (rem == null) { StuckAt(k + " has no unlock cost"); yield break; }
                 bool carry = false;

@@ -287,7 +287,8 @@ namespace IdleGrounds.Editor
                 used.Add(kv.Key);
             }
             // consumed directly by IslandArtBuilder's Rule Tiles
-            used.Add("island_center_ground_fill");
+            foreach (var biome in new[] { "center", "farm", "mine", "fishing", "volcano", "grove", "celestial" })
+                used.Add("island_" + biome + "_ground_fill");
             used.Add("island_center_path");     // stored, not yet consumed
             used.Add("island_center_plaza");    // stored, not yet consumed
             used.Add("sky_moon");   // Sky/Moon renderer (IslandsBuilder.BuildSky); delivered bytes replace the Art/Sky placeholder

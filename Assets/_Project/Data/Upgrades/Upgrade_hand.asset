@@ -31,15 +31,15 @@ MonoBehaviour:
     costs:
     - items:
       - item: wood
-        qty: 10
+        qty: 30
     - items:
       - item: wood
-        qty: 25
+        qty: 80
       - item: leaves
-        qty: 10
+        qty: 30
     - items:
       - item: cotton
-        qty: 15
-      - item: wood
         qty: 40
+      - item: wood
+        qty: 120
   icon: {fileID: -1315380296, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

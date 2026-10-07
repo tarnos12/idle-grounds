@@ -218,7 +218,7 @@ namespace IdleGrounds.Sim.Tests
             foreach (var b in c2.buildings) if (b.type == "gathering_stone") b.built = false;
             sim2.Tick();
             c2.ground.Clear();
-            clock2.Advance(1800); sim2.Tick();   // clay 300 ms ⇒ 6 events (gap capped by previous tick? first gap = 1800)
+            clock2.Advance(7250); sim2.Tick();   // clay 1200 ms (6000 x TEST 0.2) ⇒ 6 events in one coarse gap
             Assert.AreEqual(6, SimTestUtil.CountGround(c2, "clay"));
         }
 
@@ -228,12 +228,19 @@ namespace IdleGrounds.Sim.Tests
             var sim = SimTestUtil.NewSim(out _);
             var c = sim.State.Area("center");
             var stoneGen = sim.Config.Region("center").generators[1];
-            Assert.AreEqual(300, sim.FieldGenerators.IntervalMs(c, stoneGen), 1e-9);
+            double stoneBase = stoneGen.intervalMs * 0.2;                // TEST timeScale
+            Assert.AreEqual(stoneBase, sim.FieldGenerators.IntervalMs(c, stoneGen), 1e-9);
             c.upgrades.quarry = 1;
             sim.State.perks.Set("bounty", 1);
-            Assert.AreEqual(300 * 0.8 * 0.9, sim.FieldGenerators.IntervalMs(c, stoneGen), 1e-9);
+            Assert.AreEqual(stoneBase * 0.8 * 0.9, sim.FieldGenerators.IntervalMs(c, stoneGen), 1e-9);
             var clayGen = sim.Config.Region("center").generators[0];
-            Assert.AreEqual(300 * 0.9, sim.FieldGenerators.IntervalMs(c, clayGen), 1e-9, "quarry upgrade only on its generator");
+            Assert.AreEqual("quarry", clayGen.upgrade);
+            Assert.AreEqual(clayGen.intervalMs * 0.2 * 0.8 * 0.9, sim.FieldGenerators.IntervalMs(c, clayGen), 1e-9, "clay shares the quarry upgrade");
+            var woodGen = sim.Config.Region("center").generators[2];
+            Assert.AreEqual("speed", woodGen.upgrade);
+            Assert.AreEqual(woodGen.intervalMs * 0.2 * 0.9, sim.FieldGenerators.IntervalMs(c, woodGen), 1e-9, "quarry upgrade only on its generators");
+            c.upgrades.speed = 1;
+            Assert.AreEqual(woodGen.intervalMs * 0.2 * 0.8 * 0.9, sim.FieldGenerators.IntervalMs(c, woodGen), 1e-9);
         }
 
         [Test]

@@ -15,7 +15,7 @@ MonoBehaviour:
   def:
     needs:
     - item: leaves
-      qty: 15
+      qty: 50
     text: "The dragon cracks one eye open\u2026 and teaches you the Forge."
   icon: {fileID: 6168315964129227473, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
   frames:

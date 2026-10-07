@@ -20,9 +20,9 @@ MonoBehaviour:
     sizeH: 1
     cost:
     - item: wood
-      qty: 10
+      qty: 40
     - item: stone
-      qty: 10
+      qty: 40
     unlocked: 0
     stageUnlock: -1
     indestructible: 0
@@ -64,8 +64,12 @@ MonoBehaviour:
       cap: 0
     bridge:
       enabled: 1
-      cap: 20
+      cap: 60
       rateMs: 1000
-      speed: 170
-  icon: {fileID: 449270327, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+      speed: 340
+      carry: 5
+  icon: {fileID: 21300000, guid: 5ad683fdcf89f674abc1b7fb7d3276bd, type: 3}
+  hasRealArt: 0
+  frames: []
+  variants: []
   prefabOverride: {fileID: 0}

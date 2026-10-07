@@ -15,11 +15,11 @@ MonoBehaviour:
   def:
     needs:
     - item: iron_bar
-      qty: 8
+      qty: 24
     - item: algae
-      qty: 15
+      qty: 80
     - item: water
-      qty: 10
+      qty: 80
     text: "The dragon tastes forged iron and rumbles approval. \"You shape the earth
       well, little cultivator. Grow me the herbs of spirit \u2014 I will teach you
       to garden what cannot be farmed.\" (Herb Garden unlocked)"

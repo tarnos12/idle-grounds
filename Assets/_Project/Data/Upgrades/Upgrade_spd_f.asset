@@ -26,17 +26,17 @@ MonoBehaviour:
     costs:
     - items:
       - item: wheat
-        qty: 15
+        qty: 45
       - item: wood
-        qty: 20
+        qty: 60
     - items:
       - item: wheat
-        qty: 40
+        qty: 120
       - item: water
-        qty: 15
+        qty: 45
     - items:
       - item: wheat
-        qty: 80
+        qty: 240
       - item: cotton
-        qty: 20
+        qty: 60
   icon: {fileID: 2036419615, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

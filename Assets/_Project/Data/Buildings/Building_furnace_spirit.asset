@@ -20,9 +20,9 @@ MonoBehaviour:
     sizeH: 1
     cost:
     - item: stone
-      qty: 4
+      qty: 10
     - item: spirit_essence
-      qty: 2
+      qty: 4
     unlocked: 1
     stageUnlock: -1
     indestructible: 0
@@ -67,5 +67,9 @@ MonoBehaviour:
       cap: 20
       rateMs: 1000
       speed: 170
+      carry: 1
   icon: {fileID: -1988414181, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  hasRealArt: 0
+  frames: []
+  variants: []
   prefabOverride: {fileID: 0}

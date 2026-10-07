@@ -88,7 +88,8 @@ namespace IdleGrounds.Sim
     [Serializable]
     public class TestScaling
     {
-        public bool enabled = true;
+        /// <summary>Dev fast mode (ADR 0004: off by default; flip it from the Game layer's dev menu).</summary>
+        public bool enabled = false;
         public double timeScale = 0.2;
         public double costScale = 0.5;
     }
@@ -224,7 +225,9 @@ namespace IdleGrounds.Sim
     [Serializable] public class StokerConfig { public bool enabled; public int radius; public int cap; }
     [Serializable] public class LanternConfig { public bool enabled; public int rateMs; public double speed; }
     /// <summary>Spirit Bridge (ADR 0003): untyped buffer cap; beat + wisp speed base like a lantern.</summary>
-    [Serializable] public class BridgeConfig { public bool enabled; public int cap = 20; public int rateMs = 1000; public double speed = 170; }
+    /// <summary>Spirit Bridge: <c>cap</c> = buffer size (and the receiver's in-flight reservation limit), <c>rateMs</c> = send beat,
+    /// <c>speed</c> = sky wisp px/s, <c>carry</c> = items one sky wisp carries (balance pass 1).</summary>
+    [Serializable] public class BridgeConfig { public bool enabled; public int cap = 20; public int rateMs = 1000; public double speed = 170; public int carry = 1; }
     [Serializable] public class SealConfig { public bool enabled; public int cap; }
     [Serializable] public class GenBuildingConfig { public bool enabled; public string item; public int intervalMs; public int cap; }
 
@@ -428,6 +431,20 @@ namespace IdleGrounds.Sim
         public string versionDesc;
         public int worldCols = 3;
         public int worldRows = 3;
+        // prestige pacing (ADR 0004 / balance pass 1: later runs about as long as the first)
+        /// <summary>World speed gained per ascension: factor 1/(1 + this·ascensions). Was 0.2 (+20%/run).</summary>
+        public double ascensionSpeedPerRun = 0;
+        /// <summary>Eternal Haste: every timer ×this per perk level. Was 0.95.</summary>
+        public double hasteStep = 0.98;
+        /// <summary>Each vow completed at least once: timers ×this. Was 0.96.</summary>
+        public double vowMarkStep = 0.99;
+        /// <summary>Timers ×this once the dragon is awake in the current run (no longer carried into later runs).</summary>
+        public double awakenedSpeed = 0.9;
+        /// <summary>Dragon tributes ×max(floor, 1/(1 + this·ascensions)). Was 0.25 (floor 0.4).</summary>
+        public double tributeShrinkPerRun = 0;
+        public double tributeShrinkFloor = 0.4;
+        /// <summary>Vow of the Restless Dragon: every tribute ×this. Was 2.</summary>
+        public double restlessTributeMult = 1.5;
         // engine.js constants (§0)
         public int groundCap = 600;
         public int groundHardCap = 900;

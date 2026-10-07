@@ -16,6 +16,6 @@ MonoBehaviour:
     key: firestone
     name: Firestone
     emoji: "\U0001F30B"
-    fuelMs: 120000
+    fuelMs: 60000
     sourceHint: "Volcano fire veins \xB7 rare in the Mine"
   icon: {fileID: -1262905009, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

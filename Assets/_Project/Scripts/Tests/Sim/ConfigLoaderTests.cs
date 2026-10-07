@@ -44,11 +44,12 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(52, cfg.balance.versionNum);
             CollectionAssert.AreEqual(new[] { 2, 6, 20 }, cfg.balance.automationClicks);
             CollectionAssert.AreEqual(new[] { 1, 1.15, 1.3, 1.5, 1.75 }, cfg.balance.vowMult);
-            Assert.IsTrue(cfg.test.enabled);
+            Assert.IsFalse(SimTestUtil.LoadDataConfig().test.enabled, "ADR 0004: the data ships with TEST off");
+            Assert.IsTrue(cfg.test.enabled, "unit tests pin TEST scaling");
             Assert.AreEqual(0.2, cfg.test.timeScale, 1e-12);
             Assert.AreEqual(0.5, cfg.test.costScale, 1e-12);
             CollectionAssert.AreEqual(new[] { "wood", "bamboo", "charcoal", "firestone" }, cfg.FuelKeys.ToArray());
-            Assert.AreEqual(120000, cfg.FuelMs("firestone"));
+            Assert.AreEqual(60000, cfg.FuelMs("firestone"));
             Assert.AreEqual(32, cfg.grid.cell);
             Assert.AreEqual(93, cfg.grid.cells);
         }
@@ -75,7 +76,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(8, c.enemies.baitSpawn.hp);
 
             var grove = cfg.Region("grove");
-            CollectionAssert.AreEqual(new[] { "wheat", "wood" }, grove.unlockCost.Select(q => q.item).ToArray());
+            CollectionAssert.AreEqual(new[] { "wood", "algae" }, grove.unlockCost.Select(q => q.item).ToArray());
             CollectionAssert.AreEqual(new[] { "centre" }, cfg.Region("mine").noBuild);
             Assert.AreEqual(3, cfg.Region("fishing").surfaceWindow);
             var mine = cfg.Region("mine");

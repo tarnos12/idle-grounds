@@ -84,7 +84,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(2, ja.n); Assert.AreEqual(expectedAp, ja.ap);
             Assert.AreEqual(speedFrom, ja.speedFrom, 1e-9);
             Assert.AreEqual(1 / sim.Timing.PrestigeFactor(N), ja.speedTo, 1e-9);
-            Assert.Greater(ja.speedTo, ja.speedFrom, "new burden mark + ascension");
+            Assert.Less(ja.speedTo, ja.speedFrom, "the awakened-dragon bonus ends with the run (ascensions themselves no longer speed it)");
             Assert.AreSame(ja, N.justAscended);
             for (int i = 0; i < 100; i++) { clock.Advance(50); sim.Tick(); }   // the fresh run ticks
         }
@@ -114,7 +114,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.IsNull(sim.PerkCost("haste"));
             Assert.IsFalse(sim.BuyPerk("haste"));
             Assert.AreEqual(100 - spent, S.ascendPoints);
-            Assert.AreEqual(Math.Pow(0.95, def.max), sim.Timing.PrestigeFactor(S), 1e-12);
+            Assert.AreEqual(Math.Pow(sim.Config.balance.hasteStep, def.max), sim.Timing.PrestigeFactor(S), 1e-12);
             // every configured perk is buyable once
             foreach (var p in sim.Config.perks) if (p.id != "haste") Assert.IsTrue(sim.BuyPerk(p.id), p.id);
         }

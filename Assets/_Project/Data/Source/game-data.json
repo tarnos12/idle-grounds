@@ -215,14 +215,15 @@
           "kind": "clay",
           "zone": "clayField",
           "item": "clay",
-          "intervalMs": 1500,
-          "cap": 10
+          "intervalMs": 6000,
+          "cap": 10,
+          "upgrade": "quarry"
         },
         {
           "kind": "stone",
           "zone": "quarryField",
           "item": "stone",
-          "intervalMs": 1500,
+          "intervalMs": 6000,
           "cap": 10,
           "upgrade": "quarry",
           "rareDrop": {
@@ -234,8 +235,9 @@
           "kind": "wood",
           "zone": "woodField",
           "item": "wood",
-          "intervalMs": 3000,
-          "cap": 10
+          "intervalMs": 8000,
+          "cap": 10,
+          "upgrade": "speed"
         }
       ],
       "enemies": {
@@ -325,8 +327,9 @@
           "kind": "sand",
           "zone": "sandField",
           "item": "sand",
-          "intervalMs": 1500,
-          "cap": 10
+          "intervalMs": 4000,
+          "cap": 10,
+          "upgrade": "speed"
         }
       ],
       "tiers": [
@@ -360,7 +363,7 @@
             1,
             2
           ],
-          "target": 10,
+          "target": 7,
           "interaction": "break",
           "useTiers": true,
           "swingMs": 450,
@@ -375,7 +378,7 @@
           "sizes": [
             2
           ],
-          "target": 2,
+          "target": 3,
           "interaction": "break",
           "swingMs": 500,
           "sprite": "⛓️",
@@ -493,8 +496,9 @@
           "kind": "water",
           "zone": "springField",
           "item": "water",
-          "intervalMs": 2000,
-          "cap": 10
+          "intervalMs": 4000,
+          "cap": 10,
+          "upgrade": "speed"
         }
       ],
       "tiers": [
@@ -892,7 +896,7 @@
       "name": "Workbench",
       "icon": "🛠️",
       "cost": {
-        "wood": 8
+        "wood": 20
       },
       "unlocked": true,
       "recipes": [
@@ -921,8 +925,8 @@
       "name": "Kiln",
       "icon": "🏺",
       "cost": {
-        "wood": 10,
-        "clay": 5
+        "wood": 25,
+        "clay": 20
       },
       "unlocked": true,
       "fuel": true,
@@ -964,8 +968,8 @@
       "name": "Paper Mill",
       "icon": "📜",
       "cost": {
-        "wood": 10,
-        "stone": 5
+        "wood": 25,
+        "stone": 20
       },
       "unlocked": true,
       "recipes": [
@@ -985,8 +989,8 @@
       "name": "Infusion Array",
       "icon": "🔮",
       "cost": {
-        "stone": 10,
-        "spirit_essence": 5
+        "stone": 30,
+        "spirit_essence": 8
       },
       "unlocked": true,
       "recipes": [
@@ -1016,8 +1020,8 @@
       "name": "Loom",
       "icon": "🧵",
       "cost": {
-        "wood": 10,
-        "plank": 4
+        "wood": 30,
+        "plank": 10
       },
       "unlocked": true,
       "recipes": [
@@ -1056,8 +1060,8 @@
       "name": "Mill",
       "icon": "🌾",
       "cost": {
-        "wood": 8,
-        "stone": 6
+        "wood": 25,
+        "stone": 20
       },
       "unlocked": true,
       "recipes": [
@@ -1086,8 +1090,8 @@
       "name": "Brewery",
       "icon": "🍶",
       "cost": {
-        "wood": 8,
-        "clay": 6
+        "wood": 25,
+        "clay": 20
       },
       "unlocked": true,
       "recipes": [
@@ -1108,8 +1112,8 @@
       "name": "Cauldron",
       "icon": "⚗️",
       "cost": {
-        "stone": 8,
-        "iron_bar": 2
+        "stone": 30,
+        "iron_bar": 6
       },
       "unlocked": true,
       "recipes": [
@@ -1161,8 +1165,8 @@
       "name": "Jade Carver",
       "icon": "🗿",
       "cost": {
-        "wood": 6,
-        "stone": 8
+        "wood": 20,
+        "stone": 30
       },
       "unlocked": true,
       "recipes": [
@@ -1181,9 +1185,9 @@
       "name": "Pill Furnace",
       "icon": "🫕",
       "cost": {
-        "brick": 6,
-        "iron_bar": 4,
-        "tools": 2
+        "brick": 40,
+        "iron_bar": 20,
+        "tools": 6
       },
       "unlocked": true,
       "fuel": true,
@@ -1238,9 +1242,9 @@
       "name": "Star Anvil",
       "icon": "⚒️",
       "cost": {
-        "iron_bar": 6,
-        "tools": 3,
-        "glass": 2
+        "iron_bar": 60,
+        "tools": 16,
+        "glass": 20
       },
       "unlocked": true,
       "fuel": true,
@@ -1276,9 +1280,9 @@
       "name": "Talisman Atelier",
       "icon": "🖌️",
       "cost": {
-        "plank": 6,
-        "jade": 2,
-        "glass": 2
+        "plank": 60,
+        "jade": 16,
+        "glass": 16
       },
       "unlocked": true,
       "recipes": [
@@ -1299,9 +1303,9 @@
       "name": "Dragon Shrine",
       "icon": "🐲",
       "cost": {
-        "brick": 10,
-        "cloth": 8,
-        "obsidian": 4
+        "brick": 30,
+        "cloth": 20,
+        "obsidian": 15
       },
       "unlocked": true,
       "shrine": true
@@ -1316,17 +1320,17 @@
       "unlocked": true,
       "gate": true,
       "cost": {
-        "talisman": 3,
-        "star_steel": 3,
-        "dragon_scale": 3
+        "talisman": 14,
+        "star_steel": 20,
+        "dragon_scale": 6
       }
     },
     "charcoal_pit": {
       "name": "Charcoal Pit",
       "icon": "🕳️",
       "cost": {
-        "stone": 6,
-        "clay": 4
+        "stone": 20,
+        "clay": 15
       },
       "unlocked": true,
       "recipes": [
@@ -1350,8 +1354,8 @@
       },
       "anyZone": true,
       "cost": {
-        "stone": 4,
-        "spirit_essence": 2
+        "stone": 10,
+        "spirit_essence": 4
       },
       "unlocked": true,
       "stoker": {
@@ -1363,19 +1367,19 @@
       "name": "Meditation Pavilion",
       "icon": "🧘",
       "cost": {
-        "plank": 6,
-        "cloth": 4,
-        "rope": 2
+        "plank": 16,
+        "cloth": 8,
+        "rope": 4
       },
       "unlocked": true,
       "roster": {
         "cap": 3,
         "recruit": "robe",
         "food": "spirit_buns",
-        "foodCap": 20,
+        "foodCap": 60,
         "foodValues": {
-          "spirit_buns": 1,
-          "spirit_wine": 3
+          "spirit_buns": 3,
+          "spirit_wine": 8
         },
         "produce": "spirit_essence",
         "produceMs": 6000
@@ -1385,8 +1389,8 @@
       "name": "Forge",
       "icon": "🔥",
       "cost": {
-        "wood": 5,
-        "stone": 10
+        "wood": 20,
+        "stone": 40
       },
       "unlocked": false,
       "stageUnlock": 1,
@@ -1411,7 +1415,7 @@
       "name": "Storehouse",
       "icon": "📦",
       "cost": {
-        "wood": 12
+        "wood": 30
       },
       "cap": 200,
       "unlocked": true
@@ -1420,8 +1424,8 @@
       "name": "Algae Farm",
       "icon": "🪸",
       "cost": {
-        "wood": 12,
-        "algae": 6
+        "wood": 40,
+        "algae": 20
       },
       "unlocked": false,
       "stageUnlock": 2,
@@ -1436,15 +1440,15 @@
       "name": "Herb Garden",
       "icon": "🪴",
       "cost": {
-        "wood": 10,
-        "water": 5,
-        "clay": 5
+        "wood": 40,
+        "water": 20,
+        "clay": 20
       },
       "unlocked": false,
       "stageUnlock": 3,
       "gen": {
         "item": "spirit_herb",
-        "intervalMs": 2500,
+        "intervalMs": 6000,
         "cap": 24
       }
     },
@@ -1457,7 +1461,7 @@
       },
       "anyZone": true,
       "cost": {
-        "stone": 5
+        "stone": 12
       },
       "unlocked": true,
       "gather": {
@@ -1474,8 +1478,8 @@
       },
       "anyZone": true,
       "cost": {
-        "wood": 5,
-        "stone": 5
+        "wood": 12,
+        "stone": 12
       },
       "unlocked": true,
       "lantern": {
@@ -1492,8 +1496,8 @@
       },
       "anyZone": true,
       "cost": {
-        "wood": 3,
-        "stone": 3
+        "wood": 8,
+        "stone": 8
       },
       "unlocked": true,
       "seal": {
@@ -1509,43 +1513,44 @@
       },
       "anyZone": true,
       "cost": {
-        "wood": 10,
-        "stone": 10
+        "wood": 40,
+        "stone": 40
       },
       "bridge": {
-        "cap": 20,
+        "cap": 60,
         "rateMs": 1000,
-        "speed": 170
+        "speed": 340,
+        "carry": 5
       }
     }
   },
   "DRAGON_STAGES": [
     {
       "needs": {
-        "leaves": 15
+        "leaves": 50
       },
       "text": "The dragon cracks one eye open… and teaches you the Forge."
     },
     {
       "needs": {
-        "stone": 25,
-        "clay": 10
+        "stone": 120,
+        "clay": 60
       },
       "text": "The dragon yawns a plume of steam… and teaches you the Algae Farm."
     },
     {
       "needs": {
-        "iron_bar": 8,
-        "algae": 15,
-        "water": 10
+        "iron_bar": 24,
+        "algae": 80,
+        "water": 80
       },
       "text": "The dragon tastes forged iron and rumbles approval. \"You shape the earth well, little cultivator. Grow me the herbs of spirit — I will teach you to garden what cannot be farmed.\" (Herb Garden unlocked)"
     },
     {
       "needs": {
-        "spirit_herb": 20,
-        "spirit_essence": 15,
-        "iron_bar": 5
+        "spirit_herb": 450,
+        "spirit_essence": 180,
+        "iron_bar": 70
       },
       "text": "The dragon breathes in the herbs, the essence, the iron — and OPENS ITS EYES. \"I dreamed a thousand years, and you woke me with patience, not swords. Cultivate on, little one. I will watch over these grounds.\" 🐲 THE DRAGON IS AWAKE."
     }
@@ -1618,25 +1623,25 @@
     },
     "unlockCost": {
       "farm": {
-        "wood": 10
+        "wood": 50
       },
       "mine": {
-        "wood": 16
+        "wood": 80
       },
       "fishing": {
-        "wood": 20
+        "wood": 120
       },
       "volcano": {
-        "iron_bar": 3
+        "iron_bar": 60
       },
       "grove": {
-        "wheat": 12,
-        "wood": 8
+        "wood": 150,
+        "algae": 100
       },
       "celestial": {
-        "spirit_stone": 6,
-        "jade": 3,
-        "glass": 3
+        "spirit_stone": 40,
+        "jade": 20,
+        "obsidian": 60
       }
     },
     "islands": {
@@ -1676,10 +1681,10 @@
     "3": 20
   },
   "FUEL": {
-    "wood": 10000,
-    "bamboo": 6000,
-    "charcoal": 40000,
-    "firestone": 120000
+    "wood": 5000,
+    "bamboo": 3000,
+    "charcoal": 20000,
+    "firestone": 60000
   },
   "FUEL_CAP": 60000,
   "FUEL_SLOTS": 6,
@@ -1703,15 +1708,15 @@
       ],
       "costs": [
         {
-          "wood": 10
+          "wood": 30
         },
         {
-          "wood": 25,
-          "leaves": 10
+          "wood": 80,
+          "leaves": 30
         },
         {
-          "cotton": 15,
-          "wood": 40
+          "cotton": 40,
+          "wood": 120
         }
       ]
     },
@@ -1729,16 +1734,16 @@
       ],
       "costs": [
         {
-          "wood": 40,
-          "spirit_stone": 1
+          "wood": 120,
+          "spirit_stone": 3
         },
         {
-          "spirit_stone": 3,
-          "plank": 8
+          "spirit_stone": 8,
+          "plank": 24
         },
         {
-          "spirit_stone": 6,
-          "brick": 8
+          "spirit_stone": 16,
+          "brick": 24
         }
       ]
     },
@@ -1756,16 +1761,16 @@
       ],
       "costs": [
         {
-          "qi_elixir": 2,
-          "wood": 40
+          "qi_elixir": 4,
+          "wood": 120
         },
         {
-          "spirit_stone": 3,
-          "qi_elixir": 3
+          "spirit_stone": 8,
+          "qi_elixir": 8
         },
         {
-          "spirit_jade": 1,
-          "qi_elixir": 5
+          "spirit_jade": 3,
+          "qi_elixir": 12
         }
       ]
     },
@@ -1781,16 +1786,16 @@
       "links": [],
       "costs": [
         {
-          "robe": 2,
-          "spirit_stone": 2
+          "robe": 4,
+          "spirit_stone": 6
         },
         {
-          "spirit_stone": 4,
-          "spirit_buns": 20
+          "spirit_stone": 12,
+          "spirit_buns": 40
         },
         {
-          "spirit_jade": 2,
-          "robe": 5
+          "spirit_jade": 5,
+          "robe": 10
         }
       ]
     },
@@ -1808,15 +1813,15 @@
       ],
       "costs": [
         {
-          "wood": 20
+          "wood": 60
         },
         {
-          "wood": 50,
-          "leaves": 15
+          "wood": 150,
+          "leaves": 45
         },
         {
-          "wood": 120,
-          "spirit_essence": 10
+          "wood": 300,
+          "spirit_essence": 25
         }
       ]
     },
@@ -1834,16 +1839,16 @@
       ],
       "costs": [
         {
-          "wood": 60,
-          "stone": 30
+          "wood": 150,
+          "stone": 80
         },
         {
-          "stone": 120,
-          "clay": 40
+          "stone": 300,
+          "clay": 120
         },
         {
-          "iron_ore": 40,
-          "spirit_essence": 20
+          "iron_ore": 100,
+          "spirit_essence": 50
         }
       ]
     },
@@ -1859,16 +1864,16 @@
       "links": [],
       "costs": [
         {
-          "fish": 10,
-          "algae": 15
+          "fish": 30,
+          "algae": 40
         },
         {
-          "algae": 40,
-          "wood": 30
+          "algae": 100,
+          "wood": 90
         },
         {
-          "fish": 40,
-          "iron_ore": 15
+          "fish": 100,
+          "iron_ore": 40
         }
       ]
     },
@@ -1886,16 +1891,16 @@
       ],
       "costs": [
         {
-          "wood": 15,
-          "stone": 5
+          "wood": 45,
+          "stone": 15
         },
         {
-          "stone": 40,
-          "leaves": 20
+          "stone": 120,
+          "leaves": 60
         },
         {
-          "stone": 80,
-          "spirit_essence": 15
+          "stone": 240,
+          "spirit_essence": 40
         }
       ]
     },
@@ -1913,16 +1918,16 @@
       ],
       "costs": [
         {
-          "wood": 20,
-          "stone": 10
+          "wood": 60,
+          "stone": 30
         },
         {
-          "stone": 50,
-          "clay": 20
+          "stone": 150,
+          "clay": 60
         },
         {
-          "stone": 100,
-          "water": 25
+          "stone": 300,
+          "water": 75
         }
       ]
     },
@@ -1938,15 +1943,15 @@
       "links": [],
       "costs": [
         {
-          "stone": 30
+          "stone": 90
         },
         {
-          "stone": 60,
-          "clay": 25
+          "stone": 180,
+          "clay": 75
         },
         {
-          "iron_ore": 30,
-          "clay": 50
+          "iron_ore": 90,
+          "clay": 150
         }
       ]
     },
@@ -1964,16 +1969,16 @@
       ],
       "costs": [
         {
-          "wheat": 15,
-          "wood": 20
+          "wheat": 45,
+          "wood": 60
         },
         {
-          "wheat": 40,
-          "water": 15
+          "wheat": 120,
+          "water": 45
         },
         {
-          "wheat": 80,
-          "cotton": 20
+          "wheat": 240,
+          "cotton": 60
         }
       ]
     },
@@ -1991,15 +1996,15 @@
       ],
       "costs": [
         {
-          "wheat": 25
+          "wheat": 75
         },
         {
-          "wheat": 50,
-          "sand": 15
+          "wheat": 150,
+          "sand": 45
         },
         {
-          "cotton": 25,
-          "water": 20
+          "cotton": 75,
+          "water": 60
         }
       ]
     },
@@ -2015,17 +2020,17 @@
       "links": [],
       "costs": [
         {
-          "wheat": 60,
-          "wood": 40
+          "wheat": 150,
+          "wood": 120
         },
         {
-          "wheat": 120,
-          "cotton": 30
+          "wheat": 300,
+          "cotton": 80
         },
         {
-          "cotton": 60,
-          "water": 40,
-          "iron_ore": 20
+          "cotton": 150,
+          "water": 100,
+          "iron_ore": 50
         }
       ]
     },
@@ -2043,16 +2048,16 @@
       ],
       "costs": [
         {
-          "stone": 25,
-          "wood": 20
+          "stone": 75,
+          "wood": 60
         },
         {
-          "stone": 60,
-          "clay": 30
+          "stone": 180,
+          "clay": 90
         },
         {
-          "iron_ore": 25,
-          "water": 20
+          "iron_ore": 75,
+          "water": 60
         }
       ]
     },
@@ -2070,16 +2075,16 @@
       ],
       "costs": [
         {
-          "fish": 10,
-          "wood": 20
-        },
-        {
-          "algae": 30,
-          "clay": 20
-        },
-        {
           "fish": 30,
-          "water": 30
+          "wood": 60
+        },
+        {
+          "algae": 90,
+          "clay": 60
+        },
+        {
+          "fish": 90,
+          "water": 90
         }
       ]
     },
@@ -2095,17 +2100,17 @@
       "links": [],
       "costs": [
         {
-          "stone": 80,
-          "clay": 30
+          "stone": 200,
+          "clay": 80
         },
         {
-          "iron_ore": 30,
-          "stone": 100
+          "iron_ore": 80,
+          "stone": 300
         },
         {
-          "iron_ore": 60,
-          "water": 30,
-          "algae": 30
+          "iron_ore": 150,
+          "water": 80,
+          "algae": 80
         }
       ]
     },
@@ -2123,16 +2128,16 @@
       ],
       "costs": [
         {
-          "leaves": 25,
-          "wood": 15
+          "leaves": 75,
+          "wood": 45
         },
         {
-          "spirit_essence": 10,
-          "wood": 40
+          "spirit_essence": 30,
+          "wood": 120
         },
         {
-          "spirit_essence": 25,
-          "iron_bar": 5
+          "spirit_essence": 75,
+          "iron_bar": 15
         }
       ]
     },
@@ -2150,16 +2155,16 @@
       ],
       "costs": [
         {
-          "spirit_essence": 5,
-          "stone": 20
-        },
-        {
           "spirit_essence": 15,
-          "iron_ore": 10
+          "stone": 60
         },
         {
-          "spirit_essence": 30,
-          "iron_bar": 8
+          "spirit_essence": 45,
+          "iron_ore": 30
+        },
+        {
+          "spirit_essence": 90,
+          "iron_bar": 24
         }
       ]
     },
@@ -2175,16 +2180,16 @@
       "links": [],
       "costs": [
         {
-          "spirit_essence": 12,
-          "water": 10
+          "spirit_essence": 36,
+          "water": 30
         },
         {
-          "spirit_essence": 25,
-          "iron_bar": 5
+          "spirit_essence": 75,
+          "iron_bar": 15
         },
         {
-          "spirit_essence": 50,
-          "iron_bar": 12
+          "spirit_essence": 150,
+          "iron_bar": 36
         }
       ]
     }
@@ -2624,7 +2629,7 @@
         5,
         8
       ],
-      "desc": "-5% to every timer in the world (regrow, batches, wisp beats, fields, foxes, your swings). Stacks with the +20% world speed per ascension."
+      "desc": "-2% to every timer in the world (regrow, batches, wisp beats, fields, foxes, your swings)."
     },
     {
       "id": "hall",
@@ -2802,7 +2807,7 @@
     }
   ],
   "TEST": {
-    "ENABLED": true,
+    "ENABLED": false,
     "timeScale": 0.2,
     "costScale": 0.5
   },
@@ -2827,7 +2832,7 @@
       "id": "restless",
       "name": "Vow of the Restless Dragon",
       "icon": "🐉",
-      "desc": "Every dragon tribute is doubled."
+      "desc": "Every dragon tribute is raised by half."
     },
     {
       "id": "solitude",

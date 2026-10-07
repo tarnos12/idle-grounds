@@ -61,13 +61,18 @@ namespace IdleGrounds.Sim
             return n;
         }
 
-        /// <summary>`prestigeFactor(o)` engine.js:274 (§2.5). Pass ascensions/marks to preview.</summary>
+        /// <summary>
+        /// `prestigeFactor(o)` engine.js:274 (§2.5), retuned by balance pass 1 (ADR 0004): no world speed per
+        /// ascension, Eternal Haste −2%/level, vow marks −1% each, the awakened dragon −10% for the rest of
+        /// that run only. Pass ascensions/marks to preview.
+        /// </summary>
         public double PrestigeFactor(GameState s, int? ascensions = null, int? marks = null)
         {
             int asc = ascensions ?? s.ascensions;
             int mk = marks ?? VowMarks(s, false);
-            return 1.0 / (1 + 0.2 * asc) * Math.Pow(0.95, s.PerkLevel("haste"))
-                   * (s.won || s.dragonBlessed ? 0.9 : 1) * Math.Pow(0.96, mk);
+            var b = _cfg.balance;
+            return 1.0 / (1 + b.ascensionSpeedPerRun * asc) * Math.Pow(b.hasteStep, s.PerkLevel("haste"))
+                   * (s.won ? b.awakenedSpeed : 1) * Math.Pow(b.vowMarkStep, mk);
         }
 
         public double NextPrestigeFactor(GameState s) => PrestigeFactor(s, s.ascensions + 1, VowMarks(s, true));

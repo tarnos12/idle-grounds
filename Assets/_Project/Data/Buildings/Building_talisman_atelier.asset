@@ -20,11 +20,11 @@ MonoBehaviour:
     sizeH: 3
     cost:
     - item: plank
-      qty: 6
+      qty: 60
     - item: jade
-      qty: 2
+      qty: 16
     - item: glass
-      qty: 2
+      qty: 16
     unlocked: 1
     stageUnlock: -1
     indestructible: 0
@@ -81,5 +81,9 @@ MonoBehaviour:
       cap: 20
       rateMs: 1000
       speed: 170
+      carry: 1
   icon: {fileID: -431649843, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  hasRealArt: 0
+  frames: []
+  variants: []
   prefabOverride: {fileID: 0}

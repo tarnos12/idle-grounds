@@ -32,7 +32,7 @@ MonoBehaviour:
     unlockSide: up
     unlockCost:
     - item: iron_bar
-      qty: 3
+      qty: 60
     tiers:
     - name: Obsidian
       hits: 3
@@ -109,5 +109,9 @@ MonoBehaviour:
   sprites:
   - key: node_obsidian
     sprite: {fileID: 2032171820, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0
   - key: node_firevein
     sprite: {fileID: -1155112939, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0

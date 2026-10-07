@@ -31,10 +31,10 @@ MonoBehaviour:
     islandRow: 131
     unlockSide: down-left
     unlockCost:
-    - item: wheat
-      qty: 12
     - item: wood
-      qty: 8
+      qty: 150
+    - item: algae
+      qty: 100
     tiers:
     - name: Spirit Herb
       hits: 2
@@ -114,5 +114,9 @@ MonoBehaviour:
   sprites:
   - key: node_herbbush
     sprite: {fileID: -777932761, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0
   - key: node_bamboostalk
     sprite: {fileID: 1344160190, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+    frames: []
+    realArt: 0

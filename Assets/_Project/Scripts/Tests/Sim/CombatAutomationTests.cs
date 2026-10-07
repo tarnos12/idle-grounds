@@ -53,14 +53,14 @@ namespace IdleGrounds.Sim.Tests
             var sim = SimTestUtil.NewSim(out var clock);
             var c = sim.State.Area("center");
             c.upgrades.enemyCap = 2;
-            sim.State.ascensions = 1;                          // prestigeFactor = 1/1.2
+            sim.State.perks.Set("haste", 4);                  // prestigeFactor = hasteStep^4
             sim.Tick();
             Assert.AreEqual(3, Foxes(c).Count, "cap 1 + Spirit Call 2");
             double t0 = clock.NowMs;
             foreach (var f in Foxes(c)) Kill(sim, f);
             Assert.AreEqual(3, sim.State.stats.foxKills);
             Assert.AreEqual(3, c.enemyRespawns.Count);
-            foreach (var at in c.enemyRespawns) Assert.AreEqual(t0 + 1200 / 1.2, at, 1e-6);
+            foreach (var at in c.enemyRespawns) Assert.AreEqual(t0 + 1200 * System.Math.Pow(sim.Config.balance.hasteStep, 4), at, 1e-6);
             // one coarse (offline-style) tick long after: every due slot fills
             clock.Advance(10_000); sim.Tick();
             Assert.AreEqual(3, Foxes(c).Count);

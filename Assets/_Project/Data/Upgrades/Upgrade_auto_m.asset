@@ -25,19 +25,19 @@ MonoBehaviour:
     costs:
     - items:
       - item: stone
-        qty: 80
+        qty: 200
       - item: clay
-        qty: 30
+        qty: 80
     - items:
       - item: iron_ore
-        qty: 30
+        qty: 80
       - item: stone
-        qty: 100
+        qty: 300
     - items:
       - item: iron_ore
-        qty: 60
+        qty: 150
       - item: water
-        qty: 30
+        qty: 80
       - item: algae
-        qty: 30
+        qty: 80
   icon: {fileID: -826149223, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

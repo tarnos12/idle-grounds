@@ -27,17 +27,17 @@ MonoBehaviour:
     costs:
     - items:
       - item: wood
-        qty: 60
+        qty: 150
       - item: stone
-        qty: 30
+        qty: 80
     - items:
       - item: stone
-        qty: 120
+        qty: 300
       - item: clay
-        qty: 40
+        qty: 120
     - items:
       - item: iron_ore
-        qty: 40
+        qty: 100
       - item: spirit_essence
-        qty: 20
+        qty: 50
   icon: {fileID: -1770687433, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

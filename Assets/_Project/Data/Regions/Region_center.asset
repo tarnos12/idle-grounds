@@ -98,16 +98,16 @@ MonoBehaviour:
     - kind: clay
       zone: clayField
       item: clay
-      intervalMs: 1500
+      intervalMs: 6000
       cap: 10
-      upgrade: 
+      upgrade: quarry
       rareDrop:
         item: 
         chance: 0
     - kind: stone
       zone: quarryField
       item: stone
-      intervalMs: 1500
+      intervalMs: 6000
       cap: 10
       upgrade: quarry
       rareDrop:
@@ -116,9 +116,9 @@ MonoBehaviour:
     - kind: wood
       zone: woodField
       item: wood
-      intervalMs: 3000
+      intervalMs: 8000
       cap: 10
-      upgrade: 
+      upgrade: speed
       rareDrop:
         item: 
         chance: 0

@@ -20,11 +20,11 @@ MonoBehaviour:
     sizeH: 3
     cost:
     - item: plank
-      qty: 6
+      qty: 16
     - item: cloth
-      qty: 4
+      qty: 8
     - item: rope
-      qty: 2
+      qty: 4
     unlocked: 1
     stageUnlock: -1
     indestructible: 0
@@ -55,12 +55,12 @@ MonoBehaviour:
       cap: 3
       recruit: robe
       food: spirit_buns
-      foodCap: 20
+      foodCap: 60
       foodValues:
       - item: spirit_buns
-        qty: 1
-      - item: spirit_wine
         qty: 3
+      - item: spirit_wine
+        qty: 8
       produce: spirit_essence
       produceMs: 6000
     gen:
@@ -73,5 +73,9 @@ MonoBehaviour:
       cap: 20
       rateMs: 1000
       speed: 170
+      carry: 1
   icon: {fileID: -379178059, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  hasRealArt: 0
+  frames: []
+  variants: []
   prefabOverride: {fileID: 0}
