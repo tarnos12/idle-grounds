@@ -16,7 +16,7 @@ MonoBehaviour:
     id: dragon1
     icon: "\U0001F409"
     name: Wake the sleeper
-    desc: "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click
+    desc: "Carry leaves to the Sleeping Dragon (top-left of the Center) and RIGHT-click
       it to feed its tribute until it stirs \u2014 the dragon teaches you the Forge."
     goalKind: 3
     goalItem: 

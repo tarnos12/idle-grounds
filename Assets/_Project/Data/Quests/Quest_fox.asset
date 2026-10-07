@@ -16,8 +16,8 @@ MonoBehaviour:
     id: fox
     icon: "\U0001F98A"
     name: Fox hunt
-    desc: "A Fox Spirit prowls the red zone (top-right corner). Click it until it
-      falls \u2014 hold left-click to auto-attack. It drops Spirit Essence."
+    desc: "A Fox Spirit prowls the red zone (top-right of the Center). Click it until
+      it falls \u2014 hold left-click to auto-attack. It drops Spirit Essence."
     goalKind: 4
     goalItem: 
     goalStat: foxKills

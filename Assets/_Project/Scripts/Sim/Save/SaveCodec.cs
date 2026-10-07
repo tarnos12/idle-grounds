@@ -291,6 +291,32 @@ namespace IdleGrounds.Sim
 
         static bool Finite(double d) => !double.IsNaN(d) && !double.IsInfinity(d);
 
+        /// <summary>
+        /// Quest ids of earlier QUEST_CHAIN stamps, in chain order. Chain 2 = the original 14-quest tutorial
+        /// (before the Island onboarding quests bridge / caravan / wine were inserted; chain 3).
+        /// </summary>
+        public static readonly Dictionary<int, string[]> LegacyQuestChains = new Dictionary<int, string[]>
+        {
+            [2] = new[] { "wood", "leaves", "dragon1", "fox", "build", "upgrade", "link", "explore", "dragon2", "iron", "waters", "dragon3", "weaver", "cultivate" },
+        };
+
+        /// <summary>
+        /// Quest cursor of a non-veteran save stamped with an older, known chain: the same quest by id in the
+        /// current chain (a player mid-way keeps their place — quests inserted before it are skipped, never
+        /// replayed); a finished old chain stays finished. False = unknown chain / id (caller clamps).
+        /// </summary>
+        public static bool RemapQuestIdx(int oldChain, int oldIdx, GameConfig cfg, out int idx)
+        {
+            idx = 0;
+            if (!LegacyQuestChains.TryGetValue(oldChain, out var ids)) return false;
+            if (oldIdx >= ids.Length) { idx = cfg.quests.Count; return true; }
+            if (oldIdx < 0) return false;
+            int j = cfg.QuestIndex(ids[oldIdx]);
+            if (j < 0) return false;
+            idx = j;
+            return true;
+        }
+
         // ================================================================
         // sanitisation (§1.5) — runs on every load; idempotent
         // ================================================================
@@ -395,10 +421,11 @@ namespace IdleGrounds.Sim
             // quest cursor (chain stamp mismatch: a veteran skips to the end)
             s.quest ??= new QuestState();
             bool legacyChain = s.quest.chain != cfg.balance.questChain;
+            int oldChain = s.quest.chain;
             s.quest.chain = cfg.balance.questChain;
-            s.quest.idx = legacyChain && (s.ascensions > 0 || s.won)
-                ? cfg.quests.Count
-                : Math.Max(0, Math.Min(s.quest.idx, cfg.quests.Count));
+            if (legacyChain && (s.ascensions > 0 || s.won)) s.quest.idx = cfg.quests.Count;
+            else if (legacyChain && RemapQuestIdx(oldChain, s.quest.idx, cfg, out int remapped)) s.quest.idx = remapped;
+            else s.quest.idx = Math.Max(0, Math.Min(s.quest.idx, cfg.quests.Count));
 
             // build-menu reveal
             var bt = new List<string>();

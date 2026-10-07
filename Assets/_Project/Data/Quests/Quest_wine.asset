@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d18d59f7bc077ff4ba7165aeb913877e, type: 3}
+  m_Name: Quest_wine
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.Data.QuestAsset
+  def:
+    id: wine
+    icon: "\U0001F376"
+    name: Wine of three shores
+    desc: "Disciples get hungry. Build a Brewery (B) in the Center and brew 3 Spirit
+      Wine from Rice (Farm), Spring Water (Fishing \u2014 bridge it over) and Leaves
+      (Center), then right-click the wine into the Meditation Pavilion to feed them."
+    goalKind: 9
+    goalItem: spirit_wine
+    goalStat: 
+    goalStage: 0
+    goalNeed: 3
+    goalRegions: []
+    goalItems: []
+    goalSource: '() => ({ cur: window.ENGINE.runProduced("spirit_wine"), need: 3
+      })'
+    rewardReveal: []
+    rewardItems:
+    - item: spirit_herb
+      qty: 3
+    builds:
+    - brewery
+    target:
+      area: center
+      kind: building
+      id: brewery
+  icon: {fileID: -618722706, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

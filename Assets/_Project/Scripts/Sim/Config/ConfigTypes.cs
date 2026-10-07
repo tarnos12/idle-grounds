@@ -336,13 +336,24 @@ namespace IdleGrounds.Sim
         /// <summary>need = max(1, dragonTribute(goalStage)[goalItem]); stage &gt; goalStage ⇒ done;
         /// cur = min(need, handCount(goalItem) + (stage == goalStage ? dragon.paid[goalItem] : 0)).</summary>
         DragonTributeItem,
+        // ---- Island onboarding (port-only quests; appended so serialized ints of the kinds above stay stable) ----
+        /// <summary>Spirit Bridge setup shown as 3 steps: need = 3; cur = 3 once ≥ max(1, goalNeed) intact pairs
+        /// exist, else min(2, Islands holding a built Spirit Bridge). JS: <c>ENGINE.bridgeSetupSteps(pairs)</c>.</summary>
+        BridgePaired,
+        /// <summary>cur = stats.bridgeDelivered (items sky wisps handed to a receiving bridge), need = goalNeed.</summary>
+        BridgeDelivered,
+        /// <summary>cur = FlowLedger runProduced[goalItem] (made this run), need = goalNeed. JS: <c>ENGINE.runProduced(item)</c>.</summary>
+        ItemProducedThisRun,
     }
 
     [Serializable]
     public class QuestTarget
     {
         public string area;
-        public string kind;     // fixture | dragon | enemyZone | altar | building ; empty = none
+        /// <summary>fixture | dragon | enemyZone | altar | building | stele | bridge ; empty = none.
+        /// stele: the unlock stele of a locked Island (area = that Island, or empty = cheapest locked one of the
+        /// quest's goalRegions). bridge: a Spirit Bridge on any Island (id "pair" = an unpaired one, "send" = a sender).</summary>
+        public string kind;
         public string id;
     }
 

@@ -365,7 +365,7 @@ namespace IdleGrounds.Sim.Tests
             var S = sim.State;
             S.handCap = 100;
             var Q = sim.Config.quests;
-            Assert.AreEqual(14, Q.Count);
+            Assert.AreEqual(17, Q.Count);
             var claimed = new List<string>();
             sim.Events.QuestClaimed += id => claimed.Add(id);
             var setups = new Dictionary<string, Action>
@@ -384,6 +384,14 @@ namespace IdleGrounds.Sim.Tests
                 ["dragon3"] = () => S.dragon.stage = 3,
                 ["weaver"] = () => { sim.Hand.Add("rope", 5); sim.Hand.Add("cloth", 6); },
                 ["cultivate"] = () => S.stats.disciplesRecruited = 1,
+                ["bridge"] = () =>
+                {
+                    var bf = IslandQuestTests.PlaceBridge(sim, "fishing");
+                    var bc = IslandQuestTests.PlaceBridge(sim, "center");
+                    Assert.IsNull(sim.PairBridges("fishing", bf.id, "center", bc.id));
+                },
+                ["caravan"] = () => S.stats.bridgeDelivered = 30,
+                ["wine"] = () => S.flow.Produce("spirit_wine", 3),
             };
             Assert.IsFalse(sim.IsBuildingUnlocked("storehouse"));
             for (int i = 0; i < Q.Count; i++)

@@ -137,6 +137,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-07: island onboarding quests (chain v3, 17 quests: Bridge the sky, Sky caravan, Wine of three shores; QuestHint next-step line; region wording -> Islands; chain-2 saves remap by quest id). Known flaky: NonAllocQueries BuildTargets (gate phase) once allocated 12 KB/1000 calls.
+
 - 2026-10-07: ADR 0004 balance targets (first run 2-3 h, later runs same length + more content on ascension, hands early/machines win 5-10x, TEST mode off by default). Juice pass landed (Game/Juice + UiJuice: harvest squash/chips, item arcs + magnet vacuum, build bursts, kill shake + motes, ambient motes, UI press/sparkle; HUD Motion/Calm toggle = reduce motion). Balance pass 1 landed (docs/port/balance-pass-1.md): TEST mode off by default (dev toggle Idle Grounds/Dev/TEST Mode), first ascension ~2:10 human / 1:36 expert, auto/hand 0.7 early -> 7.8 mid-run, no world speed per ascension, bridges carry multiple items; 168 EditMode tests (~7.7 min; playthroughs ~2 min each). DO NOT re-run tools/data-export (it would overwrite the tuned game-data.json). island onboarding quests queued after the balance pass.
 
 - 2026-10-07: playthrough bot (Tests/Sim/PlaythroughBot*.cs, docs/port/playthrough-report.md): game completable, first ascension ~6 min (TEST expert) … ~22 min (real balance, human pacing); balance concerns listed in the report; 161 EditMode tests.

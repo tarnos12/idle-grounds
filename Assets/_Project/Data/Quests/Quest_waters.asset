@@ -16,8 +16,8 @@ MonoBehaviour:
     id: waters
     icon: "\U0001F3A3"
     name: Unlock the waters
-    desc: "Fishing is where Algae and Spring Water come from \u2014 carry wood to
-      the glowing border button and unlock Fishing."
+    desc: "Algae and Spring Water come from the Fishing Island \u2014 fly over the
+      sky to its unlock stele and pay it in wood."
     goalKind: 5
     goalItem: 
     goalStat: 
@@ -35,7 +35,7 @@ MonoBehaviour:
     rewardItems: []
     builds: []
     target:
-      area: 
-      kind: 
+      area: fishing
+      kind: stele
       id: 
   icon: {fileID: 1481890909, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

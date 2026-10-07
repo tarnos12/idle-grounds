@@ -15,9 +15,10 @@ MonoBehaviour:
   def:
     id: explore
     icon: "\U0001F513"
-    name: Beyond the woods
-    desc: Carry enough wood to a glowing border button and unlock a neighbouring
-      region (Farm, Mine or Fishing).
+    name: Across the sky
+    desc: "Other Islands float beyond the Center's cliffs. Pan over the sky (WASD)
+      to a neighbouring Island's stone unlock stele and click it while carrying wood
+      \u2014 installments count \u2014 to unlock the Farm, the Mine or Fishing."
     goalKind: 5
     goalItem: 
     goalStat: 
@@ -35,6 +36,6 @@ MonoBehaviour:
     builds: []
     target:
       area: 
-      kind: 
+      kind: stele
       id: 
   icon: {fileID: -1811920652, guid: 75f89391a88c36442b26d704bddd988c, type: 3}

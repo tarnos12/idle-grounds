@@ -170,6 +170,7 @@ namespace IdleGrounds.Sim.Tests
             sim.State.world.unlockPaid.Clear();
             sim.Hand.Add("stone", 1);
             sim.UnlockArea("farm");   // leaves an installment so UnlockPaid copies something
+            var islandQuests = new[] { "explore", "waters", "bridge", "caravan", "wine" }.Select(id => sim.Config.QuestIndex(id)).ToArray();
 
             var queries = new (string name, Action call)[]
             {
@@ -185,6 +186,13 @@ namespace IdleGrounds.Sim.Tests
                 ("PairableBridges", () => sim.PairableBridges(bridge.area, bridge.b.id, pb)),
                 ("AutomationStatus", () => sim.AutomationStatus(C, aut)),
                 ("Enemies", () => sim.Enemies(C)),
+                // Island onboarding quests: stele / bridge targets, bridge + milestone-walker build targets
+                ("QuestTarget+BuildTargets (island quests)", () =>
+                {
+                    int keep = sim.State.quest.idx;
+                    foreach (int qi in islandQuests) { sim.State.quest.idx = qi; sim.QuestTarget(qt); sim.BuildTargets(bt); }
+                    sim.State.quest.idx = keep;
+                }),
             };
 
             // the counter works: the allocating form of one query does register

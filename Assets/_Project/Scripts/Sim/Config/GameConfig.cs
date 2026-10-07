@@ -210,7 +210,8 @@ namespace IdleGrounds.Sim
             {
                 string c = "quest " + q.id;
                 if (q.goalKind == QuestGoalKind.Unknown) errs.Add(c + ": untranslated goal");
-                if (q.goalKind == QuestGoalKind.HandCount || q.goalKind == QuestGoalKind.DragonTributeItem) CheckItem(c + ".goal", q.goalItem);
+                if (q.goalKind == QuestGoalKind.HandCount || q.goalKind == QuestGoalKind.DragonTributeItem || q.goalKind == QuestGoalKind.ItemProducedThisRun) CheckItem(c + ".goal", q.goalItem);
+                if (q.target != null && q.target.kind == "stele" && !string.IsNullOrEmpty(q.target.area) && Region(q.target.area) == null) errs.Add(c + ": unknown stele island " + q.target.area);
                 foreach (var gi in q.goalItems) CheckItem(c + ".goal", gi.item);
                 foreach (var r in q.goalRegions) if (Region(r) == null) errs.Add(c + ": unknown region " + r);
                 Items(c + ".reward", q.rewardItems);

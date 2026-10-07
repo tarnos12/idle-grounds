@@ -350,6 +350,8 @@ namespace IdleGrounds.Sim
         /// <summary>Non-allocating <see cref="QuestTarget()"/>: overwrites <paramref name="into"/>; false where that returns null.</summary>
         public bool QuestTarget(QuestTargetInfo into) => Ctx.Progression.Target(into);
         public MilestoneInfo Milestone() => Ctx.Progression.Milestone();
+        /// <summary>Plain-text next step for the active quest (stele to pay, bridge setup, caravan, milestone walk), or null.</summary>
+        public string QuestHint() => Ctx.Progression.QuestHint();
         /// <summary>Build-menu 🎯 targets (quest builds then milestone builds).</summary>
         public System.Collections.Generic.List<string> BuildTargets() => Ctx.Progression.BuildTargets();
         /// <summary>Non-allocating <see cref="BuildTargets()"/>: clears and refills <paramref name="into"/> (same order).</summary>

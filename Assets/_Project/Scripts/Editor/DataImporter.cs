@@ -103,7 +103,7 @@ namespace IdleGrounds.Editor
             foreach (var d in cfg.quests)
             {
                 var a = Get<QuestAsset>(Root + "Quests/Quest_" + d.id + ".asset");
-                a.def = d; a.icon = Atlas("ui_quest_" + d.id);
+                a.def = d; a.icon = Atlas("ui_quest_" + d.id) ?? QuestFallbackIcon(db, d);
                 Dirty(a); db.quests.Add(a);
             }
             db.dragonStages.Clear();
@@ -175,6 +175,20 @@ namespace IdleGrounds.Editor
         }
 
         static Sprite Atlas(string key) => ArtIntake.Find(incoming, key) ?? (atlas != null && atlas.TryGetValue(key, out var s) ? s : null);
+
+        /// <summary>Port-only quests have no ui_quest_* atlas art: use the item they make / the building they teach.</summary>
+        static Sprite QuestFallbackIcon(GameDatabase db, QuestDef d)
+        {
+            if (d.goalKind == QuestGoalKind.ItemProducedThisRun && !string.IsNullOrEmpty(d.goalItem))
+            {
+                var it = db.FindItem(d.goalItem)?.icon;
+                if (it != null) return it;
+            }
+            if (d.goalKind == QuestGoalKind.BridgePaired || d.goalKind == QuestGoalKind.BridgeDelivered || d.target?.kind == "bridge")
+                return db.FindBuilding("spirit_bridge")?.icon;
+            foreach (var b in d.builds) { var s = db.FindBuilding(b)?.icon; if (s != null) return s; }
+            return null;
+        }
 
         static Dictionary<string, Sprite> ImportItemIcons()
         {

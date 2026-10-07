@@ -2199,7 +2199,7 @@
       "id": "wood",
       "icon": "🪵",
       "name": "First timber",
-      "desc": "Hold left-click on the big Spirit Tree 🌳 (top of the Center) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.)",
+      "desc": "Hold left-click on the big Spirit Tree 🌳 (top of the Center Island) to chop it, then hold left-click near the fallen wood to vacuum 5 into your hand. (WASD to look around, mouse-wheel to zoom.)",
       "goal": {
         "$fn": "() => ({ cur: window.ENGINE.handCount(\"wood\"), need: 5 })"
       },
@@ -2227,7 +2227,7 @@
       "id": "dragon1",
       "icon": "🐉",
       "name": "Wake the sleeper",
-      "desc": "Carry leaves to the Sleeping Dragon (top-left corner) and RIGHT-click it to feed its tribute until it stirs — the dragon teaches you the Forge.",
+      "desc": "Carry leaves to the Sleeping Dragon (top-left of the Center) and RIGHT-click it to feed its tribute until it stirs — the dragon teaches you the Forge.",
       "goal": {
         "$fn": "() => ({ cur: window.GS.dragon.stage >= 1 ? 1 : 0, need: 1 })"
       },
@@ -2245,7 +2245,7 @@
       "id": "fox",
       "icon": "🦊",
       "name": "Fox hunt",
-      "desc": "A Fox Spirit prowls the red zone (top-right corner). Click it until it falls — hold left-click to auto-attack. It drops Spirit Essence.",
+      "desc": "A Fox Spirit prowls the red zone (top-right of the Center). Click it until it falls — hold left-click to auto-attack. It drops Spirit Essence.",
       "goal": {
         "$fn": "() => ({ cur: window.GS.stats.foxKills || 0, need: 1 })"
       },
@@ -2322,17 +2322,21 @@
     {
       "id": "explore",
       "icon": "🔓",
-      "name": "Beyond the woods",
-      "desc": "Carry enough wood to a glowing border button and unlock a neighbouring region (Farm, Mine or Fishing).",
+      "name": "Across the sky",
+      "desc": "Other Islands float beyond the Center's cliffs. Pan over the sky (WASD) to a neighbouring Island's stone unlock stele and click it while carrying wood — installments count — to unlock the Farm, the Mine or Fishing.",
       "goal": {
         "$fn": "() => {\r\n      const u = window.GS.world.unlocked;\r\n      return { cur: (u.farm || u.mine || u.fishing) ? 1 : 0, need: 1 };\r\n    }"
+      },
+      "target": {
+        "area": "",
+        "kind": "stele"
       }
     },
     {
       "id": "dragon2",
       "icon": "🐉",
       "name": "Stone & clay for the dragon",
-      "desc": "The dragon's next tribute is stone and clay. The starter Gathering Stones 🧿 by the quarry rock and the clay field (bottom corners) collect both — LEFT-click (or hold) one to withdraw into your hand, then right-click the dragon.",
+      "desc": "The dragon's next tribute is stone and clay. The starter Gathering Stones 🧿 by the quarry rock and the clay field (bottom corners of the Center) collect both — LEFT-click (or hold) one to withdraw into your hand, then right-click the dragon.",
       "goal": {
         "$fn": "() => ({ cur: window.GS.dragon.stage >= 2 ? 1 : 0, need: 1 })"
       },
@@ -2353,7 +2357,7 @@
       "id": "iron",
       "icon": "🧲",
       "name": "Iron for the dragon",
-      "desc": "Unlock the Mine, break ⛓️ iron veins for Iron Ore, then build a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the dragon's third tribute asks for (bars already fed to it count).",
+      "desc": "Unlock the Mine Island, break ⛓️ iron veins for Iron Ore, then build a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the dragon's third tribute asks for (bars already fed to it count).",
       "goal": {
         "$fn": "() => {\r\n      const E = window.ENGINE, dr = window.GS.dragon;\r\n      const need = Math.max(1, E.dragonTribute(2).iron_bar || 1);\r\n      if (dr.stage >= 3) return { cur: need, need };\r\n      const paid = dr.stage === 2 ? (dr.paid.iron_bar || 0) : 0;\r\n      return { cur: Math.min(need, E.handCount(\"iron_bar\") + paid), need };\r\n    }"
       },
@@ -2365,7 +2369,7 @@
       "id": "waters",
       "icon": "🎣",
       "name": "Unlock the waters",
-      "desc": "Fishing is where Algae and Spring Water come from — carry wood to the glowing border button and unlock Fishing.",
+      "desc": "Algae and Spring Water come from the Fishing Island — fly over the sky to its unlock stele and pay it in wood.",
       "goal": {
         "$fn": "() => ({ cur: window.GS.world.unlocked.fishing ? 1 : 0, need: 1 })"
       },
@@ -2375,13 +2379,59 @@
           "mill",
           "brewery"
         ]
+      },
+      "target": {
+        "area": "fishing",
+        "kind": "stele"
+      }
+    },
+    {
+      "id": "bridge",
+      "icon": "🌉",
+      "name": "Bridge the sky",
+      "desc": "Wisps never leave their own Island — Spirit Bridges carry goods across the sky. Build a Spirit Bridge (B) on Fishing and another on the Center, then click the Fishing bridge and pick the Center one to pair them (Fishing sends, the Center receives).",
+      "goal": {
+        "$fn": "() => ({ cur: window.ENGINE.bridgeSetupSteps(1), need: 3 })"
+      },
+      "builds": [
+        "spirit_bridge"
+      ],
+      "reward": {
+        "items": {
+          "wood": 15,
+          "stone": 15
+        }
+      },
+      "target": {
+        "area": "",
+        "kind": "bridge",
+        "id": "pair"
+      }
+    },
+    {
+      "id": "caravan",
+      "icon": "🪽",
+      "name": "Sky caravan",
+      "desc": "Send 30 items across your bridge. Right-click goods into the sending bridge, or put a Gathering Stone on the spring and a Wisp Lantern linking it to the bridge. They land at the receiving bridge — withdraw them there, or link a lantern to wisp them into a Storehouse.",
+      "goal": {
+        "$fn": "() => ({ cur: window.GS.stats.bridgeDelivered || 0, need: 30 })"
+      },
+      "reward": {
+        "items": {
+          "algae": 10
+        }
+      },
+      "target": {
+        "area": "",
+        "kind": "bridge",
+        "id": "send"
       }
     },
     {
       "id": "dragon3",
       "icon": "🐉",
       "name": "The dragon tastes iron",
-      "desc": "Feed the dragon its third tribute — Iron Bars, Algae and Spring Water. The 🎯 milestone below lists what's still needed and where each comes from.",
+      "desc": "Feed the dragon its third tribute — Iron Bars, Algae and Spring Water. Let your Spirit Bridge carry the Fishing goods to the Center; the 🎯 milestone below lists what's still needed and where each comes from.",
       "goal": {
         "$fn": "() => ({ cur: window.GS.dragon.stage >= 3 ? 1 : 0, need: 1 })"
       },
@@ -2402,7 +2452,7 @@
       "id": "weaver",
       "icon": "🪢",
       "name": "Weaver's path",
-      "desc": "Build a Loom (B), then click the Loom and pick Rope (Cotton + Algae); switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth in hand. Cotton grows on the Farm — unlock it if you haven't.",
+      "desc": "Build a Loom (B), then click the Loom and pick Rope (Cotton from the Farm + Algae from Fishing); switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth in hand. Unlock the Farm Island at its stele if you haven't.",
       "goal": {
         "$fn": "() => ({ cur: Math.min(window.ENGINE.handCount(\"rope\"), 2) + Math.min(window.ENGINE.handCount(\"cloth\"), 6), need: 8 })"
       },
@@ -2440,9 +2490,31 @@
         "kind": "building",
         "id": "meditation_pavilion"
       }
+    },
+    {
+      "id": "wine",
+      "icon": "🍶",
+      "name": "Wine of three shores",
+      "desc": "Disciples get hungry. Build a Brewery (B) in the Center and brew 3 Spirit Wine from Rice (Farm), Spring Water (Fishing — bridge it over) and Leaves (Center), then right-click the wine into the Meditation Pavilion to feed them.",
+      "goal": {
+        "$fn": "() => ({ cur: window.ENGINE.runProduced(\"spirit_wine\"), need: 3 })"
+      },
+      "builds": [
+        "brewery"
+      ],
+      "reward": {
+        "items": {
+          "spirit_herb": 3
+        }
+      },
+      "target": {
+        "area": "center",
+        "kind": "building",
+        "id": "brewery"
+      }
     }
   ],
-  "QUEST_CHAIN": 2,
+  "QUEST_CHAIN": 3,
   "REVEAL": {
     "storehouse": [
       {

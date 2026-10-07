@@ -148,9 +148,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 974384dc7af17b743b9bd8d0bfee9d4c, type: 2}
   - {fileID: 11400000, guid: 1e5c01703bcd27a4db8ef03e1820ada8, type: 2}
   - {fileID: 11400000, guid: edc21594aa4e9594bb45524ff22c794f, type: 2}
+  - {fileID: 11400000, guid: 13d8a38c767332943a830e0eea761e52, type: 2}
+  - {fileID: 11400000, guid: cb56d907aaba96c4b9b1c3eb0b97e231, type: 2}
   - {fileID: 11400000, guid: 7eb9a1045ca10b747a9747124152d09c, type: 2}
   - {fileID: 11400000, guid: c6004c4a7f315534e98073d5c717f617, type: 2}
   - {fileID: 11400000, guid: 74ddcfec6efdd824896aee89c931fb7c, type: 2}
+  - {fileID: 11400000, guid: 910bfcca19652c647989a10407952c56, type: 2}
   dragonStages:
   - {fileID: 11400000, guid: 1bb498f8878e0f540b441a21b36d6f27, type: 2}
   - {fileID: 11400000, guid: e7a8477c3cb2ffa47bfc11d3d2103eea, type: 2}
@@ -167,7 +170,7 @@ MonoBehaviour:
     - 1.3
     - 1.5
     - 1.75
-    questChain: 2
+    questChain: 3
     versionNum: 52
     versionDesc: 'Design pass 2: idle loop that runs, reveal+quests, vows & legacy
       perks, readable logistics'

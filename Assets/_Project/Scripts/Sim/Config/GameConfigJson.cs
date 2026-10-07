@@ -323,6 +323,9 @@ namespace IdleGrounds.Sim
         static readonly Regex ReStage = new Regex(@"dragon\.stage\s*>=\s*(\d+)");
         static readonly Regex ReHand = new Regex(@"handCount\(""(\w+)""\)");
         static readonly Regex ReNeed = new Regex(@"need:\s*(\d+)");
+        static readonly Regex ReBridgeSetup = new Regex(@"bridgeSetupSteps\((\d*)\)");
+        static readonly Regex ReBridgeDelivered = new Regex(@"stats\.bridgeDelivered\b");
+        static readonly Regex ReRunProduced = new Regex(@"runProduced\(""(\w+)""\)");
 
         /// <summary>Pattern-match a JS goal lambda into QuestGoalKind + params. Unrecognised ⇒ Unknown (Validate reports it).</summary>
         public static void TranslateGoal(QuestDef q)
@@ -334,6 +337,26 @@ namespace IdleGrounds.Sim
             var needM = ReNeed.Match(src);
             int need = needM.Success ? int.Parse(needM.Groups[1].Value, CultureInfo.InvariantCulture) : 1;
             Match m;
+            // Island onboarding goals (port-only, ADR 0003)
+            if ((m = ReBridgeSetup.Match(src)).Success)
+            {
+                q.goalKind = QuestGoalKind.BridgePaired;
+                q.goalNeed = m.Groups[1].Value.Length > 0 ? Math.Max(1, int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture)) : 1;
+                return;
+            }
+            if (ReBridgeDelivered.IsMatch(src))
+            {
+                q.goalKind = QuestGoalKind.BridgeDelivered;
+                q.goalNeed = need;
+                return;
+            }
+            if ((m = ReRunProduced.Match(src)).Success)
+            {
+                q.goalKind = QuestGoalKind.ItemProducedThisRun;
+                q.goalItem = m.Groups[1].Value;
+                q.goalNeed = need;
+                return;
+            }
             if ((m = ReTribute.Match(src)).Success)
             {
                 q.goalKind = QuestGoalKind.DragonTributeItem;

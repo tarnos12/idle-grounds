@@ -396,6 +396,23 @@ namespace IdleGrounds.Sim.Tests
                     break;
                 }
                 case "waters": yield return Unlock("fishing"); break;
+                // Island onboarding: the Fishing → Center bridge line (stone on the spring → lantern → bridge ⇢ bridge
+                // → lantern → storehouse) — it also hauls the dragon's third-tribute water
+                case "bridge": yield return BridgeSetup(); break;
+                case "caravan":
+                {
+                    // while the line delivers, hand-gather the algae the dragon's next tribute wants
+                    _keep.Add("algae");
+                    long st = Elapsed;
+                    while (QuestOpen(id) && Elapsed - st < 30 * 60000)
+                    {
+                        int want = Math.Min(Hand.Cap(), Math.Max(0, Sim.Dragon.TributeOf(2, "algae") - (S.dragon.stage == 2 ? S.dragon.paid.Get("algae") : 0)));
+                        if (S.dragon.stage == 2 && Hand.Count("algae") < want) yield return Acquire("algae", want);
+                        else yield return Wait(1000, "waiting for the sky caravan");
+                    }
+                    _keep.Remove("algae");
+                    break;
+                }
                 case "dragon3": yield return FeedDragon(3); break;
                 case "weaver":
                 {
@@ -417,9 +434,36 @@ namespace IdleGrounds.Sim.Tests
                     else StuckAt("recruit refused: " + Sim.RecruitReason(pav.area, pav.b.id));
                     break;
                 }
+                case "wine":
+                {
+                    // cross-island chain: Farm rice + Fishing water + Center leaves → Brewery (Center) → the pavilion
+                    const string W = "spirit_wine";
+                    _keep.Add(W);
+                    long st = Elapsed;
+                    while (QuestOpen(id) && Elapsed - st < 30 * 60000)
+                    {
+                        var p = Sim.CurrentQuestProgress();
+                        long before = S.flow.Entry(W)?.runProduced ?? 0;
+                        yield return Acquire(W, Math.Min(Hand.Cap(), Hand.Count(W) + Math.Max(1, p.need - p.cur)));
+                        if ((S.flow.Entry(W)?.runProduced ?? 0) == before) yield return Wait(500, "waiting for wine");
+                    }
+                    _keep.Remove(W);
+                    var pav = FindBuilt("meditation_pavilion");
+                    if (pav.b != null && Hand.Count(W) > 0)
+                    {
+                        var b = pav.b;
+                        int cap = Cfg.Building(b.type).roster.foodCap;
+                        yield return RotateTo(W);
+                        yield return Press(pav.area, b, () => Hand.Count(W) == 0 || b.buns + Sim.Buildings.FoodValue(b, W) > cap);
+                    }
+                    break;
+                }
                 default: StuckAt("unknown quest " + id); yield return null; break;
             }
         }
+
+        /// <summary>The quest <paramref name="id"/> is still the active one and unfinished (claims happen every 10 ticks).</summary>
+        bool QuestOpen(string id) => Sim.Progression.CurrentQuest?.id == id && !(Sim.CurrentQuestProgress()?.done ?? true);
 
         // ================================================================ quests / milestones
 
@@ -642,6 +686,7 @@ namespace IdleGrounds.Sim.Tests
         IEnumerator BridgeSetup()
         {
             const string F = "fishing";
+            if (Sim.Progression.IntactBridgePairs() > 0) yield break;   // already laid during the "bridge" quest
             if (!Sim.World.IsAreaUnlocked(F)) yield return Unlock(F);
             if (!Sim.IsBuildingUnlocked("spirit_bridge")) { StuckAt("Spirit Bridge not revealed with " + Sim.Buildings.UnlockedIslandCount() + " islands"); yield break; }
             var spring = Cfg.ZoneRects("springField")[0];

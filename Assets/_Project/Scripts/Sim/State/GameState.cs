@@ -371,6 +371,8 @@ namespace IdleGrounds.Sim
         public double started;
         public long totalGathered, totalCrafted;
         public int foxKills, buildingsBuilt, upgradesApplied, linksAdded, recipeSwitches, disciplesRecruited;
+        /// <summary>Items sky wisps handed to a receiving Spirit Bridge (ADR 0003; the "Sky caravan" quest).</summary>
+        public long bridgeDelivered;
 
         public long Get(string stat)
         {
@@ -384,6 +386,7 @@ namespace IdleGrounds.Sim
                 case "linksAdded": return linksAdded;
                 case "recipeSwitches": return recipeSwitches;
                 case "disciplesRecruited": return disciplesRecruited;
+                case "bridgeDelivered": return bridgeDelivered;
                 default: return 0;
             }
         }

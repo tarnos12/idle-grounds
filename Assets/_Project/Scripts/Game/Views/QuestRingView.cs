@@ -6,7 +6,7 @@ namespace IdleGrounds.Game
     /// <summary>
     /// Quest target ring (ui.js questTargetRect / drawQuestRing U:2263-2310): while the active quest is
     /// unfinished and its <c>QuestDef.target</c> resolves (<see cref="Simulation.QuestTarget"/>: fixture node,
-    /// enemy zone, dragon / altar / building, region unlocked), a soft gold ring pulses on it:
+    /// enemy zone, dragon / altar / building, a Spirit Bridge on any Island, a locked Island's unlock stele), a soft gold ring pulses on it:
     /// k = 0.5 + 0.5 sin(now/320), stroke rgba(251,191,36, .35+.4k), 3 px. Objects get a circle of radius
     /// max(w,h)·0.62 + 6 + 6k px around their centre; a whole zone gets a dashed frame inset 6 + 4k px.
     /// The circle is a ring of pooled square-sprite segments (same 2D sprite pipeline as the rest of the
@@ -57,12 +57,27 @@ namespace IdleGrounds.Game
         }
 
         readonly QuestTargetInfo targetBuf = new QuestTargetInfo();
+        UnlockSignSync signs;
 
         void Resolve()
         {
             has = false; TargetKind = null;
             var t = runner.Sim.QuestTarget(targetBuf) ? targetBuf : null;
             if (t == null) return;
+            if (t.kind == "stele")
+            {
+                // a locked Island's unlock stele (a scene object, ADR 0003): ring the stele + its cost plate
+                if (signs == null) signs = FindFirstObjectByType<UnlockSignSync>();
+                var sv = signs != null ? signs.Find(t.area) : null;
+                if (sv == null) return;
+                var r = sv.WorldRect;
+                topLeft = new Vector3(r.xMin, r.yMax, 0f);
+                wU = r.width; hU = r.height;
+                isZone = false;
+                TargetKind = t.kind;
+                has = true;
+                return;
+            }
             var space = runner.Space;
             int cell = space.Cell;
             double x, y, w, h;

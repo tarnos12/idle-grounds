@@ -16,9 +16,9 @@ MonoBehaviour:
     id: weaver
     icon: "\U0001FAA2"
     name: Weaver's path
-    desc: "Build a Loom (B), then click the Loom and pick Rope (Cotton + Algae);
-      switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth in hand. Cotton grows
-      on the Farm \u2014 unlock it if you haven't."
+    desc: Build a Loom (B), then click the Loom and pick Rope (Cotton from the Farm
+      + Algae from Fishing); switch to Cloth (Cotton) after. Carry 2 Rope and 6 Cloth
+      in hand. Unlock the Farm Island at its stele if you haven't.
     goalKind: 2
     goalItem: 
     goalStat: 

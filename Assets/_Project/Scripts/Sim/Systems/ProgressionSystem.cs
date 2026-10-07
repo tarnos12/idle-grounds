@@ -166,6 +166,17 @@ namespace IdleGrounds.Sim
                     }
                     break;
                 }
+                case QuestGoalKind.BridgePaired:
+                    need = 3;
+                    cur = IntactBridgePairs() >= Math.Max(1, q.goalNeed) ? 3 : Math.Min(2, IslandsWithBridge());
+                    break;
+                case QuestGoalKind.BridgeDelivered: cur = (int)Math.Min(int.MaxValue, Math.Max(0, S.stats?.bridgeDelivered ?? 0)); break;
+                case QuestGoalKind.ItemProducedThisRun:
+                {
+                    var fe = S.flow?.Entry(q.goalItem);
+                    cur = fe == null ? 0 : (int)Math.Min(int.MaxValue, Math.Max(0, fe.runProduced));
+                    break;
+                }
                 default: cur = 0; break;
             }
             into.cur = Math.Min(cur, need); into.need = need; into.done = cur >= need;
@@ -243,6 +254,27 @@ namespace IdleGrounds.Sim
         {
             var q = CurrentQuest;
             if (q?.target == null || string.IsNullOrEmpty(q.target.kind)) return false;
+            if (q.target.kind == "stele")
+            {
+                // a locked Island's unlock stele (the Game layer knows where it stands; area = that Island)
+                string k = string.IsNullOrEmpty(q.target.area) ? SteleIsland(q) : q.target.area;
+                if (k == null || Cfg.Region(k) == null || S.world.IsUnlocked(k)) return false;
+                if (!CurrentQuestUnfinished()) return false;
+                into.area = k; into.kind = "stele"; into.node = null; into.building = null; into.zone = null;
+                return true;
+            }
+            if (q.target.kind == "bridge")
+            {
+                if (!CurrentQuestUnfinished()) return false;
+                // "send": the sending end of an intact pair first; then an unpaired built bridge; then a bridge ghost
+                Building pb = null; string pa = null;
+                if (q.target.id == "send") pb = FindBridge(0, out pa);
+                if (pb == null) pb = FindBridge(1, out pa);
+                if (pb == null) pb = FindBridge(2, out pa);
+                if (pb == null) return false;
+                into.area = pa; into.kind = "bridge"; into.node = null; into.building = pb; into.zone = null;
+                return true;
+            }
             string area = string.IsNullOrEmpty(q.target.area) ? "center" : q.target.area;
             if (Cfg.Region(area) == null || !S.world.IsUnlocked(area)) return false;
             if (!CurrentQuestUnfinished()) return false;
@@ -272,12 +304,7 @@ namespace IdleGrounds.Sim
         public List<string> BuildTargets()
         {
             var res = new List<string>();
-            var q = CurrentQuest;
-            if (q != null && q.builds.Count > 0)
-            {
-                var p = CurrentProgress();
-                if (p != null && !p.done) foreach (var t in q.builds) if (!S.builtTypes.Contains(t)) res.Add(t);
-            }
+            QuestBuilds(res);
             foreach (var mb in Milestone().builds) if (!res.Contains(mb)) res.Add(mb);
             return res;
         }
@@ -288,11 +315,161 @@ namespace IdleGrounds.Sim
         public void BuildTargets(List<string> into)
         {
             into.Clear();
-            var q = CurrentQuest;
-            if (q != null && q.builds.Count > 0 && CurrentQuestUnfinished())
-                foreach (var t in q.builds) if (!S.builtTypes.Contains(t)) into.Add(t);
+            QuestBuilds(into);
             MilestoneBuilds(_mbScratch);
             foreach (var mb in _mbScratch) if (!into.Contains(mb)) into.Add(mb);
+        }
+
+        /// <summary>
+        /// The active (unfinished) quest's build targets, appended to <paramref name="into"/>: its never-built
+        /// <c>builds</c> — a Spirit Bridge stays a target until two Islands hold one (the bridge quest needs a pair) —
+        /// then, for a "make N items" quest, the building the milestone walker says to build next.
+        /// </summary>
+        void QuestBuilds(List<string> into)
+        {
+            var q = CurrentQuest;
+            if (q == null || !CurrentQuestUnfinished()) return;
+            foreach (var t in q.builds)
+            {
+                bool want = q.goalKind == QuestGoalKind.BridgePaired && Cfg.Building(t)?.bridge.enabled == true
+                    ? IslandsWithBridge() < 2          // the bridge quest needs one on each of two Islands
+                    : !S.builtTypes.Contains(t);
+                if (want && !into.Contains(t)) into.Add(t);
+            }
+            if (q.goalKind == QuestGoalKind.ItemProducedThisRun && !string.IsNullOrEmpty(q.goalItem))
+            {
+                int left = Math.Max(1, _progressScratch.need - _progressScratch.cur);   // _progressScratch = this quest (CurrentQuestUnfinished)
+                string bt = StepTowardBuild(q.goalItem, 0, left);
+                if (bt != null && !into.Contains(bt)) into.Add(bt);
+            }
+        }
+
+        // ---- Island onboarding helpers (bridges / steles) ----
+
+        /// <summary>Unlocked Islands holding at least one BUILT Spirit Bridge.</summary>
+        public int IslandsWithBridge()
+        {
+            int n = 0;
+            foreach (var r in Cfg.regions)
+            {
+                if (!S.world.IsUnlocked(r.key)) continue;
+                var a = S.Area(r.key);
+                if (a == null) continue;
+                foreach (var b in a.buildings) if (b.built && _ctx.Logistics.IsBridge(b)) { n++; break; }
+            }
+            return n;
+        }
+
+        /// <summary>Intact one-way pairs between built Spirit Bridges (counted at the sending end).</summary>
+        public int IntactBridgePairs()
+        {
+            int n = 0;
+            foreach (var a in S.areas)
+                foreach (var b in a.buildings)
+                {
+                    if (!b.built || !_ctx.Logistics.BridgeSending(b)) continue;
+                    var o = _ctx.Logistics.PairOf(a.key, b);
+                    if (o != null && o.built) n++;
+                }
+            return n;
+        }
+
+        /// <summary>mode 0 = the sending end of an intact pair, 1 = an unpaired built bridge, 2 = a bridge ghost; Island order.</summary>
+        Building FindBridge(int mode, out string area)
+        {
+            foreach (var r in Cfg.regions)
+            {
+                area = r.key;
+                if (!S.world.IsUnlocked(r.key)) continue;
+                var a = S.Area(r.key);
+                if (a == null) continue;
+                foreach (var b in a.buildings)
+                {
+                    if (!_ctx.Logistics.IsBridge(b)) continue;
+                    switch (mode)
+                    {
+                        case 0: if (b.built && _ctx.Logistics.BridgeSending(b) && _ctx.Logistics.PairOf(r.key, b) != null) return b; break;
+                        case 1: if (b.built && _ctx.Logistics.PairOf(r.key, b) == null) return b; break;
+                        default: if (!b.built) return b; break;
+                    }
+                }
+            }
+            area = null;
+            return null;
+        }
+
+        readonly ItemCounts _costScratch = new ItemCounts();
+
+        /// <summary>
+        /// Which locked Island an unlock quest points at: one of its goalRegions — where installments are already
+        /// paid first, else the cheapest (fewest items still owed), ties in goalRegions order. Null = all unlocked.
+        /// </summary>
+        string SteleIsland(QuestDef q)
+        {
+            string best = null; int bestLeft = int.MaxValue; bool bestPaid = false;
+            foreach (var k in q.goalRegions)
+            {
+                if (Cfg.Region(k) == null || S.world.IsUnlocked(k)) continue;
+                var pe = PaidEntry(k, false);
+                bool paid = pe != null && pe.paid.Count > 0;
+                int left = 0;
+                if (UnlockCost(k, _costScratch)) foreach (var e in _costScratch) left += Math.Max(0, e.qty - (pe?.paid.Get(e.item) ?? 0));
+                if (best == null || (paid && !bestPaid) || (paid == bestPaid && left < bestLeft)) { best = k; bestLeft = left; bestPaid = paid; }
+            }
+            return best;
+        }
+
+        string RegionName(string k) => Cfg.Region(k)?.name ?? k;
+
+        /// <summary>
+        /// One plain-text "next step" line for the active quest (quest panel), or null: where to pay an Island
+        /// unlock, how far the bridge setup is, how to send a caravan, and — for a "make N items" quest — the
+        /// milestone walker's first missing sub-step (<see cref="StepToward"/>).
+        /// </summary>
+        public string QuestHint()
+        {
+            var q = CurrentQuest;
+            if (q == null || !CurrentQuestUnfinished()) return null;
+            switch (q.goalKind)
+            {
+                case QuestGoalKind.AnyRegionUnlocked:
+                {
+                    string k = SteleIsland(q);
+                    if (k == null) return null;
+                    var rem = UnlockRemaining(k);
+                    var parts = new List<string>();
+                    if (rem != null) foreach (var e in rem) parts.Add(e.qty + " " + ItemName(e.item));
+                    return "Pan over the sky to the " + RegionName(k) + " unlock stele and click it" +
+                           (parts.Count > 0 ? " holding " + string.Join(" + ", parts) : "") + " (installments count).";
+                }
+                case QuestGoalKind.BridgePaired:
+                {
+                    int isl = IslandsWithBridge();
+                    if (FindBridge(2, out string ga) != null && isl < 2) return "Right-click the Spirit Bridge ghost on the " + RegionName(ga) + " with its wood + stone.";
+                    if (isl == 0) return "Build a Spirit Bridge (B) on the Island that makes the goods, e.g. Fishing.";
+                    if (isl == 1)
+                    {
+                        FindBridge(1, out string one);
+                        return "Now build a Spirit Bridge on a second Island" + (one == "center" ? "." : ", e.g. the Center.");
+                    }
+                    return "Click the bridge that should SEND and pick its partner from the pairing list.";
+                }
+                case QuestGoalKind.BridgeDelivered:
+                {
+                    var send = FindBridge(0, out string sa);
+                    if (send == null) return "Pair two Spirit Bridges first (click one, pick its partner).";
+
+                    return "Right-click items into the " + RegionName(sa) + " bridge (or wisp them in from a Gathering Stone); they land at the " +
+                           RegionName(send.pairIsland) + " bridge - withdraw them there or wisp them on.";
+                }
+                case QuestGoalKind.ItemProducedThisRun:
+                {
+                    int left = Math.Max(1, _progressScratch.need - _progressScratch.cur);
+                    var st = StepToward(q.goalItem, null, left);
+                    return st?.text;
+                }
+                default: return null;
+            }
         }
 
         // ================================================================

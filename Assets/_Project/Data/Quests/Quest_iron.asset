@@ -16,9 +16,9 @@ MonoBehaviour:
     id: iron
     icon: "\U0001F9F2"
     name: Iron for the dragon
-    desc: "Unlock the Mine, break \u26D3\uFE0F iron veins for Iron Ore, then build
-      a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the dragon's
-      third tribute asks for (bars already fed to it count)."
+    desc: "Unlock the Mine Island, break \u26D3\uFE0F iron veins for Iron Ore, then
+      build a Forge (B), feed it ore plus wood as fuel, and forge the Iron Bars the
+      dragon's third tribute asks for (bars already fed to it count)."
     goalKind: 6
     goalItem: iron_bar
     goalStat: 

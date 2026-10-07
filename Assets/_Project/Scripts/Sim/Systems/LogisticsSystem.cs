@@ -758,12 +758,18 @@ namespace IdleGrounds.Sim
                     bool intact = src != null && src.built && dst != null && dst.built && src.pairSends && PairOf(w.fromIsland, src) == dst;
                     if (!intact) { SendBack(w, p.x, p.y, now); changed = true; continue; }
                     if (p.frac < 1) continue;
+                    int aboard = Math.Max(1, w.qty);
                     if (GiveAll(dst, w))
                     {
+                        S.stats.bridgeDelivered += aboard;
                         (done ??= ClearedDone()).Add(w.id); changed = true;
                         _ctx.Events.RaiseWispArrived(w.toIsland, w);
                     }
-                    else { SendBack(w, p.x, p.y, now); changed = true; }   // what the receiver refused flies home
+                    else
+                    {
+                        S.stats.bridgeDelivered += Math.Max(0, aboard - w.qty);   // the part the receiver took
+                        SendBack(w, p.x, p.y, now); changed = true;               // what the receiver refused flies home
+                    }
                     continue;
                 }
                 if (p.frac < 1) continue;

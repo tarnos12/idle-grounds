@@ -64,6 +64,8 @@ namespace IdleGrounds.Game
         public string Key => lastKey;
         public bool Collapsed => runner != null && runner.State != null && runner.State.quest.hidden;
         public bool ClaimInteractable => claimButton != null && claimButton.interactable;
+        /// <summary>Active quest description (+ "Next step" hint line) as shown.</summary>
+        public string DescriptionText => descText != null ? descText.text : null;
         public IEnumerable<string> MilestoneLines { get { foreach (var l in msPool) if (l.gameObject.activeSelf) yield return l.text.text; } }
 
         Simulation Sim => runner.Sim;
@@ -168,8 +170,10 @@ namespace IdleGrounds.Game
             int i = gq.idx, total = quests.Count;
             var p = i < total ? Sim.QuestProgress(i) : null;
             BuildMilestone(gq.hidden);
+            string hint = !gq.hidden && i < total ? Sim.QuestHint() : null;
             var kb = new StringBuilder();
             kb.Append(gq.hidden).Append('|').Append(i).Append('|').Append(p != null ? p.cur + "/" + p.need + "/" + p.done : "end").Append('|');
+            kb.Append(hint).Append('|');
             foreach (var m in msItems) kb.Append(m.t).Append(';');
             kb.Append(msBarValue);
             string key = kb.ToString();
@@ -191,7 +195,8 @@ namespace IdleGrounds.Game
             {
                 var q = quests[i];
                 nameLine.Set(runner.Database.QuestIcon(q.id), q.name, UiPalette.Text);
-                descText.text = UiText.StripEmoji(q.desc);
+                descText.text = UiText.StripEmoji(q.desc) +
+                                (string.IsNullOrEmpty(hint) ? "" : "\n<color=#" + ColorUtility.ToHtmlStringRGB(UiPalette.Accent) + ">Next step: " + UiText.StripEmoji(hint) + "</color>");
                 FillUnlocks(i);
                 barFill.fillAmount = p.need > 0 ? Mathf.Clamp01(p.cur / (float)p.need) : 0f;
                 progText.text = p.cur + "/" + p.need;
