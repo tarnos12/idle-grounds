@@ -769,6 +769,38 @@
       "source": "Idle-Grounds-Nodes-002.zip"
     },
     {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-003-preview.png",
+      "name": "preview.png",
+      "size": 18273,
+      "sha1": "d61cc33ab5f5fef571b5e75e3f0520443da7e6e8",
+      "date": "2026-10-07T23:42:51.585Z",
+      "source": "Idle-Grounds-Nodes-003.zip"
+    },
+    {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-003-README.txt",
+      "name": "README.txt",
+      "size": 970,
+      "sha1": "efaf567fac34ddeb0d176a2825a805c843826b82",
+      "date": "2026-10-07T23:42:51.586Z",
+      "source": "Idle-Grounds-Nodes-003.zip"
+    },
+    {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-004-preview.png",
+      "name": "preview.png",
+      "size": 7681,
+      "sha1": "63e6c0b1918b095ccf75f6117d545b1b9cb9a818",
+      "date": "2026-10-07T23:42:51.997Z",
+      "source": "Idle-Grounds-Nodes-004.zip"
+    },
+    {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-004-README.txt",
+      "name": "README.txt",
+      "size": 852,
+      "sha1": "7788d0f9426796657c1971ac4148df4428446440",
+      "date": "2026-10-07T23:42:51.997Z",
+      "source": "Idle-Grounds-Nodes-004.zip"
+    },
+    {
       "path": "_notes/sky-Idle-Grounds-Sky-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 269,
@@ -1689,6 +1721,14 @@
       "source": "Idle-Grounds-Items-002.zip"
     },
     {
+      "path": "nodes/node_algae_32x48_4f.png",
+      "name": "node_algae_32x48_4f.png",
+      "size": 2462,
+      "sha1": "3a2de37cb8949327324954c7506fd27ae63e574a",
+      "date": "2026-10-07T23:42:51.996Z",
+      "source": "Idle-Grounds-Nodes-004.zip"
+    },
+    {
       "path": "nodes/node_bush_32x48_2f.png",
       "name": "node_bush_32x48_2f.png",
       "size": 3009,
@@ -1711,6 +1751,46 @@
       "sha1": "ee216abffbca8815acef9cc3309884e09ce384e4",
       "date": "2026-10-07T21:43:14.384Z",
       "source": "Idle-Grounds-Nodes-002.zip"
+    },
+    {
+      "path": "nodes/node_fish_32x48_4f.png",
+      "name": "node_fish_32x48_4f.png",
+      "size": 4876,
+      "sha1": "2a2dc976e329811975f1f3e8d14c0c1656133907",
+      "date": "2026-10-07T23:42:51.996Z",
+      "source": "Idle-Grounds-Nodes-004.zip"
+    },
+    {
+      "path": "nodes/node_ironvein_64x80_2f.png",
+      "name": "node_ironvein_64x80_2f.png",
+      "size": 7073,
+      "sha1": "19ff2434ec439757fc314553ee20030f2ef929b9",
+      "date": "2026-10-07T23:42:51.583Z",
+      "source": "Idle-Grounds-Nodes-003.zip"
+    },
+    {
+      "path": "nodes/node_jadevein_64x80_2f.png",
+      "name": "node_jadevein_64x80_2f.png",
+      "size": 8345,
+      "sha1": "27014f52b510a3478144f6365d28b073f94dc680",
+      "date": "2026-10-07T23:42:51.584Z",
+      "source": "Idle-Grounds-Nodes-003.zip"
+    },
+    {
+      "path": "nodes/node_ore_1x1_32x48_2f.png",
+      "name": "node_ore_1x1_32x48_2f.png",
+      "size": 1696,
+      "sha1": "e7a600921a8cd75bbf7f4401cf8eb87cfeb2f89f",
+      "date": "2026-10-07T23:42:51.584Z",
+      "source": "Idle-Grounds-Nodes-003.zip"
+    },
+    {
+      "path": "nodes/node_ore_2x2_64x80_2f.png",
+      "name": "node_ore_2x2_64x80_2f.png",
+      "size": 4301,
+      "sha1": "5c908178670fdd7066ffa3bc09804b05e79883a1",
+      "date": "2026-10-07T23:42:51.585Z",
+      "source": "Idle-Grounds-Nodes-003.zip"
     },
     {
       "path": "sky/sky_clouds_far_1024x256.png",

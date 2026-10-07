@@ -128,14 +128,22 @@ MonoBehaviour:
   groundColor: {r: 0.25, g: 0.45, b: 0.55, a: 1}
   sprites:
   - key: node_fish
-    sprite: {fileID: 1192079518, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: 3164138643696964899, guid: 3ff820b1cad327f40a5e4e48eb9c2351, type: 3}
+    frames:
+    - {fileID: 3164138643696964899, guid: 3ff820b1cad327f40a5e4e48eb9c2351, type: 3}
+    - {fileID: -3558013573909036311, guid: 3ff820b1cad327f40a5e4e48eb9c2351, type: 3}
+    - {fileID: -8499324381351207101, guid: 3ff820b1cad327f40a5e4e48eb9c2351, type: 3}
+    - {fileID: -7162677827020504579, guid: 3ff820b1cad327f40a5e4e48eb9c2351, type: 3}
+    realArt: 1
     overlay: []
   - key: node_algae
-    sprite: {fileID: 1306688085, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: -6020402288954733037, guid: cc5ddb5d82c87164bba7eeb2cc9f1a27, type: 3}
+    frames:
+    - {fileID: -6020402288954733037, guid: cc5ddb5d82c87164bba7eeb2cc9f1a27, type: 3}
+    - {fileID: 4364086973081533472, guid: cc5ddb5d82c87164bba7eeb2cc9f1a27, type: 3}
+    - {fileID: -1042437388676168558, guid: cc5ddb5d82c87164bba7eeb2cc9f1a27, type: 3}
+    - {fileID: -7318910639903967944, guid: cc5ddb5d82c87164bba7eeb2cc9f1a27, type: 3}
+    realArt: 1
     overlay: []
   - key: fix_spring
     sprite: {fileID: 21300000, guid: 45d5ec94faadb23408947a51c72f8d95, type: 3}

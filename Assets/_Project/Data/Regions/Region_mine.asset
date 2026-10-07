@@ -128,14 +128,30 @@ MonoBehaviour:
   groundColor: {r: 0.38, g: 0.38, b: 0.42, a: 1}
   sprites:
   - key: node_ore
-    sprite: {fileID: 1147092697, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: -6976155309912069667, guid: bc6d9702eceef744e8b9ee8c987f39d4, type: 3}
+    frames:
+    - {fileID: -6976155309912069667, guid: bc6d9702eceef744e8b9ee8c987f39d4, type: 3}
+    - {fileID: 54859927784598823, guid: bc6d9702eceef744e8b9ee8c987f39d4, type: 3}
+    realArt: 1
+    overlay: []
   - key: node_ironvein
-    sprite: {fileID: -1433539018, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: 7478871655754362191, guid: 17400e8f55d41ce46980dbabdc0e5be3, type: 3}
+    frames:
+    - {fileID: 7478871655754362191, guid: 17400e8f55d41ce46980dbabdc0e5be3, type: 3}
+    - {fileID: 727058184830667675, guid: 17400e8f55d41ce46980dbabdc0e5be3, type: 3}
+    realArt: 1
+    overlay: []
   - key: node_jadevein
-    sprite: {fileID: -1548191747, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: 8209227077267360540, guid: a081bb3ed285ab14db5ca3158966a7e6, type: 3}
+    frames:
+    - {fileID: 8209227077267360540, guid: a081bb3ed285ab14db5ca3158966a7e6, type: 3}
+    - {fileID: 2543481101769347325, guid: a081bb3ed285ab14db5ca3158966a7e6, type: 3}
+    realArt: 1
+    overlay: []
+  - key: node_ore_2x2
+    sprite: {fileID: 5902746000822143927, guid: d0bf0476667a3e644b9361a4c04f95d5, type: 3}
+    frames:
+    - {fileID: 5902746000822143927, guid: d0bf0476667a3e644b9361a4c04f95d5, type: 3}
+    - {fileID: -8399554576917146418, guid: d0bf0476667a3e644b9361a4c04f95d5, type: 3}
+    realArt: 1
+    overlay: []

@@ -47,8 +47,10 @@ namespace IdleGrounds.Game
                 return d;
             }
             string key = (n.isFixed ? "fix_" : "node_") + (n.isFixed ? n.kind : n.spawnerKind ?? n.kind);
-            string k = area + ":" + key;
-            if (!artCache.TryGetValue(k, out var e)) artCache[k] = e = db.RealNodeArt(area, key);
+            bool big = !n.isFixed && n.size >= 2;     // big spawner nodes prefer the "_2x2" art (node_ore_2x2)
+            string k = area + ":" + key + (big ? ":2" : "");
+            if (!artCache.TryGetValue(k, out var e))
+                artCache[k] = e = (big ? db.RealNodeArt(area, key + "_2x2") : null) ?? db.RealNodeArt(area, key);
             return e;
         }
 

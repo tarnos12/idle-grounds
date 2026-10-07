@@ -254,6 +254,17 @@ namespace IdleGrounds.Editor
                     { e.sprite = s; e.frames = fr; e.overlay = ov; e.realArt = true; dirty = true; wired++; }
                     used.Add(rk);
                 }
+                // "<key>_2x2": size variant for big spawner nodes (node_ore_2x2), stored as its own entry
+                for (int i = 0, n0 = r.sprites.Count; i < n0; i++)
+                {
+                    string bk = r.sprites[i].key + "_2x2";
+                    if (!map.TryGetValue(bk, out var bs)) continue;
+                    frameMap.TryGetValue(bk, out var bfr);
+                    var be = r.sprites.Find(x => x.key == bk);
+                    if (be == null) { be = new SpriteEntry { key = bk }; r.sprites.Add(be); }
+                    if (be.sprite != bs || !SameFrames(be.frames, bfr) || !be.realArt) { be.sprite = bs; be.frames = bfr; be.realArt = true; dirty = true; wired++; }
+                    used.Add(bk);
+                }
                 if (Set(map, "ui_area_" + r.def.key, used, s => { if (r.icon == s) return false; r.icon = s; dirty = true; return true; })) wired++;
                 if (Set(map, "ui_action_" + r.def.key, used, s => { if (r.actionIcon == s) return false; r.actionIcon = s; dirty = true; return true; })) wired++;
                 if (dirty) EditorUtility.SetDirty(r);
