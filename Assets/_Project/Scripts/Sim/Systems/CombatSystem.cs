@@ -180,7 +180,7 @@ namespace IdleGrounds.Sim
                 foreach (var spec in drops)
                 {
                     int amt = Rng.RollAmount(spec) * loot;
-                    if (amt > 0) { _ctx.Ground.DropGround(areaKey, spec.item, amt, en.x, en.y, GroundTag.Manual); S.stats.totalGathered += amt; }
+                    if (amt > 0) { _ctx.Ground.DropGround(areaKey, spec.item, amt, en.x, en.y, GroundTag.Manual); S.stats.totalGathered += amt; _ctx.Flow.Produce(spec.item, amt); }
                 }
             if (!boss)
             {

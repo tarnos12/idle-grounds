@@ -43,6 +43,7 @@ namespace IdleGrounds.Sim
             var b = S.Area(areaKey).BuildingById(buildingId);
             var r = Cfg.Building(b.type).roster;
             _ctx.Hand.Take(r.recruit, 1);
+            _ctx.Flow.Consume(r.recruit, 1);
             b.disciples++;
             S.stats.disciplesRecruited++;
             _ctx.Events.RaiseDiscipleRecruited(areaKey, b);
@@ -70,6 +71,7 @@ namespace IdleGrounds.Sim
                 int h = Cfg.BuildingSize(b.type).h;
                 _ctx.Ground.DropGround(areaKey, def.roster.produce, worked,
                     cx + _ctx.Rng.Rand(-40, 40), (b.row + h) * _ctx.Cell + 12, GroundTag.Crafted);
+                _ctx.Flow.Produce(def.roster.produce, worked);
                 changed = true;
             }
             return changed;

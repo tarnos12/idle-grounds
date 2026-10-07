@@ -119,6 +119,7 @@ namespace IdleGrounds.Sim
         {
             double now = Ctx.Now;
             Ctx.Timing.BeginTick(now);
+            Ctx.Flow.Advance(now);
             bool changed = false;
             foreach (var reg in Config.regions)
             {

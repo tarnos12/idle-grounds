@@ -324,12 +324,15 @@ namespace IdleGrounds.Sim
                     int amt = node.dropMin != 0 ? Rng.Rand(node.dropMin, node.dropMax != 0 ? node.dropMax : node.dropMin) : 1;
                     if (Timing.BuffActive(S, "stoneheart_pill", now)) amt *= 2;
                     var c = _ctx.World.NodeCenterPx(node);
-                    ground.DropGround(areaKey, string.IsNullOrEmpty(node.dropItem) ? "stone" : node.dropItem, amt, c.x, c.y, tag);
+                    string dropItem = string.IsNullOrEmpty(node.dropItem) ? "stone" : node.dropItem;
+                    ground.DropGround(areaKey, dropItem, amt, c.x, c.y, tag);
                     stats.totalGathered += amt;
+                    _ctx.Flow.Produce(dropItem, amt);
                     if (node.rareDrop != null && Rng.Next01() < node.rareDrop.chance)
                     {
                         ground.DropGround(areaKey, node.rareDrop.item, 1, c.x, c.y, tag);
                         stats.totalGathered += 1;
+                        _ctx.Flow.Produce(node.rareDrop.item, 1);
                     }
                 }
                 return true;
@@ -363,6 +366,7 @@ namespace IdleGrounds.Sim
                     var c = _ctx.World.NodeCenterPx(node);
                     ground.DropGround(areaKey, node.rareDrop.item, 1, c.x, c.y, tag);
                     stats.totalGathered += 1;
+                    _ctx.Flow.Produce(node.rareDrop.item, 1);
                 }
                 DepleteNode(areaKey, node);
                 return true;
@@ -382,7 +386,7 @@ namespace IdleGrounds.Sim
             foreach (var spec in specs)
             {
                 int amt = Rng.RollAmount(spec) * (mult != 0 ? mult : 1);
-                if (amt > 0) { _ctx.Ground.DropGround(areaKey, spec.item, amt, c.x, c.y, tag); S.stats.totalGathered += amt; }
+                if (amt > 0) { _ctx.Ground.DropGround(areaKey, spec.item, amt, c.x, c.y, tag); S.stats.totalGathered += amt; _ctx.Flow.Produce(spec.item, amt); }
             }
         }
 
@@ -392,7 +396,7 @@ namespace IdleGrounds.Sim
             if (node.pending == null) return;
             var c = _ctx.World.NodeCenterPx(node);
             foreach (var e in node.pending)
-                if (e.qty > 0) { _ctx.Ground.DropGround(areaKey, e.item, e.qty, c.x, c.y, tag); S.stats.totalGathered += e.qty; }
+                if (e.qty > 0) { _ctx.Ground.DropGround(areaKey, e.item, e.qty, c.x, c.y, tag); S.stats.totalGathered += e.qty; _ctx.Flow.Produce(e.item, e.qty); }
             node.pending = null;
         }
     }

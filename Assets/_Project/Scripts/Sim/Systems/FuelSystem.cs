@@ -50,7 +50,7 @@ namespace IdleGrounds.Sim
                 var back = q[q.Count - 1];
                 double take = Math.Min(ms, back.rem);
                 back.rem -= take; ms -= take;
-                if (back.rem <= 0.5) q.RemoveAt(q.Count - 1);
+                if (back.rem <= 0.5) { q.RemoveAt(q.Count - 1); _ctx.Flow.Consume(back.item, 1); }
             }
         }
     }

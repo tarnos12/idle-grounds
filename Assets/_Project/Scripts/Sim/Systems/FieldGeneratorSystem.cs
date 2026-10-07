@@ -76,6 +76,7 @@ namespace IdleGrounds.Sim
             double x = (rng.Rand(z.c0, z.c1) + 0.5) * CELL;
             double y = (rng.Rand(z.r0, z.r1) + 0.5) * CELL;
             _ctx.Ground.DropGround(areaKey, item, 1, x, y, tag);
+            _ctx.Flow.Produce(item, 1);
         }
     }
 }

@@ -122,7 +122,7 @@ namespace IdleGrounds.Sim
             if (altar != null) (x, y) = _ctx.World.BuildingCenterPx(altar);
             else { x = _ctx.PlayPx / 2.0; y = _ctx.PlayPx / 2.0; }
             foreach (var e in job.paid)
-                if (e.qty > 0) _ctx.Ground.DropGround("center", e.item, e.qty, x, y, GroundTag.Manual);
+                if (e.qty > 0) { _ctx.Ground.DropGround("center", e.item, e.qty, x, y, GroundTag.Manual); _ctx.Flow.Unconsume(e.item, e.qty); }
         }
 
         /// <summary>`selectUpgrade(area,type)` — maxed ⇒ false; same job ⇒ true; else refund the old job and start this one.</summary>
@@ -152,6 +152,7 @@ namespace IdleGrounds.Sim
             var job = S.upgradeJob;
             if (job == null) { result = null; return true; }
             result = _ctx.Hand.FeedNeeds(JobRemaining(job), job.paid);
+            if (result != null && result.kind == DropResultKind.Fed) _ctx.Flow.Consume(result.item, 1);
             if (result != null && result.kind == DropResultKind.Fed && JobRemaining(job).Count == 0)
             {
                 Apply(job.area, job.type);

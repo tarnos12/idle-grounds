@@ -191,6 +191,7 @@ namespace IdleGrounds.Sim
             foreach (var r in q.rewardItems)
             {
                 if (!Cfg.IsItem(r.item) || !(r.qty > 0)) continue;
+                _ctx.Flow.Produce(r.item, r.qty);
                 int got = Hand.Add(r.item, r.qty);
                 if (got > 0) outp.toHand.Set(r.item, got);
                 if (r.qty - got > 0)
@@ -391,6 +392,7 @@ namespace IdleGrounds.Sim
                 int take = Math.Min(e.qty, Hand.Count(e.item));
                 if (take <= 0) continue;
                 Hand.Take(e.item, take);
+                _ctx.Flow.Consume(e.item, take);
                 PaidEntry(k, true).paid.Add(e.item, take);
                 n += take;
             }
@@ -409,6 +411,7 @@ namespace IdleGrounds.Sim
             foreach (var e in items)
             {
                 if (!(e.qty > 0)) continue;
+                _ctx.Flow.Unconsume(e.item, e.qty);   // installments handed back
                 int left = e.qty - Hand.Add(e.item, e.qty);
                 if (left > 0) _ctx.Ground.DropGround("center", e.item, left, _ctx.PlayPx / 2.0, _ctx.PlayPx / 2.0 + 3 * _ctx.Cell, GroundTag.Manual);
             }
@@ -515,6 +518,7 @@ namespace IdleGrounds.Sim
                 {
                     string it = first.item;
                     Hand.Take(it, 1);
+                    _ctx.Flow.Consume(it, 1);
                     b.offered ??= new ItemCounts();
                     b.offered.Add(it, 1);
                     b.offerings = GateOfferings(b).count;

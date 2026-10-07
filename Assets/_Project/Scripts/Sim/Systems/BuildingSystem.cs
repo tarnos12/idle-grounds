@@ -256,23 +256,33 @@ namespace IdleGrounds.Sim
             if (def == null || def.indestructible) return false;
             var (x, y) = _ctx.World.BuildingCenterPx(b);
             void Drop(string item, int qty) { if (qty > 0) _ctx.Ground.DropGround(areaKey, item, qty, x, y, GroundTag.Manual); }
+            var flow = _ctx.Flow;
+            // paid costs coming back un-consume them; a starter building's (never paid) cost is new items
+            void Refund(string item, int qty)
+            {
+                if (qty <= 0) return;
+                Drop(item, qty);
+                if (b.starter) flow.Produce(item, qty); else flow.Unconsume(item, qty);
+            }
+            void Restore(string item, int qty) { if (qty <= 0) return; Drop(item, qty); flow.Unconsume(item, qty); }
             if (b.built)
             {
-                foreach (var c in def.cost) Drop(c.item, c.qty);
+                foreach (var c in def.cost) Refund(c.item, c.qty);
                 if ((b.type == "storehouse" || def.seal.enabled) && b.item != null && b.qty > 0) Drop(b.item, b.qty);
                 if (b.inv != null) foreach (var st in b.inv) Drop(st.item, st.qty);
                 if (def.IsConverter)
                 {
                     if (b.stock != null) foreach (var e in b.stock) Drop(e.item, e.qty);
                     var rec = Conv.RecipeOf(b);
-                    if (b.smeltDoneAt > 0 && rec != null) foreach (var e in rec.inputs) Drop(e.item, e.qty);
+                    if (b.smeltDoneAt > 0 && rec != null) foreach (var e in rec.inputs) Restore(e.item, e.qty);
                 }
-                if (def.roster.enabled && b.disciples > 0) Drop(def.roster.recruit, b.disciples);
-                if (def.gate && b.offered != null) foreach (var e in b.offered) Drop(e.item, e.qty);
+                if (def.roster.enabled && b.disciples > 0) Restore(def.roster.recruit, b.disciples);
+                if (def.gate && b.offered != null) foreach (var e in b.offered) Restore(e.item, e.qty);
+                if (b.fuelQ != null) foreach (var f in b.fuelQ) flow.Lose(f.item, 1);   // fuel is not refunded
             }
             else
             {
-                foreach (var e in b.paid) Drop(e.item, e.qty);
+                foreach (var e in b.paid) Restore(e.item, e.qty);
             }
             if (def.bridge.enabled) _ctx.Logistics.Unpair(areaKey, b.id);   // its sky wisps turn back / drop
             area.buildings.RemoveAt(i);
@@ -357,7 +367,7 @@ namespace IdleGrounds.Sim
             var lanS = P("wisp_lantern", 62, 51);
             L(lanS, gsOut, shPlank); L(lanS, gsOut, shBrick); L(lanS, gsSpirit, shSpirit);
             int CELL = _ctx.Cell;
-            void Seed(string item, int n, int r, int c) => _ctx.Ground.DropGround(A, item, n, (c + 0.5) * CELL, (r + 0.5) * CELL);
+            void Seed(string item, int n, int r, int c) { _ctx.Ground.DropGround(A, item, n, (c + 0.5) * CELL, (r + 0.5) * CELL); _ctx.Flow.Produce(item, n); }
             Seed("stone", 8, 80, 14); Seed("jade_shard", 2, 79, 15);
             Seed("wood", 8, 15, 45); Seed("bamboo", 2, 16, 46);
             Seed("clay", 6, 80, 80); Seed("spirit_essence", 4, 12, 82);
@@ -492,7 +502,7 @@ namespace IdleGrounds.Sim
                 if (st != null) st.qty++; else b.inv.Add(new HandStack(item, 1));
                 return true;
             }
-            if (def.roster.enabled) { b.buns = Math.Min(def.roster.foodCap, b.buns + FoodValue(b, item)); return true; }
+            if (def.roster.enabled) { b.buns = Math.Min(def.roster.foodCap, b.buns + FoodValue(b, item)); _ctx.Flow.Consume(item, 1); return true; }
             if (def.IsConverter)
             {
                 // Fuel that is an ingredient of the current recipe (firestone on a Pill Furnace's
@@ -613,7 +623,7 @@ namespace IdleGrounds.Sim
                 if (def.seal.enabled)
                 {
                     if (first == null) return true;
-                    if (b.item != first.item) { b.item = first.item; b.qty = 0; b.locked = true; }
+                    if (b.item != first.item) { if (b.item != null) _ctx.Flow.Lose(b.item, b.qty); b.item = first.item; b.qty = 0; b.locked = true; }
                     result = DropResult.Of(DropResultKind.Configured, first.item);
                     return true;
                 }
@@ -643,6 +653,7 @@ namespace IdleGrounds.Sim
             result = Hand.FeedNeeds(Needs(b), b.paid);
             if (result != null)
             {
+                if (result.kind == DropResultKind.Fed) _ctx.Flow.Consume(result.item, 1);
                 if (result.kind == DropResultKind.Fed && Needs(b).Count == 0) Complete(areaKey, b);
                 result.buildingId = b.id;
             }
@@ -698,6 +709,7 @@ namespace IdleGrounds.Sim
                 for (int ev = 0; ev < tm.n && near < g.cap; ev++, near++)
                 {
                     _ctx.Ground.DropGround(areaKey, g.item, 1, bx + _ctx.Rng.Rand(-R / 2, R / 2), by + _ctx.Rng.Rand(-R / 2, R / 2), GroundTag.Crafted);
+                    _ctx.Flow.Produce(g.item, 1);
                     changed = true;
                 }
             }

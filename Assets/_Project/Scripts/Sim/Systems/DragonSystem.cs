@@ -151,6 +151,7 @@ namespace IdleGrounds.Sim
             {
                 string kind = first.item;
                 hand.Take(kind, 1);
+                _ctx.Flow.Consume(kind, 1);
                 S.buff = new BuffState { kind = kind, until = now + BlessingDurationMs() };
                 _ctx.Events.RaiseBlessingStarted(kind, S.buff.until);
                 result = new DropResult { kind = DropResultKind.Fed, item = kind, once = true };
@@ -162,6 +163,7 @@ namespace IdleGrounds.Sim
             if (CurrentStage == null) { result = pill != null ? PillFront() : null; return true; }
             var dr = S.dragon;
             var res = hand.FeedNeeds(Remaining(), dr.paid);
+            if (res != null && res.kind == DropResultKind.Fed) _ctx.Flow.Consume(res.item, 1);
             if (res != null && res.kind == DropResultKind.Fed && Remaining().Count == 0)
                 Advance(areaKey, now);
             result = res ?? (pill != null ? PillFront() : null);
@@ -214,6 +216,7 @@ namespace IdleGrounds.Sim
                 if (g.item == ScaleItem && Math.Sqrt((g.x - cx) * (g.x - cx) + (g.y - cy) * (g.y - cy)) <= R) near++;
             if (near >= ScalePileCap) return false;
             _ctx.Ground.DropGround(areaKey, ScaleItem, 1, cx + _ctx.Rng.Rand(-60, 60), cy + 90);
+            _ctx.Flow.Produce(ScaleItem, 1);
             return true;
         }
     }

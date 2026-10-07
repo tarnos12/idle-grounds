@@ -196,6 +196,7 @@ namespace IdleGrounds.Sim
             if (H.Count > 0 && H[0].item == Cfg.vitality.item)
             {
                 Take(Cfg.vitality.item, 1);
+                _ctx.Flow.Consume(Cfg.vitality.item, 1);
                 s.combatBuff = new CombatBuffState { until = now + Cfg.vitality.ms * _ctx.Timing.BuffScale };
                 _ctx.Events.RaiseCombatBuffStarted(s.combatBuff.until);
                 return new DropResult { kind = DropResultKind.Used, item = Cfg.vitality.item, once = true };
@@ -209,6 +210,7 @@ namespace IdleGrounds.Sim
                 if (rects.Count > 0 && rects[0].Contains(row, col))
                 {
                     Take("beast_bait", 1);
+                    _ctx.Flow.Consume("beast_bait", 1);
                     var bs = ecfg.baitSpawn;
                     var area = s.Area(areaKey);
                     var boar = new Enemy

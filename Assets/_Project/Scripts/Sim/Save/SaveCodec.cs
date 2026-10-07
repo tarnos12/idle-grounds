@@ -389,6 +389,8 @@ namespace IdleGrounds.Sim
             if (!(Finite(s.offlineAwayFrom) && Finite(s.lastSeen) && s.offlineAwayFrom < s.lastSeen)) s.offlineAwayFrom = double.NaN;
 
             s.stats ??= new GameStats();
+            s.flow ??= new FlowLedger();
+            s.flow.Sanitize(Live);
 
             // quest cursor (chain stamp mismatch: a veteran skips to the end)
             s.quest ??= new QuestState();

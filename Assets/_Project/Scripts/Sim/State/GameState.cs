@@ -429,6 +429,8 @@ namespace IdleGrounds.Sim
         public List<SkyWisp> skyWisps = new List<SkyWisp>();
         public int nextSkyWispId = 1;
         public GameStats stats = new GameStats();
+        /// <summary>Per-item produced / consumed / lost counters (Stats - Flow). Lifetime survives ascension, the run section resets.</summary>
+        public FlowLedger flow = new FlowLedger();
 
         /// <summary>`makeInitialState()` (state.js:31). Areas in config region order.</summary>
         public static GameState CreateInitial(GameConfig cfg, long nowMs)

@@ -120,7 +120,11 @@ namespace IdleGrounds.Sim
                     if (!outF[i] && (pass == 1 || i < freshFrom)) { outF[i] = true; gone++; }
             if (gone == 0) return 0;
             int wi = 0;
-            for (int i = 0; i < n; i++) if (!outF[i]) g[wi++] = g[i];
+            for (int i = 0; i < n; i++)
+            {
+                if (!outF[i]) g[wi++] = g[i];
+                else _ctx.Flow.Lose(g[i].item, 1);
+            }
             g.RemoveRange(wi, n - wi);
             return gone;
         }

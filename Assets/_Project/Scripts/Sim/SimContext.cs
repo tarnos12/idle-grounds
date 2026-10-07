@@ -57,6 +57,9 @@ namespace IdleGrounds.Sim
             Timing = new Timing(Config);
         }
 
+        /// <summary>The flow ledger of the current state (never null: GameState initialises it, the codec sanitises it).</summary>
+        public FlowLedger Flow => State.flow;
+
         public double Now => Clock.NowMs;
         public int Cell => Config.grid.cell;
         public int N => Config.grid.cells;

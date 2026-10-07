@@ -191,7 +191,7 @@ namespace IdleGrounds.Editor
         {
             var root = Stretch(NewUi("StatsPanel", null));
             var view = root.gameObject.AddComponent<StatsPanelView>();
-            var (modal, box, _) = FitBox(root, UiPalette.Line, 660f, 27, 10, TextAnchor.UpperLeft);
+            var (modal, box, _) = FitBox(root, UiPalette.Line, 720f, 27, 10, TextAnchor.UpperLeft);
             var brt = box.rectTransform;
             var head = NewUi("Header", brt);
             Row(head.gameObject, 0, 0, 12);
@@ -199,8 +199,57 @@ namespace IdleGrounds.Editor
             Label(head, "Title", "Stats", 25f, UiPalette.Text, true);
             Le(NewUi("Spacer", head), flexW: 1);
             var close = SmallButton(head, "Close", "x", UiPalette.Text, 48, 42);
+
+            var tabs = NewUi("Tabs", brt);
+            Row(tabs.gameObject, 0, 0, 10);
+            var tabOverview = SmallButton(tabs, "OverviewTab", "Overview", UiPalette.Text, 150, 42);
+            var tabFlow = SmallButton(tabs, "FlowTab", "Flow", UiPalette.Text, 150, 42);
+
             var rows = NewUi("Rows", brt);
             ColW(rows.gameObject, 0, 6);
+
+            // ---- Flow tab (per-item produced / consumed / lost ledger)
+            var flow = NewUi("FlowRoot", brt);
+            ColW(flow.gameObject, 0, 8);
+            var ctl = NewUi("Controls", flow);
+            Row(ctl.gameObject, 0, 0, 10);
+            var scopeBtn = SmallButton(ctl, "ScopeButton", "This run", UiPalette.Gold, 150, 40);
+            var sortBtn = SmallButton(ctl, "SortButton", "Sort: net / min", UiPalette.Text, 210, 40);
+            var hint = Label(ctl, "Hint", "net / min = last ~5 min", 16f, UiPalette.Muted, false);
+            hint.alignment = TextAlignmentOptions.MidlineRight;
+            Le(hint, flexW: 1);
+
+            var hdr = NewUi("ColumnHeader", flow);
+            Row(hdr.gameObject, 8, 0, 8);
+            Le(NewUi("IconSpace", hdr), w: 30);
+            Le(HeaderCell(hdr, "Item", TextAlignmentOptions.MidlineLeft), flexW: 1);
+            Le(HeaderCell(hdr, "Made", TextAlignmentOptions.MidlineRight), w: 86);
+            Le(HeaderCell(hdr, "Used", TextAlignmentOptions.MidlineRight), w: 86);
+            Le(HeaderCell(hdr, "Lost", TextAlignmentOptions.MidlineRight), w: 76);
+            Le(HeaderCell(hdr, "Net/min", TextAlignmentOptions.MidlineRight), w: 90);
+
+            var scrollRt = NewUi("FlowScroll", flow);
+            Le(scrollRt, h: 520);
+            var vp = NewUi("Viewport", scrollRt);
+            Stretch(vp);
+            var vimg = vp.gameObject.AddComponent<Image>();
+            vimg.color = new Color(0f, 0f, 0f, 0f);
+            vimg.raycastTarget = true;
+            vp.gameObject.AddComponent<RectMask2D>();
+            var content = NewUi("Content", vp);
+            content.anchorMin = new Vector2(0f, 1f); content.anchorMax = new Vector2(1f, 1f);
+            content.pivot = new Vector2(0.5f, 1f);
+            content.sizeDelta = Vector2.zero;
+            var ccol = ColW(content.gameObject, 0, 4);
+            ccol.padding = new RectOffset(0, 10, 0, 8);
+            Fit(content.gameObject, false, true);
+            var sr = scrollRt.gameObject.AddComponent<ScrollRect>();
+            sr.viewport = vp; sr.content = content;
+            sr.horizontal = false; sr.vertical = true;
+            sr.movementType = ScrollRect.MovementType.Clamped;
+            sr.scrollSensitivity = 40f;
+            var empty = Label(flow, "Empty", "Nothing has flowed yet - harvest, craft or build something.", 18f, UiPalette.Muted, false);
+            empty.gameObject.SetActive(false);
 
             var tpl = Templates(root);
             var r = NewUi("RowTemplate", tpl);
@@ -211,12 +260,54 @@ namespace IdleGrounds.Editor
             tr.b = Label(r, "Value", "0", 19.5f, UiPalette.Text, true);
             tr.b.alignment = TextAlignmentOptions.MidlineRight;
 
+            var fr = NewUi("FlowRowTemplate", tpl);
+            var frImg = fr.gameObject.AddComponent<Image>();
+            frImg.color = new Color(1f, 1f, 1f, 0.04f);
+            frImg.raycastTarget = false;
+            Row(fr.gameObject, 8, 3, 8);
+            Le(fr, h: 38);
+            var fv = fr.gameObject.AddComponent<FlowRowView>();
+            fv.icon = Icon(fr, "Icon", null, 28);
+            fv.nameText = Label(fr, "Name", "Item", 18.5f, UiPalette.Text, false);
+            Le(fv.nameText, flexW: 1);
+            fv.producedText = FlowCell(fr, "Made", UiPalette.Text, 86, false);
+            fv.consumedText = FlowCell(fr, "Used", UiPalette.Text, 86, false);
+            fv.lostText = FlowCell(fr, "Lost", UiPalette.Muted, 76, false);
+            fv.netText = FlowCell(fr, "Net", UiPalette.Accent, 90, true);
+            EditorUtility.SetDirty(fv);
+
             Set(view, "modal", modal);
             Set(view, "closeButton", close);
             Set(view, "rowsRoot", rows);
             Set(view, "rowTemplate", tr);
+            Set(view, "overviewTab", tabOverview);
+            Set(view, "flowTab", tabFlow);
+            Set(view, "flowRoot", flow.gameObject);
+            Set(view, "scopeButton", scopeBtn);
+            Set(view, "sortButton", sortBtn);
+            Set(view, "scopeLabel", scopeBtn.GetComponentInChildren<TextMeshProUGUI>());
+            Set(view, "sortLabel", sortBtn.GetComponentInChildren<TextMeshProUGUI>());
+            Set(view, "emptyText", empty);
+            Set(view, "flowContent", content);
+            Set(view, "flowRowTemplate", fv);
+            flow.gameObject.SetActive(false);
             modal.SetActive(false);
             Save(root.gameObject, UiPrefabDir + "/StatsPanel.prefab");
+        }
+
+        static TextMeshProUGUI HeaderCell(Transform parent, string text, TextAlignmentOptions align)
+        {
+            var t = Label(parent, text, text, 15.5f, UiPalette.Muted, true);
+            t.alignment = align;
+            return t;
+        }
+
+        static TextMeshProUGUI FlowCell(Transform parent, string name, Color c, float w, bool bold)
+        {
+            var t = Label(parent, name, "0", 18f, c, bold);
+            t.alignment = TextAlignmentOptions.MidlineRight;
+            Le(t, w: w);
+            return t;
         }
 
         static void BuildPerkShopPrefab()

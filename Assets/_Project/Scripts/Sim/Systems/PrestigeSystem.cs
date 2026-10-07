@@ -104,6 +104,7 @@ namespace IdleGrounds.Sim
             fresh.quest.idx = Cfg.quests.Count;             // veterans skip the tutorial chain
             fresh.dragonBlessed = old.dragonBlessed || old.won;
             fresh.stats = old.stats ?? new GameStats();     // lifetime
+            fresh.flow = old.flow ?? new FlowLedger();      // lifetime totals survive; Ascend() zeroes the run section
             fresh.introSeen = true;
             fresh.endingSeen = old.endingSeen;
             fresh.vows = vows;
@@ -131,6 +132,7 @@ namespace IdleGrounds.Sim
         {
             Ctx.Events.RaiseSound("ascend", null);
             var fresh = BuildAscendedState(nextVows, out _);
+            fresh.flow.ResetRun();
             _sim.ReplaceState(fresh);
             return fresh.justAscended;
         }

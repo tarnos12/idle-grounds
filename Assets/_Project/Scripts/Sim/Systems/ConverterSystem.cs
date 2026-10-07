@@ -150,7 +150,7 @@ namespace IdleGrounds.Sim
             if (b.smeltDoneAt > 0)
             {
                 var old = RecipeOf(b);
-                if (old != null) foreach (var i in old.inputs) held.Add(i.item, i.qty);
+                if (old != null) foreach (var i in old.inputs) { held.Add(i.item, i.qty); _ctx.Flow.Unconsume(i.item, i.qty); }   // the cancelled batch inputs come back
             }
             var keep = list[idx];
             b.stock = new ItemCounts();
@@ -246,6 +246,7 @@ namespace IdleGrounds.Sim
                         int qty = rec.outputQty > 0 ? rec.outputQty : 1;
                         _ctx.Ground.DropGround(areaKey, rec.output, qty, bx, by, GroundTag.Crafted);
                         S.stats.totalCrafted += qty;
+                        _ctx.Flow.Produce(rec.output, qty);
                         NoteCraft(b, now);
                         _ctx.Events.RaiseSound("craft", areaKey);
                         _ctx.Events.RaiseBatchFinished(areaKey, b, rec.output, qty);
@@ -257,7 +258,7 @@ namespace IdleGrounds.Sim
                     double cost = BatchMs(b, now);
                     // burners start on ANY fuel left (the remainder of the batch is free)
                     if (isBurner && !(Fuel.Total(b) > 0)) break;
-                    foreach (var i in rec.inputs) stock.Add(i.item, -i.qty);
+                    foreach (var i in rec.inputs) { stock.Add(i.item, -i.qty); _ctx.Flow.Consume(i.item, i.qty); }
                     // catch-up: re-arm from the finished batch's due time when it fell within this tick
                     double t0 = doneAt != 0 && doneAt >= now - tickGap ? doneAt : now;
                     b.smeltDoneAt = t0 + cost;
