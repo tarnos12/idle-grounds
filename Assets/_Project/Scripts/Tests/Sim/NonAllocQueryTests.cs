@@ -195,6 +195,14 @@ namespace IdleGrounds.Sim.Tests
                 }),
             };
 
+            // each quest of the whole chain, one at a time (so a single quest phase can't hide behind the others)
+            var perQuest = new List<(string, Action)>();
+            for (int q0 = 0; q0 < sim.Config.quests.Count; q0++)
+            {
+                int qi = q0;
+                perQuest.Add(("quest " + sim.Config.quests[qi].id, () => { sim.State.quest.idx = qi; sim.QuestTarget(qt); sim.BuildTargets(bt); }));
+            }
+            queries = queries.Concat(perQuest).ToArray();
             // the counter works: the allocating form of one query does register
             Assert.Greater(Measure(() => sim.BuildingStatus(conv.area, conv.b)), 1000, "GC counter sanity");
 
@@ -211,13 +219,28 @@ namespace IdleGrounds.Sim.Tests
             long gb = Measure(() => gateSim.BuildTargets(gbt));
             TestContext.Out.WriteLine($"BuildTargets (gate phase): {gb} B / 1000 calls");
             if (gb > 512) fails.Add($"BuildTargets (gate phase) allocated {gb} B over 1000 calls");
+            // Paired bridges (bridge-delivered quest: FindBridge mode 0 / PairOf path) on every island quest
+            var pairSim = Played();
+            var pbr = AllBuildings(pairSim).Where(x => pairSim.Logistics.IsBridge(x.b)).ToList();
+            pairSim.PairBridges(pbr[0].area, pbr[0].b.id, pbr[1].area, pbr[1].b.id);
+            Assert.Greater(pairSim.Progression.IntactBridgePairs(), 0, "bridges paired");
+            var pbt = new List<string>(); var pqt = new QuestTargetInfo();
+            long pbytes = Measure(() =>
+            {
+                foreach (int qi in islandQuests) { pairSim.State.quest.idx = qi; pairSim.QuestTarget(pqt); pairSim.BuildTargets(pbt); }
+            });
+            TestContext.Out.WriteLine($"island quests (paired bridges): {pbytes} B / 1000 calls");
+            if (pbytes > 512) fails.Add($"island quests (paired bridges) allocated {pbytes} B over 1000 calls");
             Assert.IsEmpty(fails, string.Join("\n", fails));
         }
 
         /// <summary>
         /// Managed bytes allocated by 1000 calls. GC.GetAllocatedBytesForCurrentThread / GC.GetTotalMemory
         /// read 0 under the editor's Mono, so this uses the profiler's live "GC Allocated In Frame" counter
-        /// (a synchronous test never crosses a frame boundary, so the delta is exact).
+        /// (a synchronous test never crosses a frame boundary).
+        /// The counter is process-wide, not per thread: a one-off ~12 KB allocation by the editor / MCP bridge /
+        /// test runner on another thread can land inside a window (this made the test flaky). Code under test
+        /// allocates on EVERY pass, outside noise does not, so this returns the MINIMUM over several windows.
         /// </summary>
         static long Measure(Action call)
         {
@@ -225,9 +248,14 @@ namespace IdleGrounds.Sim.Tests
             using (var rec = Unity.Profiling.ProfilerRecorder.StartNew(Unity.Profiling.ProfilerCategory.Memory, "GC Allocated In Frame"))
             {
                 Assert.IsTrue(rec.Valid, "GC Allocated In Frame recorder");
-                long before = rec.CurrentValue;
-                for (int i = 0; i < 1000; i++) call();
-                return rec.CurrentValue - before;
+                long best = long.MaxValue;
+                for (int attempt = 0; attempt < 5 && best > 0; attempt++)
+                {
+                    long before = rec.CurrentValue;
+                    for (int i = 0; i < 1000; i++) call();
+                    best = Math.Min(best, rec.CurrentValue - before);
+                }
+                return best;
             }
         }
     }
