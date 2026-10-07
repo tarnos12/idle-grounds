@@ -137,6 +137,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-07: playthrough bot (Tests/Sim/PlaythroughBot*.cs, docs/port/playthrough-report.md): game completable, first ascension ~6 min (TEST expert) … ~22 min (real balance, human pacing); balance concerns listed in the report; 161 EditMode tests.
+
 - 2026-10-07: Stats → Flow tab (FlowLedger: produced/consumed/lost per item, run + lifetime, 5-min rates); 157 EditMode tests.
 
 - 2026-10-07 art: underside fill + 5 biome cliffs + Mine/Volcano ground accepted; Farm/Fishing/Grove ground rejected (busy tiling, redo requested; placeholders kept); Celestial outstanding. (2026-10-06)
