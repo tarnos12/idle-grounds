@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
   m_Name: RuleTile_farm_coast
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
-  m_DefaultSprite: {fileID: -7281501568452139955, guid: c1386cea29997fb4bb9105cabcf9877a, type: 3}
+  m_DefaultSprite: {fileID: 333518503417895419, guid: 33ee48afb5bb54d4f9fd37917ce74369, type: 3}
   m_DefaultGameObject: {fileID: 0}
   m_DefaultColliderType: 0
   m_TilingRules:
@@ -984,9 +984,9 @@ MonoBehaviour:
     m_RuleTransform: 0
   - m_Id: 0
     m_Sprites:
-    - {fileID: -7281501568452139955, guid: c1386cea29997fb4bb9105cabcf9877a, type: 3}
-    - {fileID: -490835604, guid: c1386cea29997fb4bb9105cabcf9877a, type: 3}
-    - {fileID: 211964060, guid: c1386cea29997fb4bb9105cabcf9877a, type: 3}
+    - {fileID: 333518503417895419, guid: 33ee48afb5bb54d4f9fd37917ce74369, type: 3}
+    - {fileID: 4555360559752289731, guid: 33ee48afb5bb54d4f9fd37917ce74369, type: 3}
+    - {fileID: -1661365338335733749, guid: 33ee48afb5bb54d4f9fd37917ce74369, type: 3}
     m_GameObject: {fileID: 0}
     m_MinAnimationSpeed: 1
     m_MaxAnimationSpeed: 1

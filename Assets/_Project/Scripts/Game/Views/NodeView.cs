@@ -27,7 +27,7 @@ namespace IdleGrounds.Game
         [SerializeField] SpriteRenderer[] sparkles;
 
         public bool AutoBadgeShown => autoBadge != null && autoBadge.gameObject.activeSelf;
-        public bool SparklesShown => sparkles != null && sparkles.Length > 0 && sparkles[0] != null && sparkles[0].gameObject.activeSelf;
+        public bool SparklesShown => (overlay != null && overlay.gameObject.activeSelf) || sparkles != null && sparkles.Length > 0 && sparkles[0] != null && sparkles[0].gameObject.activeSelf;
         static readonly Vector2[] SparkleAt = { new Vector2(-0.28f, -0.72f), new Vector2(0.30f, -0.55f), new Vector2(0.05f, -0.92f) };
 
         public string Area { get; private set; }
@@ -42,8 +42,11 @@ namespace IdleGrounds.Game
         public static float SpriteSizePx(int size) => size >= 4 ? size * 30 : size >= 3 ? 90 : size >= 2 ? 72 : 30;
 
         const float ArtFps = 6f;
+        const float OverlayFps = 8f;    // ART-SPEC: overlay loops play at 8 fps
         const float ArtPpu = 32f;
         Sprite[] artFrames;     // real art with >1 frames
+        Sprite[] overlayFrames; // real-art overlay strip (Spirit Tree sparkle), drawn just above the sprite
+        SpriteRenderer overlay; // lazily created child of the sprite renderer (same pivot / scale / flip)
         bool realArt;
         int maxHits;
 
@@ -58,6 +61,21 @@ namespace IdleGrounds.Game
             artFrames = realArt && !decoArt && art.frames != null && art.frames.Length > 1 ? art.frames : null;
             maxHits = Mathf.Max(1, node.hitsLeft);
             if (realArt) sprite = art.sprite;
+            overlayFrames = realArt && !decoArt && art.overlay != null && art.overlay.Length > 0 ? art.overlay : null;
+            if (overlayFrames != null && overlay == null)
+            {
+                var go = new GameObject("Overlay");
+                go.transform.SetParent(spriteRenderer.transform, false);
+                overlay = go.AddComponent<SpriteRenderer>();
+                overlay.sortingLayerID = spriteRenderer.sortingLayerID;
+                overlay.sortingOrder = spriteRenderer.sortingOrder + 1;
+                overlay.sharedMaterial = spriteRenderer.sharedMaterial;
+            }
+            if (overlay != null)
+            {
+                overlay.gameObject.SetActive(overlayFrames != null);
+                if (overlayFrames != null) overlay.sprite = overlayFrames[0];
+            }
             bool flipX = false;
             if (decoArt)
             {
@@ -98,6 +116,7 @@ namespace IdleGrounds.Game
             if (node.deco) spriteLocal += new Vector3(node.decoDx / (float)cell, -node.decoDy / (float)cell, 0f);
             spriteRenderer.transform.localPosition = spriteLocal;
             spriteRenderer.flipX = flipX;
+            if (overlay != null) overlay.flipX = flipX;
             var c = spriteRenderer.color; c.a = node.deco && !decoArt ? 0.55f : 1f; spriteRenderer.color = c;
 
             pad.gameObject.SetActive(!node.deco && !realArt);
@@ -109,7 +128,7 @@ namespace IdleGrounds.Game
                 pad.transform.localPosition = Vector3.zero;
             }
             // Spirit Tree: three sparkles at 22% of the sprite size (offsets x fontPx, y down)
-            bool tree = node.isFixed && node.kind == "spirittree";
+            bool tree = node.isFixed && node.kind == "spirittree" && overlayFrames == null;   // emoji sparkles only without the art overlay
             if (sparkles != null)
                 for (int i = 0; i < sparkles.Length; i++)
                 {
@@ -178,6 +197,11 @@ namespace IdleGrounds.Game
                 else if (n.interaction != NodeInteraction.Surface || surfaced)
                     fi = (int)(Time.unscaledTime * ArtFps) % artFrames.Length;
                 if (spriteRenderer.sprite != artFrames[fi]) spriteRenderer.sprite = artFrames[fi];
+            }
+            if (overlayFrames != null)
+            {
+                int oi = (int)(Time.unscaledTime * OverlayFps) % overlayFrames.Length;
+                if (overlay.sprite != overlayFrames[oi]) overlay.sprite = overlayFrames[oi];
             }
 
             // fishing countdown (ui.js:1257): only in the last second, or while hovered

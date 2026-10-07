@@ -245,7 +245,13 @@ namespace IdleGrounds.Editor
                     if (s == null) continue;
                     string rk = Resolved(map, lookup);
                     frameMap.TryGetValue(rk, out var fr);
-                    if (e.sprite != s || e.frames != fr || !e.realArt) { e.sprite = s; e.frames = fr; e.realArt = true; dirty = true; wired++; }
+                    // "<key>_flow": a full-sprite animation loop that replaces the static art's frames (fix_spring_flow)
+                    if (frameMap.TryGetValue(rk + "_flow", out var flow) && flow != null) { fr = flow; used.Add(rk + "_flow"); }
+                    // "<key>_sparkle": an animated overlay drawn above the sprite (fix_spirittree_sparkle)
+                    Sprite[] ov = null;
+                    if (map.TryGetValue(rk + "_sparkle", out var ov0)) { ov = frameMap.TryGetValue(rk + "_sparkle", out var ovf) && ovf != null ? ovf : new[] { ov0 }; used.Add(rk + "_sparkle"); }
+                    if (e.sprite != s || !SameFrames(e.frames, fr) || !SameFrames(e.overlay, ov) || !e.realArt)
+                    { e.sprite = s; e.frames = fr; e.overlay = ov; e.realArt = true; dirty = true; wired++; }
                     used.Add(rk);
                 }
                 if (Set(map, "ui_area_" + r.def.key, used, s => { if (r.icon == s) return false; r.icon = s; dirty = true; return true; })) wired++;
@@ -309,7 +315,8 @@ namespace IdleGrounds.Editor
 
         static bool SameFrames(Sprite[] a, Sprite[] b)
         {
-            if (a == null || b == null) return a == b;
+            if (a == null || a.Length == 0 || b == null || b.Length == 0)     // Unity serializes null arrays as empty
+                return (a == null || a.Length == 0) && (b == null || b.Length == 0);
             if (a.Length != b.Length) return false;
             for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
             return true;

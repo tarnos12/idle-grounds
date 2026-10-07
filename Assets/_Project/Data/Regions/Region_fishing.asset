@@ -131,11 +131,18 @@ MonoBehaviour:
     sprite: {fileID: 1192079518, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
     frames: []
     realArt: 0
+    overlay: []
   - key: node_algae
     sprite: {fileID: 1306688085, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
     frames: []
     realArt: 0
+    overlay: []
   - key: fix_spring
-    sprite: {fileID: -911964136, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: 21300000, guid: 45d5ec94faadb23408947a51c72f8d95, type: 3}
+    frames:
+    - {fileID: 1530061534962794580, guid: 28d4cf07f56420f469dc4b4f01bc8a40, type: 3}
+    - {fileID: 7466349799496559283, guid: 28d4cf07f56420f469dc4b4f01bc8a40, type: 3}
+    - {fileID: 8948586321919872950, guid: 28d4cf07f56420f469dc4b4f01bc8a40, type: 3}
+    - {fileID: -719744002588797298, guid: 28d4cf07f56420f469dc4b4f01bc8a40, type: 3}
+    realArt: 1
+    overlay: []

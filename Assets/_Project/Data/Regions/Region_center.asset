@@ -159,14 +159,21 @@ MonoBehaviour:
     - {fileID: -6384541825141156081, guid: 96a9fe99262e49c47aea5ecbddf1bb48, type: 3}
     - {fileID: -4080273661060406747, guid: 96a9fe99262e49c47aea5ecbddf1bb48, type: 3}
     realArt: 1
+    overlay: []
   - key: fix_quarry
     sprite: {fileID: 21300000, guid: dad98f336b68deb4e996e77e6de04042, type: 3}
     frames: []
     realArt: 1
+    overlay: []
   - key: fix_spirittree
     sprite: {fileID: 21300000, guid: 5e50f8186bb346145846c86eef6642d0, type: 3}
     frames: []
     realArt: 1
+    overlay:
+    - {fileID: 8498487350690416925, guid: 4739edb5abf2d7245b300b8de6afb047, type: 3}
+    - {fileID: 365467347174787416, guid: 4739edb5abf2d7245b300b8de6afb047, type: 3}
+    - {fileID: 3394091836990322237, guid: 4739edb5abf2d7245b300b8de6afb047, type: 3}
+    - {fileID: 8982582570230937005, guid: 4739edb5abf2d7245b300b8de6afb047, type: 3}
   - key: enemy
     sprite: {fileID: 1688976823101074661, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
     frames:
@@ -175,7 +182,9 @@ MonoBehaviour:
     - {fileID: 1188285853192314585, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
     - {fileID: 370471857877179697, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
     realArt: 1
+    overlay: []
   - key: enemy_bait
     sprite: {fileID: 1744168387, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
     frames: []
     realArt: 0
+    overlay: []

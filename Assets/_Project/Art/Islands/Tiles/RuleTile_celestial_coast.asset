@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
   m_Name: RuleTile_celestial_coast
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
-  m_DefaultSprite: {fileID: 9117955696314103295, guid: 04beb7d2d1e566446a4ef5b9d91f387e, type: 3}
+  m_DefaultSprite: {fileID: -3359310435252337114, guid: 193718e747f003e4fba400a2f34d2bb3, type: 3}
   m_DefaultGameObject: {fileID: 0}
   m_DefaultColliderType: 0
   m_TilingRules:
@@ -984,9 +984,9 @@ MonoBehaviour:
     m_RuleTransform: 0
   - m_Id: 0
     m_Sprites:
-    - {fileID: 9117955696314103295, guid: 04beb7d2d1e566446a4ef5b9d91f387e, type: 3}
-    - {fileID: -1785010354, guid: 04beb7d2d1e566446a4ef5b9d91f387e, type: 3}
-    - {fileID: -1940525102, guid: 04beb7d2d1e566446a4ef5b9d91f387e, type: 3}
+    - {fileID: -3359310435252337114, guid: 193718e747f003e4fba400a2f34d2bb3, type: 3}
+    - {fileID: -6019199674149268691, guid: 193718e747f003e4fba400a2f34d2bb3, type: 3}
+    - {fileID: 5317425237234197142, guid: 193718e747f003e4fba400a2f34d2bb3, type: 3}
     m_GameObject: {fileID: 0}
     m_MinAnimationSpeed: 1
     m_MaxAnimationSpeed: 1

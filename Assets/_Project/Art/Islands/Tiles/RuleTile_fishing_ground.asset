@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
   m_Name: RuleTile_fishing_ground
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
-  m_DefaultSprite: {fileID: -4210921147806766446, guid: b842beb7ace34a440863f0f88f3dd677, type: 3}
+  m_DefaultSprite: {fileID: -3468383245725221193, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}
   m_DefaultGameObject: {fileID: 0}
   m_DefaultColliderType: 0
   m_TilingRules:
   - m_Id: 0
     m_Sprites:
-    - {fileID: -4210921147806766446, guid: b842beb7ace34a440863f0f88f3dd677, type: 3}
-    - {fileID: -842943996, guid: b842beb7ace34a440863f0f88f3dd677, type: 3}
-    - {fileID: 1601174642, guid: b842beb7ace34a440863f0f88f3dd677, type: 3}
+    - {fileID: -3468383245725221193, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}
+    - {fileID: -3434420453592037078, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}
+    - {fileID: 1287274258889325703, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}
     m_GameObject: {fileID: 0}
     m_MinAnimationSpeed: 1
     m_MaxAnimationSpeed: 1

@@ -1,0 +1,1 @@
+Spring: static 64x80 and four-frame 64x80 horizontal flow loop at 8 fps. Unity PPU32, Point, no compression/mipmaps, bottom-center pivot. ImageGen sources exported with nearest-neighbor fitting and palette remap. Animated basin exterior copied exactly from static; water patch only moves. In-game review pending. Limitations: manually generated loop, not physically simulated flow.
