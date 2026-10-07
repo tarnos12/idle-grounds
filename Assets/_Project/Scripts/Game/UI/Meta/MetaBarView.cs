@@ -20,6 +20,8 @@ namespace IdleGrounds.Game
         [SerializeField] Button resetButton;
         [SerializeField] Button muteButton;
         [SerializeField] TextMeshProUGUI muteLabel;
+        [SerializeField] Button motionButton;
+        [SerializeField] TextMeshProUGUI motionLabel;
         [SerializeField] Button shrinePill;
         [SerializeField] TextMeshProUGUI shrineText;
         [SerializeField] Outline shrineBorder;
@@ -38,12 +40,15 @@ namespace IdleGrounds.Game
             if (statsButton != null) statsButton.onClick.AddListener(() => stats.Open());
             if (resetButton != null) { resetButton.interactable = true; resetButton.onClick.AddListener(AskReset); }
             if (muteButton != null) muteButton.onClick.AddListener(ToggleMute);
+            if (motionButton != null) motionButton.onClick.AddListener(ToggleMotion);
             if (shrinePill != null) shrinePill.onClick.AddListener(() => perkShop.Open());
         }
 
         void Start()
         {
             PaintMute();
+            PaintMotion();
+            TooltipTrigger.Attach(motionButton, "Reduce motion: no screen shake, squash or flight tweens, no ambient motes");
             TooltipTrigger.Attach(helpButton, "How to play");
             TooltipTrigger.Attach(statsButton, "Your progress so far");
             TooltipTrigger.Attach(resetButton, "Wipe the save and start over");
@@ -79,6 +84,21 @@ namespace IdleGrounds.Game
             a.SetMuted(!a.Muted);
             PaintMute();
             if (!a.Muted) AudioService.Play("click");
+        }
+
+        public void ToggleMotion()
+        {
+            Juice.SetReduceMotion(!Juice.ReduceMotion);
+            PaintMotion();
+            AudioService.Play("click");
+        }
+
+        void PaintMotion()
+        {
+            bool calm = Juice.ReduceMotion;
+            if (motionLabel != null) motionLabel.text = calm ? "Calm" : "Motion";
+            if (motionButton != null && motionButton.targetGraphic is Image img)
+                img.color = calm ? UiPalette.AccentDk : UiPalette.Panel;
         }
 
         void PaintMute()

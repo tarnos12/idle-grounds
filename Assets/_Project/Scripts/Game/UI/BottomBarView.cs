@@ -92,6 +92,24 @@ namespace IdleGrounds.Game
             return sb.ToString();
         }
 
+        bool wasFull;
+        float lastPillScale = 1f;
+
+        /// <summary>Hand pill: two-beat throb when full, small pop when items arrive (Reduce motion: none).</summary>
+        void PillJuice()
+        {
+            if (handPill == null) return;
+            float s = 1f;
+            if (!Juice.ReduceMotion)
+            {
+                float tf = (Time.unscaledTime - Juice.HandFullAt) / 0.45f;
+                if (tf >= 0f && tf < 1f) s = 1f + 0.16f * Mathf.Abs(Mathf.Sin(tf * Mathf.PI * 2f)) * (1f - tf);
+                float tp = (Time.unscaledTime - Juice.HandPunchAt) / 0.12f;
+                if (tp >= 0f && tp < 1f) s = Mathf.Max(s, 1f + 0.07f * Mathf.Sin(tp * Mathf.PI));
+            }
+            if (s != lastPillScale) { lastPillScale = s; handPill.rectTransform.localScale = new Vector3(s, s, 1f); }
+        }
+
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
@@ -120,6 +138,7 @@ namespace IdleGrounds.Game
                 sprintTag.SetActive(cameraController.SprintActive);
 
             int total = runner.Sim.Hand.Total(), cap = runner.Sim.Hand.Cap();
+            PillJuice();
             if (total != lastTotal || cap != lastCap)
             {
                 lastTotal = total; lastCap = cap;
@@ -129,6 +148,8 @@ namespace IdleGrounds.Game
                     var c = total >= cap ? UiPalette.Danger : total >= 0.9f * cap ? UiPalette.Gold : UiPalette.Accent;
                     handText.color = c;
                 }
+                if (total >= cap && cap > 0 && !wasFull) Juice.PulseHandFull();      // juice: pill throbs when the hand just filled
+                wasFull = total >= cap;
             }
         }
     }

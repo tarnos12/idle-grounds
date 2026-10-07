@@ -13,7 +13,7 @@ namespace IdleGrounds.Game
     [RequireComponent(typeof(SortingGroup))]
     public class NodeView : MonoBehaviour
     {
-        const float SquashMs = 180f;
+        const float PunchSec = 0.12f, ShakeSec = 0.22f;
 
         [SerializeField] Transform squash;
         [SerializeField] SpriteRenderer spriteRenderer;
@@ -129,24 +129,40 @@ namespace IdleGrounds.Game
             transform.position = basePos;
             sortingGroup.sortingOrder = node.row;      // back-to-front by row (§2.1)
             squash.localScale = Vector3.one;
+            squash.localPosition = Vector3.zero;
+            punchAt = -10f; punchFinal = false; seenHitAt = node.hitAt;
         }
+
+        float punchAt = -10f;
+        double seenHitAt;
+        bool punchFinal;
+
+        /// <summary>Hit feedback (FxService, from Sim NodeHit): squash punch; <paramref name="final"/> = felling/cracking blow.</summary>
+        public void Punch(bool final) { punchAt = Time.unscaledTime; punchFinal = final; }
 
         /// <summary>Per-frame animation from sim state: hit squash, fish bob.</summary>
         public void Refresh(double now, int cell, bool autoFlash = false, bool unlocked = true, bool hovered = false)
         {
             var n = Node;
             if (autoBadge != null && autoBadge.gameObject.activeSelf != autoFlash) autoBadge.gameObject.SetActive(autoFlash);
-            float sy = 1f;
-            double dt = now - n.hitAt;
-            if (n.hitAt > 0 && dt >= 0 && dt < SquashMs)
+            // juice: squash-and-stretch punch (0.9 / 1.1 over ~120 ms) on every hit, soft shake on the final one
+            if (n.hitAt != seenHitAt) { seenHitAt = n.hitAt; if (n.hitAt > 0) punchAt = Time.unscaledTime; }
+            float sx = 1f, sy = 1f, shakeX = 0f;
+            if (!Juice.ReduceMotion)
             {
-                float t = (float)(dt / SquashMs);
-                sy = t < 0.35f ? Mathf.Lerp(1f, 0.84f, t / 0.35f)
-                   : t < 0.7f ? Mathf.Lerp(0.84f, 1.06f, (t - 0.35f) / 0.35f)
-                   : Mathf.Lerp(1.06f, 1f, (t - 0.7f) / 0.3f);
+                float age = Time.unscaledTime - punchAt;
+                if (age < PunchSec)
+                {
+                    float t = age / PunchSec;
+                    float k = t < 0.3f ? t / 0.3f : 1f - (t - 0.3f) / 0.7f;     // snap in, ease out
+                    float amp = punchFinal ? 0.15f : 0.10f;
+                    sy = 1f - amp * k; sx = 1f + amp * k;
+                }
+                if (punchFinal && age < ShakeSec)
+                    shakeX = Mathf.Round(Mathf.Sin(age * 80f) * (1f - age / ShakeSec) * 1.6f) / cell;   // whole-pixel wobble
             }
-            float sx = 1f + (1f - sy) * 0.4f;
             squash.localScale = new Vector3(sx, sy, 1f);
+            squash.localPosition = new Vector3(shakeX, 0f, 0f);
 
             float bob = 0f;
             bool surfaced = unlocked && n.interaction == NodeInteraction.Surface && n.surfaceUntil > now;

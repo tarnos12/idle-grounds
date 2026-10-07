@@ -207,6 +207,16 @@ namespace IdleGrounds.Game
 
         void Apply() => transform.position = new Vector3(centre.x, centre.y, transform.position.z);
 
+        bool shaking;
+        /// <summary>Juice camera shake: a transient offset on top of the clean centre (Update re-applies the centre every frame).</summary>
+        void LateUpdate()
+        {
+            var o = Juice.ShakeOffset();
+            if (o == Vector2.zero && !shaking) return;
+            shaking = o != Vector2.zero;
+            transform.position = new Vector3(centre.x + o.x, centre.y + o.y, transform.position.z);
+        }
+
         void Clamp()
         {
             if (cam == null || !hasBounds) return;

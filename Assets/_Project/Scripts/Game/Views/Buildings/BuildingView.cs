@@ -74,6 +74,7 @@ namespace IdleGrounds.Game
             W = def != null ? def.sizeW : 3; H = def != null ? def.sizeH : 3;
             name = $"Building_{area}_{b.id}_{b.type}";
             transform.position = sync.Space.PxToWorld(area, b.col * sync.Space.Cell, b.row * sync.Space.Cell);
+            basePos = transform.position; popStart = -1f; transform.localScale = Vector3.one;
             replaces = false;
             foreach (var f in faces) if (f.ReplacesDefault) replaces = true;
 
@@ -162,9 +163,27 @@ namespace IdleGrounds.Game
             foreach (var f in faces) f.SetHighlight(this, (hovered || selected || reach) && !demolish);
         }
 
+        Vector3 basePos;
+        float popStart = -1f;
+        const float PopSec = 0.18f;
+
+        /// <summary>Juice: brief scale pop about the footprint's bottom-centre when a ghost completes.</summary>
+        public void Pop() { if (!Juice.ReduceMotion) popStart = Time.unscaledTime; }
+
+        void ApplyPop()
+        {
+            if (popStart < 0f) return;
+            float t = (Time.unscaledTime - popStart) / PopSec;
+            float s = t >= 1f ? 1f : 1f + 0.12f * Mathf.Sin(Mathf.PI * t);
+            if (t >= 1f) popStart = -1f;
+            transform.localScale = new Vector3(s, s, 1f);
+            transform.position = basePos + new Vector3(W * 0.5f, -H, 0f) * (1f - s);
+        }
+
         public void Refresh()
         {
             var b = Building;
+            ApplyPop();
             int built = b.built ? 1 : 0;
             if (built != lastBuilt)
             {

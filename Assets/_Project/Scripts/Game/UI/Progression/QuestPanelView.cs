@@ -106,6 +106,11 @@ namespace IdleGrounds.Game
                     dy += ViewKit.U(22f);
                 }
             }
+            if (UiJuice.Instance != null && !Juice.ReduceMotion)
+            {
+                var celebrate = panel != null && panel.activeInHierarchy ? panel.transform as RectTransform : chip != null ? chip.transform as RectTransform : null;
+                UiJuice.Instance.Sparkle(celebrate, 26);
+            }
             Rebuild(true);
             return res;
         }

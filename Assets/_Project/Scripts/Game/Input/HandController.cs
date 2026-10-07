@@ -520,6 +520,7 @@ namespace IdleGrounds.Game
         {
             if (Now - lastFullBuzz < FullBuzzMs) return false;
             lastFullBuzz = Now;
+            Juice.PulseHandFull();
             AudioService.Play("error");
             if (fx != null) fx.FloaterAt(area, lx, ly - 8, "Hand full", FxService.Danger);
             return true;

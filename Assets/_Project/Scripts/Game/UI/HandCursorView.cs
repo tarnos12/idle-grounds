@@ -24,6 +24,7 @@ namespace IdleGrounds.Game
         Canvas canvas;
         RectTransform canvasRect;
         string lastKey;
+        float lastScale = 1f;
 
         public bool ChipVisible => chip != null && chip.gameObject.activeSelf;
 
@@ -54,6 +55,15 @@ namespace IdleGrounds.Game
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, null, out var local);
                 chip.anchoredPosition = local;
             }
+            float s = 1f;
+            if (!Juice.ReduceMotion)
+            {
+                float tp = (Time.unscaledTime - Juice.HandPunchAt) / 0.12f;
+                if (tp >= 0f && tp < 1f) s = 1f + 0.12f * Mathf.Sin(tp * Mathf.PI);      // items just arrived
+                float tf = (Time.unscaledTime - Juice.HandFullAt) / 0.4f;
+                if (tf >= 0f && tf < 1f) s = Mathf.Max(s, 1f + 0.14f * Mathf.Abs(Mathf.Sin(tf * Mathf.PI * 2f)) * (1f - tf));
+            }
+            if (s != lastScale) { lastScale = s; chip.localScale = new Vector3(s, s, 1f); }
         }
 
         static string Key(List<Sim.HandStack> h)

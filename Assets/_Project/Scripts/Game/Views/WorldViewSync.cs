@@ -21,6 +21,7 @@ namespace IdleGrounds.Game
         [SerializeField] Sprite decoSprite;
         [Tooltip("Cursor source for the fish countdown hover (found at runtime when empty).")]
         [SerializeField] HandController hand;
+        FxService fx;
 
         readonly Dictionary<long, NodeView> nodeViews = new Dictionary<long, NodeView>();
         readonly Dictionary<long, GroundItemView> groundViews = new Dictionary<long, GroundItemView>();
@@ -100,6 +101,7 @@ namespace IdleGrounds.Game
                     {
                         if (v == null) { v = groundPool.Get(); groundViews[k] = v; }
                         v.Bind(area.key, g, sprites.Item(g.item), space);
+                        if (Juice.TryDropOrigin(area.key, g.item, out var origin)) v.StartPop(origin);
                     }
                     v.seenFrame = frame;
                     v.Refresh(space);
@@ -111,7 +113,14 @@ namespace IdleGrounds.Game
             foreach (var k in releaseList) { nodePool.Release(nodeViews[k]); nodeViews.Remove(k); }
             releaseList.Clear();
             foreach (var kv in groundViews) if (kv.Value.seenFrame != frame) releaseList.Add(kv.Key);
-            foreach (var k in releaseList) { groundPool.Release(groundViews[k]); groundViews.Remove(k); }
+            if (fx == null) fx = FindFirstObjectByType<FxService>();
+            bool vac = hand != null && fx != null && hand.VacuumActive && hand.CursorOver;
+            foreach (var k in releaseList)
+            {
+                var gv = groundViews[k];
+                if (vac) fx.FlyToHand(gv);           // vacuumed: the icon flies to the hand instead of vanishing
+                groundPool.Release(gv); groundViews.Remove(k);
+            }
         }
     }
 }

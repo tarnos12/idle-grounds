@@ -62,6 +62,9 @@ namespace IdleGrounds.Game
         public void Refresh(Vector3 world)
         {
             transform.position = world;
+            // juice: gentle whole-pixel bob on the cargo icon
+            float bob = Juice.ReduceMotion ? 0f : Mathf.Round(Mathf.Sin(Time.time * 4.5f + phase * 6.28f) * 1.2f);
+            cargo.transform.localPosition = new Vector3(0f, ViewKit.U(12f + bob), 0f);
             bool red = Wisp.returning;
             if (useFx)
             {

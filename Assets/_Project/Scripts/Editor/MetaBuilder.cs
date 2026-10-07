@@ -600,7 +600,7 @@ namespace IdleGrounds.Editor
         static void InstallBar(BottomBarView bar, GameRunner runner, HelpModalView help, StatsPanelView stats, PerkShopView shop, ConfirmDialogView confirm)
         {
             var t = bar.transform;
-            foreach (var n in new[] { "ShrinePill", "MuteButton" })
+            foreach (var n in new[] { "ShrinePill", "MuteButton", "MotionButton" })
             {
                 var old = t.Find(n);
                 if (old != null) Object.DestroyImmediate(old.gameObject);
@@ -623,6 +623,9 @@ namespace IdleGrounds.Editor
             var mute = BarButton(t, "MuteButton", "Sound", null, UiPalette.Text);
             var helpBtn = t.Find("HelpButton");
             if (helpBtn != null) mute.transform.SetSiblingIndex(helpBtn.GetSiblingIndex());
+            // Reduce motion toggle right after Sound (persisted in PlayerPrefs ig_reduce_motion)
+            var motion = BarButton(t, "MotionButton", "Motion", null, UiPalette.Text);
+            motion.transform.SetSiblingIndex(mute.transform.GetSiblingIndex() + 1);
 
             // ascensions + world speed tag in the area pill
             GameObject tag = null; TextMeshProUGUI tagText = null;
@@ -645,6 +648,8 @@ namespace IdleGrounds.Editor
             if (reset != null) { var rb = reset.GetComponent<Button>(); rb.interactable = true; Set(view, "resetButton", rb); }
             Set(view, "muteButton", mute);
             Set(view, "muteLabel", mute.transform.Find("Label").GetComponent<TextMeshProUGUI>());
+            Set(view, "motionButton", motion);
+            Set(view, "motionLabel", motion.transform.Find("Label").GetComponent<TextMeshProUGUI>());
             Set(view, "shrinePill", pill);
             Set(view, "shrineText", pillText);
             Set(view, "shrineBorder", pillImg.GetComponent<Outline>());

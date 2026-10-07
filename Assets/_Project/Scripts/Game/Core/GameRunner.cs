@@ -46,6 +46,7 @@ namespace IdleGrounds.Game
             Instance = this;
             if (database == null) { Debug.LogError("[GameRunner] No GameDatabase assigned."); enabled = false; return; }
             Config = database.BuildConfig();
+            if (DevSettings.TestModeOverride is bool testMode) Config.test.enabled = testMode;   // dev menu: Idle Grounds/Dev/TEST Mode
             var clock = new SystemClock();
             var state = SaveService.LoadOrNull(Config, clock.NowMs);
             FreshRun = state == null;

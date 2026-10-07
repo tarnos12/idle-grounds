@@ -137,7 +137,7 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
-- 2026-10-07: ADR 0004 balance targets (first run 2-3 h, later runs same length + more content on ascension, hands early/machines win 5-10x, TEST mode off by default). Balance pass + juice pass in progress; island onboarding quests queued after the balance pass.
+- 2026-10-07: ADR 0004 balance targets (first run 2-3 h, later runs same length + more content on ascension, hands early/machines win 5-10x, TEST mode off by default). Juice pass landed (Game/Juice + UiJuice: harvest squash/chips, item arcs + magnet vacuum, build bursts, kill shake + motes, ambient motes, UI press/sparkle; HUD Motion/Calm toggle = reduce motion). Balance pass in progress; island onboarding quests queued after the balance pass.
 
 - 2026-10-07: playthrough bot (Tests/Sim/PlaythroughBot*.cs, docs/port/playthrough-report.md): game completable, first ascension ~6 min (TEST expert) … ~22 min (real balance, human pacing); balance concerns listed in the report; 161 EditMode tests.
 
