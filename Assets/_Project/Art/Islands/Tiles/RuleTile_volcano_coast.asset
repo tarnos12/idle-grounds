@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
   m_Name: RuleTile_volcano_coast
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
-  m_DefaultSprite: {fileID: -3511996972301030900, guid: c06cc07afa08fbf45bd5c38c12dd60ae, type: 3}
+  m_DefaultSprite: {fileID: 1660513221480031229, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
   m_DefaultGameObject: {fileID: 0}
   m_DefaultColliderType: 0
   m_TilingRules:
@@ -984,9 +984,9 @@ MonoBehaviour:
     m_RuleTransform: 0
   - m_Id: 0
     m_Sprites:
-    - {fileID: -3511996972301030900, guid: c06cc07afa08fbf45bd5c38c12dd60ae, type: 3}
-    - {fileID: 1430265295, guid: c06cc07afa08fbf45bd5c38c12dd60ae, type: 3}
-    - {fileID: 1640197904, guid: c06cc07afa08fbf45bd5c38c12dd60ae, type: 3}
+    - {fileID: 1660513221480031229, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
+    - {fileID: -5539466292282716202, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
+    - {fileID: -1317803899554053724, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
     m_GameObject: {fileID: 0}
     m_MinAnimationSpeed: 1
     m_MaxAnimationSpeed: 1

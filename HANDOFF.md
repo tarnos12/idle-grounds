@@ -135,7 +135,9 @@ the active scene after MCP editor work.
 - Placeholder art under `Art/Islands|Sky|Bridges` is replaced by delivered art
   with the same names/keys.
 
-## Last session summary (2026-10-06)
+## Last session summary
+
+- 2026-10-07 art: underside fill + 5 biome cliffs + Mine/Volcano ground accepted; Farm/Fishing/Grove ground rejected (busy tiling, redo requested; placeholders kept); Celestial outstanding. (2026-10-06)
 
 - Art: sky peaks (sky complete), awake dragon, decorative tree ring (hashed
   variants + flip) delivered and integrated.

@@ -12,15 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
   m_Name: RuleTile_mine_ground
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
-  m_DefaultSprite: {fileID: 250453227315017569, guid: 935c0fd705d94bb40b1b6e91d6966f3e, type: 3}
+  m_DefaultSprite: {fileID: -1015069614217309924, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
   m_DefaultGameObject: {fileID: 0}
   m_DefaultColliderType: 0
   m_TilingRules:
   - m_Id: 0
     m_Sprites:
-    - {fileID: 250453227315017569, guid: 935c0fd705d94bb40b1b6e91d6966f3e, type: 3}
-    - {fileID: -850121197, guid: 935c0fd705d94bb40b1b6e91d6966f3e, type: 3}
-    - {fileID: 84911344, guid: 935c0fd705d94bb40b1b6e91d6966f3e, type: 3}
+    - {fileID: -1015069614217309924, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
+    - {fileID: -4362343920177566343, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
+    - {fileID: -3953364086757825421, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
     m_GameObject: {fileID: 0}
     m_MinAnimationSpeed: 1
     m_MaxAnimationSpeed: 1
