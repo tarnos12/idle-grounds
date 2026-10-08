@@ -71,5 +71,10 @@ MonoBehaviour:
   - {fileID: -5132903327860737518, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
   - {fileID: 9174511186781902755, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
   - {fileID: -4468560326479900658, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
-  variants: []
+  variants:
+  - key: shrine
+    sprite: {fileID: 21300000, guid: 3d2a66ee2bbc1d84284fae4aed08017b, type: 3}
+    frames: []
+    realArt: 0
+    overlay: []
   prefabOverride: {fileID: 0}

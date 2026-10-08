@@ -18,7 +18,7 @@ Play. Hold LMB on nodes to harvest / on ground to vacuum, RMB drop, Q/E rotate,
 WASD pan, wheel zoom (max out 6), B build menu, click Altar/Dragon/lanterns for
 their panels.
 
-**Current focus: the art integration loop** (last check 2026-10-08: 21/27 buildings real; awaiting forge, algae_farm, meditation_pavilion, dragon_shrine, ascension_gate, spirit_bridge, UI chrome, FX) (poll Drive, pull, integrate,
+**Current focus: the art integration loop** (last check 2026-10-08: ALL buildings + nodes + bridge states + steles have real art; awaiting UI chrome (§5) and FX (§6)) (poll Drive, pull, integrate,
 review, give feedback in ART-SPEC Delivery log).
 Next candidates:
 1. Poll Drive `incoming/` (30 min x1h, hourly x2h, then 2-hourly; restart after
@@ -136,6 +136,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-08 art (5): forge, algae farm, meditation pavilion, dragon shrine, ascension gate (+ loops), Spirit Bridge unpaired/sending/receiving and unlock stele locked/partial/ready integrated. Every building and node now has real art.
 
 - 2026-10-08 art (4): brewery, cauldron, jade carver, pill furnace, star anvil, talisman atelier (+ working loops) integrated; 21/27 buildings real.
 

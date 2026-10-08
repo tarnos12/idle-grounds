@@ -71,5 +71,28 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 5ad683fdcf89f674abc1b7fb7d3276bd, type: 3}
   hasRealArt: 0
   frames: []
-  variants: []
+  variants:
+  - key: receiving
+    sprite: {fileID: -11222287567957997, guid: 21e9b98bfd753654f94c98169818c85a, type: 3}
+    frames:
+    - {fileID: -11222287567957997, guid: 21e9b98bfd753654f94c98169818c85a, type: 3}
+    - {fileID: 8130087904273789308, guid: 21e9b98bfd753654f94c98169818c85a, type: 3}
+    - {fileID: 8524298876875727565, guid: 21e9b98bfd753654f94c98169818c85a, type: 3}
+    - {fileID: -350173748218158319, guid: 21e9b98bfd753654f94c98169818c85a, type: 3}
+    realArt: 0
+    overlay: []
+  - key: sending
+    sprite: {fileID: -4362711183496799556, guid: a3b17490130c50c44899bff4627ee17f, type: 3}
+    frames:
+    - {fileID: -4362711183496799556, guid: a3b17490130c50c44899bff4627ee17f, type: 3}
+    - {fileID: -350798347127375453, guid: a3b17490130c50c44899bff4627ee17f, type: 3}
+    - {fileID: -622923938886132344, guid: a3b17490130c50c44899bff4627ee17f, type: 3}
+    - {fileID: 3903476757540279220, guid: a3b17490130c50c44899bff4627ee17f, type: 3}
+    realArt: 0
+    overlay: []
+  - key: unpaired
+    sprite: {fileID: 21300000, guid: 2dd3635d70737594b9e389cfdbc8e765, type: 3}
+    frames: []
+    realArt: 0
+    overlay: []
   prefabOverride: {fileID: 0}

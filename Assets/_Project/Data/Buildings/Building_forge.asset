@@ -76,8 +76,17 @@ MonoBehaviour:
       rateMs: 1000
       speed: 170
       carry: 1
-  icon: {fileID: -1174358089, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-  hasRealArt: 0
+  icon: {fileID: 21300000, guid: 9d8a5bafa50708947a21dcdfe98234ac, type: 3}
+  hasRealArt: 1
   frames: []
-  variants: []
+  variants:
+  - key: working
+    sprite: {fileID: -508314603722205184, guid: cd3cef8b6bb9d974189d7e8723491053, type: 3}
+    frames:
+    - {fileID: -508314603722205184, guid: cd3cef8b6bb9d974189d7e8723491053, type: 3}
+    - {fileID: -651167209776995213, guid: cd3cef8b6bb9d974189d7e8723491053, type: 3}
+    - {fileID: 1546954241624718472, guid: cd3cef8b6bb9d974189d7e8723491053, type: 3}
+    - {fileID: 2909082199099648978, guid: cd3cef8b6bb9d974189d7e8723491053, type: 3}
+    realArt: 0
+    overlay: []
   prefabOverride: {fileID: 0}
