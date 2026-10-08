@@ -145,6 +145,22 @@
       "source": "Idle-Grounds-Buildings-006.zip"
     },
     {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-007-preview.png",
+      "name": "preview.png",
+      "size": 18046,
+      "sha1": "a23a7194cade60d74a868b25cdd640de1747f1d7",
+      "date": "2026-10-08T05:42:52.977Z",
+      "source": "Idle-Grounds-Buildings-007.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-007-README.txt",
+      "name": "README.txt",
+      "size": 721,
+      "sha1": "524a22764f48c2c30d7e0f8e7b370086b4309b99",
+      "date": "2026-10-08T05:42:52.977Z",
+      "source": "Idle-Grounds-Buildings-007.zip"
+    },
+    {
       "path": "_notes/creatures-Idle-Grounds-Creatures-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 472,
@@ -833,6 +849,22 @@
       "source": "Idle-Grounds-Nodes-006.zip"
     },
     {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-007-preview.png",
+      "name": "preview.png",
+      "size": 11623,
+      "sha1": "ca8c00bb1cb7f7aab1d96c98e00966ca9d1039ee",
+      "date": "2026-10-08T05:42:55.707Z",
+      "source": "Idle-Grounds-Nodes-007.zip"
+    },
+    {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-007-README.txt",
+      "name": "README.txt",
+      "size": 774,
+      "sha1": "9ea271e9024ed1b531d640ab2b92ec2b2fb1b224",
+      "date": "2026-10-08T05:42:55.707Z",
+      "source": "Idle-Grounds-Nodes-007.zip"
+    },
+    {
       "path": "_notes/sky-Idle-Grounds-Sky-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 269,
@@ -905,6 +937,14 @@
       "source": "Idle-Grounds-Buildings-004.zip"
     },
     {
+      "path": "buildings/bld_charcoal_pit.png",
+      "name": "bld_charcoal_pit.png",
+      "size": 5404,
+      "sha1": "e69c6bb8d70b733a47e410571f65085dcce90e13",
+      "date": "2026-10-08T05:42:52.916Z",
+      "source": "Idle-Grounds-Buildings-007.zip"
+    },
+    {
       "path": "buildings/bld_dragon.png",
       "name": "bld_dragon.png",
       "size": 24854,
@@ -913,12 +953,28 @@
       "source": "Idle-Grounds-Buildings-005.zip"
     },
     {
+      "path": "buildings/bld_furnace_spirit.png",
+      "name": "bld_furnace_spirit.png",
+      "size": 1954,
+      "sha1": "7f234ef443d7d6697ed9f24d985965d0e9e21103",
+      "date": "2026-10-08T05:42:52.917Z",
+      "source": "Idle-Grounds-Buildings-007.zip"
+    },
+    {
       "path": "buildings/bld_gathering_stone.png",
       "name": "bld_gathering_stone.png",
       "size": 1987,
       "sha1": "ac86da28da3b0b254527db02ae561cef22aaf5e9",
       "date": "2026-10-04T10:17:14.451Z",
       "source": "Idle-Grounds-Buildings-001.zip"
+    },
+    {
+      "path": "buildings/bld_herb_garden.png",
+      "name": "bld_herb_garden.png",
+      "size": 13316,
+      "sha1": "328cd2a0c19d40a600725eeca4e60c44cdb20f76",
+      "date": "2026-10-08T05:42:52.918Z",
+      "source": "Idle-Grounds-Buildings-007.zip"
     },
     {
       "path": "buildings/bld_infusion_array_working_96x128_4f.png",
@@ -1841,6 +1897,14 @@
       "source": "Idle-Grounds-Nodes-003.zip"
     },
     {
+      "path": "nodes/node_moonshrub_32x48_2f.png",
+      "name": "node_moonshrub_32x48_2f.png",
+      "size": 2664,
+      "sha1": "a4fc79a6e8ae6fad655f8eb131acc56a56fdf9e8",
+      "date": "2026-10-08T05:42:55.705Z",
+      "source": "Idle-Grounds-Nodes-007.zip"
+    },
+    {
       "path": "nodes/node_obsidian_1x1_32x48_2f.png",
       "name": "node_obsidian_1x1_32x48_2f.png",
       "size": 2372,
@@ -1871,6 +1935,22 @@
       "sha1": "5c908178670fdd7066ffa3bc09804b05e79883a1",
       "date": "2026-10-07T23:42:51.585Z",
       "source": "Idle-Grounds-Nodes-003.zip"
+    },
+    {
+      "path": "nodes/node_starrock_1x1_32x48_2f.png",
+      "name": "node_starrock_1x1_32x48_2f.png",
+      "size": 2452,
+      "sha1": "0f1f754fbf2aa72316fb0b92eb0c279d1b51924c",
+      "date": "2026-10-08T05:42:55.706Z",
+      "source": "Idle-Grounds-Nodes-007.zip"
+    },
+    {
+      "path": "nodes/node_starrock_2x2_64x80_2f.png",
+      "name": "node_starrock_2x2_64x80_2f.png",
+      "size": 7229,
+      "sha1": "9e220a78012474b506cfadc5c3d153aa5f19b897",
+      "date": "2026-10-08T05:42:55.706Z",
+      "source": "Idle-Grounds-Nodes-007.zip"
     },
     {
       "path": "sky/sky_clouds_far_1024x256.png",

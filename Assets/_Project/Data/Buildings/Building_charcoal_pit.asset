@@ -76,8 +76,8 @@ MonoBehaviour:
       rateMs: 1000
       speed: 170
       carry: 1
-  icon: {fileID: 1906577018, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-  hasRealArt: 0
+  icon: {fileID: 21300000, guid: 0b5973f902e66ad4faefe88f6db87550, type: 3}
+  hasRealArt: 1
   frames: []
   variants: []
   prefabOverride: {fileID: 0}
