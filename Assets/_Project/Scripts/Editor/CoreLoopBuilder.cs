@@ -372,6 +372,9 @@ namespace IdleGrounds.Editor
             cb.disabledColor = new Color(1f, 1f, 1f, 0.45f);
             b.colors = cb;
             b.targetGraphic = img;
+            var le = img.gameObject.GetComponent<LayoutElement>() ?? img.gameObject.AddComponent<LayoutElement>();
+            le.minHeight = 34f;      // the 2x button art needs >= 32 px
+            UiButtonRoles.AttachFor(b);
             return b;
         }
 

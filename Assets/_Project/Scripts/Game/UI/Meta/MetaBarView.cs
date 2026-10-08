@@ -97,7 +97,10 @@ namespace IdleGrounds.Game
         {
             bool calm = Juice.ReduceMotion;
             if (motionLabel != null) motionLabel.text = calm ? "Calm" : "Motion";
-            if (motionButton != null && motionButton.targetGraphic is Image img)
+            if (motionButton == null) return;
+            var skin = motionButton.GetComponent<UiButtonSkin>();   // delivered art: swap sprite instead of tinting
+            if (skin != null && skin.SetToggle(calm ? UiToggleState.On : UiToggleState.Off)) return;
+            if (motionButton.targetGraphic is Image img)
                 img.color = calm ? UiPalette.AccentDk : UiPalette.Panel;
         }
 
@@ -105,8 +108,12 @@ namespace IdleGrounds.Game
         {
             var a = AudioService.Instance;
             if (muteLabel != null) muteLabel.text = a != null && a.Muted ? "Muted" : "Sound";
-            if (muteButton != null && muteButton.targetGraphic is Image img)
-                img.color = a != null && a.Muted ? new Color(0.45f, 0.12f, 0.12f) : UiPalette.Panel;
+            if (muteButton == null) return;
+            bool muted = a != null && a.Muted;
+            var skin = muteButton.GetComponent<UiButtonSkin>();
+            if (skin != null && skin.SetToggle(muted ? UiToggleState.Danger : UiToggleState.Off)) return;
+            if (muteButton.targetGraphic is Image img)
+                img.color = muted ? new Color(0.45f, 0.12f, 0.12f) : UiPalette.Panel;
         }
 
         // last painted values (compared every frame; strings only rebuilt on change)

@@ -45,6 +45,14 @@ namespace IdleGrounds.Game.Data
             return null;
         }
 
+        /// <summary>All frames of a delivered multi-frame ui_* strip (e.g. ui_btn_close), or null.</summary>
+        public Sprite[] UiFrames(string key)
+        {
+            foreach (var e in ui)
+                if (e != null && e.key == key && e.realArt && e.frames != null && e.frames.Length > 0) return e.frames;
+            return null;
+        }
+
         /// <summary>"Fox Spirit" -> "fox", "Boar" -> "boar" (region enemy / bait-spawn display name).</summary>
         public static string EnemyKind(string name)
         {

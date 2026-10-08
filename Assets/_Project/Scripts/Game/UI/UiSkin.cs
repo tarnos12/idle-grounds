@@ -25,6 +25,26 @@ namespace IdleGrounds.Game
 
         bool applied;
 
+        /// <summary>
+        /// pixelsPerUnitMultiplier that renders 1 art px as <paramref name="uiPerArt"/> UI px. When <paramref name="fitRect"/> is
+        /// given and the rect is too small for the borders at that scale, the scale shrinks (min 1) so the borders still fit.
+        /// </summary>
+        public static float SliceMultiplier(Image img, Sprite sp, float uiPerArt, RectTransform fitRect = null)
+        {
+            var canvas = img.canvas;
+            float refPpu = canvas != null ? canvas.referencePixelsPerUnit : 100f;
+            float s = uiPerArt;
+            if (fitRect != null)
+            {
+                var b = sp.border;   // (L,B,R,T)
+                float w = fitRect.rect.width, h = fitRect.rect.height;
+                if (b.x + b.z > 0f && w > 0f) s = Mathf.Min(s, w / (b.x + b.z));
+                if (b.y + b.w > 0f && h > 0f) s = Mathf.Min(s, h / (b.y + b.w));
+                s = Mathf.Max(1f, s);
+            }
+            return refPpu / (sp.pixelsPerUnit * s);
+        }
+
         /// <summary>Add (or update) a UiSkin on <paramref name="go"/>.</summary>
         public static UiSkin Attach(GameObject go, string skinKey)
         {
@@ -56,9 +76,7 @@ namespace IdleGrounds.Game
             if (img == null || sp == null) return false;
             img.sprite = sp;
             img.type = sp.border.sqrMagnitude > 0f ? Image.Type.Sliced : Image.Type.Simple;
-            var canvas = img.canvas;
-            float refPpu = canvas != null ? canvas.referencePixelsPerUnit : 100f;
-            img.pixelsPerUnitMultiplier = refPpu / (sp.pixelsPerUnit * UiPxPerArtPx);
+            img.pixelsPerUnitMultiplier = SliceMultiplier(img, sp, UiPxPerArtPx);
             img.color = Color.white;
             img.fillCenter = true;
             var ol = GetComponent<Outline>();     // the placeholder border; the art has its own frame

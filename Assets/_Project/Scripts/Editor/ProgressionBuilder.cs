@@ -151,6 +151,7 @@ namespace IdleGrounds.Editor
             var l = Label(img.rectTransform, "Label", label, 19f, text, true);
             Stretch(l.rectTransform);
             l.alignment = TextAlignmentOptions.Center;
+            UiButtonRoles.AttachFor(b);
             return b;
         }
 

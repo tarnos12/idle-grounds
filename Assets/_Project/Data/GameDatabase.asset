@@ -606,3 +606,62 @@ MonoBehaviour:
     frames: []
     realArt: 1
     overlay: []
+  - key: ui_btn_close
+    sprite: {fileID: -2675133261841713150, guid: 44e10ae58833d264096a42661d09b76c, type: 3}
+    frames:
+    - {fileID: -2675133261841713150, guid: 44e10ae58833d264096a42661d09b76c, type: 3}
+    - {fileID: 8042860695261752276, guid: 44e10ae58833d264096a42661d09b76c, type: 3}
+    - {fileID: -4675918125616399882, guid: 44e10ae58833d264096a42661d09b76c, type: 3}
+    - {fileID: -8068110975358223008, guid: 44e10ae58833d264096a42661d09b76c, type: 3}
+    realArt: 1
+    overlay: []
+  - key: ui_btn_disabled
+    sprite: {fileID: 21300000, guid: 746c987c800149c4fa09af420332a14b, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_hover
+    sprite: {fileID: 21300000, guid: 1ee4658a541dcb249ae5b906358b19a8, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_normal
+    sprite: {fileID: 21300000, guid: d57109fd632a48642bb88502c918caaf, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_pressed
+    sprite: {fileID: 21300000, guid: a0d61df78a34c1f419c1612deed1a0b6, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_primary_disabled
+    sprite: {fileID: 21300000, guid: 473cb9a089fa4e948bd631da9ac3b63d, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_primary_hover
+    sprite: {fileID: 21300000, guid: 01db18c2bf1b0da41b963d057e8a6aa9, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_primary_normal
+    sprite: {fileID: 21300000, guid: bebd4268a213f63408ff44e49e562145, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_primary_pressed
+    sprite: {fileID: 21300000, guid: 1bf8f38272a435e48af2144462664b25, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_toggle_danger
+    sprite: {fileID: 21300000, guid: ec566d164060ea44ca9d4561c6b1d83e, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_toggle_on
+    sprite: {fileID: 21300000, guid: 03c43323847f0c6499879af2d625b84a, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []

@@ -1025,6 +1025,22 @@
       "source": "Idle-Grounds-UI-004.zip"
     },
     {
+      "path": "_notes/ui-Idle-Grounds-UI-005-README.md",
+      "name": "README.md",
+      "size": 1068,
+      "sha1": "b0f2a8eac132a6fbc6490c44789e6f9eb68e3bd1",
+      "date": "2026-10-08T15:43:19.163Z",
+      "source": "Idle-Grounds-UI-005.zip"
+    },
+    {
+      "path": "_notes/ui-Idle-Grounds-UI-006-README.md",
+      "name": "README.md",
+      "size": 942,
+      "sha1": "e2ab0e33abe65595aef4b6a47aea089655e55dcb",
+      "date": "2026-10-08T15:43:19.640Z",
+      "source": "Idle-Grounds-UI-006.zip"
+    },
+    {
       "path": "buildings/bld_algae_farm_working_96x128_4f.png",
       "name": "bld_algae_farm_working_96x128_4f.png",
       "size": 12646,
@@ -2327,6 +2343,94 @@
       "sha1": "262d36a519b21783716fd8e5170bfae1e0779bcb",
       "date": "2026-10-08T13:43:15.860Z",
       "source": "Idle-Grounds-UI-003.zip"
+    },
+    {
+      "path": "ui/ui_btn_close_20x20_4f.png",
+      "name": "ui_btn_close_20x20_4f.png",
+      "size": 671,
+      "sha1": "f74290dcc61b90fa54f37edc6100f9118ef6ce3c",
+      "date": "2026-10-08T15:43:19.640Z",
+      "source": "Idle-Grounds-UI-006.zip"
+    },
+    {
+      "path": "ui/ui_btn_disabled_48x24.png",
+      "name": "ui_btn_disabled_48x24.png",
+      "size": 470,
+      "sha1": "9d6ee1ede6dd67737dfc79c4a3bed8806b77dfc7",
+      "date": "2026-10-08T15:43:19.164Z",
+      "source": "Idle-Grounds-UI-005.zip"
+    },
+    {
+      "path": "ui/ui_btn_hover_48x24.png",
+      "name": "ui_btn_hover_48x24.png",
+      "size": 653,
+      "sha1": "632060b2762df4be82fd7da63334fb80ee6b62f4",
+      "date": "2026-10-08T15:43:19.165Z",
+      "source": "Idle-Grounds-UI-005.zip"
+    },
+    {
+      "path": "ui/ui_btn_normal_48x24.png",
+      "name": "ui_btn_normal_48x24.png",
+      "size": 619,
+      "sha1": "b1d1b5d1515b1080ded7b7c252afae1e8948055d",
+      "date": "2026-10-08T15:43:19.223Z",
+      "source": "Idle-Grounds-UI-005.zip"
+    },
+    {
+      "path": "ui/ui_btn_pressed_48x24.png",
+      "name": "ui_btn_pressed_48x24.png",
+      "size": 589,
+      "sha1": "76d80dda8795cc3470238ffcfb1f65d7c06aab7c",
+      "date": "2026-10-08T15:43:19.224Z",
+      "source": "Idle-Grounds-UI-005.zip"
+    },
+    {
+      "path": "ui/ui_btn_primary_disabled_48x24.png",
+      "name": "ui_btn_primary_disabled_48x24.png",
+      "size": 246,
+      "sha1": "c98e5ebf3781ecc07064e14646d37c02553c797b",
+      "date": "2026-10-08T15:43:19.656Z",
+      "source": "Idle-Grounds-UI-006.zip"
+    },
+    {
+      "path": "ui/ui_btn_primary_hover_48x24.png",
+      "name": "ui_btn_primary_hover_48x24.png",
+      "size": 296,
+      "sha1": "f7faf1f4b69dcf0340163fe582d8c658053d7861",
+      "date": "2026-10-08T15:43:19.656Z",
+      "source": "Idle-Grounds-UI-006.zip"
+    },
+    {
+      "path": "ui/ui_btn_primary_normal_48x24.png",
+      "name": "ui_btn_primary_normal_48x24.png",
+      "size": 289,
+      "sha1": "8860345da36500ff133956f28b7712255e8227f7",
+      "date": "2026-10-08T15:43:19.657Z",
+      "source": "Idle-Grounds-UI-006.zip"
+    },
+    {
+      "path": "ui/ui_btn_primary_pressed_48x24.png",
+      "name": "ui_btn_primary_pressed_48x24.png",
+      "size": 276,
+      "sha1": "2b71899f1e06364dc708e2aadd614a34afcc4500",
+      "date": "2026-10-08T15:43:19.657Z",
+      "source": "Idle-Grounds-UI-006.zip"
+    },
+    {
+      "path": "ui/ui_btn_toggle_danger_48x24.png",
+      "name": "ui_btn_toggle_danger_48x24.png",
+      "size": 296,
+      "sha1": "f7faf1f4b69dcf0340163fe582d8c658053d7861",
+      "date": "2026-10-08T15:43:19.658Z",
+      "source": "Idle-Grounds-UI-006.zip"
+    },
+    {
+      "path": "ui/ui_btn_toggle_on_48x24.png",
+      "name": "ui_btn_toggle_on_48x24.png",
+      "size": 304,
+      "sha1": "c692e5f547488f53ad7f70b15dfbb98450bfc62b",
+      "date": "2026-10-08T15:43:19.658Z",
+      "source": "Idle-Grounds-UI-006.zip"
     },
     {
       "path": "ui/ui_fuel_rack_96x64.png",

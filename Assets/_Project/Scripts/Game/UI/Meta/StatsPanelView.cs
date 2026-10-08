@@ -99,7 +99,10 @@ namespace IdleGrounds.Game
 
         static void Tint(Button b, bool selected)
         {
-            if (b != null && b.targetGraphic != null) b.targetGraphic.color = selected ? UiPalette.AccentDk : UiPalette.Panel;
+            if (b == null) return;
+            var skin = b.GetComponent<UiButtonSkin>();   // delivered art: selected tab = toggle-on sprite
+            if (skin != null && skin.SetToggle(selected ? UiToggleState.On : UiToggleState.Off)) return;
+            if (b.targetGraphic != null) b.targetGraphic.color = selected ? UiPalette.AccentDk : UiPalette.Panel;
         }
 
         void RefreshOverview()

@@ -50,6 +50,8 @@ namespace IdleGrounds.Game
         static void Toggle(Button b, bool on, bool danger)
         {
             if (b == null) return;
+            var skin = b.GetComponent<UiButtonSkin>();   // delivered art: swap sprites (only on state change), no tint
+            if (skin != null && skin.SetToggle(on ? (danger ? UiToggleState.Danger : UiToggleState.On) : UiToggleState.Off)) return;
             var img = b.targetGraphic as Image;
             if (img != null) img.color = on ? (danger ? new Color(0.45f, 0.12f, 0.12f) : UiPalette.AccentDk) : UiPalette.Panel;
             var ol = b.GetComponent<Outline>();
