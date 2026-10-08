@@ -161,6 +161,38 @@
       "source": "Idle-Grounds-Buildings-007.zip"
     },
     {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-008-preview.png",
+      "name": "preview.png",
+      "size": 52974,
+      "sha1": "b664e49b292b0c93ea8b359dc0f02c4e0bee10fa",
+      "date": "2026-10-08T07:42:54.923Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-008-README.txt",
+      "name": "README.txt",
+      "size": 824,
+      "sha1": "c92607ab0989b87540fb50aa14dc36c3e4b8ad09",
+      "date": "2026-10-08T07:42:54.924Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-009-preview.png",
+      "name": "preview.png",
+      "size": 64888,
+      "sha1": "35b431b8c21752cbc6b4c74a32143f3e5eeb2530",
+      "date": "2026-10-08T07:42:55.361Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-009-README.txt",
+      "name": "README.txt",
+      "size": 392,
+      "sha1": "b45faca9b7af682b17363224b6a408178e17c3a1",
+      "date": "2026-10-08T07:42:55.361Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
+    },
+    {
       "path": "_notes/creatures-Idle-Grounds-Creatures-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 472,
@@ -929,6 +961,38 @@
       "source": "Idle-Grounds-Sky-004.zip"
     },
     {
+      "path": "buildings/bld_brewery_working_96x128_4f.png",
+      "name": "bld_brewery_working_96x128_4f.png",
+      "size": 9290,
+      "sha1": "b12bcd2f03515a51caa373a8f1368b011bc604ea",
+      "date": "2026-10-08T07:42:54.863Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
+      "path": "buildings/bld_brewery.png",
+      "name": "bld_brewery.png",
+      "size": 7627,
+      "sha1": "6d991514000d265e1f525b5b2d7284e46c70244a",
+      "date": "2026-10-08T07:42:54.862Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
+      "path": "buildings/bld_cauldron_working_96x128_4f.png",
+      "name": "bld_cauldron_working_96x128_4f.png",
+      "size": 12250,
+      "sha1": "6331396fd5c5691f1a10407a35bc7f5d6b545119",
+      "date": "2026-10-08T07:42:54.922Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
+      "path": "buildings/bld_cauldron.png",
+      "name": "bld_cauldron.png",
+      "size": 10577,
+      "sha1": "ab890c1ab5ca1a769d0432aadc48a6f08ec72722",
+      "date": "2026-10-08T07:42:54.863Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
       "path": "buildings/bld_center.png",
       "name": "bld_center.png",
       "size": 23686,
@@ -993,6 +1057,22 @@
       "source": "Idle-Grounds-Buildings-006.zip"
     },
     {
+      "path": "buildings/bld_jade_carver_working_96x128_4f.png",
+      "name": "bld_jade_carver_working_96x128_4f.png",
+      "size": 12559,
+      "sha1": "46089165dc653d416c3e23ae85da5ab688df5bb7",
+      "date": "2026-10-08T07:42:54.923Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
+      "path": "buildings/bld_jade_carver.png",
+      "name": "bld_jade_carver.png",
+      "size": 10628,
+      "sha1": "45c875b64065cfe11009142098deacf945f6fd6e",
+      "date": "2026-10-08T07:42:54.922Z",
+      "source": "Idle-Grounds-Buildings-008.zip"
+    },
+    {
       "path": "buildings/bld_kiln.png",
       "name": "bld_kiln.png",
       "size": 14070,
@@ -1049,12 +1129,60 @@
       "source": "Idle-Grounds-Buildings-006.zip"
     },
     {
+      "path": "buildings/bld_pill_furnace_working_96x192_4f.png",
+      "name": "bld_pill_furnace_working_96x192_4f.png",
+      "size": 12752,
+      "sha1": "ed4f55482bd8a01572dfc177384bf6492bbcbf42",
+      "date": "2026-10-08T07:42:55.344Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
+    },
+    {
+      "path": "buildings/bld_pill_furnace.png",
+      "name": "bld_pill_furnace.png",
+      "size": 9867,
+      "sha1": "8e10f69803de8c1e0fcac83b7db89748ce8af556",
+      "date": "2026-10-08T07:42:55.343Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
+    },
+    {
+      "path": "buildings/bld_star_anvil_working_96x192_4f.png",
+      "name": "bld_star_anvil_working_96x192_4f.png",
+      "size": 18701,
+      "sha1": "dcb8ed61811613f6b5d092efc5f770ebce953f17",
+      "date": "2026-10-08T07:42:55.359Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
+    },
+    {
+      "path": "buildings/bld_star_anvil.png",
+      "name": "bld_star_anvil.png",
+      "size": 15269,
+      "sha1": "6fc34daa1385a64cc6c05469af4b147dc26dacf6",
+      "date": "2026-10-08T07:42:55.344Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
+    },
+    {
       "path": "buildings/bld_storehouse.png",
       "name": "bld_storehouse.png",
       "size": 10119,
       "sha1": "3269d703b681c75562c38edaef359e742d891705",
       "date": "2026-10-04T11:42:31.118Z",
       "source": "Idle-Grounds-Buildings-002.zip"
+    },
+    {
+      "path": "buildings/bld_talisman_atelier_working_96x128_4f.png",
+      "name": "bld_talisman_atelier_working_96x128_4f.png",
+      "size": 12129,
+      "sha1": "ca75ecf2834f78f41b2c9986c01d0f4d9e1bdbcf",
+      "date": "2026-10-08T07:42:55.360Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
+    },
+    {
+      "path": "buildings/bld_talisman_atelier.png",
+      "name": "bld_talisman_atelier.png",
+      "size": 9986,
+      "sha1": "835811b22a0304d8550561f406b933b0e1042986",
+      "date": "2026-10-08T07:42:55.360Z",
+      "source": "Idle-Grounds-Buildings-009.zip"
     },
     {
       "path": "buildings/bld_warding_seal.png",
