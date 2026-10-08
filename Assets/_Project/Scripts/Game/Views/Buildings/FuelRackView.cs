@@ -25,19 +25,35 @@ namespace IdleGrounds.Game
 
         public override bool ReplacesDefault => false;   // the converter face draws the footprint
         public int ShownSlots { get; private set; }
+        /// <summary>True when the delivered ui_fuel_rack art replaced the placeholder panel.</summary>
+        public bool ArtActive { get; private set; }
         readonly ConverterFace ownFace = new ConverterFace();
 
         public override void Layout(BuildingView v)
         {
             transform.localPosition = new Vector3(-Cols, 0f, 0f);
             panel.transform.localPosition = new Vector3(Cols * 0.5f, -Rows * 0.5f, 0f);
-            panel.transform.localScale = new Vector3(Cols, Rows, 1f);
-            panel.color = PanelFill;
-            frame.transform.localPosition = Vector3.zero;
-            frame.Set(Cols, Rows, ViewKit.U(1.5f), PanelBorder, false);
+            // delivered ui_fuel_rack (96x64 @ PPU 32 = exactly 3x2 cells, 6 baked-in 32x32 slots): native size, no frame/dividers
+            var art = v != null && v.Sync != null && v.Sync.Sprites != null ? v.Sync.Sprites.Ui("ui_fuel_rack") : null;
+            ArtActive = art != null;
+            if (ArtActive)
+            {
+                panel.sprite = art;
+                panel.transform.localScale = Vector3.one;
+                panel.color = Color.white;
+                frame.gameObject.SetActive(false);
+                foreach (var d in dividers) if (d) d.gameObject.SetActive(false);
+            }
+            else
+            {
+                panel.transform.localScale = new Vector3(Cols, Rows, 1f);
+                panel.color = PanelFill;
+                frame.transform.localPosition = Vector3.zero;
+                frame.Set(Cols, Rows, ViewKit.U(1.5f), PanelBorder, false);
+            }
             var div = new Color(1f, 1f, 1f, 0.07f);
             float t = ViewKit.U(1f);
-            if (dividers.Length >= 3)
+            if (!ArtActive && dividers.Length >= 3)
             {
                 ViewKit.Bar(dividers[0], 1f - t * 0.5f, -1f, t, Rows); dividers[0].color = div;
                 ViewKit.Bar(dividers[1], 2f - t * 0.5f, -1f, t, Rows); dividers[1].color = div;

@@ -71,6 +71,7 @@ namespace IdleGrounds.Editor
             var root = Stretch(NewUi("BridgePanel", null));
             var view = root.gameObject.AddComponent<BridgePanelView>();
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.97f), UiPalette.Line, raycast: true);
+            UiSkin.Attach(panel.gameObject, "ui_panel_jade");
             var prt = panel.rectTransform;
             prt.anchorMin = new Vector2(0f, 0f); prt.anchorMax = new Vector2(1f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);

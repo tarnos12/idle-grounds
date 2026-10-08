@@ -19,7 +19,7 @@ namespace IdleGrounds.Game
         public override void Open()
         {
             if (Sim == null) return;
-            if (titleText != null) titleText.text = UiText.StripEmoji(HelpText.Title);
+            if (titleText != null) titleText.text = UiText.StripAllEmoji(HelpText.Title).Trim();   // the title emoji has no sprite -> tofu box
             var secs = HelpText.Sections(Sim);
             while (rows.Count < secs.Count)
             {

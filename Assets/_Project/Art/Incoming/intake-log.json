@@ -993,6 +993,22 @@
       "source": "Idle-Grounds-Sky-004.zip"
     },
     {
+      "path": "_notes/ui-Idle-Grounds-UI-001-README.md",
+      "name": "README.md",
+      "size": 1177,
+      "sha1": "c7aad6d193202148e052a9efbf5ed4b3566833bd",
+      "date": "2026-10-08T11:43:15.479Z",
+      "source": "Idle-Grounds-UI-001.zip"
+    },
+    {
+      "path": "_notes/ui-Idle-Grounds-UI-002-README.md",
+      "name": "README.md",
+      "size": 1310,
+      "sha1": "b7f726d0fb1b89fcd6908335898d36329671914b",
+      "date": "2026-10-08T11:43:15.902Z",
+      "source": "Idle-Grounds-UI-002.zip"
+    },
+    {
       "path": "buildings/bld_algae_farm_working_96x128_4f.png",
       "name": "bld_algae_farm_working_96x128_4f.png",
       "size": 12646,
@@ -2287,6 +2303,46 @@
       "sha1": "837a1e2bc85f153cd4f80925cbbd0619ce289604",
       "date": "2026-10-06T14:01:20.870Z",
       "source": "Idle-Grounds-Sky-004.zip"
+    },
+    {
+      "path": "ui/ui_fuel_rack_96x64.png",
+      "name": "ui_fuel_rack_96x64.png",
+      "size": 3796,
+      "sha1": "506b28bfe5b7d71715cdc707903014524bf66f52",
+      "date": "2026-10-08T11:43:15.538Z",
+      "source": "Idle-Grounds-UI-001.zip"
+    },
+    {
+      "path": "ui/ui_fuel_slot_32x32.png",
+      "name": "ui_fuel_slot_32x32.png",
+      "size": 906,
+      "sha1": "9b4afcae64d16ff7d168c39f4dd29f7fc4816f94",
+      "date": "2026-10-08T11:43:15.538Z",
+      "source": "Idle-Grounds-UI-001.zip"
+    },
+    {
+      "path": "ui/ui_panel_dark_32x32.png",
+      "name": "ui_panel_dark_32x32.png",
+      "size": 245,
+      "sha1": "63b05048f34d2d319308eec47bd5bd006df787d0",
+      "date": "2026-10-08T11:43:15.903Z",
+      "source": "Idle-Grounds-UI-002.zip"
+    },
+    {
+      "path": "ui/ui_panel_jade_64x64.png",
+      "name": "ui_panel_jade_64x64.png",
+      "size": 1297,
+      "sha1": "989ccdae71034ee8bb227e8bd3fddf70cda9f357",
+      "date": "2026-10-08T11:43:15.917Z",
+      "source": "Idle-Grounds-UI-002.zip"
+    },
+    {
+      "path": "ui/ui_panel_scroll_64x64.png",
+      "name": "ui_panel_scroll_64x64.png",
+      "size": 2101,
+      "sha1": "87049f38d479ab89743cb3e9fbd4f712208c908d",
+      "date": "2026-10-08T11:43:15.917Z",
+      "source": "Idle-Grounds-UI-002.zip"
     }
   ]
 }

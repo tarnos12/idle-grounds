@@ -335,6 +335,7 @@ namespace IdleGrounds.Editor
             var view = root.gameObject.AddComponent<HandCursorView>();
 
             var chip = Chip(root, "Chip", UiPalette.HandChip, UiPalette.Accent);
+            UiSkin.Attach(chip.gameObject, "ui_panel_dark");
             var crt = chip.rectTransform;
             crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
             crt.pivot = new Vector2(0f, 1f);

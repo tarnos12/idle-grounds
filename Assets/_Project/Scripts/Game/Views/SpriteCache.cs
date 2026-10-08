@@ -19,6 +19,9 @@ namespace IdleGrounds.Game
         readonly Dictionary<string, Sprite> buildingCache = new Dictionary<string, Sprite>();
         readonly Dictionary<string, Sprite> buildingArtCache = new Dictionary<string, Sprite>();
 
+        /// <summary>Delivered UI chrome sprite (ui_* key) or null.</summary>
+        public Sprite Ui(string key) => db != null ? db.UiSprite(key) : null;
+
         public Sprite Item(string item)
         {
             if (item == null) return db.ItemIcon(item);

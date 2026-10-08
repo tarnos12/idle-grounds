@@ -91,12 +91,12 @@ namespace IdleGrounds.Editor
         }
 
         /// <summary>Header row (icon? + title + spacer + ✕) anchored to the top of the box.</summary>
-        static (TextMeshProUGUI title, Button close) Header(RectTransform box, string title, Sprite icon, float top = 18f)
+        static (TextMeshProUGUI title, Button close) Header(RectTransform box, string title, Sprite icon, float top = 34f)
         {
             var head = NewUi("Header", box);
             head.anchorMin = new Vector2(0f, 1f); head.anchorMax = new Vector2(1f, 1f);
             head.pivot = new Vector2(0.5f, 1f);
-            head.sizeDelta = new Vector2(-54f, 54f);
+            head.sizeDelta = new Vector2(-72f, 54f);
             head.anchoredPosition = new Vector2(0f, -top);
             Row(head.gameObject, 0, 0, 12);
             if (icon != null) Icon(head, "Icon", icon, 36);
@@ -111,7 +111,7 @@ namespace IdleGrounds.Editor
         {
             var vp = NewUi("Viewport", box);
             vp.anchorMin = Vector2.zero; vp.anchorMax = Vector2.one;
-            vp.offsetMin = new Vector2(27f, bottom); vp.offsetMax = new Vector2(-27f, -top);
+            vp.offsetMin = new Vector2(36f, Mathf.Max(bottom, 36f)); vp.offsetMax = new Vector2(-36f, -top);   // clear of the 32 px jade frame
             var vimg = vp.gameObject.AddComponent<Image>();
             vimg.color = new Color(0f, 0f, 0f, 0f);
             vimg.raycastTarget = true;
@@ -149,9 +149,9 @@ namespace IdleGrounds.Editor
         }
 
         static (GameObject modal, Image box, VerticalLayoutGroup col) FitBox(RectTransform root, Color border, float width, int pad = 27, float spacing = 14,
-            TextAnchor align = TextAnchor.UpperCenter)
+            TextAnchor align = TextAnchor.UpperCenter, string skin = "ui_panel_jade")
         {
-            var (modal, box) = Modal(root, border);
+            var (modal, box) = Modal(root, border, skin);
             box.rectTransform.sizeDelta = new Vector2(width, 300f);
             var col = ColW(box.gameObject, pad, spacing, align);
             Fit(box.gameObject, false, true);
@@ -164,11 +164,11 @@ namespace IdleGrounds.Editor
         {
             var root = Stretch(NewUi("HelpModal", null));
             var view = root.gameObject.AddComponent<HelpModalView>();
-            var (modal, box) = Modal(root, UiPalette.Line);
+            var (modal, box) = Modal(root, UiPalette.Line, "ui_panel_jade");
             var brt = box.rectTransform;
             brt.sizeDelta = new Vector2(840f, 930f);
             var (title, close) = Header(brt, "How to play", null);
-            var (scroll, content) = Scroll(brt, 84f, 24f, 15f);
+            var (scroll, content) = Scroll(brt, 100f, 36f, 15f);
 
             var tpl = Templates(root);
             var sec = NewUi("SectionTemplate", tpl);
@@ -326,7 +326,7 @@ namespace IdleGrounds.Editor
             art.sizeDelta = new Vector2(-54f, 66f);
             art.anchoredPosition = new Vector2(0f, -78f);
             ap.alignment = TextAlignmentOptions.TopLeft;
-            var (scroll, content) = Scroll(brt, 152f, 24f, 10f);
+            var (scroll, content) = Scroll(brt, 168f, 36f, 10f);
 
             var tpl = Templates(root);
             var grp = Label(tpl, "GroupTemplate", "PACE", 16.5f, UiPalette.Muted, true);
@@ -472,7 +472,7 @@ namespace IdleGrounds.Editor
         {
             var root = Stretch(NewUi("WelcomeModal", null));
             var view = root.gameObject.AddComponent<WelcomeModalView>();
-            var (modal, box, _) = FitBox(root, UiPalette.Line, 840f);
+            var (modal, box, _) = FitBox(root, UiPalette.Line, 840f, skin: "ui_panel_jade");
             var brt = box.rectTransform;
             var icon = Icon(brt, "Icon", Emoji("ui_area_farm"), 72);     // 🌱
             icon.GetComponent<LayoutElement>().preferredHeight = 72;
@@ -498,6 +498,7 @@ namespace IdleGrounds.Editor
             var root = Stretch(NewUi("Toast", null));
             var view = root.gameObject.AddComponent<ToastView>();
             var chip = Chip(root, "Chip", UiPalette.Bg2, UiPalette.AccentDk);
+            UiSkin.Attach(chip.gameObject, "ui_panel_dark");
             chip.GetComponent<Outline>().effectDistance = new Vector2(2f, -2f);
             var crt = chip.rectTransform;
             crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 1f);

@@ -560,3 +560,29 @@ MonoBehaviour:
     - {fileID: -4072237852691933269, guid: 47e20f5fff8fd5e40bd9ed7170eba9fe, type: 3}
     realArt: 1
     overlay: []
+  ui:
+  - key: ui_fuel_rack
+    sprite: {fileID: 21300000, guid: 14d1778019fba6f4f8d93ac5c9d62d69, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_fuel_slot
+    sprite: {fileID: 21300000, guid: d8b0aee9a40e33646b2e91c6e49d0c66, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_panel_dark
+    sprite: {fileID: 21300000, guid: 5543c12026c7dc642b2650bcb3489d16, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_panel_jade
+    sprite: {fileID: 21300000, guid: e0b4fac43b329c9438ff0ae7aa0e2811, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_panel_scroll
+    sprite: {fileID: 21300000, guid: d71a0f89e4e1b8646941d77fece495b3, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []

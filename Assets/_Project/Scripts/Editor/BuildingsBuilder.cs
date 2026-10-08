@@ -548,6 +548,7 @@ namespace IdleGrounds.Editor
             var view = root.gameObject.AddComponent<BuildMenuView>();
 
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.97f), UiPalette.Line, raycast: true);
+            UiSkin.Attach(panel.gameObject, "ui_panel_jade");
             var prt = panel.rectTransform;
             prt.anchorMin = new Vector2(0f, 0f); prt.anchorMax = new Vector2(1f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);
@@ -759,6 +760,7 @@ namespace IdleGrounds.Editor
             root.sizeDelta = new Vector2(10f, 10f);
             var view = root.gameObject.AddComponent<BuildingTooltipView>();
             var panel = Chip(root, "Panel", UiPalette.HandChip, UiPalette.Line);
+            UiSkin.Attach(panel.gameObject, "ui_panel_dark");
             var prt = panel.rectTransform;
             prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);

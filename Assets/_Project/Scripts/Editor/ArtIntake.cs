@@ -56,6 +56,29 @@ namespace IdleGrounds.Editor
             category == "sky" || baseName.Contains("_ground_") || baseName.Contains("_cliff_") || baseName.Contains("_tiles") ||
             baseName.Contains("_veil_") || baseName.Contains("_trail") || baseName.Contains("_water");
 
+        // ---------------------------------------------------------------- 9-slice insets (ART-SPEC §5), key -> {L,R,T,B}
+        static readonly Dictionary<string, int[]> NineSlice = BuildNineSlice();
+
+        static Dictionary<string, int[]> BuildNineSlice()
+        {
+            var d = new Dictionary<string, int[]>();
+            void Add(int l, int r, int t, int b, params string[] keys) { foreach (var k in keys) d[k] = new[] { l, r, t, b }; }
+            Add(20, 20, 18, 18, "ui_panel_scroll");
+            Add(16, 16, 16, 16, "ui_panel_jade");
+            Add(8, 8, 8, 8, "ui_panel_dark", "ui_tooltip_frame", "ui_handchip_frame",
+                "ui_pill_green", "ui_pill_gold", "ui_pill_red", "ui_pill_purple",
+                "ui_btn_normal", "ui_btn_hover", "ui_btn_pressed", "ui_btn_disabled",
+                "ui_btn_primary_normal", "ui_btn_primary_hover", "ui_btn_primary_pressed", "ui_btn_primary_disabled",
+                "ui_btn_toggle_on", "ui_btn_toggle_danger");
+            Add(12, 12, 10, 0, "ui_bottombar_bg");
+            Add(20, 20, 20, 20, "ui_questpanel_frame");
+            Add(10, 10, 10, 10, "ui_card_normal", "ui_card_target", "ui_card_affordable", "ui_card_dim");
+            Add(3, 3, 3, 3, "ui_progress_track", "ui_progress_fill_gold", "ui_progress_fill_green", "ui_progress_fill_red", "ui_scrollbar");
+            Add(6, 6, 6, 6, "ui_badge_count");
+            Add(12, 12, 12, 12, "ui_unlockbtn_frame");
+            return d;
+        }
+
         // ---------------------------------------------------------------- import rules
         void OnPreprocessTexture()
         {
@@ -103,6 +126,8 @@ namespace IdleGrounds.Editor
                 ti.ReadTextureSettings(s);
                 s.spriteAlignment = (int)(bottom ? SpriteAlignment.BottomCenter : SpriteAlignment.Center);
                 s.spritePivot = bottom ? new Vector2(0.5f, 0f) : new Vector2(0.5f, 0.5f);
+                if (cat == "ui" && NineSlice.TryGetValue(ParseName(bn, out _, out _, out _), out var ins))
+                    s.spriteBorder = new Vector4(ins[0], ins[3], ins[1], ins[2]);   // Unity border = (L,B,R,T); table = (L,R,T,B)
                 ti.SetTextureSettings(s);
             }
         }
@@ -291,6 +316,19 @@ namespace IdleGrounds.Editor
                 if (e.sprite != kv.Value || !e.realArt || !SameFrames(e.frames, fr))
                 { e.sprite = kv.Value; e.frames = fr; e.realArt = true; EditorUtility.SetDirty(db); wired++; }
                 used.Add(kv.Key);
+            }
+            // ui_*: generic UI chrome registry (panels, buttons, fuel rack, icons...) not consumed by a typed target above
+            foreach (var kv in map)
+            {
+                string k = kv.Key;
+                if (!k.StartsWith("ui_") || used.Contains(k)) continue;
+                if (k.StartsWith("ui_area_") || k.StartsWith("ui_action_") || k.StartsWith("ui_vow_") || k.StartsWith("ui_quest_") || k == "ui_alert") continue;
+                frameMap.TryGetValue(k, out var fr);
+                var e = db.ui.Find(x => x.key == k);
+                if (e == null) { e = new SpriteEntry { key = k }; db.ui.Add(e); }
+                if (e.sprite != kv.Value || !e.realArt || !SameFrames(e.frames, fr))
+                { e.sprite = kv.Value; e.frames = fr; e.realArt = true; EditorUtility.SetDirty(db); wired++; }
+                used.Add(k);
             }
             // enemy_<kind>_<anim>: per-enemy animation set (idle/move/hit/die)
             foreach (var kv in map)

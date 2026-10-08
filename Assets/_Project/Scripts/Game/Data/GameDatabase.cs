@@ -34,6 +34,17 @@ namespace IdleGrounds.Game.Data
         /// <summary>Delivered enemy animation strips keyed enemy_&lt;kind&gt;_&lt;anim&gt; (idle/move/hit/die), wired by ArtIntake.</summary>
         public List<SpriteEntry> enemyAnims = new List<SpriteEntry>();
 
+        /// <summary>Generic delivered UI chrome (ui_panel_*, ui_btn_*, ui_fuel_*, ...), wired generically by ArtIntake.</summary>
+        public List<SpriteEntry> ui = new List<SpriteEntry>();
+
+        /// <summary>Delivered UI chrome sprite for a ui_* key (frame 0), or null when not delivered.</summary>
+        public Sprite UiSprite(string key)
+        {
+            foreach (var e in ui)
+                if (e != null && e.key == key && e.realArt && e.sprite != null) return e.sprite;
+            return null;
+        }
+
         /// <summary>"Fox Spirit" -> "fox", "Boar" -> "boar" (region enemy / bait-spawn display name).</summary>
         public static string EnemyKind(string name)
         {

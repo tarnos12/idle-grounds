@@ -29,7 +29,7 @@ namespace IdleGrounds.Game
             return sb.ToString();
         }
 
-        static string StripAllEmoji(string s)
+        public static string StripAllEmoji(string s)
         {
             var sb = new StringBuilder(s.Length);
             for (int i = 0; i < s.Length; i++)

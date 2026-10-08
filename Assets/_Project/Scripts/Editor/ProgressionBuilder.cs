@@ -155,7 +155,7 @@ namespace IdleGrounds.Editor
         }
 
         /// <summary>Scrim rgba(0,0,0,.55) + centred box (bg-2, 2 px border).</summary>
-        internal static (GameObject modal, Image box) Modal(RectTransform root, Color border)
+        internal static (GameObject modal, Image box) Modal(RectTransform root, Color border, string skin = "ui_panel_jade")
         {
             var modal = Stretch(NewUi("Modal", root));
             var scrim = Stretch(NewUi("Scrim", modal)).gameObject.AddComponent<Image>();
@@ -163,6 +163,7 @@ namespace IdleGrounds.Editor
             scrim.raycastTarget = true;
             var box = Chip(modal, "Box", UiPalette.Bg2, border, raycast: true);
             box.GetComponent<Outline>().effectDistance = new Vector2(2f, -2f);
+            UiSkin.Attach(box.gameObject, skin);
             var brt = box.rectTransform;
             brt.anchorMin = brt.anchorMax = new Vector2(0.5f, 0.5f);
             brt.pivot = new Vector2(0.5f, 0.5f);
@@ -307,6 +308,7 @@ namespace IdleGrounds.Editor
             var tipCg = tipLayer.gameObject.AddComponent<CanvasGroup>();
             tipCg.blocksRaycasts = false; tipCg.interactable = false;
             var tip = Chip(tipLayer, "Tooltip", new Color(8 / 255f, 11 / 255f, 13 / 255f, 0.97f), UiPalette.Line);
+            UiSkin.Attach(tip.gameObject, "ui_panel_dark");
             var trt = tip.rectTransform;
             trt.anchorMin = trt.anchorMax = new Vector2(0f, 1f);
             trt.pivot = new Vector2(0.5f, 0f);
@@ -353,6 +355,7 @@ namespace IdleGrounds.Editor
 
             // collapsed chip
             var chipImg = Chip(root, "Chip", UiPalette.Bg2, UiPalette.Line, raycast: true);
+            UiSkin.Attach(chipImg.gameObject, "ui_panel_dark");
             var crt = chipImg.rectTransform;
             crt.anchorMin = crt.anchorMax = new Vector2(1f, 1f);
             crt.pivot = new Vector2(1f, 1f);
@@ -366,12 +369,13 @@ namespace IdleGrounds.Editor
 
             // expanded panel
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.96f), UiPalette.Line, raycast: true);
+            UiSkin.Attach(panel.gameObject, "ui_panel_jade");
             var prt = panel.rectTransform;
             prt.anchorMin = prt.anchorMax = new Vector2(1f, 1f);
             prt.pivot = new Vector2(1f, 1f);
             prt.anchoredPosition = new Vector2(-21f, -21f);
             prt.sizeDelta = new Vector2(375f, 300f);
-            ColW(panel.gameObject, 15, 8);
+            ColW(panel.gameObject, 34, 8);   // clear of the 32 px jade frame
             Fit(panel.gameObject, false, true);
 
             var head = NewUi("Header", prt);
@@ -447,6 +451,7 @@ namespace IdleGrounds.Editor
             var root = Stretch(NewUi("PavilionPanel", null));
             var view = root.gameObject.AddComponent<PavilionPanelView>();
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.97f), UiPalette.Line, raycast: true);
+            UiSkin.Attach(panel.gameObject, "ui_panel_jade");
             var prt = panel.rectTransform;
             prt.anchorMin = new Vector2(0f, 0f); prt.anchorMax = new Vector2(1f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);
