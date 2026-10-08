@@ -18,7 +18,7 @@ Play. Hold LMB on nodes to harvest / on ground to vacuum, RMB drop, Q/E rotate,
 WASD pan, wheel zoom (max out 6), B build menu, click Altar/Dragon/lanterns for
 their panels.
 
-**Current focus: the art integration loop** (last check 2026-10-08: Mine ore/vein + Fishing koi/algae nodes integrated; awaiting node_firevein, remaining P2 buildings/items, UI chrome, FX) (poll Drive, pull, integrate,
+**Current focus: the art integration loop** (last check 2026-10-08: Volcano firevein/obsidian + Grove bamboo/herbbush nodes integrated; awaiting Celestial starrock/moonshrub, remaining P2 buildings/items, UI chrome, FX) (poll Drive, pull, integrate,
 review, give feedback in ART-SPEC Delivery log).
 Next candidates:
 1. Poll Drive `incoming/` (30 min x1h, hourly x2h, then 2-hourly; restart after
@@ -136,6 +136,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-08 art (2): Volcano firevein + obsidian (1x1/2x2), Grove bamboostalk (1x1/2x2) + herbbush integrated; all nodes except Celestial have real art.
 
 - 2026-10-08 art: Mine nodes (ore 1x1/2x2, iron/jade veins, intact/cracked) and Fishing koi/algae loops integrated. New convention `<key>_2x2` = big-spawner-node art (ArtIntake adds the region entry; SpriteCache.NodeArt prefers it for size >= 2).
 

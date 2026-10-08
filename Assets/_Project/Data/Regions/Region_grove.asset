@@ -113,10 +113,23 @@ MonoBehaviour:
   groundColor: {r: 0.2, g: 0.42, b: 0.3, a: 1}
   sprites:
   - key: node_herbbush
-    sprite: {fileID: -777932761, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: -2363265209252697221, guid: c3c8654db5436ba4496ef95257195029, type: 3}
+    frames:
+    - {fileID: -2363265209252697221, guid: c3c8654db5436ba4496ef95257195029, type: 3}
+    - {fileID: -8774226947901877620, guid: c3c8654db5436ba4496ef95257195029, type: 3}
+    realArt: 1
+    overlay: []
   - key: node_bamboostalk
-    sprite: {fileID: 1344160190, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-    frames: []
-    realArt: 0
+    sprite: {fileID: -8496351851282182155, guid: a9805bbabfdbd3f4282d22998f66d197, type: 3}
+    frames:
+    - {fileID: -8496351851282182155, guid: a9805bbabfdbd3f4282d22998f66d197, type: 3}
+    - {fileID: 6228102813224379394, guid: a9805bbabfdbd3f4282d22998f66d197, type: 3}
+    realArt: 1
+    overlay: []
+  - key: node_bamboostalk_2x2
+    sprite: {fileID: -928826124773172710, guid: fb8dbd23d36b89b438a623d31fdb2d13, type: 3}
+    frames:
+    - {fileID: -928826124773172710, guid: fb8dbd23d36b89b438a623d31fdb2d13, type: 3}
+    - {fileID: -6728787421113466914, guid: fb8dbd23d36b89b438a623d31fdb2d13, type: 3}
+    realArt: 1
+    overlay: []
