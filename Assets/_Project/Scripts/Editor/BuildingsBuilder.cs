@@ -760,7 +760,7 @@ namespace IdleGrounds.Editor
             root.sizeDelta = new Vector2(10f, 10f);
             var view = root.gameObject.AddComponent<BuildingTooltipView>();
             var panel = Chip(root, "Panel", UiPalette.HandChip, UiPalette.Line);
-            UiSkin.Attach(panel.gameObject, "ui_panel_dark");
+            UiSkin.Attach(panel.gameObject, "ui_tooltip_frame");
             var prt = panel.rectTransform;
             prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);

@@ -2639,7 +2639,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 5543c12026c7dc642b2650bcb3489d16, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 1b9f3c0c8829bcd4cbe360b0bbde9766, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -2716,7 +2716,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
-  key: ui_panel_dark
+  key: ui_tooltip_frame
 --- !u!1 &8723971629266079345
 GameObject:
   m_ObjectHideFlags: 0

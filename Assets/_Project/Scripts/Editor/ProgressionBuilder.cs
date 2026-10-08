@@ -308,7 +308,7 @@ namespace IdleGrounds.Editor
             var tipCg = tipLayer.gameObject.AddComponent<CanvasGroup>();
             tipCg.blocksRaycasts = false; tipCg.interactable = false;
             var tip = Chip(tipLayer, "Tooltip", new Color(8 / 255f, 11 / 255f, 13 / 255f, 0.97f), UiPalette.Line);
-            UiSkin.Attach(tip.gameObject, "ui_panel_dark");
+            UiSkin.Attach(tip.gameObject, "ui_tooltip_frame");
             var trt = tip.rectTransform;
             trt.anchorMin = trt.anchorMax = new Vector2(0f, 1f);
             trt.pivot = new Vector2(0.5f, 0f);
@@ -369,7 +369,7 @@ namespace IdleGrounds.Editor
 
             // expanded panel
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.96f), UiPalette.Line, raycast: true);
-            UiSkin.Attach(panel.gameObject, "ui_panel_jade");
+            UiSkin.Attach(panel.gameObject, "ui_questpanel_frame");
             var prt = panel.rectTransform;
             prt.anchorMin = prt.anchorMax = new Vector2(1f, 1f);
             prt.pivot = new Vector2(1f, 1f);

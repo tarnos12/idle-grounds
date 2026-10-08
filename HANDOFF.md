@@ -18,7 +18,7 @@ Play. Hold LMB on nodes to harvest / on ground to vacuum, RMB drop, Q/E rotate,
 WASD pan, wheel zoom (max out 6), B build menu, click Altar/Dragon/lanterns for
 their panels.
 
-**Current focus: the art integration loop** (last check 2026-10-08: UI chrome started - jade/dark panels + fuel rack in; scroll panel redo requested; awaiting bottombar, buttons, cards, bars, FX) and FX (§6)) (poll Drive, pull, integrate,
+**Current focus: the art integration loop** (last check 2026-10-08: panels/frames/bottom bar/scroll v2 all in; awaiting buttons, cards, bars, pills, cursor, FX) and FX (§6)) (poll Drive, pull, integrate,
 review, give feedback in ART-SPEC Delivery log).
 Next candidates:
 1. Poll Drive `incoming/` (30 min x1h, hourly x2h, then 2-hourly; restart after
@@ -136,6 +136,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-08 UI art (2): bottom bar, quest frame, tooltip + hand-chip frames and scroll v2 integrated. UiSkinRoles has 20 roles (root path "" = prefab root); builders updated (Help/Welcome = scroll, QuestPanel = questpanel frame, tooltips = tooltip frame, hand chip, BottomBar).
 
 - 2026-10-08 UI skin: GameDatabase.ui registry; ArtIntake sets 9-slice borders for every §5 key and wires leftover ui_* keys; UiSkin component (Game/UI/UiSkin.cs) applies a role sprite Sliced at 1 art px = 2 UI px and disables the placeholder Outline; menu Idle Grounds/UI/Apply UI Skin Roles (Editor/UiSkinRoles.cs) plus the builders attach roles (jade = modals/side panels, dark = tooltips/chips); FuelRackView draws ui_fuel_rack. The scroll panel art was rejected (Help/Welcome use jade until the redo arrives).
 

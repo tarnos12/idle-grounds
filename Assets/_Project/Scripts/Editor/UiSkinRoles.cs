@@ -18,7 +18,8 @@ namespace IdleGrounds.Editor
     {
         const string UiPrefabDir = "Assets/_Project/Prefabs/UI/";
         const string DbPath = "Assets/_Project/Data/GameDatabase.asset";
-        public const string Jade = "ui_panel_jade", Scroll = "ui_panel_scroll", Dark = "ui_panel_dark";
+        public const string Jade = "ui_panel_jade", Scroll = "ui_panel_scroll", Dark = "ui_panel_dark",
+            Quest = "ui_questpanel_frame", Tip = "ui_tooltip_frame", HandChip = "ui_handchip_frame", Bar = "ui_bottombar_bg";
 
         /// <summary>prefab -> (path under the prefab root, "name:" prefix = deep search by name, skin key)</summary>
         public static readonly (string prefab, string path, string key)[] Roles =
@@ -26,22 +27,23 @@ namespace IdleGrounds.Editor
             ("AscendDialog", "Modal/Box", Jade),
             ("DragonDialog", "Modal/Box", Jade),
             ("UpgradeTree", "Modal/Box", Jade),
-            ("UpgradeTree", "name:Tooltip", Dark),
+            ("UpgradeTree", "name:Tooltip", Tip),
             ("PerkShop", "Modal/Box", Jade),
             ("PostAscension", "Modal/Box", Jade),
             ("StatsPanel", "Modal/Box", Jade),
             ("ConfirmDialog", "Modal/Box", Jade),
-            ("HelpModal", "Modal/Box", Jade),
-            ("WelcomeModal", "Modal/Box", Jade),
+            ("HelpModal", "Modal/Box", Scroll),
+            ("WelcomeModal", "Modal/Box", Scroll),
             ("BuildMenu", "Panel", Jade),
             ("BridgePanel", "Panel", Jade),
             ("LinkEditor", "Panel", Jade),
             ("PavilionPanel", "Panel", Jade),
-            ("QuestPanel", "Panel", Jade),
+            ("QuestPanel", "Panel", Quest),
             ("QuestPanel", "Chip", Dark),
-            ("BuildingTooltip", "Panel", Dark),
+            ("BuildingTooltip", "Panel", Tip),
             ("Toast", "Chip", Dark),
-            ("HandCursor", "Chip", Dark),
+            ("HandCursor", "Chip", HandChip),
+            ("BottomBar", "", Bar),
         };
 
         [MenuItem("Idle Grounds/UI/Apply UI Skin Roles")]
@@ -58,7 +60,7 @@ namespace IdleGrounds.Editor
                 {
                     foreach (var r in group.Value)
                     {
-                        var t = r.path.StartsWith("name:") ? FindDeep(root.transform, r.path.Substring(5)) : root.transform.Find(r.path);
+                        var t = r.path.Length == 0 ? root.transform : r.path.StartsWith("name:") ? FindDeep(root.transform, r.path.Substring(5)) : root.transform.Find(r.path);
                         if (t == null || t.GetComponent<Image>() == null) { Debug.LogWarning($"UiSkinRoles: {group.Key}/{r.path} not found / no Image"); missing++; continue; }
                         var s = UiSkin.Attach(t.gameObject, r.key);
                         if (s.Apply(db)) art++;

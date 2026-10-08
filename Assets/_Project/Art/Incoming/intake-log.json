@@ -1009,6 +1009,22 @@
       "source": "Idle-Grounds-UI-002.zip"
     },
     {
+      "path": "_notes/ui-Idle-Grounds-UI-003-README.md",
+      "name": "README.md",
+      "size": 1404,
+      "sha1": "85103b8c48857d37669bfefb058b1b250bcfd370",
+      "date": "2026-10-08T13:43:15.860Z",
+      "source": "Idle-Grounds-UI-003.zip"
+    },
+    {
+      "path": "_notes/ui-Idle-Grounds-UI-004-README.md",
+      "name": "README.md",
+      "size": 1017,
+      "sha1": "169115ad87ab866e32cc61ac158c28150a940add",
+      "date": "2026-10-08T13:43:16.269Z",
+      "source": "Idle-Grounds-UI-004.zip"
+    },
+    {
       "path": "buildings/bld_algae_farm_working_96x128_4f.png",
       "name": "bld_algae_farm_working_96x128_4f.png",
       "size": 12646,
@@ -2305,6 +2321,14 @@
       "source": "Idle-Grounds-Sky-004.zip"
     },
     {
+      "path": "ui/ui_bottombar_bg_64x48.png",
+      "name": "ui_bottombar_bg_64x48.png",
+      "size": 712,
+      "sha1": "262d36a519b21783716fd8e5170bfae1e0779bcb",
+      "date": "2026-10-08T13:43:15.860Z",
+      "source": "Idle-Grounds-UI-003.zip"
+    },
+    {
       "path": "ui/ui_fuel_rack_96x64.png",
       "name": "ui_fuel_rack_96x64.png",
       "size": 3796,
@@ -2319,6 +2343,14 @@
       "sha1": "9b4afcae64d16ff7d168c39f4dd29f7fc4816f94",
       "date": "2026-10-08T11:43:15.538Z",
       "source": "Idle-Grounds-UI-001.zip"
+    },
+    {
+      "path": "ui/ui_handchip_frame_24x24.png",
+      "name": "ui_handchip_frame_24x24.png",
+      "size": 357,
+      "sha1": "6289cf1b0afb879292946ec4428a51c9277c5105",
+      "date": "2026-10-08T13:43:15.861Z",
+      "source": "Idle-Grounds-UI-003.zip"
     },
     {
       "path": "ui/ui_panel_dark_32x32.png",
@@ -2339,10 +2371,26 @@
     {
       "path": "ui/ui_panel_scroll_64x64.png",
       "name": "ui_panel_scroll_64x64.png",
-      "size": 2101,
-      "sha1": "87049f38d479ab89743cb3e9fbd4f712208c908d",
-      "date": "2026-10-08T11:43:15.917Z",
-      "source": "Idle-Grounds-UI-002.zip"
+      "size": 1296,
+      "sha1": "e4c1e5da92bfa1fb857dbf941bf3ee185e38f46a",
+      "date": "2026-10-08T13:43:16.270Z",
+      "source": "Idle-Grounds-UI-004.zip"
+    },
+    {
+      "path": "ui/ui_questpanel_frame_64x64.png",
+      "name": "ui_questpanel_frame_64x64.png",
+      "size": 2122,
+      "sha1": "10b098a7577d66fa2191a3e890e26ceaef516691",
+      "date": "2026-10-08T13:43:15.919Z",
+      "source": "Idle-Grounds-UI-003.zip"
+    },
+    {
+      "path": "ui/ui_tooltip_frame_24x24.png",
+      "name": "ui_tooltip_frame_24x24.png",
+      "size": 324,
+      "sha1": "3466f93615fc60920fd5b16b851211755e1c38a0",
+      "date": "2026-10-08T13:43:15.919Z",
+      "source": "Idle-Grounds-UI-003.zip"
     }
   ]
 }

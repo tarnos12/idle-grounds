@@ -164,7 +164,7 @@ namespace IdleGrounds.Editor
         {
             var root = Stretch(NewUi("HelpModal", null));
             var view = root.gameObject.AddComponent<HelpModalView>();
-            var (modal, box) = Modal(root, UiPalette.Line, "ui_panel_jade");
+            var (modal, box) = Modal(root, UiPalette.Line, "ui_panel_scroll");
             var brt = box.rectTransform;
             brt.sizeDelta = new Vector2(840f, 930f);
             var (title, close) = Header(brt, "How to play", null);
@@ -472,7 +472,7 @@ namespace IdleGrounds.Editor
         {
             var root = Stretch(NewUi("WelcomeModal", null));
             var view = root.gameObject.AddComponent<WelcomeModalView>();
-            var (modal, box, _) = FitBox(root, UiPalette.Line, 840f, skin: "ui_panel_jade");
+            var (modal, box, _) = FitBox(root, UiPalette.Line, 840f, skin: "ui_panel_scroll");
             var brt = box.rectTransform;
             var icon = Icon(brt, "Icon", Emoji("ui_area_farm"), 72);     // 🌱
             icon.GetComponent<LayoutElement>().preferredHeight = 72;

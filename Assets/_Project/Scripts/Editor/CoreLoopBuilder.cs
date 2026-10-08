@@ -335,7 +335,7 @@ namespace IdleGrounds.Editor
             var view = root.gameObject.AddComponent<HandCursorView>();
 
             var chip = Chip(root, "Chip", UiPalette.HandChip, UiPalette.Accent);
-            UiSkin.Attach(chip.gameObject, "ui_panel_dark");
+            UiSkin.Attach(chip.gameObject, "ui_handchip_frame");
             var crt = chip.rectTransform;
             crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
             crt.pivot = new Vector2(0f, 1f);
@@ -385,6 +385,7 @@ namespace IdleGrounds.Editor
             var bg = root.gameObject.AddComponent<Image>();
             bg.color = new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.96f);
             bg.raycastTarget = true;     // the bar blocks world clicks
+            UiSkin.Attach(root.gameObject, "ui_bottombar_bg");
             var row = Row(root.gameObject, 16, 8, 12);
             var view = root.gameObject.AddComponent<BottomBarView>();
 
