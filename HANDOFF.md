@@ -137,9 +137,11 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-09: ArtIntake is idempotent. A second run reports 0 assignments changed and leaves git clean. Fixes: frame arrays are compared by content (SameFrames) for buildings, dragon stages and building variants; the Dragon building is no longer set twice per run (it took the bld_dragon art and was then overwritten by the dragon_sleeping strip, so it changed on every run; bld_dragon is now marked consumed).
+
 - 2026-10-09 UI art (3): cards (build + perk), recipe cells, ingredient frames + count badges, UiBar (Sliced fill driven by anchors), pills, HP pips, UiCheckbox, Scrollbars on all ScrollRects, GameCursor (2x hardware cursor: open/closed/target, system arrow over UI). New editor UiArtRoles.AttachAll (run from Apply UI Skin Roles and CoreLoopBuilder.Save). Scrim art rejected (dither grid).
 
-- 2026-10-08 UI buttons: UiButtonSkin (Standard/Primary/Close, SpriteSwap, shared 2x slice multiplier with 1x floor) on 36 buttons via builders + menu Idle Grounds/UI/Apply Button Skins (Editor/UiButtonRoles.cs); toggles (Build/Demolish/Sound/Motion/Stats tab) swap toggle_on/danger art on state change. Cards/cells/pills/minimise still placeholder. Known: ArtIntake reports a nonzero "assignment(s) changed" every run (never settles; harmless, investigate later).
+- 2026-10-08 UI buttons: UiButtonSkin (Standard/Primary/Close, SpriteSwap, shared 2x slice multiplier with 1x floor) on 36 buttons via builders + menu Idle Grounds/UI/Apply Button Skins (Editor/UiButtonRoles.cs); toggles (Build/Demolish/Sound/Motion/Stats tab) swap toggle_on/danger art on state change. Cards/cells/pills/minimise still placeholder.
 
 - 2026-10-08 UI art (2): bottom bar, quest frame, tooltip + hand-chip frames and scroll v2 integrated. UiSkinRoles has 20 roles (root path "" = prefab root); builders updated (Help/Welcome = scroll, QuestPanel = questpanel frame, tooltips = tooltip frame, hand chip, BottomBar).
 

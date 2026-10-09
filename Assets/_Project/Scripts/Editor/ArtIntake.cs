@@ -228,15 +228,16 @@ namespace IdleGrounds.Editor
             foreach (var a in db.items)
                 if (a && Set(map, "item_" + a.def.key, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
 
+            // (the Dragon is skipped when the sleeping-dragon strip exists: it is wired below and would otherwise flip-flop)
             foreach (var a in db.buildings)
-                if (a && Set(map, "bld_" + a.def.key, used, s => { frameMap.TryGetValue("bld_" + a.def.key, out var bf); if (a.icon == s && a.hasRealArt && a.frames == bf) return false; a.icon = s; a.frames = bf; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
+                if (a && !(a.def.key == "dragon" && map.ContainsKey("dragon_sleeping")) && Set(map, "bld_" + a.def.key, used, s => { frameMap.TryGetValue("bld_" + a.def.key, out var bf); if (a.icon == s && a.hasRealArt && SameFrames(a.frames, bf)) return false; a.icon = s; a.frames = bf; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
 
             // the Dragon building has no bld_ art: its body is the sleeping-dragon strip (awake art = last stage asset)
             var dragonB = db.FindBuilding("dragon");
             if (dragonB && map.TryGetValue("dragon_sleeping", out var dragonSpr))
             {
                 frameMap.TryGetValue("dragon_sleeping", out var df);
-                if (dragonB.icon != dragonSpr || !dragonB.hasRealArt || dragonB.frames != df)
+                if (dragonB.icon != dragonSpr || !dragonB.hasRealArt || !SameFrames(dragonB.frames, df))
                 { dragonB.icon = dragonSpr; dragonB.frames = df; dragonB.hasRealArt = true; EditorUtility.SetDirty(dragonB); wired++; }
             }
 
@@ -251,7 +252,7 @@ namespace IdleGrounds.Editor
                 string variant = kv.Key.Substring(("bld_" + best.def.key + "_").Length);
                 frameMap.TryGetValue(kv.Key, out var fr);
                 var existing = best.variants.Find(v => v.key == variant);
-                if (existing != null && existing.sprite == kv.Value) { used.Add(kv.Key); continue; }
+                if (existing != null && existing.sprite == kv.Value && SameFrames(existing.frames, fr)) { used.Add(kv.Key); continue; }
                 best.variants.RemoveAll(v => v.key == variant);
                 best.variants.Add(new SpriteEntry { key = variant, sprite = kv.Value, frames = fr });
                 EditorUtility.SetDirty(best); used.Add(kv.Key); wired++;
@@ -298,7 +299,7 @@ namespace IdleGrounds.Editor
             {
                 var a = db.dragonStages[i]; if (!a) continue;
                 string dk = i == 0 ? "dragon_sleeping" : "dragon_awake";
-                if (Set(map, dk, used, s => { frameMap.TryGetValue(dk, out var sf); if (a.icon == s && a.hasRealArt && a.frames == sf) return false; a.icon = s; a.frames = sf; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
+                if (Set(map, dk, used, s => { frameMap.TryGetValue(dk, out var sf); if (a.icon == s && a.hasRealArt && SameFrames(a.frames, sf)) return false; a.icon = s; a.frames = sf; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
             }
             foreach (var a in db.upgrades) if (a && Set(map, "upg_" + a.def.id, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
             foreach (var a in db.perks) if (a && Set(map, "perk_" + a.def.id, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
@@ -346,7 +347,8 @@ namespace IdleGrounds.Editor
                 used.Add("island_" + biome + "_ground_fill");
             used.Add("island_center_path");     // stored, not yet consumed
             used.Add("island_center_plaza");    // stored, not yet consumed
-            used.Add("sky_moon");   // Sky/Moon renderer (IslandsBuilder.BuildSky); delivered bytes replace the Art/Sky placeholder
+            used.Add("bld_dragon");     // compatibility key, superseded by dragon_sleeping
+            used.Add("sky_moon");  // Sky/Moon renderer (IslandsBuilder.BuildSky); delivered bytes replace the Art/Sky placeholder
 
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)
             foreach (var key in map.Keys)
