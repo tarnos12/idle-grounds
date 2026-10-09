@@ -104,13 +104,25 @@ namespace IdleGrounds.Game
             }
         }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [System.Runtime.InteropServices.DllImport("__Internal")] static extern void IG_SyncFs();   // Plugins/WebGL/IdbSync.jslib
+#endif
+
         public static void WriteAtomic(string path, string text)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path));
+#if UNITY_WEBGL && !UNITY_EDITOR
+            // WebGL's virtual filesystem (IndexedDB-backed) has no File.Replace: every save after the first
+            // would throw. Writes there are already all-or-nothing per sync, so write the file directly.
+            File.WriteAllText(path, text);
+            IG_SyncFs();    // flush the in-memory FS to IndexedDB now (otherwise the save is lost on reload)
+            return;
+#else
             string tmp = path + ".tmp";
             File.WriteAllText(tmp, text);
             if (File.Exists(path)) File.Replace(tmp, path, null);
             else File.Move(tmp, path);
+#endif
         }
 
         /// <summary>Reset button: delete the save, stop saving, reload the scene (fresh run).</summary>
@@ -121,6 +133,9 @@ namespace IdleGrounds.Game
             {
                 if (File.Exists(SavePath)) File.Delete(SavePath);
                 if (File.Exists(SavePath + ".tmp")) File.Delete(SavePath + ".tmp");
+#if UNITY_WEBGL && !UNITY_EDITOR
+                IG_SyncFs();    // make the delete stick in IndexedDB too
+#endif
             }
             catch (Exception e) { Debug.LogException(e); }
             ReloadScene();

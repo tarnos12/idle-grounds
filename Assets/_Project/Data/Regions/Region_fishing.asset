@@ -123,8 +123,8 @@ MonoBehaviour:
         hp: 0
         speed: 0
         drops: []
-  icon: {fileID: 473041099, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-  actionIcon: {fileID: -385929388, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  icon: {fileID: 21300000, guid: 43cccd22c0187f642a9d537a9ed431d6, type: 3}
+  actionIcon: {fileID: 21300000, guid: 0a087ed2ede82df4685d43e9e4d5643a, type: 3}
   groundColor: {r: 0.25, g: 0.45, b: 0.55, a: 1}
   sprites:
   - key: node_fish

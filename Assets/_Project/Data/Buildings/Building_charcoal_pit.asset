@@ -79,5 +79,14 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: 0b5973f902e66ad4faefe88f6db87550, type: 3}
   hasRealArt: 1
   frames: []
-  variants: []
+  variants:
+  - key: working
+    sprite: {fileID: 3235268718238640728, guid: 0de6079364f76c447927c0515e274b97, type: 3}
+    frames:
+    - {fileID: 3235268718238640728, guid: 0de6079364f76c447927c0515e274b97, type: 3}
+    - {fileID: -788362942282899292, guid: 0de6079364f76c447927c0515e274b97, type: 3}
+    - {fileID: 4672980525764113049, guid: 0de6079364f76c447927c0515e274b97, type: 3}
+    - {fileID: -5124322493440667958, guid: 0de6079364f76c447927c0515e274b97, type: 3}
+    realArt: 0
+    overlay: []
   prefabOverride: {fileID: 0}

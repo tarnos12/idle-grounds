@@ -149,8 +149,8 @@ MonoBehaviour:
         - item: spirit_essence
           min: 1
           max: 1
-  icon: {fileID: -1045212250, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-  actionIcon: {fileID: -1708793007, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  icon: {fileID: 21300000, guid: 874126f52683455419523851c3798997, type: 3}
+  actionIcon: {fileID: 21300000, guid: 30e1510f42819104ab3c8a7f1ee4c324, type: 3}
   groundColor: {r: 0.3, g: 0.45, b: 0.28, a: 1}
   sprites:
   - key: node_bush

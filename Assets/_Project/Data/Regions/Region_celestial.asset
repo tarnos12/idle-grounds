@@ -110,8 +110,8 @@ MonoBehaviour:
         hp: 0
         speed: 0
         drops: []
-  icon: {fileID: -1720451904, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
-  actionIcon: {fileID: -1076005617, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  icon: {fileID: 21300000, guid: b0ea71f22a7f5d24d84c491f9569b439, type: 3}
+  actionIcon: {fileID: 21300000, guid: a1e6fa658c49df64c9ee25c731d733a8, type: 3}
   groundColor: {r: 0.3, g: 0.28, b: 0.5, a: 1}
   sprites:
   - key: node_starrock

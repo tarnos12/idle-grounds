@@ -481,7 +481,7 @@ MonoBehaviour:
     - dragon_scale
     cap: 6
     perType: 2
-  missingSprite: {fileID: -1935059799, guid: 75f89391a88c36442b26d704bddd988c, type: 3}
+  missingSprite: {fileID: 21300000, guid: 4158e4aa060ef0e4bb261a195d33b267, type: 3}
   fx:
   - key: fx_wisp
     sprite: {fileID: -2785000442442561768, guid: 4f755b70e9882254190703302c24efbf, type: 3}
@@ -507,6 +507,314 @@ MonoBehaviour:
     - {fileID: 2472738611648518449, guid: d5b93b9c65e32ed489af7bdf666e7d37, type: 3}
     - {fileID: 5603866904561099452, guid: d5b93b9c65e32ed489af7bdf666e7d37, type: 3}
     - {fileID: -6625133227797554688, guid: d5b93b9c65e32ed489af7bdf666e7d37, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_ascend_pillar
+    sprite: {fileID: 2630654653858914859, guid: 10d2674168b27ff4e8da306e84585ea9, type: 3}
+    frames:
+    - {fileID: 2630654653858914859, guid: 10d2674168b27ff4e8da306e84585ea9, type: 3}
+    - {fileID: 1475126964076885756, guid: 10d2674168b27ff4e8da306e84585ea9, type: 3}
+    - {fileID: 3720937834413788242, guid: 10d2674168b27ff4e8da306e84585ea9, type: 3}
+    - {fileID: 7503107986225265348, guid: 10d2674168b27ff4e8da306e84585ea9, type: 3}
+    - {fileID: 9131269173161069586, guid: 10d2674168b27ff4e8da306e84585ea9, type: 3}
+    - {fileID: 3822535662811408744, guid: 10d2674168b27ff4e8da306e84585ea9, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_build_complete
+    sprite: {fileID: -8811407604570388341, guid: e3158f20d238bc34cb17c87fffd2985e, type: 3}
+    frames:
+    - {fileID: -8811407604570388341, guid: e3158f20d238bc34cb17c87fffd2985e, type: 3}
+    - {fileID: 664550574339356986, guid: e3158f20d238bc34cb17c87fffd2985e, type: 3}
+    - {fileID: 140286387656982767, guid: e3158f20d238bc34cb17c87fffd2985e, type: 3}
+    - {fileID: -1200891946314626636, guid: e3158f20d238bc34cb17c87fffd2985e, type: 3}
+    - {fileID: -1545394671300125562, guid: e3158f20d238bc34cb17c87fffd2985e, type: 3}
+    - {fileID: -9057717038451910363, guid: e3158f20d238bc34cb17c87fffd2985e, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_bamboo
+    sprite: {fileID: -1301399204791975158, guid: 2a013ba8b8f0780459f5433b6b1140f9, type: 3}
+    frames:
+    - {fileID: -1301399204791975158, guid: 2a013ba8b8f0780459f5433b6b1140f9, type: 3}
+    - {fileID: 6855652008935839707, guid: 2a013ba8b8f0780459f5433b6b1140f9, type: 3}
+    - {fileID: 7254135322374154535, guid: 2a013ba8b8f0780459f5433b6b1140f9, type: 3}
+    - {fileID: -1305944569540638270, guid: 2a013ba8b8f0780459f5433b6b1140f9, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_clay
+    sprite: {fileID: -327638494562068726, guid: 432a58dc181df8745b235fd9de035931, type: 3}
+    frames:
+    - {fileID: -327638494562068726, guid: 432a58dc181df8745b235fd9de035931, type: 3}
+    - {fileID: -2416665391500733735, guid: 432a58dc181df8745b235fd9de035931, type: 3}
+    - {fileID: -7339508777758196826, guid: 432a58dc181df8745b235fd9de035931, type: 3}
+    - {fileID: -2189414890915755408, guid: 432a58dc181df8745b235fd9de035931, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_ember
+    sprite: {fileID: -6325735917285580109, guid: 6c8f18c93893c374fa417c1e37f8c94b, type: 3}
+    frames:
+    - {fileID: -6325735917285580109, guid: 6c8f18c93893c374fa417c1e37f8c94b, type: 3}
+    - {fileID: 5731431578975615781, guid: 6c8f18c93893c374fa417c1e37f8c94b, type: 3}
+    - {fileID: 1144814832271807975, guid: 6c8f18c93893c374fa417c1e37f8c94b, type: 3}
+    - {fileID: -5963738524378211032, guid: 6c8f18c93893c374fa417c1e37f8c94b, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_jade
+    sprite: {fileID: 5917072582184991143, guid: 34a16c230ed16b840b5615c45e55d079, type: 3}
+    frames:
+    - {fileID: 5917072582184991143, guid: 34a16c230ed16b840b5615c45e55d079, type: 3}
+    - {fileID: -6988362222992984395, guid: 34a16c230ed16b840b5615c45e55d079, type: 3}
+    - {fileID: 9083755076237471695, guid: 34a16c230ed16b840b5615c45e55d079, type: 3}
+    - {fileID: -8625336951872826752, guid: 34a16c230ed16b840b5615c45e55d079, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_leaf
+    sprite: {fileID: 3773016236537822252, guid: 8754df5aae6faec43a0452f3743c9965, type: 3}
+    frames:
+    - {fileID: 3773016236537822252, guid: 8754df5aae6faec43a0452f3743c9965, type: 3}
+    - {fileID: -2467205188914552122, guid: 8754df5aae6faec43a0452f3743c9965, type: 3}
+    - {fileID: -9029104619638707683, guid: 8754df5aae6faec43a0452f3743c9965, type: 3}
+    - {fileID: -936515212003319339, guid: 8754df5aae6faec43a0452f3743c9965, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_obsidian
+    sprite: {fileID: 54775019390958135, guid: 387becc9fe12cab49ba2b80761e7252a, type: 3}
+    frames:
+    - {fileID: 54775019390958135, guid: 387becc9fe12cab49ba2b80761e7252a, type: 3}
+    - {fileID: 585388091740505745, guid: 387becc9fe12cab49ba2b80761e7252a, type: 3}
+    - {fileID: -1106078054954669287, guid: 387becc9fe12cab49ba2b80761e7252a, type: 3}
+    - {fileID: 6401078513255249768, guid: 387becc9fe12cab49ba2b80761e7252a, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_ore
+    sprite: {fileID: 705537165980907889, guid: 6dc8a6cfc58117e48a6e158ba172d81a, type: 3}
+    frames:
+    - {fileID: 705537165980907889, guid: 6dc8a6cfc58117e48a6e158ba172d81a, type: 3}
+    - {fileID: 4319938618134638124, guid: 6dc8a6cfc58117e48a6e158ba172d81a, type: 3}
+    - {fileID: -8052394262677118288, guid: 6dc8a6cfc58117e48a6e158ba172d81a, type: 3}
+    - {fileID: 1966279267444285102, guid: 6dc8a6cfc58117e48a6e158ba172d81a, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_petal
+    sprite: {fileID: -193771994929454061, guid: 63358e94171ec724d9f13da18823d367, type: 3}
+    frames:
+    - {fileID: -193771994929454061, guid: 63358e94171ec724d9f13da18823d367, type: 3}
+    - {fileID: -4445656619505992797, guid: 63358e94171ec724d9f13da18823d367, type: 3}
+    - {fileID: -1746337764743851018, guid: 63358e94171ec724d9f13da18823d367, type: 3}
+    - {fileID: 1823412249223698365, guid: 63358e94171ec724d9f13da18823d367, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_rice
+    sprite: {fileID: -6756511077206633627, guid: a3501c26bf45f384885b08f1ccd91633, type: 3}
+    frames:
+    - {fileID: -6756511077206633627, guid: a3501c26bf45f384885b08f1ccd91633, type: 3}
+    - {fileID: -2594040104856605740, guid: a3501c26bf45f384885b08f1ccd91633, type: 3}
+    - {fileID: -2503578406206296182, guid: a3501c26bf45f384885b08f1ccd91633, type: 3}
+    - {fileID: 5003010299970312778, guid: a3501c26bf45f384885b08f1ccd91633, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_scale
+    sprite: {fileID: -1757448444933760751, guid: d142b6bb95f06e34c8fd84699fac2976, type: 3}
+    frames:
+    - {fileID: -1757448444933760751, guid: d142b6bb95f06e34c8fd84699fac2976, type: 3}
+    - {fileID: -1413137063433132948, guid: d142b6bb95f06e34c8fd84699fac2976, type: 3}
+    - {fileID: -18858487905600622, guid: d142b6bb95f06e34c8fd84699fac2976, type: 3}
+    - {fileID: -5453263727663008912, guid: d142b6bb95f06e34c8fd84699fac2976, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_star
+    sprite: {fileID: 3795224635512813242, guid: 1ab8831ab46c71345ad92758b42d915c, type: 3}
+    frames:
+    - {fileID: 3795224635512813242, guid: 1ab8831ab46c71345ad92758b42d915c, type: 3}
+    - {fileID: -3419639015304822968, guid: 1ab8831ab46c71345ad92758b42d915c, type: 3}
+    - {fileID: -4093624610257222253, guid: 1ab8831ab46c71345ad92758b42d915c, type: 3}
+    - {fileID: -2231916079764429596, guid: 1ab8831ab46c71345ad92758b42d915c, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_stone
+    sprite: {fileID: 8309906720597810624, guid: aaa9df307dd24894098500c81592ba68, type: 3}
+    frames:
+    - {fileID: 8309906720597810624, guid: aaa9df307dd24894098500c81592ba68, type: 3}
+    - {fileID: -7133756478296541223, guid: aaa9df307dd24894098500c81592ba68, type: 3}
+    - {fileID: 7977195657600451099, guid: aaa9df307dd24894098500c81592ba68, type: 3}
+    - {fileID: 8666584578216487391, guid: aaa9df307dd24894098500c81592ba68, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_water
+    sprite: {fileID: -1307657658217113393, guid: 15cf1406cf0c51849b8526143e7c1ea9, type: 3}
+    frames:
+    - {fileID: -1307657658217113393, guid: 15cf1406cf0c51849b8526143e7c1ea9, type: 3}
+    - {fileID: 1511979721608986992, guid: 15cf1406cf0c51849b8526143e7c1ea9, type: 3}
+    - {fileID: -7156624591878739797, guid: 15cf1406cf0c51849b8526143e7c1ea9, type: 3}
+    - {fileID: 6178265399173225018, guid: 15cf1406cf0c51849b8526143e7c1ea9, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_chip_wood
+    sprite: {fileID: 2098002274542019852, guid: 7ab04e420656cc649b50c8eec1ef9060, type: 3}
+    frames:
+    - {fileID: 2098002274542019852, guid: 7ab04e420656cc649b50c8eec1ef9060, type: 3}
+    - {fileID: -3439219982500352171, guid: 7ab04e420656cc649b50c8eec1ef9060, type: 3}
+    - {fileID: -8421501580858328161, guid: 7ab04e420656cc649b50c8eec1ef9060, type: 3}
+    - {fileID: 6012335917936334566, guid: 7ab04e420656cc649b50c8eec1ef9060, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_craft_done
+    sprite: {fileID: -4226444507101013214, guid: 7f979377e1137ee4eb95d3eb87bca51f, type: 3}
+    frames:
+    - {fileID: -4226444507101013214, guid: 7f979377e1137ee4eb95d3eb87bca51f, type: 3}
+    - {fileID: -1402287593812722107, guid: 7f979377e1137ee4eb95d3eb87bca51f, type: 3}
+    - {fileID: 8757139340826642470, guid: 7f979377e1137ee4eb95d3eb87bca51f, type: 3}
+    - {fileID: -1355505826199585416, guid: 7f979377e1137ee4eb95d3eb87bca51f, type: 3}
+    - {fileID: -6672394470807462029, guid: 7f979377e1137ee4eb95d3eb87bca51f, type: 3}
+    - {fileID: -8573673557734147990, guid: 7f979377e1137ee4eb95d3eb87bca51f, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_dragon_breath
+    sprite: {fileID: -3720608001042453075, guid: 22f44582abf43b04bb13151c1157ac82, type: 3}
+    frames:
+    - {fileID: -3720608001042453075, guid: 22f44582abf43b04bb13151c1157ac82, type: 3}
+    - {fileID: -3604478234707840837, guid: 22f44582abf43b04bb13151c1157ac82, type: 3}
+    - {fileID: -3390568040954722899, guid: 22f44582abf43b04bb13151c1157ac82, type: 3}
+    - {fileID: -2840410577131040575, guid: 22f44582abf43b04bb13151c1157ac82, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_dust_puff
+    sprite: {fileID: -7604148122762326393, guid: a5b4b7a90cfaa794a87dce2c6b759e8d, type: 3}
+    frames:
+    - {fileID: -7604148122762326393, guid: a5b4b7a90cfaa794a87dce2c6b759e8d, type: 3}
+    - {fileID: -6289962132550515661, guid: a5b4b7a90cfaa794a87dce2c6b759e8d, type: 3}
+    - {fileID: -7409662282447681984, guid: a5b4b7a90cfaa794a87dce2c6b759e8d, type: 3}
+    - {fileID: 9027947483615387084, guid: a5b4b7a90cfaa794a87dce2c6b759e8d, type: 3}
+    - {fileID: 1891779307257070310, guid: a5b4b7a90cfaa794a87dce2c6b759e8d, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_flame
+    sprite: {fileID: 8800820784701166463, guid: 31849d432f316eb4aa90f584d8a3ae23, type: 3}
+    frames:
+    - {fileID: 8800820784701166463, guid: 31849d432f316eb4aa90f584d8a3ae23, type: 3}
+    - {fileID: -5224040894727163675, guid: 31849d432f316eb4aa90f584d8a3ae23, type: 3}
+    - {fileID: 3432180740513836527, guid: 31849d432f316eb4aa90f584d8a3ae23, type: 3}
+    - {fileID: 4705896886104268590, guid: 31849d432f316eb4aa90f584d8a3ae23, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_gold_sparkle
+    sprite: {fileID: -239501308381194971, guid: b6ff043dbf51b7340a1501484b66b4fd, type: 3}
+    frames:
+    - {fileID: -239501308381194971, guid: b6ff043dbf51b7340a1501484b66b4fd, type: 3}
+    - {fileID: 7820578929495057850, guid: b6ff043dbf51b7340a1501484b66b4fd, type: 3}
+    - {fileID: -1624318914266399755, guid: b6ff043dbf51b7340a1501484b66b4fd, type: 3}
+    - {fileID: -5662488699146193997, guid: b6ff043dbf51b7340a1501484b66b4fd, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_hit_slash
+    sprite: {fileID: -3646888441048839870, guid: a5c255520fc67714b88edce98915ec96, type: 3}
+    frames:
+    - {fileID: -3646888441048839870, guid: a5c255520fc67714b88edce98915ec96, type: 3}
+    - {fileID: 2585225696916346742, guid: a5c255520fc67714b88edce98915ec96, type: 3}
+    - {fileID: 2282381150489633544, guid: a5c255520fc67714b88edce98915ec96, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_levelup_glow
+    sprite: {fileID: 3868817440459656428, guid: d4106f54f5058284887305d67875b68e, type: 3}
+    frames:
+    - {fileID: 3868817440459656428, guid: d4106f54f5058284887305d67875b68e, type: 3}
+    - {fileID: -4853508522919034252, guid: d4106f54f5058284887305d67875b68e, type: 3}
+    - {fileID: 9175610257871539005, guid: d4106f54f5058284887305d67875b68e, type: 3}
+    - {fileID: -2775162623890837095, guid: d4106f54f5058284887305d67875b68e, type: 3}
+    - {fileID: 2306244612883779015, guid: d4106f54f5058284887305d67875b68e, type: 3}
+    - {fileID: 5885243220015814857, guid: d4106f54f5058284887305d67875b68e, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_node_pad
+    sprite: {fileID: 21300000, guid: f6cc599af4232f54e80c4882df2bee36, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: fx_pickup_pulse
+    sprite: {fileID: 3696347096563755340, guid: ee922216ddb708146abd8cf0090daaba, type: 3}
+    frames:
+    - {fileID: 3696347096563755340, guid: ee922216ddb708146abd8cf0090daaba, type: 3}
+    - {fileID: 693249093933002768, guid: ee922216ddb708146abd8cf0090daaba, type: 3}
+    - {fileID: -1607374402920471511, guid: ee922216ddb708146abd8cf0090daaba, type: 3}
+    - {fileID: 2007997204307392133, guid: ee922216ddb708146abd8cf0090daaba, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_qi_swirl
+    sprite: {fileID: -8860156726866575085, guid: 8eb7b8a5f8c98554881af383fc11a5f2, type: 3}
+    frames:
+    - {fileID: -8860156726866575085, guid: 8eb7b8a5f8c98554881af383fc11a5f2, type: 3}
+    - {fileID: -7141325501972076100, guid: 8eb7b8a5f8c98554881af383fc11a5f2, type: 3}
+    - {fileID: 1048647533251179399, guid: 8eb7b8a5f8c98554881af383fc11a5f2, type: 3}
+    - {fileID: 7402581883098996842, guid: 8eb7b8a5f8c98554881af383fc11a5f2, type: 3}
+    - {fileID: -982999760330836714, guid: 8eb7b8a5f8c98554881af383fc11a5f2, type: 3}
+    - {fileID: -3832864207742684127, guid: 8eb7b8a5f8c98554881af383fc11a5f2, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_qi_swirl_small
+    sprite: {fileID: 2367995791475040802, guid: fec2c04a59fd484469acde696c17e7ab, type: 3}
+    frames:
+    - {fileID: 2367995791475040802, guid: fec2c04a59fd484469acde696c17e7ab, type: 3}
+    - {fileID: -7887811778725273813, guid: fec2c04a59fd484469acde696c17e7ab, type: 3}
+    - {fileID: -8808140075365089617, guid: fec2c04a59fd484469acde696c17e7ab, type: 3}
+    - {fileID: 2193977381794946425, guid: fec2c04a59fd484469acde696c17e7ab, type: 3}
+    - {fileID: -2200468027371093532, guid: fec2c04a59fd484469acde696c17e7ab, type: 3}
+    - {fileID: -5971518146858062290, guid: fec2c04a59fd484469acde696c17e7ab, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_qi_trail
+    sprite: {fileID: -5699968362117929044, guid: 4e70d6d64c172044fa3ce4bc4182f0b4, type: 3}
+    frames:
+    - {fileID: -5699968362117929044, guid: 4e70d6d64c172044fa3ce4bc4182f0b4, type: 3}
+    - {fileID: -3768428877092958344, guid: 4e70d6d64c172044fa3ce4bc4182f0b4, type: 3}
+    - {fileID: -4666754155767944713, guid: 4e70d6d64c172044fa3ce4bc4182f0b4, type: 3}
+    - {fileID: -8223811351757236678, guid: 4e70d6d64c172044fa3ce4bc4182f0b4, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_qi_trail_end
+    sprite: {fileID: -716832055685065384, guid: 696c4b2130b4fe4429d4debaaaed93dc, type: 3}
+    frames:
+    - {fileID: -716832055685065384, guid: 696c4b2130b4fe4429d4debaaaed93dc, type: 3}
+    - {fileID: -7303867692274202836, guid: 696c4b2130b4fe4429d4debaaaed93dc, type: 3}
+    - {fileID: 3436356094989413080, guid: 696c4b2130b4fe4429d4debaaaed93dc, type: 3}
+    - {fileID: 8274554405853397626, guid: 696c4b2130b4fe4429d4debaaaed93dc, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_quest_ring
+    sprite: {fileID: -2890168639574587657, guid: 2c1d4129a3f3e514c87392247695a8f3, type: 3}
+    frames:
+    - {fileID: -2890168639574587657, guid: 2c1d4129a3f3e514c87392247695a8f3, type: 3}
+    - {fileID: 2711255856405692464, guid: 2c1d4129a3f3e514c87392247695a8f3, type: 3}
+    - {fileID: -2545086094833310798, guid: 2c1d4129a3f3e514c87392247695a8f3, type: 3}
+    - {fileID: -484516393680215591, guid: 2c1d4129a3f3e514c87392247695a8f3, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_shadow_ellipse
+    sprite: {fileID: 21300000, guid: 97b68155e338f524f8a78fef510f5947, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: fx_smoke
+    sprite: {fileID: -307054749480196838, guid: 306fe722066be974394f0d8393db7e6f, type: 3}
+    frames:
+    - {fileID: -307054749480196838, guid: 306fe722066be974394f0d8393db7e6f, type: 3}
+    - {fileID: 8850805384461191229, guid: 306fe722066be974394f0d8393db7e6f, type: 3}
+    - {fileID: 7194890273991863121, guid: 306fe722066be974394f0d8393db7e6f, type: 3}
+    - {fileID: 1816018513884088465, guid: 306fe722066be974394f0d8393db7e6f, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_spark_burst
+    sprite: {fileID: -1578982118274979946, guid: 7b76bb504a89ff14b92d2dff4d0092e6, type: 3}
+    frames:
+    - {fileID: -1578982118274979946, guid: 7b76bb504a89ff14b92d2dff4d0092e6, type: 3}
+    - {fileID: -8488662583972329056, guid: 7b76bb504a89ff14b92d2dff4d0092e6, type: 3}
+    - {fileID: 1621470391984756987, guid: 7b76bb504a89ff14b92d2dff4d0092e6, type: 3}
+    - {fileID: -3080154682907476177, guid: 7b76bb504a89ff14b92d2dff4d0092e6, type: 3}
+    - {fileID: -7291484769885467000, guid: 7b76bb504a89ff14b92d2dff4d0092e6, type: 3}
+    - {fileID: 1997258549614550889, guid: 7b76bb504a89ff14b92d2dff4d0092e6, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_spark_dot
+    sprite: {fileID: 21300000, guid: 0c8f7ab455af0de4aba1e992c8aa21c8, type: 3}
+    frames: []
     realArt: 1
     overlay: []
   enemyAnims:
@@ -558,6 +866,24 @@ MonoBehaviour:
     - {fileID: -3302908026475977981, guid: 47e20f5fff8fd5e40bd9ed7170eba9fe, type: 3}
     - {fileID: 5341216985670753442, guid: 47e20f5fff8fd5e40bd9ed7170eba9fe, type: 3}
     - {fileID: -4072237852691933269, guid: 47e20f5fff8fd5e40bd9ed7170eba9fe, type: 3}
+    realArt: 1
+    overlay: []
+  - key: enemy_boar_die
+    sprite: {fileID: 395389741103481406, guid: 7ae28f900429d094eac87b137c440aea, type: 3}
+    frames:
+    - {fileID: 395389741103481406, guid: 7ae28f900429d094eac87b137c440aea, type: 3}
+    - {fileID: -8438173144375984655, guid: 7ae28f900429d094eac87b137c440aea, type: 3}
+    - {fileID: -2958694274571085696, guid: 7ae28f900429d094eac87b137c440aea, type: 3}
+    - {fileID: 4143576373614393188, guid: 7ae28f900429d094eac87b137c440aea, type: 3}
+    realArt: 1
+    overlay: []
+  - key: enemy_fox_die
+    sprite: {fileID: -4490765762479275303, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
+    frames:
+    - {fileID: -4490765762479275303, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
+    - {fileID: -5397735054874582342, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
+    - {fileID: -8434625005386893878, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
+    - {fileID: 8550383261260450600, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
     realArt: 1
     overlay: []
   ui:
@@ -796,6 +1122,150 @@ MonoBehaviour:
     overlay: []
   - key: ui_unlockbtn_frame
     sprite: {fileID: 21300000, guid: e52c8d4cd7d662149bd8c4038c7f058d, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_add
+    sprite: {fileID: 21300000, guid: 55c9c01e72b0451419d85a26e19d77c4, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_ascend
+    sprite: {fileID: 21300000, guid: ceed98e16e73d6b41909f5f1e4774cef, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_btn_icon
+    sprite: {fileID: 4328137926351328830, guid: 24be73f4421ea214b97f070bd7999271, type: 3}
+    frames:
+    - {fileID: 4328137926351328830, guid: 24be73f4421ea214b97f070bd7999271, type: 3}
+    - {fileID: -312300264212343915, guid: 24be73f4421ea214b97f070bd7999271, type: 3}
+    - {fileID: -6852324528083458200, guid: 24be73f4421ea214b97f070bd7999271, type: 3}
+    - {fileID: -4698264742784619486, guid: 24be73f4421ea214b97f070bd7999271, type: 3}
+    realArt: 1
+    overlay: []
+  - key: ui_build
+    sprite: {fileID: 21300000, guid: 68f12eded7be2f149a91d959a6d41aa8, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_claim
+    sprite: {fileID: 21300000, guid: 5efc932bb3e376342911d04e7fba42cc, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_controls
+    sprite: {fileID: 21300000, guid: 1b4e5822f00e5eb45bbbac823a69a5e8, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_demolish
+    sprite: {fileID: 21300000, guid: e9e6edd04bece704989a0cb002f4342c, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_disciple
+    sprite: {fileID: 21300000, guid: 4c8b722672dd9ff46bc22d5150869ea9, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_gathering_stone
+    sprite: {fileID: 21300000, guid: 244c0711d8d77aa4fb04a41f3311b5c6, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_hand
+    sprite: {fileID: 21300000, guid: 563abd26602a93d4c8a1b249641a0fb0, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_link
+    sprite: {fileID: 21300000, guid: c7c99d14c8449ec40886d59b87a34f76, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_lock
+    sprite: {fileID: 21300000, guid: acf05ccb6fa8c83498f65c0cbb63416e, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_quests
+    sprite: {fileID: 21300000, guid: 14852cd0255d64447a3c26dbd2e180fc, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_scrollbar_handle
+    sprite: {fileID: 21300000, guid: 5df4a3d40bcf17f468962e0a2d4ad524, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_sparkle
+    sprite: {fileID: 21300000, guid: a11ab797d0a06d749a29377dd6cc00d0, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_sprint
+    sprite: {fileID: 21300000, guid: 91c53b1a20a84de49800f93930c50ea5, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_stats
+    sprite: {fileID: 21300000, guid: 29bf12285bccb564a829996819248993, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_target
+    sprite: {fileID: 21300000, guid: 085651388d955b6408bd5ed0a3ee6aaa, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_treenode
+    sprite: {fileID: 21300000, guid: 36d7c27fe3d0d7a4e8ef59d65113f017, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_treenode_border_gold
+    sprite: {fileID: 21300000, guid: 95054297ce27b454fb6b2c902936a4f6, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_treenode_border_green
+    sprite: {fileID: 21300000, guid: 382f1b9b93e8c48429508e689372dca4, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_treenode_border_red
+    sprite: {fileID: 21300000, guid: 9f6c8d15480827b4382b3368a47b8345, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_treenode_brackets
+    sprite: {fileID: 21300000, guid: ddedbd51e0cad8d4e9d28512b616b6ea, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_tree_edge
+    sprite: {fileID: 21300000, guid: ffd94bbe84135ab4884491c4267b2b4d, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_unlock
+    sprite: {fileID: 21300000, guid: 4b3c7d33f81d3d745a75025d0d2a2311, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_welcome_moon
+    sprite: {fileID: 21300000, guid: c9d377076ac3e1d4da0d705c589678c6, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_wilds
+    sprite: {fileID: 21300000, guid: 2c2fd8cf9318fb245b66a5bd45d2f7c8, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_wisp
+    sprite: {fileID: 21300000, guid: b20c0809e62014c42a308f2589ec9efc, type: 3}
     frames: []
     realArt: 1
     overlay: []

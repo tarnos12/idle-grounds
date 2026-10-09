@@ -4,8 +4,18 @@
     {
       "name": "idle-grounds",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["old-game/server.js"],
+      "runtimeArgs": [
+        "old-game/server.js"
+      ],
       "port": 5174
+    },
+    {
+      "name": "webgl-build",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/serve-webgl.js"
+      ],
+      "port": 5180
     }
   ]
 }

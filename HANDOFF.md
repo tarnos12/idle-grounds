@@ -18,8 +18,18 @@ Play. Hold LMB on nodes to harvest / on ground to vacuum, RMB drop, Q/E rotate,
 WASD pan, wheel zoom (max out 6), B build menu, click Altar/Dragon/lanterns for
 their panels.
 
-**Current focus: the art integration loop** (last check 2026-10-09: cards, cells, bars, pills, badges, pips, checkbox, scrollbars, cursors in; scrim rejected; awaiting tree-node frames + FX) and FX (§6)) (poll Drive, pull, integrate,
-review, give feedback in ART-SPEC Delivery log).
+**Builds:** menu `Idle Grounds/Build/Windows | WebGL | Windows + WebGL`
+(Editor/BuildScript.cs) → `Builds/Windows/IdleGrounds.exe`, `Builds/WebGL`
+(gzip + decompression fallback). Serve WebGL with `node tools/serve-webgl.js`
+→ http://localhost:5180 (launch config `webgl-build`). Keep productName
+"idle grounds": it decides the save folder.
+
+**Current focus: the art integration loop** (last check 2026-10-09: big batch
+received; 138 keys auto-wired, **27 keys still need consumers**: dragon_stir,
+npc_disciple_meditate, island scatter/zone patches/water/waterfall/lavadrip/vines/
+lavacrack/twinkle/veil edge, sky_cloudpuff, sky_sunbeam, glyph_*; plus the
+emoji → real-icon switch for the ui_* icon keys now in db.ui) (poll Drive, pull,
+integrate, review, give feedback in ART-SPEC Delivery log).
 Next candidates:
 1. Poll Drive `incoming/` (30 min x1h, hourly x2h, then 2-hourly; restart after
    any ART-SPEC update), run pull + integrate, review in Play, log in
@@ -136,6 +146,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-09 builds: Windows (152 MB, runs clean) + WebGL (21 MB) via BuildScript. WebGL save fix: File.Replace is unsupported on the WebGL FS (every save after the first threw) and writes were not flushed to IndexedDB; WriteAtomic now writes directly on WebGL and calls IG_SyncFs (Plugins/WebGL/IdbSync.jslib, FS.syncfs). Verified: the intro stays dismissed after a reload. Big art batch pulled (138 wired, 27 pending).
 
 - 2026-10-09: ArtIntake is idempotent. A second run reports 0 assignments changed and leaves git clean. Fixes: frame arrays are compared by content (SameFrames) for buildings, dragon stages and building variants; the Dragon building is no longer set twice per run (it took the bld_dragon art and was then overwritten by the dragon_sleeping strip, so it changed on every run; bld_dragon is now marked consumed).
 
