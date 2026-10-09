@@ -198,7 +198,7 @@ namespace IdleGrounds.Game
                 descText.text = UiText.StripEmoji(q.desc) +
                                 (string.IsNullOrEmpty(hint) ? "" : "\n<color=#" + ColorUtility.ToHtmlStringRGB(UiPalette.Accent) + ">Next step: " + UiText.StripEmoji(hint) + "</color>");
                 FillUnlocks(i);
-                barFill.fillAmount = p.need > 0 ? Mathf.Clamp01(p.cur / (float)p.need) : 0f;
+                UiBar.Set(barFill, p.need > 0 ? Mathf.Clamp01(p.cur / (float)p.need) : 0f);
                 progText.text = p.cur + "/" + p.need;
                 claimButton.interactable = p.done;
                 claimLabel.text = p.done ? "Claim!" : "Claim";
@@ -305,7 +305,7 @@ namespace IdleGrounds.Game
             if (bar)
             {
                 msBar.transform.SetSiblingIndex(msBarAt);
-                msBarFill.fillAmount = Mathf.Clamp01(msBarValue);
+                UiBar.Set(msBarFill, Mathf.Clamp01(msBarValue));
             }
         }
     }

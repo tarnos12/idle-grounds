@@ -149,6 +149,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
   key: ui_panel_jade
+  fit: 0
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 0
+  uiPerArt: 2
 --- !u!1 &5229294751586145403
 GameObject:
   m_ObjectHideFlags: 0

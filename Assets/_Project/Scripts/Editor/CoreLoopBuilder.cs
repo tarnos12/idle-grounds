@@ -112,6 +112,8 @@ namespace IdleGrounds.Editor
 
         internal static GameObject Save(GameObject go, string path)
         {
+            if (path.Contains("/Prefabs/UI/"))     // delivered-art roles (pills, bars, checkbox, frames, scrollbars) survive rebuilds
+                UiArtRoles.AttachAll(go.transform, AssetDatabase.LoadAssetAtPath<GameDatabase>("Assets/_Project/Data/GameDatabase.asset"));
             var prefab = PrefabUtility.SaveAsPrefabAsset(go, path);
             Object.DestroyImmediate(go);
             return prefab;
@@ -519,6 +521,7 @@ namespace IdleGrounds.Editor
 
             var handGo = FindOrCreate("HandController", systems);
             var hand = Ensure<HandController>(handGo);
+            Ensure<GameCursor>(handGo);          // hardware cursor art (open / closed hand, target)
             Set(hand, "runner", runner);
             Set(hand, "fx", fx);
             Set(hand, "worldCamera", cam != null ? cam.GetComponent<Camera>() : null);

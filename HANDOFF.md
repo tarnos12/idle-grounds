@@ -18,7 +18,7 @@ Play. Hold LMB on nodes to harvest / on ground to vacuum, RMB drop, Q/E rotate,
 WASD pan, wheel zoom (max out 6), B build menu, click Altar/Dragon/lanterns for
 their panels.
 
-**Current focus: the art integration loop** (last check 2026-10-08: buttons in; awaiting cards, slots, bars, pills, cursor, FX) and FX (§6)) (poll Drive, pull, integrate,
+**Current focus: the art integration loop** (last check 2026-10-09: cards, cells, bars, pills, badges, pips, checkbox, scrollbars, cursors in; scrim rejected; awaiting tree-node frames + FX) and FX (§6)) (poll Drive, pull, integrate,
 review, give feedback in ART-SPEC Delivery log).
 Next candidates:
 1. Poll Drive `incoming/` (30 min x1h, hourly x2h, then 2-hourly; restart after
@@ -136,6 +136,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-09 UI art (3): cards (build + perk), recipe cells, ingredient frames + count badges, UiBar (Sliced fill driven by anchors), pills, HP pips, UiCheckbox, Scrollbars on all ScrollRects, GameCursor (2x hardware cursor: open/closed/target, system arrow over UI). New editor UiArtRoles.AttachAll (run from Apply UI Skin Roles and CoreLoopBuilder.Save). Scrim art rejected (dither grid).
 
 - 2026-10-08 UI buttons: UiButtonSkin (Standard/Primary/Close, SpriteSwap, shared 2x slice multiplier with 1x floor) on 36 buttons via builders + menu Idle Grounds/UI/Apply Button Skins (Editor/UiButtonRoles.cs); toggles (Build/Demolish/Sound/Motion/Stats tab) swap toggle_on/danger art on state change. Cards/cells/pills/minimise still placeholder. Known: ArtIntake reports a nonzero "assignment(s) changed" every run (never settles; harmless, investigate later).
 

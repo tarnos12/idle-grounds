@@ -665,3 +665,137 @@ MonoBehaviour:
     frames: []
     realArt: 1
     overlay: []
+  - key: ui_badge_count
+    sprite: {fileID: 21300000, guid: 69311db89ae95bf43b51ca3e319f94c4, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_card_affordable
+    sprite: {fileID: 21300000, guid: bf05bc19a95fae344863a27c1c63d7eb, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_card_dim
+    sprite: {fileID: 21300000, guid: 3a50e47e7eb71e1478c8f2f8d8b286fa, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_card_normal
+    sprite: {fileID: 21300000, guid: 039f370aa9506074181b2d93ec419dd5, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_card_target
+    sprite: {fileID: 21300000, guid: 3cf8ee6ab8ef8e9458479106f3c69e10, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_checkbox
+    sprite: {fileID: 8244810461824933092, guid: 6b0d381a6539fd242b90cbd41cda0258, type: 3}
+    frames:
+    - {fileID: 8244810461824933092, guid: 6b0d381a6539fd242b90cbd41cda0258, type: 3}
+    - {fileID: -36604512814400529, guid: 6b0d381a6539fd242b90cbd41cda0258, type: 3}
+    realArt: 1
+    overlay: []
+  - key: ui_cursor_hand_closed
+    sprite: {fileID: 21300000, guid: fe6b561e1bd74074c96c3a02aa48e394, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_cursor_hand_open
+    sprite: {fileID: 21300000, guid: c9df7aaf5a98ee846bee8100a9bb09f8, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_cursor_target
+    sprite: {fileID: 21300000, guid: aaf3d74f87acb654f9c4ca9d40bd4bc0, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_hp_pip
+    sprite: {fileID: -7684758370743983933, guid: adeeadebc6eaa094d937f0f7fe7024b8, type: 3}
+    frames:
+    - {fileID: -7684758370743983933, guid: adeeadebc6eaa094d937f0f7fe7024b8, type: 3}
+    - {fileID: 2927658449821075601, guid: adeeadebc6eaa094d937f0f7fe7024b8, type: 3}
+    realArt: 1
+    overlay: []
+  - key: ui_iconframe
+    sprite: {fileID: 21300000, guid: 4f21a663731e6d142ba42624c54a003d, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_iconframe_gold
+    sprite: {fileID: 21300000, guid: 287f4e2e0824c2541accbf5de94b3f99, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_iconframe_locked
+    sprite: {fileID: 21300000, guid: b0182411f99b6584cb96939410f22ea2, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_pill_gold
+    sprite: {fileID: 21300000, guid: 7a8b3146fc4101141a78b2c18ab77d11, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_pill_green
+    sprite: {fileID: 21300000, guid: 4fb4fea321ccf054c984cf35948395bb, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_pill_purple
+    sprite: {fileID: 21300000, guid: ad596cb57eee5f64e803d5562d44bcac, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_pill_red
+    sprite: {fileID: 21300000, guid: d481a1ab1ae1ad04c900f16ddd99b91f, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_progress_fill_gold
+    sprite: {fileID: 21300000, guid: 72502f719ccd1624bb42905bda766e00, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_progress_fill_green
+    sprite: {fileID: 21300000, guid: 4e6093c6e4bcb3e4eb1011f15d8ecbed, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_progress_fill_red
+    sprite: {fileID: 21300000, guid: 58111a06963bde045b0f9f8a9b97e5cd, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_progress_track
+    sprite: {fileID: 21300000, guid: a723533f243c06c4c994695271468101, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_recipe_cell
+    sprite: {fileID: 21300000, guid: 6bdac593f4759564c8fa2130745c2339, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_recipe_cell_active
+    sprite: {fileID: 21300000, guid: 941f61a13cd90544fba44220bd69b4af, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_scrim
+    sprite: {fileID: 21300000, guid: 1a032c64bc588804ca5ab4cbaa0b962e, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_scrollbar
+    sprite: {fileID: 21300000, guid: 871dd52d0ac6d734c80d52aea50870c8, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_unlockbtn_frame
+    sprite: {fileID: 21300000, guid: e52c8d4cd7d662149bd8c4038c7f058d, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []

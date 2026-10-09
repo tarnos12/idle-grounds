@@ -96,6 +96,7 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null) return;
             UpdateCursor();
+            UpdateHover();
 
             // Q / E without ctrl / alt (ui.js onKeyDown ignores modified keys)
             var kb = Keyboard.current;
@@ -133,6 +134,18 @@ namespace IdleGrounds.Game
             }
             if (runner.Space.WorldToArea(CursorWorld, out var a, out var x, out var y)) { CursorArea = a; Lx = x; Ly = y; }
             else { CursorArea = null; Lx = Ly = 0; }
+        }
+
+        /// <summary>True while the cursor is over the world on an unlocked Island with an enemy or a harvestable node under it (cursor art switches to the target).</summary>
+        public bool HoverHittable { get; private set; }
+
+        void UpdateHover()
+        {
+            HoverHittable = false;
+            if (!CursorOver || CursorArea == null || !runner.IsUnlocked(CursorArea)) return;
+            if (Sim.EnemyAt(CursorArea, Lx, Ly) != null) { HoverHittable = true; return; }
+            var node = NodeAtCell(S.Area(CursorArea), LRow, LCol);
+            HoverHittable = node != null && !node.deco;
         }
 
         // ================= public drive API (debug / automation / tests) =================

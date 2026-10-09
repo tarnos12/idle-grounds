@@ -612,6 +612,7 @@ namespace IdleGrounds.Editor
             // ☯ Shrine pill after the buff pill (or the hand pill)
             var pillImg = Chip(t, "ShrinePill", UiPalette.Panel, UiPalette.Line, raycast: true);
             Row(pillImg.gameObject, 12, 6, 6);
+            UiSkin.Attach(pillImg.gameObject, "ui_pill_gold", fit: true, uiPerArt: 1f);
             Icon(pillImg.rectTransform, "Icon", Emoji("ui_ascend"), 22);
             var pillText = Label(pillImg.rectTransform, "Count", "0", 19, UiPalette.Gold, true);
             var pill = pillImg.gameObject.AddComponent<Button>();

@@ -94,6 +94,7 @@ namespace IdleGrounds.Game
             return sb.ToString();
         }
 
+        UiSkin handSkin;
         bool wasFull;
         float lastPillScale = 1f;
 
@@ -149,6 +150,12 @@ namespace IdleGrounds.Game
                     handText.text = total + "/" + cap;
                     var c = total >= cap ? UiPalette.Danger : total >= 0.9f * cap ? UiPalette.Gold : UiPalette.Accent;
                     handText.color = c;
+                }
+                if (handPill != null)
+                {
+                    if (handSkin == null) handSkin = handPill.GetComponent<UiSkin>();
+                    // delivered pill art: rim colour follows the hand state (green ok / gold >= 90% / red full)
+                    if (handSkin != null) handSkin.SetKey(total >= cap ? "ui_pill_red" : total >= 0.9f * cap ? "ui_pill_gold" : "ui_pill_green");
                 }
                 if (total >= cap && cap > 0 && !wasFull) Juice.PulseHandFull();      // juice: pill throbs when the hand just filled
                 wasFull = total >= cap;

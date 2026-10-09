@@ -67,13 +67,34 @@ namespace IdleGrounds.Editor
                         done++;
                     }
                     Fixups(group.Key, root.transform);
+                    UiArtRoles.AttachAll(root.transform, db);
                     PrefabUtility.SaveAsPrefabAsset(root, path);
                 }
+                finally { PrefabUtility.UnloadPrefabContents(root); }
+            }
+            // prefabs without a Roles entry still get pills / bars / checkbox / frames / scrollbars
+            var named = new HashSet<string>();
+            foreach (var r in Roles) named.Add(r.prefab);
+            foreach (var guid in AssetDatabase.FindAssets("t:Prefab", new[] { UiPrefabDir.TrimEnd('/') }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (named.Contains(System.IO.Path.GetFileNameWithoutExtension(path))) continue;
+                var root = PrefabUtility.LoadPrefabContents(path);
+                try { if (UiArtRoles.AttachAll(root.transform, db) > 0) PrefabUtility.SaveAsPrefabAsset(root, path); }
                 finally { PrefabUtility.UnloadPrefabContents(root); }
             }
 
             // existing instances in the open scene(s): skin them too (prefab instances inherit; this covers overrides)
             int inScene = 0;
+            for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
+            {
+                var sc0 = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);
+                if (!sc0.isLoaded) continue;
+                foreach (var go in sc0.GetRootGameObjects())
+                    UiArtRoles.AttachAll(go.transform, db, t => PrefabUtility.IsPartOfPrefabInstance(t.gameObject) && !PrefabUtility.IsAddedGameObjectOverride(t.gameObject));
+            }
+            var hc = Object.FindFirstObjectByType<HandController>();
+            if (hc != null && hc.GetComponent<GameCursor>() == null) { hc.gameObject.AddComponent<GameCursor>(); EditorUtility.SetDirty(hc.gameObject); }
             for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCount; i++)
             {
                 var sc = UnityEngine.SceneManagement.SceneManager.GetSceneAt(i);

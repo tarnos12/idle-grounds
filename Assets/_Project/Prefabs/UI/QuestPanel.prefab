@@ -427,6 +427,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
   key: ui_panel_dark
+  fit: 0
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 0
+  uiPerArt: 2
 --- !u!1 &625446331296629180
 GameObject:
   m_ObjectHideFlags: 0
@@ -479,9 +483,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
   m_MinWidth: -1
-  m_MinHeight: -1
+  m_MinHeight: 16
   m_PreferredWidth: -1
-  m_PreferredHeight: 9
+  m_PreferredHeight: 16
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -1312,6 +1316,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
   key: ui_questpanel_frame
+  fit: 0
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 0
+  uiPerArt: 2
 --- !u!1 &1766064404987992706
 GameObject:
   m_ObjectHideFlags: 0
@@ -1577,6 +1585,7 @@ GameObject:
   - component: {fileID: 4124721663679319955}
   - component: {fileID: 1091219248379101911}
   - component: {fileID: 2448848044059842473}
+  - component: {fileID: 1905516537477168407}
   m_Layer: 5
   m_Name: Track
   m_TagString: Untagged
@@ -1624,15 +1633,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.12}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e52465ca28e59c649968fdd812185b2a, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: a723533f243c06c4c994695271468101, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1640,7 +1649,24 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5625
+--- !u!114 &1905516537477168407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2132827750608685325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
+  key: ui_progress_track
+  fit: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 0
+  uiPerArt: 2
 --- !u!1 &2486874305056045145
 GameObject:
   m_ObjectHideFlags: 0
@@ -1731,6 +1757,7 @@ GameObject:
   - component: {fileID: 7841303668067793164}
   - component: {fileID: 8889087369044592328}
   - component: {fileID: 4765874994095765215}
+  - component: {fileID: 7591554696824932512}
   m_Layer: 5
   m_Name: Track
   m_TagString: Untagged
@@ -1778,15 +1805,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.12}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e52465ca28e59c649968fdd812185b2a, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: a723533f243c06c4c994695271468101, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -1794,7 +1821,24 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5625
+--- !u!114 &7591554696824932512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2659409338323713600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
+  key: ui_progress_track
+  fit: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 0
+  uiPerArt: 2
 --- !u!1 &3194952514109826730
 GameObject:
   m_ObjectHideFlags: 0
@@ -2255,6 +2299,7 @@ GameObject:
   - component: {fileID: 1251400544440284517}
   - component: {fileID: 8694910811130856371}
   - component: {fileID: 6123686521414602581}
+  - component: {fileID: 1050579085360682933}
   m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
@@ -2302,15 +2347,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.2901961, g: 0.87058824, b: 0.5019608, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e52465ca28e59c649968fdd812185b2a, type: 3}
-  m_Type: 3
+  m_Sprite: {fileID: 21300000, guid: 4e6093c6e4bcb3e4eb1011f15d8ecbed, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 0
@@ -2318,7 +2363,24 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5625
+--- !u!114 &1050579085360682933
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4656840611406822060}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
+  key: ui_progress_fill_green
+  fit: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 1
+  uiPerArt: 2
 --- !u!1 &4916449196097598290
 GameObject:
   m_ObjectHideFlags: 0
@@ -2514,9 +2576,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
   m_MinWidth: -1
-  m_MinHeight: -1
+  m_MinHeight: 16
   m_PreferredWidth: -1
-  m_PreferredHeight: 9
+  m_PreferredHeight: 16
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
@@ -3605,6 +3667,7 @@ GameObject:
   - component: {fileID: 8429359957485764241}
   - component: {fileID: 3970793801560677201}
   - component: {fileID: 1035335299979918100}
+  - component: {fileID: 4903360878447986422}
   m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
@@ -3652,15 +3715,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.2901961, g: 0.87058824, b: 0.5019608, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: e52465ca28e59c649968fdd812185b2a, type: 3}
-  m_Type: 3
+  m_Sprite: {fileID: 21300000, guid: 72502f719ccd1624bb42905bda766e00, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 0
@@ -3668,7 +3731,24 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 1.5625
+--- !u!114 &4903360878447986422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7369463934311730242}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
+  key: ui_progress_fill_gold
+  fit: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 1
+  uiPerArt: 2
 --- !u!1 &7485261541491046717
 GameObject:
   m_ObjectHideFlags: 0

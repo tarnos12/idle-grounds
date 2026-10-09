@@ -28,6 +28,12 @@ namespace IdleGrounds.Game
         [SerializeField] GameObject targetBadge;
         [SerializeField] Outline targetGlow;
 
+        // delivered card art (ui_card_*): resolved once per card, then only the sprite is swapped per state
+        Sprite sNormal, sAfford, sDim, sTarget;
+        bool artLooked, art;
+        Sprite shownCard;
+        TextMeshProUGUI newLabel;
+
         readonly List<UiIconCount> costs = new List<UiIconCount>();
         BuildMenuView menu;
 
@@ -64,13 +70,49 @@ namespace IdleGrounds.Game
                 costs[i].gameObject.SetActive(on);
                 if (on) costs[i].Set(sprites.Item(def.cost[i].item), def.cost[i].qty.ToString());
             }
+            if (!ApplyArt())
             border.effectColor = Locked ? UiPalette.Line : IsTarget || isNew ? UiPalette.Gold : affordable ? UiPalette.Accent : UiPalette.Line;
             if (targetBadge != null) targetBadge.SetActive(IsTarget);
-            if (targetGlow != null) targetGlow.enabled = IsTarget;
+            if (art && targetGlow != null) targetGlow.enabled = false;
+            if (targetGlow != null && !art) targetGlow.enabled = IsTarget;
             group.alpha = Locked ? 0.45f : IsTarget || isNew || affordable ? 1f : 0.62f;
             button.interactable = !Locked;
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() => menu.CardClicked(this));
+        }
+
+        void LookupArt()
+        {
+            artLooked = true;
+            var runner = GameRunner.Instance;
+            var db = runner != null ? runner.Database : null;
+            if (db == null) return;
+            sNormal = db.UiSprite("ui_card_normal"); sAfford = db.UiSprite("ui_card_affordable");
+            sDim = db.UiSprite("ui_card_dim"); sTarget = db.UiSprite("ui_card_target");
+            art = sNormal != null && sAfford != null && sDim != null && sTarget != null;
+            if (!art) return;
+            if (border != null) border.enabled = false;
+            if (newBadge != null)
+            {
+                newLabel = newBadge.GetComponentInChildren<TextMeshProUGUI>(true);
+                UiSkin.Attach(newBadge, "ui_pill_gold", fit: true, uiPerArt: 1f).Apply(db);
+                ((RectTransform)newBadge.transform).sizeDelta = new Vector2(56f, 26f);    // 1x pill: 8 px caps around a 14 px label
+                if (newLabel != null) newLabel.color = UiPalette.Gold;       // the pill art is dark with a gold rim
+            }
+        }
+
+        /// <summary>Swaps the card background by state (target / locked-or-unaffordable dim / affordable / new+unaffordable normal). False = no art, placeholder styling applies.</summary>
+        bool ApplyArt()
+        {
+            if (!artLooked) LookupArt();
+            if (!art) return false;
+            var sp = IsTarget ? sTarget : Locked ? sDim : Affordable ? sAfford : IsNew ? sNormal : sDim;
+            if (sp != shownCard)
+            {
+                shownCard = sp;
+                UiSkin.ApplySprite(background, sp, UiSkin.UiPxPerArtPx, null, Color.white);
+            }
+            return true;
         }
 
         public void OnPointerEnter(PointerEventData e) { if (menu != null) menu.CardHovered(this, true); }

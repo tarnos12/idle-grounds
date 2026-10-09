@@ -22,6 +22,18 @@ namespace IdleGrounds.Game
 
         [SerializeField] string key = "ui_panel_jade";
         public string Key { get => key; set => key = value; }
+        [Tooltip("Shrink the slice scale (min 1x) so the borders fit the rect (pills, bars, scrollbars). Re-evaluated when the rect changes.")]
+        [SerializeField] bool fit;
+        [Tooltip("Multiplied into the image colour when the art is applied (white = unchanged).")]
+        [SerializeField] Color tint = Color.white;
+        [Tooltip("Fit against the parent rect instead (progress fills: their own width is the value).")]
+        [SerializeField] bool fitParent;
+        [Tooltip("UI px per art px (2 = the panel scale; pills / badges use 1 so their 8 px caps fit a text line).")]
+        [SerializeField] float uiPerArt = UiPxPerArtPx;
+        public float UiPerArt { get => uiPerArt; set => uiPerArt = value; }
+        public bool Fit { get => fit; set => fit = value; }
+        public Color Tint { get => tint; set => tint = value; }
+        public bool FitParent { get => fitParent; set => fitParent = value; }
 
         bool applied;
 
@@ -46,12 +58,48 @@ namespace IdleGrounds.Game
         }
 
         /// <summary>Add (or update) a UiSkin on <paramref name="go"/>.</summary>
-        public static UiSkin Attach(GameObject go, string skinKey)
+        public static UiSkin Attach(GameObject go, string skinKey, bool fit = false, Color? tint = null, bool fitParent = false, float uiPerArt = UiPxPerArtPx)
         {
             var s = go.GetComponent<UiSkin>();
             if (s == null) s = go.AddComponent<UiSkin>();
             s.key = skinKey;
+            s.fit = fit; s.fitParent = fitParent; s.uiPerArt = uiPerArt;
+            s.tint = tint ?? Color.white;
             return s;
+        }
+
+        /// <summary>Put a delivered sprite on an Image: sliced at <paramref name="uiPerArt"/> UI px per art px when it has borders, else simple. Colour reset to <paramref name="tint"/>.</summary>
+        public static void ApplySprite(Image img, Sprite sp, float uiPerArt, RectTransform fitRect, Color tint)
+        {
+            if (img.sprite != sp) img.sprite = sp;
+            var type = sp.border.sqrMagnitude > 0f ? Image.Type.Sliced : Image.Type.Simple;
+            if (img.type != type) img.type = type;
+            if (type == Image.Type.Sliced)
+            {
+                float m = SliceMultiplier(img, sp, uiPerArt, fitRect);
+                if (!Mathf.Approximately(img.pixelsPerUnitMultiplier, m)) img.pixelsPerUnitMultiplier = m;
+                img.fillCenter = true;
+            }
+            if (img.color != tint) img.color = tint;
+        }
+
+        /// <summary>Swap to another key (e.g. pill colour by state). Call only on state change.</summary>
+        public void SetKey(string newKey)
+        {
+            if (newKey == key && applied) return;
+            key = newKey;
+            var runner = GameRunner.Instance;
+            if (runner != null && runner.Database != null) applied = Apply(runner.Database);
+        }
+
+        void OnRectTransformDimensionsChange()
+        {
+            if (!applied || !fit) return;
+            var img = GetComponent<Image>();
+            if (img == null || img.sprite == null || img.type != Image.Type.Sliced) return;
+            var fr = fitParent && transform.parent is RectTransform pr ? pr : (RectTransform)transform;
+            float m = SliceMultiplier(img, img.sprite, uiPerArt, fr);
+            if (!Mathf.Approximately(img.pixelsPerUnitMultiplier, m)) img.pixelsPerUnitMultiplier = m;
         }
 
         void OnEnable()
@@ -74,16 +122,13 @@ namespace IdleGrounds.Game
             var img = GetComponent<Image>();
             var sp = db != null ? db.UiSprite(key) : null;
             if (img == null || sp == null) return false;
-            img.sprite = sp;
-            img.type = sp.border.sqrMagnitude > 0f ? Image.Type.Sliced : Image.Type.Simple;
-            img.pixelsPerUnitMultiplier = SliceMultiplier(img, sp, UiPxPerArtPx);
-            img.color = Color.white;
-            img.fillCenter = true;
+            var fr = !fit ? null : fitParent && transform.parent is RectTransform pr ? pr : (RectTransform)transform;
+            ApplySprite(img, sp, uiPerArt, fr, tint);
             var ol = GetComponent<Outline>();     // the placeholder border; the art has its own frame
             if (ol != null) ol.enabled = false;
 
             var lg = GetComponent<LayoutGroup>();   // keep content clear of the frame
-            if (lg != null)
+            if (lg != null && !fit)
             {
                 var b = sp.border;   // (L,B,R,T) art px
                 var p = lg.padding;

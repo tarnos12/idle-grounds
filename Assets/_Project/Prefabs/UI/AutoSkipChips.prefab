@@ -588,6 +588,7 @@ GameObject:
   - component: {fileID: 1817131897889453389}
   - component: {fileID: 8538085808713658991}
   - component: {fileID: 5675557977355625568}
+  - component: {fileID: 4663052186814331744}
   m_Layer: 5
   m_Name: ChipTemplate
   m_TagString: Untagged
@@ -640,14 +641,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.23529412, g: 0.15686275, b: 0.03137255, a: 0.92}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: 7a8b3146fc4101141a78b2c18ab77d11, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -656,7 +657,7 @@ MonoBehaviour:
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  m_PixelsPerUnitMultiplier: 3.125
 --- !u!114 &1817131897889453389
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -664,7 +665,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8410797483733385467}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
@@ -712,3 +713,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 2
   m_VerticalFit: 2
+--- !u!114 &4663052186814331744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8410797483733385467}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
+  key: ui_pill_gold
+  fit: 1
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 0
+  uiPerArt: 1

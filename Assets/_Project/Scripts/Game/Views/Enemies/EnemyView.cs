@@ -27,6 +27,10 @@ namespace IdleGrounds.Game
         [SerializeField] SpriteRenderer barFill;
         [SerializeField] SortingGroup sortingGroup;
 
+        // delivered HP pip art (ui_hp_pip 2-frame strip: 0 filled red, 1 empty grey), native 1 art px = 1 world px
+        Sprite pipFull, pipEmpty;
+        bool pipArtLooked;
+
         readonly List<SpriteRenderer> pipPool = new List<SpriteRenderer>();
         public string Area { get; private set; }
         public Enemy Enemy { get; private set; }
@@ -36,7 +40,13 @@ namespace IdleGrounds.Game
         /// <summary>Red (remaining) pips currently shown.</summary>
         public int LivePips
         {
-            get { int n = 0; foreach (var p in pipPool) if (p.gameObject.activeSelf && p.color == PipLive) n++; return n; }
+            get
+            {
+                int n = 0;
+                foreach (var p in pipPool)
+                    if (p.gameObject.activeSelf && (pipFull != null ? p.sprite == pipFull : p.color == PipLive)) n++;
+                return n;
+            }
         }
 
         Sprite[] idle, move, hit;
@@ -124,6 +134,13 @@ namespace IdleGrounds.Game
                 p.name = "Pip" + pipPool.Count;
                 pipPool.Add(p);
             }
+            if (!pipArtLooked)
+            {
+                pipArtLooked = true;
+                var runner = GameRunner.Instance;
+                var fr = runner != null && runner.Database != null ? runner.Database.UiFrames("ui_hp_pip") : null;
+                if (fr != null && fr.Length >= 2) { pipFull = fr[0]; pipEmpty = fr[1]; }
+            }
             float spacing = ViewKit.U(10f), x0 = -(n - 1) * spacing * 0.5f;
             for (int i = 0; i < pipPool.Count; i++)
             {
@@ -132,6 +149,13 @@ namespace IdleGrounds.Game
                 if (p.gameObject.activeSelf != on) p.gameObject.SetActive(on);
                 if (!on) continue;
                 p.transform.localPosition = new Vector3(x0 + i * spacing, y, 0f);
+                if (pipFull != null)
+                {
+                    p.transform.localScale = Vector3.one;
+                    p.sprite = i < e.hp ? pipFull : pipEmpty;
+                    p.color = Color.white;
+                    continue;
+                }
                 p.transform.localScale = Vector3.one * ViewKit.U(6f);
                 p.color = i < e.hp ? PipLive : PipLost;
             }

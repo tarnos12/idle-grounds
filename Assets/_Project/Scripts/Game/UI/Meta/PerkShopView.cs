@@ -134,8 +134,28 @@ namespace IdleGrounds.Game
             card.fxText.text = MetaText.PerkFxLine(Sim, p, lvl);
             card.buyLabel.text = maxed ? "MAX" : cost.Value + " ☯";
             card.buyButton.interactable = afford;
-            card.border.effectColor = afford ? UiPalette.Gold : UiPalette.Line;
+            if (!SkinCard(card, afford, maxed))
+                card.border.effectColor = afford ? UiPalette.Gold : UiPalette.Line;
             card.group.alpha = maxed ? 0.6f : 1f;
+        }
+
+        Sprite cardNormal, cardAfford, cardDim;
+        bool cardArtLooked;
+
+        /// <summary>Delivered card art by state (affordable = green rim, maxed = dim, else normal). False = placeholder styling.</summary>
+        bool SkinCard(PerkCardView card, bool afford, bool maxed)
+        {
+            if (!cardArtLooked)
+            {
+                cardArtLooked = true;
+                var db = runner.Database;
+                cardNormal = db.UiSprite("ui_card_normal"); cardAfford = db.UiSprite("ui_card_affordable"); cardDim = db.UiSprite("ui_card_dim");
+            }
+            if (cardNormal == null || cardAfford == null || cardDim == null) return false;
+            var sp = maxed ? cardDim : afford ? cardAfford : cardNormal;
+            if (card.background.sprite != sp) UiSkin.ApplySprite(card.background, sp, UiSkin.UiPxPerArtPx, null, Color.white);
+            if (card.border.enabled) card.border.enabled = false;
+            return true;
         }
 
         /// <summary>Buy a perk (false = unaffordable / maxed: error buzz).</summary>
