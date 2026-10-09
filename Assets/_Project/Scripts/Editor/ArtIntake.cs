@@ -348,7 +348,12 @@ namespace IdleGrounds.Editor
             used.Add("island_center_path");     // stored, not yet consumed
             used.Add("island_center_plaza");    // stored, not yet consumed
             used.Add("bld_dragon");     // compatibility key, superseded by dragon_sleeping
-            used.Add("sky_moon");  // Sky/Moon renderer (IslandsBuilder.BuildSky); delivered bytes replace the Art/Sky placeholder
+            used.Add("sky_moon");  // stored; the 3/4 top-down sky (IslandsBuilder.BuildSky) no longer shows a moon
+            // consumed directly from Art/Incoming by IslandsBuilder.BuildSky / IslandCoastBuilder.BuildUnderside
+            used.Add("sky_cloudpuff");
+            used.Add("sky_sunbeam");
+            used.Add("island_underside_vines");
+            used.Add("island_underside_lavadrip");
 
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)
             foreach (var key in map.Keys)

@@ -30,8 +30,8 @@ namespace IdleGrounds.Game
         /// <summary>Cells the painted landmass (coast + satellite islets) may extend beyond the square play area.</summary>
         public const float VisualMargin = 42f;
 
-        /// <summary>Max cells the hanging underside (body + pieces + mist) reaches below the coast bottom (see IslandCoastBuilder.UndersideExtent).</summary>
-        public const float UndersideReach = 56f;
+        /// <summary>Max cells the compact 3/4-view underside (rim + body + pieces + mist) reaches below the coast bottom (see IslandCoastBuilder.UndersideExtent).</summary>
+        public const float UndersideReach = 14f;
 
         public Vector3 Origin => transform.position;
 

@@ -18,7 +18,8 @@ namespace IdleGrounds.Editor
     /// "Idle Grounds/World/Regenerate Island Coasts (overwrites)". Paint over it by hand in the Tile Palette
     /// whenever you like; "Rebuild Island Rim + Underside + Veil" then re-derives everything that hangs off it:
     ///   - CliffRim tilemap: a cliff cell under every south-facing edge (diagonals, corners, end caps),
-    ///   - Underside decorations: a few varied hanging rocks / spikes / roots + mist along the real bottom outline,
+    ///   - Underside (3/4 view): compact native-scale hanging rock under SOUTH-facing edges only + pixel cloud puffs,
+    ///   - Shadow: a translucent black copy of the silhouette offset half a cell down-right onto the sky,
     ///   - Veil: tiled fog masked (SpriteMask) to the landmass + rim + underside while the Island is locked,
     ///   - Boundary: a low stone wall marking the playable square.
     /// </summary>
@@ -396,8 +397,9 @@ namespace IdleGrounds.Editor
             EnsureCoastTilemap(isl);
             var land = ReadLand(isl);
             var cliffCells = BuildCliff(isl, land);
-            BuildUnderside(isl, land, out var xc, out var halfW);
-            BuildVeil(isl, land, cliffCells, xc, halfW);
+            var underCells = BuildUnderside(isl, land, cliffCells);
+            BuildShadow(isl, land, cliffCells);
+            BuildVeil(isl, land, cliffCells, underCells);
             BuildBoundary(isl);
             EditorUtility.SetDirty(isl.gameObject);
         }
@@ -434,51 +436,59 @@ namespace IdleGrounds.Editor
             return set;
         }
 
-        const float UndersideDepthK = 0.35f, UndersideDepthMax = 40f;   // body depth = 35% of the coast width, capped
-        static float UndersideDepth(float span) => Mathf.Min(UndersideDepthMax, UndersideDepthK * span);
-        /// <summary>Total cells the underside reaches below the coast bottom: body + hanging pieces (~6) + mist (~10).</summary>
-        public static float UndersideExtent(float span) => UndersideDepth(span) + 16f;
+        // 3/4 top-down: only the SOUTH-facing coast shows its cliff face, and the hanging underside is a compact
+        // band of native-scale pieces under that south cliff (never beside the island, never stretched).
+        const int BodyMaxRows = 3;                 // dark rock band right under the cliff rim (cells)
+        const float SecondRowDrop = 2.5f;          // the deeper, central second row of pieces starts this far down
+        const float PieceMaxHeight = 6f;           // tallest piece (rock 256x192 at PPU 32)
+        const string IncomingIslands = "Assets/_Project/Art/Incoming/islands/";
+        const string CloudPuffs = "Assets/_Project/Art/Incoming/sky/sky_cloudpuff_128x64_3f.png";
 
-        static void BuildUnderside(Island isl, Land land, out float xCentre, out float halfWidth)
+        /// <summary>Total cells the underside reaches below the cliff rim: body / second row + tallest piece + a little mist.</summary>
+        public static float UndersideExtent(float span) => 1f + SecondRowDrop + PieceMaxHeight + 3f;
+
+        static float Snap(float v) => Mathf.Round(v * 32f) / 32f;
+
+        /// <summary>
+        /// Underside for the 3/4 view. Every SOUTH-facing edge (a land cell with open sky below it - the cells the
+        /// cliff rim sits on) can carry hanging rock; west / east / north faces never do, so nothing stands beside
+        /// the island like a pillar. Edges are grouped into profiles per column (p = 0: the lowest edge = the
+        /// island's south coast; p = 1, 2: higher edges with open sky below - islets, the north shore of a bay) and
+        /// each edge gets a factor from its chain (edges continuing left / right within 2 rows - a jump breaks the
+        /// chain, so steep walls and short stubs get small pieces or none) and the open sky below it.
+        /// Under it: dark underside fill behind every rim cell (no sky showing through the rim art) and 1-3 body
+        /// rows under the strongest edges, native-scale pieces (rock / roots / stalactite / vines; lava drips on the
+        /// volcano) hung top-centre half a cell under the rim, a deeper second row under the southernmost stretch
+        /// (inverted-cone taper) and a couple of pixel cloud puffs at the tip. All of it sorts on the Sky layer, so
+        /// any land in front (further south on screen) hides it. Returns the covered cells (for the veil mask).
+        /// </summary>
+        static HashSet<Vector2Int> BuildUnderside(Island isl, Land land, HashSet<Vector2Int> cliff)
         {
+            const int Profiles = 3, NoEdge = int.MinValue;
+            var covered = new HashSet<Vector2Int>();
             int w = land.x1 - land.x0 + 1;
-            var bot = new float[w];
-            int first = -1, last = -1;
-            double sumX = 0, sumW = 0;
+            var prof = new int[Profiles][];
+            var gap = new int[Profiles][];
+            for (int p = 0; p < Profiles; p++) { prof[p] = new int[w]; gap[p] = new int[w]; }
+            int minH = int.MaxValue;
             for (int i = 0; i < w; i++)
             {
                 int x = land.x0 + i;
-                bot[i] = float.NaN;
-                int cnt = 0;
-                for (int y = land.y0; y <= land.y1; y++)
-                    if (land[x, y]) { if (float.IsNaN(bot[i])) bot[i] = y - 1; cnt++; }
-                if (!float.IsNaN(bot[i])) { if (first < 0) first = i; last = i; sumX += (x + 0.5) * cnt; sumW += cnt; }
-            }
-            xCentre = (float)(sumX / System.Math.Max(1.0, sumW));
-            float xMin = land.x0 + first, xMax = land.x0 + last + 1;
-            halfWidth = (xMax - xMin) * 0.5f;
-            xCentre = (xMin + xMax) * 0.5f;
-            // fill gaps with the nearest valid column, then smooth (box 7)
-            var filled = (float[])bot.Clone();
-            for (int i = 0; i < w; i++)
-            {
-                if (!float.IsNaN(filled[i])) continue;
-                int best = -1;
-                for (int d = 1; d < w && best < 0; d++)
+                for (int p = 0; p < Profiles; p++) { prof[p][i] = NoEdge; gap[p][i] = 0; }
+                int p0 = 0, lastLand = int.MinValue;
+                for (int y = land.y0; y <= land.y1 + 1 && p0 < Profiles; y++)
                 {
-                    if (i - d >= 0 && !float.IsNaN(bot[i - d])) best = i - d;
-                    else if (i + d < w && !float.IsNaN(bot[i + d])) best = i + d;
+                    bool here = land[x, y], below = land[x, y - 1];
+                    if (here && !below)
+                    {
+                        int c = y - 1;
+                        int g = lastLand == int.MinValue ? 99 : c - lastLand;     // open cells under the rim cell (incl. it)
+                        if (p0 == 0 || g >= 4) { prof[p0][i] = c; gap[p0][i] = g; p0++; }
+                    }
+                    if (here) lastLand = y;
                 }
-                if (best >= 0) filled[i] = bot[best];
+                if (prof[0][i] != NoEdge) minH = Mathf.Min(minH, prof[0][i]);
             }
-            var att = new float[w];
-            for (int i = 0; i < w; i++)
-            {
-                float s = 0; int n = 0;
-                for (int d = -3; d <= 3; d++) { int j = Mathf.Clamp(i + d, 0, w - 1); if (!float.IsNaN(filled[j])) { s += filled[j]; n++; } }
-                att[i] = n > 0 ? s / n : 0f;
-            }
-            float Attach(float x) => att[Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1)];
 
             var t = isl.transform.Find("Underside");
             Transform root;
@@ -490,20 +500,48 @@ namespace IdleGrounds.Editor
             else root = t;
             for (int i = root.childCount - 1; i >= 0; i--) Object.DestroyImmediate(root.GetChild(i).gameObject);
             root.localPosition = Vector3.zero;
+            if (minH == int.MaxValue) return covered;
 
+            // per-profile factor: chain reach (both sides) x open sky below; smoothed along the chain
+            var fs = new float[Profiles][];
+            for (int p = 0; p < Profiles; p++)
+            {
+                var h = prof[p];
+                var f = new float[w];
+                for (int i = 0; i < w; i++)
+                {
+                    if (h[i] == NoEdge) continue;
+                    int l = 0, r = 0;
+                    for (int j = i - 1; j >= 0 && l < 6 && h[j] != NoEdge && Mathf.Abs(h[j] - h[j + 1]) <= 2; j--) l++;
+                    for (int j = i + 1; j < w && r < 6 && h[j] != NoEdge && Mathf.Abs(h[j] - h[j - 1]) <= 2; j++) r++;
+                    float endK = Mathf.Clamp01((Mathf.Min(l, r) + 1) / 4f);
+                    float gapK = Mathf.Clamp01((gap[p][i] - 2) / 6f);
+                    f[i] = endK * gapK;
+                }
+                fs[p] = new float[w];
+                for (int i = 0; i < w; i++)
+                {
+                    if (f[i] <= 0f) continue;
+                    float s = f[i]; int n = 1;
+                    for (int j = i - 1; j >= Mathf.Max(0, i - 2) && h[j] != NoEdge && Mathf.Abs(h[j] - h[j + 1]) <= 2; j--) { s += f[j]; n++; }
+                    for (int j = i + 1; j <= Mathf.Min(w - 1, i + 2) && h[j] != NoEdge && Mathf.Abs(h[j] - h[j - 1]) <= 2; j++) { s += f[j]; n++; }
+                    fs[p][i] = Mathf.Min(f[i], s / n + 0.1f);          // smoothing may soften, never extend, a factor
+                }
+            }
+
+            bool volcano = isl.islandKey == "volcano";
             var rock = IslandArtBuilder.Single(IslandArtBuilder.UndersideRock);
             var spike = IslandArtBuilder.Single(IslandArtBuilder.UndersideStalactite);
             var roots = IslandArtBuilder.Single(IslandArtBuilder.UndersideRoots);
-            var vines = IslandArtBuilder.Single("Assets/_Project/Art/Islands/island_underside_vines_128x128.png");
-            var mist = IslandArtBuilder.Single(IslandArtBuilder.BaseMist);
-            // subtle per-island tint: the delivered art already carries colour
+            var vines = IslandArtBuilder.Single(IncomingIslands + "island_underside_vines_128x128.png");
+            var lava = IslandArtBuilder.Frames(IncomingIslands + "island_underside_lavadrip_128x160_4f.png");
+            var puffs = IslandArtBuilder.Frames(CloudPuffs);
             var tint = Color.Lerp(Color.white, WorldBuilder.UndersideTint(isl.islandKey), 0.3f);
             var rng = new System.Random(KeySeed(isl.islandKey) ^ (isl.coastSeed * 7919) ^ 0x2545F49);
             float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
             const string Sky = WorldBuilder.SkyLayer;
-            float span = xMax - xMin;
 
-            // ---- solid body: an inverted mountain of rock tiles under the coast (full width, tapering to a point)
+            // ---- body: underside fill behind every rim cell + 1-3 rows under the strong edges
             var fillTile = IslandArtBuilder.EnsureUndersideFillTile();
             var bodyT = new GameObject("Body").transform;
             bodyT.SetParent(root, false);
@@ -511,87 +549,173 @@ namespace IdleGrounds.Editor
             var bodyR = bodyT.gameObject.AddComponent<TilemapRenderer>();
             bodyR.sortingLayerName = Sky;
             bodyR.sortingOrder = 30;
-            body.color = tint;
-            var bottom = new float[w];                       // lowest filled y (world, cell top edge) per column; NaN outside
-            for (int i = 0; i < w; i++) bottom[i] = float.NaN;
-            float walk = 0f;
-            var cells = new List<Vector3Int>();
-            for (int i = first; i <= last; i++)
-            {
-                int x = land.x0 + i;
-                float k = Mathf.Clamp01(1f - Mathf.Abs(x + 0.5f - xCentre) / (halfWidth + 0.5f));
-                walk = Mathf.Clamp(walk + R(-0.9f, 0.9f), -2.5f, 2.5f);          // ragged edge
-                int depth = Mathf.Max(3, Mathf.RoundToInt(UndersideDepth(2f * halfWidth) * Mathf.Pow(k, 1.15f) + walk * (0.3f + k)));
-                int topCell = Mathf.FloorToInt(att[i]);
-                for (int d = 0; d < depth; d++)
+            body.color = Color.Lerp(tint, Color.black, 0.25f);
+            var cellSet = new HashSet<Vector3Int>();
+            foreach (var c in cliff) cellSet.Add(new Vector3Int(c.x, c.y, 0));
+            for (int p = 0; p < Profiles; p++)
+                for (int i = 0; i < w; i++)
                 {
-                    int rowsFromEnd = depth - 1 - d;                              // dither the lowest rows into the mist
-                    if (rowsFromEnd < 5 && rng.NextDouble() < (5 - rowsFromEnd) / 6.0 * 0.9) continue;
-                    cells.Add(new Vector3Int(x, topCell - d, 0));
+                    if (fs[p][i] <= 0.15f) continue;
+                    int rows = Mathf.Clamp(Mathf.RoundToInt(fs[p][i] * BodyMaxRows), 1, Mathf.Min(BodyMaxRows, gap[p][i] - 1));
+                    for (int r = 0; r < rows; r++)
+                    {
+                        if (r == rows - 1 && rows > 1 && rng.NextDouble() < 0.35) continue;      // ragged lower edge
+                        cellSet.Add(new Vector3Int(land.x0 + i, prof[p][i] - 1 - r, 0));
+                    }
                 }
-                bottom[i] = topCell - depth + 1;
+            foreach (var c in cellSet) covered.Add(new Vector2Int(c.x, c.y));
+            if (fillTile != null && cellSet.Count > 0)
+            {
+                var cells = new Vector3Int[cellSet.Count];
+                cellSet.CopyTo(cells);
+                var arr = new TileBase[cells.Length];
+                for (int i = 0; i < arr.Length; i++) arr[i] = fillTile;
+                body.SetTiles(cells, arr);
             }
-            var arr = new TileBase[cells.Count];
-            for (int i = 0; i < arr.Length; i++) arr[i] = fillTile;
-            if (fillTile != null) body.SetTiles(cells.ToArray(), arr);
-            float BottomAt(float x) { float b = bottom[Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1)]; return float.IsNaN(b) ? Attach(x) : b; }
 
-            // ---- native-scale pieces (scale 1, PPU 32; only flipX) hung over the body: lower edge, taper, flanks
+            // ---- native-scale pieces (scale 1, PPU 32, flipX only), hung top-centre from the rim
             int pieceN = 0;
-            float tipY = BottomAt(xCentre);
-            void Piece(float x, float topY, int order)
+            float tipY = float.MaxValue, tipX = 0f;
+            Sprite Pick(float k)
             {
-                float r = rng.Next(100) / 100f;
-                Sprite sp = r < 0.4f ? rock : r < 0.62f ? spike : r < 0.82f ? roots : vines;
-                if (sp == null) sp = rock;
-                if (sp == null) return;
-                float y = topY + R(-0.4f, 0.5f);
-                var col = Color.Lerp(tint, Color.black, R(0f, 0.12f));
-                var sr = WorldBuilder.Deco(root, "Piece" + pieceN++, sp, new Vector3(x, y, 0f), 1f, col, order + pieceN % 3, Sky);
-                sr.flipX = rng.NextDouble() < 0.5;
-                tipY = Mathf.Min(tipY, y - sp.bounds.size.y);
+                float r = (float)rng.NextDouble();
+                if (volcano && lava.Length > 0 && r < 0.55f) return lava[rng.Next(lava.Length)];
+                var v = vines != null ? vines : spike;
+                if (k > 0.5f) return r < 0.55f ? rock : r < 0.82f ? roots : r < 0.92f ? v : spike;
+                if (k > 0.2f) return r < 0.3f ? rock : r < 0.6f ? roots : r < 0.85f ? v : spike;
+                return r < 0.6f ? v : spike;
             }
-            for (float x = xMin + 1f; x < xMax; x += R(4.5f, 6.5f))      // along the lower edge (overlaps it, hangs below)
-                Piece(x, BottomAt(x) + R(1.5f, 3.5f), 38);
-            for (float x = xMin + 2f; x < xMax; x += R(8f, 12f))         // mid-flank pieces breaking up the body silhouette
+            Sprite Narrow() => volcano && lava.Length > 0 ? lava[rng.Next(lava.Length)] : (vines != null && rng.NextDouble() < 0.5 ? vines : spike);
+
+            for (int p = 0; p < Profiles; p++)
             {
-                float t0 = Attach(x), b0 = BottomAt(x);
-                if (t0 - b0 > 8f) Piece(x, Mathf.Lerp(t0, b0, R(0.35f, 0.75f)), 36);
+                var h = prof[p]; var f = fs[p];
+                // highest hang line over a span of this profile's chain (pieces tuck under it); NaN if it leaves the chain
+                float HangOver(float x0, float x1)
+                {
+                    int a = Mathf.FloorToInt(x0) - land.x0, b = Mathf.CeilToInt(x1) - 1 - land.x0;
+                    if (a < 0 || b >= w || b < a) return float.NaN;
+                    int m = int.MinValue;
+                    for (int i = a; i <= b; i++)
+                    {
+                        if (f[i] <= 0.05f || (i > a && Mathf.Abs(h[i] - h[i - 1]) > 2)) return float.NaN;
+                        m = Mathf.Max(m, h[i]);
+                    }
+                    return m;
+                }
+                bool Hang(Sprite sp, float cx, float dropBelowRim, int order, float dark)
+                {
+                    if (sp == null) return false;
+                    var bnd = sp.bounds;
+                    float half = bnd.size.x * 0.5f;
+                    float top = HangOver(cx - half + 0.5f, cx + half - 0.5f);   // the outer half-cell of the art is mostly transparent
+                    if (float.IsNaN(top)) return false;
+                    float yTop = top + 0.5f - dropBelowRim;                        // tucked half a cell under the rim (hidden behind the ground)
+                    var pos = new Vector3(Snap(cx - bnd.center.x), Snap(yTop - bnd.max.y), 0f);
+                    var sr = WorldBuilder.Deco(root, "Piece" + pieceN++, sp, pos, 1f, Color.Lerp(tint, Color.black, dark), order, Sky);
+                    sr.flipX = rng.NextDouble() < 0.5;
+                    float bottom = yTop - bnd.size.y;
+                    if (p == 0 && bottom < tipY) { tipY = bottom; tipX = cx; }
+                    for (int x = Mathf.FloorToInt(cx - half); x < Mathf.CeilToInt(cx + half); x++)
+                        for (int y = Mathf.FloorToInt(bottom); y < Mathf.CeilToInt(yTop); y++) covered.Add(new Vector2Int(x, y));
+                    return true;
+                }
+
+                // first row: along every chain, spacing ~ the piece width so the tops form one ragged band
+                for (float x = land.x0 + 1.5f; x < land.x1 - 0.5f;)
+                {
+                    int i = Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1);
+                    if (f[i] <= 0.05f) { x += 1f; continue; }
+                    var sp = Pick(f[i]);
+                    int order = 38 + pieceN % 3;
+                    if (Hang(sp, x, R(0f, 0.6f), order, R(0f, 0.12f))) { x += sp.bounds.size.x * R(0.55f, 0.75f); continue; }
+                    var narrow = Narrow();       // the wide piece would leave the chain: try a narrow one
+                    if (Hang(narrow, x, R(0f, 0.4f), order, R(0f, 0.12f))) { x += narrow.bounds.size.x * R(0.65f, 0.85f); continue; }
+                    x += 1f;
+                }
+                // second, deeper row under the southernmost stretch: behind the first row -> an inverted-cone taper
+                if (p == 0)
+                    for (float x = land.x0 + 4f; x < land.x1 - 3f; x += R(7f, 10f))
+                    {
+                        int i = Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1);
+                        if (f[i] < 0.8f || h[i] - minH > 10) continue;
+                        Sprite sp = volcano && lava.Length > 0 ? lava[rng.Next(lava.Length)] : (rng.NextDouble() < 0.6 ? rock : spike);
+                        Hang(sp, x, SecondRowDrop + R(-0.5f, 0.5f), 34, R(0.15f, 0.3f));
+                    }
             }
-            Piece(xCentre + R(-1f, 1f), BottomAt(xCentre) + 2f, 39);     // the point
-            WorldBuilder.Deco(root, "MistA", mist, new Vector3(xCentre - 8f, tipY, 0f), 9f, new Color(1, 1, 1, 0.5f), 45, Sky);
-            WorldBuilder.Deco(root, "MistB", mist, new Vector3(xCentre + 10f, tipY - 2f, 0f), 7f, new Color(1, 1, 1, 0.4f), 45, Sky);
-            WorldBuilder.Deco(root, "MistC", mist, new Vector3(xMin + 3f, Attach(xMin + 3f) - 4f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, Sky);
-            WorldBuilder.Deco(root, "MistD", mist, new Vector3(xMax - 3f, Attach(xMax - 3f) - 5f, 0f), 6f, new Color(1, 1, 1, 0.3f), 44, Sky);
-            for (int i = 0; i < 2; i++)
+
+            // a couple of loose pixel cloud puffs drifting past the tip (1x, no stretching)
+            if (puffs.Length > 0 && tipY < float.MaxValue)
             {
-                float x = R(xMin + 12f, xMax - 12f);
-                WorldBuilder.Deco(root, "MistE" + i, mist, new Vector3(x, Attach(x) - R(6f, 12f), 0f), R(4f, 6f), new Color(1, 1, 1, 0.25f), 44, Sky);
+                var mist = new Color(0.86f, 0.92f, 0.96f, 0.55f);
+                WorldBuilder.Deco(root, "MistA", puffs[rng.Next(puffs.Length)], new Vector3(Snap(tipX - R(2f, 4f)), Snap(tipY + 0.5f), 0f), 1f, mist, 45, Sky).flipX = rng.NextDouble() < 0.5;
+                WorldBuilder.Deco(root, "MistB", puffs[rng.Next(puffs.Length)], new Vector3(Snap(tipX + R(3f, 6f)), Snap(tipY + 1.5f), 0f), 1f, new Color(mist.r, mist.g, mist.b, 0.4f), 44, Sky).flipX = rng.NextDouble() < 0.5;
+            }
+            EditorUtility.SetDirty(root.gameObject);
+            return covered;
+        }
+
+        /// <summary>
+        /// Soft drop shadow onto the sky: a black, semi-transparent copy of the landmass (same blob Rule Tile, so the
+        /// silhouette matches exactly) + cliff rim, offset half a cell down-right. Pixel-crisp, no blur; drawn on the
+        /// Sky layer above the cloud sea and below the underside.
+        /// </summary>
+        static void BuildShadow(Island isl, Land land, HashSet<Vector2Int> cliff)
+        {
+            var old = isl.transform.Find("Shadow");
+            if (old != null) Object.DestroyImmediate(old.gameObject);
+            var root = new GameObject("Shadow").transform;
+            root.SetParent(isl.transform, false);
+            root.SetSiblingIndex(0);
+            root.localPosition = new Vector3(0.5f, -0.5f, 0f);
+            var shade = new Color(0f, 0f, 0f, 0.35f);
+            Tilemap Map(string name)
+            {
+                var go = new GameObject(name);
+                go.transform.SetParent(root, false);
+                var tm = go.AddComponent<Tilemap>();
+                var tr = go.AddComponent<TilemapRenderer>();
+                tr.sortingLayerName = WorldBuilder.SkyLayer;
+                tr.sortingOrder = 20;
+                tm.color = shade;
+                return tm;
+            }
+            var coastTile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CoastTilePath(isl.islandKey));
+            if (coastTile != null)
+            {
+                var pos = new List<Vector3Int>();
+                for (int x = land.x0; x <= land.x1; x++)
+                    for (int y = land.y0; y <= land.y1; y++)
+                        if (land[x, y]) pos.Add(new Vector3Int(x, y, 0));
+                var arr = new TileBase[pos.Count];
+                for (int i = 0; i < arr.Length; i++) arr[i] = coastTile;
+                Map("Land").SetTiles(pos.ToArray(), arr);
+            }
+            var cliffTile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(isl.islandKey));
+            if (cliffTile != null && cliff.Count > 0)
+            {
+                var pos = new List<Vector3Int>(cliff.Count);
+                foreach (var c in cliff) pos.Add(new Vector3Int(c.x, c.y, 0));
+                var arr = new TileBase[pos.Count];
+                for (int i = 0; i < arr.Length; i++) arr[i] = cliffTile;
+                Map("Rim").SetTiles(pos.ToArray(), arr);
             }
             EditorUtility.SetDirty(root.gameObject);
         }
 
-        static void BuildVeil(Island isl, Land land, HashSet<Vector2Int> cliff, float xc, float halfW)
+        static void BuildVeil(Island isl, Land land, HashSet<Vector2Int> cliff, HashSet<Vector2Int> under)
         {
             // cell mask of everything the fog must cover: ground + cliff rim + the hanging underside
-            int gx0 = land.x0 - 3, gx1 = land.x1 + 3, gy0 = land.y0 - Mathf.CeilToInt(UndersideDepth(2f * halfW)) - 14, gy1 = land.y1 + 3;
+            int uy0 = land.y0, ux0 = land.x0, ux1 = land.x1;
+            foreach (var c in under) { uy0 = Mathf.Min(uy0, c.y); ux0 = Mathf.Min(ux0, c.x); ux1 = Mathf.Max(ux1, c.x); }
+            int gx0 = ux0 - 3, gx1 = ux1 + 3, gy0 = uy0 - 4, gy1 = land.y1 + 3;
             int gw = gx1 - gx0 + 1, gh = gy1 - gy0 + 1;
             var m = new bool[gw, gh];
-            var minY = new Dictionary<int, int>();
             for (int x = land.x0; x <= land.x1; x++)
                 for (int y = land.y0; y <= land.y1; y++)
-                    if (land[x, y])
-                    {
-                        m[x - gx0, y - gy0] = true;
-                        if (!minY.TryGetValue(x, out var cur) || y < cur) minY[x] = y;
-                    }
+                    if (land[x, y]) m[x - gx0, y - gy0] = true;
             foreach (var c in cliff) m[c.x - gx0, c.y - gy0] = true;
-            foreach (var kv in minY)
-            {
-                float k = Mathf.Clamp01(1f - Mathf.Abs(kv.Key + 0.5f - xc) / (halfW + 1f));
-                int depth = Mathf.Max(3, Mathf.RoundToInt(UndersideDepth(2f * halfW) * Mathf.Pow(k, 1.15f)) + 6);
-                for (int d = 1; d <= depth; d++) { int y = kv.Value - 1 - d; if (y >= gy0) m[kv.Key - gx0, y - gy0] = true; }
-            }
+            foreach (var c in under) m[c.x - gx0, c.y - gy0] = true;
             var dil = new bool[gw, gh];                      // 1-cell dilation so the fog hugs the coast softly
             for (int x = 0; x < gw; x++)
                 for (int y = 0; y < gh; y++)

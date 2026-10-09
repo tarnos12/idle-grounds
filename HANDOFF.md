@@ -147,6 +147,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-09 visuals (ADR 0005, 3/4 view): undersides now hang only under south-facing coast (native-scale pieces, ~12 cells reach, camera underside limit 56→14), drop shadow per island, sky = abyss vignette (#10293a) + CloudSea (Game/Views/Sky/CloudSea.cs: 96 cloud puffs, 3 depths, pixel-snapped drift); horizon gradient, peaks, moon and cloud strips retired. ART-SPEC v3 §3.6 asks for 3/4 cliff walls, edge lips, a top-down cloud sea, distant islands and ground macro patches. Still weak: straight W/E coasts, bland ground (the ground dressing pass is next).
+
 - 2026-10-09 builds: Windows (152 MB, runs clean) + WebGL (21 MB) via BuildScript. WebGL save fix: File.Replace is unsupported on the WebGL FS (every save after the first threw) and writes were not flushed to IndexedDB; WriteAtomic now writes directly on WebGL and calls IG_SyncFs (Plugins/WebGL/IdbSync.jslib, FS.syncfs). Verified: the intro stays dismissed after a reload. Big art batch pulled (138 wired, 27 pending).
 
 - 2026-10-09: ArtIntake is idempotent. A second run reports 0 assignments changed and leaves git clean. Fixes: frame arrays are compared by content (SameFrames) for buildings, dragon stages and building variants; the Dragon building is no longer set twice per run (it took the bld_dragon art and was then overwritten by the dragon_sleeping strip, so it changed on every run; bld_dragon is now marked consumed).

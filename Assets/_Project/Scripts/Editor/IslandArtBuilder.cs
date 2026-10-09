@@ -90,8 +90,8 @@ namespace IdleGrounds.Editor
         public const string BridgeSending = BridgeDir + "/bld_spirit_bridge_sending_64x64_4f.png";
         public const string BridgeReceiving = BridgeDir + "/bld_spirit_bridge_receiving_64x64_4f.png";
 
-        /// <summary>Camera clear colour = the sky gradient's base (deep upper sky).</summary>
-        public static readonly Color SkyBase = Hex("#16263f");
+        /// <summary>Camera clear colour = the deep blue-teal abyss under the Islands (3/4 top-down sea of clouds).</summary>
+        public static readonly Color SkyBase = Hex("#10293a");
 
         public static Sprite Single(string path) => AssetDatabase.LoadAssetAtPath<Sprite>(path);
 

@@ -13,8 +13,8 @@ using static IdleGrounds.Editor.ProgressionBuilder;
 namespace IdleGrounds.Editor
 {
     /// <summary>
-    /// ADR 0003 view side, reproducible: the Sky root (gradient + peaks + 3 parallax cloud layers, all
-    /// <see cref="ParallaxLayer"/>s on the "Sky" sorting layer), camera clear colour = sky base, the QiTrail
+    /// ADR 0003 view side, reproducible: the Sky root (3/4 top-down: depth vignette + a CloudSea of cloud puffs at 3 depths, all
+    /// on the "Sky" sorting layer), camera clear colour = sky base (the abyss), the QiTrail
     /// world prefab + <see cref="QiTrailSync"/> (Runtime/QiTrails), <see cref="SkyWispViewSync"/>
     /// (Runtime/SkyWisps, reusing the Wisp prefab), the BridgePanel UI prefab under UI/Canvas wired into
     /// BuildController, and the unlock steles' camera link. The Islands themselves: <see cref="WorldBuilder"/>.
@@ -146,21 +146,111 @@ namespace IdleGrounds.Editor
             return p;
         }
 
-        /// <summary>Sky root: gradient (fill) → peaks → far / mid clouds (behind undersides) → near clouds (in front of them).</summary>
+        // ------------------------------------------------------------------ sky: looking DOWN into a sea of clouds
+
+        /// <summary>Camera clear colour: the deep blue-teal of the abyss under the Islands (screen edges).</summary>
+        public static readonly Color AbyssEdge = IslandArtBuilder.SkyBase;
+        /// <summary>Slightly lighter depth colour toward the screen centre (no horizon band).</summary>
+        public static readonly Color AbyssCentre = new Color32(0x1b, 0x46, 0x58, 0xff);
+        const string DepthPath = IslandArtBuilder.SkyDir + "/sky_depth_vignette_64x36.png";
+        const string CloudPuffPath = "Assets/_Project/Art/Incoming/sky/sky_cloudpuff_128x64_3f.png";
+
+        /// <summary>A smooth elliptical vignette (lighter centre, abyss edges), stretched over the view by a Fill <see cref="ParallaxLayer"/>.</summary>
+        static Sprite EnsureDepthSprite()
+        {
+            if (!File.Exists(DepthPath))
+            {
+                const int w = 64, h = 36;
+                var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+                var px = new Color[w * h];
+                for (int y = 0; y < h; y++)
+                    for (int x = 0; x < w; x++)
+                    {
+                        float dx = (x + 0.5f) / w * 2f - 1f, dy = (y + 0.5f) / h * 2f - 1f;
+                        float d = Mathf.Clamp01(Mathf.Sqrt(dx * dx + dy * dy) / 1.25f);
+                        float k = d * d * (3f - 2f * d);
+                        px[y * w + x] = Color.Lerp(AbyssCentre, AbyssEdge, k);
+                    }
+                tex.SetPixels(px);
+                File.WriteAllBytes(DepthPath, tex.EncodeToPNG());
+                Object.DestroyImmediate(tex);
+                AssetDatabase.ImportAsset(DepthPath, ImportAssetOptions.ForceSynchronousImport);
+                var imp = (TextureImporter)AssetImporter.GetAtPath(DepthPath);
+                imp.textureType = TextureImporterType.Sprite;
+                imp.spriteImportMode = SpriteImportMode.Single;
+                imp.spritePixelsPerUnit = 32;
+                imp.filterMode = FilterMode.Bilinear;      // a smooth light falloff, not pixel art
+                imp.textureCompression = TextureImporterCompression.Uncompressed;
+                imp.mipmapEnabled = false;
+                imp.wrapMode = TextureWrapMode.Clamp;
+                imp.SaveAndReimport();
+            }
+            return AssetDatabase.LoadAssetAtPath<Sprite>(DepthPath);
+        }
+
+        /// <summary>
+        /// Sky root for the 3/4 top-down view: no horizon, moon or mountains - the camera looks DOWN past the
+        /// Islands into a calm abyss. A depth vignette (fill) plus a <see cref="CloudSea"/> of cloud puffs
+        /// gathered in loose banks at three parallax depths (far = 1x, low contrast, tinted toward the abyss; mid/near = 2x),
+        /// all on the Sky sorting layer BEHIND the Islands' drop shadows / undersides (orders 20+).
+        /// </summary>
         public static void BuildSky(Camera cam)
         {
             var old = GameObject.Find("Sky");
             if (old != null && old.transform.parent == null) Object.DestroyImmediate(old);
             var root = new GameObject("Sky").transform;
-            Layer(root, "Gradient", IslandArtBuilder.Single(IslandArtBuilder.SkyGradient), -100, ParallaxLayer.Mode.Fill, 0f, 1f, 0f, 0f, cam, Color.white);
-            // moon: screen-anchored upper-left, native 3 units wide at the start view, scales with the view like the gradient
-            var moon = Layer(root, "Moon", IslandArtBuilder.Single(IslandArtBuilder.Moon), -95, ParallaxLayer.Mode.Fixed, 0f, 1f, 0.01f, 0f, cam, Color.white);
-            moon.anchorX = 0.18f; moon.anchorY = 0.15f; moon.refViewWidth = 35f;
-            Layer(root, "Peaks", IslandArtBuilder.Single(IslandArtBuilder.Peaks), -90, ParallaxLayer.Mode.Band, -0.18f, 0.32f, 0.02f, 0f, cam, Color.white);
-            Layer(root, "CloudsFar", IslandArtBuilder.Single(IslandArtBuilder.CloudsFar), -80, ParallaxLayer.Mode.Band, -0.30f, 0.30f, 0.05f, 0.15f, cam, Color.white);
-            Layer(root, "CloudsMid", IslandArtBuilder.Single(IslandArtBuilder.CloudsMid), -70, ParallaxLayer.Mode.Band, -0.36f, 0.34f, 0.10f, 0.3f, cam, Color.white);
-            // near clouds drift fast and pass in front of the island undersides (orders 39-45), still behind the ground
-            Layer(root, "CloudsNear", IslandArtBuilder.Single(IslandArtBuilder.CloudsNear), 60, ParallaxLayer.Mode.Band, -0.44f, 0.26f, 0.22f, 0.6f, cam, new Color(1f, 1f, 1f, 0.8f));
+            Layer(root, "Depth", EnsureDepthSprite(), -100, ParallaxLayer.Mode.Fill, 0f, 1f, 0f, 0f, cam, Color.white);
+
+            var puffs = IslandArtBuilder.Frames(CloudPuffPath);
+            // (sky_sunbeam light shafts were tried: on the dark abyss they read as grey smears, so they are left out)
+            var fieldGo = new GameObject("CloudSea");
+            fieldGo.transform.SetParent(root, false);
+            var field = fieldGo.AddComponent<CloudSea>();
+            Set(field, "target", cam);
+            var list = new System.Collections.Generic.List<CloudSea.Puff>();
+            var rng = new System.Random(0x5EA0C1D);
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            Vector2 tile = field.tile;
+            var placed = new System.Collections.Generic.List<(Vector2 p, float r)>();
+            // (name, count, scale, parallax, drift, tint toward the abyss, alpha, order)
+            var layers = new (string name, int count, int scale, float parallax, float drift, float toAbyss, float alpha, int order)[]
+            {
+                ("Far", 64, 1, 0.12f, 0.12f, 0.66f, 0.60f, -80),
+                ("Mid", 24, 2, 0.28f, 0.25f, 0.42f, 0.72f, -70),
+                ("Near", 8, 2, 0.48f, 0.45f, 0.18f, 0.85f, -60),
+            };
+            if (puffs.Length > 0)
+                foreach (var L in layers)
+                {
+                    var tint = Color.Lerp(Color.white, AbyssCentre, L.toAbyss);
+                    tint.a = L.alpha;
+                    // puffs gather into loose cloud banks (a few per tile) instead of an even confetti
+                    int banks = Mathf.Max(2, L.count / 5);
+                    var centres = new Vector2[banks];
+                    for (int b = 0; b < banks; b++) centres[b] = new Vector2(R(-tile.x * 0.5f, tile.x * 0.5f), R(-tile.y * 0.5f, tile.y * 0.5f));
+                    float radius = 1.5f * L.scale;          // puffs of one layer overlap a little, never pile up
+                    placed.Clear();
+                    for (int i = 0; i < L.count; i++)
+                    {
+                        Vector2 home = default;
+                        var c = centres[i % banks];
+                        for (int tries = 0; tries < 40; tries++)
+                        {
+                            home = c + new Vector2(R(-6f, 6f) * L.scale, R(-2.5f, 2.5f) * L.scale);
+                            bool ok = true;
+                            foreach (var q in placed) if ((q.p - home).sqrMagnitude < (q.r + radius) * (q.r + radius)) { ok = false; break; }
+                            if (ok) break;
+                        }
+                        placed.Add((home, radius));
+                        var sr = Sr(fieldGo.transform, "Cloud" + L.name + i, L.order, puffs[rng.Next(puffs.Length)], Sky);
+                        sr.color = tint;
+                        sr.flipX = rng.NextDouble() < 0.5;
+                        sr.transform.localScale = new Vector3(L.scale, L.scale, 1f);
+                        list.Add(new CloudSea.Puff { t = sr.transform, home = home, parallax = L.parallax, drift = L.drift });
+                    }
+                }
+            field.puffs = list.ToArray();
+            EditorUtility.SetDirty(field);
         }
 
         public static void InstallIntoActiveScene()
