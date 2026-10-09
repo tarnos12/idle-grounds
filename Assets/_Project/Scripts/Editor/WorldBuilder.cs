@@ -283,7 +283,8 @@ namespace IdleGrounds.Editor
         /// dashed 18% edge), generator fields (FIELD_TINT by item), the enemy zone (red 7% / 30%), all 1 px
         /// dashed edges, and the 2 px region frame rgba(74,222,128,.30) — SpriteRenderers on the Ground
         /// sorting layer above the tilemap (under link lines / reach circles). Also puts the 64 px 🔒 at the
-        /// centre of every veil. Idempotent (old overlay / lock replaced).
+        /// centre of every veil. The rects sit under a "Tints" child that <see cref="PlacementGuide"/> shows only while
+        /// placing / demolishing (ADR 0005: at rest the painted dressing shows the zones). Idempotent (old overlay / lock replaced).
         /// </summary>
         public static void BuildZoneOverlays(GameDatabase db)
         {
@@ -300,17 +301,24 @@ namespace IdleGrounds.Editor
                 if (def == null) continue;
                 var root = new GameObject(OverlayName).transform;
                 root.SetParent(region.transform, false);
+                // ADR 0005: the resting look is the painted dressing (IslandDressingBuilder); the flat tints + dashed
+                // edges only show while placing / demolishing (PlacementGuide), when build limits matter
+                var tints = new GameObject("Tints").transform;
+                tints.SetParent(root, false);
 
                 foreach (var z in def.noBuild)
-                    foreach (var r in cfg.ZoneRects(z)) AddZoneRect(root, "NoBuild_" + z, r, ZoneFill, ZoneEdge, square);
+                    foreach (var r in cfg.ZoneRects(z)) AddZoneRect(tints, "NoBuild_" + z, r, ZoneFill, ZoneEdge, square);
                 foreach (var gen in def.generators)
                 {
                     var tint = gen.item != null && FieldTint.TryGetValue(gen.item, out var t) ? t : FieldTint["sand"];
-                    foreach (var r in cfg.ZoneRects(gen.zone)) AddZoneRect(root, "Field_" + gen.item + "_" + gen.zone, r, tint.fill, tint.edge, square);
+                    foreach (var r in cfg.ZoneRects(gen.zone)) AddZoneRect(tints, "Field_" + gen.item + "_" + gen.zone, r, tint.fill, tint.edge, square);
                 }
                 var ez = def.enemies;
                 if (ez != null && ez.enabled && !string.IsNullOrEmpty(ez.zone))
-                    foreach (var r in cfg.ZoneRects(ez.zone)) AddZoneRect(root, "Enemy_" + ez.zone, r, EnemyFill, EnemyEdge, square);
+                    foreach (var r in cfg.ZoneRects(ez.zone)) AddZoneRect(tints, "Enemy_" + ez.zone, r, EnemyFill, EnemyEdge, square);
+
+                tints.gameObject.SetActive(false);
+                root.gameObject.AddComponent<PlacementGuide>().guide = tints.gameObject;
 
                 if (region.veil != null) BuildVeilLock(region.veil.transform);
                 EditorUtility.SetDirty(region.gameObject);

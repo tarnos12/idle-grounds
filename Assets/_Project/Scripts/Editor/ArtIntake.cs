@@ -345,8 +345,12 @@ namespace IdleGrounds.Editor
             // consumed directly by IslandArtBuilder's Rule Tiles
             foreach (var biome in new[] { "center", "farm", "mine", "fishing", "volcano", "grove", "celestial" })
                 used.Add("island_" + biome + "_ground_fill");
-            used.Add("island_center_path");     // stored, not yet consumed
-            used.Add("island_center_plaza");    // stored, not yet consumed
+            // consumed directly from Art/Incoming by IslandDressingBuilder (ADR 0005 island dressing)
+            foreach (var biome in new[] { "center", "farm", "mine", "fishing", "volcano", "grove", "celestial" })
+                used.Add("island_" + biome + "_scatter");
+            foreach (var k in new[] { "island_center_path", "island_center_plaza", "island_fishing_water", "island_volcano_lavacrack",
+                "island_celestial_twinkle", "zone_wood_patch", "zone_stone_patch", "zone_clay_patch", "zone_sand_patch", "zone_water_patch" })
+                used.Add(k);
             used.Add("bld_dragon");     // compatibility key, superseded by dragon_sleeping
             used.Add("sky_moon");  // stored; the 3/4 top-down sky (IslandsBuilder.BuildSky) no longer shows a moon
             // consumed directly from Art/Incoming by IslandsBuilder.BuildSky / IslandCoastBuilder.BuildUnderside

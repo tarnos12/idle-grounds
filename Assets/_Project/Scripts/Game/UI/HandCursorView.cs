@@ -53,7 +53,7 @@ namespace IdleGrounds.Game
                 float f = canvas.rootCanvas.scaleFactor;
                 var screen = hand.CursorScreen + new Vector2(offsetPx.x, -offsetPx.y) * f;
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, null, out var local);
-                chip.anchoredPosition = local;
+                chip.anchoredPosition = Clamp(local);
             }
             float s = 1f;
             if (!Juice.ReduceMotion)
@@ -64,6 +64,25 @@ namespace IdleGrounds.Game
                 if (tf >= 0f && tf < 1f) s = Mathf.Max(s, 1f + 0.14f * Mathf.Abs(Mathf.Sin(tf * Mathf.PI * 2f)) * (1f - tf));
             }
             if (s != lastScale) { lastScale = s; chip.localScale = new Vector3(s, s, 1f); }
+        }
+
+        RectTransform barRect;
+
+        /// <summary>
+        /// Keeps the chip on screen and OFF the bottom bar: near the bar it flips above the pointer (it used to hang
+        /// over the hand pill / Sound button), near the right edge it flips to the pointer's left.
+        /// </summary>
+        Vector2 Clamp(Vector2 local)
+        {
+            var r = canvasRect.rect;
+            var size = chip.rect.size;
+            if (barRect == null) { var bar = FindFirstObjectByType<BottomBarView>(); if (bar != null) barRect = bar.transform as RectTransform; }
+            float floor = r.yMin + (barRect != null ? barRect.rect.height + 4f : 0f);
+            if (local.y - size.y < floor) local.y += 2f * offsetPx.y + size.y;          // above the pointer instead
+            if (local.x + size.x > r.xMax) local.x -= 2f * offsetPx.x + size.x;          // left of the pointer instead
+            local.x = Mathf.Max(local.x, r.xMin);
+            local.y = Mathf.Min(Mathf.Max(local.y, floor + size.y), r.yMax);           // pointer on / below the bar: sit on top of it
+            return local;
         }
 
         static string Key(List<Sim.HandStack> h)

@@ -401,6 +401,7 @@ namespace IdleGrounds.Editor
             BuildShadow(isl, land, cliffCells);
             BuildVeil(isl, land, cliffCells, underCells);
             BuildBoundary(isl);
+            IslandDressingBuilder.BuildIsland(isl);      // macro patches, field patches, paths, scatter (ADR 0005)
             EditorUtility.SetDirty(isl.gameObject);
         }
 
