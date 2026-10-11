@@ -1,0 +1,1 @@
+Cliffwall v2 seam repair for ART-SPEC 2026-10-11. Frames 0–2 and 7 have opaque, content-derived boundaries; A/B/C interior strata vary; cross-border shading no longer resets to identical normalised edge columns. Native 32x96 frames, 8 frames horizontally, RGBA. Import PPU 32, Point, no compression, no mipmaps.

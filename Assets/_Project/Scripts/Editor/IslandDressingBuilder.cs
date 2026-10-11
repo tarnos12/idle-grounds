@@ -60,6 +60,7 @@ namespace IdleGrounds.Editor
             public Tile[] macroBig, macroSmall;
             public Tile[] scatter, patch, path, plaza;
             public Tile[] macroArt, flowers, lip;      // ART-SPEC §3.6 delivered macro patches, flower clusters, coast grass lip (recoloured per biome)
+            public Tile[] side;                        // W / E 3/4 side faces: 0 W straight, 1 E straight, 2 W end, 3 E end
             public AnimatedTile pond;
             public AnimatedTile[] glow;
             public Color light, dark;
@@ -91,6 +92,8 @@ namespace IdleGrounds.Editor
             var ff = IslandArtBuilder.Frames($"{Inc}island_{biome}_flowers_32x32_4f.png");
             k.flowers = ff.Length > 0 ? Tiles("Flowers_" + biome, ff) : null;
             k.lip = EdgeLipTiles(biome);
+            var sw = EnsureSideWall(biome);
+            k.side = sw.Length >= 4 ? Tiles("SideWall_" + biome, sw) : null;
             FillTones(biome, out k.light, out k.dark, out k.textured);
             k.pale = k.light.r + k.light.g + k.light.b > 2.0f;
             k.busy = k.textured || k.pale;
@@ -149,6 +152,9 @@ namespace IdleGrounds.Editor
             return IslandArtBuilder.Frames(path);
         }
 
+        /// <summary>Share of each cliff-wall frame's left-to-right brightness ramp removed at build time (0 = as delivered).</summary>
+        const float DetrendStrength = 0.75f;
+
         /// <summary>
         /// Integration copy of the delivered 3/4 cliff wall (<c>island_&lt;biome&gt;_cliffwall_32x96_8f</c>) with its seam defects
         /// repaired for the tilemap: in the mid frames (0-2, 7) the 1-2 px edge columns hold holes (fully transparent
@@ -179,9 +185,119 @@ namespace IdleGrounds.Editor
                     if (At(1).a > 0) Put(0, At(1));
                     if (At(30).a > 0) Put(31, At(30));
                 }
+            // v2 (2026-10-11) still ships holes / a shared seam column on the INNER sides of the end frames (3: left end,
+            // 4: right end, 5: inner left, 6: inner right) where they meet a mid frame: same fill on that side only
+            foreach (var (f, xs, edge, from) in new[] { (3, new[] { 29, 30 }, 31, 30), (5, new[] { 29, 30 }, 31, 30), (4, new[] { 1, 2 }, 0, 1), (6, new[] { 1, 2 }, 0, 1) })
+                for (int r = 0; r < 80; r++)
+                {
+                    int y = h - 1 - r;
+                    if (px[y * w + f * 32 + 16].a == 0 && px[y * w + f * 32 + 8].a == 0 && px[y * w + f * 32 + 24].a == 0) continue;
+                    foreach (int x in xs)
+                        if (px[y * w + f * 32 + x].a == 0)
+                        {
+                            int dir = x < 16 ? 1 : -1;
+                            for (int k = 1; k <= 6; k++) { var c = px[y * w + f * 32 + x + dir * k]; if (c.a > 0) { px[y * w + f * 32 + x] = c; break; } }
+                        }
+                    if (px[y * w + f * 32 + from].a > 0) px[y * w + f * 32 + edge] = px[y * w + f * 32 + from];
+                }
+            // the ragged 16 px fade: the edge columns hold the same "normalised" mist pixels in every frame (light stubs
+            // every 32 px under the wall) -> they copy their inner neighbour, transparency included
+            for (int f = 0; f < 8; f++)
+                for (int r = 80; r < 96; r++)
+                {
+                    int y = h - 1 - r;
+                    if (f != 3) px[y * w + f * 32] = px[y * w + f * 32 + 1];
+                    if (f != 4) px[y * w + f * 32 + 31] = px[y * w + f * 32 + 30];
+                }
+            // picket-fence rhythm: every frame is lit light-left / dark-right, so a run of cells reads as a fence. Remove
+            // most of each frame's left-to-right brightness ramp (least-squares slope of the column mean luma over the
+            // body rows), so neighbouring cells meet at the same brightness.
+            for (int f = 0; f < 8; f++)
+            {
+                var colL = new float[32];
+                var colN = new int[32];
+                for (int r = 0; r < 80; r++)
+                    for (int x = 0; x < 32; x++)
+                    {
+                        var c = px[(h - 1 - r) * w + f * 32 + x];
+                        if (c.a == 0) continue;
+                        colL[x] += c.r * 0.3f + c.g * 0.59f + c.b * 0.11f; colN[x]++;
+                    }
+                float sx = 0, sy = 0, sxx = 0, sxy = 0; int n = 0;
+                for (int x = 0; x < 32; x++)
+                {
+                    if (colN[x] < 20) continue;
+                    float l = colL[x] / colN[x];
+                    sx += x; sy += l; sxx += x * x; sxy += x * l; n++;
+                }
+                if (n < 16) continue;
+                float slope = (n * sxy - sx * sy) / (n * sxx - sx * sx), mean = sy / n, cx = sx / n;
+                if (mean < 1f) continue;
+                for (int r = 0; r < h; r++)
+                    for (int x = 0; x < 32; x++)
+                    {
+                        int i = (h - 1 - r) * w + f * 32 + x;
+                        var c = px[i];
+                        if (c.a == 0) continue;
+                        float k = 1f - DetrendStrength * slope * (x - cx) / mean;
+                        px[i] = new Color32((byte)Mathf.Clamp(c.r * k, 0, 255), (byte)Mathf.Clamp(c.g * k, 0, 255), (byte)Mathf.Clamp(c.b * k, 0, 255), c.a);
+                    }
+            }
             string path = $"{ArtDir}/dress_cliffwall_{biome}_32x96_8f.png";
             WriteIfChanged(path, w, h, px);
             Import(path, 8, 32);
+            return IslandArtBuilder.Frames(path);
+        }
+
+        /// <summary>Transparent margin (px) of the delivered 47-blob coast tiles on their W / E / N edges (all 7 biomes):
+        /// the visible coast edge sits this far inside the cell.</summary>
+        const int CoastInset = 3;
+
+        static readonly Color SideEastShade = new Color(0.82f, 0.82f, 0.88f, 1f);
+
+        /// <summary>
+        /// Integration copy of <c>island_&lt;biome&gt;_sidewall_32x32_4f</c> (ART-SPEC §3.6, 2026-10-11 delivery) for the W / E
+        /// coasts. The delivered frames are HORIZONTAL bands (grass row on top, 12 px of earth / rock darkening downward,
+        /// like a thin south wall), which cannot stack along a north-south coast. They are turned into VERTICAL side faces:
+        /// the band's top (grass) row becomes the column touching the coast, its dark bottom row the outer edge hanging into
+        /// the sky; the band's length runs along the coast (it tiles vertically as it tiled horizontally). Output frames:
+        /// 0 west face (band in the right columns of the sky cell west of the coast), 1 east face (left columns), 2 / 3 the
+        /// same faces tapering diagonally into the south cliff wall (outer edge first) for the corner cell above the wall.
+        /// The delivered "end" frames 2 / 3 taper the wrong way for this (their slanted end keeps the dark outer rows and
+        /// drops the grass side), so the ends are cut from the straight frames here.
+        /// </summary>
+        public static Sprite[] EnsureSideWall(string biome)
+        {
+            string src = $"{Inc}island_{biome}_sidewall_32x32_4f.png";
+            var px = ReadPng(src, out int w, out int h);
+            if (px == null || w != 128 || h != 32) return new Sprite[0];
+            Color32 Old(int f, int c, int r) => px[(31 - r) * w + f * 32 + c];          // top-down coords
+            // band rows of each straight frame (top-down)
+            int Top(int f) { for (int r = 0; r < 32; r++) for (int c = 0; c < 32; c++) if (Old(f, c, r).a > 0) return r; return 32; }
+            int Bot(int f) { for (int r = 31; r >= 0; r--) for (int c = 0; c < 32; c++) if (Old(f, c, r).a > 0) return r; return -1; }
+            var o = new Color32[128 * 32];
+            void Put(int f, int c, int r, Color32 col) { o[(31 - r) * 128 + f * 32 + c] = col; }
+            const int TaperFrom = 12;                // the end frames start narrowing this many px below the cell top
+            for (int side = 0; side < 2; side++)     // 0 west (from delivered frame 0), 1 east (from delivered frame 1)
+            {
+                int f = side, t = Top(f), b = Bot(f), bw = b - t + 1;
+                if (bw <= 0 || bw > 16) return new Sprite[0];
+                for (int r = 0; r < 32; r++)
+                    for (int k = 0; k < bw; k++)          // k = 0 at the coast (grass row), bw-1 outermost (dark)
+                    {
+                        var col = Old(f, r, t + k);       // band length (old column) -> along the coast (new row)
+                        if (col.a == 0) continue;
+                        int c = side == 0 ? 31 - k : k;
+                        Put(side, c, r, col);
+                        // end frame: the outer part is cut away along a diagonal reaching the coast at the cell bottom
+                        int keep = r < TaperFrom ? bw : Mathf.Max(1, bw - Mathf.CeilToInt((r - TaperFrom + 1) * bw / (float)(32 - TaperFrom)));
+                        if (k < keep) Put(side + 2, c, r, k == keep - 1 && keep < bw ? Old(f, r, b) : col);   // dark rim on the cut
+                    }
+            }
+            string path = $"{ArtDir}/dress_sidewall_{biome}_32x32_4f.png";
+            Directory.CreateDirectory(ArtDir);
+            WriteIfChanged(path, 128, 32, o);
+            Import(path, 4, 32);
             return IslandArtBuilder.Frames(path);
         }
 
@@ -867,8 +983,9 @@ namespace IdleGrounds.Editor
             // ---- coast grass lip on the W / E / N coasts (ART-SPEC §3.6; the south coast has the 3/4 cliff wall)
             if (kit.lip != null)
             {
-                // the 4 px overhang sticks OUT of the coast: each direction is its own tilemap nudged 4 art pixels outward
-                const float o = 4f / 32f;
+                // the 4 px overhang sticks OUT of the coast: each direction is its own tilemap nudged outward so the lip
+                // starts at the blob tiles' visible edge (CoastInset px inside the cell) and overhangs 4 px past it
+                const float o = (4f - CoastInset) / 32f;
                 var lipW = NewMap(root, "EdgeLipW", 8, new Vector3(-o, 0f, 0f));
                 var lipE = NewMap(root, "EdgeLipE", 8, new Vector3(o, 0f, 0f));
                 var lipN = NewMap(root, "EdgeLipN", 9, new Vector3(0f, o, 0f));
@@ -883,6 +1000,47 @@ namespace IdleGrounds.Editor
                     else if (n) Place(lipN, cell, kit.lip[2]);
                     if (w && !n) Place(lipW, cell, kit.lip[0]);
                     if (e && !n) Place(lipE, cell, kit.lip[1]);
+                }
+            }
+
+            // ---- 3/4 side faces on the W / E coasts (ART-SPEC §3.6 *_sidewall): an earth / rock band hanging off the coast
+            //      into the sky cell beside it (under the edge lip, which overhangs its grass column). Sorted above the south
+            //      cliff wall (Ground -3): a side face belongs to land further south, in front of a recessed wall. The cell
+            //      that also faces south (the wall starts under it) gets the tapering end frame. Sky-layer shadow copies keep
+            //      the drop shadow matching the silhouette; the veil mask already covers one cell around the land.
+            if (kit.side != null)
+            {
+                // nudged inward by the blob inset: the band's grass column tucks under the lip, the rest hangs past it
+                var sideW = NewMap(root, "SideWallW", 7, new Vector3(CoastInset / 32f, 0f, 0f));
+                var sideE = NewMap(root, "SideWallE", 7, new Vector3(-CoastInset / 32f, 0f, 0f));
+                sideE.color = SideEastShade;      // light from the top-left: the east faces sit in shade
+                foreach (var v in land)
+                {
+                    bool w = !land.Contains(v + Vector2Int.left), e = !land.Contains(v + Vector2Int.right), s = !land.Contains(v + Vector2Int.down);
+                    if (w) sideW.SetTile(new Vector3Int(v.x - 1, v.y, 0), kit.side[s ? 2 : 0]);
+                    if (e) sideE.SetTile(new Vector3Int(v.x + 1, v.y, 0), kit.side[s ? 3 : 1]);
+                }
+                var shadow = isl.transform.Find("Shadow");
+                if (shadow != null)
+                {
+                    var oldS = shadow.Find("Side");
+                    if (oldS != null) Object.DestroyImmediate(oldS.gameObject);
+                    var sRoot = new GameObject("Side").transform;
+                    sRoot.SetParent(shadow, false);
+                    foreach (var src in new[] { sideW, sideE })
+                    {
+                        var go = new GameObject(src.name);
+                        go.transform.SetParent(sRoot, false);
+                        go.transform.localPosition = src.transform.localPosition;
+                        var tm = go.AddComponent<Tilemap>();
+                        var tr = go.AddComponent<TilemapRenderer>();
+                        tr.sortingLayerName = WorldBuilder.SkyLayer;
+                        tr.sortingOrder = 20;
+                        tm.color = new Color(0f, 0f, 0f, 0.35f);
+                        src.CompressBounds();
+                        foreach (var p in src.cellBounds.allPositionsWithin) { var t = src.GetTile(p); if (t != null) tm.SetTile(p, t); }
+                        tm.CompressBounds();
+                    }
                 }
             }
 
