@@ -24,23 +24,30 @@ their panels.
 → http://localhost:5180 (launch config `webgl-build`). Keep productName
 "idle grounds": it decides the save folder.
 
-**Current focus: the art integration loop** (last check 2026-10-09: big batch
-received; 138 keys auto-wired, **27 keys still need consumers**: dragon_stir,
-npc_disciple_meditate, island scatter/zone patches/water/waterfall/lavadrip/vines/
-lavacrack/twinkle/veil edge, sky_cloudpuff, sky_sunbeam, glyph_*; plus the
-emoji → real-icon switch for the ui_* icon keys now in db.ui) (poll Drive, pull,
-integrate, review, give feedback in ART-SPEC Delivery log).
-Next candidates:
-1. Poll Drive `incoming/` (30 min x1h, hourly x2h, then 2-hourly; restart after
-   any ART-SPEC update), run pull + integrate, review in Play, log in
-   `docs/art/ART-SPEC.md` "Delivery log" and mirror the spec to Drive.
-2. Art still requested (see spec section 3-4): the other 6 biome tilesets
-   (blob 47f + fill + cliff, same process as Center), `island_underside_fill_32x32_3f`,
-   `fix_spirittree_sparkle`, `enemy_boar_*`, remaining P2 buildings/nodes/items,
-   UI icons/FX. Center path/plaza tiles are stored but not painted in game yet
-   (they read plain; needs a pass).
-3. Deferred: remaining low UI parity items (`docs/port/parity-audit-ui.md`),
-   Spirit Bridge / Island art once delivered.
+**Current focus: integrate the ADR 0005 / ART-SPEC §3.6 art (resume point
+2026-10-11).** Pulled into Art/Incoming but NOT yet integrated (Unity was not
+running): `island_<biome>_cliffwall_32x96_8f` (7), `*_macro_96x96_4f` (7),
+`*_flowers_32x32_4f` (7), `island_edge_lip_32x32_4f`, `island_center_path` v2,
+`sky_depth`, `sky_cloudsea_far/mid/near`, `sky_cloudpuff_3q`,
+`sky_island_distant_96x96_4f`, `island_underside_*_3q` (5).
+Next steps:
+1. Start Unity (MCP instance idle-grounds@d0cd7413e288ec3f), run Integrate Incoming Art.
+2. Consumers (one agent, editor-heavy): IslandCoastBuilder → 3-cell cliffwall
+   under south coast (replaces the 1-cell rim; frame 7 spout + island_waterfall
+   is wrong art - skip) and edge lip on W/E/N; IslandDressingBuilder → swap the
+   generated macro decals for `*_macro` art, add `*_flowers`, rebuild path from
+   v2; sky → tiled `sky_cloudsea_*` parallax layers (+ `sky_depth` only if it
+   reads calm in game - pre-review says too busy), `sky_island_distant` and the
+   rejected `_3q` undersides as mid-distance background islands.
+3. Review in Play (Center whole/edges/plaza, Fishing, Volcano), log
+   accepted/rejected in ART-SPEC, mirror, rebuild Windows + WebGL.
+Still waiting on art: `_3q` undersides redo (rejected: grass-topped mini-islands).
+Other open items: 27 earlier keys without consumers (dragon_stir,
+npc_disciple_meditate, glyph_*, veil edge, sunbeam...), emoji → real ui_* icons,
+ascension-content design session (needs the user), Game.unity size (~74 MB vs
+GitHub 100 MB limit — move generated dressing out of the scene before it grows).
+Art loop rules: memory art-drive-loop.md (16 standing rules; cron jobs are
+session-only, recreate on start).
 
 ## How things work
 
@@ -146,6 +153,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-11: §3.6 art pulled and inspected (files OK); _3q undersides rejected (they are grass-topped mini-islands); sky_depth pre-flagged as too busy. Integration blocked: Unity not running.
 
 - 2026-10-09 ground dressing: IslandDressingBuilder (menu Idle Grounds/World/Rebuild Island Dressing; also called from RebuildDerived) builds a Dressing tilemap stack per island. Contents: macro grass patches (noise-placed generated decals), generator-field textures (earth base + zone_*_patch), Center plaza disc + 3 short winding warm-stone paths (recoloured path/plaza copies in Art/Islands/Dressing), biome scatter, Fishing pond (AnimatedTile), volcano lavacrack and celestial twinkle. Zone tint rectangles are hidden at rest (PlacementGuide shows them only while placing/demolishing). HandCursorView clamps the hand chip above the bottom bar. Game.unity is ~74 MB (GitHub hard limit 100 MB; watch it). Unused: island_waterfall (the art is wrong: it shows a tiny island) and island_veil_edge.
 
