@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: fishing macro redo (Islands-031) reviewed in game and rejected again (warm tan stains on cool shingle); fallback kept.
+
 - 2026-10-12: W/E side faces (sidewall art rotated at build time, SideWallW/E tilemaps + shadow; edge lips moved onto the visible coast edge, CoastInset=3) and cliffwall v2 with the extended build-time repair (hole fill + per-frame brightness detrend). Sidewall redo requested (wrong orientation); cliffwall still has seam defects. Tests 177/177; Game.unity ~78 MB.
 
 - 2026-10-11: §3.6 art integrated: 3-cell south cliff walls (seam-repaired), W/E/N grass lips, delivered macro patches + flowers, path v2, tiled cloud-sea sky + background islands. sky_depth and fishing macro rejected; sidewall art requested. Added tools/mcp-call.js (direct MCP client). Tests 177/177.
