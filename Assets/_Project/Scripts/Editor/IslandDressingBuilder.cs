@@ -59,6 +59,7 @@ namespace IdleGrounds.Editor
         {
             public Tile[] macroBig, macroSmall;
             public Tile[] scatter, patch, path, plaza;
+            public Tile[] macroArt, flowers, lip;      // ART-SPEC §3.6 delivered macro patches, flower clusters, coast grass lip (recoloured per biome)
             public AnimatedTile pond;
             public AnimatedTile[] glow;
             public Color light, dark;
@@ -83,6 +84,13 @@ namespace IdleGrounds.Editor
             }
             k.macroBig = _macroBig; k.macroSmall = _macroSmall; k.path = _path; k.plaza = _plaza;
             k.scatter = Tiles("Scatter_" + biome, IslandArtBuilder.Frames($"{Inc}island_{biome}_scatter_32x32_4f.png"));
+            // fishing macro REJECTED (ART-SPEC §3.6 log): it is a mini world map (sand, grass, water) in a palette foreign to
+            // the pale fishing fill - the generated blob decals stay in use there
+            var mf = biome == "fishing" ? new Sprite[0] : EnsureSoftened($"{Inc}island_{biome}_macro_96x96_4f.png", $"dress_macro_{biome}_96x96_4f.png", 4, 96, MacroStrength, $"{Inc}island_{biome}_ground_fill_32x32_3f.png");
+            k.macroArt = mf.Length >= 4 ? Tiles("MacroArt_" + biome, mf) : null;
+            var ff = IslandArtBuilder.Frames($"{Inc}island_{biome}_flowers_32x32_4f.png");
+            k.flowers = ff.Length > 0 ? Tiles("Flowers_" + biome, ff) : null;
+            k.lip = EdgeLipTiles(biome);
             FillTones(biome, out k.light, out k.dark, out k.textured);
             k.pale = k.light.r + k.light.g + k.light.b > 2.0f;
             k.busy = k.textured || k.pale;
@@ -139,6 +147,111 @@ namespace IdleGrounds.Editor
             WriteIfChanged(path, w, h, px);
             Import(path, frames, 32);
             return IslandArtBuilder.Frames(path);
+        }
+
+        /// <summary>
+        /// Integration copy of the delivered 3/4 cliff wall (<c>island_&lt;biome&gt;_cliffwall_32x96_8f</c>) with its seam defects
+        /// repaired for the tilemap: in the mid frames (0-2, 7) the 1-2 px edge columns hold holes (fully transparent
+        /// columns) and an identical flat "normalised seam" column that drew a hard vertical line every 32 px. Holes in the
+        /// wall body are filled from the nearest opaque pixel toward the frame's interior and the outer columns copy their
+        /// inner neighbours. The ragged bottom 16 px (fade into the sky) and the end / inner frames are left untouched.
+        /// </summary>
+        public static Sprite[] RepairedCliffWall(string biome)
+        {
+            string src = IslandArtBuilder.CliffWallPath(biome);
+            var px = ReadPng(src, out int w, out int h);
+            if (px == null || w != 256 || h != 96) return IslandArtBuilder.Frames(src);
+            Directory.CreateDirectory(ArtDir);
+            foreach (int f in new[] { 0, 1, 2, 7 })
+                for (int r = 0; r < 80; r++)             // r = rows from the top; leave the 16 px fade alone
+                {
+                    int y = h - 1 - r;
+                    Color32 At(int x) => px[y * w + f * 32 + x];
+                    void Put(int x, Color32 c) => px[y * w + f * 32 + x] = c;
+                    // only rows where the wall body exists (some interior pixel opaque)
+                    if (At(8).a == 0 && At(16).a == 0 && At(24).a == 0) continue;
+                    foreach (int x in new[] { 1, 2, 29, 30 })
+                        if (At(x).a == 0)
+                        {
+                            int dir = x < 16 ? 1 : -1;
+                            for (int k = 1; k <= 6; k++) { var c = At(x + dir * k); if (c.a > 0) { Put(x, c); break; } }
+                        }
+                    if (At(1).a > 0) Put(0, At(1));
+                    if (At(30).a > 0) Put(31, At(30));
+                }
+            string path = $"{ArtDir}/dress_cliffwall_{biome}_32x96_8f.png";
+            WriteIfChanged(path, w, h, px);
+            Import(path, 8, 32);
+            return IslandArtBuilder.Frames(path);
+        }
+
+        /// <summary>How far the delivered macro patches keep their own light / dark tones (1 = as delivered, 0 = the fill base).</summary>
+        const float MacroStrength = 0.4f;
+
+        /// <summary>
+        /// Copy of a delivered strip with every colour pulled toward the island's ground-fill base colour (the most common
+        /// colour of <paramref name="baseFrom"/>) by <paramref name="k"/> (k = 1: identical copy). Lets the macro patches sit
+        /// calmly ON the fill (a step lighter / darker, never a darker sticker) without editing the artist's file.
+        /// </summary>
+        static Sprite[] EnsureSoftened(string src, string dstName, int frames, int frameW, float k, string baseFrom)
+        {
+            var px = ReadPng(src, out int w, out int h);
+            if (px == null) return new Sprite[0];
+            if (k >= 0.999f) return IslandArtBuilder.Frames(src);
+            var basePx = ReadPng(baseFrom, out _, out _) ?? px;
+            var count = new Dictionary<Color32, int>();
+            foreach (var c in basePx) if (c.a > 200) { count.TryGetValue(c, out var v); count[c] = v + 1; }
+            Color32 b = new Color32(0, 0, 0, 255); int best = -1;
+            foreach (var kv in count) if (kv.Value > best) { best = kv.Value; b = kv.Key; }
+            for (int i = 0; i < px.Length; i++)
+                if (px[i].a > 0) { var c = Color32.Lerp(b, px[i], k); c.a = px[i].a; px[i] = c; }
+            string path = $"{ArtDir}/{dstName}";
+            WriteIfChanged(path, w, h, px);
+            Import(path, frames, frameW);
+            return IslandArtBuilder.Frames(path);
+        }
+
+        /// <summary>
+        /// ART-SPEC §3.6 <c>island_edge_lip_32x32_4f</c> (neutral green: W, E, N, outer NW corner) recoloured to the biome's
+        /// delivered fill: the lip's darkest tone (the 1 px rim) -> the fill's shade tone darkened, the others by
+        /// brightness rank onto the fill's shade / base / light tones. Center's fill shares the lip palette (identity).
+        /// </summary>
+        static Tile[] EdgeLipTiles(string biome)
+        {
+            var px = ReadPng(IslandArtBuilder.EdgeLipPath, out int w, out int h);
+            var fill = ReadPng($"{Inc}island_{biome}_ground_fill_32x32_3f.png", out _, out _);
+            if (px == null || fill == null) return null;
+            float L(Color32 c) => c.r * 0.3f + c.g * 0.59f + c.b * 0.11f;
+            var fc = new Dictionary<Color32, int>();
+            foreach (var c in fill) if (c.a > 200) { fc.TryGetValue(c, out var v); fc[c] = v + 1; }
+            var fl = new List<KeyValuePair<Color32, int>>(fc);
+            fl.Sort((a, b) => b.Value.CompareTo(a.Value));
+            Color32 fBase = fl[0].Key, fDark = fBase, fLight = fBase;
+            for (int i = 1; i < Mathf.Min(6, fl.Count); i++)
+            {
+                var c = fl[i].Key;
+                if (L(c) < L(fDark) && fDark.Equals(fBase)) fDark = c;
+                if (L(c) > L(fLight) && fLight.Equals(fBase)) fLight = c;
+            }
+            if (fDark.Equals(fBase)) fDark = Color32.Lerp(fBase, new Color32(0, 0, 0, 255), 0.35f);
+            if (fLight.Equals(fBase)) fLight = Color32.Lerp(fBase, new Color32(255, 255, 255, 255), 0.2f);
+            var lc = new List<Color32>();
+            foreach (var c in px) if (c.a > 0) { var o = new Color32(c.r, c.g, c.b, 255); if (!lc.Contains(o)) lc.Add(o); }
+            lc.Sort((a, b) => L(a).CompareTo(L(b)));
+            // the delivered lip palette is the Center fill's (dark / base / light): an exact 3-colour lip maps 1:1
+            var map = new Dictionary<Color32, Color32>();
+            for (int i = 0; i < lc.Count; i++)
+            {
+                float t = lc.Count > 1 ? i / (float)(lc.Count - 1) : 0.5f;
+                map[lc[i]] = t < 0.34f ? fDark : t < 0.67f ? fBase : fLight;
+            }
+            for (int i = 0; i < px.Length; i++)
+                if (px[i].a > 0) { var m = map[new Color32(px[i].r, px[i].g, px[i].b, 255)]; m.a = px[i].a; px[i] = m; }
+            string path = $"{ArtDir}/dress_edge_lip_{biome}_32x32_4f.png";
+            WriteIfChanged(path, w, h, px);
+            Import(path, 4, 32);
+            var f = IslandArtBuilder.Frames(path);
+            return f.Length >= 4 ? Tiles("EdgeLip_" + biome, f) : null;
         }
 
         static Tile[] Tiles(string name, Sprite[] sprites)
@@ -504,8 +617,31 @@ namespace IdleGrounds.Editor
             var placed = new List<(Vector2 p, float r, bool lightTone)>();
             Color tintL = kit.light / MacroBase, tintD = kit.dark / MacroBase;
             tintL.a = kit.light.a; tintD.a = kit.dark.a;
+            if (kit.macroArt != null)
+            {
+                // delivered 96x96 macro patches (3 cells, 1x): clustered by low-frequency noise so the meadow reads as
+                // sunlit / shaded stretches, never an even wallpaper; whole footprint on interior land
+                const int mstep = 3;
+                for (int gy = yMin; gy <= yMax; gy += mstep)
+                    for (int gx = xMin; gx <= xMax; gx += mstep)
+                    {
+                        int x = gx + rng.Next(-1, 2), y = gy + rng.Next(-1, 2);
+                        float n = Fbm(x / 20f, y / 20f, seed);
+                        if (InCorner(x, y)) n += 0.08f;
+                        double p = n > 0.6f ? 0.9 : n > 0.55f ? 0.35 : 0.0;
+                        if (kit.busy) p *= 0.35;
+                        if (rng.NextDouble() >= p) continue;
+                        bool ok = true;
+                        for (int dy = -1; dy <= 1 && ok; dy++) for (int dx = -1; dx <= 1 && ok; dx++) if (!Interior(x + dx, y + dy)) ok = false;
+                        if (!ok) continue;
+                        foreach (var q in placed) if ((q.p - new Vector2(x, y)).sqrMagnitude < 2.2f * 2.2f) { ok = false; break; }
+                        if (!ok) continue;
+                        placed.Add((new Vector2(x, y), 1.5f, true));
+                        Place(macro, new Vector3Int(x, y, 0), kit.macroArt[rng.Next(kit.macroArt.Length)], rng.NextDouble() < 0.5, false);
+                    }
+            }
             const int step = 5;
-            for (int gy = yMin; gy <= yMax; gy += step)
+            for (int gy = yMin; gy <= yMax && kit.macroArt == null; gy += step)
                 for (int gx = xMin; gx <= xMax; gx += step)
                 {
                     int x = gx + rng.Next(-2, 3), y = gy + rng.Next(-2, 3);
@@ -697,6 +833,20 @@ namespace IdleGrounds.Editor
                         Place(scatter, new Vector3Int(x, y, 0), kit.scatter[f], Hash(x, y, seed + 79) < 0.5f, false);
                     }
                 foreach (var v in pathTufts) Place(scatter, new Vector3Int(v.x, v.y, 0), kit.scatter[0], Hash(v.x, v.y, seed + 41) < 0.5f, false);
+                // denser flower / tuft clusters (ART-SPEC §3.6 *_flowers), sparse, never on a scatter cell
+                if (kit.flowers != null)
+                {
+                    var flowers = NewMap(root, "Flowers", 6, Vector3.zero);
+                    for (int y = yMin; y <= yMax; y++)
+                        for (int x = xMin; x <= xMax; x++)
+                        {
+                            if (!Interior(x, y) || busy.Contains(new Vector2Int(x, y)) || scatter.HasTile(new Vector3Int(x, y, 0))) continue;
+                            float cl = Fbm(x / 9f, y / 9f, seed + 55);                 // clustered: meadows of flowers, not confetti
+                            double p = (InCorner(x, y) ? 0.02 : InSquare(x, y) ? 0.007 : 0.005) * (cl > 0.58f ? 2.5 : cl < 0.45f ? 0.1 : 0.8) * (kit.busy ? 0.3 : 1.0);
+                            if (Hash(x, y, seed + 66) >= p) continue;
+                            Place(flowers, new Vector3Int(x, y, 0), kit.flowers[(int)(Hash(x, y, seed + 67) * kit.flowers.Length) % kit.flowers.Length], Hash(x, y, seed + 68) < 0.5f, false);
+                        }
+                }
                 if (kit.scatter.Length > 1)
                     foreach (var v in stepStones) if (land.Contains(v)) Place(scatter, new Vector3Int(v.x, v.y, 0), kit.scatter[1], Hash(v.x, v.y, seed + 42) < 0.5f, false);
             }
@@ -712,6 +862,28 @@ namespace IdleGrounds.Editor
                         if (busy.Contains(new Vector2Int(x, y)) || Hash(x, y, seed + 91) >= 0.035f) continue;
                         glow.SetTile(new Vector3Int(x, y, 0), kit.glow[(int)(Hash(x, y, seed + 92) * 4) & 3]);
                     }
+            }
+
+            // ---- coast grass lip on the W / E / N coasts (ART-SPEC §3.6; the south coast has the 3/4 cliff wall)
+            if (kit.lip != null)
+            {
+                // the 4 px overhang sticks OUT of the coast: each direction is its own tilemap nudged 4 art pixels outward
+                const float o = 4f / 32f;
+                var lipW = NewMap(root, "EdgeLipW", 8, new Vector3(-o, 0f, 0f));
+                var lipE = NewMap(root, "EdgeLipE", 8, new Vector3(o, 0f, 0f));
+                var lipN = NewMap(root, "EdgeLipN", 9, new Vector3(0f, o, 0f));
+                var lipNW = NewMap(root, "EdgeLipNW", 9, new Vector3(-o, o, 0f));
+                var lipNE = NewMap(root, "EdgeLipNE", 9, new Vector3(o, o, 0f));
+                foreach (var v in land)
+                {
+                    bool n = !land.Contains(v + Vector2Int.up), w = !land.Contains(v + Vector2Int.left), e = !land.Contains(v + Vector2Int.right);
+                    var cell = new Vector3Int(v.x, v.y, 0);
+                    if (n && w) Place(lipNW, cell, kit.lip[3]);
+                    else if (n && e) Place(lipNE, cell, kit.lip[3], true);
+                    else if (n) Place(lipN, cell, kit.lip[2]);
+                    if (w && !n) Place(lipW, cell, kit.lip[0]);
+                    if (e && !n) Place(lipE, cell, kit.lip[1]);
+                }
             }
 
             foreach (var tm in root.GetComponentsInChildren<Tilemap>()) tm.CompressBounds();

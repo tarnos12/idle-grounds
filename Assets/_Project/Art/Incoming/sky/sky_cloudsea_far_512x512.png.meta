@@ -1,0 +1,1868 @@
+fileFormatVersion: 2
+guid: 04a1521fa400d4c4e93624e39f220b76
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 3676486081005454652
+    second: sky_cloudsea_far_512x512_0
+  - first:
+      213: 9087192904043203618
+    second: sky_cloudsea_far_512x512_1
+  - first:
+      213: 1629544097072266309
+    second: sky_cloudsea_far_512x512_2
+  - first:
+      213: 8106713899874952319
+    second: sky_cloudsea_far_512x512_3
+  - first:
+      213: 5681878535376593895
+    second: sky_cloudsea_far_512x512_4
+  - first:
+      213: 4326410086721538607
+    second: sky_cloudsea_far_512x512_5
+  - first:
+      213: 3347085766722804573
+    second: sky_cloudsea_far_512x512_6
+  - first:
+      213: -6411185192212554737
+    second: sky_cloudsea_far_512x512_7
+  - first:
+      213: 2463693413420287198
+    second: sky_cloudsea_far_512x512_8
+  - first:
+      213: 8541573895220754349
+    second: sky_cloudsea_far_512x512_9
+  - first:
+      213: 5495348733189299040
+    second: sky_cloudsea_far_512x512_10
+  - first:
+      213: 6053820554439183186
+    second: sky_cloudsea_far_512x512_11
+  - first:
+      213: 3979629288929603359
+    second: sky_cloudsea_far_512x512_12
+  - first:
+      213: -4284975161399197505
+    second: sky_cloudsea_far_512x512_13
+  - first:
+      213: -5590467976239094156
+    second: sky_cloudsea_far_512x512_14
+  - first:
+      213: -3110656285886389912
+    second: sky_cloudsea_far_512x512_15
+  - first:
+      213: -2770770175070847080
+    second: sky_cloudsea_far_512x512_16
+  - first:
+      213: 7208670316807494367
+    second: sky_cloudsea_far_512x512_17
+  - first:
+      213: 2121140794023037500
+    second: sky_cloudsea_far_512x512_18
+  - first:
+      213: 7319355754170671048
+    second: sky_cloudsea_far_512x512_19
+  - first:
+      213: 4790500947048216801
+    second: sky_cloudsea_far_512x512_20
+  - first:
+      213: -4818262924624187946
+    second: sky_cloudsea_far_512x512_21
+  - first:
+      213: -5092766080384902611
+    second: sky_cloudsea_far_512x512_22
+  - first:
+      213: -4081138981916368778
+    second: sky_cloudsea_far_512x512_23
+  - first:
+      213: 294394962603794749
+    second: sky_cloudsea_far_512x512_24
+  - first:
+      213: 6120402319378920056
+    second: sky_cloudsea_far_512x512_25
+  - first:
+      213: 3463086368587715019
+    second: sky_cloudsea_far_512x512_26
+  - first:
+      213: -5920088829945790116
+    second: sky_cloudsea_far_512x512_27
+  - first:
+      213: 1396235821994199330
+    second: sky_cloudsea_far_512x512_28
+  - first:
+      213: 3091953932285515130
+    second: sky_cloudsea_far_512x512_29
+  - first:
+      213: -3593685554619943469
+    second: sky_cloudsea_far_512x512_30
+  - first:
+      213: 6822905920415917053
+    second: sky_cloudsea_far_512x512_31
+  - first:
+      213: -358950899323517084
+    second: sky_cloudsea_far_512x512_32
+  - first:
+      213: 1209853916790543168
+    second: sky_cloudsea_far_512x512_33
+  - first:
+      213: 4595771106853718619
+    second: sky_cloudsea_far_512x512_34
+  - first:
+      213: -6315841929050814870
+    second: sky_cloudsea_far_512x512_35
+  - first:
+      213: 2059833589242038341
+    second: sky_cloudsea_far_512x512_36
+  - first:
+      213: -7743100870276433650
+    second: sky_cloudsea_far_512x512_37
+  - first:
+      213: -7251160860464066879
+    second: sky_cloudsea_far_512x512_38
+  - first:
+      213: 7810167824256289418
+    second: sky_cloudsea_far_512x512_39
+  - first:
+      213: 6995971000805840900
+    second: sky_cloudsea_far_512x512_40
+  - first:
+      213: 4240184027051546057
+    second: sky_cloudsea_far_512x512_41
+  - first:
+      213: 3996525150331145768
+    second: sky_cloudsea_far_512x512_42
+  - first:
+      213: -2994168945452434790
+    second: sky_cloudsea_far_512x512_43
+  - first:
+      213: -1432257048211136598
+    second: sky_cloudsea_far_512x512_44
+  - first:
+      213: -3688134460603209444
+    second: sky_cloudsea_far_512x512_45
+  - first:
+      213: -4429441660445025689
+    second: sky_cloudsea_far_512x512_46
+  - first:
+      213: -51698646843693695
+    second: sky_cloudsea_far_512x512_47
+  - first:
+      213: 971154699543835910
+    second: sky_cloudsea_far_512x512_48
+  - first:
+      213: 3126699930346522445
+    second: sky_cloudsea_far_512x512_49
+  - first:
+      213: -9161213712491859051
+    second: sky_cloudsea_far_512x512_50
+  - first:
+      213: -6999266400512566697
+    second: sky_cloudsea_far_512x512_51
+  - first:
+      213: 5364805672578690281
+    second: sky_cloudsea_far_512x512_52
+  - first:
+      213: -7605870433853609296
+    second: sky_cloudsea_far_512x512_53
+  - first:
+      213: 5752356166550504742
+    second: sky_cloudsea_far_512x512_54
+  - first:
+      213: -4215635510844545339
+    second: sky_cloudsea_far_512x512_55
+  - first:
+      213: -4780189055074475989
+    second: sky_cloudsea_far_512x512_56
+  - first:
+      213: 5638774637526222810
+    second: sky_cloudsea_far_512x512_57
+  - first:
+      213: -5195210631761621958
+    second: sky_cloudsea_far_512x512_58
+  - first:
+      213: 2990099644327221109
+    second: sky_cloudsea_far_512x512_59
+  - first:
+      213: 1934499688542475943
+    second: sky_cloudsea_far_512x512_60
+  - first:
+      213: 3613472765558413454
+    second: sky_cloudsea_far_512x512_61
+  - first:
+      213: -7189456080978022334
+    second: sky_cloudsea_far_512x512_62
+  - first:
+      213: -478525938563321555
+    second: sky_cloudsea_far_512x512_63
+  - first:
+      213: -4069565342062051321
+    second: sky_cloudsea_far_512x512_64
+  - first:
+      213: 3443559553984306512
+    second: sky_cloudsea_far_512x512_65
+  - first:
+      213: -4016611134396383570
+    second: sky_cloudsea_far_512x512_66
+  - first:
+      213: -1594521943212479504
+    second: sky_cloudsea_far_512x512_67
+  - first:
+      213: -4645699540156170070
+    second: sky_cloudsea_far_512x512_68
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 8192
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 326
+        width: 192
+        height: 174
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c358fff9c90850330800000000000000
+      internalID: 3676486081005454652
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_1
+      rect:
+        serializedVersion: 2
+        x: 138
+        y: 464
+        width: 71
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 22c02fadcc13c1e70800000000000000
+      internalID: 9087192904043203618
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_2
+      rect:
+        serializedVersion: 2
+        x: 201
+        y: 471
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54cb3dbf8bd4d9610800000000000000
+      internalID: 1629544097072266309
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_3
+      rect:
+        serializedVersion: 2
+        x: 250
+        y: 471
+        width: 17
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f74a4c93755d08070800000000000000
+      internalID: 8106713899874952319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_4
+      rect:
+        serializedVersion: 2
+        x: 271
+        y: 442
+        width: 157
+        height: 70
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7e3e90e8c661ade40800000000000000
+      internalID: 5681878535376593895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_5
+      rect:
+        serializedVersion: 2
+        x: 401
+        y: 351
+        width: 111
+        height: 147
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2a44b33d0f7a0c30800000000000000
+      internalID: 4326410086721538607
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_6
+      rect:
+        serializedVersion: 2
+        x: 168
+        y: 402
+        width: 37
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5b574e65cc337e20800000000000000
+      internalID: 3347085766722804573
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_7
+      rect:
+        serializedVersion: 2
+        x: 213
+        y: 389
+        width: 37
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0c1dec1905e607a0800000000000000
+      internalID: -6411185192212554737
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_8
+      rect:
+        serializedVersion: 2
+        x: 203
+        y: 387
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed4c2663b1cc03220800000000000000
+      internalID: 2463693413420287198
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_9
+      rect:
+        serializedVersion: 2
+        x: 263
+        y: 374
+        width: 34
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da7f167d334c98670800000000000000
+      internalID: 8541573895220754349
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_10
+      rect:
+        serializedVersion: 2
+        x: 289
+        y: 371
+        width: 37
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 06b14a6ae86634c40800000000000000
+      internalID: 5495348733189299040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_11
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 366
+        width: 12
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 25b4e4148bd730450800000000000000
+      internalID: 6053820554439183186
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_12
+      rect:
+        serializedVersion: 2
+        x: 329
+        y: 374
+        width: 13
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1fa368d0cb7a3730800000000000000
+      internalID: 3979629288929603359
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_13
+      rect:
+        serializedVersion: 2
+        x: 340
+        y: 368
+        width: 12
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fb0cd612bc5b884c0800000000000000
+      internalID: -4284975161399197505
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_14
+      rect:
+        serializedVersion: 2
+        x: 243
+        y: 362
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4766214cefaaa62b0800000000000000
+      internalID: -5590467976239094156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_15
+      rect:
+        serializedVersion: 2
+        x: 353
+        y: 363
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 861e765c69ab4d4d0800000000000000
+      internalID: -3110656285886389912
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_16
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 285
+        width: 94
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89fb7a8b43f3c89d0800000000000000
+      internalID: -2770770175070847080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_17
+      rect:
+        serializedVersion: 2
+        x: 252
+        y: 333
+        width: 13
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fda9630c5775a0460800000000000000
+      internalID: 7208670316807494367
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_18
+      rect:
+        serializedVersion: 2
+        x: 322
+        y: 300
+        width: 104
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3a455a505ecf6d10800000000000000
+      internalID: 2121140794023037500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_19
+      rect:
+        serializedVersion: 2
+        x: 426
+        y: 333
+        width: 26
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8cfdd006743939560800000000000000
+      internalID: 7319355754170671048
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_20
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 239
+        width: 88
+        height: 76
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e83bfcea374b7240800000000000000
+      internalID: 4790500947048216801
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_21
+      rect:
+        serializedVersion: 2
+        x: 294
+        y: 315
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6dd2757f567122db0800000000000000
+      internalID: -4818262924624187946
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_22
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 296
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2adf768b3cd259b0800000000000000
+      internalID: -5092766080384902611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_23
+      rect:
+        serializedVersion: 2
+        x: 309
+        y: 302
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 67020eff7b1ec57c0800000000000000
+      internalID: -4081138981916368778
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_24
+      rect:
+        serializedVersion: 2
+        x: 401
+        y: 298
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d31e9a1a8a6e51400800000000000000
+      internalID: 294394962603794749
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_25
+      rect:
+        serializedVersion: 2
+        x: 409
+        y: 291
+        width: 17
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 872be017b7900f450800000000000000
+      internalID: 6120402319378920056
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_26
+      rect:
+        serializedVersion: 2
+        x: 436
+        y: 300
+        width: 15
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bc11b2a34ba5f0030800000000000000
+      internalID: 3463086368587715019
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_27
+      rect:
+        serializedVersion: 2
+        x: 94
+        y: 277
+        width: 9
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c51c25c339e97dda0800000000000000
+      internalID: -5920088829945790116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_28
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 266
+        width: 21
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 229c3a0251d606310800000000000000
+      internalID: 1396235821994199330
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_29
+      rect:
+        serializedVersion: 2
+        x: 262
+        y: 280
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a7510c338b3d8ea20800000000000000
+      internalID: 3091953932285515130
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_30
+      rect:
+        serializedVersion: 2
+        x: 303
+        y: 282
+        width: 10
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3d5fc6a370aa02ec0800000000000000
+      internalID: -3593685554619943469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_31
+      rect:
+        serializedVersion: 2
+        x: 308
+        y: 275
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df3ec4a09c4dfae50800000000000000
+      internalID: 6822905920415917053
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_32
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 269
+        width: 11
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 467c3021f00c40bf0800000000000000
+      internalID: -358950899323517084
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_33
+      rect:
+        serializedVersion: 2
+        x: 147
+        y: 264
+        width: 13
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0435a6c2ab34ac010800000000000000
+      internalID: 1209853916790543168
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_34
+      rect:
+        serializedVersion: 2
+        x: 179
+        y: 263
+        width: 9
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b5a0505e87577cf30800000000000000
+      internalID: 4595771106853718619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_35
+      rect:
+        serializedVersion: 2
+        x: 191
+        y: 263
+        width: 10
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a6688617a3f9958a0800000000000000
+      internalID: -6315841929050814870
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_36
+      rect:
+        serializedVersion: 2
+        x: 455
+        y: 266
+        width: 7
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54880376cbff59c10800000000000000
+      internalID: 2059833589242038341
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_37
+      rect:
+        serializedVersion: 2
+        x: 462
+        y: 260
+        width: 18
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e09b72f78cafa8490800000000000000
+      internalID: -7743100870276433650
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_38
+      rect:
+        serializedVersion: 2
+        x: 482
+        y: 246
+        width: 30
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1cec2de9d93be5b90800000000000000
+      internalID: -7251160860464066879
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_39
+      rect:
+        serializedVersion: 2
+        x: 78
+        y: 121
+        width: 200
+        height: 139
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8a4bf0914a436c60800000000000000
+      internalID: 7810167824256289418
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_40
+      rect:
+        serializedVersion: 2
+        x: 323
+        y: 252
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 40857f91f8ea61160800000000000000
+      internalID: 6995971000805840900
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_41
+      rect:
+        serializedVersion: 2
+        x: 334
+        y: 247
+        width: 21
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c551ba38e828da30800000000000000
+      internalID: 4240184027051546057
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_42
+      rect:
+        serializedVersion: 2
+        x: 34
+        y: 234
+        width: 12
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 82e07612372867730800000000000000
+      internalID: 3996525150331145768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_43
+      rect:
+        serializedVersion: 2
+        x: 226
+        y: 63
+        width: 286
+        height: 177
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9a3dc835339276d0800000000000000
+      internalID: -2994168945452434790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_44
+      rect:
+        serializedVersion: 2
+        x: 274
+        y: 237
+        width: 10
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aaf53569dc99f1ce0800000000000000
+      internalID: -1432257048211136598
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_45
+      rect:
+        serializedVersion: 2
+        x: 370
+        y: 237
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c196ed7af3d11dcc0800000000000000
+      internalID: -3688134460603209444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_46
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 206
+        width: 31
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 76a9bdb27467782c0800000000000000
+      internalID: -4429441660445025689
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_47
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 176
+        width: 10
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1856387ca54584ff0800000000000000
+      internalID: -51698646843693695
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_48
+      rect:
+        serializedVersion: 2
+        x: 42
+        y: 162
+        width: 36
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 605f248cd0c3a7d00800000000000000
+      internalID: 971154699543835910
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_49
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 147
+        width: 5
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d470b8b4505446b20800000000000000
+      internalID: 3126699930346522445
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_50
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 110
+        width: 40
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5933c7baaa4dcd080800000000000000
+      internalID: -9161213712491859051
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_51
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 115
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 75a1f1dda4c9dde90800000000000000
+      internalID: -6999266400512566697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_52
+      rect:
+        serializedVersion: 2
+        x: 71
+        y: 118
+        width: 13
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9ecad03d55e937a40800000000000000
+      internalID: 5364805672578690281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_53
+      rect:
+        serializedVersion: 2
+        x: 124
+        y: 110
+        width: 20
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0ba62865325827690800000000000000
+      internalID: -7605870433853609296
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_54
+      rect:
+        serializedVersion: 2
+        x: 207
+        y: 105
+        width: 16
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 62545c8c47974df40800000000000000
+      internalID: 5752356166550504742
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_55
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 170
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c6a69996dd0f75c0800000000000000
+      internalID: -4215635510844545339
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_56
+      rect:
+        serializedVersion: 2
+        x: 170
+        y: 61
+        width: 9
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b206315816b59adb0800000000000000
+      internalID: -4780189055074475989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_57
+      rect:
+        serializedVersion: 2
+        x: 176
+        y: 70
+        width: 8
+        height: 6
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ad78b3648a3f04e40800000000000000
+      internalID: 5638774637526222810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_58
+      rect:
+        serializedVersion: 2
+        x: 388
+        y: 59
+        width: 10
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a3c0480b477e6e7b0800000000000000
+      internalID: -5195210631761621958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_59
+      rect:
+        serializedVersion: 2
+        x: 502
+        y: 50
+        width: 10
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5775527c8c7fe7920800000000000000
+      internalID: 2990099644327221109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_60
+      rect:
+        serializedVersion: 2
+        x: 170
+        y: 44
+        width: 25
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7a69da1a739b8da10800000000000000
+      internalID: 1934499688542475943
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_61
+      rect:
+        serializedVersion: 2
+        x: 340
+        y: 44
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e8858a4d552a52230800000000000000
+      internalID: 3613472765558413454
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_62
+      rect:
+        serializedVersion: 2
+        x: 362
+        y: 0
+        width: 76
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 240780529cbe93c90800000000000000
+      internalID: -7189456080978022334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_63
+      rect:
+        serializedVersion: 2
+        x: 424
+        y: 44
+        width: 14
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d217f18b13feb59f0800000000000000
+      internalID: -478525938563321555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_64
+      rect:
+        serializedVersion: 2
+        x: 438
+        y: 42
+        width: 8
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 700862402eff587c0800000000000000
+      internalID: -4069565342062051321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_65
+      rect:
+        serializedVersion: 2
+        x: 478
+        y: 20
+        width: 34
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 05d132a6b2bf9cf20800000000000000
+      internalID: 3443559553984306512
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_66
+      rect:
+        serializedVersion: 2
+        x: 248
+        y: 12
+        width: 44
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaebc6544712248c0800000000000000
+      internalID: -4016611134396383570
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_67
+      rect:
+        serializedVersion: 2
+        x: 301
+        y: 12
+        width: 45
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0fb2144adbe1fd9e0800000000000000
+      internalID: -1594521943212479504
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: sky_cloudsea_far_512x512_68
+      rect:
+        serializedVersion: 2
+        x: 470
+        y: 33
+        width: 11
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: aa0cbc7d1e8278fb0800000000000000
+      internalID: -4645699540156170070
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable: {}
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

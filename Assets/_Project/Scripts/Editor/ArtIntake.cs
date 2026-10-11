@@ -358,6 +358,20 @@ namespace IdleGrounds.Editor
             used.Add("sky_sunbeam");
             used.Add("island_underside_vines");
             used.Add("island_underside_lavadrip");
+            // ADR 0005 / ART-SPEC §3.6 set: cliff walls + edge lip (IslandArtBuilder / IslandCoastBuilder), macro patches +
+            // flowers (IslandDressingBuilder), cloud sea + 3/4 puffs + background islands (IslandsBuilder.BuildSky; the
+            // _3q undersides were rejected as undersides and are used there as mid-distance background islands)
+            foreach (var biome in new[] { "center", "farm", "mine", "fishing", "volcano", "grove", "celestial" })
+            {
+                used.Add("island_" + biome + "_cliffwall");
+                if (biome != "fishing") used.Add("island_" + biome + "_macro");     // fishing macro rejected (awaits a redo)
+                used.Add("island_" + biome + "_flowers");
+            }
+            foreach (var k in new[] { "island_edge_lip", "sky_cloudsea_far", "sky_cloudsea_mid", "sky_cloudsea_near", "sky_cloudpuff_3q",
+                "sky_island_distant", "island_underside_rock_3q", "island_underside_roots_3q", "island_underside_stalactite_3q",
+                "island_underside_vines_3q", "island_underside_lavadrip_3q" })
+                used.Add(k);
+            if (IslandsBuilder.UseSkyDepthTexture) used.Add("sky_depth");
 
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)
             foreach (var key in map.Keys)

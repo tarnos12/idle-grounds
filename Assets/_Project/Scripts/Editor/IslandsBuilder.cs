@@ -153,7 +153,11 @@ namespace IdleGrounds.Editor
         /// <summary>Slightly lighter depth colour toward the screen centre (no horizon band).</summary>
         public static readonly Color AbyssCentre = new Color32(0x1b, 0x46, 0x58, 0xff);
         const string DepthPath = IslandArtBuilder.SkyDir + "/sky_depth_vignette_64x36.png";
-        const string CloudPuffPath = "Assets/_Project/Art/Incoming/sky/sky_cloudpuff_128x64_3f.png";
+        const string CloudPuffPath = "Assets/_Project/Art/Incoming/sky/sky_cloudpuff_3q_128x64_3f.png";
+        const string IncSky = "Assets/_Project/Art/Incoming/sky/";
+        const string IncIslands = "Assets/_Project/Art/Incoming/islands/";
+        /// <summary>sky_depth_512x512 as the deepest layer (heavily tinted toward the depth colour).</summary>
+        public static bool UseSkyDepthTexture = false;
 
         /// <summary>A smooth elliptical vignette (lighter centre, abyss edges), stretched over the view by a Fill <see cref="ParallaxLayer"/>.</summary>
         static Sprite EnsureDepthSprite()
@@ -194,12 +198,29 @@ namespace IdleGrounds.Editor
         /// gathered in loose banks at three parallax depths (far = 1x, low contrast, tinted toward the abyss; mid/near = 2x),
         /// all on the Sky sorting layer BEHIND the Islands' drop shadows / undersides (orders 20+).
         /// </summary>
+        [MenuItem("Idle Grounds/World/Rebuild Sky (cloud sea)")]
+        public static void RebuildSkyMenu()
+        {
+            var camCtl = Object.FindFirstObjectByType<CameraController>();
+            BuildSky(camCtl != null ? camCtl.GetComponent<Camera>() : Camera.main);
+            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+            Debug.Log("[IdleGrounds] Sky (cloud sea) rebuilt.");
+        }
+
         public static void BuildSky(Camera cam)
         {
             var old = GameObject.Find("Sky");
             if (old != null && old.transform.parent == null) Object.DestroyImmediate(old);
             var root = new GameObject("Sky").transform;
             Layer(root, "Depth", EnsureDepthSprite(), -100, ParallaxLayer.Mode.Fill, 0f, 1f, 0f, 0f, cam, Color.white);
+
+            // ART-SPEC §3.6 top-down cloud sea: tiled layers at integer scale, each deeper one smaller, darker, slower
+            Color Abyss(float toAbyss, float alpha) { var c = Color.Lerp(Color.white, AbyssCentre, toAbyss); c.a = alpha; return c; }
+            if (UseSkyDepthTexture)
+                TileLayer(root, "DepthTexture", IncSky + "sky_depth_512x512.png", -96, 0.04f, 2, new Vector2(0.02f, 0f), cam, Abyss(0.85f, 0.35f));
+            TileLayer(root, "CloudSeaFar", IncSky + "sky_cloudsea_far_512x512.png", -90, 0.10f, 1, new Vector2(0.10f, 0.02f), cam, Abyss(0.80f, 0.38f));
+            TileLayer(root, "CloudSeaMid", IncSky + "sky_cloudsea_mid_512x512.png", -74, 0.22f, 2, new Vector2(0.22f, 0.03f), cam, Abyss(0.62f, 0.50f));
+            TileLayer(root, "CloudSeaNear", IncSky + "sky_cloudsea_near_512x256.png", -58, 0.45f, 2, new Vector2(0.55f, 0.05f), cam, Abyss(0.35f, 0.35f));
 
             var puffs = IslandArtBuilder.Frames(CloudPuffPath);
             // (sky_sunbeam light shafts were tried: on the dark abyss they read as grey smears, so they are left out)
@@ -212,23 +233,55 @@ namespace IdleGrounds.Editor
             float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
             Vector2 tile = field.tile;
             var placed = new System.Collections.Generic.List<(Vector2 p, float r)>();
+
+            // mid-distance background islands (3/4 view): the distant set + the five rejected-as-underside _3q
+            // mini-islands, hazed toward the abyss, between the far and mid cloud layers; small and sparse
+            var distant = new System.Collections.Generic.List<(Sprite s, float haze)>();
+            foreach (var s in IslandArtBuilder.Frames(IncSky + "sky_island_distant_96x96_4f.png")) distant.Add((s, 0.30f));
+            foreach (var f in new[] { "island_underside_rock_3q_256x192.png", "island_underside_roots_3q_192x160.png", "island_underside_stalactite_3q_96x160.png",
+                         "island_underside_vines_3q_128x128.png", "island_underside_lavadrip_3q_128x160_4f.png" })
+            {
+                var fr = IslandArtBuilder.Frames(IncIslands + f);
+                if (fr.Length > 0) distant.Add((fr[0], 0.52f));
+            }
+            if (distant.Count > 0)
+            {
+                int n = Mathf.Min(9, distant.Count);
+                for (int i = 0; i < n; i++)
+                {
+                    var (s, haze) = distant[i];             // each variant once: 4 distant islands + the 5 _3q mini-islands
+                    Vector2 home = default;
+                    float rad = Mathf.Max(s.bounds.size.x, s.bounds.size.y) * 0.5f + 14f;      // well spread out
+                    for (int tries = 0; tries < 60; tries++)
+                    {
+                        home = new Vector2(R(-tile.x * 0.5f, tile.x * 0.5f), R(-tile.y * 0.5f, tile.y * 0.5f));
+                        bool ok = true;
+                        foreach (var q in placed) if ((q.p - home).sqrMagnitude < (q.r + rad) * (q.r + rad)) { ok = false; break; }
+                        if (ok) break;
+                    }
+                    placed.Add((home, rad));
+                    var sr = Sr(fieldGo.transform, "DistantIsland" + i, -72, s, Sky);
+                    sr.color = Abyss(haze, 1f);
+                    sr.flipX = rng.NextDouble() < 0.5;
+                    list.Add(new CloudSea.Puff { t = sr.transform, home = home, parallax = 0.16f, drift = 0.04f });
+                }
+            }
+
+            // loose top-down cloud puffs over the tiled layers (fewer than before: the cloud sea carries the depth now)
             // (name, count, scale, parallax, drift, tint toward the abyss, alpha, order)
             var layers = new (string name, int count, int scale, float parallax, float drift, float toAbyss, float alpha, int order)[]
             {
-                ("Far", 64, 1, 0.12f, 0.12f, 0.66f, 0.60f, -80),
-                ("Mid", 24, 2, 0.28f, 0.25f, 0.42f, 0.72f, -70),
-                ("Near", 8, 2, 0.48f, 0.45f, 0.18f, 0.85f, -60),
+                ("Mid", 10, 1, 0.28f, 0.25f, 0.42f, 0.75f, -70),
+                ("Near", 6, 2, 0.48f, 0.45f, 0.32f, 0.70f, -56),
             };
             if (puffs.Length > 0)
                 foreach (var L in layers)
                 {
-                    var tint = Color.Lerp(Color.white, AbyssCentre, L.toAbyss);
-                    tint.a = L.alpha;
-                    // puffs gather into loose cloud banks (a few per tile) instead of an even confetti
-                    int banks = Mathf.Max(2, L.count / 5);
+                    var tint = Abyss(L.toAbyss, L.alpha);
+                    int banks = Mathf.Max(2, L.count / 4);
                     var centres = new Vector2[banks];
                     for (int b = 0; b < banks; b++) centres[b] = new Vector2(R(-tile.x * 0.5f, tile.x * 0.5f), R(-tile.y * 0.5f, tile.y * 0.5f));
-                    float radius = 1.5f * L.scale;          // puffs of one layer overlap a little, never pile up
+                    float radius = 1.5f * L.scale;
                     placed.Clear();
                     for (int i = 0; i < L.count; i++)
                     {
@@ -251,6 +304,28 @@ namespace IdleGrounds.Editor
                 }
             field.puffs = list.ToArray();
             EditorUtility.SetDirty(field);
+        }
+
+        /// <summary>A both-axes tiled cloud-sea layer (<see cref="ParallaxLayer.Mode.Tile2D"/>) from a delivered sky texture (FullRect mesh for tiling).</summary>
+        static void TileLayer(Transform root, string name, string path, int order, float scroll, int scale, Vector2 drift, Camera cam, Color tint)
+        {
+            var imp = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (imp == null) return;
+            var st = new TextureImporterSettings();
+            imp.ReadTextureSettings(st);
+            if (st.spriteMeshType != SpriteMeshType.FullRect || imp.wrapMode != TextureWrapMode.Repeat)
+            {
+                st.spriteMeshType = SpriteMeshType.FullRect;
+                imp.SetTextureSettings(st);
+                imp.wrapMode = TextureWrapMode.Repeat;
+                imp.SaveAndReimport();
+            }
+            var s = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (s == null) return;
+            var p = Layer(root, name, s, order, ParallaxLayer.Mode.Tile2D, 0f, 1f, scroll, 0f, cam, tint);
+            p.pixelScale = scale;
+            p.windDrift = drift;
+            EditorUtility.SetDirty(p);
         }
 
         public static void InstallIntoActiveScene()

@@ -424,7 +424,15 @@ namespace IdleGrounds.Editor
             for (int x = land.x0; x <= land.x1; x++)
                 for (int y = land.y0; y <= land.y1; y++)
                     if (land[x, y] && !land[x, y - 1]) set.Add(new Vector2Int(x, y - 1));
-            var tile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(isl.islandKey));
+            // 3/4 cliff wall (ART-SPEC §3.6): 3 cells tall, painted on the rim cells of a tilemap shifted one cell down
+            // so the wall's top meets the coast's south edge and it hangs 3 cells below it. It sorts BEHIND the coast,
+            // so land further south on screen (a bay's far shore, an islet) correctly hides it.
+            var wall = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffWallTilePath(isl.islandKey));
+            var cr0 = cliff.GetComponent<TilemapRenderer>();
+            HasWall = wall != null;
+            cliff.transform.localPosition = wall != null ? new Vector3(0f, -WallDrop, 0f) : Vector3.zero;
+            if (cr0 != null) cr0.sortingOrder = wall != null ? -3 : -1;
+            var tile = wall != null ? wall : AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(isl.islandKey));
             if (tile != null)
             {
                 var pos = new List<Vector3Int>(set.Count);
@@ -440,13 +448,16 @@ namespace IdleGrounds.Editor
         // 3/4 top-down: only the SOUTH-facing coast shows its cliff face, and the hanging underside is a compact
         // band of native-scale pieces under that south cliff (never beside the island, never stretched).
         const int BodyMaxRows = 3;                 // dark rock band right under the cliff rim (cells)
-        const float SecondRowDrop = 2.5f;          // the deeper, central second row of pieces starts this far down
+        const float SecondRowDrop = 1.5f;          // the deeper, central second row of pieces starts this far down
+        const float WallDrop = 1f - 4f / 32f;      // the cliff-wall tilemap is shifted this many cells down: the wall's ragged top 4 px tuck behind the coast edge
+        const int WallBelowRim = 2;                // the 3-cell wall reaches this many cells below the rim cell
+        static bool HasWall;                       // set by BuildCliff: the delivered 3/4 cliff wall is in use
         const float PieceMaxHeight = 6f;           // tallest piece (rock 256x192 at PPU 32)
         const string IncomingIslands = "Assets/_Project/Art/Incoming/islands/";
-        const string CloudPuffs = "Assets/_Project/Art/Incoming/sky/sky_cloudpuff_128x64_3f.png";
+        const string CloudPuffs = "Assets/_Project/Art/Incoming/sky/sky_cloudpuff_3q_128x64_3f.png";
 
         /// <summary>Total cells the underside reaches below the cliff rim: body / second row + tallest piece + a little mist.</summary>
-        public static float UndersideExtent(float span) => 1f + SecondRowDrop + PieceMaxHeight + 3f;
+        public static float UndersideExtent(float span) => 1f + WallBelowRim + SecondRowDrop + PieceMaxHeight + 2f;
 
         static float Snap(float v) => Mathf.Round(v * 32f) / 32f;
 
@@ -552,8 +563,15 @@ namespace IdleGrounds.Editor
             bodyR.sortingOrder = 30;
             body.color = Color.Lerp(tint, Color.black, 0.25f);
             var cellSet = new HashSet<Vector3Int>();
-            foreach (var c in cliff) cellSet.Add(new Vector3Int(c.x, c.y, 0));
-            for (int p = 0; p < Profiles; p++)
+            if (HasWall)
+            {
+                // the opaque 3/4 cliff wall replaces the dark fill + body rows: its ragged, fading bottom shows the sky,
+                // and the pieces below tuck behind it. Only report the wall's cells (veil mask).
+                foreach (var c in cliff) for (int r = 0; r <= WallBelowRim; r++) covered.Add(new Vector2Int(c.x, c.y - r));
+                Object.DestroyImmediate(bodyT.gameObject);
+            }
+            else foreach (var c in cliff) cellSet.Add(new Vector3Int(c.x, c.y, 0));
+            for (int p = 0; p < Profiles && !HasWall; p++)
                 for (int i = 0; i < w; i++)
                 {
                     if (fs[p][i] <= 0.15f) continue;
@@ -611,7 +629,7 @@ namespace IdleGrounds.Editor
                     float half = bnd.size.x * 0.5f;
                     float top = HangOver(cx - half + 0.5f, cx + half - 0.5f);   // the outer half-cell of the art is mostly transparent
                     if (float.IsNaN(top)) return false;
-                    float yTop = top + 0.5f - dropBelowRim;                        // tucked half a cell under the rim (hidden behind the ground)
+                    float yTop = top - (HasWall ? WallBelowRim : 0) + 0.5f - dropBelowRim;                        // tucked half a cell under the rim (hidden behind the ground)
                     var pos = new Vector3(Snap(cx - bnd.center.x), Snap(yTop - bnd.max.y), 0f);
                     var sr = WorldBuilder.Deco(root, "Piece" + pieceN++, sp, pos, 1f, Color.Lerp(tint, Color.black, dark), order, Sky);
                     sr.flipX = rng.NextDouble() < 0.5;
@@ -626,17 +644,17 @@ namespace IdleGrounds.Editor
                 for (float x = land.x0 + 1.5f; x < land.x1 - 0.5f;)
                 {
                     int i = Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1);
-                    if (f[i] <= 0.05f) { x += 1f; continue; }
+                    if (f[i] <= (HasWall ? 0.3f : 0.05f) || (HasWall && rng.NextDouble() < 0.45)) { x += HasWall ? 2f : 1f; continue; }
                     var sp = Pick(f[i]);
                     int order = 38 + pieceN % 3;
-                    if (Hang(sp, x, R(0f, 0.6f), order, R(0f, 0.12f))) { x += sp.bounds.size.x * R(0.55f, 0.75f); continue; }
+                    if (Hang(sp, x, R(0f, 0.6f), order, R(0f, 0.12f))) { x += sp.bounds.size.x * (HasWall ? R(0.85f, 1.15f) : R(0.55f, 0.75f)); continue; }
                     var narrow = Narrow();       // the wide piece would leave the chain: try a narrow one
                     if (Hang(narrow, x, R(0f, 0.4f), order, R(0f, 0.12f))) { x += narrow.bounds.size.x * R(0.65f, 0.85f); continue; }
                     x += 1f;
                 }
                 // second, deeper row under the southernmost stretch: behind the first row -> an inverted-cone taper
-                if (p == 0)
-                    for (float x = land.x0 + 4f; x < land.x1 - 3f; x += R(7f, 10f))
+                if (p == 0 && !HasWall)
+                    for (float x = land.x0 + 4f; x < land.x1 - 3f; x += HasWall ? R(11f, 16f) : R(7f, 10f))
                     {
                         int i = Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1);
                         if (f[i] < 0.8f || h[i] - minH > 10) continue;
@@ -692,14 +710,17 @@ namespace IdleGrounds.Editor
                 for (int i = 0; i < arr.Length; i++) arr[i] = coastTile;
                 Map("Land").SetTiles(pos.ToArray(), arr);
             }
-            var cliffTile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(isl.islandKey));
+            var wallTile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffWallTilePath(isl.islandKey));
+            var cliffTile = wallTile != null ? wallTile : AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(isl.islandKey));
             if (cliffTile != null && cliff.Count > 0)
             {
                 var pos = new List<Vector3Int>(cliff.Count);
                 foreach (var c in cliff) pos.Add(new Vector3Int(c.x, c.y, 0));
                 var arr = new TileBase[pos.Count];
                 for (int i = 0; i < arr.Length; i++) arr[i] = cliffTile;
-                Map("Rim").SetTiles(pos.ToArray(), arr);
+                var rim = Map("Rim");
+                if (wallTile != null) rim.transform.localPosition = new Vector3(0f, -WallDrop, 0f);     // follows the 3-cell wall
+                rim.SetTiles(pos.ToArray(), arr);
             }
             EditorUtility.SetDirty(root.gameObject);
         }

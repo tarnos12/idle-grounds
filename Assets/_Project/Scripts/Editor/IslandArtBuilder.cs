@@ -70,6 +70,9 @@ namespace IdleGrounds.Editor
         public const string BoundaryProps = IslandDir + "/island_boundary_props_32x32_6f.png";     // placeholder-only (no spec row)
         public const string MaskDir = IslandDir + "/Masks";
         public static string CliffTilePath(string key) => $"{TileDir}/RuleTile_{key}_cliff.asset";
+        public static string CliffWallPath(string key) => $"Assets/_Project/Art/Incoming/islands/island_{key}_cliffwall_32x96_8f.png";
+        public static string CliffWallTilePath(string key) => $"{TileDir}/RuleTile_{key}_cliffwall.asset";
+        public const string EdgeLipPath = "Assets/_Project/Art/Incoming/islands/island_edge_lip_32x32_4f.png";
 
         public const string UndersideRock = IslandDir + "/island_underside_rock_256x192.png";
         public const string UndersideRoots = IslandDir + "/island_underside_roots_192x160.png";
@@ -282,6 +285,25 @@ namespace IdleGrounds.Editor
                     rules.Add(Rule(new[] { c[5] }, T, O, O, N, O, O, O, O));                  // inner left: steps down from a higher cliff
                     rules.Add(Rule(new[] { c[6] }, O, O, T, O, N, O, O, O));                  // inner right
                     rules.Add(Rule(new[] { c[0], c[1], c[2], c[0], c[1], c[2], c[7] }, O, O, O, O, O, O, O, O));   // mid, rare waterfall spout
+                    EditorUtility.SetDirty(tile);
+                }
+                // ART-SPEC §3.6 3/4 south cliff wall (32x96, 3 cells): same neighbour logic as the 1-cell rim, painted on
+                // the rim cells of a tilemap shifted one cell down so the wall's top meets the coast's south edge.
+                // Frame 7 (waterfall spout) is left out: there is no matching fall below it yet.
+                var wf = File.Exists(CliffWallPath(key)) ? IslandDressingBuilder.RepairedCliffWall(key) : new Sprite[0];
+                if (wf.Length >= 7)
+                {
+                    var tile = LoadOrCreate(CliffWallTilePath(key));
+                    tile.m_DefaultSprite = wf[0];
+                    tile.m_DefaultColliderType = Tile.ColliderType.None;
+                    var rules = tile.m_TilingRules;
+                    rules.Clear();
+                    rules.Add(Rule(new[] { wf[0], wf[1], wf[2] }, N, O, N, N, N, O, O, O));
+                    rules.Add(Rule(new[] { wf[3] }, N, O, O, N, O, O, O, O));
+                    rules.Add(Rule(new[] { wf[4] }, O, O, N, O, N, O, O, O));
+                    rules.Add(Rule(new[] { wf[5] }, T, O, O, N, O, O, O, O));
+                    rules.Add(Rule(new[] { wf[6] }, O, O, T, O, N, O, O, O));
+                    rules.Add(Rule(new[] { wf[0], wf[1], wf[2] }, O, O, O, O, O, O, O, O));
                     EditorUtility.SetDirty(tile);
                 }
             }

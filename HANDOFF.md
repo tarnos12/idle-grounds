@@ -24,29 +24,20 @@ their panels.
 → http://localhost:5180 (launch config `webgl-build`). Keep productName
 "idle grounds": it decides the save folder.
 
-**Current focus: integrate the ADR 0005 / ART-SPEC §3.6 art (resume point
-2026-10-11).** Pulled into Art/Incoming but NOT yet integrated (Unity was not
-running): `island_<biome>_cliffwall_32x96_8f` (7), `*_macro_96x96_4f` (7),
-`*_flowers_32x32_4f` (7), `island_edge_lip_32x32_4f`, `island_center_path` v2,
-`sky_depth`, `sky_cloudsea_far/mid/near`, `sky_cloudpuff_3q`,
-`sky_island_distant_96x96_4f`, `island_underside_*_3q` (5).
-Next steps:
-1. Start Unity (MCP instance idle-grounds@d0cd7413e288ec3f), run Integrate Incoming Art.
-2. Consumers (one agent, editor-heavy): IslandCoastBuilder → 3-cell cliffwall
-   under south coast (replaces the 1-cell rim; frame 7 spout + island_waterfall
-   is wrong art - skip) and edge lip on W/E/N; IslandDressingBuilder → swap the
-   generated macro decals for `*_macro` art, add `*_flowers`, rebuild path from
-   v2; sky → tiled `sky_cloudsea_*` parallax layers (+ `sky_depth` only if it
-   reads calm in game - pre-review says too busy), `sky_island_distant` and the
-   rejected `_3q` undersides as mid-distance background islands.
-3. Review in Play (Center whole/edges/plaza, Fishing, Volcano), log
-   accepted/rejected in ART-SPEC, mirror, rebuild Windows + WebGL.
-Still waiting on art: `_3q` undersides redo (rejected: grass-topped mini-islands).
-Other open items: 27 earlier keys without consumers (dragon_stir,
-npc_disciple_meditate, glyph_*, veil edge, sunbeam...), emoji → real ui_* icons,
-ascension-content design session (needs the user), Game.unity size (~74 MB vs
-GitHub 100 MB limit — move generated dressing out of the scene before it grows).
-Art loop rules: memory art-drive-loop.md (16 standing rules; cron jobs are
+**Current focus: finish the 3/4 island look (ADR 0005).** §3.6 art is in
+game (2026-10-11): south cliff walls (repaired copies in Art/Islands/Dressing),
+edge lips, macro patches (softened), flowers, path v2, tiled cloud-sea sky
+(ParallaxLayer Mode.Tile2D, menu Idle Grounds/World/Rebuild Sky (cloud sea)),
+background islands. Still weak: W/E coasts read as a flat straight cut
+(requested `island_<biome>_sidewall_32x32_4f`), staircase diagonals on south
+coasts, heavy side-view underside pieces (`_3q` underside redo requested),
+Fishing macro + sky_depth rejected. Windows/WebGL builds predate this pass.
+**Unity MCP:** if the session's unityMCP tools are disconnected, drive the editor
+with `node tools/mcp-call.js <tool> '<json>'` (pins idle-grounds).
+Other open items: 10 keys without consumers (dragon_stir, npc_disciple_meditate,
+glyph_*, island_veil_edge, island_waterfall*), emoji → real ui_* icons,
+ascension-content design session (needs the user), Game.unity ~77 MB (GitHub
+limit 100 MB). Art loop rules: memory art-drive-loop.md (cron jobs are
 session-only, recreate on start).
 
 ## How things work
@@ -153,6 +144,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-11: §3.6 art integrated: 3-cell south cliff walls (seam-repaired), W/E/N grass lips, delivered macro patches + flowers, path v2, tiled cloud-sea sky + background islands. sky_depth and fishing macro rejected; sidewall art requested. Added tools/mcp-call.js (direct MCP client). Tests 177/177.
 
 - 2026-10-11: §3.6 art pulled and inspected (files OK); _3q undersides rejected (they are grass-topped mini-islands); sky_depth pre-flagged as too busy. Integration blocked: Unity not running.
 
