@@ -234,14 +234,15 @@ namespace IdleGrounds.Editor
             Vector2 tile = field.tile;
             var placed = new System.Collections.Generic.List<(Vector2 p, float r)>();
 
-            // mid-distance background islands (3/4 view): the distant set + the five rejected-as-underside _3q
-            // mini-islands, hazed toward the abyss, between the far and mid cloud layers; small and sparse
+            // mid-distance background islands (3/4 view): the distant set + five mini-islands (the first _3q underside
+            // delivery, preserved in Art/Sky/BackgroundIslands because later underside redraws reuse those keys),
+            // hazed toward the abyss, between the far and mid cloud layers; small and sparse
             var distant = new System.Collections.Generic.List<(Sprite s, float haze)>();
             foreach (var s in IslandArtBuilder.Frames(IncSky + "sky_island_distant_96x96_4f.png")) distant.Add((s, 0.30f));
-            foreach (var f in new[] { "island_underside_rock_3q_256x192.png", "island_underside_roots_3q_192x160.png", "island_underside_stalactite_3q_96x160.png",
-                         "island_underside_vines_3q_128x128.png", "island_underside_lavadrip_3q_128x160_4f.png" })
+            foreach (var f in new[] { "sky_bgisle_rock_3q_256x192.png", "sky_bgisle_roots_3q_192x160.png", "sky_bgisle_stalactite_3q_96x160.png",
+                         "sky_bgisle_vines_3q_128x128.png", "sky_bgisle_lavadrip_3q_128x160_4f.png" })
             {
-                var fr = IslandArtBuilder.Frames(IncIslands + f);
+                var fr = IslandArtBuilder.Frames("Assets/_Project/Art/Sky/BackgroundIslands/" + f);
                 if (fr.Length > 0) distant.Add((fr[0], 0.52f));
             }
             if (distant.Count > 0)

@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: Islands-035 underside-only redraws rejected on quality (flat triangles with flecks). The first _3q mini-islands are preserved as Art/Sky/BackgroundIslands/sky_bgisle_* (IslandsBuilder.BuildSky now reads them there) because the redraws reuse the incoming keys. Still pending in Unity (editor unresponsive): vertical sidewalls + variants, fishing macro v3, sky rebuild with the new background-island paths (code not yet compiled).
+
 - 2026-10-12: pulled Islands-033 (fishing macro v3, looks right) and Islands-034 (vertical sidewalls + 8f variants, correct orientation). NOT integrated: Unity editor unresponsive (likely a 'scene changed on disk' dialog). Next: remove the build-time rotation in IslandDressingBuilder.EnsureSideWall, use the 8f variants for W/E faces, enable the fishing macro (drop the fishing exclusion in IslandDressingBuilder + ArtIntake), rebuild, review in Play.
 
 - 2026-10-12: fishing macro redo (Islands-031) reviewed in game and rejected again (warm tan stains on cool shingle); fallback kept.
