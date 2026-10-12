@@ -364,9 +364,10 @@ namespace IdleGrounds.Editor
             foreach (var biome in new[] { "center", "farm", "mine", "fishing", "volcano", "grove", "celestial" })
             {
                 used.Add("island_" + biome + "_cliffwall");
-                if (biome != "fishing") used.Add("island_" + biome + "_macro");     // fishing macro rejected (awaits a redo)
+                used.Add("island_" + biome + "_macro");
                 used.Add("island_" + biome + "_flowers");
-                used.Add("island_" + biome + "_sidewall");     // W/E 3/4 side faces (IslandDressingBuilder.EnsureSideWall)
+                used.Add("island_" + biome + "_sidewall");     // W/E 3/4 side faces (IslandDressingBuilder.EnsureSideWall: fallback)
+                used.Add("island_" + biome + "_sidewall_variants");     // ... preferred: 3 straight variants per side + ends
             }
             foreach (var k in new[] { "island_edge_lip", "sky_cloudsea_far", "sky_cloudsea_mid", "sky_cloudsea_near", "sky_cloudpuff_3q",
                 "sky_island_distant", "island_underside_rock_3q", "island_underside_roots_3q", "island_underside_stalactite_3q",

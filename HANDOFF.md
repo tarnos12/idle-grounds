@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12 art: vertical sidewalls + variants (no rotation; seeded variants), _3q undersides under the south walls (WallTuck 2.2, roots speck masked), fishing macro v3 enabled (needs repair), sky background islands confirmed. Tests 177/177; Game.unity 78.4 MB. Sidewall width/end frames and the fishing macro sent back to the artist.
+
 - 2026-10-12: ADR 0007 accepted (island requesters replace ascension; fixed order Mine→Fishing→Farm→Grove→Volcano→Lotus Marsh→Thunder Crag→Azure Beast Ravine→Tribulation Peak→Celestial; Shrine tributes; 11 NPCs × 3 requests; Heavenly Gate ending; vows/perks/AP removed). ART-SPEC v4 §3.7 requests 144 files (P1 shrine + NPCs). Implementation = 6 phases in the ADR; phase 1 starts after the art integration agent finishes. CONTEXT.md still needs the new terms (Shrine, Tribute, Requester, Heavenly Gate).
 
 - 2026-10-12: ADR 0007 island requesters drafted (proposed): Sky-Bridge Shrine on the Center's north edge takes per-island Tributes (5 items × 5–20) to raise bridges; 13 NPCs × 3 optional requests unlock island buildings/utilities (old perk effects); Heavenly Gate on Celestial = ending; ascension/AP/perks/vows/prestige removed with a save migration. 7 owner questions in the Hub.

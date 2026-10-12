@@ -452,6 +452,7 @@ namespace IdleGrounds.Editor
         const float WallDrop = 1f - 4f / 32f;      // the cliff-wall tilemap is shifted this many cells down: the wall's ragged top 4 px tuck behind the coast edge
         const int WallBelowRim = 2;                // the 3-cell wall reaches this many cells below the rim cell
         static bool HasWall;                       // set by BuildCliff: the delivered 3/4 cliff wall is in use
+        const float WallTuck = 2.2f;               // rim cell top -> first opaque row of a hanging piece (the wall's dense part ends ~2.4 cells down, then dithers out)
         const float PieceMaxHeight = 6f;           // tallest piece (rock 256x192 at PPU 32)
         const string IncomingIslands = "Assets/_Project/Art/Incoming/islands/";
         const string CloudPuffs = "Assets/_Project/Art/Incoming/sky/sky_cloudpuff_3q_128x64_3f.png";
@@ -542,11 +543,15 @@ namespace IdleGrounds.Editor
             }
 
             bool volcano = isl.islandKey == "volcano";
-            var rock = IslandArtBuilder.Single(IslandArtBuilder.UndersideRock);
-            var spike = IslandArtBuilder.Single(IslandArtBuilder.UndersideStalactite);
-            var roots = IslandArtBuilder.Single(IslandArtBuilder.UndersideRoots);
-            var vines = IslandArtBuilder.Single(IncomingIslands + "island_underside_vines_128x128.png");
-            var lava = IslandArtBuilder.Frames(IncomingIslands + "island_underside_lavadrip_128x160_4f.png");
+            // 3/4 underside-only pieces (Islands-036, roots touch-up Islands-037; flat top cut, no grass): they hang from
+            // behind the cliff wall's fading bottom. Falls back to the old side-view pieces if the _3q set is missing.
+            Sprite Pick1(string q, string old) { var s = IslandArtBuilder.Single(IncomingIslands + q); return s != null ? s : IslandArtBuilder.Single(old); }
+            var rock = Pick1("island_underside_rock_3q_256x192.png", IslandArtBuilder.UndersideRock);
+            var spike = Pick1("island_underside_stalactite_3q_96x160.png", IslandArtBuilder.UndersideStalactite);
+            var roots = IslandDressingBuilder.MaskedUndersideRoots() ?? IslandArtBuilder.Single(IslandArtBuilder.UndersideRoots);
+            var vines = Pick1("island_underside_vines_3q_128x128.png", IncomingIslands + "island_underside_vines_128x128.png");
+            var lava = IslandArtBuilder.Frames(IncomingIslands + "island_underside_lavadrip_3q_128x160_4f.png");
+            if (lava.Length == 0) lava = IslandArtBuilder.Frames(IncomingIslands + "island_underside_lavadrip_128x160_4f.png");
             var puffs = IslandArtBuilder.Frames(CloudPuffs);
             var tint = Color.Lerp(Color.white, WorldBuilder.UndersideTint(isl.islandKey), 0.3f);
             var rng = new System.Random(KeySeed(isl.islandKey) ^ (isl.coastSeed * 7919) ^ 0x2545F49);
@@ -599,6 +604,7 @@ namespace IdleGrounds.Editor
             {
                 float r = (float)rng.NextDouble();
                 if (volcano && lava.Length > 0 && r < 0.55f) return lava[rng.Next(lava.Length)];
+                if (volcano) return k > 0.35f && r < 0.85f ? rock : spike;            // basalt: no roots / green vines
                 var v = vines != null ? vines : spike;
                 if (k > 0.5f) return r < 0.55f ? rock : r < 0.82f ? roots : r < 0.92f ? v : spike;
                 if (k > 0.2f) return r < 0.3f ? rock : r < 0.6f ? roots : r < 0.85f ? v : spike;
@@ -629,7 +635,11 @@ namespace IdleGrounds.Editor
                     float half = bnd.size.x * 0.5f;
                     float top = HangOver(cx - half + 0.5f, cx + half - 0.5f);   // the outer half-cell of the art is mostly transparent
                     if (float.IsNaN(top)) return false;
-                    float yTop = top - (HasWall ? WallBelowRim : 0) + 0.5f - dropBelowRim;                        // tucked half a cell under the rim (hidden behind the ground)
+                    // with the 3/4 cliff wall: the art's first opaque row sits WallTuck cells under the rim cell's top,
+                    // i.e. a few px above the wall's solid bottom (the wall fades out over its last ~0.9 cell)
+                    float margin = HasWall ? IslandDressingBuilder.OpaqueTopMargin(sp) / 32f : 0f;
+                    float yTop = HasWall ? top + 1f - WallTuck - dropBelowRim * 0.35f + margin      // small jitter: the flat top cut stays hidden
+                                         : top + 0.5f - dropBelowRim;                        // tucked half a cell under the rim (hidden behind the ground)
                     var pos = new Vector3(Snap(cx - bnd.center.x), Snap(yTop - bnd.max.y), 0f);
                     var sr = WorldBuilder.Deco(root, "Piece" + pieceN++, sp, pos, 1f, Color.Lerp(tint, Color.black, dark), order, Sky);
                     sr.flipX = rng.NextDouble() < 0.5;
@@ -644,7 +654,7 @@ namespace IdleGrounds.Editor
                 for (float x = land.x0 + 1.5f; x < land.x1 - 0.5f;)
                 {
                     int i = Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1);
-                    if (f[i] <= (HasWall ? 0.3f : 0.05f) || (HasWall && rng.NextDouble() < 0.45)) { x += HasWall ? 2f : 1f; continue; }
+                    if (f[i] <= (HasWall ? 0.3f : 0.05f) || (HasWall && rng.NextDouble() < 0.3)) { x += HasWall ? 2f : 1f; continue; }
                     var sp = Pick(f[i]);
                     int order = 38 + pieceN % 3;
                     if (Hang(sp, x, R(0f, 0.6f), order, R(0f, 0.12f))) { x += sp.bounds.size.x * (HasWall ? R(0.85f, 1.15f) : R(0.55f, 0.75f)); continue; }

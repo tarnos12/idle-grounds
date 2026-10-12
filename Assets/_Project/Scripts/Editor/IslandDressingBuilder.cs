@@ -60,7 +60,8 @@ namespace IdleGrounds.Editor
             public Tile[] macroBig, macroSmall;
             public Tile[] scatter, patch, path, plaza;
             public Tile[] macroArt, flowers, lip;      // ART-SPEC §3.6 delivered macro patches, flower clusters, coast grass lip (recoloured per biome)
-            public Tile[] side;                        // W / E 3/4 side faces: 0 W straight, 1 E straight, 2 W end, 3 E end
+            public Tile[] sideW, sideE;                // W / E 3/4 side faces: straight variants (delivered, Islands-034)
+            public Tile sideWEnd, sideEEnd;            // ... and the end pieces above the south cliff wall
             public AnimatedTile pond;
             public AnimatedTile[] glow;
             public Color light, dark;
@@ -85,15 +86,24 @@ namespace IdleGrounds.Editor
             }
             k.macroBig = _macroBig; k.macroSmall = _macroSmall; k.path = _path; k.plaza = _plaza;
             k.scatter = Tiles("Scatter_" + biome, IslandArtBuilder.Frames($"{Inc}island_{biome}_scatter_32x32_4f.png"));
-            // fishing macro REJECTED (ART-SPEC §3.6 log): it is a mini world map (sand, grass, water) in a palette foreign to
-            // the pale fishing fill - the generated blob decals stay in use there
-            var mf = biome == "fishing" ? new Sprite[0] : EnsureSoftened($"{Inc}island_{biome}_macro_96x96_4f.png", $"dress_macro_{biome}_96x96_4f.png", 4, 96, MacroStrength, $"{Inc}island_{biome}_ground_fill_32x32_3f.png");
+            // fishing v3 macro (Islands-033): its patches are already the fill colour with sparse pebbles, so it is used
+            // as delivered (softening would only erase the pebbles); the other biomes are softened toward their fill
+            var mf = EnsureSoftened($"{Inc}island_{biome}_macro_96x96_4f.png", $"dress_macro_{biome}_96x96_4f.png", 4, 96, biome == "fishing" ? 1f : MacroStrength, $"{Inc}island_{biome}_ground_fill_32x32_3f.png");
             k.macroArt = mf.Length >= 4 ? Tiles("MacroArt_" + biome, mf) : null;
             var ff = IslandArtBuilder.Frames($"{Inc}island_{biome}_flowers_32x32_4f.png");
             k.flowers = ff.Length > 0 ? Tiles("Flowers_" + biome, ff) : null;
             k.lip = EdgeLipTiles(biome);
             var sw = EnsureSideWall(biome);
-            k.side = sw.Length >= 4 ? Tiles("SideWall_" + biome, sw) : null;
+            if (sw != null)
+            {
+                var all = new List<Sprite>(sw.w); all.AddRange(sw.e); all.Add(sw.wEnd); all.Add(sw.eEnd);
+                var t = Tiles("SideWall_" + biome, all.ToArray());
+                int nw = sw.w.Length, ne = sw.e.Length;
+                k.sideW = new Tile[nw]; k.sideE = new Tile[ne];
+                System.Array.Copy(t, 0, k.sideW, 0, nw);
+                System.Array.Copy(t, nw, k.sideE, 0, ne);
+                k.sideWEnd = t[nw + ne]; k.sideEEnd = t[nw + ne + 1];
+            }
             FillTones(biome, out k.light, out k.dark, out k.textured);
             k.pale = k.light.r + k.light.g + k.light.b > 2.0f;
             k.busy = k.textured || k.pale;
@@ -256,50 +266,70 @@ namespace IdleGrounds.Editor
         static readonly Color SideEastShade = new Color(0.82f, 0.82f, 0.88f, 1f);
 
         /// <summary>
-        /// Integration copy of <c>island_&lt;biome&gt;_sidewall_32x32_4f</c> (ART-SPEC §3.6, 2026-10-11 delivery) for the W / E
-        /// coasts. The delivered frames are HORIZONTAL bands (grass row on top, 12 px of earth / rock darkening downward,
-        /// like a thin south wall), which cannot stack along a north-south coast. They are turned into VERTICAL side faces:
-        /// the band's top (grass) row becomes the column touching the coast, its dark bottom row the outer edge hanging into
-        /// the sky; the band's length runs along the coast (it tiles vertically as it tiled horizontally). Output frames:
-        /// 0 west face (band in the right columns of the sky cell west of the coast), 1 east face (left columns), 2 / 3 the
-        /// same faces tapering diagonally into the south cliff wall (outer edge first) for the corner cell above the wall.
-        /// The delivered "end" frames 2 / 3 taper the wrong way for this (their slanted end keeps the dark outer rows and
-        /// drops the grass side), so the ends are cut from the straight frames here.
+        /// W / E 3/4 side faces (ART-SPEC §3.6, Islands-034): the delivered vertical faces, used as delivered (no rotation,
+        /// no cut ends). Prefers <c>island_&lt;biome&gt;_sidewall_variants_32x32_8f</c> (0-2 W straight, 3-5 E straight,
+        /// 6 W end, 7 E end) and falls back to <c>island_&lt;biome&gt;_sidewall_32x32_4f</c> (0 W, 1 E, 2 W end, 3 E end).
+        /// Each face is 11 px wide: W frames sit in the LEFT columns (grass column 10 against the island, dark outer
+        /// column 0), E frames in the RIGHT columns (grass column 21). Returned as a <see cref="SideSet"/>.
         /// </summary>
-        public static Sprite[] EnsureSideWall(string biome)
+        public static SideSet EnsureSideWall(string biome)
         {
-            string src = $"{Inc}island_{biome}_sidewall_32x32_4f.png";
-            var px = ReadPng(src, out int w, out int h);
-            if (px == null || w != 128 || h != 32) return new Sprite[0];
-            Color32 Old(int f, int c, int r) => px[(31 - r) * w + f * 32 + c];          // top-down coords
-            // band rows of each straight frame (top-down)
-            int Top(int f) { for (int r = 0; r < 32; r++) for (int c = 0; c < 32; c++) if (Old(f, c, r).a > 0) return r; return 32; }
-            int Bot(int f) { for (int r = 31; r >= 0; r--) for (int c = 0; c < 32; c++) if (Old(f, c, r).a > 0) return r; return -1; }
-            var o = new Color32[128 * 32];
-            void Put(int f, int c, int r, Color32 col) { o[(31 - r) * 128 + f * 32 + c] = col; }
-            const int TaperFrom = 12;                // the end frames start narrowing this many px below the cell top
-            for (int side = 0; side < 2; side++)     // 0 west (from delivered frame 0), 1 east (from delivered frame 1)
-            {
-                int f = side, t = Top(f), b = Bot(f), bw = b - t + 1;
-                if (bw <= 0 || bw > 16) return new Sprite[0];
-                for (int r = 0; r < 32; r++)
-                    for (int k = 0; k < bw; k++)          // k = 0 at the coast (grass row), bw-1 outermost (dark)
-                    {
-                        var col = Old(f, r, t + k);       // band length (old column) -> along the coast (new row)
-                        if (col.a == 0) continue;
-                        int c = side == 0 ? 31 - k : k;
-                        Put(side, c, r, col);
-                        // end frame: the outer part is cut away along a diagonal reaching the coast at the cell bottom
-                        int keep = r < TaperFrom ? bw : Mathf.Max(1, bw - Mathf.CeilToInt((r - TaperFrom + 1) * bw / (float)(32 - TaperFrom)));
-                        if (k < keep) Put(side + 2, c, r, k == keep - 1 && keep < bw ? Old(f, r, b) : col);   // dark rim on the cut
-                    }
-            }
-            string path = $"{ArtDir}/dress_sidewall_{biome}_32x32_4f.png";
-            Directory.CreateDirectory(ArtDir);
-            WriteIfChanged(path, 128, 32, o);
-            Import(path, 4, 32);
-            return IslandArtBuilder.Frames(path);
+            var v = IslandArtBuilder.Frames($"{Inc}island_{biome}_sidewall_variants_32x32_8f.png");
+            if (v.Length >= 8)
+                return new SideSet { w = new[] { v[0], v[1], v[2] }, e = new[] { v[3], v[4], v[5] }, wEnd = v[6], eEnd = v[7] };
+            var f = IslandArtBuilder.Frames($"{Inc}island_{biome}_sidewall_32x32_4f.png");
+            if (f.Length >= 4)
+                return new SideSet { w = new[] { f[0] }, e = new[] { f[1] }, wEnd = f[2], eEnd = f[3] };
+            return null;
         }
+
+        public class SideSet { public Sprite[] w, e; public Sprite wEnd, eEnd; }
+
+        static readonly Dictionary<Sprite, int> _topMargin = new Dictionary<Sprite, int>();
+
+        /// <summary>Fully transparent rows (px) above the first opaque pixel of a sprite (read from its PNG; cached).</summary>
+        public static int OpaqueTopMargin(Sprite s)
+        {
+            if (s == null) return 0;
+            if (_topMargin.TryGetValue(s, out var m)) return m;
+            m = 0;
+            var px = ReadPng(AssetDatabase.GetAssetPath(s.texture), out int w, out int h);
+            if (px != null)
+            {
+                var r = s.rect;
+                int x0 = (int)r.x, x1 = (int)r.xMax, yTop = (int)r.yMax - 1, y0 = (int)r.y;
+                for (int y = yTop; y >= y0; y--, m++)
+                {
+                    bool any = false;
+                    for (int x = x0; x < x1 && !any; x++) any = px[y * w + x].a > 0;
+                    if (any) break;
+                }
+            }
+            _topMargin[s] = m;
+            return m;
+        }
+
+        /// <summary>
+        /// Integration copy of <c>island_underside_roots_3q_192x160</c> (Islands-037 touch-up) with the leftover 4-px speck
+        /// in its bottom-left corner (x &lt; 24, y &gt;= 145, top-down) cleared. The incoming file is never edited.
+        /// </summary>
+        public static Sprite MaskedUndersideRoots()
+        {
+            string src = Inc + "island_underside_roots_3q_192x160.png";
+            var px = ReadPng(src, out int w, out int h);
+            if (px == null) return IslandArtBuilder.Single(src);
+            for (int y = 145; y < h; y++)
+                for (int x = 0; x < 24 && x < w; x++) px[(h - 1 - y) * w + x] = new Color32(0, 0, 0, 0);
+            Directory.CreateDirectory(ArtDir);
+            string path = $"{ArtDir}/dress_underside_roots_3q_192x160.png";
+            WriteIfChanged(path, w, h, px);
+            Import(path, 1, w);
+            var f = IslandArtBuilder.Frames(path);
+            return f.Length > 0 ? f[0] : null;
+        }
+
+        /// <summary>Grass column of the delivered W face (the E face mirrors it at 31 - this).</summary>
+        const int SideGrassCol = 10;
 
         /// <summary>How far the delivered macro patches keep their own light / dark tones (1 = as delivered, 0 = the fill base).</summary>
         const float MacroStrength = 0.4f;
@@ -986,8 +1016,11 @@ namespace IdleGrounds.Editor
                 // the 4 px overhang sticks OUT of the coast: each direction is its own tilemap nudged outward so the lip
                 // starts at the blob tiles' visible edge (CoastInset px inside the cell) and overhangs 4 px past it
                 const float o = (4f - CoastInset) / 32f;
-                var lipW = NewMap(root, "EdgeLipW", 8, new Vector3(-o, 0f, 0f));
-                var lipE = NewMap(root, "EdgeLipE", 8, new Vector3(o, 0f, 0f));
+                // with the delivered W / E side faces the face itself hangs past the coast; the W / E lips then move
+                // 2 px inward instead and cover the blob tiles' brown rim (else: face, lip grass, brown line, grass)
+                // (the blob's E rim sits 1 px further in than its W rim)
+                var lipW = NewMap(root, "EdgeLipW", 8, new Vector3(kit.sideW != null ? 2f / 32f : -o, 0f, 0f));
+                var lipE = NewMap(root, "EdgeLipE", 8, new Vector3(kit.sideW != null ? -3f / 32f : o, 0f, 0f));
                 var lipN = NewMap(root, "EdgeLipN", 9, new Vector3(0f, o, 0f));
                 var lipNW = NewMap(root, "EdgeLipNW", 9, new Vector3(-o, o, 0f));
                 var lipNE = NewMap(root, "EdgeLipNE", 9, new Vector3(o, o, 0f));
@@ -1008,17 +1041,36 @@ namespace IdleGrounds.Editor
             //      cliff wall (Ground -3): a side face belongs to land further south, in front of a recessed wall. The cell
             //      that also faces south (the wall starts under it) gets the tapering end frame. Sky-layer shadow copies keep
             //      the drop shadow matching the silhouette; the veil mask already covers one cell around the land.
-            if (kit.side != null)
+            if (kit.sideW != null)
             {
-                // nudged inward by the blob inset: the band's grass column tucks under the lip, the rest hangs past it
-                var sideW = NewMap(root, "SideWallW", 7, new Vector3(CoastInset / 32f, 0f, 0f));
-                var sideE = NewMap(root, "SideWallE", 7, new Vector3(-CoastInset / 32f, 0f, 0f));
+                // the face is drawn in the sky cell beside the coast; the tilemap is nudged toward the island so the face's
+                // grass column lands 1 px outside the blob tiles' visible edge (under the lip), the rock hanging past it
+                float nudge = (32 - SideGrassCol + CoastInset - 1) / 32f;
+                var sideW = NewMap(root, "SideWallW", 7, new Vector3(nudge, 0f, 0f));
+                var sideE = NewMap(root, "SideWallE", 7, new Vector3(-nudge, 0f, 0f));
                 sideE.color = SideEastShade;      // light from the top-left: the east faces sit in shade
-                foreach (var v in land)
+                // straight variants picked per cell (seeded), never the same one twice in a row down a coast column
+                var pickW = new Dictionary<Vector2Int, int>();
+                var pickE = new Dictionary<Vector2Int, int>();
+                int Variant(Dictionary<Vector2Int, int> memo, Vector2Int v, bool west, int n)
+                {
+                    if (memo.TryGetValue(v, out var got)) return got;
+                    int r;
+                    var up = v + Vector2Int.up;
+                    bool upFace = land.Contains(up) && !land.Contains(up + (west ? Vector2Int.left : Vector2Int.right));
+                    if (n <= 1) r = 0;
+                    else if (upFace) r = (Variant(memo, up, west, n) + 1 + (Hash(v.x, v.y, seed + (west ? 211 : 212)) < 0.5f ? 0 : n - 2)) % n;
+                    else r = (int)(Hash(v.x, v.y, seed + (west ? 213 : 214)) * n) % n;
+                    memo[v] = r;
+                    return r;
+                }
+                var sorted = new List<Vector2Int>(land);
+                sorted.Sort((a, b) => b.y != a.y ? b.y.CompareTo(a.y) : a.x.CompareTo(b.x));     // north first: memo depth stays 1
+                foreach (var v in sorted)
                 {
                     bool w = !land.Contains(v + Vector2Int.left), e = !land.Contains(v + Vector2Int.right), s = !land.Contains(v + Vector2Int.down);
-                    if (w) sideW.SetTile(new Vector3Int(v.x - 1, v.y, 0), kit.side[s ? 2 : 0]);
-                    if (e) sideE.SetTile(new Vector3Int(v.x + 1, v.y, 0), kit.side[s ? 3 : 1]);
+                    if (w) sideW.SetTile(new Vector3Int(v.x - 1, v.y, 0), s ? kit.sideWEnd : kit.sideW[Variant(pickW, v, true, kit.sideW.Length)]);
+                    if (e) sideE.SetTile(new Vector3Int(v.x + 1, v.y, 0), s ? kit.sideEEnd : kit.sideE[Variant(pickE, v, false, kit.sideE.Length)]);
                 }
                 var shadow = isl.transform.Find("Shadow");
                 if (shadow != null)

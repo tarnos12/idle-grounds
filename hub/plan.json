@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 08:05",
+  "updated": "2026-10-12 10:09",
   "milestones": [
     {
       "id": "M1",
@@ -117,34 +117,31 @@
         {
           "title": "Integrate vertical side walls (v2, with variants)",
           "detail": "Swap the rotated first version for the artist's corrected vertical side faces.",
-          "status": "in-progress",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "now": "Opus agent: integrating + Play review"
+          "owner": "Claude"
         },
         {
           "title": "Integrate the new hanging undersides (3/4 rock, roots, vines)",
           "detail": "Replace the side-view rocks under the south cliffs with the redrawn 3/4 pieces.",
-          "status": "in-progress",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "now": "Opus agent: integrating + Play review"
+          "owner": "Claude"
         },
         {
           "title": "Fishing ground patches (3rd version)",
           "detail": "Calm cool-grey shingle patches for the Fishing island; earlier two were rejected.",
-          "status": "in-progress",
+          "status": "blocked",
           "size": "S",
           "owner": "Claude",
-          "now": "Opus agent: integrating + Play review"
+          "blockedBy": "Integrated; nearly invisible in game; repair requested from the artist"
         },
         {
           "title": "Rebuild the sky with the kept background islands",
           "detail": "Background islands now load from their own folder so new deliveries can't replace them.",
-          "status": "in-progress",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "now": "Opus agent: integrating + Play review"
+          "owner": "Claude"
         },
         {
           "title": "Cliff wall seam and stripe fix",

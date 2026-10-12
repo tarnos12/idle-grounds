@@ -1,14 +1,10 @@
 # Plan
 
-Updated 2026-10-12 08:05. in-progress: 5, blocked: 4, waiting: 8, done: 8
+Updated 2026-10-12 10:09. in-progress: 1, blocked: 5, waiting: 8, done: 11
 
 ## Being worked on now
 
 - South cliff walls, side faces, grass lips (art loop: integrating deliveries as they arrive)
-- Integrate vertical side walls (v2, with variants) (Opus agent: integrating + Play review)
-- Integrate the new hanging undersides (3/4 rock, roots, vines) (Opus agent: integrating + Play review)
-- Fishing ground patches (3rd version) (Opus agent: integrating + Play review)
-- Rebuild the sky with the kept background islands (Opus agent: integrating + Play review)
 
 ## M1: Unity port of the browser game
 
@@ -52,18 +48,15 @@ Updated 2026-10-12 08:05. in-progress: 5, blocked: 4, waiting: 8, done: 8
 - [ ] **South cliff walls, side faces, grass lips** (in-progress, L, Claude)
   - Islands show a 3-tile cliff on the south edge and a narrow earth face on the west/east edges, so they read as floating rock seen from above.
   - Now: art loop: integrating deliveries as they arrive
-- [ ] **Integrate vertical side walls (v2, with variants)** (in-progress, S, Claude)
+- [x] **Integrate vertical side walls (v2, with variants)** (done, S, Claude)
   - Swap the rotated first version for the artist's corrected vertical side faces.
-  - Now: Opus agent: integrating + Play review
-- [ ] **Integrate the new hanging undersides (3/4 rock, roots, vines)** (in-progress, S, Claude)
+- [x] **Integrate the new hanging undersides (3/4 rock, roots, vines)** (done, S, Claude)
   - Replace the side-view rocks under the south cliffs with the redrawn 3/4 pieces.
-  - Now: Opus agent: integrating + Play review
-- [ ] **Fishing ground patches (3rd version)** (in-progress, S, Claude)
+- [ ] **Fishing ground patches (3rd version)** (blocked, S, Claude)
   - Calm cool-grey shingle patches for the Fishing island; earlier two were rejected.
-  - Now: Opus agent: integrating + Play review
-- [ ] **Rebuild the sky with the kept background islands** (in-progress, S, Claude)
+  - Why: Integrated; nearly invisible in game; repair requested from the artist
+- [x] **Rebuild the sky with the kept background islands** (done, S, Claude)
   - Background islands now load from their own folder so new deliveries can't replace them.
-  - Now: Opus agent: integrating + Play review
 - [ ] **Cliff wall seam and stripe fix** (blocked, S, Artist)
   - The artist's cliff tiles still have transparent seams and a light-to-dark stripe per tile; patched in code for now.
   - Why: Waiting for the artist's corrected cliff walls (ART-SPEC delivery log)
