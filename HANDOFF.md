@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: Project Hub (CLAUDE.md section): hub/plan.json + hub/questions.json, tools/hub/build-hub.cjs + template + set-task + build-plan; published and pinned at https://claude.ai/artifact/EAabdoZhE79jgBc6THmrwG. Open owner questions: ascension unlocks, smoothing coasts, scene size.
+
 - 2026-10-12: Islands-036 underside _3q quality redo pulled and validated (good). Pending in Unity: swap IslandCoastBuilder underside pieces (side-view rock/roots/stalactite/vines/lavadrip) for the _3q versions, plus sidewalls v2, fishing macro v3, sky rebuild.
 
 - 2026-10-12: Islands-035 underside-only redraws rejected on quality (flat triangles with flecks). The first _3q mini-islands are preserved as Art/Sky/BackgroundIslands/sky_bgisle_* (IslandsBuilder.BuildSky now reads them there) because the redraws reuse the incoming keys. Still pending in Unity (editor unresponsive): vertical sidewalls + variants, fishing macro v3, sky rebuild with the new background-island paths (code not yet compiled).

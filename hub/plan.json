@@ -1,0 +1,34 @@
+{
+  "updated": "2026-10-12 12:00",
+  "milestones": [
+    { "id": "M1", "title": "Unity port of the browser game", "tasks": [
+      { "title": "Port every system and screen from the HTML game", "detail": "The full game runs in Unity with scenes, prefabs and data assets; parity audits passed.", "status": "done", "size": "L", "owner": "Claude" },
+      { "title": "Floating islands, Spirit Bridges, no offline progress", "detail": "Regions became floating Islands linked by one-way bridges (ADR 0002, 0003).", "status": "done", "size": "L", "owner": "Claude" }
+    ]},
+    { "id": "M2", "title": "Balance and onboarding", "tasks": [
+      { "title": "Real balance: 2-3 h first run, machines beat hands mid-game", "detail": "TEST mode off by default; playthrough bot checks the pacing (ADR 0004).", "status": "done", "size": "M", "owner": "Claude" },
+      { "title": "Island onboarding quests", "detail": "Quests that teach bridges, caravans and cross-island trade, with next-step hints.", "status": "done", "size": "M", "owner": "Claude" },
+      { "title": "Decide what each ascension unlocks", "detail": "Ascension no longer speeds the world up, so later runs need new content instead (new islands, buildings, recipes).", "status": "blocked", "size": "M", "owner": "Mariusz", "blockedBy": "Owner answer: Questions tab, 'What should ascensions unlock?'" }
+    ]},
+    { "id": "M3", "title": "3/4 world look (ADR 0005)", "tasks": [
+      { "title": "South cliff walls, side faces, grass lips", "detail": "Islands show a 3-tile cliff on the south edge and a narrow earth face on the west/east edges, so they read as floating rock seen from above.", "status": "in-progress", "size": "L", "owner": "Claude", "now": "art loop: integrating deliveries as they arrive" },
+      { "title": "Integrate vertical side walls (v2, with variants)", "detail": "Swap the rotated first version for the artist's corrected vertical side faces.", "status": "blocked", "size": "S", "owner": "Claude", "blockedBy": "Unity editor is not responding (likely a 'scene changed on disk - Reload' dialog)" },
+      { "title": "Integrate the new hanging undersides (3/4 rock, roots, vines)", "detail": "Replace the side-view rocks under the south cliffs with the redrawn 3/4 pieces.", "status": "blocked", "size": "S", "owner": "Claude", "blockedBy": "Unity editor is not responding" },
+      { "title": "Fishing ground patches (3rd version)", "detail": "Calm cool-grey shingle patches for the Fishing island; earlier two were rejected.", "status": "blocked", "size": "S", "owner": "Claude", "blockedBy": "Unity editor is not responding" },
+      { "title": "Rebuild the sky with the kept background islands", "detail": "Background islands now load from their own folder so new deliveries can't replace them.", "status": "blocked", "size": "S", "owner": "Claude", "blockedBy": "Unity editor is not responding" },
+      { "title": "Cliff wall seam and stripe fix", "detail": "The artist's cliff tiles still have transparent seams and a light-to-dark stripe per tile; patched in code for now.", "status": "blocked", "size": "S", "owner": "Artist", "blockedBy": "Waiting for the artist's corrected cliff walls (ART-SPEC delivery log)" },
+      { "title": "Smooth stepped and long-straight coasts", "detail": "Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.", "status": "blocked", "size": "M", "owner": "Claude", "blockedBy": "Owner answer: Questions tab, 'Smooth the coastlines now?'" }
+    ]},
+    { "id": "M4", "title": "Art coverage", "tasks": [
+      { "title": "All buildings, nodes, items and creatures have real art", "detail": "Every building, resource, item and enemy uses delivered pixel art.", "status": "done", "size": "L", "owner": "Claude" },
+      { "title": "UI chrome: panels, buttons, cards, bars, cursor", "detail": "The interface uses the delivered jade/lacquer frames, buttons and cursors.", "status": "done", "size": "M", "owner": "Claude" },
+      { "title": "Replace emoji icons in the UI with real icons", "detail": "Perk, upgrade, quest and toolbar icons were delivered but the UI still draws emoji.", "status": "waiting", "size": "M", "owner": "Claude", "blockedBy": "After the 3/4 world look lands" },
+      { "title": "Use the 10 delivered pieces that have no place yet", "detail": "Dragon stirring, meditating disciple, small glyphs, veil edge, waterfall pieces.", "status": "waiting", "size": "M", "owner": "Claude", "blockedBy": "After the 3/4 world look lands" }
+    ]},
+    { "id": "M5", "title": "Builds and tech health", "tasks": [
+      { "title": "Windows and WebGL builds", "detail": "One-click builds; browser saves fixed so progress survives a reload.", "status": "done", "size": "M", "owner": "Claude" },
+      { "title": "Rebuild Windows + WebGL with the new island look", "detail": "Current builds predate the cliff walls and cloud sea.", "status": "waiting", "size": "S", "owner": "Claude", "blockedBy": "After the pending integrations" },
+      { "title": "Keep the scene file under GitHub's 100 MB limit", "detail": "Game.unity is about 78 MB because generated island dressing is stored in it.", "status": "blocked", "size": "M", "owner": "Claude", "blockedBy": "Owner answer: Questions tab, 'Move generated island dressing out of the scene?'" }
+    ]}
+  ]
+}

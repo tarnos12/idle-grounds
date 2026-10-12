@@ -26,6 +26,26 @@ and the ▶ NEXT SESSION pointer.
    It still runs: `node old-game/server.js` → `http://localhost:5174`
    (launch config `idle-grounds`).
 
+## Project Hub (owner dashboard) — https://claude.ai/artifact/EAabdoZhE79jgBc6THmrwG
+
+One private, pinned page for the owner: game data (Items, Buildings, Charts), the
+**Plan** and open **Questions**. It is generated, never edited by hand.
+- Sources: `hub/plan.json`, `hub/questions.json`, `hub/question-images/`, game data
+  `Assets/_Project/Data/Source/game-data.json`, item/building art in `Art/Incoming`.
+- Build: `node tools/hub/build-hub.cjs <scratchpad>/hub` (checks script syntax and
+  image refs), then publish `<scratchpad>/hub/index.html` with its `img/` and `q/`
+  side files **to the same URL above** (Artifact `url`).
+- Tasks: `node tools/hub/set-task.cjs "<precise title regex>" <in-progress|blocked|waiting|done> ["now" | "reason"]`;
+  `node tools/hub/build-plan.cjs` writes `hub/PLAN.md`.
+- Rules: every owner request/pick/delivery becomes a plan task at once; every running
+  agent has an `in-progress` task with a `now` line; blocked/waiting tasks always say
+  why. Owner decisions go **only** in the Questions tab (recommended options marked,
+  never pre-selected). When answers are pasted in chat: save them verbatim in
+  `hub/owner-picks-<date>.json`, remove answered questions, turn answers into tasks,
+  rebuild + republish. Owner picks are commitments — read the picks files before
+  planning. Rebuild + republish after every plan/question/data change, and end every
+  status report with the Hub link.
+
 ## Unity project + MCP
 
 - Unity **6000.3.12f1**, URP, 2D packages. The project lives at the repo

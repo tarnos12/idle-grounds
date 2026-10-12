@@ -1,0 +1,701 @@
+<title>Idle Grounds Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: one padded wrapper (.wrap, 16px+ gutters) -> sticky header with tab bar -> one panel per tab; lists in overflow-x:auto boxes, grids wrap. */
+/* Palette: ink-lacquer surfaces, jade = active/primary, gold = trim and waiting, cinnabar = danger/blocked. */
+:root {
+  --bg: #eceff0;
+  --panel: #f8faf9;
+  --panel-2: #e2e8e6;
+  --fg: #16201e;
+  --muted: #566562;
+  --line: #bcc8c4;
+  --jade: #1b7a62;
+  --jade-soft: #cfe8df;
+  --on-jade: #ffffff;
+  --gold: #8a6512;
+  --gold-soft: #f1e2b5;
+  --cinnabar: #b5382b;
+  --cinnabar-soft: #f4d4cf;
+  --done: #6d7c78;
+  --done-soft: #dfe5e3;
+  --focus: #b5382b;
+  --shade: rgba(14, 22, 20, 0.78);
+  --on-cin: #ffffff;
+  --on-shade: #ffffff;
+  --bar: #1b7a62;
+  --bar-2: #8a6512;
+  --font-display: "Yuji Syuku", "Cormorant Garamond", "Palatino Linotype", Georgia, serif;
+  --font-body: "Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1413;
+    --panel: #162120;
+    --panel-2: #1e2d2b;
+    --fg: #e4ebe8;
+    --muted: #94a7a2;
+    --line: #2f4340;
+    --jade: #52c3a0;
+    --jade-soft: #173a31;
+    --on-jade: #0a1512;
+    --gold: #dcb55a;
+    --gold-soft: #3a2f14;
+    --cinnabar: #ef6a5a;
+    --cinnabar-soft: #43201c;
+    --done: #8b9c97;
+    --done-soft: #22302d;
+    --focus: #dcb55a;
+    --shade: rgba(0, 0, 0, 0.85);
+    --bar: #52c3a0;
+    --bar-2: #dcb55a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1413;
+  --panel: #162120;
+  --panel-2: #1e2d2b;
+  --fg: #e4ebe8;
+  --muted: #94a7a2;
+  --line: #2f4340;
+  --jade: #52c3a0;
+  --jade-soft: #173a31;
+  --on-jade: #0a1512;
+  --gold: #dcb55a;
+  --gold-soft: #3a2f14;
+  --cinnabar: #ef6a5a;
+  --cinnabar-soft: #43201c;
+  --done: #8b9c97;
+  --done-soft: #22302d;
+  --focus: #dcb55a;
+  --shade: rgba(0, 0, 0, 0.85);
+  --bar: #52c3a0;
+  --bar-2: #dcb55a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.5 var(--font-body); font-variant-numeric: tabular-nums; overflow-x: hidden; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }
+h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
+.display { font-family: var(--font-display); font-weight: 400; letter-spacing: 0.02em; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+a { color: var(--jade); }
+@media (prefers-reduced-motion: no-preference) { .tab, .chip-btn, .row-btn { transition: background-color .15s, border-color .15s; } }
+
+/* header */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); padding-block: 12px 0; border-bottom: 2px solid var(--gold); }
+.titlebar { display: flex; align-items: baseline; gap: 8px 16px; flex-wrap: wrap; padding-bottom: 8px; }
+.titlebar h1 { font-size: 1.7rem; color: var(--fg); }
+.titlebar .sub { color: var(--muted); font-size: .9rem; min-width: 0; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: thin; }
+.tab { flex: 0 0 auto; border: 1px solid transparent; border-bottom: 0; background: transparent; padding: 8px 14px; cursor: pointer; font-family: var(--font-display); font-size: 1.1rem; color: var(--muted); border-radius: 6px 6px 0 0; display: inline-flex; gap: 8px; align-items: center; }
+.tab:hover { background: var(--panel-2); }
+.tab[aria-selected="true"] { background: var(--panel); color: var(--fg); border-color: var(--gold); box-shadow: inset 0 3px 0 var(--jade); }
+.badge { background: var(--cinnabar); color: var(--on-cin); font: 700 .75rem/1 var(--font-body); min-width: 20px; padding: 4px 6px; border-radius: 10px; text-align: center; }
+
+main { padding-block: 20px; }
+.panel > h2 { font-size: 1.6rem; margin-bottom: 4px; }
+.lede { color: var(--muted); margin: 0 0 16px; max-width: 70ch; }
+
+/* controls */
+.controls { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; margin-bottom: 14px; }
+.field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.field label { font-size: .8rem; color: var(--muted); }
+input[type="search"], select, textarea { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px; min-width: 0; max-width: 100%; }
+input[type="search"] { width: min(280px, 100%); }
+textarea { width: 100%; resize: vertical; min-height: 44px; }
+.chip-btn { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.chip-btn[aria-pressed="true"] { background: var(--jade); color: var(--on-jade); border-color: var(--jade); }
+.btn { border: 1px solid var(--jade); background: var(--jade); color: var(--on-jade); border-radius: 4px; padding: 8px 16px; cursor: pointer; font-weight: 600; }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+
+/* generic bits */
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 560px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--panel-2); position: sticky; top: 0; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; }
+tr.sel td { background: var(--jade-soft); }
+.row-btn { border: 0; background: transparent; padding: 2px 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; text-align: left; font-weight: 600; border-radius: 4px; }
+.row-btn:hover { background: var(--panel-2); }
+.ico { width: 32px; height: 32px; flex: 0 0 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; line-height: 1; }
+.ico img { width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated; }
+.ico.big { width: 64px; height: 64px; flex-basis: 64px; font-size: 48px; }
+.ico.big img { width: 64px; height: 64px; }
+.muted { color: var(--muted); }
+.small { font-size: .85rem; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cost { display: inline-flex; align-items: center; gap: 4px; background: var(--panel-2); border-radius: 4px; padding: 1px 8px 1px 2px; font-size: .85rem; border: 0; cursor: pointer; }
+.cost .ico { width: 20px; height: 20px; flex-basis: 20px; font-size: 15px; }
+.cost .ico img { width: 20px; height: 20px; }
+.status { display: inline-block; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 3px; }
+.s-in-progress { background: var(--jade-soft); color: var(--jade); border: 1px solid var(--jade); }
+.s-blocked { background: var(--cinnabar-soft); color: var(--cinnabar); border: 1px solid var(--cinnabar); }
+.s-waiting { background: var(--gold-soft); color: var(--gold); border: 1px solid var(--gold); }
+.s-done { background: var(--done-soft); color: var(--done); border: 1px solid var(--line); }
+.tag { font-size: .75rem; padding: 1px 7px; border: 1px solid var(--line); border-radius: 3px; color: var(--muted); }
+
+/* items */
+.split { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+@media (max-width: 800px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.detail { border: 1px solid var(--gold); border-radius: 10px 2px 10px 2px; background: var(--panel); padding: 16px; min-width: 0; }
+.detail h3 { font-family: var(--font-display); font-size: 1.4rem; font-weight: 400; }
+.detail h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+.detail .head { display: flex; gap: 12px; align-items: center; }
+.detail ul { margin: 0; padding-left: 18px; }
+.detail li { margin-bottom: 4px; }
+
+/* buildings */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-top: 3px solid var(--jade); border-radius: 3px 14px 3px 3px; padding: 14px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.card .head { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.card h3 { font-size: 1.05rem; font-family: var(--font-body); font-weight: 700; overflow-wrap: anywhere; }
+.card .art { width: 72px; height: 72px; flex: 0 0 72px; display: flex; align-items: center; justify-content: center; background: var(--panel-2); border-radius: 4px; font-size: 40px; }
+.card .art img { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
+.card p { margin: 0; }
+.card .effects { margin: 0; padding-left: 18px; font-size: .9rem; }
+
+/* charts */
+.chart { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; margin-bottom: 18px; }
+.chart h3 { font-size: 1.1rem; font-family: var(--font-body); font-weight: 700; }
+.chart p { margin: 2px 0 10px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart svg text { fill: var(--fg); font: 12px var(--font-body); }
+.chart svg text.val { fill: var(--muted); font-variant-numeric: tabular-nums; }
+.bar-a { fill: var(--bar); }
+.bar-b { fill: var(--bar-2); }
+.bar-track { fill: var(--panel-2); }
+
+/* plan */
+.counts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.nowbox { border: 1px solid var(--jade); background: var(--jade-soft); border-radius: 12px 3px 12px 3px; padding: 14px; margin-bottom: 18px; }
+.nowbox h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; margin-bottom: 6px; }
+.nowbox ul { margin: 0; padding-left: 18px; }
+.ms { margin-bottom: 20px; }
+.ms > h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; padding-bottom: 4px; border-bottom: 1px solid var(--gold); margin-bottom: 8px; }
+.task { background: var(--panel); border: 1px solid var(--line); border-left-width: 4px; border-radius: 3px; padding: 10px 12px; margin-bottom: 8px; min-width: 0; }
+.task.t-in-progress { border-left-color: var(--jade); }
+.task.t-blocked { border-left-color: var(--cinnabar); }
+.task.t-waiting { border-left-color: var(--gold); }
+.task.t-done { border-left-color: var(--done); }
+.task .t-head { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.task .t-title { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.task.t-done .t-title { color: var(--muted); font-weight: 600; }
+.task .why { margin-top: 4px; font-size: .9rem; }
+.task .meta { color: var(--muted); font-size: .8rem; }
+
+/* questions */
+.qgroup { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; margin: 22px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--gold); }
+.q { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--cinnabar); border-radius: 3px; padding: 14px; margin-bottom: 12px; min-width: 0; }
+.q.answered { border-left-color: var(--jade); }
+.q .qtext { font-weight: 600; margin: 0 0 4px; overflow-wrap: anywhere; }
+.q .ctx { color: var(--muted); font-size: .9rem; margin: 0 0 8px; }
+.q .qid { font-size: .75rem; color: var(--muted); }
+.qimgs { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+.qimgs figure { margin: 0; max-width: 220px; }
+.qimgs button { border: 1px solid var(--line); background: var(--panel-2); padding: 0; cursor: zoom-in; border-radius: 4px; display: block; }
+.qimgs img { display: block; max-width: 100%; height: 160px; object-fit: contain; }
+.qimgs figcaption { font-size: .8rem; color: var(--muted); }
+.opts { border: 0; padding: 0; margin: 8px 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.opt { display: flex; gap: 10px; align-items: flex-start; padding: 6px 8px; border-radius: 4px; cursor: pointer; min-width: 0; }
+.opt:hover { background: var(--panel-2); }
+.opt input { margin-top: 5px; flex: 0 0 auto; width: 18px; height: 18px; accent-color: var(--jade); }
+.opt span { min-width: 0; overflow-wrap: anywhere; }
+.pick { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--gold); border: 1px solid var(--gold); border-radius: 3px; padding: 0 5px; margin-left: 6px; white-space: nowrap; }
+.qbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 14px 0; }
+#copy-out { margin-top: 10px; min-height: 120px; font-family: ui-monospace, Consolas, monospace; }
+.empty { color: var(--muted); padding: 20px; text-align: center; border: 1px dashed var(--line); border-radius: 6px; }
+
+/* lightbox */
+.lightbox { position: fixed; inset: 0; z-index: 100; background: var(--shade); display: flex; align-items: center; justify-content: center; padding: 16px; flex-direction: column; gap: 10px; }
+.lightbox img { max-width: 100%; max-height: calc(100vh - 100px); object-fit: contain; background: var(--panel); border-radius: 4px; }
+.lightbox .cap { color: var(--on-shade); }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="titlebar">
+      <h1 class="display">Idle Grounds Hub</h1>
+      <span class="sub" id="stamp"></span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Hub sections" id="tabs"></nav>
+  </header>
+  <main>
+    <section class="panel" id="panel-items" role="tabpanel" hidden>
+      <h2 class="display">Items</h2>
+      <p class="lede">Every item in the game: where you get it and which buildings use it. Pick a row for the full picture.</p>
+      <div class="controls">
+        <div class="field"><label for="items-filter">Filter</label><input type="search" id="items-filter" placeholder="Name or source"></div>
+        <div class="field"><label for="items-sort">Sort by</label>
+          <select id="items-sort"><option value="name">Name</option><option value="uses">Most used in recipes</option><option value="made">Made by buildings first</option><option value="raw">Raw (gathered) first</option></select></div>
+        <span class="muted small" id="items-count"></span>
+      </div>
+      <div class="split">
+        <div class="scroll"><table><thead><tr><th>Item</th><th>Where it comes from</th><th class="num">Used in</th></tr></thead><tbody id="items-body"></tbody></table></div>
+        <aside class="detail" id="item-detail" aria-live="polite"></aside>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-buildings" role="tabpanel" hidden>
+      <h2 class="display">Buildings</h2>
+      <p class="lede">What each building costs, what it does and when it opens up.</p>
+      <div class="controls">
+        <div class="field"><label for="bld-filter">Filter</label><input type="search" id="bld-filter" placeholder="Name, item or effect"></div>
+        <div class="field"><label for="bld-sort">Sort by</label>
+          <select id="bld-sort"><option value="name">Name</option><option value="cost">Cheapest first</option><option value="cost-desc">Most expensive first</option><option value="recipes">Most recipes</option></select></div>
+        <span class="muted small" id="bld-count"></span>
+      </div>
+      <div class="cards" id="bld-cards"></div>
+    </section>
+
+    <section class="panel" id="panel-charts" role="tabpanel" hidden>
+      <h2 class="display">Charts</h2>
+      <p class="lede">Balance at a glance. All numbers come straight from the game data.</p>
+      <div id="charts"></div>
+    </section>
+
+    <section class="panel" id="panel-plan" role="tabpanel" hidden>
+      <h2 class="display">Plan</h2>
+      <p class="lede" id="plan-lede"></p>
+      <div class="counts" id="plan-counts"></div>
+      <div class="nowbox" id="plan-now"></div>
+      <div id="plan-ms"></div>
+    </section>
+
+    <section class="panel" id="panel-questions" role="tabpanel" hidden>
+      <h2 class="display">Questions</h2>
+      <p class="lede">Decisions waiting for you. Pick answers, add a note if you like, then press Copy results and paste the text into the chat. Nothing is sent anywhere by this page; your answers stay in this browser.</p>
+      <div id="q-list"></div>
+      <div class="qbar">
+        <button class="btn" id="q-copy" type="button">Copy results</button>
+        <button class="btn ghost" id="q-clear" type="button">Clear my answers</button>
+        <span class="muted small" id="q-status" role="status"></span>
+      </div>
+      <div id="q-fallback" hidden>
+        <label class="small muted" for="copy-out">Copying was blocked. The text below is selected: copy it by hand.</label>
+        <textarea id="copy-out" readonly></textarea>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Picture, full size" hidden>
+  <img id="lightbox-img" alt="">
+  <div class="cap" id="lightbox-cap"></div>
+  <button class="btn" id="lightbox-close" type="button">Close</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var DATA = /*DATA*/null;
+  var PLAN = /*PLAN*/null;
+  var QUESTIONS = /*QUESTIONS*/[];
+
+  // ---------- helpers
+  function h(tag, attrs) {
+    var el = document.createElement(tag);
+    if (attrs) for (var k in attrs) {
+      var v = attrs[k];
+      if (v === null || v === undefined || v === false) continue;
+      if (k === 'class') el.className = v;
+      else if (k === 'text') el.textContent = v;
+      else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? '' : v);
+    }
+    for (var i = 2; i < arguments.length; i++) {
+      var c = arguments[i];
+      if (c === null || c === undefined || c === false) continue;
+      if (Array.isArray(c)) c.forEach(function (x) { if (x) el.appendChild(x); });
+      else el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return el;
+  }
+  function $(id) { return document.getElementById(id); }
+  function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+  function num(n) { return Number(n).toLocaleString('en-US'); }
+  function secs(ms) { var s = ms / 1000; return (s % 1 ? s.toFixed(1) : s) + 's'; }
+  function titleCase(s) { return String(s).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+
+  var NAMES = DATA.ITEM_NAMES, ICONS = DATA.ITEM_ICONS, B = DATA.BUILDINGS, IMG = DATA.imgs;
+  function iname(k) { return NAMES[k] || titleCase(k); }
+  function icon(kind, key, big) {
+    var src = IMG[kind] && IMG[kind][key];
+    var fallback = kind === 'items' ? ICONS[key] : (B[key] && B[key].icon);
+    var box = h('span', { class: 'ico' + (big ? ' big' : ''), 'aria-hidden': 'true' });
+    if (src) box.appendChild(h('img', { src: src, alt: '', loading: 'lazy' }));
+    else box.textContent = fallback || '?';
+    return box;
+  }
+
+  // ---------- derived data
+  var itemKeys = Object.keys(NAMES);
+  var bKeys = Object.keys(B);
+  var usedIn = {}, madeBy = {}, costOf = {};
+  itemKeys.forEach(function (k) { usedIn[k] = []; madeBy[k] = []; costOf[k] = []; });
+  function pushTo(map, k, v) { (map[k] = map[k] || []).push(v); }
+  bKeys.forEach(function (bk) {
+    var b = B[bk];
+    (b.recipes || []).forEach(function (r) {
+      Object.keys(r.inputs || {}).forEach(function (ik) { pushTo(usedIn, ik, { b: bk, r: r }); });
+      if (r.output) pushTo(madeBy, r.output, { b: bk, r: r });
+    });
+    if (b.gen && b.gen.item) pushTo(madeBy, b.gen.item, { b: bk, gen: b.gen });
+    if (b.roster && b.roster.produce) pushTo(madeBy, b.roster.produce, { b: bk, roster: b.roster });
+    Object.keys(b.cost || {}).forEach(function (ik) { pushTo(costOf, ik, { b: bk, n: b.cost[ik] }); });
+  });
+  function costTotal(b) { var t = 0; for (var k in (b.cost || {})) t += b.cost[k]; return t; }
+  function recipeText(r) {
+    var ins = Object.keys(r.inputs || {}).map(function (k) { return r.inputs[k] + ' ' + iname(k); }).join(' + ');
+    return r.name + ': ' + ins + ' → ' + (r.outputQty || 1) + ' ' + iname(r.output) + ' (' + secs(r.timeMs) + ')';
+  }
+
+  function goItem(k) { selectedItem = k; $('items-filter').value = ''; show('items'); renderItems(); }
+  function costChip(k, n) {
+    return h('button', { type: 'button', class: 'cost', title: iname(k), onclick: function () { goItem(k); } }, icon('items', k), (n !== undefined ? num(n) + ' ' : '') + iname(k));
+  }
+
+  // ---------- tabs
+  var TABS = [['items', 'Items'], ['buildings', 'Buildings'], ['charts', 'Charts'], ['plan', 'Plan'], ['questions', 'Questions']];
+  var current = null;
+  var tabsEl = $('tabs');
+  TABS.forEach(function (t) {
+    var b = h('button', { class: 'tab', role: 'tab', id: 'tab-' + t[0], type: 'button', 'aria-controls': 'panel-' + t[0], 'aria-selected': 'false', onclick: function () { show(t[0]); } },
+      t[1]);
+    if (t[0] === 'questions') b.appendChild(h('span', { class: 'badge', id: 'q-badge', hidden: true }));
+    tabsEl.appendChild(b);
+  });
+  tabsEl.addEventListener('keydown', function (e) {
+    var i = TABS.findIndex(function (t) { return t[0] === current; });
+    if (e.key === 'ArrowRight') i = (i + 1) % TABS.length; else if (e.key === 'ArrowLeft') i = (i + TABS.length - 1) % TABS.length; else return;
+    show(TABS[i][0]); $('tab-' + TABS[i][0]).focus(); e.preventDefault();
+  });
+  function show(id, noHash) {
+    if (!TABS.some(function (t) { return t[0] === id; })) id = 'items';
+    current = id;
+    TABS.forEach(function (t) {
+      $('panel-' + t[0]).hidden = t[0] !== id;
+      var tb = $('tab-' + t[0]);
+      tb.setAttribute('aria-selected', t[0] === id ? 'true' : 'false');
+      tb.tabIndex = t[0] === id ? 0 : -1;
+    });
+    lsSet('ig-hub-tab', id);
+    if (!noHash && location.hash !== '#' + id) { try { history.replaceState(null, '', '#' + id); } catch (e) { location.hash = id; } }
+  }
+  window.addEventListener('hashchange', function () { var t = location.hash.replace('#', ''); if (t && t !== current) show(t, true); });
+
+  // ---------- items
+  var selectedItem = null;
+  function isRaw(k) { return madeBy[k].length === 0; }
+  function renderItems() {
+    var q = $('items-filter').value.trim().toLowerCase();
+    var sort = $('items-sort').value;
+    var list = itemKeys.filter(function (k) {
+      if (!q) return true;
+      return (iname(k) + ' ' + k + ' ' + (DATA.SOURCES[k] || '')).toLowerCase().indexOf(q) >= 0;
+    });
+    list.sort(function (a, b) {
+      if (sort === 'uses') return usedIn[b].length - usedIn[a].length || iname(a).localeCompare(iname(b));
+      if (sort === 'made') return (isRaw(a) - isRaw(b)) || iname(a).localeCompare(iname(b));
+      if (sort === 'raw') return (isRaw(b) - isRaw(a)) || iname(a).localeCompare(iname(b));
+      return iname(a).localeCompare(iname(b));
+    });
+    $('items-count').textContent = list.length + ' of ' + itemKeys.length + ' items';
+    var body = $('items-body'); clear(body);
+    list.forEach(function (k) {
+      var tr = h('tr', { class: k === selectedItem ? 'sel' : '' },
+        h('td', null, h('button', { type: 'button', class: 'row-btn', 'aria-pressed': k === selectedItem ? 'true' : 'false', onclick: function () { selectedItem = k; renderItems(); } }, icon('items', k), iname(k))),
+        h('td', null, DATA.SOURCES[k] || h('span', { class: 'muted', text: 'Not listed' })),
+        h('td', { class: 'num' }, String(usedIn[k].length)));
+      body.appendChild(tr);
+    });
+    if (!list.length) body.appendChild(h('tr', null, h('td', { colspan: '3', class: 'muted', text: 'Nothing matches that filter.' })));
+    renderItemDetail();
+  }
+  function renderItemDetail() {
+    var box = $('item-detail'); clear(box);
+    if (!selectedItem) { box.appendChild(h('p', { class: 'muted', text: 'Select an item to see its recipes, costs and sources.' })); return; }
+    var k = selectedItem;
+    box.appendChild(h('div', { class: 'head' }, icon('items', k, true), h('div', { style: 'min-width:0' }, h('h3', { text: iname(k) }), h('div', { class: 'muted small', text: k }))));
+    box.appendChild(h('h4', { text: 'Where it comes from' }));
+    box.appendChild(h('p', { text: DATA.SOURCES[k] || 'Not listed in the data.' }));
+    if (madeBy[k].length) {
+      box.appendChild(h('h4', { text: 'Made by' }));
+      box.appendChild(h('ul', null, madeBy[k].map(function (m) {
+        var txt = m.r ? recipeText(m.r) : m.gen ? 'makes 1 every ' + secs(m.gen.intervalMs) + ', holds ' + m.gen.cap : 'a resident makes 1 every ' + secs(m.roster.produceMs);
+        return h('li', null, h('strong', { text: B[m.b].name }), ' – ' + txt);
+      })));
+    }
+    box.appendChild(h('h4', { text: 'Used in recipes (' + usedIn[k].length + ')' }));
+    if (usedIn[k].length) box.appendChild(h('ul', null, usedIn[k].map(function (m) { return h('li', null, h('strong', { text: B[m.b].name }), ' – ' + recipeText(m.r)); })));
+    else box.appendChild(h('p', { class: 'muted', text: 'No building recipe uses it.' }));
+    if (costOf[k].length) {
+      box.appendChild(h('h4', { text: 'Needed to build' }));
+      box.appendChild(h('ul', null, costOf[k].map(function (c) { return h('li', { text: B[c.b].name + ': ' + num(c.n) }); })));
+    }
+    var ups = (DATA.UPGRADE_TREE || []).filter(function (u) { return (u.costs || []).some(function (c) { return c[k]; }); });
+    if (ups.length) {
+      box.appendChild(h('h4', { text: 'Needed for upgrades' }));
+      box.appendChild(h('ul', null, ups.map(function (u) { return h('li', { text: u.name }); })));
+    }
+    var stages = (DATA.DRAGON_STAGES || []).map(function (s, i) { return { s: s, i: i }; }).filter(function (x) { return x.s.needs && x.s.needs[k]; });
+    if (stages.length) {
+      box.appendChild(h('h4', { text: 'Fed to the dragon' }));
+      box.appendChild(h('ul', null, stages.map(function (x) { return h('li', { text: 'Stage ' + (x.i + 1) + ': ' + x.s.needs[k] }); })));
+    }
+  }
+
+  // ---------- buildings
+  function qname(id) { var q = (DATA.QUESTS || []).filter(function (x) { return x.id === id; })[0]; return q ? q.name : id; }
+  function availability(bk) {
+    var b = B[bk], out = [];
+    if (b.indestructible) out.push('Always there');
+    else {
+      if (b.unlocked && !DATA.REVEAL[bk]) out.push('From the start');
+      var rv = DATA.REVEAL[bk];
+      if (rv) out.push(rv.map(function (c) {
+        if (c.quest) return c.quest === 'build' || c.quest === 'link' || c.quest === 'fox' || c.quest === 'waters' || c.quest === 'weaver' || c.quest === 'wood' ? 'Quest: ' + qname(c.quest) : 'Quest: ' + qname(c.quest);
+        if (c.region) return 'Reach the ' + ((DATA.AREAS[c.region] || {}).name || c.region) + ' island';
+        if (c.stage) return 'Dragon stage ' + c.stage;
+        if (c.islands) return 'Own ' + c.islands + ' islands';
+        return JSON.stringify(c);
+      }).join(' or '));
+      if (b.stageUnlock) out.push('Taught by the dragon at stage ' + b.stageUnlock);
+    }
+    out.push(b.anyZone ? 'Any island, any spot' : b.waterOnly ? 'Water tiles only' : 'Normal build zones');
+    return out;
+  }
+  function effects(b) {
+    var e = [];
+    (b.recipes || []).forEach(function (r) { e.push(recipeText(r)); });
+    if (b.gen) e.push('Makes 1 ' + iname(b.gen.item) + ' every ' + secs(b.gen.intervalMs) + ', holds ' + b.gen.cap);
+    if (b.gather) e.push('Collects loose items within ' + b.gather.radius + ' tiles, holds ' + b.gather.cap);
+    if (b.lantern) e.push('Sends a wisp every ' + secs(b.lantern.rateMs) + ' to carry items');
+    if (b.seal) e.push('Protects its area, holds ' + b.seal.cap);
+    if (b.bridge) e.push('Carries ' + b.bridge.carry + ' items per trip every ' + secs(b.bridge.rateMs) + ' to the next island, holds ' + b.bridge.cap);
+    if (b.stoker) e.push('Tops up fuel for burners within ' + b.stoker.radius + ' tiles, holds ' + b.stoker.cap);
+    if (b.roster) e.push('Seats ' + b.roster.cap + ' disciples (recruit with ' + iname(b.roster.recruit) + '); fed with ' + iname(b.roster.food) + '; each makes ' + iname(b.roster.produce) + ' every ' + secs(b.roster.produceMs));
+    if (b.cap && !b.gen && !b.gather) e.push('Stores up to ' + num(b.cap) + ' items');
+    if (b.fuel) e.push('Burns fuel to run');
+    if (b.shrine) e.push('Where the dragon is honoured');
+    if (b.gate) e.push('Lets you ascend. Offering: ' + Object.keys(b.cost).map(function (k) { return b.cost[k] + ' ' + iname(k); }).join(', '));
+    if (b.indestructible && !e.length) e.push('Fixed landmark, cannot be removed');
+    return e;
+  }
+  function renderBuildings() {
+    var q = $('bld-filter').value.trim().toLowerCase(), sort = $('bld-sort').value;
+    var list = bKeys.filter(function (k) {
+      if (!q) return true;
+      var b = B[k];
+      return (b.name + ' ' + k + ' ' + effects(b).join(' ') + ' ' + Object.keys(b.cost || {}).map(iname).join(' ')).toLowerCase().indexOf(q) >= 0;
+    });
+    list.sort(function (a, b) {
+      if (sort === 'cost') return costTotal(B[a]) - costTotal(B[b]) || B[a].name.localeCompare(B[b].name);
+      if (sort === 'cost-desc') return costTotal(B[b]) - costTotal(B[a]) || B[a].name.localeCompare(B[b].name);
+      if (sort === 'recipes') return (B[b].recipes || []).length - (B[a].recipes || []).length || B[a].name.localeCompare(B[b].name);
+      return B[a].name.localeCompare(B[b].name);
+    });
+    $('bld-count').textContent = list.length + ' of ' + bKeys.length + ' buildings';
+    var box = $('bld-cards'); clear(box);
+    list.forEach(function (k) {
+      var b = B[k];
+      var art = h('div', { class: 'art', 'aria-hidden': 'true' });
+      if (IMG.buildings[k]) art.appendChild(h('img', { src: IMG.buildings[k], alt: '', loading: 'lazy' })); else art.textContent = b.icon || '?';
+      var costKeys = Object.keys(b.cost || {});
+      box.appendChild(h('article', { class: 'card' },
+        h('div', { class: 'head' }, art, h('div', { style: 'min-width:0' }, h('h3', { text: b.name }),
+          h('div', { class: 'muted small', text: b.size ? 'Footprint ' + b.size.w + ' x ' + b.size.h : 'Standard footprint' }))),
+        h('div', null, h('div', { class: 'muted small', text: 'Cost' }),
+          costKeys.length ? h('div', { class: 'chips' }, costKeys.map(function (ck) { return costChip(ck, b.cost[ck]); })) : h('span', { class: 'muted', text: 'Free' })),
+        h('div', null, h('div', { class: 'muted small', text: 'What it does' }),
+          effects(b).length ? h('ul', { class: 'effects' }, effects(b).map(function (t) { return h('li', { text: t }); })) : h('span', { class: 'muted', text: 'Nothing listed' })),
+        h('div', null, h('div', { class: 'muted small', text: 'Where and when' }), h('div', { class: 'chips' }, availability(k).map(function (t) { return h('span', { class: 'tag', text: t }); })))));
+    });
+    if (!list.length) box.appendChild(h('p', { class: 'empty', text: 'No building matches that filter.' }));
+  }
+
+  // ---------- charts
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function s(tag, attrs, text) { var el = document.createElementNS(SVGNS, tag); for (var k in attrs) el.setAttribute(k, attrs[k]); if (text !== undefined) el.textContent = text; return el; }
+  function barChart(title, note, rows, cls) {
+    rows = rows.filter(function (r) { return r.v > 0; });
+    var rowH = 26, left = 150, right = 48, w = 640, top = 4;
+    var max = Math.max.apply(null, rows.map(function (r) { return r.v; }).concat([1]));
+    var svg = s('svg', { viewBox: '0 0 ' + w + ' ' + (rows.length * rowH + top * 2), role: 'img', 'aria-label': title });
+    rows.forEach(function (r, i) {
+      var y = top + i * rowH, bw = (w - left - right) * r.v / max;
+      svg.appendChild(s('text', { x: left - 8, y: y + 16, 'text-anchor': 'end' }, r.label));
+      svg.appendChild(s('rect', { x: left, y: y + 3, width: w - left - right, height: 18, class: 'bar-track', rx: 2 }));
+      svg.appendChild(s('rect', { x: left, y: y + 3, width: Math.max(2, bw), height: 18, class: cls || 'bar-a', rx: 2 }));
+      svg.appendChild(s('text', { x: left + Math.max(2, bw) + 6, y: y + 16, class: 'val' }, num(r.v)));
+    });
+    return h('section', { class: 'chart' }, h('h3', { text: title }), h('p', { class: 'muted small', text: note }), svg);
+  }
+  function renderCharts() {
+    var box = $('charts'); clear(box);
+    var byCost = bKeys.map(function (k) { return { label: B[k].name, v: costTotal(B[k]) }; }).sort(function (a, b) { return b.v - a.v; });
+    box.appendChild(barChart('Build cost per building', 'Total items needed to place one, all materials added together.', byCost));
+    var byUse = itemKeys.map(function (k) { return { label: iname(k), v: usedIn[k].length }; }).sort(function (a, b) { return b.v - a.v; });
+    box.appendChild(barChart('Recipes that use each item', 'How many building recipes take this item as an input. Items not shown are used by none.', byUse, 'bar-b'));
+    var byDemand = itemKeys.map(function (k) { var t = 0; costOf[k].forEach(function (c) { t += c.n; }); return { label: iname(k), v: t }; }).sort(function (a, b) { return b.v - a.v; });
+    box.appendChild(barChart('Materials the whole building list asks for', 'Sum of one of every building. Shows which materials the build menu leans on.', byDemand));
+    var byRec = bKeys.map(function (k) { return { label: B[k].name, v: (B[k].recipes || []).length }; }).sort(function (a, b) { return b.v - a.v; });
+    box.appendChild(barChart('Recipes per building', 'Buildings that turn items into other items.', byRec, 'bar-b'));
+  }
+
+  // ---------- plan
+  var STATUS_ORDER = ['in-progress', 'blocked', 'waiting', 'done'];
+  var STATUS_LABEL = { 'in-progress': 'In progress', blocked: 'Blocked', waiting: 'Waiting', done: 'Done' };
+  var statusFilter = null;
+  function renderPlan() {
+    if (!PLAN) { $('plan-lede').textContent = 'No plan file was found.'; $('plan-now').hidden = true; return; }
+    $('plan-lede').textContent = 'Updated ' + PLAN.updated + '. Every task has a status and, when it is not moving, the reason why.';
+    var all = [];
+    PLAN.milestones.forEach(function (m) { m.tasks.forEach(function (t) { all.push(t); }); });
+    var counts = {}; all.forEach(function (t) { counts[t.status] = (counts[t.status] || 0) + 1; });
+    var cbox = $('plan-counts'); clear(cbox);
+    cbox.appendChild(h('button', { type: 'button', id: 'plan-f-all', class: 'chip-btn', 'aria-pressed': statusFilter === null ? 'true' : 'false', onclick: function () { statusFilter = null; renderPlan(); } }, 'All ' + all.length));
+    STATUS_ORDER.forEach(function (st) {
+      cbox.appendChild(h('button', { type: 'button', id: 'plan-f-' + st, class: 'chip-btn', 'aria-pressed': statusFilter === st ? 'true' : 'false', onclick: function () { statusFilter = statusFilter === st ? null : st; renderPlan(); } },
+        STATUS_LABEL[st] + ' ' + (counts[st] || 0)));
+    });
+    var now = all.filter(function (t) { return t.status === 'in-progress'; });
+    var nb = $('plan-now'); clear(nb);
+    nb.appendChild(h('h3', { text: 'Being worked on now' }));
+    if (now.length) nb.appendChild(h('ul', null, now.map(function (t) { return h('li', null, h('strong', { text: t.title }), t.now ? ' – ' + t.now : ''); })));
+    else nb.appendChild(h('p', { class: 'muted', text: 'Nothing is running right now.' }));
+    var ms = $('plan-ms'); clear(ms);
+    PLAN.milestones.forEach(function (m) {
+      var tasks = m.tasks.filter(function (t) { return !statusFilter || t.status === statusFilter; });
+      if (!tasks.length) return;
+      var done = m.tasks.filter(function (t) { return t.status === 'done'; }).length;
+      var sec = h('section', { class: 'ms' }, h('h3', { text: m.id + ': ' + m.title + '  (' + done + '/' + m.tasks.length + ' done)' }));
+      tasks.forEach(function (t) {
+        sec.appendChild(h('div', { class: 'task t-' + t.status },
+          h('div', { class: 't-head' }, h('span', { class: 'status s-' + t.status, text: STATUS_LABEL[t.status] || t.status }), h('span', { class: 't-title', text: t.title }),
+            h('span', { class: 'meta', text: [t.owner, t.size && ('size ' + t.size)].filter(Boolean).join(' · ') })),
+          t.detail ? h('div', { class: 'small muted', text: t.detail }) : null,
+          t.now ? h('div', { class: 'why' }, h('strong', { text: 'Now: ' }), t.now) : null,
+          t.blockedBy ? h('div', { class: 'why' }, h('strong', { text: (t.status === 'waiting' ? 'Waiting because: ' : 'Blocked by: ') }), t.blockedBy) : null));
+      });
+      ms.appendChild(sec);
+    });
+    if (!ms.firstChild) ms.appendChild(h('p', { class: 'empty', text: 'No tasks with that status.' }));
+  }
+
+  // ---------- questions
+  var ANS_KEY = 'ig-hub-answers';
+  var answers = {};
+  try { answers = JSON.parse(lsGet(ANS_KEY) || '{}') || {}; } catch (e) { answers = {}; }
+  function saveAnswers() { lsSet(ANS_KEY, JSON.stringify(answers)); }
+  function realQuestions() { return QUESTIONS.filter(function (q) { return q.id; }); }
+  function isAnswered(q) { var a = answers[q.id]; return !!(a && a.v && a.v.length); }
+  function updateBadge() {
+    var open = realQuestions().filter(function (q) { return !isAnswered(q); }).length;
+    var b = $('q-badge'); b.textContent = String(open); b.hidden = open === 0;
+    b.setAttribute('aria-label', open + ' open questions');
+    $('q-status').textContent = realQuestions().length ? (realQuestions().length - open) + ' of ' + realQuestions().length + ' answered' : '';
+  }
+  function optLabel(q, v) { var o = q.o.filter(function (x) { return x[0] === v; })[0]; return o ? o[1] : v; }
+  function renderQuestions() {
+    var box = $('q-list'); clear(box);
+    if (!realQuestions().length) { box.appendChild(h('p', { class: 'empty', text: 'No open questions. Nice.' })); }
+    QUESTIONS.forEach(function (q) {
+      if (!q.id) { if (q.g) box.appendChild(h('h3', { class: 'qgroup', text: q.g })); return; }
+      var a = answers[q.id] || { v: [], n: '' };
+      var card = h('div', { class: 'q' + (isAnswered(q) ? ' answered' : ''), id: 'q-' + q.id });
+      card.appendChild(h('p', { class: 'qtext', text: q.q }));
+      if (q.ctx) card.appendChild(h('p', { class: 'ctx', text: q.ctx }));
+      if (q.imgs && q.imgs.length) {
+        card.appendChild(h('div', { class: 'qimgs' }, q.imgs.map(function (im, i) {
+          return h('figure', null,
+            h('button', { type: 'button', id: 'q-' + q.id + '-img' + i, 'aria-label': 'Open full size: ' + (im.cap || 'picture'), onclick: function () { openLightbox(im.src, im.cap); } },
+              h('img', { src: im.src, alt: im.cap || '' })),
+            im.cap ? h('figcaption', { text: im.cap }) : null);
+        })));
+      }
+      var fs = h('fieldset', { class: 'opts' }, h('legend', { class: 'qid', text: q.multi ? 'Pick any (' + q.id + ')' : 'Pick one (' + q.id + ')' }));
+      q.o.forEach(function (o) {
+        var iid = 'q-' + q.id + '-' + o[0];
+        var inp = h('input', { type: q.multi ? 'checkbox' : 'radio', name: 'q-' + q.id, id: iid, value: o[0] });
+        if (a.v.indexOf(o[0]) >= 0) inp.checked = true;
+        inp.addEventListener('change', function () {
+          var cur = answers[q.id] || { v: [], n: '' };
+          if (q.multi) { var i = cur.v.indexOf(o[0]); if (inp.checked && i < 0) cur.v.push(o[0]); if (!inp.checked && i >= 0) cur.v.splice(i, 1); }
+          else cur.v = [o[0]];
+          answers[q.id] = cur; saveAnswers(); card.className = 'q' + (isAnswered(q) ? ' answered' : ''); updateBadge();
+        });
+        fs.appendChild(h('label', { class: 'opt', for: iid }, inp, h('span', null, o[1], o[2] ? h('span', { class: 'pick', text: 'my pick' }) : null)));
+      });
+      card.appendChild(fs);
+      var nid = 'q-' + q.id + '-note';
+      var ta = h('textarea', { id: nid, rows: '2', placeholder: 'Optional note' });
+      ta.value = a.n || '';
+      ta.addEventListener('input', function () { var cur = answers[q.id] || { v: [], n: '' }; cur.n = ta.value; answers[q.id] = cur; saveAnswers(); });
+      card.appendChild(h('div', { class: 'field' }, h('label', { for: nid, text: 'Note' }), ta));
+      box.appendChild(card);
+    });
+    updateBadge();
+  }
+  function resultsText() {
+    var lines = ['Answers'];
+    realQuestions().forEach(function (q) {
+      var a = answers[q.id]; if (!a) return;
+      var n = (a.n || '').replace(/\s*\n\s*/g, ' ').trim();
+      if (!(a.v && a.v.length) && !n) return;
+      var val = a.v && a.v.length ? a.v.map(function (v) { return optLabel(q, v); }).join(', ') : '(no pick)';
+      lines.push(q.id + ': ' + val + (n ? '  | note: ' + n : ''));
+    });
+    return lines.join('\n');
+  }
+  function fallbackCopy(text) {
+    $('q-fallback').hidden = false;
+    var ta = $('copy-out'); ta.value = text; ta.focus(); ta.select();
+    $('q-status').textContent = 'Copy by hand: the text is selected below.';
+  }
+  $('q-copy').addEventListener('click', function () {
+    var text = resultsText();
+    var done = function () { $('q-fallback').hidden = true; $('q-status').textContent = 'Copied. Paste it into the chat.'; };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); });
+      } else fallbackCopy(text);
+    } catch (e) { fallbackCopy(text); }
+  });
+  $('q-clear').addEventListener('click', function () {
+    answers = {}; saveAnswers(); $('q-fallback').hidden = true; renderQuestions();
+  });
+
+  // ---------- lightbox (in page)
+  var lastFocus = null;
+  function openLightbox(src, cap) {
+    lastFocus = document.activeElement;
+    $('lightbox-img').src = src; $('lightbox-img').alt = cap || '';
+    $('lightbox-cap').textContent = cap || '';
+    $('lightbox').hidden = false; $('lightbox-close').focus();
+  }
+  function closeLightbox() { $('lightbox').hidden = true; $('lightbox-img').removeAttribute('src'); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+  $('lightbox-close').addEventListener('click', closeLightbox);
+  $('lightbox').addEventListener('click', function (e) { if (e.target === $('lightbox')) closeLightbox(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('lightbox').hidden) closeLightbox(); });
+
+  // ---------- boot
+  $('items-filter').addEventListener('input', renderItems);
+  $('items-sort').addEventListener('change', renderItems);
+  $('bld-filter').addEventListener('input', renderBuildings);
+  $('bld-sort').addEventListener('change', renderBuildings);
+  $('stamp').textContent = itemKeys.length + ' items · ' + bKeys.length + ' buildings' + (PLAN ? ' · plan updated ' + PLAN.updated : '');
+  renderItems(); renderBuildings(); renderCharts(); renderPlan(); renderQuestions();
+  var start = location.hash.replace('#', '') || lsGet('ig-hub-tab') || 'items';
+  show(start, !location.hash);
+})();
+</script>

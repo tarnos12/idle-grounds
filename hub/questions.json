@@ -1,0 +1,21 @@
+[
+  { "g": "Game design" },
+  { "id": "ascension_unlocks",
+    "q": "Ascension no longer speeds the world up (ADR 0004). What should each ascension unlock to keep later runs fresh? Pick any.",
+    "ctx": "First run is about 2 h; later runs stay the same length. Today an ascension only gives Ascension Points for perks.",
+    "multi": true,
+    "o": [ ["islands", "New islands that only appear after ascending", true],
+           ["recipes", "New buildings and higher-tier recipes", true],
+           ["vows", "Harder vows (challenge rules) for more points"],
+           ["sect", "A permanent sect/home upgrade that carries over (cosmetic + small quality-of-life)"] ] },
+  { "g": "World look" },
+  { "id": "smooth_coasts",
+    "q": "Diagonal south coasts are drawn as stairs, so the cliff walls read as rows of short pillars. Reshape the coastlines now so cliffs run in longer, natural stretches?",
+    "ctx": "Only the decorative coast changes; the playable 93x93 square, buildings and saves are untouched.",
+    "o": [ ["now", "Yes, now", true], ["later", "Later, after the art settles"], ["no", "No, keep the current shapes"] ] },
+  { "g": "Tech" },
+  { "id": "scene_size",
+    "q": "The main scene file is about 78 MB; GitHub refuses files over 100 MB. Move the generated island dressing (tile layers built by tools) out of the scene into separate assets?",
+    "ctx": "No visual change. It keeps commits small and stops a future push from failing.",
+    "o": [ ["yes", "Yes, move it out", true], ["lfs", "Use Git LFS for the scene instead"], ["later", "Not yet"] ] }
+]
