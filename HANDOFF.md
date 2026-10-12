@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: Hub upgraded to the hub-kit conventions: sources in docs/Design/ (plan.json with milestone status/goal/exit, questions.json, question-images/, owner-picks, islands.json), plan tools in tools/plan/ (set-task, build-plan → PLAN.md + Temp/plan/Idle-Grounds-Plan.pdf), new Islands tab (11-island map, unlock order, tributes, NPC requests, #islands/<id>).
+
 - 2026-10-12: .NET sim test runner (tools/simtests, dotnet test over linked Sim + Tests/Sim): fast 168 tests ~30 s (`tools/simtests/run.sh`), `--all` adds 3 Slow playthroughs (171, ~70 s); UnityOnly alloc tests stay in Unity. Full Unity EditMode/PlayMode only at milestones (CLAUDE.md Testing).
 
 - 2026-10-12: Game.unity split — each Island_<key> generated hierarchy is a prefab (Assets/_Project/Prefabs/Islands/Generated, 10–12 MB each); scene 78 MB → 0.4 MB. Builders wrap edits in `using (IslandPrefabs.Edit())`; menu Idle Grounds/World/Save Islands To Prefabs. Coast smoothing (SmoothCoast + 'Re-cut Island Coasts From Seed') is applied but came out boxy; owner asked for a redo (natural coastline, tiles must connect) — next task. Tests 177/177.
@@ -159,9 +161,9 @@ the active scene after MCP editor work.
 
 - 2026-10-12: ADR 0006 ascension content drafted (proposed): 4 realm tiers, each adds an island (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak), buildings, higher recipes, Gate items and weighted vows. 5 decisions posted in the Hub Questions tab (asc_tiers, asc_island_themes, asc_island_mode, asc_vow_style, asc_postgame).
 
-- 2026-10-12 owner picks (hub/owner-picks-2026-10-12.json): ascension unlocks = new islands + new buildings/higher recipe tiers + harder vows; smooth coasts now; move generated island dressing out of Game.unity (into repo assets, still on GitHub). Next: ADR 0006 ascension design (in progress), coast smoothing + scene split once Unity responds.
+- 2026-10-12 owner picks (docs/Design/owner-picks-2026-10-12.json): ascension unlocks = new islands + new buildings/higher recipe tiers + harder vows; smooth coasts now; move generated island dressing out of Game.unity (into repo assets, still on GitHub). Next: ADR 0006 ascension design (in progress), coast smoothing + scene split once Unity responds.
 
-- 2026-10-12: Project Hub (CLAUDE.md section): hub/plan.json + hub/questions.json, tools/hub/build-hub.cjs + template + set-task + build-plan; published and pinned at https://claude.ai/artifact/EAabdoZhE79jgBc6THmrwG. Open owner questions: ascension unlocks, smoothing coasts, scene size.
+- 2026-10-12: Project Hub (CLAUDE.md section): docs/Design/plan.json + questions.json + islands.json, tools/hub/build-hub.cjs + template, tools/plan/set-task + build-plan; published and pinned at https://claude.ai/artifact/EAabdoZhE79jgBc6THmrwG. Open owner questions: ascension unlocks, smoothing coasts, scene size.
 
 - 2026-10-12: Islands-036 underside _3q quality redo pulled and validated (good). Pending in Unity: swap IslandCoastBuilder underside pieces (side-view rock/roots/stalactite/vines/lavadrip) for the _3q versions, plus sidewalls v2, fishing macro v3, sky rebuild.
 

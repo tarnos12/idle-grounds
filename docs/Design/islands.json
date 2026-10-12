@@ -1,0 +1,1027 @@
+{
+ "title": "Idle Grounds islands",
+ "source": "Source of truth for the Hub's Islands tab. Positions: Assets/_Project/Data/Source/game-data.json WORLD.islands (7 built) and docs/adr/0007-island-requesters.md section 2 (the rest, and Celestial's move north). Tributes, NPCs and requests: ADR 0007 sections 1, 3 and 4 (quantities are first guesses until the playthrough bot tunes them).",
+ "islandSize": 93,
+ "statusMeaning": {
+  "built": "In the game today (Celestial is built but moves north under ADR 0007).",
+  "planned": "Designed in ADR 0007, not built yet."
+ },
+ "biomes": {
+  "forest": {
+   "name": "Forest",
+   "color": "#3f8f4a"
+  },
+  "meadow": {
+   "name": "Meadow",
+   "color": "#a8b23a"
+  },
+  "rock": {
+   "name": "Rock",
+   "color": "#8a7f73"
+  },
+  "water": {
+   "name": "Water",
+   "color": "#3b8fc4"
+  },
+  "bamboo": {
+   "name": "Bamboo grove",
+   "color": "#2fa58a"
+  },
+  "lava": {
+   "name": "Lava",
+   "color": "#d4552f"
+  },
+  "marsh": {
+   "name": "Marsh",
+   "color": "#7c6fb8"
+  },
+  "storm": {
+   "name": "Storm",
+   "color": "#5a6fa8"
+  },
+  "canyon": {
+   "name": "Canyon",
+   "color": "#4f8f7a"
+  },
+  "scorched": {
+   "name": "Scorched jade",
+   "color": "#b0702e"
+  },
+  "sky": {
+   "name": "Sky",
+   "color": "#c9a640"
+  }
+ },
+ "shrine": {
+  "name": "Sky-Bridge Shrine",
+  "col": 167,
+  "row": 1,
+  "size": 5,
+  "island": "center",
+  "note": "Fixed, indestructible 5x5 building on the Center's north edge (local column 44, row 1). Click it, feed the next Island's Tribute by right-click in installments; a full Tribute raises a Sky Path to that Island. Celestial's Sky Path starts at the Shrine."
+ },
+ "order": [
+  "center",
+  "mine",
+  "fishing",
+  "farm",
+  "grove",
+  "volcano",
+  "lotus",
+  "thunder",
+  "ravine",
+  "tribulation",
+  "celestial"
+ ],
+ "islands": [
+  {
+   "id": "center",
+   "order": 0,
+   "status": "built",
+   "col": 123,
+   "row": 0,
+   "biome": "forest",
+   "biomeNote": "Forest clearing with the Altar, the Dragon and the Spirit Tree.",
+   "tribute": null,
+   "automation": "The start Island. Altar automation and Gathering Stones feed the first Tributes.",
+   "nodes": [
+    {
+     "name": "Oak",
+     "yields": "wood"
+    },
+    {
+     "name": "Bush",
+     "yields": "leaves"
+    },
+    {
+     "name": "Quarry",
+     "yields": "stone, rare jade shard"
+    },
+    {
+     "name": "Spirit Tree",
+     "yields": "wood, rare bamboo"
+    },
+    {
+     "name": "Clay, stone and wood generators",
+     "yields": "clay, stone, wood"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Altar",
+     "how": "start",
+     "note": "Fixed, feeds the upgrade tree"
+    },
+    {
+     "name": "Dragon",
+     "how": "start",
+     "note": "4 stages; unlocks Forge, Algae Farm, Herb Garden, Pill Furnace, Star Anvil, Talisman Atelier, Dragon Shrine"
+    },
+    {
+     "name": "Workbench, Kiln, Paper Mill, Charcoal Pit",
+     "how": "quests",
+     "note": "Revealed by the first quests"
+    },
+    {
+     "name": "Storehouse, Gathering Stone, Wisp Lantern, Warding Seal",
+     "how": "quests",
+     "note": "Revealed by the first quests"
+    },
+    {
+     "name": "Spirit Bridge",
+     "how": "today",
+     "note": "Needs 2 Islands"
+    },
+    {
+     "name": "Sky-Bridge Shrine",
+     "how": "planned",
+     "note": "Fixed 5x5 building on the north edge; takes the Tributes"
+    }
+   ],
+   "enemies": [
+    "Fox Spirit (hp 3): spirit essence",
+    "Spirit Boar, comes with bait (hp 8): beast bone, spirit essence"
+   ],
+   "npc": {
+    "name": "Steward Lin",
+    "role": "Outer-sect steward",
+    "requests": [
+     {
+      "needs": {
+       "wood": 60,
+       "plank": 20
+      },
+      "reward": {
+       "t": "b",
+       "name": "Bamboo Nursery",
+       "desc": "Generator: bamboo every 8 s, cap 12"
+      }
+     },
+     {
+      "needs": {
+       "spirit_essence": 15,
+       "stone": 30
+      },
+      "reward": {
+       "t": "b",
+       "name": "Spirit Snare",
+       "desc": "1x1; auto-strikes foxes in reach once a second"
+      }
+     },
+     {
+      "needs": {
+       "spirit_stone": 10,
+       "cloth": 10,
+       "paper": 20
+      },
+      "reward": {
+       "t": "u",
+       "name": "Carry and storage",
+       "desc": "+5 carry, Storehouses +50 % (replaces Fleet Hands)"
+      },
+      "later": [
+       "cloth"
+      ]
+     }
+    ]
+   },
+   "name": "Center",
+   "icon": "🌲"
+  },
+  {
+   "id": "mine",
+   "order": 1,
+   "status": "built",
+   "col": 249,
+   "row": 4,
+   "biome": "rock",
+   "biomeNote": "Rocky hills with ore seams.",
+   "tribute": {
+    "wood": 20,
+    "leaves": 15,
+    "stone": 20,
+    "plank": 10,
+    "brick": 10
+   },
+   "pathFrom": "center",
+   "automation": "Center automation + Gathering Stones; Workbench/Kiln by lantern.",
+   "nodes": [
+    {
+     "name": "Ore",
+     "yields": "stone, clay, rare firestone"
+    },
+    {
+     "name": "Iron vein",
+     "yields": "iron ore, rare firestone"
+    },
+    {
+     "name": "Jade vein",
+     "yields": "jade shard"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Jade Carver, Cauldron",
+     "how": "today",
+     "note": "Revealed when the Island opens"
+    }
+   ],
+   "enemies": [],
+   "npc": {
+    "name": "Foreman Kang",
+    "role": "Mine foreman",
+    "requests": [
+     {
+      "needs": {
+       "iron_ore": 40,
+       "tools": 4
+      },
+      "reward": {
+       "t": "b",
+       "name": "Deep Shaft",
+       "desc": "Generator: iron ore every 8 s, cap 20"
+      }
+     },
+     {
+      "needs": {
+       "stone": 100,
+       "clay": 50
+      },
+      "reward": {
+       "t": "u",
+       "name": "Mine boost",
+       "desc": "Every automation takes +1 node per tick (replaces Keen Automation)"
+      }
+     },
+     {
+      "needs": {
+       "iron_bar": 30,
+       "charcoal": 30
+      },
+      "reward": {
+       "t": "b",
+       "name": "Blast Forge",
+       "desc": "Burner: iron ore 3 + charcoal 1 -> iron bar 3"
+      }
+     }
+    ]
+   },
+   "name": "Mine",
+   "icon": "⛰️"
+  },
+  {
+   "id": "fishing",
+   "order": 2,
+   "status": "built",
+   "col": 125,
+   "row": 126,
+   "biome": "water",
+   "biomeNote": "Lake and shallows where fish and algae surface.",
+   "tribute": {
+    "iron_ore": 20,
+    "iron_bar": 10,
+    "brick": 20,
+    "plank": 20,
+    "spirit_stone": 5
+   },
+   "pathFrom": "center",
+   "automation": "Mine automation; Forge (Dragon 1); Infusion Array.",
+   "nodes": [
+    {
+     "name": "Fish",
+     "yields": "fish"
+    },
+    {
+     "name": "Algae",
+     "yields": "algae"
+    },
+    {
+     "name": "Spring",
+     "yields": "water"
+    },
+    {
+     "name": "Water generator",
+     "yields": "water"
+    }
+   ],
+   "buildings": [],
+   "enemies": [],
+   "npc": {
+    "name": "Fisher-Hermit Jiang",
+    "role": "Hermit angler",
+    "requests": [
+     {
+      "needs": {
+       "fish": 30,
+       "algae": 30
+      },
+      "reward": {
+       "t": "u",
+       "name": "Fishing Automation",
+       "desc": "Automates koi, algae and the spring"
+      }
+     },
+     {
+      "needs": {
+       "plank": 30,
+       "rope": 10
+      },
+      "reward": {
+       "t": "b",
+       "name": "Koi Pond",
+       "desc": "Water-only generator: fish every 6 s"
+      },
+      "later": [
+       "rope"
+      ]
+     },
+     {
+      "needs": {
+       "glass": 15,
+       "spirit_stone": 10
+      },
+      "reward": {
+       "t": "u",
+       "name": "Bridge boost",
+       "desc": "Spirit Bridges carry +2 per sky wisp and send +15 % faster"
+      },
+      "later": [
+       "glass"
+      ]
+     }
+    ]
+   },
+   "name": "Fishing",
+   "icon": "🎣"
+  },
+  {
+   "id": "farm",
+   "order": 3,
+   "status": "built",
+   "col": 0,
+   "row": 6,
+   "biome": "meadow",
+   "biomeNote": "Rice paddies and cotton fields.",
+   "tribute": {
+    "algae": 20,
+    "iron_bar": 15,
+    "tools": 5,
+    "jade": 10,
+    "charcoal": 20
+   },
+   "pathFrom": "center",
+   "automation": "Algae Farm (Dragon 2); Jade Carver; Charcoal Pit.",
+   "nodes": [
+    {
+     "name": "Rice crop",
+     "yields": "wheat"
+    },
+    {
+     "name": "Cotton",
+     "yields": "cotton"
+    },
+    {
+     "name": "Sand generator",
+     "yields": "sand"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Loom, Mill, Brewery",
+     "how": "today",
+     "note": "Revealed when the Island opens"
+    }
+   ],
+   "enemies": [],
+   "npc": {
+    "name": "Rice Immortal Tian",
+    "role": "Rice spirit",
+    "requests": [
+     {
+      "needs": {
+       "wheat": 60,
+       "water": 30
+      },
+      "reward": {
+       "t": "b",
+       "name": "Spirit Paddy",
+       "desc": "Generator: wheat every 6 s, rare spirit herb"
+      }
+     },
+     {
+      "needs": {
+       "flour": 30,
+       "spirit_buns": 10
+      },
+      "reward": {
+       "t": "u",
+       "name": "Field boost",
+       "desc": "Fields +10 %, nodes respawn +10 % (replaces Astral Bounty, Deep Roots)"
+      }
+     },
+     {
+      "needs": {
+       "spirit_wine": 10,
+       "spirit_herb": 40
+      },
+      "reward": {
+       "t": "b",
+       "name": "Elixir Still",
+       "desc": "Converter: spirit herb 2 + spirit wine 1 -> qi elixir 2"
+      },
+      "later": [
+       "spirit_herb"
+      ]
+     }
+    ]
+   },
+   "name": "Farm",
+   "icon": "🌱"
+  },
+  {
+   "id": "grove",
+   "order": 4,
+   "status": "built",
+   "col": 8,
+   "row": 131,
+   "biome": "bamboo",
+   "biomeNote": "Spirit Grove: herb bushes and bamboo stands.",
+   "tribute": {
+    "wheat": 20,
+    "flour": 15,
+    "cloth": 10,
+    "rope": 10,
+    "glass": 10
+   },
+   "pathFrom": "fishing",
+   "automation": "Farm automation; Mill, Loom, Kiln (sand).",
+   "nodes": [
+    {
+     "name": "Herb bush",
+     "yields": "spirit herb"
+    },
+    {
+     "name": "Bamboo stalk",
+     "yields": "bamboo"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Meditation Pavilion",
+     "how": "today",
+     "note": "Revealed when the Island opens (after the weaver quest)"
+    }
+   ],
+   "enemies": [],
+   "npc": {
+    "name": "Abbess Qingyun",
+    "role": "Grove abbess",
+    "requests": [
+     {
+      "needs": {
+       "spirit_herb": 60,
+       "bamboo": 30
+      },
+      "reward": {
+       "t": "u",
+       "name": "Grove Automation",
+       "desc": "Automates the Island's nodes"
+      }
+     },
+     {
+      "needs": {
+       "robe": 6,
+       "spirit_buns": 20
+      },
+      "reward": {
+       "t": "u",
+       "name": "Pavilion boost",
+       "desc": "+1 disciple per Pavilion (replaces Master's Hall)"
+      }
+     },
+     {
+      "needs": {
+       "qi_elixir": 10,
+       "spirit_jade": 4
+      },
+      "reward": {
+       "t": "b",
+       "name": "Essence Well",
+       "desc": "Converter: spirit herb 3 + water 1 -> spirit essence 2"
+      },
+      "later": [
+       "spirit_jade"
+      ]
+     }
+    ]
+   },
+   "name": "Spirit Grove",
+   "icon": "🎋"
+  },
+  {
+   "id": "volcano",
+   "order": 5,
+   "status": "built",
+   "col": 252,
+   "row": 122,
+   "biome": "lava",
+   "biomeNote": "Obsidian fields and fire veins.",
+   "tribute": {
+    "spirit_herb": 20,
+    "paper": 15,
+    "robe": 5,
+    "qi_elixir": 10,
+    "spirit_buns": 10
+   },
+   "pathFrom": "mine",
+   "automation": "Grove herbs by hand (Herb Garden from Dragon 3); Paper Mill, Loom, Cauldron, Mill.",
+   "nodes": [
+    {
+     "name": "Obsidian",
+     "yields": "obsidian"
+    },
+    {
+     "name": "Fire vein",
+     "yields": "firestone"
+    }
+   ],
+   "buildings": [],
+   "enemies": [],
+   "npc": {
+    "name": "Flame Smith Ouyang",
+    "role": "Volcano smith",
+    "requests": [
+     {
+      "needs": {
+       "obsidian": 30,
+       "firestone": 10
+      },
+      "reward": {
+       "t": "u",
+       "name": "Volcano Automation",
+       "desc": "Automates the Island's nodes"
+      }
+     },
+     {
+      "needs": {
+       "iron_bar": 30,
+       "brick": 40
+      },
+      "reward": {
+       "t": "b",
+       "name": "Fire Vent",
+       "desc": "Generator: firestone every 10 s, cap 12"
+      }
+     },
+     {
+      "needs": {
+       "ember_pill": 4,
+       "star_steel": 4
+      },
+      "reward": {
+       "t": "u",
+       "name": "Fuel saver",
+       "desc": "Burners use 25 % less fuel (replaces Ember Heart)"
+      },
+      "later": [
+       "star_steel"
+      ]
+     }
+    ]
+   },
+   "name": "Volcano",
+   "icon": "🌋"
+  },
+  {
+   "id": "lotus",
+   "order": 6,
+   "status": "planned",
+   "col": 4,
+   "row": 258,
+   "biome": "marsh",
+   "biomeNote": "Misty shallows, giant lotus pads, reed beds and stilt walks.",
+   "tribute": {
+    "obsidian": 20,
+    "firestone": 10,
+    "glass": 20,
+    "ember_pill": 5,
+    "spirit_stone": 20
+   },
+   "pathFrom": "grove",
+   "automation": "Obsidian and firestone by hand (small); Pill Furnace (Dragon 3).",
+   "nodes": [
+    {
+     "name": "Lotus pad (surface)",
+     "yields": "spirit lotus"
+    },
+    {
+     "name": "Reed bed (chop)",
+     "yields": "reed"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Lotus Pond",
+     "how": "on unlock",
+     "note": "Generator on water cells: spirit lotus every 5 s, cap 24"
+    },
+    {
+     "name": "Reed Press",
+     "how": "on unlock",
+     "note": "Converter: reed 3 -> paper 2; reed 2 -> rope 1"
+    },
+    {
+     "name": "Lotus Distillery",
+     "how": "request",
+     "note": "From Lotus Maiden He"
+    }
+   ],
+   "enemies": [],
+   "npc": {
+    "name": "Lotus Maiden He",
+    "role": "Marsh spirit",
+    "requests": [
+     {
+      "needs": {
+       "spirit_lotus": 30,
+       "reed": 30
+      },
+      "reward": {
+       "t": "u",
+       "name": "Marsh Automation",
+       "desc": "Automates the Island's nodes"
+      }
+     },
+     {
+      "needs": {
+       "spirit_lotus": 30,
+       "qi_elixir": 10,
+       "spirit_stone": 10
+      },
+      "reward": {
+       "t": "b",
+       "name": "Lotus Distillery",
+       "desc": "Converter: spirit lotus 2 + water 1 -> qi elixir 3; spirit lotus 3 + qi elixir 1 + spirit stone 1 -> foundation pill"
+      }
+     },
+     {
+      "needs": {
+       "foundation_pill": 6,
+       "storm_crystal": 10
+      },
+      "reward": {
+       "t": "u",
+       "name": "Pill batches",
+       "desc": "Pill Furnace makes 2 pills per batch"
+      },
+      "later": [
+       "storm_crystal"
+      ],
+      "needsOwn": true
+     }
+    ]
+   },
+   "name": "Lotus Marsh",
+   "icon": "🪷"
+  },
+  {
+   "id": "thunder",
+   "order": 7,
+   "status": "planned",
+   "col": 250,
+   "row": 256,
+   "biome": "storm",
+   "biomeNote": "Storm-black slate, crystal spires and split trees.",
+   "tribute": {
+    "spirit_lotus": 20,
+    "reed": 20,
+    "iron_bar": 20,
+    "glass": 15,
+    "talisman": 5
+   },
+   "pathFrom": "volcano",
+   "automation": "Lotus Pond, reed by hand; Talisman Atelier.",
+   "nodes": [
+    {
+     "name": "Split tree (chop)",
+     "yields": "thunderwood (fuel)"
+    },
+    {
+     "name": "Crystal spire (break)",
+     "yields": "storm crystal"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Lightning Rod",
+     "how": "on unlock",
+     "note": "1x1 generator: storm crystal every 8 s, cap 12"
+    },
+    {
+     "name": "Thunder Forge",
+     "how": "on unlock",
+     "note": "Burner 3x5: iron ore 3 + storm crystal 1 -> iron bar 4; iron bar 2 + storm crystal 2 -> thunder steel 1"
+    }
+   ],
+   "enemies": [],
+   "npc": {
+    "name": "Storm Sage Lei",
+    "role": "Storm sage",
+    "requests": [
+     {
+      "needs": {
+       "thunderwood": 30,
+       "storm_crystal": 20
+      },
+      "reward": {
+       "t": "u",
+       "name": "Crag Automation",
+       "desc": "Automates the Island's nodes"
+      }
+     },
+     {
+      "needs": {
+       "thunder_steel": 6,
+       "glass": 20
+      },
+      "reward": {
+       "t": "u",
+       "name": "Wisp boost",
+       "desc": "Wisps fly and lanterns send +15 % (replaces Tireless Wisps, Wisp Gale)"
+      }
+     },
+     {
+      "needs": {
+       "thunder_steel": 10,
+       "beast_core": 4
+      },
+      "reward": {
+       "t": "u",
+       "name": "Haste",
+       "desc": "Every timer -5 % (replaces Eternal Haste)"
+      },
+      "later": [
+       "beast_core"
+      ]
+     }
+    ]
+   },
+   "name": "Thunder Crag",
+   "icon": "⚡"
+  },
+  {
+   "id": "ravine",
+   "order": 8,
+   "status": "planned",
+   "col": 378,
+   "row": 126,
+   "biome": "canyon",
+   "biomeNote": "Mossy canyon, giant ribcages and glowing vines.",
+   "tribute": {
+    "thunderwood": 20,
+    "storm_crystal": 15,
+    "thunder_steel": 5,
+    "beast_bait": 20,
+    "robe": 10
+   },
+   "pathFrom": "volcano",
+   "automation": "Lightning Rod, Thunder Forge; Cauldron.",
+   "nodes": [
+    {
+     "name": "Bone heap (break)",
+     "yields": "beast bone"
+    },
+    {
+     "name": "Soulvine (chop)",
+     "yields": "soulvine"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Soul Refinery",
+     "how": "on unlock",
+     "note": "Converter: beast core 1 + soulvine 2 + spirit jade 1 -> soul lamp"
+    },
+    {
+     "name": "Beast Pen",
+     "how": "request",
+     "note": "From Beast-Tamer Yao; 5x5 roster of 3 tamed beasts"
+    }
+   ],
+   "enemies": [
+    "Azure Wolf (hp 12, comes in pairs): beast bone, beast core"
+   ],
+   "npc": {
+    "name": "Beast-Tamer Yao",
+    "role": "Beast tamer",
+    "requests": [
+     {
+      "needs": {
+       "beast_bait": 20,
+       "beast_bone": 20
+      },
+      "reward": {
+       "t": "b",
+       "name": "Beast Pen",
+       "desc": "5x5 roster of 3 tamed beasts fed fish or spirit buns -> beast bone, rare beast core"
+      }
+     },
+     {
+      "needs": {
+       "beast_core": 6,
+       "soulvine": 20
+      },
+      "reward": {
+       "t": "u",
+       "name": "Ravine Automation",
+       "desc": "Automates bone heaps and soulvine"
+      }
+     },
+     {
+      "needs": {
+       "soul_lamp": 4,
+       "tribulation_essence": 6
+      },
+      "reward": {
+       "t": "u",
+       "name": "Battle fury",
+       "desc": "+1 damage per strike, Pen holds 5 (replaces Battle Fury)"
+      },
+      "later": [
+       "tribulation_essence"
+      ]
+     }
+    ]
+   },
+   "name": "Azure Beast Ravine",
+   "icon": "🐺"
+  },
+  {
+   "id": "tribulation",
+   "order": 9,
+   "status": "planned",
+   "col": 127,
+   "row": 252,
+   "biome": "scorched",
+   "biomeNote": "Scorched jade terraces, rune circles and a storm ring. Takes Celestial's old slot.",
+   "tribute": {
+    "soulvine": 20,
+    "beast_core": 10,
+    "soul_lamp": 5,
+    "thunder_steel": 10,
+    "spirit_jade": 15
+   },
+   "pathFrom": "thunder",
+   "automation": "Ravine nodes and wolves by hand; Soul Refinery.",
+   "nodes": [
+    {
+     "name": "Peach trees (quarry)",
+     "yields": "immortal peach"
+    },
+    {
+     "name": "Scarred jade (break)",
+     "yields": "jade shard, rare spirit jade"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Tribulation Array",
+     "how": "on unlock",
+     "note": "5x5 converter: storm crystal 1 -> tribulation essence 1 per 30 s"
+    },
+    {
+     "name": "Immortal Furnace",
+     "how": "request",
+     "note": "From Tribulation Elder Mo"
+    }
+   ],
+   "enemies": [],
+   "npc": {
+    "name": "Tribulation Elder Mo",
+    "role": "Tribulation elder",
+    "requests": [
+     {
+      "needs": {
+       "immortal_peach": 20,
+       "jade_shard": 40
+      },
+      "reward": {
+       "t": "u",
+       "name": "Peak Automation",
+       "desc": "Automates the Island's nodes"
+      }
+     },
+     {
+      "needs": {
+       "tribulation_essence": 10,
+       "soul_lamp": 4
+      },
+      "reward": {
+       "t": "b",
+       "name": "Immortal Furnace",
+       "desc": "Burner 3x5: tribulation essence 2 + immortal peach 1 + soul lamp 1 -> immortal pill"
+      }
+     },
+     {
+      "needs": {
+       "immortal_pill": 3,
+       "star_fragment": 30
+      },
+      "reward": {
+       "t": "u",
+       "name": "Blessings",
+       "desc": "Blessings +20 %, dragon scales x1.5 (replaces Heaven's Favor)"
+      },
+      "later": [
+       "star_fragment"
+      ],
+      "needsOwn": true
+     }
+    ]
+   },
+   "name": "Tribulation Peak",
+   "icon": "🌩️"
+  },
+  {
+   "id": "celestial",
+   "order": 10,
+   "status": "built",
+   "col": 125,
+   "row": -128,
+   "movedFrom": {
+    "col": 127,
+    "row": 252
+   },
+   "biome": "sky",
+   "biomeNote": "Cloud peak with star rock and moon shrubs. The final Island: the Heavenly Gate ending is built here. Moves north of the Center, behind the Shrine.",
+   "tribute": {
+    "immortal_peach": 15,
+    "tribulation_essence": 10,
+    "talisman": 10,
+    "soul_lamp": 5,
+    "spirit_stone": 20
+   },
+   "pathFrom": "shrine",
+   "automation": "Peach fixture; Tribulation Array.",
+   "nodes": [
+    {
+     "name": "Star rock",
+     "yields": "star fragment, rare firestone"
+    },
+    {
+     "name": "Moon shrub",
+     "yields": "moonpetal"
+    }
+   ],
+   "buildings": [
+    {
+     "name": "Heavenly Gate",
+     "how": "ending",
+     "note": "Talisman 14, star steel 20, dragon scale 6, tribulation essence 10; plays the ending"
+    }
+   ],
+   "enemies": [],
+   "npc": {
+    "name": "Star-Gazer Elder Xuan",
+    "role": "Star-gazer",
+    "requests": [
+     {
+      "needs": {
+       "star_fragment": 40,
+       "glass": 20
+      },
+      "reward": {
+       "t": "b",
+       "name": "Star Well",
+       "desc": "Generator: star fragment every 10 s"
+      }
+     },
+     {
+      "needs": {
+       "moonpetal": 30,
+       "talisman": 4
+      },
+      "reward": {
+       "t": "u",
+       "name": "Celestial Automation",
+       "desc": "Automates the Island's nodes"
+      }
+     },
+     {
+      "needs": {
+       "star_steel": 10,
+       "tribulation_essence": 10
+      },
+      "reward": {
+       "t": "u",
+       "name": "Cheaper Gate",
+       "desc": "Heavenly Gate cost -25 %"
+      }
+     }
+    ]
+   },
+   "name": "Celestial Peak",
+   "icon": "☁️"
+  }
+ ]
+}

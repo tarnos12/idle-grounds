@@ -140,6 +140,8 @@ tr.sel td { background: var(--jade-soft); }
 .s-blocked { background: var(--cinnabar-soft); color: var(--cinnabar); border: 1px solid var(--cinnabar); }
 .s-waiting { background: var(--gold-soft); color: var(--gold); border: 1px solid var(--gold); }
 .s-done { background: var(--done-soft); color: var(--done); border: 1px solid var(--line); }
+.s-next { background: var(--jade-soft); color: var(--jade); border: 1px dashed var(--jade); }
+.s-later, .s-todo { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
 .tag { font-size: .75rem; padding: 1px 7px; border: 1px solid var(--line); border-radius: 3px; color: var(--muted); }
 
 /* items */
@@ -174,14 +176,33 @@ tr.sel td { background: var(--jade-soft); }
 .bar-track { fill: var(--panel-2); }
 
 /* plan */
-.counts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+.counts .lbl { font-size: .8rem; color: var(--muted); min-width: 52px; }
 .nowbox { border: 1px solid var(--jade); background: var(--jade-soft); border-radius: 12px 3px 12px 3px; padding: 14px; margin-bottom: 18px; }
 .nowbox h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.25rem; margin-bottom: 6px; }
 .nowbox ul { margin: 0; padding-left: 18px; }
-.ms { margin-bottom: 20px; }
-.ms > h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; padding-bottom: 4px; border-bottom: 1px solid var(--gold); margin-bottom: 8px; }
-.task { background: var(--panel); border: 1px solid var(--line); border-left-width: 4px; border-radius: 3px; padding: 10px 12px; margin-bottom: 8px; min-width: 0; }
+.legend { display: grid; gap: 4px; margin: 0 0 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); font-size: .88rem; }
+.legend > div { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+.legend .status { flex: 0 0 auto; }
+.overview { width: 100%; min-width: 0; margin-bottom: 16px; }
+.overview td { vertical-align: middle; }
+.prog { display: inline-block; width: 110px; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; vertical-align: middle; }
+.prog i { display: block; height: 100%; background: var(--bar); }
+details.ms { margin-bottom: 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); min-width: 0; }
+details.ms > summary { cursor: pointer; padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; list-style: none; }
+details.ms > summary::-webkit-details-marker { display: none; }
+details.ms > summary::before { content: "▸"; color: var(--jade); font-weight: 800; }
+details.ms[open] > summary::before { content: "▾"; }
+.ms-id { font: 700 1rem var(--font-body); color: var(--jade); min-width: 34px; }
+.ms-name { font-family: var(--font-display); font-size: 1.2rem; flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+.ms-gate { font-size: .75rem; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; }
+.ms-count { color: var(--muted); font-size: .85rem; white-space: nowrap; }
+.ms-body { padding: 0 14px 12px; }
+.ms-body p { margin: 0 0 6px; max-width: 90ch; }
+.ms-body .exit { color: var(--muted); }
+.task { background: var(--bg); border: 1px solid var(--line); border-left-width: 4px; border-radius: 3px; padding: 10px 12px; margin-top: 8px; min-width: 0; }
 .task.t-in-progress { border-left-color: var(--jade); }
+.task.t-next { border-left-color: var(--jade); }
 .task.t-blocked { border-left-color: var(--cinnabar); }
 .task.t-waiting { border-left-color: var(--gold); }
 .task.t-done { border-left-color: var(--done); }
@@ -190,6 +211,47 @@ tr.sel td { background: var(--jade-soft); }
 .task.t-done .t-title { color: var(--muted); font-weight: 600; }
 .task .why { margin-top: 4px; font-size: .9rem; }
 .task .meta { color: var(--muted); font-size: .8rem; }
+.nowtag { font-size: .68rem; font-weight: 800; letter-spacing: .06em; color: var(--on-cin); background: var(--cinnabar); border-radius: 3px; padding: 0 5px; }
+
+/* islands */
+.isl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 420px); gap: 16px; align-items: start; }
+.isl > * { min-width: 0; }
+@media (max-width: 860px) { .isl { grid-template-columns: minmax(0, 1fr); } }
+.isl-order { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.isl-order .chip-btn { display: inline-flex; gap: 6px; align-items: center; }
+.isl-order .n { font-weight: 800; color: var(--muted); }
+.isl-order .chip-btn[aria-pressed="true"] .n { color: inherit; }
+.isl-order .chip-btn.planned { border-style: dashed; }
+.isl-map { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); padding: 10px; }
+.isl-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.isl-scroll { overflow: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); max-height: 78vh; }
+.isl-scroll svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.isl-scroll svg text { fill: var(--fg); font-family: var(--font-body); }
+.isl-g { cursor: pointer; }
+.isl-g:focus-visible { outline: none; }
+.isl-g:focus-visible .isl-box { stroke: var(--focus); stroke-width: 4; }
+.isl-box { stroke-width: 2.5; }
+.isl-g.sel .isl-box { stroke: var(--focus); stroke-width: 5; }
+.isl-path { stroke: var(--jade); stroke-width: 2.5; stroke-dasharray: 6 5; fill: none; opacity: .85; }
+.isl-badge { fill: var(--fg); }
+.isl-scroll svg text.isl-badge-t { fill: var(--bg); font-weight: 800; }
+.isl-shrine { fill: var(--gold); stroke: var(--fg); stroke-width: 1.5; }
+.isl-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: .82rem; color: var(--muted); }
+.isl-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.isl-legend i { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 2px solid; }
+.isl-panel { border: 1px solid var(--gold); border-radius: 10px 2px 10px 2px; background: var(--panel); padding: 16px; min-width: 0; }
+.isl-panel h3 { font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; }
+.isl-panel h4 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+.isl-panel ul { margin: 0; padding-left: 18px; }
+.isl-panel li { margin-bottom: 3px; }
+.isl-panel p { margin: 4px 0; }
+.req { border: 1px solid var(--line); border-radius: 4px; padding: 8px 10px; margin-bottom: 8px; background: var(--bg); }
+.req .rt { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; margin-bottom: 4px; }
+.kind { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; border: 1px solid var(--line); border-radius: 3px; padding: 0 5px; color: var(--muted); }
+.kind.b { color: var(--jade); border-color: var(--jade); }
+.kind.u { color: var(--gold); border-color: var(--gold); }
+.cost.late { border: 1px dashed var(--muted); }
+.note-sm { font-size: .82rem; color: var(--muted); margin: 4px 0 0; }
 
 /* questions */
 .qgroup { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; margin: 22px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--gold); }
@@ -261,11 +323,28 @@ tr.sel td { background: var(--jade-soft); }
       <div id="charts"></div>
     </section>
 
+    <section class="panel" id="panel-islands" role="tabpanel" hidden>
+      <h2 class="display">Islands</h2>
+      <p class="lede" id="isl-lede"></p>
+      <div class="isl-order" id="isl-order" role="group" aria-label="Islands in unlock order"></div>
+      <div class="isl">
+        <div class="isl-map">
+          <div class="isl-tools"><button class="btn ghost" id="isl-out" type="button" aria-label="Zoom out">&minus;</button><button class="btn ghost" id="isl-fit" type="button">Fit</button><button class="btn ghost" id="isl-in" type="button" aria-label="Zoom in">+</button><span class="muted small" id="isl-zoomlbl"></span></div>
+          <div class="isl-scroll" id="isl-scroll"></div>
+          <div class="isl-legend" id="isl-legend"></div>
+        </div>
+        <aside class="isl-panel" id="isl-panel" aria-live="polite"></aside>
+      </div>
+    </section>
+
     <section class="panel" id="panel-plan" role="tabpanel" hidden>
       <h2 class="display">Plan</h2>
       <p class="lede" id="plan-lede"></p>
-      <div class="counts" id="plan-counts"></div>
+      <div id="plan-overview"></div>
       <div class="nowbox" id="plan-now"></div>
+      <div class="legend" id="plan-legend"></div>
+      <div class="counts" id="plan-counts"></div>
+      <div class="counts" id="plan-owners"></div>
       <div id="plan-ms"></div>
     </section>
 
@@ -297,6 +376,7 @@ tr.sel td { background: var(--jade-soft); }
   'use strict';
   var DATA = /*DATA*/null;
   var PLAN = /*PLAN*/null;
+  var ISLANDS = /*ISLANDS*/null;
   var QUESTIONS = /*QUESTIONS*/[];
 
   // ---------- helpers
@@ -365,7 +445,7 @@ tr.sel td { background: var(--jade-soft); }
   }
 
   // ---------- tabs
-  var TABS = [['items', 'Items'], ['buildings', 'Buildings'], ['charts', 'Charts'], ['plan', 'Plan'], ['questions', 'Questions']];
+  var TABS = [['items', 'Items'], ['buildings', 'Buildings'], ['islands', 'Islands'], ['charts', 'Charts'], ['plan', 'Plan'], ['questions', 'Questions']];
   var current = null;
   var tabsEl = $('tabs');
   TABS.forEach(function (t) {
@@ -389,9 +469,17 @@ tr.sel td { background: var(--jade-soft); }
       tb.tabIndex = t[0] === id ? 0 : -1;
     });
     lsSet('ig-hub-tab', id);
-    if (!noHash && location.hash !== '#' + id) { try { history.replaceState(null, '', '#' + id); } catch (e) { location.hash = id; } }
+    var hh = id === 'islands' && typeof selIsland === 'string' ? 'islands/' + selIsland : id;
+    if (!noHash && location.hash !== '#' + hh) { try { history.replaceState(null, '', '#' + hh); } catch (e) { location.hash = hh; } }
   }
-  window.addEventListener('hashchange', function () { var t = location.hash.replace('#', ''); if (t && t !== current) show(t, true); });
+  function applyHash() {
+    var p = location.hash.replace('#', '').split('/');
+    if (!p[0]) return false;
+    if (p[0] === 'islands' && p[1] && ISL_BY[p[1]]) selectIsland(p[1], true);
+    if (p[0] !== current) show(p[0], true);
+    return true;
+  }
+  window.addEventListener('hashchange', applyHash);
 
   // ---------- items
   var selectedItem = null;
@@ -553,44 +641,226 @@ tr.sel td { background: var(--jade-soft); }
   }
 
   // ---------- plan
-  var STATUS_ORDER = ['in-progress', 'blocked', 'waiting', 'done'];
-  var STATUS_LABEL = { 'in-progress': 'In progress', blocked: 'Blocked', waiting: 'Waiting', done: 'Done' };
-  var statusFilter = null;
+  var STATUS_ORDER = ['in-progress', 'next', 'todo', 'later', 'waiting', 'blocked', 'done'];
+  var STATUS_LABEL = { 'in-progress': 'In progress', next: 'Next', todo: 'To do', later: 'Later', waiting: 'Waiting', blocked: 'Blocked', done: 'Done' };
+  var statusFilter = null, ownerFilter = null;
+  function chip(st) { return h('span', { class: 'status s-' + st, text: STATUS_LABEL[st] || st }); }
+  function bar(n, d) { return h('span', { class: 'prog', role: 'img', 'aria-label': n + ' of ' + d }, h('i', { style: 'width:' + Math.round(100 * n / Math.max(1, d)) + '%' })); }
+  function planOpenMs(id) {
+    var d = $('ms-' + id); if (!d) return;
+    statusFilter = null; ownerFilter = null; renderPlan();
+    d = $('ms-' + id); d.open = true; d.scrollIntoView({ block: 'start' });
+  }
   function renderPlan() {
     if (!PLAN) { $('plan-lede').textContent = 'No plan file was found.'; $('plan-now').hidden = true; return; }
-    $('plan-lede').textContent = 'Updated ' + PLAN.updated + '. Every task has a status and, when it is not moving, the reason why.';
+    $('plan-lede').textContent = 'Updated ' + PLAN.updated + '. ' + (PLAN.source || '') + ' Every task has a status and, when it is not moving, the reason why.';
     var all = [];
     PLAN.milestones.forEach(function (m) { m.tasks.forEach(function (t) { all.push(t); }); });
     var counts = {}; all.forEach(function (t) { counts[t.status] = (counts[t.status] || 0) + 1; });
-    var cbox = $('plan-counts'); clear(cbox);
-    cbox.appendChild(h('button', { type: 'button', id: 'plan-f-all', class: 'chip-btn', 'aria-pressed': statusFilter === null ? 'true' : 'false', onclick: function () { statusFilter = null; renderPlan(); } }, 'All ' + all.length));
-    STATUS_ORDER.forEach(function (st) {
-      cbox.appendChild(h('button', { type: 'button', id: 'plan-f-' + st, class: 'chip-btn', 'aria-pressed': statusFilter === st ? 'true' : 'false', onclick: function () { statusFilter = statusFilter === st ? null : st; renderPlan(); } },
-        STATUS_LABEL[st] + ' ' + (counts[st] || 0)));
+    var doneN = counts.done || 0;
+    // overview
+    var ov = $('plan-overview'); clear(ov);
+    ov.appendChild(h('p', null, h('strong', { text: doneN + ' of ' + all.length + ' tasks done' }), ' ', bar(doneN, all.length)));
+    var otb = h('tbody');
+    PLAN.milestones.forEach(function (m) {
+      var md = m.tasks.filter(function (t) { return t.status === 'done'; }).length;
+      otb.appendChild(h('tr', null,
+        h('td', null, h('button', { type: 'button', class: 'row-btn', onclick: function () { planOpenMs(m.id); } }, m.id)),
+        h('td', { text: m.name }), h('td', null, m.gate ? h('span', { class: 'ms-gate', text: 'Gate ' + m.gate }) : ''), h('td', null, chip(m.status)),
+        h('td', null, bar(md, m.tasks.length), ' ' + md + '/' + m.tasks.length)));
     });
-    var now = all.filter(function (t) { return t.status === 'in-progress'; });
+    ov.appendChild(h('div', { class: 'scroll' }, h('table', { class: 'overview' }, h('thead', null, h('tr', null, h('th', { text: '#' }), h('th', { text: 'Milestone' }), h('th', { text: 'Gate' }), h('th', { text: 'Status' }), h('th', { text: 'Tasks done' }))), otb)));
+    // being worked on now
+    var now = [];
+    PLAN.milestones.forEach(function (m) { m.tasks.forEach(function (t) { if (t.now) now.push({ m: m, t: t }); }); });
     var nb = $('plan-now'); clear(nb);
     nb.appendChild(h('h3', { text: 'Being worked on now' }));
-    if (now.length) nb.appendChild(h('ul', null, now.map(function (t) { return h('li', null, h('strong', { text: t.title }), t.now ? ' – ' + t.now : ''); })));
+    if (now.length) nb.appendChild(h('ul', null, now.map(function (x) { return h('li', null, h('strong', { text: x.m.id + ' ' + x.t.title }), ' – ' + x.t.now); })));
     else nb.appendChild(h('p', { class: 'muted', text: 'Nothing is running right now.' }));
+    // legend: status meaning + owners
+    var lg = $('plan-legend'); clear(lg);
+    var sm = (PLAN.statusMeaning || {}).task || {};
+    STATUS_ORDER.forEach(function (st) { if (sm[st]) lg.appendChild(h('div', null, chip(st), ' ' + sm[st].replace(/^[^:]*: /, ''))); });
+    var ow = PLAN.owners || {};
+    Object.keys(ow).forEach(function (o) { lg.appendChild(h('div', null, h('strong', { text: o + ':' }), ' ' + ow[o])); });
+    // filters
+    var cbox = $('plan-counts'); clear(cbox);
+    cbox.appendChild(h('span', { class: 'lbl', text: 'Status' }));
+    cbox.appendChild(h('button', { type: 'button', id: 'plan-f-all', class: 'chip-btn', 'aria-pressed': statusFilter === null ? 'true' : 'false', onclick: function () { statusFilter = null; renderPlan(); } }, 'All ' + all.length));
+    STATUS_ORDER.forEach(function (st) {
+      if (!counts[st]) return;
+      cbox.appendChild(h('button', { type: 'button', id: 'plan-f-' + st, class: 'chip-btn', 'aria-pressed': statusFilter === st ? 'true' : 'false', onclick: function () { statusFilter = statusFilter === st ? null : st; renderPlan(); } },
+        STATUS_LABEL[st] + ' ' + counts[st]));
+    });
+    var obox = $('plan-owners'); clear(obox);
+    obox.appendChild(h('span', { class: 'lbl', text: 'Owner' }));
+    Object.keys(ow).forEach(function (o, i) {
+      var n = all.filter(function (t) { return t.owner === o; }).length;
+      obox.appendChild(h('button', { type: 'button', id: 'plan-o-' + i, class: 'chip-btn', 'aria-pressed': ownerFilter === o ? 'true' : 'false', onclick: function () { ownerFilter = ownerFilter === o ? null : o; renderPlan(); } }, o + ' ' + n));
+    });
+    // milestones
+    var filtering = !!(statusFilter || ownerFilter);
     var ms = $('plan-ms'); clear(ms);
     PLAN.milestones.forEach(function (m) {
-      var tasks = m.tasks.filter(function (t) { return !statusFilter || t.status === statusFilter; });
-      if (!tasks.length) return;
+      var tasks = m.tasks.filter(function (t) { return (!statusFilter || t.status === statusFilter) && (!ownerFilter || t.owner === ownerFilter); });
+      if (filtering && !tasks.length) return;
       var done = m.tasks.filter(function (t) { return t.status === 'done'; }).length;
-      var sec = h('section', { class: 'ms' }, h('h3', { text: m.id + ': ' + m.title + '  (' + done + '/' + m.tasks.length + ' done)' }));
+      var det = h('details', { class: 'ms', id: 'ms-' + m.id, open: filtering || m.status === 'in-progress' || m.status === 'next' });
+      det.appendChild(h('summary', null, h('span', { class: 'ms-id', text: m.id }), h('span', { class: 'ms-name', text: m.name }),
+        m.gate ? h('span', { class: 'ms-gate', text: 'Gate ' + m.gate }) : null, chip(m.status), bar(done, m.tasks.length), h('span', { class: 'ms-count', text: done + '/' + m.tasks.length + ' done' })));
+      var body = h('div', { class: 'ms-body' }, h('p', { text: m.goal }), h('p', { class: 'exit' }, h('strong', { text: 'Exit: ' }), m.exit));
       tasks.forEach(function (t) {
-        sec.appendChild(h('div', { class: 'task t-' + t.status },
-          h('div', { class: 't-head' }, h('span', { class: 'status s-' + t.status, text: STATUS_LABEL[t.status] || t.status }), h('span', { class: 't-title', text: t.title }),
+        body.appendChild(h('div', { class: 'task t-' + t.status },
+          h('div', { class: 't-head' }, chip(t.status), h('span', { class: 't-title', text: t.title }), t.now ? h('span', { class: 'nowtag', text: 'NOW' }) : null,
             h('span', { class: 'meta', text: [t.owner, t.size && ('size ' + t.size)].filter(Boolean).join(' · ') })),
           t.detail ? h('div', { class: 'small muted', text: t.detail }) : null,
           t.now ? h('div', { class: 'why' }, h('strong', { text: 'Now: ' }), t.now) : null,
           t.blockedBy ? h('div', { class: 'why' }, h('strong', { text: (t.status === 'waiting' ? 'Waiting because: ' : 'Blocked by: ') }), t.blockedBy) : null));
       });
-      ms.appendChild(sec);
+      det.appendChild(body);
+      ms.appendChild(det);
     });
-    if (!ms.firstChild) ms.appendChild(h('p', { class: 'empty', text: 'No tasks with that status.' }));
+    if (!ms.firstChild) ms.appendChild(h('p', { class: 'empty', text: 'No tasks match those filters.' }));
   }
+
+  // ---------- islands (the world map: positions in grid cells, from game data and ADR 0007)
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function sv(tag, attrs, text) {
+    var e = document.createElementNS(SVGNS, tag);
+    if (attrs) for (var k in attrs) if (attrs[k] !== null && attrs[k] !== undefined) e.setAttribute(k, attrs[k]);
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  var selIsland = 'center', islZoom = 1, islBuilt = false;
+  var ISL_BY = {};
+  if (ISLANDS) ISLANDS.islands.forEach(function (i) { ISL_BY[i.id] = i; });
+  function islCenter(i) { var s = ISLANDS.islandSize; return { x: i.col + s / 2, y: i.row + s / 2 }; }
+  function itemChip(k, n, late) {
+    if (NAMES[k]) { var c = costChip(k, n); if (late) { c.className += ' late'; c.title = iname(k) + ' (from a later Island)'; } return c; }
+    return h('span', { class: 'cost' + (late ? ' late' : ''), title: titleCase(k) + ' (new item)' }, h('span', { class: 'ico', 'aria-hidden': 'true', text: '✦' }), num(n) + ' ' + titleCase(k));
+  }
+  function needChips(needs, later) {
+    var box = h('div', { class: 'chips' });
+    Object.keys(needs).forEach(function (k) { box.appendChild(itemChip(k, needs[k], later && later.indexOf(k) >= 0)); });
+    return box;
+  }
+  function islHash(id) { return 'islands/' + id; }
+  function selectIsland(id, noHash) {
+    if (!ISL_BY[id]) id = 'center';
+    selIsland = id;
+    renderIslandMap(); renderIslandPanel();
+    if (!noHash && current === 'islands') { try { history.replaceState(null, '', '#' + islHash(id)); } catch (e) { location.hash = islHash(id); } }
+  }
+  function renderIslands() {
+    var panel = $('panel-islands');
+    if (!ISLANDS) { $('isl-lede').textContent = 'No islands file was found.'; return; }
+    var built = ISLANDS.islands.filter(function (i) { return i.status === 'built'; }).length;
+    $('isl-lede').textContent = ISLANDS.islands.length + ' Islands in unlock order (' + built + ' in the game, ' + (ISLANDS.islands.length - built) + ' planned). Numbers are the unlock order: the Center is the start, and each Tribute paid at the Sky-Bridge Shrine opens the next one. Click an Island for its Tribute, NPC and requests. Dashed outline = planned.';
+    var ob = $('isl-order'); clear(ob);
+    ISLANDS.islands.forEach(function (i) {
+      ob.appendChild(h('button', { type: 'button', id: 'isl-b-' + i.id, class: 'chip-btn' + (i.status === 'planned' ? ' planned' : ''), 'aria-pressed': i.id === selIsland ? 'true' : 'false', onclick: function () { selectIsland(i.id); } },
+        h('span', { class: 'n', text: String(i.order) }), i.name));
+    });
+    var lg = $('isl-legend'); clear(lg);
+    Object.keys(ISLANDS.biomes).forEach(function (b) {
+      if (!ISLANDS.islands.some(function (i) { return i.biome === b; })) return;
+      var c = ISLANDS.biomes[b].color;
+      lg.appendChild(h('span', null, h('i', { style: 'background:' + c + '66;border-color:' + c }), ISLANDS.biomes[b].name));
+    });
+    lg.appendChild(h('span', null, h('i', { style: 'border-style:dashed;border-color:var(--muted)' }), 'planned'));
+    lg.appendChild(h('span', null, h('i', { style: 'border-style:solid;border-color:var(--muted)' }), 'in the game'));
+    lg.appendChild(h('span', null, h('i', { style: 'border:0;border-top:3px dashed var(--jade);height:0;border-radius:0' }), 'Sky Path from the previous Island'));
+    lg.appendChild(h('span', null, h('i', { style: 'background:var(--gold);border-color:var(--fg);transform:rotate(45deg) scale(.7)' }), 'Sky-Bridge Shrine'));
+    renderIslandMap(); renderIslandPanel();
+    setIslZoom(islZoom);
+    islBuilt = true;
+  }
+  function setIslZoom(z) {
+    islZoom = Math.max(1, Math.min(3, z));
+    var svg = $('isl-scroll').firstChild;
+    if (svg) svg.style.width = Math.round(islZoom * 100) + '%';
+    $('isl-zoomlbl').textContent = islZoom === 1 ? '' : Math.round(islZoom * 100) + '%';
+  }
+  function renderIslandMap() {
+    var host = $('isl-scroll'); clear(host);
+    var S = ISLANDS.islandSize;
+    var cols = ISLANDS.islands.map(function (i) { return i.col; }), rows = ISLANDS.islands.map(function (i) { return i.row; });
+    var x0 = Math.min.apply(null, cols) - 12, y0 = Math.min.apply(null, rows) - 12, x1 = Math.max.apply(null, cols) + S + 12, y1 = Math.max.apply(null, rows) + S + 12;
+    var svg = sv('svg', { viewBox: x0 + ' ' + y0 + ' ' + (x1 - x0) + ' ' + (y1 - y0), role: 'group', 'aria-label': 'Map of the Islands on their grid' });
+    svg.style.width = Math.round(islZoom * 100) + '%';
+    // Sky Paths first (under the Islands)
+    var sh = ISLANDS.shrine, shC = { x: sh.col + sh.size / 2, y: sh.row + sh.size / 2 };
+    ISLANDS.islands.forEach(function (i) {
+      if (!i.pathFrom) return;
+      var from = i.pathFrom === 'shrine' ? shC : islCenter(ISL_BY[i.pathFrom]), to = islCenter(i);
+      svg.appendChild(sv('line', { x1: from.x, y1: from.y, x2: to.x, y2: to.y, class: 'isl-path' }));
+    });
+    ISLANDS.islands.forEach(function (i) {
+      var bio = ISLANDS.biomes[i.biome], planned = i.status === 'planned';
+      var g = sv('g', { class: 'isl-g' + (i.id === selIsland ? ' sel' : ''), tabindex: '0', role: 'button', 'aria-label': i.order + ': ' + i.name + ', ' + (planned ? 'planned' : 'in the game') + ', ' + bio.name, 'aria-pressed': i.id === selIsland ? 'true' : 'false', 'data-isl': i.id });
+      g.appendChild(sv('rect', { x: i.col, y: i.row, width: S, height: S, rx: 14, fill: bio.color, 'fill-opacity': planned ? 0.22 : 0.5, stroke: bio.color, 'stroke-dasharray': planned ? '9 6' : null, class: 'isl-box' }));
+      var c = islCenter(i);
+      g.appendChild(sv('text', { x: c.x, y: c.y + 4, 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 700 }, i.name));
+      g.appendChild(sv('text', { x: c.x, y: c.y + 22, 'text-anchor': 'middle', 'font-size': 11 }, bio.name + (planned ? ' · planned' : '')));
+      g.appendChild(sv('circle', { cx: i.col + 14, cy: i.row + 14, r: 13, class: 'isl-badge' }));
+      g.appendChild(sv('text', { x: i.col + 14, y: i.row + 19, 'text-anchor': 'middle', 'font-size': 15, class: 'isl-badge-t' }, String(i.order)));
+      var act = function () { selectIsland(i.id); };
+      g.addEventListener('click', act);
+      g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+      svg.appendChild(g);
+    });
+    // Shrine marker
+    var sg = sv('g', { role: 'img', 'aria-label': sh.name });
+    sg.appendChild(sv('rect', { x: shC.x - 8, y: shC.y - 8, width: 16, height: 16, class: 'isl-shrine', transform: 'rotate(45 ' + shC.x + ' ' + shC.y + ')' }));
+    sg.appendChild(sv('text', { x: shC.x + 14, y: shC.y - 12, 'font-size': 11, 'font-weight': 700 }, sh.name));
+    svg.appendChild(sg);
+    host.appendChild(svg);
+    var ob = $('isl-order');
+    Array.prototype.forEach.call(ob.children, function (b) { b.setAttribute('aria-pressed', b.id === 'isl-b-' + selIsland ? 'true' : 'false'); });
+  }
+  function renderIslandPanel() {
+    var box = $('isl-panel'); clear(box);
+    var i = ISL_BY[selIsland]; if (!i) return;
+    var bio = ISLANDS.biomes[i.biome];
+    box.appendChild(h('h3', { text: i.order + '. ' + i.name }));
+    box.appendChild(h('p', null, chip2(i.status), ' ', h('span', { class: 'muted', text: bio.name + ' · grid column ' + i.col + ', row ' + i.row })));
+    box.appendChild(h('p', { text: i.biomeNote }));
+    if (i.movedFrom) box.appendChild(h('p', { class: 'note-sm', text: 'Planned move: today it sits at column ' + i.movedFrom.col + ', row ' + i.movedFrom.row + '; ADR 0007 moves it north of the Center so the Shrine locks it visibly. The map shows the planned spot.' }));
+    box.appendChild(h('h4', { text: 'Unlock' }));
+    if (!i.tribute) box.appendChild(h('p', { text: 'The start Island: nothing to pay. It also holds the Sky-Bridge Shrine (north edge), where every other Tribute is paid.' }));
+    else {
+      var from = i.pathFrom === 'shrine' ? ISLANDS.shrine.name : ISL_BY[i.pathFrom].name;
+      box.appendChild(h('p', { text: 'Tribute #' + i.order + ' at the Shrine: 5 items, fed by right-click in installments. A full Tribute raises a Sky Path from ' + from + '.' }));
+      box.appendChild(needChips(i.tribute));
+      box.appendChild(h('p', { class: 'note-sm', text: 'Automation path: ' + i.automation }));
+    }
+    var n = i.npc;
+    box.appendChild(h('h4', { text: 'NPC: ' + n.name + ' (' + n.role + ')' }));
+    n.requests.forEach(function (r, k) {
+      var card = h('div', { class: 'req' });
+      card.appendChild(h('div', { class: 'rt' }, h('strong', { text: 'Request ' + 'ABC'.charAt(k) + ': ' + r.reward.name }), h('span', { class: 'kind ' + r.reward.t, text: r.reward.t === 'b' ? 'building' : 'utility' })));
+      card.appendChild(needChips(r.needs, r.later));
+      card.appendChild(h('p', { class: 'small', text: r.reward.desc }));
+      var notes = [];
+      if (r.later && r.later.length) notes.push('Dashed items come from a later Island: the request waits, which is fine because requests are optional.');
+      if (r.needsOwn) notes.push('Needs this NPC\'s own building reward first.');
+      if (notes.length) card.appendChild(h('p', { class: 'note-sm', text: notes.join(' ') }));
+      box.appendChild(card);
+    });
+    box.appendChild(h('p', { class: 'note-sm', text: 'Requests never gate progress. All three are open at once; feed them by right-click.' }));
+    if (i.nodes.length) {
+      box.appendChild(h('h4', { text: 'Resource nodes' }));
+      box.appendChild(h('ul', null, i.nodes.map(function (x) { return h('li', null, h('strong', { text: x.name }), ' → ' + x.yields); })));
+    }
+    if (i.buildings.length) {
+      box.appendChild(h('h4', { text: 'Buildings' }));
+      box.appendChild(h('ul', null, i.buildings.map(function (x) { return h('li', null, h('strong', { text: x.name }), ' (' + x.how + ') – ' + x.note); })));
+    }
+    box.appendChild(h('h4', { text: 'Enemies' }));
+    if (i.enemies.length) box.appendChild(h('ul', null, i.enemies.map(function (x) { return h('li', { text: x }); })));
+    else box.appendChild(h('p', { class: 'muted', text: 'None.' }));
+  }
+  function chip2(st) { return h('span', { class: 'status ' + (st === 'built' ? 's-done' : 's-next'), text: st === 'built' ? 'In the game' : 'Planned' }); }
 
   // ---------- questions
   var ANS_KEY = 'ig-hub-answers';
@@ -693,9 +963,11 @@ tr.sel td { background: var(--jade-soft); }
   $('items-sort').addEventListener('change', renderItems);
   $('bld-filter').addEventListener('input', renderBuildings);
   $('bld-sort').addEventListener('change', renderBuildings);
-  $('stamp').textContent = itemKeys.length + ' items · ' + bKeys.length + ' buildings' + (PLAN ? ' · plan updated ' + PLAN.updated : '');
-  renderItems(); renderBuildings(); renderCharts(); renderPlan(); renderQuestions();
-  var start = location.hash.replace('#', '') || lsGet('ig-hub-tab') || 'items';
-  show(start, !location.hash);
+  $('stamp').textContent = itemKeys.length + ' items · ' + bKeys.length + ' buildings' + (ISLANDS ? ' · ' + ISLANDS.islands.length + ' islands' : '') + (PLAN ? ' · plan updated ' + PLAN.updated : '');
+  renderItems(); renderBuildings(); renderCharts(); renderPlan(); renderQuestions(); renderIslands();
+  $('isl-in').addEventListener('click', function () { setIslZoom(islZoom + 0.5); });
+  $('isl-out').addEventListener('click', function () { setIslZoom(islZoom - 0.5); });
+  $('isl-fit').addEventListener('click', function () { setIslZoom(1); });
+  if (!applyHash()) show(lsGet('ig-hub-tab') || 'items', true);
 })();
 </script>

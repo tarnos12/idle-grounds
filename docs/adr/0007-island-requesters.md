@@ -2,7 +2,7 @@
 
 Status: accepted (2026-10-12) — supersedes the ascension parts of ADR 0004 and all of ADR 0006 (rejected; its four
 Islands, items and buildings are reused here); changes the Island-unlock part of ADR 0003.
-Owner decisions: `hub/owner-picks-2026-10-12.json`, `hub/owner-picks-2026-10-12-requesters.json`.
+Owner decisions: `docs/Design/owner-picks-2026-10-12.json`, `docs/Design/owner-picks-2026-10-12-requesters.json`.
 
 ## Context
 

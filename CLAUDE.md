@@ -28,20 +28,28 @@ and the ▶ NEXT SESSION pointer.
 
 ## Project Hub (owner dashboard) — https://claude.ai/artifact/EAabdoZhE79jgBc6THmrwG
 
-One private, pinned page for the owner: game data (Items, Buildings, Charts), the
-**Plan** and open **Questions**. It is generated, never edited by hand.
-- Sources: `hub/plan.json`, `hub/questions.json`, `hub/question-images/`, game data
-  `Assets/_Project/Data/Source/game-data.json`, item/building art in `Art/Incoming`.
-- Build: `node tools/hub/build-hub.cjs <scratchpad>/hub` (checks script syntax and
-  image refs), then publish `<scratchpad>/hub/index.html` with its `img/` and `q/`
-  side files **to the same URL above** (Artifact `url`).
-- Tasks: `node tools/hub/set-task.cjs "<precise title regex>" <in-progress|blocked|waiting|done> ["now" | "reason"]`;
-  `node tools/hub/build-plan.cjs` writes `hub/PLAN.md`.
+One private, pinned page for the owner: game data (**Items**, **Buildings**, **Charts**), the
+**Islands** map (11 Islands in unlock order, Tributes, NPC requests; `#islands/<id>` deep
+link), the **Plan** and open **Questions**. It is generated, never edited by hand.
+- Sources (all in `docs/Design/`): `plan.json`, `questions.json`, `question-images/`,
+  `islands.json`, `owner-picks-<date>.json`; game data
+  `Assets/_Project/Data/Source/game-data.json`; item/building art in `Art/Incoming`.
+  `plan.json` schema: title, source, statusMeaning, owners, and per milestone
+  id/name/status/goal/exit/optional gate/tasks (task: title, detail, status, size, owner,
+  now, blockedBy). Statuses: done, in-progress, next, later, todo, blocked, waiting.
+  `islands.json` is the single source for the Islands tab (positions, tributes, NPCs,
+  requests); keep it in step with `docs/adr/0007-island-requesters.md` and `WORLD.islands`.
+- Build: `node tools/hub/build-hub.cjs <scratchpad>/hub` (checks script syntax, image
+  refs, plan/islands schema), then publish `<scratchpad>/hub/index.html` with its `img/`
+  and `q/` side files **to the same URL above** (Artifact `url`).
+- Tasks: `node tools/plan/set-task.cjs "<precise title regex>" <done|in-progress|next|later|todo|blocked|waiting|-> ["now" | "reason"]`;
+  `node tools/plan/build-plan.cjs` writes `docs/Design/PLAN.md` plus a printable A4 page and
+  a PDF (headless Edge) at `Temp/plan/Idle-Grounds-Plan.pdf`.
 - Rules: every owner request/pick/delivery becomes a plan task at once; every running
   agent has an `in-progress` task with a `now` line; blocked/waiting tasks always say
   why. Owner decisions go **only** in the Questions tab (recommended options marked,
   never pre-selected). When answers are pasted in chat: save them verbatim in
-  `hub/owner-picks-<date>.json`, remove answered questions, turn answers into tasks,
+  `docs/Design/owner-picks-<date>.json`, remove answered questions, turn answers into tasks,
   rebuild + republish. Owner picks are commitments — read the picks files before
   planning. Rebuild + republish after every plan/question/data change, and end every
   status report with the Hub link.

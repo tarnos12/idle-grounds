@@ -1,9 +1,38 @@
 {
-  "updated": "2026-10-12 10:44",
+  "title": "Idle Grounds: plan",
+  "updated": "2026-10-12 10:55",
+  "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
+  "statusMeaning": {
+    "task": {
+      "done": "Done: built and checked.",
+      "in-progress": "In progress: someone (an agent) is working on it now; the \"now\" line says who.",
+      "next": "Next: the next thing to start.",
+      "later": "Later: planned, not started.",
+      "todo": "To do: planned and can start.",
+      "blocked": "Blocked: cannot start; needs art, an owner answer or another task (the reason is shown).",
+      "waiting": "Waiting: could start, but not a good time yet (the reason is shown)."
+    },
+    "milestone": {
+      "done": "Done: every task is done and the exit criteria hold.",
+      "in-progress": "In progress: work on it is running now.",
+      "next": "Next: starts as soon as the current milestone allows.",
+      "later": "Later: planned for after the current ones.",
+      "waiting": "Waiting: held back on purpose until something else lands.",
+      "blocked": "Blocked: everything left needs an outside answer or delivery."
+    }
+  },
+  "owners": {
+    "Claude": "Builds and checks the work.",
+    "Mariusz (owner)": "Decides; answers the Questions tab.",
+    "Artist": "ChatGPT via the shared Drive folder: delivers art from the art specification."
+  },
   "milestones": [
     {
       "id": "M1",
-      "title": "Unity port of the browser game",
+      "name": "Unity port of the browser game",
+      "status": "done",
+      "goal": "Bring the whole browser prototype into Unity: every system and screen, with the world rebuilt as floating Islands joined by one-way Spirit Bridges and no offline progress.",
+      "exit": "The Unity game plays like the browser version (parity audits passed) and the Island and Bridge rules of ADR 0002 and 0003 are in.",
       "tasks": [
         {
           "title": "Port every system and screen from the HTML game",
@@ -23,7 +52,10 @@
     },
     {
       "id": "M2",
-      "title": "Balance and onboarding",
+      "name": "Balance and onboarding",
+      "status": "done",
+      "goal": "Make the first run take about 2 to 3 hours, with machines overtaking hand work in the mid game, and teach the island and bridge ideas through quests.",
+      "exit": "The playthrough bot confirms the pacing (ADR 0004) and the quests walk a new player through bridges, caravans and cross-island trade.",
       "tasks": [
         {
           "title": "Real balance: 2-3 h first run, machines beat hands mid-game",
@@ -43,7 +75,10 @@
     },
     {
       "id": "M2b",
-      "title": "Island requesters replace ascension (ADR 0007, accepted)",
+      "name": "Island requesters replace ascension (ADR 0007, accepted)",
+      "status": "waiting",
+      "goal": "Replace ascension with optional Island requesters: eleven Islands unlocked in a fixed order by tributes at the Sky-Bridge Shrine, one NPC per Island with three optional requests each, and the Heavenly Gate as the ending (ADR 0007).",
+      "exit": "The game has 11 Islands, the Shrine, 11 NPCs with 33 requests, no ascension, vows or perks, and the playthrough bot finishes in about 3 hours both with and without taking requests.",
       "tasks": [
         {
           "title": "Island requesters design (ADR 0007)",
@@ -104,7 +139,10 @@
     },
     {
       "id": "M3",
-      "title": "3/4 world look (ADR 0005)",
+      "name": "3/4 world look (ADR 0005)",
+      "status": "in-progress",
+      "goal": "Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersides and natural coastlines (ADR 0005).",
+      "exit": "All Islands show the new walls, undersides and smooth coasts without seams or stripes, and the owner has seen the result.",
       "tasks": [
         {
           "title": "South cliff walls, side faces, grass lips",
@@ -154,16 +192,19 @@
         {
           "title": "Smooth stepped and long-straight coasts",
           "detail": "Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.",
-          "status": "waiting",
+          "status": "in-progress",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Your pick: redo — natural coastline, tiles must connect better. Starts after the test run finishes"
+          "now": "Opus agent: natural coastline, connecting edge tiles"
         }
       ]
     },
     {
       "id": "M4",
-      "title": "Art coverage",
+      "name": "Art coverage",
+      "status": "later",
+      "goal": "Make sure everything the player sees has real art, not placeholders or emoji.",
+      "exit": "No emoji icons remain in the UI and every delivered art piece is used somewhere in the game.",
       "tasks": [
         {
           "title": "All buildings, nodes, items and creatures have real art",
@@ -199,7 +240,10 @@
     },
     {
       "id": "M5",
-      "title": "Builds and tech health",
+      "name": "Builds and tech health",
+      "status": "waiting",
+      "goal": "Keep the project healthy to build and store: Windows and WebGL builds that work, and a scene file small enough for GitHub.",
+      "exit": "Fresh Windows and WebGL builds show the new island look, and no file in the repository exceeds GitHub's limit.",
       "tasks": [
         {
           "title": "Windows and WebGL builds",
