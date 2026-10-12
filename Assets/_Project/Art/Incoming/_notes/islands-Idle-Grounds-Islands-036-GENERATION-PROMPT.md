@@ -1,0 +1,1 @@
+Generated as a transparent pixel-art reference sheet: underside-only floating-island rock masses with layered strata, top-left light, dark recesses, roots wrapping over rock, hanging vines, and four lava-drip phases; forbidden grass, plateau, text, flat triangles, confetti flecks, and thin straight roots. Exact project palette and geometry were enforced during final assembly.
