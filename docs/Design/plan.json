@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-12 20:00",
+  "updated": "2026-10-12 21:55",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -197,11 +197,18 @@
         },
         {
           "title": "Smooth stepped and long-straight coasts",
-          "detail": "Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.",
-          "status": "waiting",
+          "detail": "Signed off 2026-10-12: curved coastlines with walls, lips and side faces following the curve.",
+          "status": "done",
           "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Designer team visual pass: find and fix what makes the game look off",
+          "detail": "Owner request: art director, in-game art reviewer, UI/UX designer and UI QA review a full screenshot tour of the game, then the fixes are built in the background copy.",
+          "status": "in-progress",
+          "size": "L",
           "owner": "Claude",
-          "blockedBy": "Curved coasts merged; waiting for your sign-off (coast4_signoff)"
+          "now": "Engine pass: full screenshot tour in the background copy"
         }
       ]
     },

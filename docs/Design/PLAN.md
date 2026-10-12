@@ -1,19 +1,20 @@
 # Idle Grounds: plan
 
-Updated 2026-10-12 20:00. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-12 21:55. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**15 of 28 tasks done**, 1 in progress, 1 to do, 3 blocked, 8 waiting.
+**16 of 29 tasks done**, 2 in progress, 1 to do, 3 blocked, 7 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
+- **M3** Designer team visual pass: find and fix what makes the game look off: Engine pass: full screenshot tour in the background copy
 
 | # | Milestone | Gate | Status | Tasks done |
 |---|---|---|---|---|
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 2 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 3 / 7 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 4 / 8 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -75,7 +76,8 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Blocked | Fishing ground patches (3rd version) | Calm cool-grey shingle patches for the Fishing island; earlier two were rejected. | Claude |
 | Done | Rebuild the sky with the kept background islands | Background islands now load from their own folder so new deliveries can't replace them. | Claude |
 | Blocked | Cliff wall seam and stripe fix | The artist's cliff tiles still have transparent seams and a light-to-dark stripe per tile; patched in code for now. | Artist |
-| Waiting | Smooth stepped and long-straight coasts | Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches. | Claude |
+| Done | Smooth stepped and long-straight coasts | Signed off 2026-10-12: curved coastlines with walls, lips and side faces following the curve. | Claude |
+| In progress | Designer team visual pass: find and fix what makes the game look off **(NOW)** | Owner request: art director, in-game art reviewer, UI/UX designer and UI QA review a full screenshot tour of the game, then the fixes are built in the background copy. | Claude |
 
 ## M4: Art coverage. Later
 
