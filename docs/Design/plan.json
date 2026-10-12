@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-12 13:35",
+  "updated": "2026-10-12 13:43",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -285,10 +285,9 @@
         {
           "title": "Define the 11 role agents and their guide documents",
           "detail": "World, Balance, Onboarding, UI/UX, UI QA, Art director, In-game art reviewer, Writer, Playtester, Performance, Code health — each an agent definition with a guide doc it owns.",
-          "status": "in-progress",
+          "status": "done",
           "size": "M",
-          "owner": "Claude",
-          "now": "Sonnet agent: writing .claude/agents + docs/guides"
+          "owner": "Claude"
         },
         {
           "title": "Background copy: git worktree + headless Unity for all agent work",

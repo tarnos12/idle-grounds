@@ -89,3 +89,22 @@ Single-context: one root `CONTEXT.md` + `docs/adr/` (created lazily). See `docs/
   only run in Unity.
 - **Full Unity EditMode + PlayMode (+ Slow playthroughs) only at milestones / before
   builds** — they block the editor (~177 EditMode tests incl. 4 Game tests, several minutes).
+
+## Agent team (owner decision 2026-10-12: `docs/Design/owner-picks-2026-10-12-team.json`)
+
+A permanent team of 11 role agents lives in `.claude/agents/` (world-designer, balance-designer,
+onboarding-designer, ui-ux-designer, ui-qa-reviewer, art-director, ingame-art-reviewer, writer,
+playtester, performance-reviewer, code-health-reviewer). Each owns a guide in `docs/guides/`; the
+team table, model tiers and the task-specialist brief templates (engine pass, art importer, feature
+builder, hub builder, release builder, integrator) are in **`docs/guides/README.md`**. The main
+session orchestrates, reviews, integrates and commits. Rules for every agent:
+
+1. Read the plan (`docs/Design/plan.json`) and the owner's decisions (`owner-picks-*.json`) first.
+2. Each agent has its own plan task with a "now" line (`node tools/plan/set-task.cjs ...`).
+3. Owner questions only via the Hub Questions tab (`docs/Design/questions.json`, with pictures if
+   visual); offer every plausible option, including "all" / the maximal one.
+4. **All agent work happens in the background copy** (git worktree + headless Unity), never in the
+   owner's open project or editor.
+5. Run the test gate before pushing (fast `bash tools/simtests/run.sh`; full Unity only at
+   milestones) and report results plainly.
+6. Never `cat > file` without a heredoc; never reset the owner's save.
