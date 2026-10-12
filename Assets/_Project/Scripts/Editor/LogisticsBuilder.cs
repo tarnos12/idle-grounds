@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using static IdleGrounds.Editor.BuildingsBuilder;
 using static IdleGrounds.Editor.CoreLoopBuilder;
+using static IdleGrounds.Editor.ProgressionBuilder;
 
 namespace IdleGrounds.Editor
 {
@@ -33,6 +34,15 @@ namespace IdleGrounds.Editor
             BuildLinkEditorPrefab();
             AssetDatabase.SaveAssets();
             Debug.Log("[IdleGrounds] M4 logistics prefabs built.");
+        }
+
+        /// <summary>The link editor prefab only. Used by <see cref="UiRebuild"/>.</summary>
+        internal static void BuildUiPrefabsOnly()
+        {
+            EnsureShapes();
+            Directory.CreateDirectory(UiPrefabDir);
+            BuildLinkEditorPrefab();
+            AssetDatabase.SaveAssets();
         }
 
         [MenuItem("Idle Grounds/Scene/Install Logistics (M4)")]
@@ -114,15 +124,23 @@ namespace IdleGrounds.Editor
 
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.97f), UiPalette.Line, raycast: true);
             UiSkin.Attach(panel.gameObject, "ui_panel_jade");
+            panel.gameObject.AddComponent<UiDock>();
             var prt = panel.rectTransform;
             prt.anchorMin = new Vector2(0f, 0f); prt.anchorMax = new Vector2(1f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);
             prt.sizeDelta = new Vector2(-24f, 100f);
             prt.anchoredPosition = new Vector2(0f, 68f);
-            Col(panel.gameObject, 14, 8);
+            ColW(panel.gameObject, 14, 8);
             Fit(panel.gameObject, false, true);
 
-            var title = Label(prt, "Title", "Wisp Lantern - links run in order, one per beat", 19f, UiPalette.Text, true);
+            // dock title bar: icon + title + subtitle, Close on the right (same as the bridge / pavilion docks; Esc also closes)
+            var tbar = NewUi("TitleBar", prt);
+            Row(tbar.gameObject, 0, 0, 10);
+            Icon(tbar, "Icon", Emoji("bld_wisp_lantern"), 33);
+            var title = Label(tbar, "Title", "Wisp Lantern", 21f, UiPalette.Text, true);
+            var subtitle = Label(tbar, "Subtitle", "Links run in order, one per beat. Each row shows its state in words; hover for details.", 17f, UiPalette.MutedSoft, false);
+            Le(NewUi("Spacer", tbar), flexW: 1);
+            var close = SmallButton(tbar, "Close", "x", UiPalette.Text, 42, 36);
 
             var header = NewUi("Header", prt);
             Row(header.gameObject, 0, 0, 14);
@@ -142,7 +160,7 @@ namespace IdleGrounds.Editor
 
             var grid = NewUi("Grid", prt);
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
-            g.cellSize = new Vector2(480f, 44f);
+            g.cellSize = new Vector2(600f, 44f);
             g.spacing = new Vector2(10f, 8f);
             g.constraint = GridLayoutGroup.Constraint.Flexible;
             g.childAlignment = TextAnchor.UpperLeft;
@@ -156,6 +174,8 @@ namespace IdleGrounds.Editor
             dotImg.color = LinkLineView.DotGrey;
             var idx = Label(rrt, "Index", "1.", 16f, UiPalette.Muted, true);
             Size(idx, 26, 24);
+            var word = Label(rrt, "StateWord", "idle", 15f, UiPalette.MutedSoft, true);      // the dot's state in words (never colour alone)
+            Size(word, 68, 24);
             EndpointUi(rrt, lr, "source", "Source");
             Label(rrt, "Arrow", ">", 18f, UiPalette.Muted, true);
             EndpointUi(rrt, lr, "target", "Target");
@@ -170,11 +190,13 @@ namespace IdleGrounds.Editor
             rl.alignment = TextAlignmentOptions.Center;
             SetPath(lr, "dot", dotImg);
             SetPath(lr, "indexText", idx);
+            SetPath(lr, "stateText", word);
             SetPath(lr, "remove", rbtn);
             rowImg.gameObject.SetActive(false);
 
             Set(view, "panel", panel.gameObject);
             Set(view, "titleText", title);
+            Set(view, "closeButton", close);
             Set(view, "addButton", abtn);
             Set(view, "hintText", hint);
             Set(view, "warnText", warn);

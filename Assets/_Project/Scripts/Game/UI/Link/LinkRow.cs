@@ -22,6 +22,7 @@ namespace IdleGrounds.Game
 
         [SerializeField] Image dot;
         [SerializeField] TextMeshProUGUI indexText;
+        [SerializeField] TextMeshProUGUI stateText;
         [SerializeField] Endpoint source = new Endpoint();
         [SerializeField] Endpoint target = new Endpoint();
         [SerializeField] Button remove;
@@ -49,10 +50,11 @@ namespace IdleGrounds.Game
             if (indexText.text != s) indexText.text = s;
         }
 
-        public void SetStatus(Color c, string tip)
+        public void SetStatus(Color c, string tip, string word = null)
         {
             dot.color = c;
             Tip = tip;
+            if (stateText != null && word != null && stateText.text != word) stateText.text = word;
         }
 
         public void OnPointerEnter(PointerEventData e) { if (editor != null) editor.SetTip(Tip); }

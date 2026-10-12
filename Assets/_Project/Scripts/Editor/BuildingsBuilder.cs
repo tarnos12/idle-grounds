@@ -49,6 +49,17 @@ namespace IdleGrounds.Editor
             Debug.Log("[IdleGrounds] M3 building + UI prefabs built.");
         }
 
+        /// <summary>The UI prefabs of this builder only (build menu, recipe picker, tooltip); no world prefabs. Used by <see cref="UiRebuild"/>.</summary>
+        internal static void BuildUiPrefabsOnly()
+        {
+            EnsureShapes();
+            Directory.CreateDirectory(UiPrefabDir);
+            BuildBuildMenuPrefab();
+            BuildRecipePickerPrefab();
+            BuildTooltipPrefab();
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("Idle Grounds/Scene/Install Buildings (M3)")]
         public static void InstallMenu()
         {
@@ -549,6 +560,7 @@ namespace IdleGrounds.Editor
 
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.97f), UiPalette.Line, raycast: true);
             UiSkin.Attach(panel.gameObject, "ui_panel_jade");
+            panel.gameObject.AddComponent<UiDock>();
             var prt = panel.rectTransform;
             prt.anchorMin = new Vector2(0f, 0f); prt.anchorMax = new Vector2(1f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);
@@ -559,12 +571,21 @@ namespace IdleGrounds.Editor
             var hrt = hint.rectTransform;
             hrt.anchorMin = new Vector2(0f, 1f); hrt.anchorMax = new Vector2(1f, 1f);
             hrt.pivot = new Vector2(0f, 1f);
-            hrt.sizeDelta = new Vector2(-28f, 26f);
+            hrt.sizeDelta = new Vector2(-90f, 26f);
             hrt.anchoredPosition = new Vector2(14f, -6f);
+
+            // close (also Esc / the Build button) top right
+            var closeBtn = ProgressionBuilder.SmallButton(prt, "Close", "x", UiPalette.Text, 40, 30);
+            closeBtn.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var cbrt = (RectTransform)closeBtn.transform;
+            cbrt.anchorMin = cbrt.anchorMax = new Vector2(1f, 1f);
+            cbrt.pivot = new Vector2(1f, 1f);
+            cbrt.sizeDelta = new Vector2(40f, 30f);
+            cbrt.anchoredPosition = new Vector2(-12f, -10f);
 
             var scrollRt = NewUi("Scroll", prt);
             scrollRt.anchorMin = Vector2.zero; scrollRt.anchorMax = Vector2.one;
-            scrollRt.offsetMin = new Vector2(6f, 6f); scrollRt.offsetMax = new Vector2(-6f, -32f);
+            scrollRt.offsetMin = new Vector2(18f, 6f); scrollRt.offsetMax = new Vector2(-18f, -38f);
             var scroll = scrollRt.gameObject.AddComponent<ScrollRect>();
             scroll.horizontal = true; scroll.vertical = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
@@ -589,7 +610,7 @@ namespace IdleGrounds.Editor
             var cg = card.gameObject.AddComponent<CanvasGroup>();
             var le = card.gameObject.AddComponent<LayoutElement>();
             le.minWidth = 165f; le.preferredHeight = 120f;
-            Col(card.gameObject, 10, 6, TextAnchor.MiddleLeft);
+            Col(card.gameObject, 18, 6, TextAnchor.MiddleLeft);       // clear of the card frame art
             var btn = card.gameObject.AddComponent<Button>();
             btn.targetGraphic = card;
             var cb = btn.colors; cb.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f); btn.colors = cb;
@@ -597,9 +618,10 @@ namespace IdleGrounds.Editor
             Row(top.gameObject, 0, 0, 8);
             var cIcon = Icon(top, "Icon", Emoji("bld_workbench"), 36);
             var cName = Label(top, "Name", "Workbench", 19.5f, UiPalette.Text, true);
+            cName.enableAutoSizing = true; cName.fontSizeMin = 15f; cName.fontSizeMax = 19.5f;      // long names shrink inside the card
             var costRow = NewUi("Cost", cardRt);
             Row(costRow.gameObject, 0, 0, 8);
-            var costTpl = CostEntry(costRow, "CostTemplate", 16.5f, 21f);
+            var costTpl = CostEntry(costRow, "CostTemplate", 19f, 24f);
             var locked = Label(cardRt, "Locked", "", 15f, UiPalette.Muted, true);
             locked.textWrappingMode = TextWrappingModes.Normal;
             var badge = Chip(cardRt, "NewBadge", UiPalette.Gold, UiPalette.Gold);
@@ -641,11 +663,33 @@ namespace IdleGrounds.Editor
             Set(bc, "group", cg);
             card.gameObject.SetActive(false);
 
-            var empty = Label(prt, "Empty", "Nothing to build yet — follow the quests to unlock buildings.", 19f, UiPalette.Muted, true);
+            var empty = Label(prt, "Empty", "Nothing to build yet.", 20f, UiPalette.Text, true);
             Stretch(empty.rectTransform);
+            empty.rectTransform.offsetMin = new Vector2(60f, 14f); empty.rectTransform.offsetMax = new Vector2(-60f, -14f);
             empty.alignment = TextAlignmentOptions.Center;
             empty.gameObject.SetActive(false);
 
+            // paging arrows: only shown when the strip overflows, toward the hidden side
+            Button Arrow(string name, string glyph, float x)
+            {
+                var b = ProgressionBuilder.SmallButton(prt, name, glyph, UiPalette.Gold, 36, 100);
+                b.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                var art = (RectTransform)b.transform;
+                art.anchorMin = art.anchorMax = new Vector2(x, 0.5f);
+                art.pivot = new Vector2(x, 0.5f);
+                art.sizeDelta = new Vector2(36f, 100f);
+                art.anchoredPosition = new Vector2(x < 0.5f ? 8f : -8f, -14f);
+                b.gameObject.SetActive(false);
+                return b;
+            }
+            var leftArrow = Arrow("ArrowLeft", "<", 0f);
+            var rightArrow = Arrow("ArrowRight", ">", 1f);
+
+            Set(view, "panelRect", prt);
+            Set(view, "scroll", scroll);
+            Set(view, "leftArrow", leftArrow);
+            Set(view, "rightArrow", rightArrow);
+            Set(view, "closeButton", closeBtn);
             Set(view, "panel", panel.gameObject);
             Set(view, "content", content);
             Set(view, "cardTemplate", bc);
@@ -668,6 +712,14 @@ namespace IdleGrounds.Editor
             Fit(popup.gameObject, true, true);
             Label(prt, "Title", "Recipes", 21f, UiPalette.Text, true);
             var grid = NewUi("Grid", prt);
+            var captionRt = NewUi("CaptionHolder", prt);
+            captionRt.SetSiblingIndex(2);
+            var capLe = captionRt.gameObject.AddComponent<LayoutElement>();
+            capLe.minWidth = 0f; capLe.preferredWidth = 0f; capLe.flexibleWidth = 1f; capLe.minHeight = 52f;
+            var caption = Label(captionRt, "Caption", "", 17f, UiPalette.Gold, true);
+            Stretch(caption.rectTransform);
+            caption.textWrappingMode = TextWrappingModes.Normal;
+            caption.alignment = TextAlignmentOptions.TopLeft;
             var g = grid.gameObject.AddComponent<GridLayoutGroup>();
             g.cellSize = new Vector2(87f, 87f);
             g.spacing = new Vector2(12f, 12f);
@@ -738,6 +790,7 @@ namespace IdleGrounds.Editor
             rowRt.gameObject.SetActive(false);
 
             Set(view, "popup", prt);
+            Set(view, "caption", caption);
             Set(view, "grid", grid);
             Set(view, "cellTemplate", rc);
             Set(view, "detail", drt);

@@ -65,24 +65,48 @@ namespace IdleGrounds.Game
             Refresh();
         }
 
+        /// <summary>Group header marker: a row whose value is null renders as a heading (<see cref="Rows"/>).</summary>
+        public const string ProgressHeading = "Progress", ProductionHeading = "Production", CombatHeading = "Combat";
+
+        /// <summary>
+        /// The Overview rows in three groups (Progress / Production / Combat); a group heading is a row with a null value.
+        /// Rows whose value is zero are hidden except the first three data rows, and an empty group has no heading (VP-25).
+        /// </summary>
         public List<(string label, string value)> Rows()
         {
             var G = Sim.State; var st = G.stats;
             var list = new List<(string, string)>();
-            if (st.started > 0) list.Add(("Playtime", MetaText.FmtAway(runner.SimNow - st.started)));
-            list.Add(("Total gathered", st.totalGathered.ToString()));
-            list.Add(("Total crafted", st.totalCrafted.ToString()));
-            list.Add(("Fox spirits slain", st.foxKills.ToString()));
-            list.Add(("Buildings built", st.buildingsBuilt.ToString()));
-            list.Add(("Upgrades applied", st.upgradesApplied.ToString()));
-            list.Add(("Disciples recruited", st.disciplesRecruited.ToString()));
-            list.Add(("Wisp links added", st.linksAdded.ToString()));
-            list.Add(("Recipe switches", st.recipeSwitches.ToString()));
-            list.Add(("Ascended to Immortality", G.ascended ? "yes" : "not yet"));
+            int data = 0;
+            void Group(string heading, List<(string label, string value, bool zero)> items)
+            {
+                var shown = new List<(string, string)>();
+                foreach (var it in items)
+                {
+                    bool keep = !it.zero || data < 3;
+                    if (!keep) continue;
+                    shown.Add((it.label, it.value));
+                    data++;
+                }
+                if (shown.Count == 0) return;
+                list.Add((heading, null));
+                list.AddRange(shown);
+            }
+            (string, string, bool) N(string label, long v) => (label, v.ToString(), v == 0);
             int unlocked = 0;
             foreach (var r in Sim.Config.regions) if (G.world.IsUnlocked(r.key)) unlocked++;
-            list.Add(("Islands unlocked", unlocked + " / " + Sim.Config.regions.Count));
-            list.Add(("Carry capacity", Sim.Hand.Cap().ToString()));
+            var progress = new List<(string, string, bool)>();
+            progress.Add(("Playtime", st.started > 0 ? MetaText.FmtPlaytime(runner.SimNow - st.started) : "--", false));
+            progress.Add(("Islands unlocked", unlocked + " / " + Sim.Config.regions.Count, false));
+            progress.Add(N("Buildings built", st.buildingsBuilt));
+            progress.Add(N("Upgrades applied", st.upgradesApplied));
+            progress.Add(("Ending reached", G.ascended ? "yes" : "not yet", false));
+            Group(ProgressHeading, progress);
+            Group(ProductionHeading, new List<(string, string, bool)>
+            {
+                N("Total gathered", st.totalGathered), N("Total crafted", st.totalCrafted), N("Disciples recruited", st.disciplesRecruited),
+                N("Wisp links added", st.linksAdded), N("Recipe switches", st.recipeSwitches), ("Carry capacity", Sim.Hand.Cap().ToString(), false),
+            });
+            Group(CombatHeading, new List<(string, string, bool)> { N("Fox spirits slain", st.foxKills) });
             return list;
         }
 
@@ -112,7 +136,15 @@ namespace IdleGrounds.Game
             {
                 bool on = i < data.Count;
                 rows[i].gameObject.SetActive(on);
-                if (on) rows[i].Set(data[i].label, data[i].value);
+                if (!on) continue;
+                bool heading = data[i].value == null;
+                rows[i].Set(data[i].label, heading ? "" : data[i].value);
+                if (rows[i].a != null)
+                {
+                    rows[i].a.color = heading ? UiPalette.Gold : UiPalette.Text;     // 4.5:1 on the dark panel
+                    rows[i].a.fontStyle = heading ? FontStyles.Bold : FontStyles.Normal;
+                    rows[i].a.fontSize = heading ? 21f : 19.5f;
+                }
             }
         }
 
@@ -180,7 +212,7 @@ namespace IdleGrounds.Game
                 double net = ledger.NetPerMin(e);
                 r.netText.text = FmtRate(net);
                 r.netText.color = net > 0.05 ? UiPalette.Accent : net < -0.05 ? UiPalette.Danger : UiPalette.Muted;
-                r.lostText.color = Lost(e) > 0 ? UiPalette.Danger : UiPalette.Muted;
+                r.lostText.color = Lost(e) > 0 ? UiPalette.Danger : UiPalette.MutedSoft;
             }
         }
     }

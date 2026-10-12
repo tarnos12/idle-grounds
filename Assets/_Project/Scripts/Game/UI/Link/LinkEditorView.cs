@@ -29,6 +29,7 @@ namespace IdleGrounds.Game
         [SerializeField] LinkLineView rubberBand;
         [SerializeField] GameObject panel;
         [SerializeField] TextMeshProUGUI titleText;
+        [SerializeField] Button closeButton;
         [SerializeField] Button addButton;
         [SerializeField] TextMeshProUGUI hintText;
         [SerializeField] TextMeshProUGUI warnText;
@@ -67,6 +68,7 @@ namespace IdleGrounds.Game
             if (panel != null) panel.SetActive(false);
             if (rubberBand != null) rubberBand.gameObject.SetActive(false);
             if (addButton != null) addButton.onClick.AddListener(BeginAddLink);
+            if (closeButton != null) closeButton.onClick.AddListener(Close);
         }
 
         // ================= state =================
@@ -204,7 +206,7 @@ namespace IdleGrounds.Game
                 HandStack top = null;
                 if (b.inv != null) foreach (var s in b.inv) if (s.qty > 0 && (top == null || s.qty > top.qty)) top = s;
                 if (top != null) item = sprites.Item(top.item);
-                text = top != null ? XCount(BuildingSystem.GatherTotal(b)) : "(empty)";
+                text = top != null ? XCount(BuildingSystem.GatherTotal(b)) : "Stone: nothing yet";
             }
             else
             {
@@ -246,7 +248,7 @@ namespace IdleGrounds.Game
         {
             var lan = Lantern;
             if (lan == null) return;
-            if (titleText != null && titleText.text.Length == 0) titleText.text = "Wisp Lantern - links run in order, one per beat";
+            if (titleText != null && titleText.text.Length == 0) titleText.text = "Wisp Lantern";
 
             // hint / add button (the pick prompt replaces "Add link", as in the original)
             if (addButton != null) addButton.gameObject.SetActive(!Picking);
@@ -283,9 +285,21 @@ namespace IdleGrounds.Game
                 row.SetIndex(i);
                 Sim.LinkStatus(Area, LanternId, i, stBuf);
                 var st = stBuf;
-                row.SetStatus(LinkLineView.DotColour(st.dot), st.text);
+                row.SetStatus(LinkLineView.DotColour(st.dot), st.text, StateWord(st.dot));
                 Describe(area.BuildingById(l.from), row.Source);
                 Describe(area.BuildingById(l.to), row.Target);
+            }
+        }
+
+        /// <summary>The status dot in words: green sending, amber waiting, red blocked, grey idle.</summary>
+        static string StateWord(LinkDot d)
+        {
+            switch (d)
+            {
+                case LinkDot.Green: return "sending";
+                case LinkDot.Amber: return "waiting";
+                case LinkDot.Red: return "blocked";
+                default: return "idle";
             }
         }
 

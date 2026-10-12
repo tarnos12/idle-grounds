@@ -19,6 +19,14 @@ namespace IdleGrounds.Game
             return s + "s";
         }
 
+        /// <summary>Playtime as "Xh Ym" / "Ym" / "Xs"; a negative, NaN or implausible span (a save whose clock is not ours) shows "--" (VP-03).</summary>
+        public static string FmtPlaytime(double ms)
+        {
+            const double MaxMs = 50000.0 * 3600000.0;   // ~5.7 years: anything beyond is a clock mismatch, not play time
+            if (double.IsNaN(ms) || ms < 0 || ms > MaxMs) return "--";
+            return FmtAway(ms);
+        }
+
         public static string Plural(int n, string word) => n + " " + word + (n == 1 ? "" : "s");
 
         public static string RegionName(GameConfig cfg, string key) => cfg.Region(key)?.name ?? key;

@@ -109,9 +109,12 @@ namespace IdleGrounds.Editor
         /// <summary>Vertical ScrollRect filling the box between <paramref name="top"/> and <paramref name="bottom"/> px.</summary>
         static (ScrollRect scroll, RectTransform content) Scroll(RectTransform box, float top, float bottom, float spacing)
         {
-            var vp = NewUi("Viewport", box);
-            vp.anchorMin = Vector2.zero; vp.anchorMax = Vector2.one;
-            vp.offsetMin = new Vector2(36f, Mathf.Max(bottom, 36f)); vp.offsetMax = new Vector2(-36f, -top);   // clear of the 32 px jade frame
+            // the ScrollRect lives on its own area inside the frame (36 px clear of the 32 px frame art), so its scrollbar sits inside it too
+            var area = NewUi("ScrollArea", box);
+            area.anchorMin = Vector2.zero; area.anchorMax = Vector2.one;
+            area.offsetMin = new Vector2(36f, Mathf.Max(bottom, 36f)); area.offsetMax = new Vector2(-36f, -top);
+            var vp = NewUi("Viewport", area);
+            Stretch(vp);
             var vimg = vp.gameObject.AddComponent<Image>();
             vimg.color = new Color(0f, 0f, 0f, 0f);
             vimg.raycastTarget = true;
@@ -121,9 +124,9 @@ namespace IdleGrounds.Editor
             content.pivot = new Vector2(0.5f, 1f);
             content.sizeDelta = Vector2.zero;
             var col = ColW(content.gameObject, 0, spacing);
-            col.padding = new RectOffset(0, 12, 0, 12);
+            col.padding = new RectOffset(0, 26, 0, 12);      // clear of the 16 px scrollbar
             Fit(content.gameObject, false, true);
-            var sr = box.gameObject.AddComponent<ScrollRect>();
+            var sr = area.gameObject.AddComponent<ScrollRect>();
             sr.viewport = vp; sr.content = content;
             sr.horizontal = false; sr.vertical = true;
             sr.movementType = ScrollRect.MovementType.Clamped;
@@ -206,21 +209,24 @@ namespace IdleGrounds.Editor
             var tabFlow = SmallButton(tabs, "FlowTab", "Flow", UiPalette.Text, 150, 42);
 
             var rows = NewUi("Rows", brt);
-            ColW(rows.gameObject, 0, 6);
+            ColW(rows.gameObject, 0, 4);
+            rows.gameObject.AddComponent<LayoutElement>().minHeight = StatsBodyHeight;    // same body height as the Flow tab: the tabs never jump
 
             // ---- Flow tab (per-item produced / consumed / lost ledger)
             var flow = NewUi("FlowRoot", brt);
             ColW(flow.gameObject, 0, 8);
+            flow.gameObject.AddComponent<LayoutElement>().minHeight = StatsBodyHeight;
             var ctl = NewUi("Controls", flow);
             Row(ctl.gameObject, 0, 0, 10);
             var scopeBtn = SmallButton(ctl, "ScopeButton", "This run", UiPalette.Gold, 150, 40);
             var sortBtn = SmallButton(ctl, "SortButton", "Sort: net / min", UiPalette.Text, 210, 40);
-            var hint = Label(ctl, "Hint", "net / min = last ~5 min", 16f, UiPalette.Muted, false);
+            var hint = Label(ctl, "Hint", "net / min = last ~5 min", 17f, UiPalette.MutedSoft, false);
             hint.alignment = TextAlignmentOptions.MidlineRight;
             Le(hint, flexW: 1);
 
             var hdr = NewUi("ColumnHeader", flow);
-            Row(hdr.gameObject, 8, 0, 8);
+            var hdrRow = Row(hdr.gameObject, 8, 0, 8);
+            hdrRow.padding = new RectOffset(8, 8 + 26, 0, 0);       // aligned with the rows, which leave room for the scrollbar
             Le(NewUi("IconSpace", hdr), w: 30);
             Le(HeaderCell(hdr, "Item", TextAlignmentOptions.MidlineLeft), flexW: 1);
             Le(HeaderCell(hdr, "Made", TextAlignmentOptions.MidlineRight), w: 86);
@@ -229,7 +235,7 @@ namespace IdleGrounds.Editor
             Le(HeaderCell(hdr, "Net/min", TextAlignmentOptions.MidlineRight), w: 90);
 
             var scrollRt = NewUi("FlowScroll", flow);
-            Le(scrollRt, h: 520);
+            Le(scrollRt, h: 470);
             var vp = NewUi("Viewport", scrollRt);
             Stretch(vp);
             var vimg = vp.gameObject.AddComponent<Image>();
@@ -241,7 +247,7 @@ namespace IdleGrounds.Editor
             content.pivot = new Vector2(0.5f, 1f);
             content.sizeDelta = Vector2.zero;
             var ccol = ColW(content.gameObject, 0, 4);
-            ccol.padding = new RectOffset(0, 10, 0, 8);
+            ccol.padding = new RectOffset(0, 26, 0, 8);          // the 16 px scrollbar never touches the Net/min column
             Fit(content.gameObject, false, true);
             var sr = scrollRt.gameObject.AddComponent<ScrollRect>();
             sr.viewport = vp; sr.content = content;
@@ -272,7 +278,7 @@ namespace IdleGrounds.Editor
             Le(fv.nameText, flexW: 1);
             fv.producedText = FlowCell(fr, "Made", UiPalette.Text, 86, false);
             fv.consumedText = FlowCell(fr, "Used", UiPalette.Text, 86, false);
-            fv.lostText = FlowCell(fr, "Lost", UiPalette.Muted, 76, false);
+            fv.lostText = FlowCell(fr, "Lost", UiPalette.MutedSoft, 76, false);
             fv.netText = FlowCell(fr, "Net", UiPalette.Accent, 90, true);
             EditorUtility.SetDirty(fv);
 
@@ -295,9 +301,11 @@ namespace IdleGrounds.Editor
             Save(root.gameObject, UiPrefabDir + "/StatsPanel.prefab");
         }
 
+        const float StatsBodyHeight = 570f;
+
         static TextMeshProUGUI HeaderCell(Transform parent, string text, TextAlignmentOptions align)
         {
-            var t = Label(parent, text, text, 15.5f, UiPalette.Muted, true);
+            var t = Label(parent, text, text, 16.5f, UiPalette.MutedSoft, true);
             t.alignment = align;
             return t;
         }
@@ -339,22 +347,32 @@ namespace IdleGrounds.Editor
         {
             var root = Stretch(NewUi("Toast", null));
             var view = root.gameObject.AddComponent<ToastView>();
-            var chip = Chip(root, "Chip", UiPalette.Bg2, UiPalette.AccentDk);
+            // stack: top-centre column of up to 3 dark pills (ToastView clones the template)
+            var stack = NewUi("Stack", root);
+            stack.anchorMin = stack.anchorMax = new Vector2(0.5f, 1f);
+            stack.pivot = new Vector2(0.5f, 1f);
+            stack.anchoredPosition = new Vector2(0f, -21f);
+            var col = stack.gameObject.AddComponent<VerticalLayoutGroup>();
+            col.spacing = 8f; col.childAlignment = TextAnchor.UpperCenter;
+            col.childControlWidth = true; col.childControlHeight = true;
+            col.childForceExpandWidth = false; col.childForceExpandHeight = false;
+            Fit(stack.gameObject, true, true);
+            var chip = Chip(stack, "ItemTemplate", new Color(UiPalette.Bg.r, UiPalette.Bg.g, UiPalette.Bg.b, 0.92f), UiPalette.AccentDk);
             UiSkin.Attach(chip.gameObject, "ui_panel_dark");
             chip.GetComponent<Outline>().effectDistance = new Vector2(2f, -2f);
-            var crt = chip.rectTransform;
-            crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 1f);
-            crt.pivot = new Vector2(0.5f, 1f);
-            crt.anchoredPosition = new Vector2(0f, -21f);
-            Row(chip.gameObject, 21, 12, 0);
-            Fit(chip.gameObject, true, true);
+            Row(chip.gameObject, 21, 12, 12);
             var cg = chip.gameObject.AddComponent<CanvasGroup>();
             cg.blocksRaycasts = false; cg.interactable = false;
-            var t = Label(crt, "Text", "", 21f, UiPalette.Text, true);
-            Set(view, "root", chip.gameObject);
-            Set(view, "group", cg);
-            Set(view, "text", t);
+            Icon(chip.rectTransform, "Icon", Emoji("ui_quests"), 30);
+            Label(chip.rectTransform, "Text", "", 21f, UiPalette.Text, true);
+            Set(view, "root", stack.gameObject);
+            Set(view, "stack", stack);
+            Set(view, "itemTemplate", chip.gameObject);
+            Set(view, "infoIcon", Emoji("ui_quests"));
+            Set(view, "successIcon", Emoji("ui_claim"));
+            Set(view, "warningIcon", Emoji("ui_alert"));
             chip.gameObject.SetActive(false);
+            stack.gameObject.SetActive(false);
             Save(root.gameObject, UiPrefabDir + "/Toast.prefab");
         }
 
@@ -364,11 +382,13 @@ namespace IdleGrounds.Editor
             var view = root.gameObject.AddComponent<ConfirmDialogView>();
             var (modal, box, _) = FitBox(root, UiPalette.Line, 660f, 27, 18);
             var brt = box.rectTransform;
-            var msg = Text(brt, "Message", "Are you sure?", 21f, UiPalette.Text, true, true, TextAlignmentOptions.Center);
+            var ctitle = Text(brt, "Title", "Are you sure?", 27f, UiPalette.Gold, true, true, TextAlignmentOptions.Center);
+            var msg = Text(brt, "Message", "", 20f, UiPalette.Text, false, true, TextAlignmentOptions.Center);
             var row = ButtonRow(brt);
             var ok = BigButton(row, "OK", "OK", UiPalette.Gold, 200);
             var cancel = BigButton(row, "Cancel", "Cancel", UiPalette.Text, 200);
             Set(view, "modal", modal);
+            Set(view, "titleText", ctitle);
             Set(view, "messageText", msg);
             Set(view, "okButton", ok);
             Set(view, "okLabel", ok.GetComponentInChildren<TextMeshProUGUI>());

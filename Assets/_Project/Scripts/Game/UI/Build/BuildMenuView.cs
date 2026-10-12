@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using IdleGrounds.Sim;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace IdleGrounds.Game
 {
@@ -27,6 +28,9 @@ namespace IdleGrounds.Game
         [SerializeField] BuildCard cardTemplate;
         [SerializeField] TextMeshProUGUI emptyText;
         [SerializeField] TextMeshProUGUI hintText;
+        [SerializeField] RectTransform panelRect;
+        [SerializeField] ScrollRect scroll;
+        [SerializeField] Button leftArrow, rightArrow, closeButton;
         [Tooltip("Also list not-yet-revealed buildings (dimmed, with their unlock reason). Off = faithful to the original.")]
         [SerializeField] bool showLocked;
 
@@ -49,9 +53,35 @@ namespace IdleGrounds.Game
             if (runner == null) runner = GameRunner.Instance;
             if (cardTemplate != null) cardTemplate.gameObject.SetActive(false);
             if (panel != null) panel.SetActive(false);
+            if (leftArrow != null) leftArrow.onClick.AddListener(() => Page(-1));
+            if (rightArrow != null) rightArrow.onClick.AddListener(() => Page(1));
+            if (closeButton != null) closeButton.onClick.AddListener(() => { if (controller != null) controller.CloseBuildMenu(); else Close(); });
         }
 
         Simulation Sim => runner.Sim;
+
+        /// <summary>Strip height: the full strip with cards, a short one for the empty state.</summary>
+        public const float FullHeight = 178f, EmptyHeight = 112f;
+
+        /// <summary>Arrow click: scroll about 80% of the visible strip.</summary>
+        void Page(int dir)
+        {
+            if (scroll == null || scroll.viewport == null) return;
+            float over = content.rect.width - scroll.viewport.rect.width;
+            if (over <= 1f) return;
+            scroll.horizontalNormalizedPosition = Mathf.Clamp01(scroll.horizontalNormalizedPosition + dir * scroll.viewport.rect.width * 0.8f / over);
+        }
+
+        /// <summary>Arrows only when the strip overflows, and only toward the hidden side.</summary>
+        void SyncArrows()
+        {
+            if (scroll == null || scroll.viewport == null) return;
+            float over = content.rect.width - scroll.viewport.rect.width;
+            bool overflow = over > 1f && cards.Count > 0;
+            float pos = scroll.horizontalNormalizedPosition;
+            if (leftArrow != null) { bool on = overflow && pos > 0.01f; if (leftArrow.gameObject.activeSelf != on) leftArrow.gameObject.SetActive(on); }
+            if (rightArrow != null) { bool on = overflow && pos < 0.99f; if (rightArrow.gameObject.activeSelf != on) rightArrow.gameObject.SetActive(on); }
+        }
 
         public void Open()
         {
@@ -110,6 +140,7 @@ namespace IdleGrounds.Game
                 }
             }
             Restyle();
+            SyncArrows();
         }
 
         struct Row { public BuildingDef def; public int rank, order; public string locked; }
@@ -144,7 +175,24 @@ namespace IdleGrounds.Game
                 cards[i].transform.SetSiblingIndex(i + 1);
                 BindCard(cards[i], rows[i].def, rows[i].locked);
             }
-            if (emptyText != null) emptyText.gameObject.SetActive(rows.Count == 0);
+            bool empty = rows.Count == 0;
+            if (emptyText != null)
+            {
+                emptyText.gameObject.SetActive(empty);
+                if (empty) emptyText.text = EmptyMessage();
+            }
+            if (panelRect != null) panelRect.sizeDelta = new Vector2(panelRect.sizeDelta.x, empty ? EmptyHeight : FullHeight);   // a short strip for the empty state
+            if (scroll != null) scroll.gameObject.SetActive(!empty);
+            if (hintText != null) hintText.gameObject.SetActive(!empty);
+        }
+
+        /// <summary>Empty state: names the quest that unlocks the next building.</summary>
+        string EmptyMessage()
+        {
+            var q = runner.Config.quests;
+            int i = runner.State.quest.idx;
+            string next = i >= 0 && i < q.Count ? " Next: finish the quest \"" + q[i].name + "\"." : "";
+            return "Nothing to build yet." + next;
         }
 
         void BindCard(BuildCard c, BuildingDef d, string locked)
@@ -153,7 +201,7 @@ namespace IdleGrounds.Game
             bool afford = locked == null && Sim.Hand.CanAfford(d.cost);
             bool target = locked == null && targets.Contains(d.key);
             c.Bind(this, d, sprites.Building(d.key), sprites, isNew, afford, locked,
-                d.name + " — " + Role(d) + (target ? GoalSuffix : ""), target);
+                d.name + " - " + Role(d) + (target ? GoalSuffix : ""), target);
         }
 
         /// <summary>Re-evaluate new / affordable styling without reordering.</summary>

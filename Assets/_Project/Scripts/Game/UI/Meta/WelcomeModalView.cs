@@ -30,8 +30,8 @@ namespace IdleGrounds.Game
         {
             if (icon != null && introSprite != null) icon.sprite = introSprite;
             titleText.text = "Welcome to Idle Grounds";
-            bodyText.text = "These are your cultivation grounds — tend them and awaken the Sleeping Dragon.";
-            hintText.text = "Follow the Quests panel (top-right) for what to do next, and open Help anytime. Left-click to gather · right-click to feed buildings · WASD to look around.";
+            bodyText.text = "These are your cultivation grounds - tend them and awaken the Sleeping Dragon.";
+            hintText.text = "Follow the Quests panel (top-right) for what to do next, and open Help anytime. Left-click to gather, right-click to feed buildings, WASD to look around.";
             continueButton.gameObject.SetActive(true);
             Open();
         }

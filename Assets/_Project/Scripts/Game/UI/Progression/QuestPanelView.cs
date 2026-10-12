@@ -40,6 +40,10 @@ namespace IdleGrounds.Game
         [SerializeField] TextMeshProUGUI progText;
         [SerializeField] Button claimButton;
         [SerializeField] TextMeshProUGUI claimLabel;
+        [Tooltip("Dims the Claim button until the quest is ready.")]
+        [SerializeField] CanvasGroup claimGroup;
+        [Tooltip("Pulsing gold ring on the Claim button while it is ready (static under Calm).")]
+        [SerializeField] Outline claimGlow;
         [SerializeField] UiIconLine nextLine;
         [Header("milestone")]
         [SerializeField] GameObject msBlock;
@@ -125,11 +129,18 @@ namespace IdleGrounds.Game
 
         void FadeOverSteles()
         {
+            if (fadeGroup == null) { if (!TryGetComponent(out fadeGroup)) fadeGroup = gameObject.AddComponent<CanvasGroup>(); }
+            if (ModalScrim.Any)      // VP-05: nothing of the quest panel peeks out beside an open modal
+            {
+                fadeGroup.alpha = Mathf.MoveTowards(fadeGroup.alpha, 0f, Time.unscaledDeltaTime * 12f);
+                fadeGroup.blocksRaycasts = false;
+                return;
+            }
+            fadeGroup.blocksRaycasts = true;
             if (signs == null) signs = FindFirstObjectByType<UnlockSignSync>();
             if (worldCamera == null || signs == null) return;
             var target = panel != null && panel.activeSelf ? (RectTransform)panel.transform : chip != null ? (RectTransform)chip.transform : null;
             if (target == null) return;
-            if (fadeGroup == null) { if (!TryGetComponent(out fadeGroup)) fadeGroup = gameObject.AddComponent<CanvasGroup>(); }
             target.GetWorldCorners(corners);
             var canvas = target.GetComponentInParent<Canvas>();
             var cam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
@@ -154,9 +165,20 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null || sprites == null) return;
             FadeOverSteles();
+            PulseClaim();
             if (Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + RefreshEvery;
             Rebuild(false);
+        }
+
+        void PulseClaim()
+        {
+            if (claimGlow == null) return;
+            bool ready = claimButton != null && claimButton.interactable && claimButton.isActiveAndEnabled;
+            if (claimGlow.enabled != ready) claimGlow.enabled = ready;
+            if (!ready) return;
+            float a = Juice.ReduceMotion ? 0.7f : 0.45f + 0.3f * (0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f));
+            claimGlow.effectColor = new Color(UiPalette.Gold.r, UiPalette.Gold.g, UiPalette.Gold.b, a);
         }
 
         string ItemName(string it) => runner.Config.Item(it)?.name ?? it;
@@ -195,14 +217,18 @@ namespace IdleGrounds.Game
             if (!chainDone)
             {
                 var q = quests[i];
-                nameLine.Set(runner.Database.QuestIcon(q.id), q.name, UiPalette.Text);
+                nameLine.Set(runner.Database.QuestIcon(q.id), q.name, UiPalette.Gold);       // the current quest heading in gold
                 descText.text = UiText.StripEmoji(q.desc) +
                                 (string.IsNullOrEmpty(hint) ? "" : "\n<color=#" + ColorUtility.ToHtmlStringRGB(UiPalette.Accent) + ">Next step: " + UiText.StripEmoji(hint) + "</color>");
                 FillUnlocks(i);
                 UiBar.Set(barFill, p.need > 0 ? Mathf.Clamp01(p.cur / (float)p.need) : 0f);
+                if (barFill != null && barFill.transform.parent != null)
+                    barFill.transform.parent.gameObject.SetActive(false);       // the "cur/need" text already says it (VP-24)
                 progText.text = p.cur + "/" + p.need;
                 claimButton.interactable = p.done;
                 claimLabel.text = p.done ? "Claim!" : "Claim";
+                claimLabel.color = p.done ? UiPalette.Gold : UiPalette.Muted;
+                if (claimGroup != null) claimGroup.alpha = p.done ? 1f : 0.55f;
                 var nq = i + 1 < total ? quests[i + 1] : null;
                 nextLine.gameObject.SetActive(nq != null);
                 if (nq != null) nextLine.Set(runner.Database.QuestIcon(nq.id), "Next: " + nq.name, new Color(UiPalette.Text.r, UiPalette.Text.g, UiPalette.Text.b, 0.6f));
@@ -247,28 +273,28 @@ namespace IdleGrounds.Game
             {
                 case MilestoneKind.DragonTribute:
                     Add(dragonSprite, "<b>Dragon tribute " + m.tributeNumber + "/" + m.tributeTotal + "</b>", UiPalette.Text);
-                    Add(null, "Right-click the dragon to feed it. In hand / still needed:", UiPalette.Muted);
+                    Add(null, "Right-click the dragon to feed it:", UiPalette.Muted);
                     NeedRows(m);
                     msBarAt = msItems.Count; msBarValue = (float)m.tributeProgress;
                     break;
                 case MilestoneKind.OpenIsland:
                     Add(sprites.Building("heavenly_gate"), "<b>Open " + RegionName(m.island) + "</b>", UiPalette.Text);
-                    Add(null, "The Heavenly Gate can only stand there. Pay its unlock stele - in hand / still needed:", UiPalette.Muted);
+                    Add(null, "The Gate can only stand there. Pay its unlock stele:", UiPalette.Muted);
                     NeedRows(m);
                     break;
                 case MilestoneKind.RaiseGate:
                     Add(sprites.Building("heavenly_gate"), "<b>Raise the Heavenly Gate</b>", UiPalette.Text);
-                    Add(null, m.gatePlaced ? "Feed its ghost (right-click). In hand / still needed:" : "Build it on Celestial Peak (B), then feed it. In hand / cost:", UiPalette.Muted);
+                    Add(null, m.gatePlaced ? "Feed its ghost (right-click):" : "Build it there (B), then feed it:", UiPalette.Muted);
                     NeedRows(m);
                     if (m.step != null && !string.IsNullOrEmpty(m.step.text)) Add(null, "Next step: " + m.step.text, UiPalette.Accent);
                     break;
                 case MilestoneKind.Ascend:
                     Add(ascendSprite, "<b>Ascend to Immortality</b>", UiPalette.Gold);
-                    Add(null, "Click the Heavenly Gate on Celestial Peak - the ending plays, then free play continues.", UiPalette.Muted);
+                    Add(null, "Click the Heavenly Gate to play the ending.", UiPalette.Muted);
                     break;
                 case MilestoneKind.FreePlay:
                     Add(ascendSprite, "<b>Free play</b>", UiPalette.Gold);
-                    Add(null, "You have ascended. The grounds are yours - keep building.", UiPalette.Muted);
+                    Add(null, "The ending is behind you. The grounds are yours - keep building.", UiPalette.Muted);
                     break;
             }
             if (m.hungryDisciples)
@@ -280,7 +306,7 @@ namespace IdleGrounds.Game
             foreach (var r in m.needs)
             {
                 string t = "<b>" + ItemName(r.item) + "</b> " + r.have + "/" + r.need +
-                           (string.IsNullOrEmpty(r.sourceHint) ? "" : " <color=#94a3b8>- " + r.sourceHint + "</color>");
+                           (string.IsNullOrEmpty(r.sourceHint) ? "" : " <color=#94a3b8>- " + UiText.Ascii(r.sourceHint) + "</color>");
                 Add(sprites.Item(r.item), t, r.Ok ? UiPalette.Accent : UiPalette.Text);
             }
         }
@@ -298,7 +324,7 @@ namespace IdleGrounds.Game
                 bool on = j < msItems.Count;
                 if (msPool[j].gameObject.activeSelf != on) msPool[j].gameObject.SetActive(on);
                 if (!on) continue;
-                msPool[j].Set(msItems[j].s, msItems[j].t, msItems[j].c);
+                msPool[j].Set(msItems[j].s, UiText.Ascii(msItems[j].t), msItems[j].c);
                 msPool[j].transform.SetSiblingIndex(j);
             }
             bool bar = msBarAt >= 0;

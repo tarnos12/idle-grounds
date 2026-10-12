@@ -38,7 +38,7 @@ namespace IdleGrounds.Editor
             ("QuestPanel", "Panel", Quest),
             ("QuestPanel", "Chip", Dark),
             ("BuildingTooltip", "Panel", Tip),
-            ("Toast", "Chip", Dark),
+            ("Toast", "name:ItemTemplate", Dark),
             ("HandCursor", "Chip", HandChip),
             ("BottomBar", "", Bar),
         };

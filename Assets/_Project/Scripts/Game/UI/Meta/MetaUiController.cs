@@ -17,9 +17,10 @@ namespace IdleGrounds.Game
     [DefaultExecutionOrder(-50)]
     public class MetaUiController : MonoBehaviour
     {
-        public const string AscendText =
-            "The Heavenly Gate stands open. Ascend to Immortality?\nThe ending plays - then your grounds stay as they are and free play continues.";
-        public const string AscendAgainText = "You have already ascended. Watch the ending again?";
+        public const string AscendTitle = "Ascend to Immortality?";
+        public const string AscendText = "The ending plays once - then your grounds stay as they are and free play continues.";
+        public const string AscendAgainTitle = "Watch the ending again?";
+        public const string AscendAgainText = "The Heavenly Gate plays the ending once more. Your grounds stay as they are.";
 
         [SerializeField] GameRunner runner;
         [SerializeField] BuildController build;
@@ -58,11 +59,30 @@ namespace IdleGrounds.Game
 
         void Start()
         {
+            EnforceLayerOrder();
             if (runner == null || runner.Sim == null) return;
             subscribed = runner.Sim;
             subscribed.Events.RunReset += OnRunReset;
             subscribed.Events.HeavenlyGateRaised += OnGateRaised;
             if (!runner.State.introSeen) welcome.ShowIntro();
+        }
+
+        /// <summary>
+        /// Canvas sibling order, tail last (VP-05): HUD panels and the bottom bar first, then every modal (so each modal's
+        /// scrim dims and blocks the bar and the quest panel), then the toast, then the hand chip.
+        /// </summary>
+        void EnforceLayerOrder()
+        {
+            var canvas = welcome != null ? welcome.GetComponentInParent<Canvas>() : null;
+            if (canvas == null) return;
+            var root = canvas.transform;
+            void Last(Component c) { if (c != null && c.transform.parent == root) c.transform.SetAsLastSibling(); }
+            if (build != null) Last(build.UpgradeTree);
+            Last(help); Last(stats); Last(welcome);
+            Last(FindFirstObjectByType<DragonDialogView>());
+            Last(confirm); Last(toast);
+            var cursor = root.Find("HandCursor");
+            if (cursor != null) cursor.SetAsLastSibling();
         }
 
         void Unsubscribe()
@@ -88,7 +108,7 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null || confirm == null || !runner.Sim.CanAscendToImmortality) return;
             var sim = runner.Sim;
-            confirm.Ask(sim.State.ascended ? AscendAgainText : AscendText, "Ascend to Immortality", () =>
+            confirm.Ask(sim.State.ascended ? AscendAgainTitle : AscendTitle, sim.State.ascended ? AscendAgainText : AscendText, "Ascend to Immortality", () =>
             {
                 if (sim.AscendToImmortality() && SaveService.Instance != null) SaveService.Instance.Save();
             });

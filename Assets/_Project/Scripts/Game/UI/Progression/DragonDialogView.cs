@@ -25,6 +25,7 @@ namespace IdleGrounds.Game
         [SerializeField] Outline border;
         [SerializeField] Image icon;
         [SerializeField] TextMeshProUGUI titleText;
+        [SerializeField] TextMeshProUGUI speakerText;
         [SerializeField] TextMeshProUGUI bodyText;
         [SerializeField] TextMeshProUGUI statsText;
         [SerializeField] Button continueButton;
@@ -82,7 +83,9 @@ namespace IdleGrounds.Game
             modal.SetActive(true);
             border.effectColor = UiPalette.Purple;
             icon.sprite = sleepingSprite;
-            titleText.gameObject.SetActive(false);
+            titleText.gameObject.SetActive(true);
+            titleText.text = "The Dragon";
+            if (speakerText != null) { speakerText.gameObject.SetActive(true); speakerText.text = "Words of the Sleeping Dragon"; }
             bodyText.text = UiText.StripEmoji(text);
             statsText.gameObject.SetActive(false);
         }
@@ -94,26 +97,21 @@ namespace IdleGrounds.Game
             border.effectColor = UiPalette.Gold;
             icon.sprite = awakeSprite;
             titleText.gameObject.SetActive(true);
-            titleText.text = "Ascended to Immortality";
+            titleText.text = "Immortality";
+            if (speakerText != null) { speakerText.gameObject.SetActive(true); speakerText.text = "The Heavenly Gate"; }
             bodyText.text = EndingText;
             var s = runner.State;
-            double playMs = s.stats.started > 0 ? runner.SimNow - s.stats.started : 0;
+            double playMs = s.stats.started > 0 ? runner.SimNow - s.stats.started : double.NaN;
             int islands = 0;
             foreach (var r in runner.Config.regions) if (s.world.IsUnlocked(r.key)) islands++;
             statsText.gameObject.SetActive(true);
             statsText.text =
                 "<color=#fbbf24>The End - free play continues.</color>\n\n" +
                 "Islands  <b>" + islands + "/" + runner.Config.regions.Count + "</b>\nBuildings built  <b>" + s.stats.buildingsBuilt + "</b>\n" +
-                "Total crafted  <b>" + s.stats.totalCrafted + "</b>\nPlaytime  <b>" + FmtAway(playMs) + "</b>";
+                "Total crafted  <b>" + s.stats.totalCrafted + "</b>\nPlaytime  <b>" + MetaText.FmtPlaytime(playMs) + "</b>";
         }
 
-        /// <summary>ui.js fmtAway: "Xh Ym" / "Ym" / "Xs".</summary>
-        public static string FmtAway(double ms)
-        {
-            long s = (long)(ms / 1000);
-            if (s >= 3600) return (s / 3600) + "h " + (s % 3600 / 60) + "m";
-            if (s >= 60) return (s / 60) + "m";
-            return s + "s";
-        }
+        /// <summary>ui.js fmtAway: "Xh Ym" / "Ym" / "Xs" (clamped, see <see cref="MetaText.FmtPlaytime"/>).</summary>
+        public static string FmtAway(double ms) => MetaText.FmtPlaytime(ms);
     }
 }

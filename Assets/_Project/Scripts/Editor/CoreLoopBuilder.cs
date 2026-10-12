@@ -366,7 +366,9 @@ namespace IdleGrounds.Editor
             var img = Chip(parent, name, UiPalette.Panel, UiPalette.Line, raycast: true);
             Row(img.gameObject, 12, 6, 6);
             if (icon != null) Icon(img.transform, "Icon", icon, 22);
-            Label(img.transform, "Label", label, 17, textColour, true);
+            var lbl = Label(img.transform, "Label", label, 17, textColour, true);
+            lbl.alignment = TextAlignmentOptions.Center;
+            lbl.gameObject.AddComponent<LayoutElement>().preferredHeight = 24f;       // one text row height for every button: the labels share a baseline
             var b = img.gameObject.AddComponent<Button>();
             var cb = b.colors;
             cb.normalColor = Color.white;
@@ -406,7 +408,8 @@ namespace IdleGrounds.Editor
 
             // area pill
             var area = Chip(root, "AreaPill", UiPalette.Panel, UiPalette.Line);
-            Row(area.gameObject, 12, 6, 6);
+            Row(area.gameObject, 12, 6, 6).childAlignment = TextAnchor.MiddleCenter;
+            area.gameObject.AddComponent<LayoutElement>().preferredWidth = 230f;    // fixed width: the bar never shifts when the name changes
             var areaIcon = Icon(area.transform, "RegionIcon", Emoji("ui_area_center"), 22);
             var areaText = Label(area.transform, "RegionName", "Center", 19, UiPalette.Text, true);
             var areaLock = Icon(area.transform, "Lock", Emoji("ui_lock"), 18);
@@ -419,7 +422,8 @@ namespace IdleGrounds.Editor
 
             // hand pill
             var hand = Chip(root, "HandPill", UiPalette.Panel, UiPalette.Line);
-            Row(hand.gameObject, 12, 6, 6);
+            Row(hand.gameObject, 12, 6, 6).childAlignment = TextAnchor.MiddleCenter;
+            hand.gameObject.AddComponent<LayoutElement>().preferredWidth = 124f;    // "35/35" and "5/5" take the same room
             Icon(hand.transform, "Icon", Emoji("ui_hand"), 22);
             var handText = Label(hand.transform, "Count", "0/20", 19, UiPalette.Accent, true);
 
@@ -446,6 +450,19 @@ namespace IdleGrounds.Editor
             var reset = BarButton(root, "ResetButton", "Reset", null, UiPalette.Danger);
             reset.interactable = false;
 
+            // mode banner above the bar (Demolish: what to do and how to stop)
+            var banner = Chip(root, "ModeBanner", new Color(UiPalette.Bg.r, UiPalette.Bg.g, UiPalette.Bg.b, 0.92f), UiPalette.Danger);
+            banner.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            var bnrt = banner.rectTransform;
+            bnrt.anchorMin = bnrt.anchorMax = new Vector2(0.5f, 1f);
+            bnrt.pivot = new Vector2(0.5f, 0f);
+            bnrt.anchoredPosition = new Vector2(0f, 10f);
+            Row(banner.gameObject, 18, 8, 0);
+            BuildingsBuilder.Fit(banner.gameObject, true, true);
+            var bannerText = Label(bnrt, "Text", "Demolish: click a building to remove it - Esc to stop", 19f, UiPalette.Text, true);
+            banner.gameObject.SetActive(false);
+            Set(view, "modeBanner", banner.gameObject);
+
             Set(view, "versionText", version);
             Set(view, "areaText", areaText);
             Set(view, "areaIcon", areaIcon);
@@ -455,6 +472,15 @@ namespace IdleGrounds.Editor
             Set(view, "handPill", hand);
             Set(view, "resetButton", reset);
             Save(root.gameObject, UiPrefabDir + "/BottomBar.prefab");
+        }
+
+        /// <summary>HUD UI prefabs only (hand chip, bottom bar). Used by <see cref="UiRebuild"/>.</summary>
+        internal static void BuildUiPrefabsOnly()
+        {
+            Directory.CreateDirectory(UiPrefabDir);
+            BuildHandCursorPrefab();
+            BuildBottomBarPrefab();
+            AssetDatabase.SaveAssets();
         }
 
         // ------------------------------------------------------------------ scene wiring

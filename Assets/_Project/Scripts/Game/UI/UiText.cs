@@ -13,11 +13,23 @@ namespace IdleGrounds.Game
         /// <summary>Fallback switch: true = strip every emoji (used when no emoji sprite asset is available).</summary>
         public static bool StripAll = false;
 
-        /// <summary>Kept name for existing call sites; strips selectors, or all emoji when <see cref="StripAll"/>.</summary>
+        /// <summary>Kept name for existing call sites; strips selectors, or all emoji when <see cref="StripAll"/>; one punctuation convention (<see cref="Ascii"/>).</summary>
         public static string StripEmoji(string s)
         {
             if (string.IsNullOrEmpty(s)) return s;
-            return StripAll ? StripAllEmoji(s) : StripSelectors(s);
+            return Ascii(StripAll ? StripAllEmoji(s) : StripSelectors(s));
+        }
+
+        /// <summary>
+        /// One punctuation convention for UI text (VP-26): ASCII " - " for dashes and middle dots, "->" for arrows
+        /// (the data strings were ported with em dashes, middle dots and arrows).
+        /// </summary>
+        public static string Ascii(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            if (s.IndexOf('\u2014') < 0 && s.IndexOf('\u00B7') < 0 && s.IndexOf('\u2192') < 0 && s.IndexOf('\u2013') < 0) return s;
+            return s.Replace(" \u2014 ", " - ").Replace("\u2014", " - ").Replace(" \u2013 ", " - ").Replace("\u2013", "-")
+                    .Replace(" \u00B7 ", ", ").Replace("\u00B7", ",").Replace(" \u2192 ", " -> ").Replace("\u2192", "->");
         }
 
         static string StripSelectors(string s)
