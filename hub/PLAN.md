@@ -1,6 +1,6 @@
 # Plan
 
-Updated 2026-10-12 09:48. in-progress: 5, blocked: 6, waiting: 3, done: 7
+Updated 2026-10-12 07:52. in-progress: 5, blocked: 7, waiting: 3, done: 7
 
 ## Being worked on now
 
@@ -27,14 +27,17 @@ Updated 2026-10-12 09:48. in-progress: 5, blocked: 6, waiting: 3, done: 7
 ## M2b: Island requesters replace ascension
 
 - [ ] **Island requesters design (ADR 0007)** (blocked, M, Claude)
-  - Each island has buildings/NPCs that ask for items you pick from a menu; fulfilling a request unlocks new recipes. Replaces ascension, perks and vows. Open choices come to you in the Questions tab.
-  - Why: ADR 0007 drafted (proposed); waiting for your answers in the Questions tab (Island requesters)
+  - Answers 2026-10-12: fixed unlock order (Mine, Fishing, Farm, Grove, Volcano, Celestial), 1 NPC per island with 3 requests all open at once, right-click feeding only, Heavenly Gate ending, vows removed. Follow-up open on how many new islands.
+  - Why: Waiting for your follow-up answers (new islands: how many, where in the order)
 - [ ] **Remove ascension (gate, points, perks, vows, prestige reset)** (blocked, M, Claude)
   - Take out the Ascension Gate, Ascension Points, perk shop, vows and the run reset; old saves keep their progress.
   - Why: Needs the requester design (ADR 0007) so nothing the game relies on is removed early
 - [ ] **Build island requesters** (blocked, L, Claude)
   - Requester buildings/NPCs per island with a request menu; each fulfilled request unlocks recipes.
   - Why: Needs your answers on the requester design
+- [ ] **New islands (Lotus Marsh, Thunder Crag, maybe Beast Ravine and Tribulation Peak)** (blocked, L, Claude)
+  - New islands in the unlock order, each with one NPC and new buildings; needs new island art.
+  - Why: Waiting for your follow-up answers, then ADR 0007 update and art request
 
 ## M3: 3/4 world look (ADR 0005)
 

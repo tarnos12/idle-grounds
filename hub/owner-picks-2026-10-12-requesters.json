@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-12",
+  "source": "Hub Questions — Island requesters (ADR 0007)",
+  "verbatim": "Answers\ntribute_order: Fixed order: Mine, Fishing, Farm, Grove, Volcano, then Celestial\nreq_count: 1 per Island (7 NPCs, 21 requests)\nreq_menu: All 3 open at once; pick any\nreq_delivery: Right-click feeding only\nending: Build the Heavenly Gate on Celestial Peak, then the ending plays and free play continues\nnew_islands: Add Lotus Marsh and Thunder Crag now (empty bottom slots), each with NPCs  | note: Add all 4 as part of the gameplay with new npcs and buildings.\nvows: Remove vows completely",
+  "answers": {
+    "tribute_order": "fixed",
+    "req_count": "1",
+    "req_menu": "all_open",
+    "req_delivery": "feed_only",
+    "ending": "heavenly_gate",
+    "new_islands": {
+      "picked": "two",
+      "note": "Add all 4 as part of the gameplay with new npcs and buildings.",
+      "status": "ambiguous — follow-up asked"
+    },
+    "vows": "remove"
+  }
+}

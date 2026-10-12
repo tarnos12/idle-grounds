@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 09:48",
+  "updated": "2026-10-12 07:52",
   "milestones": [
     {
       "id": "M1",
@@ -47,11 +47,11 @@
       "tasks": [
         {
           "title": "Island requesters design (ADR 0007)",
-          "detail": "Each island has buildings/NPCs that ask for items you pick from a menu; fulfilling a request unlocks new recipes. Replaces ascension, perks and vows. Open choices come to you in the Questions tab.",
+          "detail": "Answers 2026-10-12: fixed unlock order (Mine, Fishing, Farm, Grove, Volcano, Celestial), 1 NPC per island with 3 requests all open at once, right-click feeding only, Heavenly Gate ending, vows removed. Follow-up open on how many new islands.",
           "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "ADR 0007 drafted (proposed); waiting for your answers in the Questions tab (Island requesters)"
+          "blockedBy": "Waiting for your follow-up answers (new islands: how many, where in the order)"
         },
         {
           "title": "Remove ascension (gate, points, perks, vows, prestige reset)",
@@ -68,6 +68,14 @@
           "size": "L",
           "owner": "Claude",
           "blockedBy": "Needs your answers on the requester design"
+        },
+        {
+          "title": "New islands (Lotus Marsh, Thunder Crag, maybe Beast Ravine and Tribulation Peak)",
+          "detail": "New islands in the unlock order, each with one NPC and new buildings; needs new island art.",
+          "status": "blocked",
+          "size": "L",
+          "owner": "Claude",
+          "blockedBy": "Waiting for your follow-up answers, then ADR 0007 update and art request"
         }
       ]
     },
