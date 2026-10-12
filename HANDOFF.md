@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: pulled Islands-033 (fishing macro v3, looks right) and Islands-034 (vertical sidewalls + 8f variants, correct orientation). NOT integrated: Unity editor unresponsive (likely a 'scene changed on disk' dialog). Next: remove the build-time rotation in IslandDressingBuilder.EnsureSideWall, use the 8f variants for W/E faces, enable the fishing macro (drop the fishing exclusion in IslandDressingBuilder + ArtIntake), rebuild, review in Play.
+
 - 2026-10-12: fishing macro redo (Islands-031) reviewed in game and rejected again (warm tan stains on cool shingle); fallback kept.
 
 - 2026-10-12: W/E side faces (sidewall art rotated at build time, SideWallW/E tilemaps + shadow; edge lips moved onto the visible coast edge, CoastInset=3) and cliffwall v2 with the extended build-time repair (hole fill + per-frame brightness detrend). Sidewall redo requested (wrong orientation); cliffwall still has seam defects. Tests 177/177; Game.unity ~78 MB.
