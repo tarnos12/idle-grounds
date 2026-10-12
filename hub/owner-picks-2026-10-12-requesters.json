@@ -14,6 +14,10 @@
       "status": "resolved: the option list lacked 'all 4', so the note is the answer",
       "owner_clarification": "You never gave me an option to choose 4 so I had to add it as a note."
     },
-    "vows": "remove"
+    "vows": "remove",
+    "new_islands_order": {
+      "picked": "before_celestial",
+      "verbatim": "new_islands_order: After Volcano, before Celestial: ...Volcano, Lotus Marsh, Thunder Crag, Beast Ravine, Tribulation Peak, Celestial"
+    }
   }
 }

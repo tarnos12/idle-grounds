@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 07:52",
+  "updated": "2026-10-12 07:54",
   "milestones": [
     {
       "id": "M1",
@@ -47,11 +47,11 @@
       "tasks": [
         {
           "title": "Island requesters design (ADR 0007)",
-          "detail": "Answers 2026-10-12: fixed unlock order (Mine, Fishing, Farm, Grove, Volcano, Celestial), 1 NPC per island with 3 requests all open at once, right-click feeding only, Heavenly Gate ending, vows removed. Follow-up open on how many new islands.",
-          "status": "blocked",
+          "detail": "All decided 2026-10-12: unlock order Mine, Fishing, Farm, Grove, Volcano, Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak, Celestial; 1 NPC per island (11), 3 requests all open, right-click feeding only, Heavenly Gate ending, vows removed.",
+          "status": "in-progress",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Waiting for your answer on where the 4 new islands go in the unlock order"
+          "now": "Opus agent: finalising ADR 0007 with all answers + art request"
         },
         {
           "title": "Remove ascension (gate, points, perks, vows, prestige reset)",
@@ -75,7 +75,7 @@
           "status": "blocked",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Waiting for your answer on where they go in the unlock order"
+          "blockedBy": "Needs the final ADR 0007 and the new island art (art request goes out with the ADR)"
         }
       ]
     },

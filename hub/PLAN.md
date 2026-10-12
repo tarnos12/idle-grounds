@@ -1,9 +1,10 @@
 # Plan
 
-Updated 2026-10-12 07:52. in-progress: 5, blocked: 7, waiting: 3, done: 7
+Updated 2026-10-12 07:54. in-progress: 6, blocked: 6, waiting: 3, done: 7
 
 ## Being worked on now
 
+- Island requesters design (ADR 0007) (Opus agent: finalising ADR 0007 with all answers + art request)
 - South cliff walls, side faces, grass lips (art loop: integrating deliveries as they arrive)
 - Integrate vertical side walls (v2, with variants) (Opus agent: integrating + Play review)
 - Integrate the new hanging undersides (3/4 rock, roots, vines) (Opus agent: integrating + Play review)
@@ -26,9 +27,9 @@ Updated 2026-10-12 07:52. in-progress: 5, blocked: 7, waiting: 3, done: 7
 
 ## M2b: Island requesters replace ascension
 
-- [ ] **Island requesters design (ADR 0007)** (blocked, M, Claude)
-  - Answers 2026-10-12: fixed unlock order (Mine, Fishing, Farm, Grove, Volcano, Celestial), 1 NPC per island with 3 requests all open at once, right-click feeding only, Heavenly Gate ending, vows removed. Follow-up open on how many new islands.
-  - Why: Waiting for your answer on where the 4 new islands go in the unlock order
+- [ ] **Island requesters design (ADR 0007)** (in-progress, M, Claude)
+  - All decided 2026-10-12: unlock order Mine, Fishing, Farm, Grove, Volcano, Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak, Celestial; 1 NPC per island (11), 3 requests all open, right-click feeding only, Heavenly Gate ending, vows removed.
+  - Now: Opus agent: finalising ADR 0007 with all answers + art request
 - [ ] **Remove ascension (gate, points, perks, vows, prestige reset)** (blocked, M, Claude)
   - Take out the Ascension Gate, Ascension Points, perk shop, vows and the run reset; old saves keep their progress.
   - Why: Needs the requester design (ADR 0007) so nothing the game relies on is removed early
@@ -37,7 +38,7 @@ Updated 2026-10-12 07:52. in-progress: 5, blocked: 7, waiting: 3, done: 7
   - Why: Needs your answers on the requester design
 - [ ] **4 new islands: Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak** (blocked, L, Claude)
   - Picked 2026-10-12: all 4 join the unlock order, each with one NPC and new buildings; needs ~100 new art pieces.
-  - Why: Waiting for your answer on where they go in the unlock order
+  - Why: Needs the final ADR 0007 and the new island art (art request goes out with the ADR)
 
 ## M3: 3/4 world look (ADR 0005)
 
