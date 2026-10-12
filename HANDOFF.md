@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: coast redo #4 merged from bg/coast-curves (first background-copy feature): curved coastlines — wide-blurred seed outline + gentle swell, one straight segment per crossed cell (CoastShapeTile, Editor/CoastCurves.cs), walls laid by arc length with taper, curved lips/side faces, per-pixel veil masks. EditMode 175/175 in the bg copy, fast sim 167/167. Art hook: island_<biome>_cliffwall_round_32x96_4f. Sign-off asked (coast4_signoff).
+
 - 2026-10-12: background copy — git worktree D:WORKUnityidle-grounds-bg (branch bg/main) + headless Unity via tools/bg/* (sync, compile, test, menu, shot, unity, build, publish-back, task). Editor entry points in Editor/Batch.cs; SaveService honours IDLEGROUNDS_SAVE_DIR in the Editor so background Play/tests never touch the owner's save. Verified: compile 53 s, EditMode 175/175 in 6 min, menu 26 s, Play screenshots 47 s; owner's editor and save untouched. Flow: CLAUDE.md 'Background copy'. Known: PlayMode GameSmokeTests.Logistics_WispLaunches_ConverterCompletes fails (pre-existing timing issue, plan task).
 
 - 2026-10-12: coast redo #3 — corner-sampled coast model with 45° diagonal cells (CoastDiag_<biome> tiles; runtime CoastRuleTile treats them as land), corner clean-up (no square corners/spikes), rounded ≥7×7 islets; diagonal south walls (rise/fall, sheared from repaired frames), diagonal ground edges + north lips composed from delivered art; hooks for island_<biome>_ground_diag / cliffwall_diag when delivered. Owner sign-off asked (coast3_signoff).

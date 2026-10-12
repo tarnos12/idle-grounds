@@ -1,13 +1,12 @@
 # Idle Grounds: plan
 
-Updated 2026-10-12 18:38. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-12 20:00. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**15 of 28 tasks done**, 2 in progress, 1 to do, 3 blocked, 7 waiting.
+**15 of 28 tasks done**, 1 in progress, 1 to do, 3 blocked, 8 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
-- **M3** Smooth stepped and long-straight coasts: Agent in the background copy: rounding corners into curves
 
 | # | Milestone | Gate | Status | Tasks done |
 |---|---|---|---|---|
@@ -76,7 +75,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Blocked | Fishing ground patches (3rd version) | Calm cool-grey shingle patches for the Fishing island; earlier two were rejected. | Claude |
 | Done | Rebuild the sky with the kept background islands | Background islands now load from their own folder so new deliveries can't replace them. | Claude |
 | Blocked | Cliff wall seam and stripe fix | The artist's cliff tiles still have transparent seams and a light-to-dark stripe per tile; patched in code for now. | Artist |
-| In progress | Smooth stepped and long-straight coasts **(NOW)** | Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches. | Claude |
+| Waiting | Smooth stepped and long-straight coasts | Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches. | Claude |
 
 ## M4: Art coverage. Later
 
