@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 10:09",
+  "updated": "2026-10-12 10:41",
   "milestones": [
     {
       "id": "M1",
@@ -157,7 +157,7 @@
           "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Picked 'Yes, now' (2026-10-12); waiting for the Unity editor to respond (Reload dialog)"
+          "blockedBy": "Smoothed version came out boxy; your pick in the Questions tab ('coast_shape')"
         }
       ]
     },
@@ -219,10 +219,9 @@
         {
           "title": "Keep the scene file under GitHub's 100 MB limit",
           "detail": "Picked 'Yes, move it out' (2026-10-12): generated island layers become separate asset files in the repo (still on GitHub), so Game.unity shrinks well below the 100 MB limit.",
-          "status": "blocked",
+          "status": "done",
           "size": "M",
-          "owner": "Claude",
-          "blockedBy": "Waiting for the Unity editor to respond (Reload dialog)"
+          "owner": "Claude"
         }
       ]
     }

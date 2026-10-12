@@ -1,6 +1,6 @@
 # Plan
 
-Updated 2026-10-12 10:09. in-progress: 1, blocked: 5, waiting: 8, done: 11
+Updated 2026-10-12 10:41. in-progress: 1, blocked: 4, waiting: 8, done: 12
 
 ## Being worked on now
 
@@ -62,7 +62,7 @@ Updated 2026-10-12 10:09. in-progress: 1, blocked: 5, waiting: 8, done: 11
   - Why: Waiting for the artist's corrected cliff walls (ART-SPEC delivery log)
 - [ ] **Smooth stepped and long-straight coasts** (blocked, M, Claude)
   - Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.
-  - Why: Picked 'Yes, now' (2026-10-12); waiting for the Unity editor to respond (Reload dialog)
+  - Why: Smoothed version came out boxy; your pick in the Questions tab ('coast_shape')
 
 ## M4: Art coverage
 
@@ -84,7 +84,6 @@ Updated 2026-10-12 10:09. in-progress: 1, blocked: 5, waiting: 8, done: 11
 - [ ] **Rebuild Windows + WebGL with the new island look** (waiting, S, Claude)
   - Current builds predate the cliff walls and cloud sea.
   - Why: After the pending integrations
-- [ ] **Keep the scene file under GitHub's 100 MB limit** (blocked, M, Claude)
+- [x] **Keep the scene file under GitHub's 100 MB limit** (done, M, Claude)
   - Picked 'Yes, move it out' (2026-10-12): generated island layers become separate asset files in the repo (still on GitHub), so Game.unity shrinks well below the 100 MB limit.
-  - Why: Waiting for the Unity editor to respond (Reload dialog)
 
