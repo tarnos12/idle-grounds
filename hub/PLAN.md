@@ -1,9 +1,10 @@
 # Plan
 
-Updated 2026-10-12 12:00. in-progress: 1, blocked: 8, waiting: 3, done: 7
+Updated 2026-10-12 07:08. in-progress: 2, blocked: 10, waiting: 3, done: 8
 
 ## Being worked on now
 
+- Ascension design document (ADR 0006) (Claude: drafting ADR 0006)
 - South cliff walls, side faces, grass lips (art loop: integrating deliveries as they arrive)
 
 ## M1: Unity port of the browser game
@@ -19,9 +20,20 @@ Updated 2026-10-12 12:00. in-progress: 1, blocked: 8, waiting: 3, done: 7
   - TEST mode off by default; playthrough bot checks the pacing (ADR 0004).
 - [x] **Island onboarding quests** (done, M, Claude)
   - Quests that teach bridges, caravans and cross-island trade, with next-step hints.
-- [ ] **Decide what each ascension unlocks** (blocked, M, Mariusz)
-  - Ascension no longer speeds the world up, so later runs need new content instead (new islands, buildings, recipes).
-  - Why: Owner answer: Questions tab, 'What should ascensions unlock?'
+- [x] **Decide what each ascension unlocks** (done, M, Mariusz)
+  - Picked 2026-10-12: new islands after ascending, new buildings and higher-tier recipes, harder vows for more points (hub/owner-picks-2026-10-12.json).
+- [ ] **Ascension design document (ADR 0006)** (in-progress, M, Claude)
+  - Turns the three picks into concrete content: which new islands, which buildings and recipe tiers, which harder vows, and when each unlocks. Specific choices come back to you in the Questions tab.
+  - Now: Claude: drafting ADR 0006
+- [ ] **New islands unlocked by ascending** (blocked, L, Claude)
+  - Islands that only appear after an ascension, each with its own resources and buildings.
+  - Why: Needs the ascension design document (ADR 0006) and new island art
+- [ ] **New buildings and higher-tier recipes after ascending** (blocked, L, Claude)
+  - Later runs open stronger converters and recipe tiers instead of just running faster.
+  - Why: Needs the ascension design document (ADR 0006)
+- [ ] **Harder vows for more Ascension Points** (blocked, M, Claude)
+  - New challenge rules you can opt into on ascending, each worth more points.
+  - Why: Needs the ascension design document (ADR 0006)
 
 ## M3: 3/4 world look (ADR 0005)
 
@@ -45,7 +57,7 @@ Updated 2026-10-12 12:00. in-progress: 1, blocked: 8, waiting: 3, done: 7
   - Why: Waiting for the artist's corrected cliff walls (ART-SPEC delivery log)
 - [ ] **Smooth stepped and long-straight coasts** (blocked, M, Claude)
   - Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.
-  - Why: Owner answer: Questions tab, 'Smooth the coastlines now?'
+  - Why: Picked 'Yes, now' (2026-10-12); waiting for the Unity editor to respond (Reload dialog)
 
 ## M4: Art coverage
 
@@ -68,6 +80,6 @@ Updated 2026-10-12 12:00. in-progress: 1, blocked: 8, waiting: 3, done: 7
   - Current builds predate the cliff walls and cloud sea.
   - Why: After the pending integrations
 - [ ] **Keep the scene file under GitHub's 100 MB limit** (blocked, M, Claude)
-  - Game.unity is about 78 MB because generated island dressing is stored in it.
-  - Why: Owner answer: Questions tab, 'Move generated island dressing out of the scene?'
+  - Picked 'Yes, move it out' (2026-10-12): generated island layers become separate asset files in the repo (still on GitHub), so Game.unity shrinks well below the 100 MB limit.
+  - Why: Waiting for the Unity editor to respond (Reload dialog)
 

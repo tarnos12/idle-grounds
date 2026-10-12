@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-12",
+  "answers": {
+    "ascension_unlocks": { "picked": ["islands", "recipes", "vows"], "labels": ["New islands that only appear after ascending", "New buildings and higher-tier recipes", "Harder vows (challenge rules) for more points"], "note": "" },
+    "smooth_coasts": { "picked": "now", "label": "Yes, now", "note": "" },
+    "scene_size": { "picked": "yes", "label": "Yes, move it out", "note": "" }
+  },
+  "chat_note": "I'm assuming separate art doesn't mean it's not pushed to git? We need everything on GitHub"
+}
