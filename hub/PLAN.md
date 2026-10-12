@@ -1,10 +1,9 @@
 # Plan
 
-Updated 2026-10-12 07:41. in-progress: 6, blocked: 5, waiting: 3, done: 7
+Updated 2026-10-12 09:48. in-progress: 5, blocked: 6, waiting: 3, done: 7
 
 ## Being worked on now
 
-- Island requesters design (ADR 0007) (Opus agent: drafting ADR 0007 + questions)
 - South cliff walls, side faces, grass lips (art loop: integrating deliveries as they arrive)
 - Integrate vertical side walls (v2, with variants) (Opus agent: integrating + Play review)
 - Integrate the new hanging undersides (3/4 rock, roots, vines) (Opus agent: integrating + Play review)
@@ -27,9 +26,9 @@ Updated 2026-10-12 07:41. in-progress: 6, blocked: 5, waiting: 3, done: 7
 
 ## M2b: Island requesters replace ascension
 
-- [ ] **Island requesters design (ADR 0007)** (in-progress, M, Claude)
+- [ ] **Island requesters design (ADR 0007)** (blocked, M, Claude)
   - Each island has buildings/NPCs that ask for items you pick from a menu; fulfilling a request unlocks new recipes. Replaces ascension, perks and vows. Open choices come to you in the Questions tab.
-  - Now: Opus agent: drafting ADR 0007 + questions
+  - Why: ADR 0007 drafted (proposed); waiting for your answers in the Questions tab (Island requesters)
 - [ ] **Remove ascension (gate, points, perks, vows, prestige reset)** (blocked, M, Claude)
   - Take out the Ascension Gate, Ascension Points, perk shop, vows and the run reset; old saves keep their progress.
   - Why: Needs the requester design (ADR 0007) so nothing the game relies on is removed early

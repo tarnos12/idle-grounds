@@ -1,1 +1,143 @@
-[]
+[
+  {
+    "g": "Island requesters"
+  },
+  {
+    "id": "tribute_order",
+    "q": "Islands unlock by paying a Tribute (5 items) at the new Sky-Bridge Shrine north of the Center. In what order can Islands be unlocked?",
+    "ctx": "Celestial Peak (final Island) moves north, behind the Shrine, and always comes last. Rings: Mine/Fishing/Farm open at the start; Grove/Volcano after any 2 of those.",
+    "o": [
+      [
+        "rings",
+        "In rings: choose freely within each ring",
+        true
+      ],
+      [
+        "fixed",
+        "Fixed order: Mine, Fishing, Farm, Grove, Volcano, then Celestial"
+      ],
+      [
+        "any",
+        "Any order (except Celestial last); Tribute items decide what is reachable"
+      ]
+    ]
+  },
+  {
+    "id": "req_count",
+    "q": "How many requester NPCs per Island?",
+    "ctx": "Each NPC has 3 requests and unlocks a new building and/or utilities. Each NPC needs a sprite, a portrait and a small prop.",
+    "o": [
+      [
+        "2",
+        "2 per Island, 1 on Celestial (13 NPCs, 39 requests)",
+        true
+      ],
+      [
+        "1",
+        "1 per Island (7 NPCs, 21 requests)"
+      ],
+      [
+        "3",
+        "3 per Island (about 20 NPCs, 60 requests)"
+      ]
+    ]
+  },
+  {
+    "id": "req_menu",
+    "q": "How does an NPC's request menu open up?",
+    "ctx": "Requests never block Island unlocks or the ending; they are optional upgrades.",
+    "o": [
+      [
+        "two_then_master",
+        "Requests I and II open together (you pick); III opens after both",
+        true
+      ],
+      [
+        "all_open",
+        "All 3 open at once; pick any"
+      ],
+      [
+        "chain",
+        "Strict chain: one at a time, I then II then III"
+      ]
+    ]
+  },
+  {
+    "id": "req_delivery",
+    "q": "How are request (and Shrine Tribute) items delivered?",
+    "o": [
+      [
+        "feed_and_wisps",
+        "Right-click feeding like the Dragon, and wisp lanterns can deliver too",
+        true
+      ],
+      [
+        "feed_only",
+        "Right-click feeding only"
+      ],
+      [
+        "deliver_button",
+        "A Deliver button that pulls from Storehouses on that Island"
+      ]
+    ]
+  },
+  {
+    "id": "ending",
+    "q": "With no ascension, what is the ending?",
+    "ctx": "Main path without requests is about 2:10 to the Gate; with about half the requests, about 3 h.",
+    "o": [
+      [
+        "heavenly_gate",
+        "Build the Heavenly Gate on Celestial Peak, then the ending plays and free play continues",
+        true
+      ],
+      [
+        "gate_plus_requests",
+        "Same, but the Gate also needs some requests done (e.g. 15 of 39)"
+      ],
+      [
+        "dragon",
+        "Awakening the Dragon is the ending; the Gate is removed"
+      ]
+    ]
+  },
+  {
+    "id": "new_islands",
+    "q": "The dropped ascension plan had 4 new Islands (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak). Keep any?",
+    "o": [
+      [
+        "later",
+        "Not now; maybe later as extra Shrine Tributes with their own NPCs",
+        true
+      ],
+      [
+        "two",
+        "Add Lotus Marsh and Thunder Crag now (empty bottom slots), each with NPCs"
+      ],
+      [
+        "none",
+        "No, drop them"
+      ]
+    ]
+  },
+  {
+    "id": "vows",
+    "q": "Vows were optional challenge rules that paid extra Ascension Points. With ascension gone they have no reward. What should happen to them?",
+    "ctx": "Today: 4 vows (e.g. Burden, Cold Hearth, Restless, Solitude), chosen when ascending.",
+    "o": [
+      [
+        "remove",
+        "Remove vows completely",
+        true
+      ],
+      [
+        "challenge",
+        "Keep them as optional challenge modes for a new game (bragging rights only)"
+      ],
+      [
+        "requests",
+        "Turn the best ones into hard bonus requests from an NPC"
+      ]
+    ]
+  }
+]

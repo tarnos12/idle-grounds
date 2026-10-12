@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: ADR 0007 island requesters drafted (proposed): Sky-Bridge Shrine on the Center's north edge takes per-island Tributes (5 items × 5–20) to raise bridges; 13 NPCs × 3 optional requests unlock island buildings/utilities (old perk effects); Heavenly Gate on Celestial = ending; ascension/AP/perks/vows/prestige removed with a save migration. 7 owner questions in the Hub.
+
 - 2026-10-12 owner: REMOVE ascension (not fun). Replace it with per-island requester buildings/NPCs that take item requests (picked from a menu) and unlock recipes. ADR 0006 rejected; ADR 0007 (island requesters) is being drafted; the ascension questions are withdrawn from the Hub.
 
 - 2026-10-12: ADR 0006 ascension content drafted (proposed): 4 realm tiers, each adds an island (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak), buildings, higher recipes, Gate items and weighted vows. 5 decisions posted in the Hub Questions tab (asc_tiers, asc_island_themes, asc_island_mode, asc_vow_style, asc_postgame).

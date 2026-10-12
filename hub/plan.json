@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 07:41",
+  "updated": "2026-10-12 09:48",
   "milestones": [
     {
       "id": "M1",
@@ -48,10 +48,10 @@
         {
           "title": "Island requesters design (ADR 0007)",
           "detail": "Each island has buildings/NPCs that ask for items you pick from a menu; fulfilling a request unlocks new recipes. Replaces ascension, perks and vows. Open choices come to you in the Questions tab.",
-          "status": "in-progress",
+          "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "now": "Opus agent: drafting ADR 0007 + questions"
+          "blockedBy": "ADR 0007 drafted (proposed); waiting for your answers in the Questions tab (Island requesters)"
         },
         {
           "title": "Remove ascension (gate, points, perks, vows, prestige reset)",
