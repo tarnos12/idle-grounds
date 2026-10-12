@@ -1,1 +1,135 @@
-[]
+[
+  { "g": "Visual pass" },
+  {
+    "id": "vp_panels",
+    "q": "Where should the Shrine panel (pay the Tribute) and the Request panel (NPC requests) open?",
+    "ctx": "You feed items by right-clicking the Shrine or the NPC from your hand, so the world must stay visible and clickable while the panel is open. Today the Altar, Stats and Help are centred windows that cover most of the screen and sit over the quest panel. The quest panel on the right is about 375 px wide (20% of the screen). Each panel shows: the Tribute rows (5 items, have/need bars) or the 3 request cards, with a reason line for waiting ones. Click a picture for full size.",
+    "imgs": [
+      { "file": "question-images/vp-panels-1.png", "cap": "Mid-game HUD: quest panel at right, bottom bar" },
+      { "file": "question-images/vp-panels-2.png", "cap": "A bottom dock (Pavilion roster) for comparison" }
+    ],
+    "o": [
+      ["modal", "Centred window, like the Altar and Stats (simple, but it covers the world while you feed)"],
+      ["right", "Right-side panel, about 25% wide, world stays visible and clickable", true],
+      ["bottom", "Bottom dock, like the Pavilion and Bridge panels"],
+      ["by_context", "Both by context: Shrine and NPC panels on the right, building panels at the bottom"],
+      ["right_tracker", "Right-side panel plus a permanent 'next Tribute / requests' chip in the HUD that opens it and shows a mini progress bar"]
+    ]
+  },
+  {
+    "id": "vp_guidance",
+    "q": "How much should the game guide a brand-new player in the first minutes?",
+    "ctx": "Today the first screen is a text paragraph in the top-right corner (about 8% of the screen): 'hold left-click on the Spirit Tree'. Nothing in the world points at the tree or at the first loot. Quests that are already 5/5 need a separate Claim click, and the 'Unlocks:' line shows an icon without a name.",
+    "imgs": [
+      { "file": "question-images/vp-guidance-1.png", "cap": "Start view: text wall in the corner, no pointer in the world" },
+      { "file": "question-images/vp-guidance-2.png", "cap": "Loot picked up: quest is 5/5 and waits for Claim" }
+    ],
+    "o": [
+      ["none", "Leave as it is (text only)"],
+      ["pointer", "Pulse ring and arrow on the current objective in the world"],
+      ["pointer_claim", "Pointer plus auto-claim for simple pickup quests (no Claim click)"],
+      ["pointer_claim_text", "Pointer, auto-claim, one-sentence quest text with a '?' for details, named unlocks; guidance fades after the first quest chain", true],
+      ["tutorial", "All of the above plus a skippable 5-step interactive tutorial overlay on the first run"]
+    ]
+  },
+  {
+    "id": "vp_look",
+    "q": "How far should the UI restyle go? (buttons, frames, icons, font)",
+    "ctx": "Facts: red is used for both the main button (Continue, Claim!, Ascend) and for danger or blocked (No fuel, Reset, Demolish). Four frame styles exist side by side: parchment (Welcome, Help), gold-and-red (quest panel), thin jade (Altar, build strip), and an unframed toast. Emoji icons (quest scroll, dragon, bar-chart, hand, tree and leaf in quest text) sit next to the pixel art, and all text is the default LiberationSans (the art spec names Pixelify Sans and Silkscreen). Most real pixel icons (ui_hand, ui_stats, ui_build ...) are already listed in the art spec, but the tour still shows emoji, so they are not delivered or not wired. New icons would need art (see the plan).",
+    "imgs": [
+      { "file": "question-images/vp-look-1.png", "cap": "Parchment Welcome with red Continue and emoji sprout" },
+      { "file": "question-images/vp-look-2.png", "cap": "Altar tree on dark jade" },
+      { "file": "question-images/vp-look-3.png", "cap": "Build menu cards with emoji in the bar and small costs" }
+    ],
+    "o": [
+      ["keep", "Keep the UI as it is"],
+      ["recolour", "Only move the main button off red (bright jade with gold text); red means danger only"],
+      ["unify", "Recolour, plus put Welcome and Help on the jade frame (no more parchment)"],
+      ["icons", "Unify, plus replace every emoji with real pixel icons (and use item icons inside text)"],
+      ["font", "Icons, plus one pixel font (Pixelify Sans) for all text", true],
+      ["glint", "Font, plus an animated idle glint on the quest panel and Shrine frames"]
+    ]
+  },
+  {
+    "id": "vp_bar",
+    "q": "How should the bottom bar be laid out?",
+    "ctx": "Today the bar is a 60 px dark strip: the title 'Idle Grounds' is the largest text on screen at the left, and eight controls crowd the right (Sound, Motion, Help, Stats, Build, Demolish, Reset, plus the area and hand pills). The red Reset button sits right next to Demolish. 'Help' sits 2 px higher than the others, and the pills shift when digits widen.",
+    "imgs": [
+      { "file": "question-images/vp-bar-1.png", "cap": "Bar with area and hand pills and the version badge" },
+      { "file": "question-images/vp-bar-2.png", "cap": "Demolish mode: only the red button shows the mode" }
+    ],
+    "o": [
+      ["keep", "Keep the layout (title left, text buttons right); only fix alignment and pill widths"],
+      ["icons", "Icon-only buttons with tooltips; Reset moves into a Help/Settings menu", true],
+      ["icons_notitle", "Icon-only, Reset in the menu, and the big title is dropped after the first session"],
+      ["status_block", "All of that plus one centred status block: area pill, hand pill and a 'next Tribute / request' pill"]
+    ]
+  },
+  {
+    "id": "vp_zoom",
+    "q": "Crisp pixels need fixed zoom steps. Which zoom range do you want?",
+    "ctx": "Today zoom is smooth from 1 to 6 (17.5 to 105 cells across at 1080p). At the start zoom a texel is 1.71 screen pixels, so neighbouring texels draw 1, 2 or 3 px wide and outlines shimmer. Crisp stops need a whole number of screen pixels per texel: 4 px = 15 cells across, 3 px = 20, 2 px = 30, 1 px = 60. The farthest crisp view would therefore be 60 cells, much closer than today's 105. A half-size 120-cell step is possible but fine detail may shimmer a little.",
+    "imgs": [
+      { "file": "question-images/vp-zoom-1.png", "cap": "Today's farthest zoom (105 cells across)" },
+      { "file": "question-images/vp-zoom-2.png", "cap": "Whole Center island, for scale" }
+    ],
+    "o": [
+      ["crisp4", "Four crisp steps only: 15, 20, 30 and 60 cells across (the farthest view gets closer)"],
+      ["crisp_map", "The four crisp steps plus one far 'map' step at 120 cells (half size, slight shimmer)", true],
+      ["smooth", "Keep today's smooth zoom; pixels stay uneven and a bit soft"],
+      ["map_view", "Crisp steps, plus a separately drawn world-map view (island icons and Sky Paths) instead of a far zoom"]
+    ]
+  },
+  {
+    "id": "vp_mood",
+    "q": "How bright should the world be: island ground and the sky under it?",
+    "ctx": "Center grass is the brightest, most saturated thing on the screen (about 70-80% of the start view), lighter than most building roofs, so the eye goes to empty grass. Celestial ground is near white and Volcano ground near black, so pale props on pale ground and dark props on dark ground vanish. The cloud sea under the islands is dark slate-teal (a stormy dusk), while the brief says calm, serene dawn. Pick any that apply.",
+    "multi": true,
+    "imgs": [
+      { "file": "question-images/vp-mood-1.png", "cap": "Center ground at the start zoom" },
+      { "file": "question-images/vp-mood-2.png", "cap": "Cloud sea under the islands" }
+    ],
+    "o": [
+      ["ground", "Calmer ground on every island: darker, less saturated, so buildings and resources stand out", true],
+      ["sky", "Lighter dawn sky: pale cloud tops with soft gold light"],
+      ["grade", "A soft warm colour grade over the whole world (slight vignette, light from the upper left)"],
+      ["island_moods", "A subtle mood per island (misty Grove, hazy Volcano, glowing Celestial)"],
+      ["day_cycle", "A slow dawn-day-dusk cycle on the sky"],
+      ["none", "None of these: keep the look as it is"]
+    ]
+  },
+  {
+    "id": "vp_props",
+    "q": "Which building and prop art should be redone now? Pick any.",
+    "ctx": "Fuel rack: today an opaque black 96x64 box with an orange grid; it is the highest-contrast thing in the start cluster and reads like a UI panel stuck on the Kiln. Projection: Kiln, Workbench, Herb Garden and the rice-paddy plots are drawn from a corner (diamond footprint), while Altar, Storehouse, Paper Mill, Loom and the rest are drawn 3/4 from the front. 19 new buildings are still to come, and they will copy whichever angle exists. A redo is an artist round (a day or more each).",
+    "multi": true,
+    "imgs": [
+      { "file": "question-images/vp-props-1.png", "cap": "Fuel rack (black box) and the corner-view Kiln and Workbench" },
+      { "file": "question-images/vp-props-2.png", "cap": "Rice-paddy plots drawn as diamonds" }
+    ],
+    "o": [
+      ["rack_soft", "Soften the rack: dark wood instead of black, strong only on hover or low fuel"],
+      ["rack_new", "Replace it with a drawn wooden log rack beside the burner, where fed logs appear", true],
+      ["rack_fire", "Also make the burner's fire and smoke grow and shrink with the fuel left"],
+      ["iso_starter", "Redraw Kiln and Workbench (the starter area) in front 3/4 now", true],
+      ["iso_all4", "Redraw all four (Kiln, Workbench, Herb Garden, paddy plots) now, before the new-island batch"],
+      ["audit", "Check all 26 existing buildings against one reference sheet"],
+      ["none", "Neither: do both later, after the new-island batch"]
+    ]
+  },
+  {
+    "id": "vp_fishing",
+    "q": "Fishing Island looks like a snowfield. What should its ground be?",
+    "ctx": "The ground is a flat pale grey-lilac (#B7BCCD) with blue specks, so it reads as snow. The art spec gave Fishing blue water plus shore tones, and the rejected tiles said 'cool shingle'. Its cliff wall is saturated teal with a green moss lip, which clashes with pale ground. Lotus pads and reeds float on a pale grey void.",
+    "imgs": [
+      { "file": "question-images/vp-fishing-1.png", "cap": "Pond field at the normal zoom" },
+      { "file": "question-images/vp-fishing-2.png", "cap": "South coast: teal wall on pale ground" }
+    ],
+    "o": [
+      ["shingle", "Cool pebble shingle: grey-blue stones with wet dark patches"],
+      ["moss", "Mossy lake shore: green moss and wet sand around the pond", true],
+      ["snow", "Make it a snowy northern fishing island on purpose (snow props, ice at the pond edge)"],
+      ["moss_channels", "Mossy shore plus shallow water channels and small wooden jetties across the island"]
+    ]
+  }
+]

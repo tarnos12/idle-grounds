@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-13: designer-team visual pass — 100-shot tour (scratchpad/tour, tools/bg/tour.sh), 4 reviews in docs/reviews/2026-10-13-*, merged plan docs/reviews/2026-10-13-visual-pass-plan.md (A 27 no-input fixes, B 9 needing answers, C 77 art files). 8 owner questions in the Hub. Batch A split into 3 builders in separate background task copies.
+
 - 2026-10-12: coast redo #4 merged from bg/coast-curves (first background-copy feature): curved coastlines — wide-blurred seed outline + gentle swell, one straight segment per crossed cell (CoastShapeTile, Editor/CoastCurves.cs), walls laid by arc length with taper, curved lips/side faces, per-pixel veil masks. EditMode 175/175 in the bg copy, fast sim 167/167. Art hook: island_<biome>_cliffwall_round_32x96_4f. Sign-off asked (coast4_signoff).
 
 - 2026-10-12: background copy — git worktree D:WORKUnityidle-grounds-bg (branch bg/main) + headless Unity via tools/bg/* (sync, compile, test, menu, shot, unity, build, publish-back, task). Editor entry points in Editor/Batch.cs; SaveService honours IDLEGROUNDS_SAVE_DIR in the Editor so background Play/tests never touch the owner's save. Verified: compile 53 s, EditMode 175/175 in 6 min, menu 26 s, Play screenshots 47 s; owner's editor and save untouched. Flow: CLAUDE.md 'Background copy'. Known: PlayMode GameSmokeTests.Logistics_WispLaunches_ConverterCompletes fails (pre-existing timing issue, plan task).
