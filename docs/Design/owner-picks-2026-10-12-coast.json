@@ -17,6 +17,13 @@
           "note": "We can't have 90degrees angles"
         }
       }
+    },
+    {
+      "when": "2026-10-12",
+      "verbatim": "Answers\ncoast3_signoff: Also round the corners into curves",
+      "answers": {
+        "coast3_signoff": "curves"
+      }
     }
   ]
 }
