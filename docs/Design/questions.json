@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "g": "World look"
+  },
+  {
+    "id": "coast3_signoff",
+    "q": "Coast redo #3: no right angles. Coasts are straight runs plus 45-degree diagonals (every turn is 135 degrees), with angled cliff walls built from the existing art until the artist's diagonal pieces arrive. Is this the look?",
+    "ctx": "Corners are 45-degree cuts, not curves; steeper slopes still show small steps. Click a picture for full size.",
+    "imgs": [
+      {
+        "file": "question-images/coast3-whole.png",
+        "cap": "Center, whole island"
+      },
+      {
+        "file": "question-images/coast3-sw.png",
+        "cap": "South-west, normal zoom"
+      },
+      {
+        "file": "question-images/coast3-diag-steps.png",
+        "cap": "Diagonal wall close-up"
+      },
+      {
+        "file": "question-images/coast3-fishing.png",
+        "cap": "Fishing, whole island"
+      }
+    ],
+    "o": [
+      [
+        "ok",
+        "Yes, keep it",
+        true
+      ],
+      [
+        "curves",
+        "Also round the corners into curves"
+      ],
+      [
+        "redo",
+        "No, redo with my note"
+      ]
+    ]
+  }
+]

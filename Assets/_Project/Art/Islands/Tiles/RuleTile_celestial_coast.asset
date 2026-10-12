@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
+  m_Script: {fileID: 11500000, guid: 141495f650add3c429d5d259b8ee55e1, type: 3}
   m_Name: RuleTile_celestial_coast
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
   m_DefaultSprite: {fileID: -3359310435252337114, guid: 193718e747f003e4fba400a2f34d2bb3, type: 3}
@@ -1005,3 +1005,8 @@ MonoBehaviour:
     - {x: 0, y: -1, z: 0}
     - {x: 1, y: -1, z: 0}
     m_RuleTransform: 0
+  kin:
+  - {fileID: 11400000, guid: fddf883a83a296d4aadc1dc572054b74, type: 2}
+  - {fileID: 11400000, guid: 82659916992be834eb4f09328a88e05c, type: 2}
+  - {fileID: 11400000, guid: 6684b434535905b4aba2dfb44614b80b, type: 2}
+  - {fileID: 11400000, guid: fa8c335c77feb004f902561713dcf857, type: 2}

@@ -299,26 +299,8 @@ namespace IdleGrounds.Editor
             if (!File.Exists(IslandArtBuilder.CliffWallPath(biome))) return null;
             var f = RepairedCliffWall(biome);
             if (f.Length < 7) return null;
-            string src = $"{ArtDir}/dress_cliffwall_{biome}_32x96_8f.png";
-            var px = ReadPng(src, out int w, out int h);
-            if (px == null || w != 256 || h != 96) return null;
-            Color32 C(int frame, int col, int y) => px[y * w + frame * 32 + col];
-            int E = WallEndReach, T = WallTuckReach;
-            // each piece: u range (px relative to the cell's left edge) and the source column for every u
-            var pieces = new List<(int u0, int u1, System.Func<int, int, Color32> at)>
-            {
-                (-E, 31, (u, y) => u <= 31 - E ? C(3, u + E, y) : C(0, u, y)),          // endL
-                (0, 31 + E, (u, y) => u < E ? C(0, u, y) : C(4, u - E, y)),             // endR
-                (-T, 31, (u, y) => u < 0 ? C(0, u + 32, y) : C(5, u, y)),               // tuckL
-                (0, 31 + T, (u, y) => u <= 31 ? C(6, u, y) : C(0, u - 32, y)),          // tuckR
-            };
-            for (int l = 0; l < 2; l++)
-                for (int r = 0; r < 2; r++)
-                {
-                    var L = pieces[l == 0 ? 0 : 2];
-                    var R = pieces[r == 0 ? 1 : 3];
-                    pieces.Add((L.u0, R.u1, (u, y) => u < 16 ? L.at(u, y) : R.at(u, y)));
-                }
+            var pieces = WallPieces(biome, false);
+            if (pieces == null) return null;
             int total = 0;
             foreach (var p in pieces) total += p.u1 - p.u0 + 1;
             var o = new Color32[total * 96];
@@ -340,9 +322,177 @@ namespace IdleGrounds.Editor
             return new WallSet { mid = new[] { t[0], t[1], t[2] }, endL = t[3], endR = t[4], tuckL = t[5], tuckR = t[6], pair = new[] { t[7], t[8], t[9], t[10] } };
         }
 
+        /// <summary>
+        /// The joint pieces of the repaired cliff wall (see <see cref="EnsureWallSet"/>): u range (px relative to the cell's
+        /// left edge) and the source pixel (u, y bottom-up) for every column. Order: endL, endR, tuckL, tuckR, pair[0..3];
+        /// with <paramref name="withMids"/> the 3 mid frames come first.
+        /// </summary>
+        static List<(int u0, int u1, System.Func<int, int, Color32> at)> WallPieces(string biome, bool withMids)
+        {
+            string src = $"{ArtDir}/dress_cliffwall_{biome}_32x96_8f.png";
+            var px = ReadPng(src, out int w, out int h);
+            if (px == null || w != 256 || h != 96) return null;
+            Color32 C(int frame, int col, int y) => px[y * w + frame * 32 + col];
+            int E = WallEndReach, T = WallTuckReach;
+            var pieces = new List<(int u0, int u1, System.Func<int, int, Color32> at)>
+            {
+                (-E, 31, (u, y) => u <= 31 - E ? C(3, u + E, y) : C(0, u, y)),          // endL
+                (0, 31 + E, (u, y) => u < E ? C(0, u, y) : C(4, u - E, y)),             // endR
+                (-T, 31, (u, y) => u < 0 ? C(0, u + 32, y) : C(5, u, y)),               // tuckL
+                (0, 31 + T, (u, y) => u <= 31 ? C(6, u, y) : C(0, u - 32, y)),          // tuckR
+            };
+            for (int l = 0; l < 2; l++)
+                for (int r = 0; r < 2; r++)
+                {
+                    var L = pieces[l == 0 ? 0 : 2];
+                    var R = pieces[r == 0 ? 1 : 3];
+                    pieces.Add((L.u0, R.u1, (u, y) => u < 16 ? L.at(u, y) : R.at(u, y)));
+                }
+            if (withMids)
+                for (int v = 2; v >= 0; v--) { int fv = v; pieces.Insert(0, (0, 31, (u, y) => C(fv, u, y))); }
+            return pieces;
+        }
+
+        // ------------------------------------------------------------------ 45° diagonal coast (owner 2026-10-12: "we can't have 90 degrees angles")
+
+        /// <summary>Diagonal coast cell codes (which corner of the cell is sky): the cell's other three corners are land and
+        /// the coast runs along the diagonal between them. Tile index = code - 1.</summary>
+        public const int SkyNE = 1, SkyNW = 2, SkySE = 3, SkySW = 4;
+        const string DiagTileName = "CoastDiag_";
+
+        /// <summary>Diagonal code of a Coast tilemap tile (0 = not a diagonal tile).</summary>
+        public static int DiagCode(TileBase t)
+        {
+            if (t == null) return 0;
+            string n = t.name;
+            if (!n.StartsWith(DiagTileName) || n.Length < 2) return 0;
+            int k = n[n.Length - 1] - '0';
+            return k >= 0 && k <= 3 ? k + 1 : 0;
+        }
+
+        /// <summary>Signed px distance of pixel (x, y bottom-up) from the visible diagonal coast line of a cell with sky
+        /// corner <paramref name="code"/>: k &lt; 0 sky, k = 0 the outer rim colour, 1 the inner rim colour, &gt;= 2 ground. The
+        /// line sits 3 px inside the true diagonal (the blob tiles' transparent inset), so it meets the straight edges'
+        /// rims and the blob inner-corner notches pixel for pixel.</summary>
+        public static int DiagK(int code, int x, int y)
+        {
+            switch (code)
+            {
+                case SkySE: return y - x - 3;
+                case SkyNW: return x - y - 3;
+                case SkyNE: return 28 - x - y;
+                default: return x + y - 34;          // SkySW
+            }
+        }
+
+        /// <summary>
+        /// The 4 diagonal coast tiles of a biome (index = code - 1: sky NE, NW, SE, SW): a half cell of ground cut along the
+        /// diagonal with the blob rim's two colours drawn on the cut. Prefers the delivered
+        /// <c>island_&lt;biome&gt;_ground_diag_32x32_4f</c> (same frame order); until then composed at build time from the blob's
+        /// rim colours (frame 0, column 16) and the ground fill (frame 0) - palette-faithful, pixel-crisp
+        /// (<c>dress_ground_diag_&lt;biome&gt;_32x32_4f</c>).
+        /// </summary>
+        public static Tile[] EnsureDiagGround(string biome)
+        {
+            var del = IslandArtBuilder.Frames($"{Inc}island_{biome}_ground_diag_32x32_4f.png");
+            if (del.Length >= 4) return Tiles(DiagTileName + biome, new[] { del[0], del[1], del[2], del[3] });
+            var blob = ReadPng(IslandArtBuilder.BlobPath(biome), out int bw, out int bh);
+            if (blob == null || bh != 32) blob = ReadPng($"{Inc}island_{biome}_ground_blob_32x32_47f.png", out bw, out bh);
+            if (blob == null || bh != 32) return null;
+            var fill = ReadPng($"{Inc}island_{biome}_ground_fill_32x32_3f.png", out int fw, out int fh);
+            int interior = System.Array.IndexOf(IslandArtBuilder.BlobMasks(), 255);
+            Color32 Fill(int x, int y) => fill != null && fh == 32 ? fill[y * fw + x] : blob[y * bw + interior * 32 + x];
+            Color32 r1 = blob[(31 - 3) * bw + 16], r2 = blob[(31 - 4) * bw + 16];
+            var o = new Color32[128 * 32];
+            for (int f = 0; f < 4; f++)
+                for (int y = 0; y < 32; y++)
+                    for (int x = 0; x < 32; x++)
+                    {
+                        int k = DiagK(f + 1, x, y);
+                        o[y * 128 + f * 32 + x] = k < 0 ? new Color32(0, 0, 0, 0) : k == 0 ? r1 : k == 1 ? r2 : Fill(x, y);
+                    }
+            Directory.CreateDirectory(ArtDir);
+            Directory.CreateDirectory(TileDir);
+            string path = $"{ArtDir}/dress_ground_diag_{biome}_32x32_4f.png";
+            WriteIfChanged(path, 128, 32, o);
+            Import(path, 4, 32);
+            var s = IslandArtBuilder.Frames(path);
+            return s.Length >= 4 ? Tiles(DiagTileName + biome, s) : null;
+        }
+
+        /// <summary>South walls under the two south-facing diagonals: <c>rise</c> = sky SE (the coast rises to the right),
+        /// <c>fall</c> = sky SW (it falls to the right). Same joint layout as <see cref="WallSet"/>.</summary>
+        public class DiagWallSet { public WallSet rise, fall; }
+
+        /// <summary>Canvas height of a sheared diagonal wall piece: the 96 px wall + up to 39 px of shear + 1.</summary>
+        const int DiagWallH = 136, DiagWallBase = 4;
+
+        /// <summary>
+        /// 45° south cliff walls under the SE / SW-facing diagonals. Prefers the delivered
+        /// <c>island_&lt;biome&gt;_cliffwall_diag_32x96_4f</c> (frame 0 rises to the right, 1 falls; 2/3 transitions not used yet).
+        /// Until then every straight joint piece (3 mids, free ends, tucked ends, pairs) is SHEARED in 1 px steps: column u
+        /// moves up u px (rise) or 31 - u px (fall), so the wall's grass top follows the diagonal coast 3 px behind its
+        /// visible rim (like the straight wall's 6 px tuck) and one piece tiles into the next one cell right + one cell up.
+        /// Pixel-for-pixel copies of the repaired delivered frames (no new colours). Custom pivots put column 31 (rise) /
+        /// column 0 (fall) exactly where the straight wall's column would be, so straight and diagonal runs join seamlessly.
+        /// </summary>
+        public static DiagWallSet EnsureDiagWallSet(string biome)
+        {
+            if (EnsureWallSet(biome) == null) return null;
+            string dp = $"{Inc}island_{biome}_cliffwall_diag_32x96_4f.png";
+            var del = ReadPng(dp, out int dw, out int dh);
+            if (del != null && dw >= 64)
+            {
+                // delivered: its top row sits where the composed piece's highest grass row is (79 px above the pivot)
+                string copy = $"{ArtDir}/dress_cliffwall_diag_{biome}_delivered.png";
+                WriteIfChanged(copy, dw, dh, del);
+                var rs = new List<(int x, int w, float pivot)> { (0, 32, 0.5f), (32, 32, 0.5f) };
+                var ds = ImportRects(copy, rs, 1f - 79f / dh);
+                if (ds.Length >= 2)
+                {
+                    WallSet One(string n, Sprite sp)
+                    {
+                        var t = Tiles(n, new[] { sp })[0];
+                        return new WallSet { mid = new[] { t, t, t }, endL = t, endR = t, tuckL = t, tuckR = t, pair = new[] { t, t, t, t } };
+                    }
+                    return new DiagWallSet { rise = One("CliffWallDiagRiseD_" + biome, ds[0]), fall = One("CliffWallDiagFallD_" + biome, ds[1]) };
+                }
+            }
+            var pieces = WallPieces(biome, true);
+            if (pieces == null) return null;
+            WallSet Build(bool rise)
+            {
+                int total = 0;
+                foreach (var p in pieces) total += p.u1 - p.u0 + 1;
+                var o = new Color32[total * DiagWallH];
+                var rects = new List<(int x, int w, float pivot)>();
+                int x0 = 0;
+                foreach (var p in pieces)
+                {
+                    int pw = p.u1 - p.u0 + 1;
+                    for (int u = p.u0; u <= p.u1; u++)
+                    {
+                        int s = rise ? u : 31 - u;
+                        for (int y = 0; y < 96; y++) o[(y + s + DiagWallBase) * total + x0 + u - p.u0] = p.at(u, y);
+                    }
+                    rects.Add((x0, pw, (16f - p.u0) / pw));
+                    x0 += pw;
+                }
+                string path = $"{ArtDir}/dress_cliffwall_diag_{(rise ? "rise" : "fall")}_{biome}.png";
+                WriteIfChanged(path, total, DiagWallH, o);
+                var js = ImportRects(path, rects, (48f + DiagWallBase) / DiagWallH);
+                if (js.Length < 11) return null;
+                var t = Tiles((rise ? "CliffWallDiagRise_" : "CliffWallDiagFall_") + biome, js);
+                return new WallSet { mid = new[] { t[0], t[1], t[2] }, endL = t[3], endR = t[4], tuckL = t[5], tuckR = t[6], pair = new[] { t[7], t[8], t[9], t[10] } };
+            }
+            var r = Build(true);
+            var f = Build(false);
+            return r != null && f != null ? new DiagWallSet { rise = r, fall = f } : null;
+        }
+
         /// <summary>Imports a horizontal strip of sprites with their own widths and horizontal pivots (vertical pivot centred,
         /// PPU 32); returns them in strip order.</summary>
-        static Sprite[] ImportRects(string path, List<(int x, int w, float pivot)> rects)
+        static Sprite[] ImportRects(string path, List<(int x, int w, float pivot)> rects, float py = 0.5f)
         {
             var imp = (TextureImporter)AssetImporter.GetAtPath(path);
             if (imp == null) return new Sprite[0];
@@ -369,7 +519,7 @@ namespace IdleGrounds.Editor
             var existing = provider.GetSpriteRects();
             bool same = existing != null && existing.Length == rects.Count;
             for (int i = 0; same && i < rects.Count; i++)
-                same = existing[i].rect == new Rect(rects[i].x, 0, rects[i].w, tex.height) && Mathf.Abs(existing[i].pivot.x - rects[i].pivot) < 1e-4f;
+                same = existing[i].rect == new Rect(rects[i].x, 0, rects[i].w, tex.height) && Mathf.Abs(existing[i].pivot.x - rects[i].pivot) < 1e-4f && Mathf.Abs(existing[i].pivot.y - py) < 1e-4f;
             if (!same)
             {
                 string baseName = Path.GetFileNameWithoutExtension(path);
@@ -380,7 +530,7 @@ namespace IdleGrounds.Editor
                         name = baseName + "_" + i,
                         rect = new Rect(rects[i].x, 0, rects[i].w, tex.height),
                         alignment = SpriteAlignment.Custom,
-                        pivot = new Vector2(rects[i].pivot, 0.5f),
+                        pivot = new Vector2(rects[i].pivot, py),
                         spriteID = existing != null && i < existing.Length ? existing[i].spriteID : GUID.Generate(),
                     };
                 provider.SetSpriteRects(list);
@@ -575,6 +725,33 @@ namespace IdleGrounds.Editor
             Import(path, 4, 32);
             var f = IslandArtBuilder.Frames(path);
             return f.Length >= 4 ? Tiles("EdgeLip_" + biome, f) : null;
+        }
+
+        /// <summary>
+        /// Grass lip along the north-facing 45° diagonals (sky NE / NW; frames 0 / 1): the biome's N lip frame (frame 2 of
+        /// <c>dress_edge_lip_&lt;biome&gt;</c>) re-laid along the diagonal - lip row r lands r - 4 px inside the visible diagonal
+        /// line, exactly as on a straight north edge (whose lip tilemap sits 1 px up), so the lip runs on unbroken from a
+        /// north run onto the diagonal. Pixel copies, no new colours.
+        /// </summary>
+        static Tile[] DiagLipTiles(string biome)
+        {
+            var px = ReadPng($"{ArtDir}/dress_edge_lip_{biome}_32x32_4f.png", out int w, out int h);
+            if (px == null || h != 32 || w < 128) return null;
+            var o = new Color32[64 * 32];
+            for (int f = 0; f < 2; f++)
+                for (int y = 0; y < 32; y++)
+                    for (int x = 0; x < 32; x++)
+                    {
+                        int r = DiagK(f == 0 ? SkyNE : SkyNW, x, y) + 4;     // lip row (from the top of the N lip frame)
+                        if (r < 0 || r > 31) continue;
+                        var c = px[(31 - r) * w + 2 * 32 + x];
+                        if (c.a > 0) o[y * 64 + f * 32 + x] = c;
+                    }
+            string path = $"{ArtDir}/dress_edge_lip_diag_{biome}_32x32_2f.png";
+            WriteIfChanged(path, 64, 32, o);
+            Import(path, 2, 32);
+            var s = IslandArtBuilder.Frames(path);
+            return s.Length >= 2 ? Tiles("EdgeLipDiag_" + biome, s) : null;
         }
 
         static Tile[] Tiles(string name, Sprite[] sprites)
@@ -913,7 +1090,15 @@ namespace IdleGrounds.Editor
             isl.coast.CompressBounds();
             var b = isl.coast.cellBounds;
             var land = new HashSet<Vector2Int>();
-            foreach (var p in b.allPositionsWithin) if (isl.coast.HasTile(p)) land.Add(new Vector2Int(p.x, p.y));
+            var triAt = new Dictionary<Vector2Int, int>();         // 45° diagonal half cells (land for every neighbour test)
+            foreach (var p in b.allPositionsWithin)
+            {
+                var tt = isl.coast.GetTile(p);
+                if (tt == null) continue;
+                land.Add(new Vector2Int(p.x, p.y));
+                int dc = DiagCode(tt);
+                if (dc > 0) triAt[new Vector2Int(p.x, p.y)] = dc;
+            }
             for (int r = 0; r < Cells; r++) for (int c = 0; c < Cells; c++) land.Add(new Vector2Int(c, -r - 1));
             bool Interior(int x, int y)
             {
@@ -1201,8 +1386,16 @@ namespace IdleGrounds.Editor
                 var lipN = NewMap(root, "EdgeLipN", 9, new Vector3(0f, o, 0f));
                 var lipNW = NewMap(root, "EdgeLipNW", 9, new Vector3(-o, o, 0f));
                 var lipNE = NewMap(root, "EdgeLipNE", 9, new Vector3(o, o, 0f));
+                var diagLip = triAt.Count > 0 ? DiagLipTiles(key) : null;
+                var lipD = diagLip != null ? NewMap(root, "EdgeLipDiag", 9, Vector3.zero) : null;
                 foreach (var v in land)
                 {
+                    if (triAt.TryGetValue(v, out var dcode))
+                    {
+                        // north-facing diagonals carry the lip; south-facing ones meet the 45° wall's grass top
+                        if (lipD != null && (dcode == SkyNE || dcode == SkyNW)) Place(lipD, new Vector3Int(v.x, v.y, 0), diagLip[dcode == SkyNE ? 0 : 1]);
+                        continue;
+                    }
                     bool n = !land.Contains(v + Vector2Int.up), w = !land.Contains(v + Vector2Int.left), e = !land.Contains(v + Vector2Int.right);
                     var cell = new Vector3Int(v.x, v.y, 0);
                     if (n && w) Place(lipNW, cell, kit.lip[3]);
@@ -1273,19 +1466,23 @@ namespace IdleGrounds.Editor
                 footE.color = SideEastShade;
                 foreach (var v in sorted)
                 {
+                    if (triAt.ContainsKey(v)) continue;          // diagonal cells never carry a W / E face (their legs are land)
                     bool w = !land.Contains(v + Vector2Int.left), e = !land.Contains(v + Vector2Int.right), s = !land.Contains(v + Vector2Int.down);
+                    // the foot frame also where a 45° south wall starts under the face (a diagonal falling away from it)
+                    triAt.TryGetValue(v + Vector2Int.down, out int below);
+                    bool sW = s || below == SkySW, sE = s || below == SkySE;
                     if (w && !SkipRun(v, -1))
                     {
                         int k = Variant(pickW, v, true, kit.sideW.Length);
                         var p = new Vector3Int(v.x - 1, v.y, 0);
-                        sideW.SetTile(p, s ? kit.sideWEnd[k] : kit.sideW[k]);
+                        sideW.SetTile(p, sW ? kit.sideWEnd[k] : kit.sideW[k]);
                         if (!s && land.Contains(new Vector2Int(v.x - 1, v.y - 1))) footW.SetTile(p, kit.sideW[k]);
                     }
                     if (e && !SkipRun(v, 1))
                     {
                         int k = Variant(pickE, v, false, kit.sideE.Length);
                         var p = new Vector3Int(v.x + 1, v.y, 0);
-                        sideE.SetTile(p, s ? kit.sideEEnd[k] : kit.sideE[k]);
+                        sideE.SetTile(p, sE ? kit.sideEEnd[k] : kit.sideE[k]);
                         if (!s && land.Contains(new Vector2Int(v.x + 1, v.y - 1))) footE.SetTile(p, kit.sideE[k]);
                     }
                 }

@@ -1,0 +1,408 @@
+fileFormatVersion: 2
+guid: 4fac01c7de3e2384991772450ffc1d8b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4555278741963195058
+    second: dress_cliffwall_diag_rise_center_0
+  - first:
+      213: -3195392373679703491
+    second: dress_cliffwall_diag_rise_center_1
+  - first:
+      213: -4903478926062981179
+    second: dress_cliffwall_diag_rise_center_2
+  - first:
+      213: 2275441812475982563
+    second: dress_cliffwall_diag_rise_center_3
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4d356c7e1668c0c0800000000000000
+      internalID: -4555278741963195058
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3a34d8e09fa7a3d0800000000000000
+      internalID: -3195392373679703491
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_2
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5cfe66085e753fbb0800000000000000
+      internalID: -4903478926062981179
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_3
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 35
+        height: 136
+      alignment: 9
+      pivot: {x: 0.54285717, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e2b3bbc54ef39f10800000000000000
+      internalID: 2275441812475982563
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_4
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 0
+        width: 35
+        height: 136
+      alignment: 9
+      pivot: {x: 0.45714286, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: edefdaa5e21442c4daa4594a5e6df913
+      internalID: -391741500
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_5
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 0
+        width: 36
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5555556, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 61269e423bfb24e4587f19b7900847f6
+      internalID: -1904045995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_6
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 0
+        width: 36
+        height: 136
+      alignment: 9
+      pivot: {x: 0.44444445, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 17fe174a4d044d84ab5b416090d70873
+      internalID: 1078418858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_7
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 0
+        width: 38
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 33cc431f2c38eab4f85d367ec89fcf77
+      internalID: -1999877430
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_8
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 0
+        width: 39
+        height: 136
+      alignment: 9
+      pivot: {x: 0.4871795, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cbdddea107fa80b409fabae622406f58
+      internalID: 1605852302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_9
+      rect:
+        serializedVersion: 2
+        x: 315
+        y: 0
+        width: 39
+        height: 136
+      alignment: 9
+      pivot: {x: 0.51282054, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 846d69315336f074fbb610075dea2dd9
+      internalID: -357612581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_center_10
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 0
+        width: 40
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dbd1aa2c180480a429083bc00d358025
+      internalID: 1891200498
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 3c2662b88ea028e4f80f5130912afe16
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      dress_cliffwall_diag_rise_center_0: -4555278741963195058
+      dress_cliffwall_diag_rise_center_1: -3195392373679703491
+      dress_cliffwall_diag_rise_center_10: 1891200498
+      dress_cliffwall_diag_rise_center_2: -4903478926062981179
+      dress_cliffwall_diag_rise_center_3: 2275441812475982563
+      dress_cliffwall_diag_rise_center_4: -391741500
+      dress_cliffwall_diag_rise_center_5: -1904045995
+      dress_cliffwall_diag_rise_center_6: 1078418858
+      dress_cliffwall_diag_rise_center_7: -1999877430
+      dress_cliffwall_diag_rise_center_8: 1605852302
+      dress_cliffwall_diag_rise_center_9: -357612581
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

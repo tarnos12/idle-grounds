@@ -363,15 +363,18 @@ namespace IdleGrounds.Editor
             EditorUtility.SetDirty(isl);
         }
 
-        // ------------------------------------------------------------------ coast smoothing (owner pick 2026-10-12)
+        // ------------------------------------------------------------------ coast smoothing (owner picks 2026-10-12)
 
-        // Diagonal coasts painted cell by cell read as rows of 1-cell pillars once the 3-cell south cliff wall and the
-        // W/E side faces hang off every step; a coarse 4-7 x 3-5 lattice (the first redo) read as boxy terraces. The
-        // seed outline is therefore blurred (organic curve, no noise jaggies) and re-cut on a FINE irregular lattice
-        // (column widths StepMinX-StepMaxX, row heights StepMinY-StepMaxY, seeded per Island): the outline follows the
-        // true curve, but every straight run is at least 2 cells and a diagonal becomes a staircase whose step lengths
-        // vary (2, 3, 4, 5, 6 ...) with the local slope - never a 1-cell stair, never a big rectangular block.
-        const int StepMinX = 2, StepMaxX = 3, StepMinY = 2, StepMaxY = 3, SmoothBlur = 2;
+        // History: diagonal coasts painted cell by cell read as rows of 1-cell pillars; a coarse 4-7 x 3-5 lattice read as
+        // boxy terraces; a fine 2-3 cell lattice was "closer, but we can't have 90 degree angles". The coast is now cut on
+        // the cell CORNERS (vertices) instead of the cells: the blurred seed outline is sampled at every vertex, a cell with
+        // all 4 corners on land is a full coast cell, a cell with exactly 3 is a 45° DIAGONAL cell (a half-cell triangle,
+        // IslandDressingBuilder.EnsureDiagGround, painted with the diagonal tiles), anything less is sky. A 1-vertex step of
+        // the outline therefore becomes a 45° diagonal instead of a stair. Vertex clean-up removes every remaining right
+        // angle: convex square corners are cut to a diagonal, 1-vertex spikes / strands and diagonal pinches are removed,
+        // 1-vertex notches are filled (a concave corner always holds a diagonal cell by construction). Result: an outline
+        // of straight runs and 45° runs with 135° turns only.
+        const int SmoothBlur = 2;
 
         /// <summary>
         /// Re-paints every Island's coast from its recorded <see cref="Island.coastSeed"/> (the same outline as before)
@@ -399,21 +402,32 @@ namespace IdleGrounds.Editor
 
         static int FloorTo(int v, int s) => Mathf.FloorToInt(v / (float)s) * s;
 
-        /// <summary>Re-cuts the Island's painted Coast on the coarse lattice (deterministic, idempotent). The play square stays land.</summary>
+        /// <summary>Re-cuts the Island's painted Coast on the cell corners (full + 45° diagonal cells, deterministic). The play square stays land.</summary>
         public static bool SmoothCoast(Island isl)
         {
             var tm = EnsureCoastTilemap(isl);
             var tile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CoastTilePath(isl.islandKey));
             if (tile == null) { Debug.LogError("[IdleGrounds] Coast Rule Tile missing for " + isl.islandKey); return false; }
+            var diag = IslandDressingBuilder.EnsureDiagGround(isl.islandKey);
             var land = ReadLand(isl);
             int ox = FloorTo(land.x0 - 10, 2), oy = FloorTo(land.y0 - 10, 2);
             int w = land.x1 + 10 - ox + 1, h = land.y1 + 10 - oy + 1;
             var a = new bool[w, h];
             for (int x = 0; x < w; x++) for (int y = 0; y < h; y++) a[x, y] = land[ox + x, oy + y];
-            var s = SmoothMask(a, ox, oy, KeySeed(isl.islandKey) ^ (isl.coastSeed * 31));
+            VertexCut(a, ox, oy, KeySeed(isl.islandKey) ^ (isl.coastSeed * 31), out var full, out var tri);
             var bounds = new BoundsInt(ox, oy, 0, w, h, 1);
             var tiles = new TileBase[w * h];
-            for (int x = 0; x < w; x++) for (int y = 0; y < h; y++) if (s[x, y]) tiles[x + y * w] = tile;
+            int nd = 0;
+            for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                {
+                    if (full[x, y]) tiles[x + y * w] = tile;
+                    else if (tri[x, y] != 0)
+                    {
+                        if (diag != null) { tiles[x + y * w] = diag[tri[x, y] - 1]; nd++; }
+                        else tiles[x + y * w] = tile;           // no diagonal art: a full cell (old staircase look)
+                    }
+                }
             tm.ClearAllTiles();
             tm.SetTilesBlock(bounds, tiles);
             tm.CompressBounds();
@@ -423,21 +437,7 @@ namespace IdleGrounds.Editor
 
         static bool InSquare(int x, int y) => x >= 0 && x < Cells && y >= -Cells && y <= -1;
 
-        /// <summary>Seeded lattice lines along one axis: cell -> block index; block i spans [start[i], start[i + 1]).</summary>
-        static int[] Lattice(int n, int origin, int min, int max, int seed, out int count)
-        {
-            var idx = new int[n];
-            count = 0;
-            for (int i = 0; i < n; count++)
-            {
-                int len = min + (int)(HashU(count, origin, seed) % (uint)(max - min + 1));
-                for (int k = 0; k < len && i < n; k++, i++) idx[i] = count;
-            }
-            return idx;
-        }
-
-        /// <summary>Blur -> block quantisation (irregular lattice) -> block clean-up (diagonal pinches, nubs, notches, specks, holes).</summary>
-        static bool[,] SmoothMask(bool[,] a, int ox, int oy, int seed)
+        static float[,] Blur(bool[,] a)
         {
             int w = a.GetLength(0), h = a.GetLength(1);
             var f = new float[w, h];
@@ -460,220 +460,185 @@ namespace IdleGrounds.Editor
                         f[x, y] = sum / (2 * SmoothBlur + 1);
                     }
             }
+            return f;
+        }
 
-            var colOf = Lattice(w, ox, StepMinX, StepMaxX, seed, out int bw);
-            var rowOf = Lattice(h, oy, StepMinY, StepMaxY, seed + 7, out int bh);
-            var mean = new float[bw, bh];
-            var area = new int[bw, bh];
-            var sq = new bool[bw, bh];
-            var b = new bool[bw, bh];
-            for (int x = 0; x < w; x++)
-                for (int y = 0; y < h; y++)
+        /// <summary>
+        /// Blurred outline -> vertex mask -> clean-up -> cells (see the section comment). <paramref name="a"/> is the raw
+        /// cell mask over [ox, ox + w) x [oy, oy + h); vertex (i, j) is the lower-left corner of cell (i, j).
+        /// <paramref name="tri"/> holds the diagonal code (IslandDressingBuilder.SkyNE ..) of every half cell.
+        /// </summary>
+        static void VertexCut(bool[,] a, int ox, int oy, int seed, out bool[,] full, out byte[,] tri)
+        {
+            int w = a.GetLength(0), h = a.GetLength(1);
+            var f = Blur(a);
+            int vw = w + 1, vh = h + 1;
+            var v = new bool[vw, vh];
+            var val = new float[vw, vh];
+            var locked = new bool[vw, vh];
+            float F(int x, int y) => x >= 0 && y >= 0 && x < w && y < h ? f[x, y] : 0f;
+            for (int i = 0; i < vw; i++)
+                for (int j = 0; j < vh; j++)
                 {
-                    int bx = colOf[x], by = rowOf[y];
-                    mean[bx, by] += f[x, y];
-                    area[bx, by]++;
-                    if (InSquare(ox + x, oy + y)) sq[bx, by] = true;
+                    val[i, j] = (F(i - 1, j - 1) + F(i, j - 1) + F(i - 1, j) + F(i, j)) * 0.25f;
+                    v[i, j] = val[i, j] >= 0.5f;
+                    int wx = ox + i, wy = oy + j;
+                    if (wx >= 0 && wx <= Cells && wy >= -Cells && wy <= 0) { v[i, j] = true; locked[i, j] = true; }
                 }
-            for (int bx = 0; bx < bw; bx++)
-                for (int by = 0; by < bh; by++)
-                {
-                    mean[bx, by] /= Mathf.Max(1, area[bx, by]);
-                    b[bx, by] = sq[bx, by] || mean[bx, by] >= 0.5f;
-                }
-            bool B(int x, int y) => x >= 0 && y >= 0 && x < bw && y < bh && b[x, y];
-            int Nb(int x, int y) => (B(x + 1, y) ? 1 : 0) + (B(x - 1, y) ? 1 : 0) + (B(x, y + 1) ? 1 : 0) + (B(x, y - 1) ? 1 : 0);
-
-            void Clean()
-            {
-            for (int iter = 0; iter < 8; iter++)
-            {
-                bool changed = false;
-                // notches: a sea block walled in on 3 sides becomes land (1-block bays read as slots)
-                for (int x = 0; x < bw; x++)
-                    for (int y = 0; y < bh; y++)
-                        if (!b[x, y] && Nb(x, y) >= 3) { b[x, y] = true; changed = true; }
-                // nubs and 1-block-wide strands: a block held by one side (or none) is cut, so peninsulas are at least
-                // 2 blocks wide (a 4-7 cell knob or finger reads as a pillar)
-                for (int x = 0; x < bw; x++)
-                    for (int y = 0; y < bh; y++)
-                        if (b[x, y] && !sq[x, y] && Nb(x, y) <= 1) { b[x, y] = false; changed = true; }
-                // diagonal-only contacts (1-cell pinches): bridge with the stronger of the two open blocks
-                for (int x = 0; x < bw - 1; x++)
-                    for (int y = 0; y < bh - 1; y++)
-                    {
-                        bool p00 = b[x, y], p10 = b[x + 1, y], p01 = b[x, y + 1], p11 = b[x + 1, y + 1];
-                        if (p00 && p11 && !p10 && !p01) { if (mean[x + 1, y] >= mean[x, y + 1]) b[x + 1, y] = true; else b[x, y + 1] = true; changed = true; }
-                        else if (p10 && p01 && !p00 && !p11) { if (mean[x, y] >= mean[x + 1, y + 1]) b[x, y] = true; else b[x + 1, y + 1] = true; changed = true; }
-                    }
-                if (!changed) break;
-            }
-            }
-            Clean();
-
-            var q = new Queue<Vector2Int>();
+            bool L(int i, int j) => i >= 0 && j >= 0 && i < vw && j < vh && v[i, j];
             var dirs = new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            var q = new Queue<Vector2Int>();
 
-            // satellite islets: the blur and the strand rule erase small ones, so each detached islet of the input is
-            // re-cut from its raw coverage - every block at least half covered (a rounded clump of fine blocks), or for
-            // a tiny islet the best-covered 2x2 blocks plus the best neighbouring block - as long as it stays clear of
-            // other land
+            // main land only (vertices 4-connected to the play square); islets are redrawn below
+            {
+                var main = new bool[vw, vh];
+                for (int i = 0; i < vw; i++) for (int j = 0; j < vh; j++) if (locked[i, j]) { main[i, j] = true; q.Enqueue(new Vector2Int(i, j)); }
+                while (q.Count > 0)
+                {
+                    var p = q.Dequeue();
+                    foreach (var d in dirs) { var n = p + d; if (L(n.x, n.y) && !main[n.x, n.y]) { main[n.x, n.y] = true; q.Enqueue(n); } }
+                }
+                for (int i = 0; i < vw; i++) for (int j = 0; j < vh; j++) v[i, j] = main[i, j];
+            }
+
+            // satellite islets: each detached clump of the raw outline becomes a rounded superellipse over its bounds (at
+            // least 7 x 7 cells: the corner cut eats a ring, so smaller ones read as posts), slightly squashed per islet, kept 3 vertices clear of the main land
+            var mainV = (bool[,])v.Clone();
             var seen = new bool[w, h];
+            int isletN = 0;
             for (int sx = 0; sx < w; sx++)
                 for (int sy = 0; sy < h; sy++)
                 {
                     if (!a[sx, sy] || seen[sx, sy]) continue;
-                    var cov = new Dictionary<Vector2Int, int>();
-                    bool main = false;
+                    var cells = new List<Vector2Int>();
+                    bool touchesSquare = false;
                     seen[sx, sy] = true; q.Enqueue(new Vector2Int(sx, sy));
                     while (q.Count > 0)
                     {
-                        var p = q.Dequeue();
-                        main |= InSquare(ox + p.x, oy + p.y);
-                        var key = new Vector2Int(colOf[p.x], rowOf[p.y]);
-                        cov[key] = cov.TryGetValue(key, out var c0) ? c0 + 1 : 1;
+                        var p = q.Dequeue(); cells.Add(p);
+                        touchesSquare |= InSquare(ox + p.x, oy + p.y);
                         foreach (var d in dirs) { var n = p + d; if (n.x >= 0 && n.y >= 0 && n.x < w && n.y < h && a[n.x, n.y] && !seen[n.x, n.y]) { seen[n.x, n.y] = true; q.Enqueue(n); } }
                     }
-                    if (main) continue;
-                    bool any = false;
-                    foreach (var k in cov.Keys) if (b[k.x, k.y]) { any = true; break; }
-                    if (any) continue;                     // survived the quantisation on its own
-                    int Cov(Vector2Int k) => cov.TryGetValue(k, out var cv) ? cv : 0;
-                    int bestSum = 0; var best = new Vector2Int(-1, -1);
-                    foreach (var k in cov.Keys)
-                        for (int wx = k.x - 1; wx <= k.x; wx++)
-                            for (int wy = k.y - 1; wy <= k.y; wy++)
-                            {
-                                if (wx < 0 || wy < 0 || wx + 1 >= bw || wy + 1 >= bh) continue;
-                                int sum = Cov(new Vector2Int(wx, wy)) + Cov(new Vector2Int(wx + 1, wy)) + Cov(new Vector2Int(wx, wy + 1)) + Cov(new Vector2Int(wx + 1, wy + 1));
-                                if (sum > bestSum || (sum == bestSum && (wx < best.x || (wx == best.x && wy < best.y)))) { bestSum = sum; best = new Vector2Int(wx, wy); }
-                            }
-                    if (best.x < 0) continue;
-                    var pick = new List<Vector2Int>();
-                    foreach (var kv in cov) if (kv.Value * 2 >= area[kv.Key.x, kv.Key.y]) pick.Add(kv.Key);
-                    pick.Sort((p1, p2) => p1.x != p2.x ? p1.x.CompareTo(p2.x) : p1.y.CompareTo(p2.y));
-                    if (pick.Count >= 5) best = new Vector2Int(-1, -1);
-                    else pick = new List<Vector2Int> { best, best + Vector2Int.right, best + Vector2Int.up, best + Vector2Int.one };
-                    Vector2Int extra = new Vector2Int(-1, -1); int extraCov = 0;
-                    foreach (var pk in pick)
-                        foreach (var d in dirs)
+                    if (touchesSquare || cells.Count < 4) continue;
+                    // part of the main land after the blur? then it is not an islet
+                    bool merged = false;
+                    foreach (var c in cells) if (mainV[c.x, c.y] && mainV[c.x + 1, c.y + 1] && mainV[c.x + 1, c.y] && mainV[c.x, c.y + 1]) { merged = true; break; }
+                    if (merged) continue;
+                    int x0 = int.MaxValue, y0 = int.MaxValue, x1 = int.MinValue, y1 = int.MinValue;
+                    foreach (var c in cells) { x0 = Mathf.Min(x0, c.x); x1 = Mathf.Max(x1, c.x); y0 = Mathf.Min(y0, c.y); y1 = Mathf.Max(y1, c.y); }
+                    while (x1 - x0 + 1 < 7) { if (((x1 - x0) & 1) == 0) x0--; else x1++; }
+                    while (y1 - y0 + 1 < 7) { if (((y1 - y0) & 1) == 0) y0--; else y1++; }
+                    float cx = (x0 + x1 + 1) * 0.5f, cy = (y0 + y1 + 1) * 0.5f, rx = (x1 - x0 + 1) * 0.5f, ry = (y1 - y0 + 1) * 0.5f;
+                    float pw = 2.2f + (HashU(isletN++, x0, seed + 31) % 100) / 100f * 0.8f;      // 2.2 (round) .. 3.0 (squarer)
+                    for (int i = Mathf.Max(0, x0); i <= Mathf.Min(vw - 1, x1 + 1); i++)
+                        for (int j = Mathf.Max(0, y0); j <= Mathf.Min(vh - 1, y1 + 1); j++)
                         {
-                            var n = pk + d;
-                            if (pick.Contains(n) || n.x < 0 || n.y < 0 || n.x >= bw || n.y >= bh) continue;
-                            int cv = Cov(n);
-                            if (cv >= 0.4f * area[n.x, n.y] && cv > extraCov) { extraCov = cv; extra = n; }
+                            float dx = Mathf.Abs((i - cx) / rx), dy = Mathf.Abs((j - cy) / ry);
+                            if (Mathf.Pow(dx, pw) + Mathf.Pow(dy, pw) > 1f) continue;
+                            bool near = false;
+                            for (int ka = -3; ka <= 3 && !near; ka++)
+                                for (int kb = -3; kb <= 3 && !near; kb++)
+                                {
+                                    int ni = i + ka, nj = j + kb;
+                                    near = ni >= 0 && nj >= 0 && ni < vw && nj < vh && mainV[ni, nj];
+                                }
+                            if (!near) v[i, j] = true;
                         }
-                    if (extra.x >= 0 && best.x >= 0) pick.Add(extra);
-                    bool clear = true;
-                    foreach (var pk in pick)
-                        for (int dx = -1; dx <= 1 && clear; dx++)
-                            for (int dy = -1; dy <= 1 && clear; dy++)
-                            {
-                                var n = new Vector2Int(pk.x + dx, pk.y + dy);
-                                if (B(n.x, n.y) && !pick.Contains(n)) clear = false;
-                            }
-                    if (!clear) continue;
-                    foreach (var pk in pick) b[pk.x, pk.y] = true;
-                    // diagonal-only contacts inside the islet: fill the corner block with more coverage
-                    for (bool fixedAll = false; !fixedAll;)
-                    {
-                        fixedAll = true;
-                        foreach (var pk in new List<Vector2Int>(pick))
-                            foreach (var dg in new[] { new Vector2Int(1, 1), new Vector2Int(1, -1) })
-                            {
-                                var o2 = pk + dg;
-                                if (!pick.Contains(o2)) continue;
-                                var c1 = new Vector2Int(pk.x + dg.x, pk.y);
-                                var c2 = new Vector2Int(pk.x, pk.y + dg.y);
-                                if (b[c1.x, c1.y] || b[c2.x, c2.y]) continue;
-                                int v1 = cov.TryGetValue(c1, out var t1) ? t1 : 0, v2 = cov.TryGetValue(c2, out var t2) ? t2 : 0;
-                                var add = v1 >= v2 ? c1 : c2;
-                                b[add.x, add.y] = true; pick.Add(add); fixedAll = false;
-                            }
-                    }
                 }
 
-            Clean();
-
-            // specks: islets smaller than 2 blocks go; enclosed sea (lakes) is filled
-            var comp = new int[bw, bh];
-            var isletIds = new HashSet<int>();
-            int id = 0;
-            for (int x = 0; x < bw; x++)
-                for (int y = 0; y < bh; y++)
-                {
-                    if (!b[x, y] || comp[x, y] != 0) continue;
-                    id++;
-                    var cells = new List<Vector2Int>();
-                    bool hasSq = false;
-                    comp[x, y] = id; q.Enqueue(new Vector2Int(x, y));
-                    while (q.Count > 0)
-                    {
-                        var p = q.Dequeue(); cells.Add(p); hasSq |= sq[p.x, p.y];
-                        foreach (var d in dirs) { var n = p + d; if (B(n.x, n.y) && comp[n.x, n.y] == 0) { comp[n.x, n.y] = id; q.Enqueue(n); } }
-                    }
-                    if (!hasSq && cells.Count < 2) foreach (var c in cells) b[c.x, c.y] = false;
-                    else if (!hasSq) isletIds.Add(id);
-                }
-            var sea = new bool[bw, bh];
-            for (int x = 0; x < bw; x++) for (int y = 0; y < bh; y++)
-                    if ((x == 0 || y == 0 || x == bw - 1 || y == bh - 1) && !b[x, y]) { sea[x, y] = true; q.Enqueue(new Vector2Int(x, y)); }
-            while (q.Count > 0)
+            // clean-up: no right angles, no spikes, no pinches
+            for (int iter = 0; iter < 200; iter++)
             {
-                var p = q.Dequeue();
-                foreach (var d in dirs) { var n = p + d; if (n.x >= 0 && n.y >= 0 && n.x < bw && n.y < bh && !b[n.x, n.y] && !sea[n.x, n.y]) { sea[n.x, n.y] = true; q.Enqueue(n); } }
+                bool changed = false;
+                for (int i = 0; i < vw; i++)
+                    for (int j = 0; j < vh; j++)
+                    {
+                        if (locked[i, j]) continue;
+                        bool n = L(i, j + 1), e = L(i + 1, j), s = L(i, j - 1), wv = L(i - 1, j);
+                        int cnt = (n ? 1 : 0) + (e ? 1 : 0) + (s ? 1 : 0) + (wv ? 1 : 0);
+                        if (v[i, j])
+                        {
+                            bool cut = cnt <= 1 || (!n && !s) || (!e && !wv);
+                            // convex square corner: the full cell in quadrant (dx, dy) and sky on both outer sides
+                            for (int dx = -1; dx <= 1 && !cut; dx += 2)
+                                for (int dy = -1; dy <= 1 && !cut; dy += 2)
+                                    cut = L(i + dx, j) && L(i, j + dy) && L(i + dx, j + dy)
+                                          && !L(i, j - dy) && !L(i + dx, j - dy) && !L(i - dx, j) && !L(i - dx, j + dy);
+                            if (cut) { v[i, j] = false; changed = true; }
+                        }
+                        else if (cnt >= 3) { v[i, j] = true; changed = true; }
+                    }
+                // diagonal pinches (2 x 2 checkerboard): bridge with the stronger of the two sky vertices
+                for (int i = 0; i < vw - 1; i++)
+                    for (int j = 0; j < vh - 1; j++)
+                    {
+                        bool p00 = v[i, j], p10 = v[i + 1, j], p01 = v[i, j + 1], p11 = v[i + 1, j + 1];
+                        if (p00 && p11 && !p10 && !p01) { if (val[i + 1, j] >= val[i, j + 1]) v[i + 1, j] = true; else v[i, j + 1] = true; changed = true; }
+                        else if (p10 && p01 && !p00 && !p11) { if (val[i, j] >= val[i + 1, j + 1]) v[i, j] = true; else v[i + 1, j + 1] = true; changed = true; }
+                    }
+                if (!changed) break;
             }
 
-            var o = new bool[w, h];
-            bool Isle(int x, int y) { int bx = colOf[x], by = rowOf[y]; return b[bx, by] && isletIds.Contains(comp[bx, by]); }
+            // vertices -> cells
+            full = new bool[w, h];
+            tri = new byte[w, h];
             for (int x = 0; x < w; x++)
                 for (int y = 0; y < h; y++)
-                    o[x, y] = InSquare(ox + x, oy + y) || ((b[colOf[x], rowOf[y]] || !sea[colOf[x], rowOf[y]]) && !Isle(x, y));
+                {
+                    bool c00 = v[x, y], c10 = v[x + 1, y], c01 = v[x, y + 1], c11 = v[x + 1, y + 1];
+                    int cnt = (c00 ? 1 : 0) + (c10 ? 1 : 0) + (c01 ? 1 : 0) + (c11 ? 1 : 0);
+                    if (cnt == 4) full[x, y] = true;
+                    else if (cnt == 3)
+                        tri[x, y] = (byte)(!c11 ? IslandDressingBuilder.SkyNE : !c01 ? IslandDressingBuilder.SkyNW : !c10 ? IslandDressingBuilder.SkySE : IslandDressingBuilder.SkySW);
+                }
 
-            // satellite islets: block unions read as little rectangles, so each is redrawn at cell resolution as a rounded
-            // clump (superellipse) filling its block bounds (at least 5 x 5 cells), slightly squashed per islet; cells
-            // within 2 of the main land are left out so it stays detached
-            var mainLand = (bool[,])o.Clone();
-            foreach (int iid in isletIds)
-            {
-                int x0 = int.MaxValue, y0 = int.MaxValue, x1 = int.MinValue, y1 = int.MinValue;
-                for (int x = 0; x < w; x++)
-                    for (int y = 0; y < h; y++)
-                        if (b[colOf[x], rowOf[y]] && comp[colOf[x], rowOf[y]] == iid) { x0 = Mathf.Min(x0, x); x1 = Mathf.Max(x1, x); y0 = Mathf.Min(y0, y); y1 = Mathf.Max(y1, y); }
-                if (x0 > x1) continue;
-                while (x1 - x0 + 1 < 5) { if (((x1 - x0) & 1) == 0) x0--; else x1++; }
-                while (y1 - y0 + 1 < 5) { if (((y1 - y0) & 1) == 0) y0--; else y1++; }
-                float cx = (x0 + x1 + 1) * 0.5f, cy = (y0 + y1 + 1) * 0.5f, rx = (x1 - x0 + 1) * 0.5f, ry = (y1 - y0 + 1) * 0.5f;
-                float p = 2.2f + (HashU(iid, x0, seed + 31) % 100) / 100f * 0.8f;      // 2.2 (round) .. 3.0 (squarer)
-                for (int x = Mathf.Max(0, x0); x <= Mathf.Min(w - 1, x1); x++)
-                    for (int y = Mathf.Max(0, y0); y <= Mathf.Min(h - 1, y1); y++)
+            // specks: detached clumps under 8 cells go
+            var comp = new bool[w, h];
+            for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                {
+                    if ((!full[x, y] && tri[x, y] == 0) || comp[x, y]) continue;
+                    var cells = new List<Vector2Int>();
+                    bool sq = false;
+                    comp[x, y] = true; q.Enqueue(new Vector2Int(x, y));
+                    while (q.Count > 0)
                     {
-                        float dx = Mathf.Abs((x + 0.5f - cx) / rx), dy = Mathf.Abs((y + 0.5f - cy) / ry);
-                        if (Mathf.Pow(dx, p) + Mathf.Pow(dy, p) > 1f) continue;
-                        bool near = false;
-                        for (int ka = -2; ka <= 2 && !near; ka++)
-                            for (int kc = -2; kc <= 2 && !near; kc++)
-                            {
-                                int nx = x + ka, ny = y + kc;
-                                near = nx >= 0 && ny >= 0 && nx < w && ny < h && mainLand[nx, ny];
-                            }
-                        if (!near) o[x, y] = true;
+                        var p = q.Dequeue(); cells.Add(p); sq |= InSquare(ox + p.x, oy + p.y);
+                        foreach (var d in dirs)
+                        {
+                            var n = p + d;
+                            if (n.x < 0 || n.y < 0 || n.x >= w || n.y >= h || comp[n.x, n.y] || (!full[n.x, n.y] && tri[n.x, n.y] == 0)) continue;
+                            comp[n.x, n.y] = true; q.Enqueue(n);
+                        }
                     }
-            }
-            return o;
+                    if (!sq && cells.Count < 8) foreach (var c in cells) { full[c.x, c.y] = false; tri[c.x, c.y] = 0; }
+                }
         }
 
         // ------------------------------------------------------------------ land read-back (hand-edits included)
 
+        /// <summary>Painted landmass: the indexer is "solid" (a full cell OR a 45° diagonal half cell); <see cref="Tri"/> gives
+        /// the diagonal code of a half cell (IslandDressingBuilder.SkyNE ..; 0 = full or sky).</summary>
         sealed class Land
         {
             public int x0, y0, x1, y1;      // inclusive tilemap cell bounds
             readonly bool[,] a;
-            public Land(int x0, int y0, int x1, int y1) { this.x0 = x0; this.y0 = y0; this.x1 = x1; this.y1 = y1; a = new bool[x1 - x0 + 1, y1 - y0 + 1]; }
+            readonly byte[,] t;
+            public Land(int x0, int y0, int x1, int y1) { this.x0 = x0; this.y0 = y0; this.x1 = x1; this.y1 = y1; a = new bool[x1 - x0 + 1, y1 - y0 + 1]; t = new byte[x1 - x0 + 1, y1 - y0 + 1]; }
+            bool In(int x, int y) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
             public bool this[int x, int y]
             {
-                get => x >= x0 && x <= x1 && y >= y0 && y <= y1 && a[x - x0, y - y0];
-                set { if (x >= x0 && x <= x1 && y >= y0 && y <= y1) a[x - x0, y - y0] = value; }
+                get => In(x, y) && a[x - x0, y - y0];
+                set { if (In(x, y)) { a[x - x0, y - y0] = value; t[x - x0, y - y0] = 0; } }
+            }
+            public int Tri(int x, int y) => In(x, y) ? t[x - x0, y - y0] : 0;
+            public void SetTri(int x, int y, int code) { if (In(x, y)) { a[x - x0, y - y0] = true; t[x - x0, y - y0] = (byte)code; } }
+            /// <summary>Whether the cell's south edge is entirely land (a full cell or a diagonal whose sky corner is north).</summary>
+            public bool SouthEdgeLand(int x, int y)
+            {
+                if (!this[x, y]) return false;
+                int c = Tri(x, y);
+                return c == 0 || c == IslandDressingBuilder.SkyNE || c == IslandDressingBuilder.SkyNW;
             }
         }
 
@@ -693,7 +658,13 @@ namespace IdleGrounds.Editor
             }
             var land = new Land(x0, y0, x1, y1);
             if (tm != null)
-                foreach (var p in tm.cellBounds.allPositionsWithin) if (tm.GetTile(p) != null) land[p.x, p.y] = true;
+                foreach (var p in tm.cellBounds.allPositionsWithin)
+                {
+                    var tt = tm.GetTile(p);
+                    if (tt == null) continue;
+                    int code = IslandDressingBuilder.DiagCode(tt);
+                    if (code > 0) land.SetTri(p.x, p.y, code); else land[p.x, p.y] = true;
+                }
             for (int x = 0; x < Cells; x++) for (int y = -Cells; y <= -1; y++) land[x, y] = true;     // the play area is always ground
             return land;
         }
@@ -728,10 +699,17 @@ namespace IdleGrounds.Editor
             }
             else cliff = go.GetComponent<Tilemap>();
             cliff.ClearAllTiles();
-            var set = new HashSet<Vector2Int>();
+            // wall cells (the sky cell under a south-facing coast edge) by kind: 0 straight (under a full cell or a diagonal
+            // whose south edge is land), 1 rise (under a sky-SE diagonal: the coast rises to the right), 2 fall (sky-SW)
+            var kind = new Dictionary<Vector2Int, int>();
             for (int x = land.x0; x <= land.x1; x++)
                 for (int y = land.y0; y <= land.y1; y++)
-                    if (land[x, y] && !land[x, y - 1]) set.Add(new Vector2Int(x, y - 1));
+                {
+                    if (!land[x, y] || land[x, y - 1]) continue;
+                    int code = land.Tri(x, y);
+                    kind[new Vector2Int(x, y - 1)] = code == IslandDressingBuilder.SkySE ? 1 : code == IslandDressingBuilder.SkySW ? 2 : 0;
+                }
+            var set = new HashSet<Vector2Int>(kind.Keys);
             // 3/4 cliff wall (ART-SPEC §3.6): 3 cells tall, painted on the rim cells of a tilemap shifted one cell down
             // so the wall's top meets the coast's south edge and it hangs 3 cells below it. It sorts BEHIND the coast,
             // so land further south on screen (a bay's far shore, an islet) correctly hides it.
@@ -742,6 +720,7 @@ namespace IdleGrounds.Editor
             if (cr0 != null) cr0.sortingOrder = wall != null ? -3 : -1;
             var tile = wall != null ? wall : AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(isl.islandKey));
             var ws = wall != null ? IslandDressingBuilder.EnsureWallSet(isl.islandKey) : null;
+            var ds = ws != null ? IslandDressingBuilder.EnsureDiagWallSet(isl.islandKey) : null;
             if (ws != null)
             {
                 // a wall further south on screen belongs to land in front: draw the rows top-down so it overlaps the one behind
@@ -752,20 +731,24 @@ namespace IdleGrounds.Editor
                 var mid = new Dictionary<Vector2Int, int>();
                 foreach (var c in sorted)
                 {
-                    var l = WallSide(set, land, c, -1);
-                    var r = WallSide(set, land, c, 1);
+                    int k = kind[c];
+                    var l = WallSide(kind, land, c, -1);
+                    var r = WallSide(kind, land, c, 1);
+                    // the 45° walls (sheared joint pieces) under the diagonals; the straight set without diagonal art
+                    var s = k == 0 || ds == null ? ws : k == 1 ? ds.rise : ds.fall;
                     TileBase t;
                     if (l == Joint.Run && r == Joint.Run)
                     {
                         // mid variants: seeded, never the same one as the wall cell to the left
                         int v = (int)(HashU(c.x, c.y, seed) % 3u);
-                        if (mid.TryGetValue(c + Vector2Int.left, out var pv) && pv == v) v = (v + 1 + (int)(HashU(c.x, c.y, seed + 1) % 2u)) % 3;
+                        var left = c + (k == 1 ? new Vector2Int(-1, -1) : k == 2 ? new Vector2Int(-1, 1) : Vector2Int.left);
+                        if ((mid.TryGetValue(left, out var pv) || mid.TryGetValue(c + Vector2Int.left, out pv)) && pv == v) v = (v + 1 + (int)(HashU(c.x, c.y, seed + 1) % 2u)) % 3;
                         mid[c] = v;
-                        t = ws.mid[v];
+                        t = s.mid[v];
                     }
-                    else if (r == Joint.Run) t = l == Joint.End ? ws.endL : ws.tuckL;
-                    else if (l == Joint.Run) t = r == Joint.End ? ws.endR : ws.tuckR;
-                    else t = ws.pair[(l == Joint.End ? 0 : 2) + (r == Joint.End ? 0 : 1)];
+                    else if (r == Joint.Run) t = l == Joint.End ? s.endL : s.tuckL;
+                    else if (l == Joint.Run) t = r == Joint.End ? s.endR : s.tuckR;
+                    else t = s.pair[(l == Joint.End ? 0 : 2) + (r == Joint.End ? 0 : 1)];
                     cliff.SetTile(new Vector3Int(c.x, c.y, 0), t);
                 }
             }
@@ -785,16 +768,23 @@ namespace IdleGrounds.Editor
 
         /// <summary>
         /// How the south wall under rim cell <paramref name="c"/> meets its side <paramref name="dx"/> (-1 left, +1 right):
-        /// Run - the wall goes on (a rim cell beside it); Tuck - land further south stands beside it (a concave step: the
-        /// wall runs on behind that land, whose side face covers the joint) or a higher wall one row up overlaps it; End -
-        /// open sky (an outer corner: the free end cap, under the side face's tapering end frame).
+        /// Run - the wall goes on (the next wall cell along the coast: beside it for straight walls, one cell up / down for
+        /// the 45° walls, which also join straight runs at their ends); Tuck - land further south stands beside it (a
+        /// concave step: the wall runs on behind that land, whose side face covers the joint) or a higher wall one row up
+        /// overlaps it; End - open sky (an outer corner: the free end cap, under the side face's tapering end frame).
         /// </summary>
-        static Joint WallSide(HashSet<Vector2Int> rim, Land land, Vector2Int c, int dx)
+        static Joint WallSide(Dictionary<Vector2Int, int> kind, Land land, Vector2Int c, int dx)
         {
+            bool Has(int ox, int oy, int k) => kind.TryGetValue(new Vector2Int(c.x + ox, c.y + oy), out var q) && q == k;
+            int me = kind[c];
+            bool run;
+            if (me == 0) run = dx > 0 ? Has(1, 0, 0) || Has(1, 0, 1) || Has(1, -1, 2) : Has(-1, 0, 0) || Has(-1, 0, 2) || Has(-1, -1, 1);
+            else if (me == 1) run = dx > 0 ? Has(1, 1, 1) || Has(1, 1, 0) : Has(-1, -1, 1) || Has(-1, 0, 0);
+            else run = dx > 0 ? Has(1, -1, 2) || Has(1, 0, 0) : Has(-1, 1, 2) || Has(-1, 1, 0);
+            if (run) return Joint.Run;
             var n = new Vector2Int(c.x + dx, c.y);
-            if (rim.Contains(n)) return Joint.Run;
             if (land[n.x, n.y]) return Joint.Tuck;
-            if (rim.Contains(new Vector2Int(n.x, n.y + 1))) return Joint.Tuck;
+            if (kind.ContainsKey(new Vector2Int(n.x, n.y + 1))) return Joint.Tuck;
             return Joint.End;
         }
 
@@ -926,7 +916,7 @@ namespace IdleGrounds.Editor
             {
                 // the opaque 3/4 cliff wall replaces the dark fill + body rows: its ragged, fading bottom shows the sky,
                 // and the pieces below tuck behind it. Only report the wall's cells (veil mask).
-                foreach (var c in cliff) for (int r = 0; r <= WallBelowRim; r++) covered.Add(new Vector2Int(c.x, c.y - r));
+                foreach (var c in cliff) for (int r = -1; r <= WallBelowRim; r++) covered.Add(new Vector2Int(c.x, c.y - r));      // -1: a 45° wall reaches into the cell above
                 Object.DestroyImmediate(bodyT.gameObject);
             }
             else foreach (var c in cliff) cellSet.Add(new Vector3Int(c.x, c.y, 0));
@@ -1075,7 +1065,8 @@ namespace IdleGrounds.Editor
                     for (int y = land.y0; y <= land.y1; y++)
                         if (land[x, y]) pos.Add(new Vector3Int(x, y, 0));
                 var arr = new TileBase[pos.Count];
-                for (int i = 0; i < arr.Length; i++) arr[i] = coastTile;
+                // the painted tiles (blob + 45° diagonals), so the shadow keeps the diagonal silhouette
+                for (int i = 0; i < arr.Length; i++) { var t = isl.coast != null ? isl.coast.GetTile(pos[i]) : null; arr[i] = t != null ? t : coastTile; }
                 Map("Land").SetTiles(pos.ToArray(), arr);
             }
             var wallTile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffWallTilePath(isl.islandKey));

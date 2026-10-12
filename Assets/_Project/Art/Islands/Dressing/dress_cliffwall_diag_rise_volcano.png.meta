@@ -1,0 +1,420 @@
+fileFormatVersion: 2
+guid: 9e774fa03218955439cb3eb2901b90cc
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -775026593993848613
+    second: dress_cliffwall_diag_rise_volcano_0
+  - first:
+      213: -8522069515798769206
+    second: dress_cliffwall_diag_rise_volcano_1
+  - first:
+      213: -2973897259663545346
+    second: dress_cliffwall_diag_rise_volcano_2
+  - first:
+      213: 7754258813998309609
+    second: dress_cliffwall_diag_rise_volcano_3
+  - first:
+      213: 4405729370470084698
+    second: dress_cliffwall_diag_rise_volcano_4
+  - first:
+      213: 1382404415107739047
+    second: dress_cliffwall_diag_rise_volcano_5
+  - first:
+      213: -1975806744222560393
+    second: dress_cliffwall_diag_rise_volcano_6
+  - first:
+      213: 2253490938536452109
+    second: dress_cliffwall_diag_rise_volcano_7
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd804854b6d8e35f0800000000000000
+      internalID: -775026593993848613
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac111af5de68bb980800000000000000
+      internalID: -8522069515798769206
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_2
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: efb2f3fd2389ab6d0800000000000000
+      internalID: -2973897259663545346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_3
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 35
+        height: 136
+      alignment: 9
+      pivot: {x: 0.54285717, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9e0afc8be49ac9b60800000000000000
+      internalID: 7754258813998309609
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_4
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 0
+        width: 35
+        height: 136
+      alignment: 9
+      pivot: {x: 0.45714286, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a50ff57158b442d30800000000000000
+      internalID: 4405729370470084698
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_5
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 0
+        width: 36
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5555556, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7adad62cd794f2310800000000000000
+      internalID: 1382404415107739047
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_6
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 0
+        width: 36
+        height: 136
+      alignment: 9
+      pivot: {x: 0.44444445, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77f0bc10c368494e0800000000000000
+      internalID: -1975806744222560393
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_7
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 0
+        width: 38
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d00e600b112064f10800000000000000
+      internalID: 2253490938536452109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_8
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 0
+        width: 39
+        height: 136
+      alignment: 9
+      pivot: {x: 0.4871795, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 37afa2a2b7205054da447436205636aa
+      internalID: -1066533921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_9
+      rect:
+        serializedVersion: 2
+        x: 315
+        y: 0
+        width: 39
+        height: 136
+      alignment: 9
+      pivot: {x: 0.51282054, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 84f41f7587e3b314ebeca406a02da2ee
+      internalID: -178682532
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_rise_volcano_10
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 0
+        width: 40
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f4383e558e6c0624abf12c0e134db42b
+      internalID: -2092522784
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: e8724e66dd2292d4cbd62c3009592f4e
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      dress_cliffwall_diag_rise_volcano_0: -775026593993848613
+      dress_cliffwall_diag_rise_volcano_1: -8522069515798769206
+      dress_cliffwall_diag_rise_volcano_10: -2092522784
+      dress_cliffwall_diag_rise_volcano_2: -2973897259663545346
+      dress_cliffwall_diag_rise_volcano_3: 7754258813998309609
+      dress_cliffwall_diag_rise_volcano_4: 4405729370470084698
+      dress_cliffwall_diag_rise_volcano_5: 1382404415107739047
+      dress_cliffwall_diag_rise_volcano_6: -1975806744222560393
+      dress_cliffwall_diag_rise_volcano_7: 2253490938536452109
+      dress_cliffwall_diag_rise_volcano_8: -1066533921
+      dress_cliffwall_diag_rise_volcano_9: -178682532
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

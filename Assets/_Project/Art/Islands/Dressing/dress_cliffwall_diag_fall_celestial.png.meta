@@ -1,0 +1,426 @@
+fileFormatVersion: 2
+guid: 6240de2dced57ab4b920ea39255afd98
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5661384735976001628
+    second: dress_cliffwall_diag_fall_celestial_0
+  - first:
+      213: 396977491405497449
+    second: dress_cliffwall_diag_fall_celestial_1
+  - first:
+      213: 2995346910479958315
+    second: dress_cliffwall_diag_fall_celestial_2
+  - first:
+      213: 171994040778025995
+    second: dress_cliffwall_diag_fall_celestial_3
+  - first:
+      213: 2666504218019882267
+    second: dress_cliffwall_diag_fall_celestial_4
+  - first:
+      213: -237311426114897621
+    second: dress_cliffwall_diag_fall_celestial_5
+  - first:
+      213: 2463929331295880581
+    second: dress_cliffwall_diag_fall_celestial_6
+  - first:
+      213: 735411906327471273
+    second: dress_cliffwall_diag_fall_celestial_7
+  - first:
+      213: -2334544044854845617
+    second: dress_cliffwall_diag_fall_celestial_8
+  - first:
+      213: 1834168093431648422
+    second: dress_cliffwall_diag_fall_celestial_9
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 0
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 4096
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4afe453f398be61b0800000000000000
+      internalID: -5661384735976001628
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_1
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 964ec07dce8528500800000000000000
+      internalID: 396977491405497449
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_2
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b21c832252c919920800000000000000
+      internalID: 2995346910479958315
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_3
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 35
+        height: 136
+      alignment: 9
+      pivot: {x: 0.54285717, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0cee083bab036200800000000000000
+      internalID: 171994040778025995
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_4
+      rect:
+        serializedVersion: 2
+        x: 131
+        y: 0
+        width: 35
+        height: 136
+      alignment: 9
+      pivot: {x: 0.45714286, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b15e7236573510520800000000000000
+      internalID: 2666504218019882267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_5
+      rect:
+        serializedVersion: 2
+        x: 166
+        y: 0
+        width: 36
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5555556, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b29b749e386e4bcf0800000000000000
+      internalID: -237311426114897621
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_6
+      rect:
+        serializedVersion: 2
+        x: 202
+        y: 0
+        width: 36
+        height: 136
+      alignment: 9
+      pivot: {x: 0.44444445, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5858e8f1ca2a13220800000000000000
+      internalID: 2463929331295880581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_7
+      rect:
+        serializedVersion: 2
+        x: 238
+        y: 0
+        width: 38
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9a4ed308b35b43a00800000000000000
+      internalID: 735411906327471273
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_8
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 0
+        width: 39
+        height: 136
+      alignment: 9
+      pivot: {x: 0.4871795, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4f5ce56f880a9fd0800000000000000
+      internalID: -2334544044854845617
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_9
+      rect:
+        serializedVersion: 2
+        x: 315
+        y: 0
+        width: 39
+        height: 136
+      alignment: 9
+      pivot: {x: 0.51282054, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6a05953c926447910800000000000000
+      internalID: 1834168093431648422
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dress_cliffwall_diag_fall_celestial_10
+      rect:
+        serializedVersion: 2
+        x: 354
+        y: 0
+        width: 40
+        height: 136
+      alignment: 9
+      pivot: {x: 0.5, y: 0.38235295}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8a0680e3aadc5354998091b6331fba0a
+      internalID: -969248140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 80085b9e248a241488e5384ce680cbee
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      dress_cliffwall_diag_fall_celestial_0: -5661384735976001628
+      dress_cliffwall_diag_fall_celestial_1: 396977491405497449
+      dress_cliffwall_diag_fall_celestial_10: -969248140
+      dress_cliffwall_diag_fall_celestial_2: 2995346910479958315
+      dress_cliffwall_diag_fall_celestial_3: 171994040778025995
+      dress_cliffwall_diag_fall_celestial_4: 2666504218019882267
+      dress_cliffwall_diag_fall_celestial_5: -237311426114897621
+      dress_cliffwall_diag_fall_celestial_6: 2463929331295880581
+      dress_cliffwall_diag_fall_celestial_7: 735411906327471273
+      dress_cliffwall_diag_fall_celestial_8: -2334544044854845617
+      dress_cliffwall_diag_fall_celestial_9: 1834168093431648422
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

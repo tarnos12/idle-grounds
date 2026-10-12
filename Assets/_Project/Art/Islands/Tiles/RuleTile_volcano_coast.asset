@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
+  m_Script: {fileID: 11500000, guid: 141495f650add3c429d5d259b8ee55e1, type: 3}
   m_Name: RuleTile_volcano_coast
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
   m_DefaultSprite: {fileID: 1660513221480031229, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
@@ -1005,3 +1005,8 @@ MonoBehaviour:
     - {x: 0, y: -1, z: 0}
     - {x: 1, y: -1, z: 0}
     m_RuleTransform: 0
+  kin:
+  - {fileID: 11400000, guid: 95466bd339257594ba68b2e595f0352b, type: 2}
+  - {fileID: 11400000, guid: c7f58a90a3344034a9c5646752935bb1, type: 2}
+  - {fileID: 11400000, guid: 1929aa4106556f34f8ff12f24120a643, type: 2}
+  - {fileID: 11400000, guid: e2dbfad85f3c67541a140da2eb50ea0c, type: 2}

@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
+  m_Script: {fileID: 11500000, guid: 141495f650add3c429d5d259b8ee55e1, type: 3}
   m_Name: RuleTile_center_coast
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
   m_DefaultSprite: {fileID: 863191164810182010, guid: 76bf6e0495eb9c945bbc04af7f49e871, type: 3}
@@ -1005,3 +1005,8 @@ MonoBehaviour:
     - {x: 0, y: -1, z: 0}
     - {x: 1, y: -1, z: 0}
     m_RuleTransform: 0
+  kin:
+  - {fileID: 11400000, guid: a3e445748d0b2f14e97e7bfcf1127766, type: 2}
+  - {fileID: 11400000, guid: 934e700d9d8d514468bcbba20d0d618b, type: 2}
+  - {fileID: 11400000, guid: 65ea9868d566ab04bb9ffdd3d4a8c949, type: 2}
+  - {fileID: 11400000, guid: ac56eb2ec8bbabe4cb15cc33ee9d7202, type: 2}

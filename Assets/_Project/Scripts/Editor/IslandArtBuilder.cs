@@ -250,7 +250,10 @@ namespace IdleGrounds.Editor
                     // 47-blob coast tile: one exact rule per reduced neighbour mask (corner bits are don't-care
                     // unless both adjacent edges are ground); the all-ground mask uses the random fill variants
                     var b = Frames(BlobPath(key));
-                    var coast = LoadOrCreate(CoastTilePath(key));
+                    var coast = LoadOrCreateCoast(CoastTilePath(key));
+                    // 45° diagonal coast cells (owner 2026-10-12: no right angles) count as land for the blob rules
+                    var diag = IslandDressingBuilder.EnsureDiagGround(key);
+                    coast.kin = diag != null ? (TileBase[])diag : new TileBase[0];
                     coast.m_DefaultSprite = g[0];
                     coast.m_DefaultColliderType = Tile.ColliderType.None;
                     var rules = coast.m_TilingRules;
@@ -307,6 +310,31 @@ namespace IdleGrounds.Editor
                     EditorUtility.SetDirty(tile);
                 }
             }
+        }
+
+        /// <summary>The coast blob tile as a <see cref="IdleGrounds.Game.CoastRuleTile"/>. An older plain RuleTile asset is
+        /// converted in place (script swapped, GUID kept), so every painted Coast tilemap keeps its references.</summary>
+        public static IdleGrounds.Game.CoastRuleTile LoadOrCreateCoast(string path)
+        {
+            var any = AssetDatabase.LoadAssetAtPath<RuleTile>(path);
+            if (any is IdleGrounds.Game.CoastRuleTile ct) return ct;
+            if (any == null)
+            {
+                var n = ScriptableObject.CreateInstance<IdleGrounds.Game.CoastRuleTile>();
+                AssetDatabase.CreateAsset(n, path);
+                return n;
+            }
+            var probe = ScriptableObject.CreateInstance<IdleGrounds.Game.CoastRuleTile>();
+            var script = MonoScript.FromScriptableObject(probe);
+            Object.DestroyImmediate(probe);
+            var so = new SerializedObject(any);
+            so.FindProperty("m_Script").objectReferenceValue = script;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+            var conv = AssetDatabase.LoadAssetAtPath<IdleGrounds.Game.CoastRuleTile>(path);
+            if (conv == null) Debug.LogError("[IdleGrounds] Could not convert " + path + " to CoastRuleTile.");
+            return conv;
         }
 
         static RuleTile LoadOrCreate(string path)

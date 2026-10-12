@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
+  m_Script: {fileID: 11500000, guid: 141495f650add3c429d5d259b8ee55e1, type: 3}
   m_Name: RuleTile_grove_coast
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
   m_DefaultSprite: {fileID: 6037604669729073721, guid: 4524d127e77b8c043a779a249ea57c73, type: 3}
@@ -1005,3 +1005,8 @@ MonoBehaviour:
     - {x: 0, y: -1, z: 0}
     - {x: 1, y: -1, z: 0}
     m_RuleTransform: 0
+  kin:
+  - {fileID: 11400000, guid: e6c5926254a865441b5657c046d03616, type: 2}
+  - {fileID: 11400000, guid: dfa23678e3c7cd24d85a8ae0f5810696, type: 2}
+  - {fileID: 11400000, guid: cbc218489ccea5447a89b3ea173cf344, type: 2}
+  - {fileID: 11400000, guid: 2c0714518bf05844c8a2114c6c23241d, type: 2}

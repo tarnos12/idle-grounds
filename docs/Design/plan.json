@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-12 13:43",
+  "updated": "2026-10-12 13:51",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -198,10 +198,10 @@
         {
           "title": "Smooth stepped and long-straight coasts",
           "detail": "Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "M",
           "owner": "Claude",
-          "now": "Your note: no 90-degree angles; diagonal/rounded coast pieces (code now + art request)"
+          "blockedBy": "Coast redo #3 (45-degree diagonals) done; waiting for your sign-off (coast3_signoff)"
         }
       ]
     },
