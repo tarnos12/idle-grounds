@@ -40,7 +40,10 @@ namespace IdleGrounds.Sim
         public event Action<string, string> UpgradeApplied;
         public event Action<string> RegionUnlocked;
         public event Action<string> QuestClaimed;
-        public event Action AscendPromptRequested;
+        /// <summary>ADR 0007: (area, gate) — the Heavenly Gate was just completed (the UI offers "Ascend to Immortality").</summary>
+        public event Action<string, Building> HeavenlyGateRaised;
+        /// <summary>ADR 0007: "Ascend to Immortality" chosen — the ending plays; free play continues.</summary>
+        public event Action AscendedToImmortality;
         public event Action RunReset;
 #pragma warning restore 67
         /// <summary>M5: (area, pavilion) after a disciple joined.</summary>
@@ -76,9 +79,11 @@ namespace IdleGrounds.Sim
         { if (!Muted) WispReturned?.Invoke(area, w); }
         internal void RaiseWispDropped(string area, Wisp w)
         { if (!Muted) WispDropped?.Invoke(area, w); }
-        internal void RaiseAscendPrompt()
-        { if (!Muted) AscendPromptRequested?.Invoke(); }
-        // M7 — RunReset: the state object was replaced (ascension / load); views rebuild from scratch.
+        internal void RaiseHeavenlyGateRaised(string area, Building b)
+        { if (!Muted) HeavenlyGateRaised?.Invoke(area, b); }
+        internal void RaiseAscendedToImmortality()
+        { if (!Muted) AscendedToImmortality?.Invoke(); }
+        // M7 — RunReset: the state object was replaced (in-place load); views rebuild from scratch.
         internal void RaiseRunReset()
         { if (!Muted) RunReset?.Invoke(); }
         // M5

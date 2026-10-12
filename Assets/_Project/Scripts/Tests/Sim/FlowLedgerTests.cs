@@ -174,18 +174,18 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
-        public void Ascend_KeepsLifetime_ResetsRun()
+        public void ResetRun_KeepsLifetime_ZeroesRun()
         {
             var sim = SimTestUtil.NewSim(out _);
             sim.State.flow = new FlowLedger();
             sim.State.flow.Produce("wood", 10);
             sim.State.flow.Consume("wood", 4);
-            sim.Ascend();
+            sim.State.flow.ResetRun();
             var e = sim.State.flow.Entry("wood");
             Assert.AreEqual(4L, e.consumed, "lifetime survives");
-            Assert.GreaterOrEqual(e.produced, 10L);
+            Assert.AreEqual(10L, e.produced);
             Assert.AreEqual(0L, e.runConsumed, "run section reset");
-            Assert.AreEqual(e.produced - 10L, e.runProduced, "only the new run's starter seeds remain");
+            Assert.AreEqual(0L, e.runProduced, "run section reset");
         }
 
         [Test]

@@ -12,7 +12,7 @@ namespace IdleGrounds.Sim
 
     /// <summary>
     /// Tick-gap bookkeeping, due-time clocks and the world speed factors
-    /// (engine-systems §0 TEST scaling, §2.2 periodic, §2.5 prestigeFactor).
+    /// (engine-systems §0 TEST scaling, §2.2 periodic, §2.5 world factor).
     /// </summary>
     public sealed class Timing
     {
@@ -52,30 +52,15 @@ namespace IdleGrounds.Sim
         /// <summary>`buffScale()` engine.js:1889 — 1 in TEST, 4 otherwise (inverse of timeScale).</summary>
         public double BuffScale => _cfg.test.enabled ? 1 : 4;
 
-        /// <summary>Vows completed at least once (+ active when requested). engine.js:260.</summary>
-        public int VowMarks(GameState s, bool includeActive)
-        {
-            int n = 0;
-            foreach (var v in _cfg.vows)
-                if (s.vows.done.Get(v.id) > 0 || (includeActive && s.VowActive(v.id))) n++;
-            return n;
-        }
-
         /// <summary>
-        /// `prestigeFactor(o)` engine.js:274 (§2.5), retuned by balance pass 1 (ADR 0004): no world speed per
-        /// ascension, Eternal Haste −2%/level, vow marks −1% each, the awakened dragon −10% for the rest of
-        /// that run only. Pass ascensions/marks to preview.
+        /// Every world timer's multiplier (was `prestigeFactor`, engine.js:274 §2.5). Ascension is gone (ADR 0007):
+        /// the "haste" utility bonus (−2%/level) and the awakened dragon (−10%).
         /// </summary>
-        public double PrestigeFactor(GameState s, int? ascensions = null, int? marks = null)
+        public double WorldFactor(GameState s)
         {
-            int asc = ascensions ?? s.ascensions;
-            int mk = marks ?? VowMarks(s, false);
             var b = _cfg.balance;
-            return 1.0 / (1 + b.ascensionSpeedPerRun * asc) * Math.Pow(b.hasteStep, s.PerkLevel("haste"))
-                   * (s.won ? b.awakenedSpeed : 1) * Math.Pow(b.vowMarkStep, mk);
+            return Math.Pow(b.hasteStep, s.Bonus("haste")) * (s.won ? b.awakenedSpeed : 1);
         }
-
-        public double NextPrestigeFactor(GameState s) => PrestigeFactor(s, s.ascensions + 1, VowMarks(s, true));
 
         /// <summary>`buffActive(kind)` engine.js:131.</summary>
         public static bool BuffActive(GameState s, string kind, double now) => s.buff != null && s.buff.kind == kind && s.buff.until > now;
@@ -87,7 +72,7 @@ namespace IdleGrounds.Sim
         public double HarvestInterval(GameState s, AreaState area, Node node)
         {
             double b = node != null && node.swingMs > 0 ? node.swingMs : 350;
-            return Math.Max(120, b * Math.Pow(0.8, area.upgrades.harvestSpeed) * PrestigeFactor(s));
+            return Math.Max(120, b * Math.Pow(0.8, area.upgrades.harvestSpeed) * WorldFactor(s));
         }
     }
 }

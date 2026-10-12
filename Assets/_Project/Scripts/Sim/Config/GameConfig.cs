@@ -25,9 +25,6 @@ namespace IdleGrounds.Sim
         public List<UpgradeNodeDef> upgradeTree = new List<UpgradeNodeDef>();
         public List<QuestDef> quests = new List<QuestDef>();
         public List<RevealRule> reveal = new List<RevealRule>();
-        public List<PerkDef> perks = new List<PerkDef>();
-        public List<VowDef> vows = new List<VowDef>();
-        public GateOffering gateOfferings = new GateOffering();
 
         // ---- runtime lookups (not serialized) ----
         [NonSerialized] Dictionary<string, ItemDef> _items;
@@ -36,7 +33,6 @@ namespace IdleGrounds.Sim
         [NonSerialized] Dictionary<string, int> _regionIndex;
         [NonSerialized] Dictionary<string, BuildingDef> _buildings;
         [NonSerialized] Dictionary<string, DragonBuffDef> _buffs;
-        [NonSerialized] Dictionary<string, PerkDef> _perks;
         [NonSerialized] List<string> _fuelKeys;
         [NonSerialized] bool _built;
 
@@ -63,8 +59,6 @@ namespace IdleGrounds.Sim
             foreach (var b in buildings) if (b != null && b.key != null) _buildings[b.key] = b;
             _buffs = new Dictionary<string, DragonBuffDef>();
             foreach (var b in dragonBuffs) if (b != null && b.item != null) _buffs[b.item] = b;
-            _perks = new Dictionary<string, PerkDef>();
-            foreach (var p in perks) if (p != null && p.id != null) _perks[p.id] = p;
             _fuelKeys = new List<string>();
             foreach (var it in items) if (it != null && it.fuelMs > 0) _fuelKeys.Add(it.key);
             _built = true;
@@ -82,7 +76,6 @@ namespace IdleGrounds.Sim
         public int RegionIndex(string key) { Ensure(); return key != null && _regionIndex.TryGetValue(key, out var v) ? v : -1; }
         public BuildingDef Building(string key) { Ensure(); return key != null && _buildings.TryGetValue(key, out var v) ? v : null; }
         public DragonBuffDef DragonBuff(string item) { Ensure(); return item != null && _buffs.TryGetValue(item, out var v) ? v : null; }
-        public PerkDef Perk(string id) { Ensure(); return id != null && _perks.TryGetValue(id, out var v) ? v : null; }
         /// <summary>FUEL key order (= item order of fuel items).</summary>
         public IReadOnlyList<string> FuelKeys { get { Ensure(); return _fuelKeys; } }
         public int FuelMs(string item) => Item(item)?.fuelMs ?? 0;
@@ -227,8 +220,8 @@ namespace IdleGrounds.Sim
                     if (cnd.kind == RevealKind.Region && Region(cnd.key) == null) errs.Add("reveal " + rr.building + ": unknown region " + cnd.key);
                 }
             }
-            foreach (var p in perks) if (p.cost.Count != p.max) errs.Add("perk " + p.id + ": cost count != max");
-            foreach (var it in gateOfferings.items) CheckItem("gateOfferings", it);
+            foreach (var b in buildings)
+                if (!string.IsNullOrEmpty(b.onlyArea) && Region(b.onlyArea) == null) errs.Add("building " + b.key + ": unknown area " + b.onlyArea);
             foreach (var it in items) if (string.IsNullOrEmpty(it.sourceHint)) errs.Add("item " + it.key + ": no source hint");
             return errs;
         }

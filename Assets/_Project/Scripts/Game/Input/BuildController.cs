@@ -128,7 +128,7 @@ namespace IdleGrounds.Game
 
         /// <summary>
         /// Esc chain (ui.js onKeyDown U:3178): (the C#-only confirm dialog) → tree → recipe picker → roster →
-        /// link editor → dragon dialog → perk shop → ascend → stats → help → welcome → post-ascension card
+        /// link editor → dragon dialog → stats → help → welcome
         /// (MetaUiController) → placing/demolish + build menu.
         /// </summary>
         public void Escape()

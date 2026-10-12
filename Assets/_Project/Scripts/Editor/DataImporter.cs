@@ -34,8 +34,7 @@ namespace IdleGrounds.Editor
             AssetDatabase.Refresh();
             ArtIntake.Integrate();   // re-applies strip frames + building variants that the rebuild above cleared
             Debug.Log("DataImporter: imported " + cfg.items.Count + " items, " + cfg.regions.Count + " regions, " +
-                      cfg.buildings.Count + " buildings, " + cfg.upgradeTree.Count + " upgrades, " + cfg.perks.Count +
-                      " perks, " + cfg.vows.Count + " vows, " + cfg.quests.Count + " quests, " + cfg.dragonStages.Count + " dragon stages.");
+                      cfg.buildings.Count + " buildings, " + cfg.upgradeTree.Count + " upgrades, " + cfg.quests.Count + " quests, " + cfg.dragonStages.Count + " dragon stages.");
         }
 
         static void Run(GameConfig cfg, Dictionary<string, Sprite> itemSprites)
@@ -56,7 +55,7 @@ namespace IdleGrounds.Editor
             {
                 var a = Get<BuildingAsset>(Root + "Buildings/Building_" + d.key + ".asset");
                 // TODO(ADR 0003): spirit_bridge has no atlas emoji yet — the Wisp Lantern icon stands in
-                a.def = d; a.icon = Atlas("bld_" + d.key) ?? (d.key == "spirit_bridge" ? Atlas("bld_wisp_lantern") : null);
+                a.def = d; a.icon = Atlas(ArtKeys.Building(d.key)) ?? (d.key == "spirit_bridge" ? Atlas("bld_wisp_lantern") : null);
                 a.hasRealArt = false;   // ArtIntake re-flags delivered art
                 Dirty(a); db.buildings.Add(a);
             }
@@ -85,20 +84,6 @@ namespace IdleGrounds.Editor
                 a.def = d; a.icon = Atlas("upg_" + d.id);
                 Dirty(a); db.upgrades.Add(a);
             }
-            db.perks.Clear();
-            foreach (var d in cfg.perks)
-            {
-                var a = Get<PerkAsset>(Root + "Perks/Perk_" + d.id + ".asset");
-                a.def = d; a.icon = Atlas("perk_" + d.id);
-                Dirty(a); db.perks.Add(a);
-            }
-            db.vows.Clear();
-            foreach (var d in cfg.vows)
-            {
-                var a = Get<VowAsset>(Root + "Vows/Vow_" + d.id + ".asset");
-                a.def = d; a.icon = Atlas("ui_vow_" + d.id);
-                Dirty(a); db.vows.Add(a);
-            }
             db.quests.Clear();
             foreach (var d in cfg.quests)
             {
@@ -122,7 +107,6 @@ namespace IdleGrounds.Editor
             db.dragonBuffs = cfg.dragonBuffs;
             db.vitality = cfg.vitality;
             db.reveal = cfg.reveal;
-            db.gateOfferings = cfg.gateOfferings;
             Dirty(db);
         }
 

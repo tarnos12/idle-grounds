@@ -78,8 +78,7 @@ namespace IdleGrounds.Game
             list.Add(("Disciples recruited", st.disciplesRecruited.ToString()));
             list.Add(("Wisp links added", st.linksAdded.ToString()));
             list.Add(("Recipe switches", st.recipeSwitches.ToString()));
-            list.Add(("Ascensions", G.ascensions.ToString()));
-            list.Add(("Ascension Points", G.ascendPoints.ToString()));
+            list.Add(("Ascended to Immortality", G.ascended ? "yes" : "not yet"));
             int unlocked = 0;
             foreach (var r in Sim.Config.regions) if (G.world.IsUnlocked(r.key)) unlocked++;
             list.Add(("Islands unlocked", unlocked + " / " + Sim.Config.regions.Count));

@@ -121,12 +121,12 @@ namespace IdleGrounds.Sim
         public (double x, double y) NodeCenterPx(Node n) =>
             ((n.col + n.size / 2.0) * _ctx.Cell, (n.row + n.size / 2.0) * _ctx.Cell);
 
-        /// <summary>`gateExists()` engine.js:222 — any gate (ghost or built) anywhere.</summary>
+        /// <summary>`gateExists()` engine.js:222 — any Heavenly Gate (ghost or built) anywhere.</summary>
         public bool GateExists()
         {
             foreach (var a in S.areas)
                 foreach (var b in a.buildings)
-                    if (Cfg.Building(b.type)?.gate == true) return true;
+                    if (Cfg.Building(b.type)?.ending == true) return true;
             return false;
         }
 
@@ -158,7 +158,8 @@ namespace IdleGrounds.Sim
             bool waterOnly = def != null && def.waterOnly, anyZone = def != null && def.anyZone;
             if (row < 0 || col < 0 || row + bh > N || col + bw > N) return "Off the edge";
             if (waterOnly && areaKey != "fishing") return "Water only";
-            if (def != null && def.gate && GateExists()) return "Only one Ascension Gate";
+            if (def != null && !string.IsNullOrEmpty(def.onlyArea) && areaKey != def.onlyArea) return "Only on " + (Cfg.Region(def.onlyArea)?.name ?? def.onlyArea);
+            if (def != null && def.ending && GateExists()) return "Only one " + def.name;
             var area = S.Area(areaKey);
             var occ = _ctx.Occupancy;
             bool wild = false, water = false, blocked = false;

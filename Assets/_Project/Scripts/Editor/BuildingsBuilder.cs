@@ -15,7 +15,7 @@ namespace IdleGrounds.Editor
     /// <summary>
     /// M3 "Buildings & converters" view side, reproducible: shape sprites, the base Building prefab +
     /// one prefab VARIANT per family (Converter → Burner, Storehouse, WardingSeal, GatheringStone,
-    /// FurnaceSpirit, WispLantern, Generator, Pavilion, AscensionGate, Altar, Dragon, SpiritBridge), the
+    /// FurnaceSpirit, WispLantern, Generator, Pavilion, HeavenlyGate, Altar, Dragon, SpiritBridge), the
     /// BuildingPrefabSet table, the PlacementGhost, the BuildMenu / RecipePicker / BuildingTooltip UI
     /// prefabs, and the scene wiring (BuildingViewSync, BuildController, HUD instances).
     /// </summary>
@@ -457,7 +457,7 @@ namespace IdleGrounds.Editor
             var lantern = Variant(bas, "WispLantern", AddFormation(FormationFaceView.Kind.WispLantern));
             var gen = Variant(bas, "Generator", AddGenerator);
             var pav = Variant(bas, "Pavilion", AddPavilion);
-            var gate = Variant(bas, "AscensionGate", AddGate);
+            var gate = Variant(bas, "HeavenlyGate", AddGate);
             var altar = Variant(bas, "Altar", AddAltar);
             var dragon = Variant(bas, "Dragon", AddDragon);
             var bridge = Variant(bas, "SpiritBridge", AddBridge);
@@ -466,7 +466,7 @@ namespace IdleGrounds.Editor
             if (set == null) { set = ScriptableObject.CreateInstance<BuildingPrefabSet>(); AssetDatabase.CreateAsset(set, PrefabSetPath); }
             set.fallback = bas; set.converter = conv; set.burner = burner; set.storehouse = store; set.wardingSeal = seal;
             set.gatheringStone = stone; set.furnaceSpirit = spirit; set.wispLantern = lantern; set.generator = gen;
-            set.pavilion = pav; set.ascensionGate = gate; set.altar = altar; set.dragon = dragon;
+            set.pavilion = pav; set.heavenlyGate = gate; set.altar = altar; set.dragon = dragon;
             set.spiritBridge = bridge;
             set.entries.Clear();
             var db = AssetDatabase.LoadAssetAtPath<GameDatabase>(DatabasePath);

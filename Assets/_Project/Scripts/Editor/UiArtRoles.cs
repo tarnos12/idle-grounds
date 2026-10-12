@@ -9,7 +9,7 @@ namespace IdleGrounds.Editor
     /// Attaches the delivered-art UI roles (pills, progress bars, checkbox, ingredient frames + count badges, scrollbars) by name on a UI
     /// hierarchy. Idempotent. Called from <see cref="CoreLoopBuilder.Save"/> (so builder rebuilds keep the roles) and from
     /// "Idle Grounds/UI/Apply UI Skin Roles" (existing prefabs + scene). Cards / recipe cells / HP pips / cursors are runtime-driven
-    /// (BuildCard, RecipeCell, PerkShopView, EnemyView, GameCursor) and need no attachment here.
+    /// (BuildCard, RecipeCell, EnemyView, GameCursor) and need no attachment here.
     /// </summary>
     public static class UiArtRoles
     {
@@ -35,7 +35,7 @@ namespace IdleGrounds.Editor
                     string pill = null;
                     if (nm == "AreaPill" || nm == "HandPill") pill = "ui_pill_green";
                     else if (nm == "Pill" && pn == "BuffPill") pill = "ui_pill_purple";
-                    else if (nm == "ShrinePill" || nm == "ChipTemplate" || (nm == "Pick" && pn == "NameRow")) pill = "ui_pill_gold";
+                    else if (nm == "ChipTemplate") pill = "ui_pill_gold";
                     if (pill != null) { Apply(UiSkin.Attach(t.gameObject, pill, fit: true, uiPerArt: 1f), db); n++; }
                 }
 

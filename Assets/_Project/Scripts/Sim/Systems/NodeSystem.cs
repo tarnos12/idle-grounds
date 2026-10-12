@@ -214,7 +214,7 @@ namespace IdleGrounds.Sim
             double buffFac = Timing.BuffActive(S, "verdant_pill", _ctx.Now) ? 0.5 : 1;
             double regrow = node.regrowSec != 0 ? node.regrowSec : 10;
             return regrow * Math.Pow(0.8, area.upgrades.speed) * t.TimeScale * 1000 * buffFac
-                   * t.PrestigeFactor(S) * Math.Pow(0.9, S.PerkLevel("regrow"));
+                   * t.WorldFactor(S) * Math.Pow(0.9, S.Bonus("regrow"));
         }
 
         /// <summary>`depleteNode(area,node)` engine.js:693 — remove + queue a replacement at a new random spot.</summary>

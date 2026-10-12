@@ -52,3 +52,6 @@ old-game/dist/
 # .NET sim tests
 /tools/simtests/bin/
 /tools/simtests/obj/
+
+# the .NET sim test project must be tracked
+!tools/simtests/*.csproj

@@ -50,14 +50,11 @@ namespace IdleGrounds.Sim.Tests
     {
         static readonly string[] StageUnlocks = { "forge", "algae_farm", "herb_garden" };
 
-        [TestCase(0, false)]
-        [TestCase(2, true)]
-        public void EachStage_ExactScaledTribute_UnlocksBuilding_ThenAwakens(int ascensions, bool restless)
+        [Test]
+        public void EachStage_ExactScaledTribute_UnlocksBuilding_ThenAwakens()
         {
             var sim = SimTestUtil.NewSim(out var clock);
             var S = sim.State;
-            S.ascensions = ascensions;
-            if (restless) S.vows.active.Add("restless");
             S.handCap = 5000;
             var dragon = M5Util.Dragon(sim);
             var advanced = new List<(int, string)>();
@@ -65,14 +62,12 @@ namespace IdleGrounds.Sim.Tests
             sim.Events.DragonStageAdvanced += (st, t) => advanced.Add((st, t));
             sim.Events.DragonAwakened += () => awakened++;
             sim.Events.SoundRequested += (n, a) => { if (n == "dragon") sfx++; };
-            double m = Math.Max(sim.Config.balance.tributeShrinkFloor, 1.0 / (1 + sim.Config.balance.tributeShrinkPerRun * ascensions));
-            double rm = restless ? sim.Config.balance.restlessTributeMult : 1;
             for (int i = 0; i < sim.Config.dragonStages.Count; i++)
             {
                 var st = sim.Config.dragonStages[i];
                 var expected = new ItemCounts();
                 foreach (var n in st.needs)
-                    expected.Set(n.item, Math.Max(1, (int)Math.Ceiling(Math.Ceiling(n.qty * 0.5) * m * rm)));
+                    expected.Set(n.item, Math.Max(1, (int)Math.Ceiling(n.qty * 0.5)));
                 CollectionAssert.AreEqual(expected.entries.Select(e => e.ToString()), sim.DragonRemaining().entries.Select(e => e.ToString()), "stage " + i);
                 if (i < StageUnlocks.Length) Assert.IsFalse(sim.IsBuildingUnlocked(StageUnlocks[i]));
                 // one short: never advances
@@ -94,7 +89,8 @@ namespace IdleGrounds.Sim.Tests
                 if (i < StageUnlocks.Length) Assert.IsTrue(sim.IsBuildingUnlocked(StageUnlocks[i]), StageUnlocks[i]);
             }
             Assert.IsNull(sim.DragonStage);
-            Assert.IsTrue(S.won && S.dragonBlessed && sim.EndingPending);
+            Assert.IsTrue(S.won, "awake");
+            Assert.IsFalse(sim.EndingPending, "ADR 0007: the awakened dragon is a mid-game moment, not the ending");
             Assert.AreEqual(4, advanced.Count); Assert.AreEqual(1, awakened); Assert.AreEqual(4, sfx);
             Assert.AreEqual(4, advanced[3].Item1);
             // awake: tributes ignored, nothing taken
@@ -106,12 +102,10 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
-        public void Tribute_OtherStagesOmitTributeMult_CurrentReadsPaidPlusRemaining()
+        public void Tribute_OtherStagesScaled_CurrentReadsPaidPlusRemaining()
         {
             var sim = SimTestUtil.NewSim(out _);
             var cfg = sim.Config;
-            sim.State.ascensions = 4;   // tributes no longer shrink per run (tributeShrinkPerRun 0)
-            Assert.AreEqual(1.0, sim.Dragon.TributeMult(), 1e-12);
             var s0 = cfg.dragonStages[0].needs[0];
             var s1 = cfg.dragonStages[1].needs[0];
             Assert.AreEqual(sim.Timing.Scaled(s0.qty), sim.DragonTribute(0).Get(s0.item));   // current stage: paid + remaining
@@ -140,7 +134,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.IsNotNull(sim.Buildings.PlaceBuilt("center", "dragon_shrine", 55, 36));
             Assert.IsTrue(sim.ShrineBuilt());
             Assert.AreEqual(180000, sim.Dragon.BlessingDurationMs(), 1e-6);
-            S.perks.Set("bless", 1);
+            S.bonuses.Set("bless", 1);
             Assert.AreEqual(216000, sim.Dragon.BlessingDurationMs(), 1e-6);
             // replaces the active blessing
             sim.Hand.Add("verdant_pill", 1);
@@ -462,7 +456,7 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
-        public void Milestone_DragonThenGateStepThenAscend()
+        public void Milestone_DragonThenCelestialThenGateStepThenAscend()
         {
             var sim = SimTestUtil.NewSim(out _, init: false);
             var S = sim.State;
@@ -478,6 +472,8 @@ namespace IdleGrounds.Sim.Tests
             Assert.Contains("forge", m.builds);
 
             S.dragon.stage = 4; S.quest.idx = sim.Config.quests.Count;
+            Assert.AreEqual(MilestoneKind.OpenIsland, sim.Milestone().kind, "the Heavenly Gate needs Celestial Peak first");
+            S.world.SetUnlocked("celestial", true);
             m = sim.Milestone();
             Assert.AreEqual(MilestoneKind.RaiseGate, m.kind);
             Assert.IsFalse(m.gatePlaced);
@@ -495,16 +491,17 @@ namespace IdleGrounds.Sim.Tests
 
             // stored talismans cover it ⇒ withdraw hint
             var sh = sim.Buildings.PlaceBuilt("center", "storehouse", 60, 60, "talisman");
-            sh.qty = sim.Config.Building("ascension_gate").cost.Where(q => q.item == "talisman").Sum(q => q.qty);   // covers the Gate's talisman cost
+            sh.qty = sim.Config.Building("heavenly_gate").cost.Where(q => q.item == "talisman").Sum(q => q.qty);   // covers the Gate's talisman cost
             m = sim.Milestone();
             Assert.AreEqual(MilestoneStepKind.Withdraw, m.step.kind);
 
-            // built gate ⇒ ascend
-            var gate = sim.Buildings.PlaceBuilt("center", "ascension_gate", 30, 60);
+            // built gate ⇒ ascend to Immortality ⇒ free play
+            var gate = sim.Buildings.PlaceBuilt("celestial", "heavenly_gate", 10, 60);
             Assert.IsNotNull(gate);
             m = sim.Milestone();
             Assert.AreEqual(MilestoneKind.Ascend, m.kind);
-            Assert.AreEqual(3, m.ascendReward);
+            Assert.IsTrue(sim.AscendToImmortality());
+            Assert.AreEqual(MilestoneKind.FreePlay, sim.Milestone().kind);
         }
     }
 
@@ -549,54 +546,105 @@ namespace IdleGrounds.Sim.Tests
             sim.Hand.Add("wood", groveCost.Get("wood") - 1);
             Assert.AreEqual(UnlockResultKind.Unlocked, sim.UnlockArea("grove").kind);
         }
-
-        [Test]
-        public void Frugal_ShrinksCost_RefundsOverpaid_OpensWhenCovered()
-        {
-            var sim = SimTestUtil.NewSim(out _);
-            var S = sim.State;
-            S.handCap = 500;
-            int mine = sim.AreaUnlockCost("mine").Get("wood");                      // scaled shipped cost
-            int f1 = (int)Math.Ceiling(mine * 0.8), f3 = (int)Math.Ceiling(mine * 0.512);
-            int paid = f3 + 1;                                                      // covers Frugal 3 by exactly one, not Frugal 1
-            Assert.Less(paid, f1);
-            sim.Hand.Add("wood", paid);
-            Assert.AreEqual(UnlockResultKind.Paid, sim.UnlockArea("mine").kind);
-            S.perks.Set("frugal", 1);
-            Assert.AreEqual(f1, sim.AreaUnlockCost("mine").Get("wood"));             // ceil(cost·0.8)
-            Assert.AreEqual((int)Math.Ceiling(sim.Timing.Scaled(sim.Config.Region("farm").unlockCost.Single(c => c.item == "wood").qty) * 0.8), sim.AreaUnlockCost("farm").Get("wood"));
-            sim.Progression.ReconcileUnlockInstallments();
-            Assert.IsFalse(S.world.IsUnlocked("mine"));
-            S.perks.Set("frugal", 3);                                              // ceil(cost·0.512)
-            sim.Progression.ReconcileUnlockInstallments();
-            Assert.IsTrue(S.world.IsUnlocked("mine"));
-            Assert.AreEqual(1, sim.Hand.Count("wood"));                            // 1 overpaid back
-            Assert.AreEqual(0, S.world.unlockPaid.Count);
-        }
     }
 
-    public class GateTests
+    /// <summary>ADR 0007: the Heavenly Gate on Celestial Peak is the ending; free play continues after it.</summary>
+    public class HeavenlyGateTests
     {
+        const string G = "heavenly_gate", Cel = "celestial";
+
         [Test]
-        public void Offerings_PerTypeCap_FallThrough_AndReward()
+        public void Reveal_NeedsCelestialAndAwakenedDragon()
         {
             var sim = SimTestUtil.NewSim(out _, init: false);
-            var gate = sim.Buildings.PlaceBuilt("center", "ascension_gate", 55, 36);
-            sim.Hand.Add("talisman", 3);
-            Assert.AreEqual(DropResultKind.Fed, M3Util.Click(sim, "center", gate).kind);
-            Assert.AreEqual(DropResultKind.Fed, M3Util.Click(sim, "center", gate).kind);
-            Assert.IsNull(M3Util.Click(sim, "center", gate));      // per-type full: kept
-            Assert.AreEqual(1, sim.Hand.Count("talisman"));
-            Assert.AreEqual(2, gate.offerings);
-            sim.Hand.Add("dragon_scale", 1);                        // behind the talisman
-            Assert.AreEqual(DropResultKind.Reordered, M3Util.Click(sim, "center", gate).kind);
-            Assert.AreEqual(DropResultKind.Fed, M3Util.Click(sim, "center", gate).kind);
-            Assert.AreEqual(3, sim.GateOfferings(gate).count);
-            Assert.AreEqual(3 + 3, sim.AscendReward());
-            // non-offering front, no wanted offering carried ⇒ falls through to the ground drop
+            var S = sim.State;
+            S.quest.idx = sim.Config.quests.Count;
+            Assert.IsFalse(sim.IsBuildingUnlocked(G));
+            S.dragon.stage = 4;
+            Assert.IsFalse(sim.IsBuildingUnlocked(G), "awake dragon alone is not enough");
+            Assert.AreEqual("Open Celestial Peak", sim.Buildings.UnlockReason(G));
+            S.dragon.stage = 3;
+            S.world.SetUnlocked(Cel, true);
+            Assert.IsFalse(sim.IsBuildingUnlocked(G), "Celestial alone is not enough");
+            S.dragon.stage = 4;
+            Assert.IsTrue(sim.IsBuildingUnlocked(G));
+        }
+
+        [Test]
+        public void Build_OnlyOnCelestial_RaisedEvent_Ascend_EndingThenFreePlay()
+        {
+            var sim = SimTestUtil.NewSim(out _, init: false);
+            var S = sim.State;
+            S.quest.idx = sim.Config.quests.Count;
+            S.dragon.stage = 4; S.won = true;
+            S.world.SetUnlocked(Cel, true);
+            S.handCap = 500;
+            Assert.AreEqual("Only on Celestial Peak", sim.PlaceReason("center", G, 30, 60));
+            var ghost = sim.PlaceGhost(Cel, G, 10, 60);
+            Assert.IsNotNull(ghost);
+            Assert.IsFalse(sim.CanAscendToImmortality);
+            Assert.IsFalse(sim.AscendToImmortality(), "no built gate yet");
+
+            string raisedOn = null; int ascendedEv = 0, sfx = 0;
+            sim.Events.HeavenlyGateRaised += (a, b) => raisedOn = a;
+            sim.Events.AscendedToImmortality += () => ascendedEv++;
+            sim.Events.SoundRequested += (n, a) => { if (n == "ascend") sfx++; };
+            foreach (var c in sim.Config.Building(G).cost) sim.Hand.Add(c.item, c.qty);
+            M5Util.ClickUntil(sim, Cel, ghost, () => ghost.built, 500);
+            Assert.IsTrue(ghost.built);
+            Assert.AreEqual(Cel, raisedOn);
+            Assert.AreEqual((Cel, ghost), sim.BuiltHeavenlyGate());
+            Assert.AreEqual(MilestoneKind.Ascend, sim.Milestone().kind);
+            Assert.IsFalse(sim.EndingPending);
+
+            int buildings = S.areas.Sum(a => a.buildings.Count);
+            Assert.IsTrue(sim.AscendToImmortality());
+            Assert.IsTrue(S.ascended);
+            Assert.IsTrue(sim.EndingPending, "the ending card plays");
+            Assert.AreEqual((1, 1), (ascendedEv, sfx));
+            Assert.AreEqual(buildings, S.areas.Sum(a => a.buildings.Count), "nothing resets");
+            Assert.AreEqual(4, S.dragon.stage);
+            sim.MarkEndingSeen();
+            Assert.IsFalse(sim.EndingPending);
+            Assert.AreEqual(MilestoneKind.FreePlay, sim.Milestone().kind, "free play continues");
+
+            // choosing it again replays the ending
+            Assert.IsTrue(sim.AscendToImmortality());
+            Assert.IsTrue(sim.EndingPending);
+
+            // a built gate takes nothing: carried items fall through to the ground
             sim.State.hand.Clear();
-            sim.Hand.Add("wood", 1);
-            Assert.AreEqual(DropResultKind.Dropped, M3Util.Click(sim, "center", gate, noGround: false).kind);
+            sim.Hand.Add("talisman", 1);
+            Assert.AreEqual(DropResultKind.Dropped, M3Util.Click(sim, Cel, ghost, noGround: false).kind);
+        }
+
+        [Test]
+        public void UnitySerializedEmptyStrings_MeanNoRestriction()
+        {
+            // Unity serializes null strings as "" (GameDatabase → BuildConfig): "" must behave like null
+            var cfg = SimTestUtil.LoadConfig();
+            foreach (var b in cfg.buildings) if (b.onlyArea == null) b.onlyArea = "";
+            foreach (var r in cfg.reveal) foreach (var c in r.any) if (c.key == null) c.key = "";
+            var sim = SimTestUtil.NewSim(out _, cfg: cfg);
+            Assert.Greater(sim.State.Area("center").buildings.Count(b => b.starter), 10, "starter network placed");
+            sim.State.quest.idx = cfg.quests.Count; sim.State.dragon.stage = 1;
+            Assert.IsTrue(sim.IsBuildingUnlocked("forge"), "plain stage reveal");
+            Assert.IsNull(sim.PlaceReason("center", "workbench", 30, 60));
+        }
+
+        [Test]
+        public void Milestone_OpenCelestialBeforeTheGate()
+        {
+            var sim = SimTestUtil.NewSim(out _, init: false);
+            var S = sim.State;
+            S.dragon.stage = 4; S.quest.idx = sim.Config.quests.Count;
+            var m = sim.Milestone();
+            Assert.AreEqual(MilestoneKind.OpenIsland, m.kind);
+            Assert.AreEqual(Cel, m.island);
+            CollectionAssert.AreEquivalent(sim.AreaUnlockCost(Cel).entries.Select(e => e.item), m.needs.Select(n => n.item));
+            Assert.IsEmpty(m.builds);
+            S.world.SetUnlocked(Cel, true);
+            Assert.AreEqual(MilestoneKind.RaiseGate, sim.Milestone().kind);
         }
     }
 
@@ -659,7 +707,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual("Full", sim.RecruitReason("center", pav.id));
             Assert.IsFalse(sim.RecruitDisciple("center", pav.id));
             S.Area("center").upgrades.discipleCap = 1;
-            S.perks.Set("hall", 1);
+            S.bonuses.Set("hall", 1);
             Assert.AreEqual(6, sim.RosterCap(pav));
             for (int i = 0; i < 3; i++) Assert.IsTrue(sim.RecruitDisciple("center", pav.id));
             Assert.AreEqual(6, pav.disciples);

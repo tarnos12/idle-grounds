@@ -261,7 +261,10 @@ namespace IdleGrounds.Sim
         public bool waterOnly;
         public int cap;                     // storehouse cap (0 = none)
         public bool shrine;
-        public bool gate;
+        /// <summary>The Heavenly Gate (ADR 0007): built, it offers "Ascend to Immortality" — the ending. One per world.</summary>
+        public bool ending;
+        /// <summary>Buildable only on this Island (JSON "area"); null or "" (Unity serializes null strings as "") = any.</summary>
+        public string onlyArea;
         public List<RecipeDef> recipes = new List<RecipeDef>();
         public GatherConfig gather = new GatherConfig();
         public StokerConfig stoker = new StokerConfig();
@@ -385,7 +388,7 @@ namespace IdleGrounds.Sim
     public class RevealCond
     {
         public RevealKind kind;
-        public string key;      // quest id / region key
+        public string key;      // quest id / region key (Stage: optional Island that must also be unlocked; null/"" = none)
         public int stage;
         /// <summary>Islands: revealed once at least this many Islands are unlocked.</summary>
         public int count;
@@ -398,34 +401,6 @@ namespace IdleGrounds.Sim
         public List<RevealCond> any = new List<RevealCond>();
     }
 
-    [Serializable]
-    public class PerkDef
-    {
-        public string id;
-        public string name;
-        public string icon;
-        public int max;
-        public List<int> cost = new List<int>();
-        public string desc;
-    }
-
-    [Serializable]
-    public class VowDef
-    {
-        public string id;
-        public string name;
-        public string icon;
-        public string desc;
-    }
-
-    [Serializable]
-    public class GateOffering
-    {
-        public List<string> items = new List<string>();
-        public int cap = 6;
-        public int perType = 2;
-    }
-
     /// <summary>Scalar DATA constants + the engine.js constants table (engine-systems §0).</summary>
     [Serializable]
     public class GameBalance
@@ -436,26 +411,16 @@ namespace IdleGrounds.Sim
         public int fuelCap = 60000;
         /// <summary>AUTOMATION_CLICKS: index i = level i+1.</summary>
         public List<int> automationClicks = new List<int> { 2, 6, 20 };
-        public List<double> vowMult = new List<double> { 1, 1.15, 1.3, 1.5, 1.75 };
         public int questChain = 2;
         public int versionNum = 52;
         public string versionDesc;
         public int worldCols = 3;
         public int worldRows = 3;
-        // prestige pacing (ADR 0004 / balance pass 1: later runs about as long as the first)
-        /// <summary>World speed gained per ascension: factor 1/(1 + this·ascensions). Was 0.2 (+20%/run).</summary>
-        public double ascensionSpeedPerRun = 0;
-        /// <summary>Eternal Haste: every timer ×this per perk level. Was 0.95.</summary>
+        // world pace (ADR 0004 / 0007)
+        /// <summary>"haste" bonus (ex Eternal Haste; ADR 0007 Storm Sage Lei C): every timer ×this per level.</summary>
         public double hasteStep = 0.98;
-        /// <summary>Each vow completed at least once: timers ×this. Was 0.96.</summary>
-        public double vowMarkStep = 0.99;
-        /// <summary>Timers ×this once the dragon is awake in the current run (no longer carried into later runs).</summary>
+        /// <summary>Timers ×this once the dragon is awake.</summary>
         public double awakenedSpeed = 0.9;
-        /// <summary>Dragon tributes ×max(floor, 1/(1 + this·ascensions)). Was 0.25 (floor 0.4).</summary>
-        public double tributeShrinkPerRun = 0;
-        public double tributeShrinkFloor = 0.4;
-        /// <summary>Vow of the Restless Dragon: every tribute ×this. Was 2.</summary>
-        public double restlessTributeMult = 1.5;
         // engine.js constants (§0)
         public int groundCap = 600;
         public int groundHardCap = 900;

@@ -37,7 +37,7 @@ namespace IdleGrounds.Sim.Tests
             Kill(sim, fox);
             Assert.AreEqual(0, Foxes(c).Count);
             Assert.AreEqual(1, sim.State.stats.foxKills);
-            // respawn = respawnMs 6000 · TEST timeScale 0.2 · prestigeFactor 1 = 1200 ms
+            // respawn = respawnMs 6000 · TEST timeScale 0.2 · world factor 1 = 1200 ms
             Assert.AreEqual(1, c.enemyRespawns.Count);
             Assert.AreEqual(clock.NowMs + 1200, c.enemyRespawns[0], 1e-6);
             clock.Advance(1150); sim.Tick();
@@ -48,12 +48,12 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
-        public void Foxes_SpiritCallRaisesCap_PrestigeShortensRespawn_CoarseTickCatchesUp()
+        public void Foxes_SpiritCallRaisesCap_HasteShortensRespawn_CoarseTickCatchesUp()
         {
             var sim = SimTestUtil.NewSim(out var clock);
             var c = sim.State.Area("center");
             c.upgrades.enemyCap = 2;
-            sim.State.perks.Set("haste", 4);                  // prestigeFactor = hasteStep^4
+            sim.State.bonuses.Set("haste", 4);                  // world factor = hasteStep^4
             sim.Tick();
             Assert.AreEqual(3, Foxes(c).Count, "cap 1 + Spirit Call 2");
             double t0 = clock.NowMs;
@@ -147,7 +147,7 @@ namespace IdleGrounds.Sim.Tests
             var sim = SimTestUtil.NewSim(out _);
             var c = sim.State.Area("center");
             c.upgrades.damage = 2;
-            sim.State.perks.Set("fury", 1);
+            sim.State.bonuses.Set("fury", 1);
             Assert.AreEqual(4, sim.AttackDamage("center"));
             sim.Tick();
             var fox = Foxes(c)[0];
@@ -275,10 +275,10 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
-        public void Automation_KeenAutomationPerk_AddsBudget()
+        public void Automation_AutoboostBonus_AddsBudget()
         {
             var sim = AutoSim(out _, 1);
-            sim.State.perks.Set("autoboost", 2);
+            sim.State.bonuses.Set("autoboost", 2);
             Assert.AreEqual(4, sim.AutomationStatus("center").budget);
             Assert.AreEqual(4 + 1, sim.AutomationTick());
         }

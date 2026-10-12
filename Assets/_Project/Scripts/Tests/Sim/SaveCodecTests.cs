@@ -9,7 +9,7 @@ namespace IdleGrounds.Sim.Tests
     public class SaveCodecTests
     {
         /// <summary>A state after a few minutes of play: starter network running, wisps in flight,
-        /// converters mid-batch, plus prestige / quest / job / buff fields set.</summary>
+        /// converters mid-batch, plus bonus / ending / quest / job / buff fields set.</summary>
         internal static Simulation PlayedSim(out ManualClock clock, int maxTicks = 20000)
         {
             var sim = SimTestUtil.NewSim(out clock, seed: 99);
@@ -22,9 +22,9 @@ namespace IdleGrounds.Sim.Tests
                 if (i % 20 == 19) sim.AutomationTick();
                 if (i > 2400 && AnyWisp(S) && AnySmelting(S)) break;
             }
-            S.perks.Set("haste", 2); S.perks.Set("hall", 1);
-            S.ascendPoints = 7; S.ascensions = 1;
-            S.vows.done.Set("burden", 1);
+            S.bonuses.Set("haste", 2); S.bonuses.Set("hall", 1);
+            S.legacyPerks.Set("frugal", 2);
+            S.ascended = true; S.endingSeen = true;
             S.quest.idx = 3;
             S.hand.Add(new HandStack("wood", 4));
             S.upgradeJob = new UpgradeJob { area = "center", type = "harvestSpeed" };
@@ -33,7 +33,6 @@ namespace IdleGrounds.Sim.Tests
             S.combatBuff = new CombatBuffState { until = clock.NowMs + 5000 };
             S.world.unlockPaid.Add(new RegionPaid { region = "farm" });
             S.world.unlockPaid[0].paid.Set(cfg.Region("farm").unlockCost[0].item, 1);
-            S.justAscended = new JustAscended { n = 1, ap = 3, speedFrom = 1, speedTo = 1.2 };
             return sim;
         }
 
@@ -62,7 +61,9 @@ namespace IdleGrounds.Sim.Tests
                 StringAssert.DoesNotContain(t, j1, t + " is transient");
             Assert.AreEqual(stamp, s2.lastSeen);
             Assert.AreEqual(S.Area("center").wisps.Count, s2.Area("center").wisps.Count);
-            Assert.AreEqual(2, s2.PerkLevel("haste"));
+            Assert.AreEqual(2, s2.Bonus("haste"));
+            Assert.AreEqual(2, s2.legacyPerks.Get("frugal"));
+            Assert.IsTrue(s2.ascended && s2.endingSeen);
             Assert.AreEqual(5, s2.upgradeJob.needs.Get("wood"));
             Assert.IsNotNull(s2.buff);
             Assert.IsTrue(double.IsNaN(s2.offlineAwayFrom));
@@ -131,7 +132,7 @@ namespace IdleGrounds.Sim.Tests
             Assert.IsNotNull(s);
             Assert.AreEqual(cfg.regions.Count, s.areas.Count, "every area present, region order");
             Assert.AreEqual(cfg.regions[0].key, s.areas[0].key);
-            Assert.AreEqual(2, s.ascensions);
+            Assert.AreEqual(GameState.SchemaVersion, s.schemaVersion, "an old save (ascensions etc.) loads as the current schema");
             Assert.AreEqual(4, s.stats.foxKills);
             Assert.AreEqual(cfg.balance.handCap, s.handCap);
             Assert.IsTrue(s.world.IsUnlocked("center"));
@@ -149,9 +150,8 @@ namespace IdleGrounds.Sim.Tests
             var c = S.Area("center");
             S.hand.Add(new HandStack("bogus_item", 3));
             S.hand.Add(new HandStack("stone", 0));
-            S.perks.Set("bogus_perk", 2); S.perks.Set("haste", 99);
-            S.vows.active.AddRange(new[] { "burden", "nope", "burden" });
-            S.vows.done.Set("nope", 3); S.vows.done.Set("restless", 0);
+            S.bonuses.Set("bogus_perk", 2); S.bonuses.Set("haste", 99); S.bonuses.Set("hall", 0);
+            S.ascended = false; S.endingSeen = true;   // seen without ascending ⇒ cleared
             S.quest.idx = 999;
             S.builtTypes.Add("bogus_building");
             S.buildSeen.Set("kiln", 7); S.buildSeen.Set("bogus_building", 1);
@@ -174,10 +174,6 @@ namespace IdleGrounds.Sim.Tests
             var conv = c.buildings.First(b => cfg.Building(b.type).IsConverter);
             conv.stock ??= new ItemCounts();
             conv.stock.Set("bogus_item", 4);
-            var gate = sim.Buildings.PlaceBuilt("center", "ascension_gate", 40, 70);
-            gate.offered = new ItemCounts();
-            gate.offered.Set("talisman", 5); gate.offered.Set("bogus_item", 3); gate.offered.Set("star_steel", 1);
-            gate.offerings = 9;
             S.offlineAwayFrom = clock.NowMs + 10;   // after lastSeen ⇒ dropped
 
             string raw = SaveCodec.Serialize(S, clock.NowMs);
@@ -185,11 +181,10 @@ namespace IdleGrounds.Sim.Tests
             Assert.IsNotNull(s);
             var sc = s.Area("center");
             Assert.IsFalse(s.hand.Any(h => h.item == "bogus_item" || h.qty <= 0));
-            Assert.AreEqual(0, s.PerkLevel("bogus_perk"));
-            Assert.AreEqual(cfg.Perk("haste").max, s.PerkLevel("haste"));
-            CollectionAssert.AreEqual(new[] { "burden" }, s.vows.active);
-            Assert.IsFalse(s.vows.done.Has("nope"));
-            Assert.IsFalse(s.vows.done.Has("restless"));
+            Assert.AreEqual(0, s.Bonus("bogus_perk"));
+            Assert.IsFalse(s.bonuses.Has("hall"), "zero levels dropped");
+            Assert.AreEqual(SaveCodec.MaxBonusLevel, s.Bonus("haste"));
+            Assert.IsFalse(s.endingSeen);
             Assert.AreEqual(cfg.quests.Count, s.quest.idx);
             Assert.IsFalse(s.builtTypes.Contains("bogus_building"));
             Assert.AreEqual(2, s.buildSeen.Get("kiln"));
@@ -210,11 +205,6 @@ namespace IdleGrounds.Sim.Tests
             Assert.IsTrue(sb.fuelQ.All(f => f.total == cfg.FuelMs(f.item)));
             Assert.AreEqual(0, sb.recipe);
             Assert.IsFalse(sc.buildings.First(b => b.id == conv.id).stock.Has("bogus_item"));
-            var sg = sc.buildings.First(b => b.id == gate.id);
-            Assert.AreEqual(2, sg.offered.Get("talisman"));
-            Assert.AreEqual(1, sg.offered.Get("star_steel"));
-            Assert.IsFalse(sg.offered.Has("bogus_item"));
-            Assert.AreEqual(3, sg.offerings);
             Assert.IsTrue(double.IsNaN(s.offlineAwayFrom));
             Assert.IsTrue(sc.nextBuildId > sc.buildings.Max(b => b.id));
 
@@ -225,18 +215,11 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
-        public void Sanitize_CountOnlyGate_AttributedFromLastItem_AndRegridClearsNodes()
+        public void Sanitize_RegridClearsNodes()
         {
             var sim = SimTestUtil.NewSim(out var clock);
-            var gate = sim.Buildings.PlaceBuilt("center", "ascension_gate", 40, 70);
-            gate.offered = null; gate.offerings = 3;
             sim.State.gridCells = 50;                     // saved under another grid size
             var s = SaveCodec.Deserialize(SaveCodec.Serialize(sim.State), sim.Config, clock.NowMs);
-            var g = s.Area("center").BuildingById(gate.id);
-            var items = sim.Config.gateOfferings.items;
-            Assert.AreEqual(2, g.offered.Get(items[items.Count - 1]));
-            Assert.AreEqual(1, g.offered.Get(items[items.Count - 2]));
-            Assert.AreEqual(3, g.offerings);
             Assert.AreEqual(0, s.Area("center").nodes.Count, "regrid ⇒ nodes re-rolled by initArea");
             Assert.Greater(s.Area("center").buildings.Count, 2, "buildings kept");
             Assert.AreEqual(sim.Config.grid.cells, s.gridCells);

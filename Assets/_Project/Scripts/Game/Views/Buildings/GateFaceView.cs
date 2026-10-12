@@ -4,10 +4,9 @@ using UnityEngine;
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// Built Ascension Gate (spec §2.4): pulsing gold border p = 0.5+0.5 sin(now/500) (width (2.5+p) px,
-    /// glow alpha 0.35+0.4p), icon 56 px at 36%, gold name 16 px at 64%, "Ascend · +N ☯" 12 px #fde68a
-    /// at 84% (N = <see cref="IdleGrounds.Sim.Simulation.AscendReward"/>, ui.js:1121; sampled at 4 Hz, text
-    /// rebuilt only when N changes).
+    /// Built Heavenly Gate (ADR 0007; spec §2.4 face of the old Ascension Gate): pulsing gold border
+    /// p = 0.5+0.5 sin(now/500) (width (2.5+p) px, glow alpha 0.35+0.4p), icon 56 px at 36%, gold name 16 px at
+    /// 64%, "Ascend to Immortality" / "Ascended" 12 px #fde68a at 84% (text rebuilt only when it changes).
     /// </summary>
     public class GateFaceView : BuildingFace
     {
@@ -16,8 +15,7 @@ namespace IdleGrounds.Game
         [SerializeField] TextMeshPro sub;
         [SerializeField] EdgeFrame glow;
 
-        int lastReward = int.MinValue;
-        float nextRewardAt;
+        int lastAscended = -1;
 
         public string SubText => sub != null ? sub.text : null;
 
@@ -29,26 +27,21 @@ namespace IdleGrounds.Game
             title.text = v.Def.name; ViewKit.Font(title, 16f); title.color = UiPalette.Gold;
             title.transform.localPosition = v.L(0.5f, 0.64f);
             title.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(20f));
-            sub.text = "Ascend"; ViewKit.Font(sub, 12f); sub.color = UiPalette.Hex("#fde68a");
+            sub.text = "Ascend to Immortality"; ViewKit.Font(sub, 12f); sub.color = UiPalette.Hex("#fde68a");
             sub.transform.localPosition = v.L(0.5f, 0.84f);
             sub.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(16f));
-            lastReward = int.MinValue; nextRewardAt = 0f;
+            lastAscended = -1;
         }
         public override bool IsActive(BuildingView v) => true;
 
 
         public override void Refresh(BuildingView v)
         {
-            float t = Time.unscaledTime;
-            if (t >= nextRewardAt)
+            int asc = v.Sync.Sim.State.ascended ? 1 : 0;
+            if (asc != lastAscended)
             {
-                nextRewardAt = t + 0.25f;
-                int n = v.Sync.Sim.AscendReward();
-                if (n != lastReward)
-                {
-                    lastReward = n;
-                    ViewKit.Text(sub, "Ascend · +" + n + " ☯");
-                }
+                lastAscended = asc;
+                ViewKit.Text(sub, asc == 1 ? "Ascended - click to see the ending" : "Ascend to Immortality");
             }
             float p = 0.5f + 0.5f * Mathf.Sin(Time.realtimeSinceStartup * 1000f / 500f);
             var g = UiPalette.Gold;

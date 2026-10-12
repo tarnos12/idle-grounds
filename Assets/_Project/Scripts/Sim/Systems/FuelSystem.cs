@@ -40,10 +40,9 @@ namespace IdleGrounds.Sim
             return true;
         }
 
-        /// <summary>`burnFuel(b,ms)` — burn from the back; Vow of the Cold Hearth doubles it; pop when rem ≤ 0.5.</summary>
+        /// <summary>`burnFuel(b,ms)` — burn from the back; pop when rem ≤ 0.5.</summary>
         public void Burn(Building b, double ms)
         {
-            if (_ctx.State.VowActive("coldhearth")) ms *= 2;
             var q = Queue(b);
             while (ms > 0 && q.Count > 0)
             {

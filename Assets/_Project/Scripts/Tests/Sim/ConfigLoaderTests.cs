@@ -25,8 +25,6 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(28, cfg.buildings.Sum(b => b.recipes.Count), "recipes");
             Assert.AreEqual(17, cfg.quests.Count, "quests");
             Assert.AreEqual(19, cfg.upgradeTree.Count, "upgrade nodes");
-            Assert.AreEqual(15, cfg.perks.Count, "perks");
-            Assert.AreEqual(4, cfg.vows.Count, "vows");
             Assert.AreEqual(4, cfg.dragonStages.Count, "dragon stages");
             Assert.AreEqual(4, cfg.dragonBuffs.Count, "dragon buffs");
             Assert.AreEqual(22, cfg.reveal.Count, "reveal rules (+ spirit_bridge)");
@@ -41,9 +39,8 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(20, cfg.balance.handCap);
             Assert.AreEqual(6, cfg.balance.fuelSlots);
             Assert.AreEqual(3, cfg.balance.questChain);
-            Assert.AreEqual(52, cfg.balance.versionNum);
+            Assert.AreEqual(53, cfg.balance.versionNum);
             CollectionAssert.AreEqual(new[] { 2, 6, 20 }, cfg.balance.automationClicks);
-            CollectionAssert.AreEqual(new[] { 1, 1.15, 1.3, 1.5, 1.75 }, cfg.balance.vowMult);
             Assert.IsFalse(SimTestUtil.LoadDataConfig().test.enabled, "ADR 0004: the data ships with TEST off");
             Assert.IsTrue(cfg.test.enabled, "unit tests pin TEST scaling");
             Assert.AreEqual(0.2, cfg.test.timeScale, 1e-12);
@@ -105,7 +102,9 @@ namespace IdleGrounds.Sim.Tests
             CollectionAssert.AreEqual(new[] { "spirit_buns", "spirit_wine" }, pav.foodValues.Select(f => f.item).ToArray());
             Assert.IsTrue(cfg.Building("algae_farm").waterOnly);
             Assert.AreEqual(24, cfg.Building("algae_farm").gen.cap);
-            Assert.IsTrue(cfg.Building("ascension_gate").gate);
+            Assert.IsTrue(cfg.Building("heavenly_gate").ending, "ADR 0007: the Heavenly Gate ends the game");
+            Assert.AreEqual("celestial", cfg.Building("heavenly_gate").onlyArea);
+            Assert.IsNull(cfg.Building("ascension_gate"), "ascension removed");
             Assert.IsTrue(cfg.Building("center").indestructible);
             var bench = cfg.Building("workbench").recipes[1];
             CollectionAssert.AreEqual(new[] { "plank", "iron_bar" }, bench.inputs.Select(i => i.item).ToArray());

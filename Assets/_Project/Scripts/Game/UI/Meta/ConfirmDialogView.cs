@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace IdleGrounds.Game
 {
-    /// <summary>The browser confirm() of the original (Reset, Ascend): message + OK / Cancel.</summary>
+    /// <summary>The browser confirm() of the original (Reset, Ascend to Immortality): message + OK / Cancel.</summary>
     public class ConfirmDialogView : ModalView
     {
         [SerializeField] TextMeshProUGUI messageText;

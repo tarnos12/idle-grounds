@@ -390,14 +390,14 @@ namespace IdleGrounds.Sim
 
         /// <summary>
         /// Beat interval (ms) of a lantern or Spirit Bridge with base rate <paramref name="rateMs"/> (§11.7):
-        /// Wisp Haste, Swiftwind, prestige, Wisp Gale, and Tireless Wisps (ADR 0002: +15% beat rate per level).
+        /// Wisp Haste, Swiftwind, world factor, Wisp Gale, and Tireless Wisps (ADR 0002: +15% beat rate per level).
         /// </summary>
         public double BeatMs(AreaState area, double rateMs, double now)
         {
             int haste = area.upgrades.wispRate;
             double wind = Timing.BuffActive(S, "swiftwind_pill", now) ? 0.5 : 1;
             double rate = rateMs > 0 ? rateMs : 1000;
-            return rate * _ctx.Timing.TimeScale * Math.Pow(0.85, haste) * wind * _ctx.Timing.PrestigeFactor(S) * Math.Pow(0.9, S.PerkLevel("gale"))
+            return rate * _ctx.Timing.TimeScale * Math.Pow(0.85, haste) * wind * _ctx.Timing.WorldFactor(S) * Math.Pow(0.9, S.Bonus("gale"))
                    / TirelessFactor;
         }
 
@@ -414,10 +414,10 @@ namespace IdleGrounds.Sim
             return sp * (1 + 0.25 * haste) / wind * TirelessFactor;
         }
 
-        /// <summary>Tireless Wisps perk (save id "slumber", ADR 0002): 1 + 0.15 per level.</summary>
-        public double TirelessFactor => 1 + 0.15 * S.PerkLevel(TirelessPerk);
+        /// <summary>"slumber" bonus (ex Tireless Wisps perk, ADR 0002/0007): 1 + 0.15 per level.</summary>
+        public double TirelessFactor => 1 + 0.15 * S.Bonus(TirelessPerk);
 
-        /// <summary>Perk id of Tireless Wisps — the old Long Slumber id, kept so existing saves keep their levels.</summary>
+        /// <summary>Bonus key of the ex Tireless Wisps perk (the old Long Slumber id; migrated saves keep their levels).</summary>
         public const string TirelessPerk = "slumber";
 
         public bool TickLantern(string areaKey, AreaState area, Building b, BuildingDef def, double now)
@@ -654,7 +654,7 @@ namespace IdleGrounds.Sim
 
         /// <summary>
         /// Sending bridge beat (tick step 6): lantern beat rules (Wisp Haste of the sending Island,
-        /// Swiftwind, prestige, Wisp Gale, Tireless Wisps). Each beat launches one sky wisp carrying up to
+        /// Swiftwind, world factor, Wisp Gale, Tireless Wisps). Each beat launches one sky wisp carrying up to
         /// <c>bridge.carry</c> of the buffer's first item, as many as the receiver has room for counting
         /// items already on the way.
         /// </summary>

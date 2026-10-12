@@ -126,7 +126,7 @@ namespace IdleGrounds.Sim
         {
             var area = S.Area(areaKey);
             return 1 + (area?.upgrades.damage ?? 0)
-                   + (Timing.CombatBuffActive(S, now) ? Cfg.vitality.bonusDamage : 0) + S.PerkLevel("fury");
+                   + (Timing.CombatBuffActive(S, now) ? Cfg.vitality.bonusDamage : 0) + S.Bonus("fury");
         }
 
         /// <summary>Spirit Wave splash radius: aoe · 1.5 cells (px).</summary>
@@ -186,7 +186,7 @@ namespace IdleGrounds.Sim
             {
                 area.enemyRespawns ??= new List<double>();
                 double respawn = ecfg.respawnMs > 0 ? ecfg.respawnMs : 5000;
-                area.enemyRespawns.Add(now + respawn * _ctx.Timing.TimeScale * _ctx.Timing.PrestigeFactor(S));
+                area.enemyRespawns.Add(now + respawn * _ctx.Timing.TimeScale * _ctx.Timing.WorldFactor(S));
                 S.stats.foxKills++;
             }
             _ctx.Events.RaiseEnemyKilled(areaKey, en);

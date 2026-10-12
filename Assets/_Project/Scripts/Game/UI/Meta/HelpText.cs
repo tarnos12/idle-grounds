@@ -62,17 +62,14 @@ namespace IdleGrounds.Game
                 "<b>Low fuel</b>: a burner reading No fuel needs items on its left rack — or a Furnace Spirit in range with a stocked stash. " +
                 "<b>Nothing moves</b>: check the link dot (amber = source empty, or it holds nothing this target uses; red = target refused/full) and that both ends sit on the SAME Island — only Spirit Bridges carry items across the sky. " +
                 "<b>Automation skipping</b>: when too much of one item is lying around an Island, automation stops harvesting that item (a small amber 'Skipping' chip with its icon shows at the Island's top-left corner) until you vacuum it up or clear it away; other work carries on."));
-            if (dr >= 4) S.Add(("⛩️ Ascension",
-                "Craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Ascension Gate — the built gate glows gold; click it to ascend. Ascending resets the grounds and grants Ascension Points (AP: 3, +2 per Island beyond the Center, plus gate offerings — right-click spare Talismans, Star Steel and Dragon Scales onto the gate, 2 of each count — all × the bonus from any vows you kept) to spend on perks (☯ in the bottom bar shows your ascensions)."));
-            if (G.ascensions > 0 || G.ascendPoints > 0)
-                S.Add(("☯ Ascension Shrine",
-                    "Open the Shrine (the ☯ button in the bottom bar) to spend AP on permanent perks, grouped by Pace, Economy, Combat, Meta and Legacy — they persist through every future reset. Remembered Paths opens the Mine, then Fishing, then the Farm; Center automation also taps the Spirit Tree. After your first ascension you can also take Vows: optional restrictions for a run that pay out extra when you ascend."));
+            if (dr >= 4) S.Add(("⛩️ The Heavenly Gate",
+                "The game's ending. Open Celestial Peak, then craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Heavenly Gate there (it can only stand on Celestial Peak) — the built gate glows gold; click it to Ascend to Immortality. The ending plays, then your grounds stay exactly as they are and free play continues."));
             if (U("farm") || U("mine") || U("fishing")) S.Add(("🗺️ Islands",
                 "Each Island has unique resources (Farm: rice & cotton & sand; Mine: iron ore; Fishing: fish, algae & spring water). Jade shards drop from the Center quarry rock and Mine jade veins. Each locked Island bordering an open one shows an unlock stele on its edge facing the Center — pan over the sky to it and pay there."));
             else S.Add(("🗺️ Islands",
                 "Locked Islands float beyond the sky — gather wood and pay at the stone unlock stele on a locked Island's edge to expand."));
             S.Add(("📊 Stats",
-                "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, ascensions and more."));
+                "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, whether you have ascended, and more."));
             return S;
         }
     }

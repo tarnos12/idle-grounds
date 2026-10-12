@@ -22,7 +22,8 @@ namespace IdleGrounds.Sim
     /// every other field.
     ///
     /// Load = merge onto <see cref="GameState.CreateInitial"/> (missing fields
-    /// keep their defaults) + the §1.5 sanitisation rules on EVERY load
+    /// keep their defaults) + the schema migrations (<see cref="MigrateFromV1"/>:
+    /// ascension removed, ADR 0007) + the §1.5 sanitisation rules on EVERY load
     /// (unknown ids scrubbed, clamps, defaults). Idempotent:
     /// load(save(load(x))) == load(x). Legacy web-save migrations
     /// (quest-chain remap, starter inference, scalar fuel/queue formats) are
@@ -130,7 +131,9 @@ namespace IdleGrounds.Sim
                 // the generic merge overwrites these lists wholesale: keep the fresh defaults to merge by key
                 var freshUnlocked = new List<RegionFlag>(fresh.world.unlocked);
                 int savedGrid = o.Get("gridCells") is double gc ? (int)gc : -1;
+                int savedSchema = o.Get("schemaVersion") is double sv0 ? (int)sv0 : 1;
                 Populate(fresh, o);
+                if (savedSchema < 2) MigrateFromV1(fresh, o, cfg);
                 // lastSeen / offlineAwayFrom: absent or null ⇒ null (NaN). Legacy, unused (ADR 0002).
                 fresh.lastSeen = o.Get("lastSeen") is double ls ? ls : double.NaN;
                 fresh.offlineAwayFrom = o.Get("offlineAwayFrom") is double af ? af : double.NaN;
@@ -318,6 +321,148 @@ namespace IdleGrounds.Sim
         }
 
         // ================================================================
+        // schema 1 → 2: ascension removed (ADR 0007, phase 1)
+        // ================================================================
+
+        /// <summary>Utility bonus keys (the retired perks that have a requester successor, ADR 0007 §4).</summary>
+        public static readonly string[] BonusKeys = { "haste", "hall", "slumber", "hands", "ember", "autoboost", "regrow", "gale", "fury", "bless", "bounty" };
+        /// <summary>Sanity cap for a bonus level (the old perks maxed at 5).</summary>
+        public const int MaxBonusLevel = 10;
+        /// <summary>Type id of the retired Ascension Gate.</summary>
+        public const string LegacyGateType = "ascension_gate";
+        /// <summary>The retired Ascension Gate's cost (refunded when a built one is removed).</summary>
+        public static readonly ItemQty[] LegacyGateCost = { new ItemQty("talisman", 14), new ItemQty("star_steel", 20), new ItemQty("dragon_scale", 6) };
+        /// <summary>Retired GATE_OFFERINGS: offering items (count-only saves attribute from the last), 2 per item, 6 total.</summary>
+        static readonly string[] LegacyOfferingItems = { "talisman", "star_steel", "dragon_scale" };
+        const int LegacyOfferingPerType = 2, LegacyOfferingCap = 6;
+
+        /// <summary>
+        /// A pre-ADR-0007 save (schemaVersion absent or 1) on top of the merged state, before sanitising.
+        /// Dropped (unknown fields, ignored by the merge): ascensions, ascendPoints, perks, vows, justAscended,
+        /// perkShopSeen, ascendPrompt, dragonBlessed, the gate's offered/offerings. Then:
+        /// <list type="bullet">
+        /// <item>every owned perk is recorded in <c>legacyPerks</c>; perks with a requester successor keep working as
+        /// utility <c>bonuses</c> (same level); Fleet Hands moves out of the stored hand cap into the "hands" bonus;</item>
+        /// <item>a built or ghost Ascension Gate is removed: its paid cost (built = the full legacy cost) drops at its
+        /// cell, a built gate's offerings drop below the Altar — ground items (the Heavenly Gate must be built on
+        /// Celestial Peak);</item>
+        /// <item>the old ending flag (the dragon card) no longer counts: <c>endingSeen</c> restarts false;</item>
+        /// <item>a veteran (ascended at least once) on an older quest chain skips the tutorial chain;</item>
+        /// <item>unlocked Islands, unlock installments, other buildings and their recipes are untouched.</item>
+        /// </list>
+        /// </summary>
+        public static void MigrateFromV1(GameState s, JsonObject raw, GameConfig cfg)
+        {
+            // perks → legacy record + successor bonuses
+            s.legacyPerks = new ItemCounts();
+            s.bonuses ??= new ItemCounts();
+            if (raw.Get("perks") is JsonObject perks)
+                foreach (var e in perks.Entries)
+                {
+                    if (string.IsNullOrEmpty(e.Key) || !(e.Value is double d) || !(d >= 1)) continue;
+                    int lvl = (int)Math.Min(MaxBonusLevel, Math.Floor(d));
+                    s.legacyPerks.Set(e.Key, lvl);
+                    if (Array.IndexOf(BonusKeys, e.Key) >= 0) s.bonuses.Set(e.Key, Math.Max(s.bonuses.Get(e.Key), lvl));
+                }
+            int hands = s.legacyPerks.Get("hands");
+            if (hands > 0) s.handCap = Math.Max(cfg.balance.handCap, s.handCap - HandSystem.HandsPerBonus * hands);
+
+            s.endingSeen = false;
+            s.ascended = false;
+
+            // a veteran on an older quest chain skips the tutorial (was: ascensions > 0 ⇒ chain finished)
+            int ascensions = raw.Get("ascensions") is double asc && asc > 0 ? (int)asc : 0;
+            if (ascensions > 0 && s.quest != null && s.quest.chain != cfg.balance.questChain)
+            {
+                s.quest.chain = cfg.balance.questChain;
+                s.quest.idx = cfg.quests.Count;
+            }
+
+            // Ascension Gates (built or ghost) → refunds on the ground; the building goes
+            if (!(raw.Get("areas") is List<object> rawAreas)) return;
+            foreach (var ra in rawAreas)
+            {
+                if (!(ra is JsonObject rao) || !(rao.Get("key") is string key) || !(rao.Get("buildings") is List<object> rbs)) continue;
+                var area = s.areas?.Find(x => x != null && x.key == key);
+                if (area == null || cfg.Region(key) == null) continue;
+                foreach (var rb in rbs)
+                {
+                    if (!(rb is JsonObject bo) || !(bo.Get("type") is string ty) || ty != LegacyGateType) continue;
+                    int row = bo.Get("row") is double rr ? (int)rr : 0, col = bo.Get("col") is double cc ? (int)cc : 0;
+                    bool built = bo.Get("built") is bool bb && bb;
+                    double gx = (col + 2.5) * cfg.grid.cell, gy = (row + 2.5) * cfg.grid.cell;   // 5×5 footprint centre
+                    var refund = new ItemCounts();
+                    if (built) foreach (var c in LegacyGateCost) refund.Add(c.item, c.qty);
+                    else if (bo.Get("paid") is JsonObject po)
+                        foreach (var e in po.Entries) if (e.Value is double q && q >= 1) refund.Add(e.Key, (int)Math.Floor(q));
+                    DropRefund(area, cfg, refund, gx, gy);
+                    if (built)
+                    {
+                        var (ax, ay) = AltarDropPx(s, cfg);
+                        DropRefund(s.Area("center") ?? area, cfg, LegacyOfferings(bo), ax, ay);
+                    }
+                }
+                area.buildings?.RemoveAll(x => x != null && x.type == LegacyGateType);
+            }
+        }
+
+        /// <summary>The gate's offerings per item (≤ 2 each, ≤ 6 total); a count-only save attributes from the last item.</summary>
+        static ItemCounts LegacyOfferings(JsonObject gate)
+        {
+            var off = new ItemCounts();
+            int total = 0;
+            if (gate.Get("offered") is JsonObject od)
+            {
+                foreach (var it in LegacyOfferingItems)
+                {
+                    int q = od.Get(it) is double d ? (int)Math.Max(0, Math.Min(Math.Min(LegacyOfferingPerType, Math.Floor(d)), LegacyOfferingCap - total)) : 0;
+                    if (q > 0) { off.Set(it, q); total += q; }
+                }
+            }
+            else if (gate.Get("offerings") is double n0 && n0 >= 1)
+            {
+                int n = (int)Math.Min(LegacyOfferingCap, Math.Floor(n0));
+                for (int i = LegacyOfferingItems.Length - 1; i >= 0 && n > 0; i--)
+                {
+                    int q = Math.Min(LegacyOfferingPerType, n);
+                    off.Set(LegacyOfferingItems[i], q); n -= q;
+                }
+            }
+            return off;
+        }
+
+        /// <summary>Just below the Altar (building "center" on the Center Island); the Island's middle when missing.</summary>
+        static (double x, double y) AltarDropPx(GameState s, GameConfig cfg)
+        {
+            var altar = s.Area("center")?.buildings?.Find(b => b != null && b.type == "center");
+            if (altar == null) return (cfg.grid.PlayPx / 2.0, cfg.grid.PlayPx / 2.0);
+            var (w, h) = cfg.BuildingSize("center");
+            return ((altar.col + w / 2.0) * cfg.grid.cell, (altar.row + h + 1.0) * cfg.grid.cell);
+        }
+
+        /// <summary>Refund as ground items (one per unit, small deterministic spread) with fresh ids; unknown items skipped.</summary>
+        static void DropRefund(AreaState area, GameConfig cfg, ItemCounts items, double x, double y)
+        {
+            if (items == null || items.Count == 0) return;
+            area.ground ??= new List<GroundItem>();
+            int next = Math.Max(1, area.nextGroundId);
+            foreach (var g in area.ground) if (g != null && g.id >= next) next = g.id + 1;
+            double px = cfg.grid.PlayPx;
+            int k = 0;
+            foreach (var e in items)
+            {
+                if (!cfg.IsItem(e.item)) continue;
+                for (int i = 0; i < e.qty; i++, k++)
+                {
+                    double gx = Math.Max(0, Math.Min(px - 1, x + (k % 7 - 3) * 9.0));
+                    double gy = Math.Max(0, Math.Min(px - 1, y + (k / 7 % 7 - 3) * 9.0));
+                    area.ground.Add(new GroundItem { id = next++, item = e.item, x = gx, y = gy });
+                }
+            }
+            area.nextGroundId = next;
+        }
+
+        // ================================================================
         // sanitisation (§1.5) — runs on every load; idempotent
         // ================================================================
 
@@ -390,25 +535,13 @@ namespace IdleGrounds.Sim
             if (s.buff != null && (!Finite(s.buff.until) || cfg.DragonBuff(s.buff.kind) == null)) s.buff = null;
             if (s.combatBuff != null && !Finite(s.combatBuff.until)) s.combatBuff = null;
 
-            // prestige
-            if (s.ascensions < 0) s.ascensions = 0;
-            if (s.ascendPoints < 0) s.ascendPoints = 0;
-            s.vows ??= new VowsState();
-            var act = new List<string>();
-            foreach (var id in s.vows.active ?? new List<string>())
-                if (id != null && cfg.vows.Exists(v => v.id == id) && !act.Contains(id)) act.Add(id);
-            s.vows.active = act;
-            s.vows.done ??= new ItemCounts();
-            ScrubCounts(s.vows.done, id => cfg.vows.Exists(v => v.id == id), positiveOnly: true);
-            var ja = s.justAscended;
-            if (ja != null && !(Finite(ja.speedFrom) && Finite(ja.speedTo))) s.justAscended = null;
-            s.perks ??= new ItemCounts();
-            foreach (var e in new List<ItemQty>(s.perks.entries))
-            {
-                var pd = cfg.Perk(e.item);
-                if (pd == null || !(e.qty > 0)) s.perks.Remove(e.item);
-                else if (e.qty > pd.max) s.perks.Set(e.item, pd.max);
-            }
+            // utility bonuses (ADR 0007): known keys, 1..MaxBonusLevel; the legacy perk record: positive levels
+            s.bonuses ??= new ItemCounts();
+            ScrubCounts(s.bonuses, k => Array.IndexOf(BonusKeys, k) >= 0, positiveOnly: true);
+            foreach (var e in s.bonuses) if (e.qty > MaxBonusLevel) e.qty = MaxBonusLevel;
+            s.legacyPerks ??= new ItemCounts();
+            ScrubCounts(s.legacyPerks, k => k.Length > 0, positiveOnly: true);
+            if (!s.ascended) s.endingSeen = false;   // the ending card can only have been seen after ascending
 
             // legacy offline stamps (unused, ADR 0002)
             if (!Finite(s.lastSeen)) s.lastSeen = double.NaN;
@@ -423,7 +556,7 @@ namespace IdleGrounds.Sim
             bool legacyChain = s.quest.chain != cfg.balance.questChain;
             int oldChain = s.quest.chain;
             s.quest.chain = cfg.balance.questChain;
-            if (legacyChain && (s.ascensions > 0 || s.won)) s.quest.idx = cfg.quests.Count;
+            if (legacyChain && s.won) s.quest.idx = cfg.quests.Count;
             else if (legacyChain && RemapQuestIdx(oldChain, s.quest.idx, cfg, out int remapped)) s.quest.idx = remapped;
             else s.quest.idx = Math.Max(0, Math.Min(s.quest.idx, cfg.quests.Count));
 
@@ -531,7 +664,6 @@ namespace IdleGrounds.Sim
 
             var ids = new HashSet<int>();
             foreach (var b in a.buildings) ids.Add(b.id);
-            var G = cfg.gateOfferings;
             foreach (var b in a.buildings)
             {
                 var def = cfg.Building(b.type);
@@ -542,36 +674,6 @@ namespace IdleGrounds.Sim
                 if (b.item != null && !Live(b.item)) { b.item = null; b.qty = 0; }
                 if (b.qty < 0) b.qty = 0;
                 if (b.connIdx < 0) b.connIdx = 0;
-
-                // Ascension Gate offerings: per item (≤ perType each, ≤ cap total); offerings mirrors the total
-                if (def.gate && (b.offered != null || b.offerings != 0))
-                {
-                    int per = G.perType > 0 ? G.perType : G.cap;
-                    var off = new ItemCounts();
-                    int total = 0;
-                    if (b.offered != null)
-                    {
-                        foreach (var it in G.items)
-                        {
-                            int q = Math.Max(0, Math.Min(Math.Min(per, b.offered.Get(it)), G.cap - total));
-                            if (q > 0) { off.Set(it, q); total += q; }
-                        }
-                    }
-                    else
-                    {
-                        // count-only gate: attribute to the last items first (dragon scales, star steel, talismans)
-                        int n = Math.Max(0, Math.Min(G.cap, b.offerings));
-                        var by = new ItemCounts();
-                        for (int i = G.items.Count - 1; i >= 0; i--)
-                        {
-                            int q = Math.Min(per, n);
-                            if (q > 0) { by.Set(G.items[i], q); total += q; n -= q; }
-                        }
-                        foreach (var it in G.items) if (by.Get(it) > 0) off.Set(it, by.Get(it));
-                    }
-                    b.offered = off;
-                    b.offerings = total;
-                }
 
                 if (def.roster.enabled)
                 {

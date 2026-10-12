@@ -232,7 +232,7 @@ namespace IdleGrounds.Game
 
         /// <summary>
         /// Building click (ui.js U:3020-3045): converter → recipe picker; storehouse / seal / gathering stone
-        /// → immediate withdraw of 1, then the 1 → 5 per second hold. Altar, Gate,
+        /// → immediate withdraw of 1, then the 1 → 5 per second hold. Altar, Heavenly Gate (ascend confirm),
         /// lantern and pavilion open their panels. Anything else closes the open panel and returns false
         /// (not consumed: the click falls through to the node / vacuum checks).
         /// </summary>
@@ -244,10 +244,10 @@ namespace IdleGrounds.Game
                 if (build != null) build.OpenUpgradeTree();
                 return true;
             }
-            if (b.built && def != null && def.gate)       // the Ascension Gate re-opens the ascend dialog
+            if (b.built && def != null && def.ending)     // the Heavenly Gate offers "Ascend to Immortality" (ADR 0007)
             {
                 if (build != null) build.CloseBuildingPanels();
-                Sim.SetAscendPrompt(true);
+                if (MetaUiController.Instance != null) MetaUiController.Instance.AskAscend();
                 return true;
             }
             if (b.built && def != null && def.roster.enabled)
@@ -391,7 +391,7 @@ namespace IdleGrounds.Game
                 }
             }
 
-            // a modal popping up (dragon stage story, ascend, help...) ends a right-hold (ui.js:3262)
+            // a modal popping up (dragon stage story, ending, help...) ends a right-hold (ui.js:3262)
             if (rightHeld && (hasHoldTarget || holdFront != null) && !holdDone && AnyModalOpen())
             {
                 holdDone = true; holdFront = null;

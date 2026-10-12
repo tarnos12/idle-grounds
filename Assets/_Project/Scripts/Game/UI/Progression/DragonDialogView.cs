@@ -6,16 +6,18 @@ using UnityEngine.UI;
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// Dragon story modal + awakening ending card (ui-input-render §4.13, ui.js syncDragonDialog /
+    /// Dragon story modal + the ending card (ui-input-render §4.13, ui.js syncDragonDialog /
     /// maybeShowEnding). Pull-based: shows while State.dragon.dialog is set (purple border, dragon
     /// sprite 56 px, the stage text, "Continue"); after the dialog, once, when
-    /// <see cref="Simulation.EndingPending"/> the gold "The Dragon Awakens" card with stats.
+    /// <see cref="Simulation.EndingPending"/> (the player chose "Ascend to Immortality" at the Heavenly Gate,
+    /// ADR 0007) the gold "Ascended to Immortality" card with stats; free play continues after it.
     /// Continue / Esc dismisses (<see cref="Simulation.DismissDragonDialog"/> / MarkEndingSeen).
     /// </summary>
     public class DragonDialogView : MonoBehaviour
     {
-        const string EndingText = "The grounds are complete. The Sleeping Dragon stirs, unfurls, and rises to watch over all you have " +
-                                  "raised. In gratitude it grants a permanent blessing - the whole world quickens by roughly 11%, forever.";
+        const string EndingText = "You step through the Heavenly Gate. Talisman, star steel and dragon scale hum as one, the awakened " +
+                                  "Dragon circles the peak, and you rise beyond the clouds - an Immortal. The grounds you raised remain, " +
+                                  "and they are yours to keep tending.";
 
         [SerializeField] GameRunner runner;
         [SerializeField] GameObject modal;
@@ -92,19 +94,17 @@ namespace IdleGrounds.Game
             border.effectColor = UiPalette.Gold;
             icon.sprite = awakeSprite;
             titleText.gameObject.SetActive(true);
-            titleText.text = "The Dragon Awakens";
+            titleText.text = "Ascended to Immortality";
             bodyText.text = EndingText;
             var s = runner.State;
-            var gate = runner.Config.Building("ascension_gate");
-            int tal = 3, star = 3;
-            if (gate != null) foreach (var c in gate.cost) { if (c.item == "talisman") tal = c.qty; if (c.item == "star_steel") star = c.qty; }
             double playMs = s.stats.started > 0 ? runner.SimNow - s.stats.started : 0;
+            int islands = 0;
+            foreach (var r in runner.Config.regions) if (s.world.IsUnlocked(r.key)) islands++;
             statsText.gameObject.SetActive(true);
             statsText.text =
-                "<color=#fbbf24>The dragon now sheds Dragon Scales - with " + tal + " Talismans and " + star +
-                " Star Steel, raise the Ascension Gate (B).</color>\n\n" +
-                "Ascensions  <b>" + s.ascensions + "</b>\nTotal crafted  <b>" + s.stats.totalCrafted + "</b>\n" +
-                "Playtime  <b>" + FmtAway(playMs) + "</b>";
+                "<color=#fbbf24>The End - free play continues.</color>\n\n" +
+                "Islands  <b>" + islands + "/" + runner.Config.regions.Count + "</b>\nBuildings built  <b>" + s.stats.buildingsBuilt + "</b>\n" +
+                "Total crafted  <b>" + s.stats.totalCrafted + "</b>\nPlaytime  <b>" + FmtAway(playMs) + "</b>";
         }
 
         /// <summary>ui.js fmtAway: "Xh Ym" / "Ym" / "Xs".</summary>

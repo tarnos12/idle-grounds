@@ -300,7 +300,7 @@ namespace IdleGrounds.Sim
         public int AutomationBudget(string areaKey)
         {
             int lvl = S.Area(areaKey)?.upgrades.automation ?? 0;
-            return lvl <= 0 ? 0 : Cfg.balance.AutomationClicks(lvl) + S.PerkLevel("autoboost");
+            return lvl <= 0 ? 0 : Cfg.balance.AutomationClicks(lvl) + S.Bonus("autoboost");
         }
 
         /// <summary>Regular enemy cap = config cap + Spirit Call level.</summary>
@@ -314,7 +314,7 @@ namespace IdleGrounds.Sim
         /// <summary>Strike damage: 1 + Spirit Blade + Martial Vigor bonus + Fury perk.</summary>
         public int AttackDamage(string areaKey, double now) =>
             1 + (S.Area(areaKey)?.upgrades.damage ?? 0)
-              + (Timing.CombatBuffActive(S, now) ? Cfg.vitality.bonusDamage : 0) + S.PerkLevel("fury");
+              + (Timing.CombatBuffActive(S, now) ? Cfg.vitality.bonusDamage : 0) + S.Bonus("fury");
 
         /// <summary>Spirit Wave splash radius in px (aoe · 1.5 cells).</summary>
         public double AoeRadiusPx(string areaKey) => (S.Area(areaKey)?.upgrades.aoe ?? 0) * 1.5 * _ctx.Cell;

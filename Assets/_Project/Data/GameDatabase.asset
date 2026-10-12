@@ -83,7 +83,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d0a75546ec983f1448d74448aae052ec, type: 2}
   - {fileID: 11400000, guid: 82990ff1e1b705844aebf7026a00c1a2, type: 2}
   - {fileID: 11400000, guid: 4859e612839072347a4c1cd7028da2b7, type: 2}
-  - {fileID: 11400000, guid: dc8741fba5a2ba24c84da211c2a78da0, type: 2}
+  - {fileID: 11400000, guid: 9a9d6bf02d04a3948856f0eddc28473b, type: 2}
   - {fileID: 11400000, guid: 4d8804fcf6c795f49899378f786ca548, type: 2}
   - {fileID: 11400000, guid: 741fa4268c8504d468a06d1649557c03, type: 2}
   - {fileID: 11400000, guid: 8f25449a10ae9ab49b31d13e5aa7cdea, type: 2}
@@ -115,27 +115,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: cc271ed50a2817349a567db75ac2f96d, type: 2}
   - {fileID: 11400000, guid: 74454fd896da81947996b3d35176432e, type: 2}
   - {fileID: 11400000, guid: 52e50d502977a9e4cbcbbdc4dc6c7f37, type: 2}
-  perks:
-  - {fileID: 11400000, guid: 7c01c45a4dfbc2d409e82198d3ae0556, type: 2}
-  - {fileID: 11400000, guid: 999b71d4380571c4db25c4f6ff99bec5, type: 2}
-  - {fileID: 11400000, guid: 1df55351b2dfa7440afc950347ae5d38, type: 2}
-  - {fileID: 11400000, guid: fbbaebf786957e341a88d2d16b769eb3, type: 2}
-  - {fileID: 11400000, guid: 7ff42fd050909ef4da89cb660badf97f, type: 2}
-  - {fileID: 11400000, guid: 1192c1b824cc3fb48ace6cd9d266e277, type: 2}
-  - {fileID: 11400000, guid: 573bffee206083a469236d760011e800, type: 2}
-  - {fileID: 11400000, guid: 2efb8b9628dabe7428c0834446160e02, type: 2}
-  - {fileID: 11400000, guid: 80acc092481d7e947a4687e48f38b1a6, type: 2}
-  - {fileID: 11400000, guid: d6ef55c4a307165459dbbd00185d8b01, type: 2}
-  - {fileID: 11400000, guid: d78ca3ff4f71d0f4fa2a4a3764102445, type: 2}
-  - {fileID: 11400000, guid: c38c134abaa385d419218fef17393b9c, type: 2}
-  - {fileID: 11400000, guid: aed40550bafcbed47b9816648b90b1fa, type: 2}
-  - {fileID: 11400000, guid: 2f35e44ad9b81894bad8554fc76cfae1, type: 2}
-  - {fileID: 11400000, guid: 7d2b0d1fff263a140a74f4790399ecfd, type: 2}
-  vows:
-  - {fileID: 11400000, guid: 6c98822a34916e143abf862526c24739, type: 2}
-  - {fileID: 11400000, guid: b139aa09f9fcbf44994ade778d718ba8, type: 2}
-  - {fileID: 11400000, guid: be1c498a28a66674c9d67c51de1a9c5c, type: 2}
-  - {fileID: 11400000, guid: 1753768b87556814dabbf2ce721a2744, type: 2}
   quests:
   - {fileID: 11400000, guid: 1f96a72c4cea3e646add6222c9fd36e5, type: 2}
   - {fileID: 11400000, guid: bade1d10609ade7428983dc083b13a65, type: 2}
@@ -164,25 +143,14 @@ MonoBehaviour:
     fuelSlots: 6
     fuelCap: 60000
     automationClicks: 020000000600000014000000
-    vowMult:
-    - 1
-    - 1.15
-    - 1.3
-    - 1.5
-    - 1.75
     questChain: 3
-    versionNum: 52
-    versionDesc: 'Design pass 2: idle loop that runs, reveal+quests, vows & legacy
-      perks, readable logistics'
+    versionNum: 53
+    versionDesc: 'ADR 0007 phase 1: ascension removed (no perks, vows, offerings);
+      the Heavenly Gate on Celestial Peak ends the game'
     worldCols: 3
     worldRows: 3
-    ascensionSpeedPerRun: 0
     hasteStep: 0.98
-    vowMarkStep: 0.99
     awakenedSpeed: 0.9
-    tributeShrinkPerRun: 0
-    tributeShrinkFloor: 0.4
-    restlessTributeMult: 1.5
     groundCap: 600
     groundHardCap: 900
     protectedShare: 480
@@ -462,10 +430,10 @@ MonoBehaviour:
       key: 
       stage: 4
       count: 0
-  - building: ascension_gate
+  - building: heavenly_gate
     any:
     - kind: 2
-      key: 
+      key: celestial
       stage: 4
       count: 0
   - building: spirit_bridge
@@ -474,13 +442,6 @@ MonoBehaviour:
       key: 
       stage: 0
       count: 2
-  gateOfferings:
-    items:
-    - talisman
-    - star_steel
-    - dragon_scale
-    cap: 6
-    perType: 2
   missingSprite: {fileID: 21300000, guid: 4158e4aa060ef0e4bb261a195d33b267, type: 3}
   fx:
   - key: fx_wisp

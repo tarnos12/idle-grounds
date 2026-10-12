@@ -22,10 +22,10 @@ MonoBehaviour:
   wispLantern: {fileID: 5870811081662143205, guid: e6edf1f0dc9e0ae4fafcabe88b847a69, type: 3}
   generator: {fileID: 6657290988448432561, guid: c24d9243ffdacb243b7c78eb6cb990a8, type: 3}
   pavilion: {fileID: 7279245925484001574, guid: 324121b6db960734088678f8a423bbf9, type: 3}
-  ascensionGate: {fileID: 3417318820931048896, guid: fd598abc3a63e654699901b40daa220d, type: 3}
   altar: {fileID: 6178716484569919784, guid: f2fc56723b16f69448ba63f28f3a047a, type: 3}
   dragon: {fileID: 1761070528920596416, guid: c98cb8a1b3adaa446873d139bad561ed, type: 3}
   spiritBridge: {fileID: 5269814933747387364, guid: 742c0ff1af845c54c9ab855267114f44, type: 3}
+  heavenlyGate: {fileID: 3417318820931048896, guid: fd598abc3a63e654699901b40daa220d, type: 3}
   entries:
   - type: center
     prefab: {fileID: 6178716484569919784, guid: f2fc56723b16f69448ba63f28f3a047a, type: 3}
@@ -57,7 +57,7 @@ MonoBehaviour:
     prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}
   - type: dragon_shrine
     prefab: {fileID: 5314109418191238808, guid: 4312cb64b566f8143bfeb3592874222c, type: 3}
-  - type: ascension_gate
+  - type: heavenly_gate
     prefab: {fileID: 3417318820931048896, guid: fd598abc3a63e654699901b40daa220d, type: 3}
   - type: charcoal_pit
     prefab: {fileID: 1640764719475180201, guid: fccc4783044fd6147b7b64503de8ade8, type: 3}

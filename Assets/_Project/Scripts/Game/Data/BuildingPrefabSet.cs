@@ -23,7 +23,9 @@ namespace IdleGrounds.Game.Data
         [Tooltip("Base Building prefab (default face).")]
         public GameObject fallback;
         public GameObject converter, burner, storehouse, wardingSeal, gatheringStone, furnaceSpirit,
-            wispLantern, generator, pavilion, ascensionGate, altar, dragon, spiritBridge;
+            wispLantern, generator, pavilion, altar, dragon, spiritBridge;
+        [UnityEngine.Serialization.FormerlySerializedAs("ascensionGate")]
+        public GameObject heavenlyGate;
         [Tooltip("Per-type rows (filled by the editor builder; edit freely).")]
         public List<Entry> entries = new List<Entry>();
 
@@ -43,7 +45,7 @@ namespace IdleGrounds.Game.Data
         {
             if (def.key == "center") return altar;
             if (def.key == "dragon") return dragon;
-            if (def.gate) return ascensionGate;
+            if (def.ending) return heavenlyGate;
             if (def.IsConverter) return def.fuel ? burner : converter;
             if (def.key == "storehouse") return storehouse;
             if (def.seal.enabled) return wardingSeal;

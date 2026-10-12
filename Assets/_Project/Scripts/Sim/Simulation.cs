@@ -49,13 +49,9 @@ namespace IdleGrounds.Sim
             Ctx.Hand.FeedBuilding = Ctx.Buildings.FeedBuilding;
             Ctx.Buildings.AltarFeed = Ctx.Upgrades.AltarFeed;
             Ctx.Buildings.DragonFeed = Ctx.Dragon.Feed;
-            Ctx.Buildings.GateFeed = Ctx.Progression.GateFeed;
-            Prestige = new PrestigeSystem(this);
         }
 
-        // ---- M7 prestige, save (§14, §1.4-1.5, §2.1) ----
-
-        public PrestigeSystem Prestige { get; }
+        // ---- M7 save (§1.4-1.5, §2.1) ----
 
         /// <summary>
         /// Boot (§2.1 steps 2-3): initArea ×all + starter network. No offline
@@ -66,7 +62,7 @@ namespace IdleGrounds.Sim
         public void Boot() => InitAllAreas();
 
         /// <summary>
-        /// Swap in another state (ascension, in-place load): caches dropped,
+        /// Swap in another state (in-place load): caches dropped,
         /// tick gap reset, any replay abandoned; <paramref name="boot"/> re-runs
         /// initArea ×all + starter network. Raises RunReset.
         /// </summary>
@@ -88,18 +84,28 @@ namespace IdleGrounds.Sim
         public static GameState LoadJson(string json, GameConfig cfg, double nowMs, out string reason) =>
             SaveCodec.TryDeserialize(json, cfg, nowMs, out var s, out reason) ? s : null;
 
-        /// <summary>`buyPerk(id)` — false when unaffordable / maxed / unknown.</summary>
-        public bool BuyPerk(string id) => Prestige.BuyPerk(id);
-        /// <summary>AP price of the perk's next level; null when maxed/unknown.</summary>
-        public int? PerkCost(string id) => Prestige.PerkCost(id);
-        public int PerkLevel(string id) => State.PerkLevel(id);
-        /// <summary>`ascend(nextVows)` — resets the run in place (RunReset); save right after.</summary>
-        public JustAscended Ascend(System.Collections.Generic.IEnumerable<string> nextVows = null) => Prestige.Ascend(nextVows);
-        /// <summary>Close the ascend dialog (the gate re-opens it on click).</summary>
-        public void SetAscendPrompt(bool open) => State.ascendPrompt = open;
-        /// <summary>Dismiss the one-time "Ascension n complete" card.</summary>
-        public void ClearJustAscended() => State.justAscended = null;
-        public void MarkPerkShopSeen() => State.perkShopSeen = true;
+        /// <summary>Utility bonus level (ADR 0007 §4 requester utilities; 0 = not owned). Phase 3 feeds it from requests.</summary>
+        public int Bonus(string key) => State.Bonus(key);
+
+        // ---- the ending (ADR 0007): the Heavenly Gate on Celestial Peak ----
+
+        /// <summary>The built Heavenly Gate (null = none yet).</summary>
+        public (string area, Building b) BuiltHeavenlyGate() => Ctx.Progression.BuiltGate();
+        /// <summary>"Ascend to Immortality" is possible: a built Heavenly Gate stands.</summary>
+        public bool CanAscendToImmortality => BuiltHeavenlyGate().b != null;
+        /// <summary>
+        /// "Ascend to Immortality" at the built Heavenly Gate: the ending plays (EndingPending), then free play
+        /// continues — nothing resets. Choosing it again replays the ending. False without a built gate.
+        /// </summary>
+        public bool AscendToImmortality()
+        {
+            if (!CanAscendToImmortality) return false;
+            State.ascended = true;
+            State.endingSeen = false;
+            Ctx.Events.RaiseSound("ascend", BuiltHeavenlyGate().area);
+            Ctx.Events.RaiseAscendedToImmortality();
+            return true;
+        }
         public void MarkIntroSeen() => State.introSeen = true;
 
         public BuildingSystem Buildings => Ctx.Buildings;
@@ -313,8 +319,8 @@ namespace IdleGrounds.Sim
         public void DismissDragonDialog() => Ctx.Dragon.DismissDialog();
         /// <summary>Dragon murmur to show above it now (null = none).</summary>
         public string DragonMessage() => Ctx.Dragon.ActiveMessage(Ctx.Now);
-        /// <summary>Ending card pending: awakened this run and not yet seen.</summary>
-        public bool EndingPending => State.won && !State.endingSeen;
+        /// <summary>Ending card pending: ascended to Immortality and not yet seen.</summary>
+        public bool EndingPending => State.ascended && !State.endingSeen;
         public void MarkEndingSeen() => State.endingSeen = true;
         /// <summary>Active dragon blessing or null (buff.kind = pill item id, until ms).</summary>
         public BuffState ActiveBlessing() => Ctx.Dragon.ActiveBlessing(Ctx.Now);
@@ -369,10 +375,6 @@ namespace IdleGrounds.Sim
         public ItemCounts UnlockRemaining(string areaKey) => Ctx.Progression.UnlockRemaining(areaKey);
         public bool CanPayUnlock(string areaKey) => Ctx.Progression.CanPayUnlock(areaKey);
         public (UnlockPayState state, int have, int need) UnlockPayInfo(string areaKey) => Ctx.Progression.PayState(areaKey);
-
-        // gate
-        public GateOfferingInfo GateOfferings(Building gate) => Ctx.Progression.GateOfferings(gate);
-        public int AscendReward() => Ctx.Progression.AscendReward();
 
         // pavilion
         public bool RecruitDisciple(string areaKey, int buildingId) => Ctx.Pavilions.Recruit(areaKey, buildingId);

@@ -140,9 +140,8 @@ namespace IdleGrounds.Sim.Tests
             for (int i = 0; i < 5; i++) sim.Fuel.AddItem(k, "wood");
             Assert.AreEqual(0, sim.Fuel.Space(k));
             Assert.IsFalse(sim.Fuel.AddItem(k, "wood"));
-            sim.State.vows.active.Add("coldhearth");
             sim.Fuel.Burn(k, 2500);
-            Assert.AreEqual(C - 1000 - 5000, sim.Fuel.Queue(k)[5].rem, 1e-9, "Cold Hearth burns double — from the back (the old charcoal)");
+            Assert.AreEqual(C - 1000 - 2500, sim.Fuel.Queue(k)[5].rem, 1e-9, "burns from the back (the old charcoal)");
         }
 
         [Test]
@@ -181,10 +180,10 @@ namespace IdleGrounds.Sim.Tests
             clock.Advance(50); sim.Tick();                                      // batch starts (1000 ms)
             for (int i = 0; i < 40; i++) { clock.Advance(50); sim.Tick(); }
             Assert.AreEqual(C - 1000, sim.Fuel.Total(k), 1e-6, "exactly one batch duration burned");
-            sim.State.perks.Set("ember", 2);
+            sim.State.bonuses.Set("ember", 2);
             k.stock.Set("clay", 2);
             for (int i = 0; i < 40; i++) { clock.Advance(50); sim.Tick(); }
-            Assert.AreEqual(C - 1000 - 1000 * 0.85 * 0.85, sim.Fuel.Total(k), 1e-6, "Ember Heart perk");
+            Assert.AreEqual(C - 1000 - 1000 * 0.85 * 0.85, sim.Fuel.Total(k), 1e-6, "ember bonus");
         }
 
         [Test]

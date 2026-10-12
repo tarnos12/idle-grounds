@@ -202,7 +202,7 @@ namespace IdleGrounds.Game
             if (b.roster.enabled) return $"Disciples cultivate {N(b.roster.produce)} (they eat {N(b.roster.food)})";
             if (b.gen.enabled) return $"Grows {N(b.gen.item)} around itself" + (b.waterOnly ? " (water only)" : "");
             if (b.shrine) return "Longer dragon blessings, more Dragon Scales";
-            if (b.gate) return "The final monument — Ascend from here";
+            if (b.ending) return "The final monument - Ascend to Immortality from here (Celestial Peak only)";
             if (b.key == "storehouse") return $"Stores up to {b.cap} of one item type";
             return "";
         }

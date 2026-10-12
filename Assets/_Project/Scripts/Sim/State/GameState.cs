@@ -177,9 +177,6 @@ namespace IdleGrounds.Sim
         public string pairIsland;
         public int pairId;
         public bool pairSends;
-        // gate
-        public ItemCounts offered;
-        public int offerings;
         // transients
         [NonSerialized] public List<double> crafts;
         [NonSerialized] public double craftFirst;
@@ -343,21 +340,6 @@ namespace IdleGrounds.Sim
     }
 
     [Serializable]
-    public class VowsState
-    {
-        public List<string> active = new List<string>();
-        public ItemCounts done = new ItemCounts();
-    }
-
-    [Serializable]
-    public class JustAscended
-    {
-        public int n;
-        public int ap;
-        public double speedFrom, speedTo;
-    }
-
-    [Serializable]
     public class QuestState
     {
         public int idx;
@@ -396,7 +378,8 @@ namespace IdleGrounds.Sim
     [Serializable]
     public class GameState
     {
-        public const int SchemaVersion = 1;
+        /// <summary>2 = ADR 0007 phase 1: ascension removed (see SaveCodec.MigrateFromV1).</summary>
+        public const int SchemaVersion = 2;
         public int schemaVersion = SchemaVersion;
 
         public List<HandStack> hand = new List<HandStack>();
@@ -409,23 +392,27 @@ namespace IdleGrounds.Sim
         public DragonState dragon = new DragonState();
         public double dragonScaleAt;            // 0 = unset
         public bool starterPlaced;
+        /// <summary>The Sleeping Dragon is awake (stage 4): timers ×awakenedSpeed. A mid-game moment, not the ending (ADR 0007).</summary>
         public bool won;
-        public bool dragonBlessed;
         public BuffState buff;
         public CombatBuffState combatBuff;
-        public int ascensions;
-        public bool ascendPrompt;
-        public int ascendPoints;
-        public ItemCounts perks = new ItemCounts();
-        public VowsState vows = new VowsState();
-        public JustAscended justAscended;
+        /// <summary>"Ascend to Immortality" was chosen at the built Heavenly Gate: the ending (ADR 0007). Free play continues.</summary>
+        public bool ascended;
+        /// <summary>The ending card was dismissed (pending while ascended and not seen).</summary>
         public bool introSeen, endingSeen;
+        /// <summary>
+        /// Utility bonus levels by key (ADR 0007 §4: requester utilities, read via <c>Simulation.Bonus(key)</c>).
+        /// Keys are the retired perk ids for now (haste, hall, slumber, hands, ember, autoboost, regrow, gale, fury,
+        /// bless, bounty); a fresh game has none. Phase 1 fills it only from migrated perks.
+        /// </summary>
+        public ItemCounts bonuses = new ItemCounts();
+        /// <summary>Perk levels a pre-ADR-0007 save owned (record only; phase 3 gifts the successor requests).</summary>
+        public ItemCounts legacyPerks = new ItemCounts();
         public int gridCells;
         public QuestState quest = new QuestState();
         public List<string> builtTypes = new List<string>();
         public ItemCounts buildSeen = new ItemCounts();
         public bool pavilionSeeded;
-        public bool perkShopSeen;
         /// <summary>Save stamp (ADR 0002: no offline progress — kept readable for old saves, never used).</summary>
         public double lastSeen;                 // NaN = null
         /// <summary>Legacy (ADR 0002): read from old saves, unused.</summary>
@@ -434,7 +421,7 @@ namespace IdleGrounds.Sim
         public List<SkyWisp> skyWisps = new List<SkyWisp>();
         public int nextSkyWispId = 1;
         public GameStats stats = new GameStats();
-        /// <summary>Per-item produced / consumed / lost counters (Stats - Flow). Lifetime survives ascension, the run section resets.</summary>
+        /// <summary>Per-item produced / consumed / lost counters (Stats - Flow).</summary>
         public FlowLedger flow = new FlowLedger();
 
         /// <summary>`makeInitialState()` (state.js:31). Areas in config region order.</summary>
@@ -464,7 +451,7 @@ namespace IdleGrounds.Sim
             return null;
         }
 
-        public int PerkLevel(string id) => perks.Get(id);
-        public bool VowActive(string id) => vows.active.Contains(id);
+        /// <summary>Utility bonus level (0 = not owned). See <see cref="bonuses"/>.</summary>
+        public int Bonus(string key) => bonuses.Get(key);
     }
 }

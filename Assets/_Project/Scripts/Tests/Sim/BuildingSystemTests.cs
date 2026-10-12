@@ -168,13 +168,11 @@ namespace IdleGrounds.Sim.Tests
             Assert.IsNull(sim.PlaceReason("volcano", "gathering_stone", 40, 40));
             Assert.AreEqual("Water only", sim.PlaceReason("fishing", "algae_farm", 5, 30));
             Assert.IsNull(sim.PlaceReason("fishing", "algae_farm", 40, 40));
-            Assert.AreEqual("Only one Ascension Gate", PlaceGate(sim));
-        }
-
-        static string PlaceGate(Simulation sim)
-        {
-            Assert.IsNotNull(sim.PlaceGhost("volcano", "ascension_gate", 10, 60));
-            return sim.PlaceReason("volcano", "ascension_gate", 10, 70);
+            Assert.AreEqual("Locked", sim.PlaceReason("volcano", "heavenly_gate", 10, 60), "Celestial Peak still locked");
+            sim.State.world.SetUnlocked("celestial", true);
+            Assert.AreEqual("Only on Celestial Peak", sim.PlaceReason("volcano", "heavenly_gate", 10, 60));
+            Assert.IsNotNull(sim.PlaceGhost("celestial", "heavenly_gate", 10, 60));
+            Assert.AreEqual("Only one Heavenly Gate", sim.PlaceReason("celestial", "heavenly_gate", 10, 70));
         }
 
         [Test]

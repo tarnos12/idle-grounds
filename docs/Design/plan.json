@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-12 09:20",
+  "updated": "2026-10-12 10:09",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -89,11 +89,10 @@
         },
         {
           "title": "Phase 1: remove ascension, perks, vows, offerings; Heavenly Gate ending; save migration",
-          "detail": "Old saves keep their progress; the game stays playable on 7 islands.",
-          "status": "waiting",
+          "detail": "Done 2026-10-12: ascension, Ascension Points, perks, vows, offerings and the run reset removed; Heavenly Gate on Celestial is the ending (free play continues); old saves migrate (perks become bonuses where a requester replaces them). Playthrough bot: 2:12 human pace to the ending.",
+          "status": "done",
           "size": "L",
-          "owner": "Claude",
-          "blockedBy": "Starts after the art integration agent leaves the Unity editor"
+          "owner": "Claude"
         },
         {
           "title": "Phase 2: Sky-Bridge Shrine, fixed unlock order, Celestial moves north, Sky Paths",
@@ -101,7 +100,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "After phase 1"
+          "blockedBy": "Ready to start (next)"
         },
         {
           "title": "Phase 3: requester NPCs on the 7 existing islands (21 requests)",
@@ -134,6 +133,13 @@
           "size": "L",
           "owner": "Artist",
           "blockedBy": "Requested 2026-10-12 in ART-SPEC §3.7"
+        },
+        {
+          "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
+          "detail": "The first converter batch takes 20.5 s of game time but the test waits only 18 s; it fails before and after phase 1.",
+          "status": "todo",
+          "size": "S",
+          "owner": "Claude"
         }
       ]
     },

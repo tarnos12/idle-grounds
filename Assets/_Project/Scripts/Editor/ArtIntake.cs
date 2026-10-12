@@ -230,7 +230,7 @@ namespace IdleGrounds.Editor
 
             // (the Dragon is skipped when the sleeping-dragon strip exists: it is wired below and would otherwise flip-flop)
             foreach (var a in db.buildings)
-                if (a && !(a.def.key == "dragon" && map.ContainsKey("dragon_sleeping")) && Set(map, "bld_" + a.def.key, used, s => { frameMap.TryGetValue("bld_" + a.def.key, out var bf); if (a.icon == s && a.hasRealArt && SameFrames(a.frames, bf)) return false; a.icon = s; a.frames = bf; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
+                if (a && !(a.def.key == "dragon" && map.ContainsKey("dragon_sleeping")) && Set(map, ArtKeys.Building(a.def.key), used, s => { frameMap.TryGetValue(ArtKeys.Building(a.def.key), out var bf); if (a.icon == s && a.hasRealArt && SameFrames(a.frames, bf)) return false; a.icon = s; a.frames = bf; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
 
             // the Dragon building has no bld_ art: its body is the sleeping-dragon strip (awake art = last stage asset)
             var dragonB = db.FindBuilding("dragon");
@@ -247,9 +247,9 @@ namespace IdleGrounds.Editor
                 if (!kv.Key.StartsWith("bld_")) continue;
                 BuildingAsset best = null;
                 foreach (var b in db.buildings)
-                    if (b && kv.Key.StartsWith("bld_" + b.def.key + "_") && (best == null || b.def.key.Length > best.def.key.Length)) best = b;
+                    if (b && kv.Key.StartsWith(ArtKeys.Building(b.def.key) + "_") && (best == null || ArtKeys.BuildingArtId(b.def.key).Length > ArtKeys.BuildingArtId(best.def.key).Length)) best = b;
                 if (best == null) continue;
-                string variant = kv.Key.Substring(("bld_" + best.def.key + "_").Length);
+                string variant = kv.Key.Substring((ArtKeys.Building(best.def.key) + "_").Length);
                 frameMap.TryGetValue(kv.Key, out var fr);
                 var existing = best.variants.Find(v => v.key == variant);
                 if (existing != null && existing.sprite == kv.Value && SameFrames(existing.frames, fr)) { used.Add(kv.Key); continue; }
@@ -302,8 +302,7 @@ namespace IdleGrounds.Editor
                 if (Set(map, dk, used, s => { frameMap.TryGetValue(dk, out var sf); if (a.icon == s && a.hasRealArt && SameFrames(a.frames, sf)) return false; a.icon = s; a.frames = sf; a.hasRealArt = true; EditorUtility.SetDirty(a); return true; })) wired++;
             }
             foreach (var a in db.upgrades) if (a && Set(map, "upg_" + a.def.id, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
-            foreach (var a in db.perks) if (a && Set(map, "perk_" + a.def.id, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
-            foreach (var a in db.vows) if (a && Set(map, "ui_vow_" + a.def.id, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
+            // perk_* / ui_vow_* art is retired with ascension (ADR 0007): no consumer, intentionally left unwired
             foreach (var a in db.quests) if (a && Set(map, "ui_quest_" + a.def.id, used, s => { if (a.icon == s) return false; a.icon = s; EditorUtility.SetDirty(a); return true; })) wired++;
             if (Set(map, "ui_alert", used, s => { if (db.missingSprite == s) return false; db.missingSprite = s; EditorUtility.SetDirty(db); return true; })) wired++;
 
@@ -381,6 +380,7 @@ namespace IdleGrounds.Editor
                 if (used.Contains(key) || used.Contains(key + "_idle")) continue;
                 if (key.EndsWith("_1x1") && used.Contains(key.Substring(0, key.Length - 4))) continue;
                 if (map.ContainsKey(key + "_1x1") && used.Contains(key)) continue;
+                if (key.StartsWith("perk_") || key.StartsWith("ui_vow_")) continue;   // retired with ascension (ADR 0007): kept, not consumed
                 warnings++;
                 Debug.LogWarning($"ArtIntake: '{key}' has no wiring target yet (kept in Art/Incoming; unknown or not-yet-consumed key).");
             }

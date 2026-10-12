@@ -44,14 +44,11 @@ namespace IdleGrounds.Sim
 
     public enum UnlockPayState { Cant, Partial, Afford }
 
-    /// <summary>`gateOfferings(b)`.</summary>
-    public sealed class GateOfferingInfo
-    {
-        public int count, cap, perType;
-        public ItemCounts offered = new ItemCounts();
-    }
-
-    public enum MilestoneKind { DragonTribute, RaiseGate, Ascend }
+    /// <summary>
+    /// The next big goal (ADR 0007): feed the dragon → open the gate's Island (Celestial Peak) → raise the Heavenly
+    /// Gate → "Ascend to Immortality" → free play.
+    /// </summary>
+    public enum MilestoneKind { DragonTribute, OpenIsland, RaiseGate, Ascend, FreePlay }
     public enum MilestoneStepKind { Withdraw, Gather, SwitchRecipe, Build, Collect, Feed, FeedGhost, PlaceGate }
 
     /// <summary>One have/need row with its SOURCES hint.</summary>
@@ -81,22 +78,17 @@ namespace IdleGrounds.Sim
     /// <summary>`milestoneInfo()` as data.</summary>
     public sealed class MilestoneInfo
     {
-        /// <summary>"Spend N AP at the Ascension Shrine" line.</summary>
-        public bool spendAp;
-        public int ap;
         public MilestoneKind kind;
+        /// <summary>OpenIsland: the Island the Heavenly Gate needs (its unlock remainder is in <see cref="needs"/>).</summary>
+        public string island;
         // dragon tribute
         public int tributeNumber, tributeTotal;
         public double tributeProgress;
-        /// <summary>Have/need rows (dragon remaining or gate cost/needs).</summary>
+        /// <summary>Have/need rows (dragon remaining, the Island's unlock remainder, or gate cost/needs).</summary>
         public List<MilestoneNeedRow> needs = new List<MilestoneNeedRow>();
         // gate
         public bool gatePlaced;
         public MilestoneStep step;
-        // ascend
-        public int ascendReward;
-        public bool allRegionsOpen;
-        public GateOfferingInfo offerings;
         /// <summary>Disciples are eating and no Mill/Brewery stands.</summary>
         public bool hungryDisciples;
         /// <summary>Primary building target (null = none).</summary>
@@ -106,8 +98,8 @@ namespace IdleGrounds.Sim
     }
 
     /// <summary>
-    /// Quests (§13.2), region unlocks with installments (§3.6), Ascension Gate
-    /// offerings (§14.1-14.2) and the milestone tracker (ui.js milestoneInfo /
+    /// Quests (§13.2), region unlocks with installments (§3.6), the Heavenly Gate
+    /// (ADR 0007) and the milestone tracker (ui.js milestoneInfo /
     /// stepToward, ported as pure logic).
     /// </summary>
     public sealed class ProgressionSystem
@@ -489,8 +481,7 @@ namespace IdleGrounds.Sim
             into.ClearReuse();
             var reg = Cfg.Region(k);
             if (reg == null || reg.unlockCost.Count == 0) return false;
-            double frugal = Math.Pow(0.8, S.PerkLevel("frugal"));
-            foreach (var c in reg.unlockCost) into.Set(c.item, Math.Max(1, (int)Math.Ceiling(_ctx.Timing.Scaled(c.qty) * frugal)));
+            foreach (var c in reg.unlockCost) into.Set(c.item, Math.Max(1, _ctx.Timing.Scaled(c.qty)));
             return true;
         }
 
@@ -594,121 +585,31 @@ namespace IdleGrounds.Sim
             }
         }
 
-        /// <summary>
-        /// The Frugal Frontier part of `buyPerk` (engine.js:183): after the
-        /// unlock costs shrank, installments past the new cost go back to the
-        /// hand, and regions with nothing left open on the spot (sfx unlock).
-        /// Call right after raising perks["frugal"].
-        /// </summary>
-        public void ReconcileUnlockInstallments()
-        {
-            foreach (var entry in new List<RegionPaid>(S.world.unlockPaid))
-            {
-                string k = entry.region;
-                if (Cfg.Region(k) == null || S.world.IsUnlocked(k)) continue;
-                var cost = UnlockCost(k) ?? new ItemCounts();
-                var over = new ItemCounts();
-                foreach (var e in new List<ItemQty>(entry.paid.entries))
-                {
-                    int x = e.qty - cost.Get(e.item);
-                    if (x > 0) { over.Set(e.item, x); entry.paid.Set(e.item, e.qty - x); }
-                    if (!(entry.paid.Get(e.item) > 0)) entry.paid.Remove(e.item);
-                }
-                RefundToHand(over);
-                var rem = UnlockRemaining(k);
-                if (rem != null && rem.Count == 0)
-                {
-                    DeletePaid(k);
-                    OpenRegion(k);
-                    _ctx.Events.RaiseSound("unlock", k);
-                }
-            }
-        }
-
         // ================================================================
-        // Ascension Gate offerings (§14.1-14.2)
+        // the Heavenly Gate (ADR 0007)
         // ================================================================
 
-        /// <summary>`gateOfferings(b)`.</summary>
-        public GateOfferingInfo GateOfferings(Building b)
-        {
-            var G = Cfg.gateOfferings;
-            int cap = G.cap, per = G.perType > 0 ? G.perType : cap;
-            var offered = b?.offered ?? new ItemCounts();
-            int count = 0;
-            foreach (var it in G.items) count += Math.Max(0, Math.Min(per, offered.Get(it)));
-            return new GateOfferingInfo { count = Math.Min(cap, count), cap = cap, perType = per, offered = offered };
-        }
-
-        /// <summary>`gateTakes(b,item)`.</summary>
-        public bool GateTakes(Building b, string item)
-        {
-            var off = GateOfferings(b);
-            return Cfg.gateOfferings.items.Contains(item) && off.count < off.cap && off.offered.Get(item) < off.perType;
-        }
-
-        /// <summary>`builtGate()` — first built gate anywhere (area order).</summary>
+        /// <summary>First built Heavenly Gate anywhere (area order); (null, null) when none.</summary>
         public (string area, Building b) BuiltGate()
         {
             foreach (var a in S.areas)
                 foreach (var b in a.buildings)
-                    if (b.built && Cfg.Building(b.type)?.gate == true) return (a.key, b);
+                    if (b.built && Cfg.Building(b.type)?.ending == true) return (a.key, b);
             return (null, null);
         }
 
-        /// <summary>`vowMult()`.</summary>
-        public double VowMult()
+        /// <summary>The ending building type (first `ending` building in config order; null = none).</summary>
+        public string GateType()
         {
-            var m = Cfg.balance.vowMult;
-            if (m == null || m.Count == 0) return 1;
-            return m[Math.Min(S.vows.active.Count, m.Count - 1)];
+            foreach (var bc in Cfg.buildings) if (bc.ending) return bc.key;
+            return null;
         }
 
-        /// <summary>`ascendReward()` — AP for ascending now.</summary>
-        public int AscendReward()
+        /// <summary>The Island the Heavenly Gate must stand on while it is still locked (null = open / unrestricted).</summary>
+        public string GateIslandLocked()
         {
-            int regions = 0;
-            foreach (var f in S.world.unlocked) if (f.unlocked) regions++;
-            var (_, g) = BuiltGate();
-            int offerings = g != null ? GateOfferings(g).count : 0;
-            return (int)Math.Round((3 + 2 * Math.Max(0, regions - 1) + S.PerkLevel("apgain") + offerings) * VowMult(), MidpointRounding.AwayFromZero);
-        }
-
-        /// <summary>`perkCost(id)` — AP price of the next level; null when maxed/unknown.</summary>
-        public int? PerkCost(string id)
-        {
-            var def = Cfg.Perk(id);
-            if (def == null) return null;
-            int lvl = S.PerkLevel(id);
-            return lvl >= def.max || lvl >= def.cost.Count ? (int?)null : def.cost[lvl];
-        }
-
-        /// <summary>dropFromHand step 11 (engine.js:2036). false = fall through (front item is not an offering, nothing to reorder).</summary>
-        public bool GateFeed(string areaKey, Building b, out DropResult result)
-        {
-            result = null;
-            var items = Cfg.gateOfferings.items;
-            var first = S.hand.Count > 0 ? S.hand[0] : null;
-            if (first != null && items.Contains(first.item))
-            {
-                if (GateTakes(b, first.item))
-                {
-                    string it = first.item;
-                    Hand.Take(it, 1);
-                    _ctx.Flow.Consume(it, 1);
-                    b.offered ??= new ItemCounts();
-                    b.offered.Add(it, 1);
-                    b.offerings = GateOfferings(b).count;
-                    result = DropResult.Of(DropResultKind.Fed, it);
-                    return true;
-                }
-                foreach (var it in items)
-                    if (Hand.Count(it) > 0 && GateTakes(b, it)) { Hand.MoveToFront(it); result = DropResult.Of(DropResultKind.Reordered, it); return true; }
-                return true;
-            }
-            foreach (var it in items)
-                if (Hand.Count(it) > 0 && GateTakes(b, it)) { Hand.MoveToFront(it); result = DropResult.Of(DropResultKind.Reordered, it); return true; }
-            return false;
+            var def = Cfg.Building(GateType());
+            return !string.IsNullOrEmpty(def?.onlyArea) && Cfg.Region(def.onlyArea) != null && !S.world.IsUnlocked(def.onlyArea) ? def.onlyArea : null;
         }
 
         // ================================================================
@@ -886,16 +787,15 @@ namespace IdleGrounds.Sim
                     if (firstUnlocked != null && !builds.Contains(firstUnlocked)) builds.Add(firstUnlocked);
                 }
             }
-            else
+            else if (GateIslandLocked() == null)
             {
                 Building gate = null;
                 foreach (var a in S.areas)
                     foreach (var b in a.buildings)
-                        if (Cfg.Building(b.type)?.gate == true && (gate == null || b.built)) gate = b;
+                        if (Cfg.Building(b.type)?.ending == true && (gate == null || b.built)) gate = b;
                 if (gate == null || !gate.built)
                 {
-                    string gType = null;
-                    foreach (var bc in Cfg.buildings) if (bc.gate) { gType = bc.key; break; }
+                    string gType = GateType();
                     var rem = _remScratch;
                     if (gate != null) _ctx.Buildings.NeedsInto(gate, rem);
                     else
@@ -977,20 +877,12 @@ namespace IdleGrounds.Sim
             return null;                                                                         // Collect / Feed
         }
 
-        /// <summary>`milestoneInfo()` — the next big goal (dragon tribute → raise the Gate → ascend) + side lines.</summary>
+        /// <summary>`milestoneInfo()` — the next big goal (dragon tribute → open Celestial → raise the Heavenly Gate → ascend → free play) + side lines.</summary>
         public MilestoneInfo Milestone()
         {
             var m = new MilestoneInfo();
             string build = null;
             var builds = m.builds;
-            int ap = S.ascendPoints;
-            m.ap = ap;
-            if (!S.perkShopSeen && ap > 0)
-            {
-                int? cheapest = null;
-                foreach (var pk in Cfg.perks) { var c = PerkCost(pk.id); if (c != null && (cheapest == null || c < cheapest)) cheapest = c; }
-                m.spendAp = cheapest != null && ap >= cheapest;
-            }
             var dragon = _ctx.Dragon;
             var st = dragon.CurrentStage;
             if (st != null)
@@ -1012,18 +904,23 @@ namespace IdleGrounds.Sim
                 m.needs = NeedRows(rem);
                 m.tributeProgress = all > 0 ? (double)paid / all : 0;
             }
+            else if (GateIslandLocked() is string isl)
+            {
+                m.kind = MilestoneKind.OpenIsland;
+                m.island = isl;
+                m.needs = NeedRows(UnlockRemaining(isl) ?? new ItemCounts());
+            }
             else
             {
                 Building gate = null;
                 foreach (var a in S.areas)
                     foreach (var b in a.buildings)
-                        if (Cfg.Building(b.type)?.gate == true && (gate == null || b.built)) gate = b;
+                        if (Cfg.Building(b.type)?.ending == true && (gate == null || b.built)) gate = b;
                 if (gate == null || !gate.built)
                 {
                     m.kind = MilestoneKind.RaiseGate;
                     m.gatePlaced = gate != null;
-                    string gType = null;
-                    foreach (var bc in Cfg.buildings) if (bc.gate) { gType = bc.key; break; }
+                    string gType = GateType();
                     var rem = gate != null ? _ctx.Buildings.Needs(gate)
                         : gType != null ? new ItemCounts(Cfg.Building(gType).cost) : new ItemCounts();
                     string miss = null;
@@ -1032,21 +929,13 @@ namespace IdleGrounds.Sim
                     if (miss != null) step = StepToward(miss, null, rem.Get(miss));
                     else step = gate != null
                         ? new MilestoneStep { kind = MilestoneStepKind.FeedGhost, building = gate.type, text = "Right-click the Gate ghost to feed it." }
-                        : new MilestoneStep { kind = MilestoneStepKind.PlaceGate, building = gType, text = "Place it from the build menu (B)." };
+                        : new MilestoneStep { kind = MilestoneStepKind.PlaceGate, building = gType, text = "Place it on " + (Cfg.Region(Cfg.Building(gType)?.onlyArea)?.name ?? "an Island") + " from the build menu (B)." };
                     if (gate == null && miss == null) build = gType;
                     else if (step.kind == MilestoneStepKind.Build) build = step.building;
                     m.needs = NeedRows(rem);
                     m.step = step;
                 }
-                else
-                {
-                    m.kind = MilestoneKind.Ascend;
-                    bool allOpen = true;
-                    foreach (var r in Cfg.regions) if (!S.world.IsUnlocked(r.key)) allOpen = false;
-                    m.allRegionsOpen = allOpen;
-                    m.offerings = GateOfferings(gate);
-                    m.ascendReward = AscendReward();
-                }
+                else m.kind = S.ascended ? MilestoneKind.FreePlay : MilestoneKind.Ascend;
             }
             if (!BuiltAnywhere("mill") && !BuiltAnywhere("brewery"))
             {

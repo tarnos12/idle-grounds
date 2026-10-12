@@ -14,11 +14,12 @@ using static IdleGrounds.Editor.ProgressionBuilder;
 namespace IdleGrounds.Editor
 {
     /// <summary>
-    /// M7 "Prestige, save" + M8 "Juice &amp; audio" view side, reproducible: the SfxLibrary asset; UI
-    /// prefabs HelpModal, StatsPanel, PerkShop, AscendDialog, PostAscension, WelcomeModal, Toast, ConfirmDialog;
-    /// scene wiring — SaveService / AudioService / MetaUiController under "--- Systems", the modals under
-    /// UI/Canvas (above the M5 panels, below the hand cursor), the bottom-bar additions (Shrine pill, mute
-    /// button, ascension tag in the area pill, MetaBarView) and the FxService spark sprite.
+    /// M7 "Save" + M8 "Juice &amp; audio" view side, reproducible: the SfxLibrary asset; UI
+    /// prefabs HelpModal, StatsPanel, WelcomeModal, Toast, ConfirmDialog; scene wiring — SaveService /
+    /// AudioService / MetaUiController under "--- Systems", the modals under UI/Canvas (above the M5 panels,
+    /// below the hand cursor), the bottom-bar additions (mute + motion buttons, MetaBarView) and the FxService
+    /// spark sprite. The ascension UI (PerkShop, AscendDialog, PostAscension, Shrine pill, ascension tag) was
+    /// removed by ADR 0007; installing deletes leftover copies of it from the scene.
     /// </summary>
     public static class MetaBuilder
     {
@@ -26,7 +27,9 @@ namespace IdleGrounds.Editor
         const string SfxDir = "Assets/_Project/Audio/SFX";
         const string SfxLibraryPath = "Assets/_Project/Audio/SfxLibrary.asset";
         static readonly string[] SfxNames = { "harvest", "pickup", "swing", "craft", "build", "upgrade", "unlock", "hit", "kill", "dragon", "ascend", "error", "click" };
-        static readonly string[] Prefabs = { "PostAscension", "AscendDialog", "PerkShop", "HelpModal", "StatsPanel", "WelcomeModal", "Toast", "ConfirmDialog" };
+        static readonly string[] Prefabs = { "HelpModal", "StatsPanel", "WelcomeModal", "Toast", "ConfirmDialog" };
+        /// <summary>Retired ascension modals (ADR 0007): removed from the canvas on install.</summary>
+        static readonly string[] RetiredPrefabs = { "PostAscension", "AscendDialog", "PerkShop" };
 
         [MenuItem("Idle Grounds/Prefabs/Build Meta Prefabs (M7+M8)")]
         public static void BuildAllPrefabs()
@@ -36,9 +39,6 @@ namespace IdleGrounds.Editor
             EnsureSfxLibrary();
             BuildHelpPrefab();
             BuildStatsPrefab();
-            BuildPerkShopPrefab();
-            BuildAscendPrefab();
-            BuildPostAscensionPrefab();
             BuildWelcomePrefab();
             BuildToastPrefab();
             BuildConfirmPrefab();
@@ -310,164 +310,6 @@ namespace IdleGrounds.Editor
             return t;
         }
 
-        static void BuildPerkShopPrefab()
-        {
-            var root = Stretch(NewUi("PerkShop", null));
-            var view = root.gameObject.AddComponent<PerkShopView>();
-            var (modal, box) = Modal(root, UiPalette.Gold);
-            var brt = box.rectTransform;
-            brt.sizeDelta = new Vector2(840f, 930f);
-            var (_, close) = Header(brt, "Ascension Shrine", Emoji("ui_ascend"));
-            var ap = Label(brt, "APLine", "0 Ascension Points to spend", 19.5f, UiPalette.Text, false);
-            ap.textWrappingMode = TextWrappingModes.Normal; ap.richText = true;
-            var art = ap.rectTransform;
-            art.anchorMin = new Vector2(0f, 1f); art.anchorMax = new Vector2(1f, 1f);
-            art.pivot = new Vector2(0.5f, 1f);
-            art.sizeDelta = new Vector2(-54f, 66f);
-            art.anchoredPosition = new Vector2(0f, -78f);
-            ap.alignment = TextAlignmentOptions.TopLeft;
-            var (scroll, content) = Scroll(brt, 168f, 36f, 10f);
-
-            var tpl = Templates(root);
-            var grp = Label(tpl, "GroupTemplate", "PACE", 16.5f, UiPalette.Muted, true);
-            grp.characterSpacing = 8f;
-            Le(grp, h: 30);
-
-            var cardImg = Chip(tpl, "CardTemplate", UiPalette.Panel, UiPalette.Line, raycast: true);
-            Row(cardImg.gameObject, 15, 12, 15).childAlignment = TextAnchor.MiddleLeft;
-            var card = cardImg.gameObject.AddComponent<PerkCardView>();
-            card.background = cardImg;
-            card.border = cardImg.GetComponent<Outline>();
-            card.border.effectDistance = new Vector2(2f, -2f);
-            card.group = cardImg.gameObject.AddComponent<CanvasGroup>();
-            card.cardButton = cardImg.gameObject.AddComponent<Button>();
-            card.cardButton.targetGraphic = cardImg;
-            var nav = card.cardButton.navigation; nav.mode = Navigation.Mode.None; card.cardButton.navigation = nav;
-            card.icon = Icon(cardImg.rectTransform, "Icon", Emoji("perk_haste"), 45);
-            var body = NewUi("Body", cardImg.rectTransform);
-            ColW(body.gameObject, 0, 3);
-            Le(body, flexW: 1);
-            var nameRow = NewUi("NameRow", body);
-            Row(nameRow.gameObject, 0, 0, 9);
-            card.nameText = Label(nameRow, "Name", "Haste", 22.5f, UiPalette.Text, true);
-            card.levelText = Label(nameRow, "Level", "0/5", 19.5f, UiPalette.Gold, true);
-            var pick = Chip(nameRow, "Pick", ViewKit.Rgba(251, 191, 36, 0.15f), UiPalette.Gold);
-            Row(pick.gameObject, 8, 1, 0);
-            Label(pick.rectTransform, "Label", "good first pick", 15f, UiPalette.Gold, true);
-            card.pickTag = pick.gameObject;
-            card.descText = Text(body, "Desc", "desc", 18.75f, UiPalette.Muted, false, true);
-            card.fxText = Text(body, "Fx", "timers ×1.00 → ×0.95", 18f, UiPalette.Accent, false, true);
-            card.buyButton = SmallButton(cardImg.rectTransform, "Buy", "1 AP", UiPalette.Gold, 120, 51);
-            card.buyLabel = card.buyButton.GetComponentInChildren<TextMeshProUGUI>();
-            EditorUtility.SetDirty(card);
-
-            Set(view, "modal", modal);
-            Set(view, "closeButton", close);
-            Set(view, "apLine", ap);
-            Set(view, "listRoot", content);
-            Set(view, "groupTemplate", grp);
-            Set(view, "cardTemplate", card);
-            Set(view, "scroll", scroll);
-            modal.SetActive(false);
-            Save(root.gameObject, UiPrefabDir + "/PerkShop.prefab");
-        }
-
-        static Toggle CheckBox(Transform parent)
-        {
-            var bg = Chip(parent, "Toggle", UiPalette.Panel, UiPalette.Line, raycast: true);
-            Le(bg, 30, 30);
-            var check = Icon(bg.rectTransform, "Check", null, 18);
-            check.sprite = UiSprite; check.type = Image.Type.Sliced; check.color = UiPalette.Accent;
-            var crt = check.rectTransform;
-            crt.anchorMin = crt.anchorMax = new Vector2(0.5f, 0.5f);
-            crt.sizeDelta = new Vector2(18f, 18f);
-            var t = bg.gameObject.AddComponent<Toggle>();
-            t.targetGraphic = bg; t.graphic = check; t.isOn = false;
-            return t;
-        }
-
-        static void BuildAscendPrefab()
-        {
-            var root = Stretch(NewUi("AscendDialog", null));
-            var view = root.gameObject.AddComponent<AscendDialogView>();
-            var (modal, box, _) = FitBox(root, UiPalette.Gold, 960f, 27, 12);
-            var brt = box.rectTransform;
-            Icon(brt, "Icon", Emoji("bld_ascension_gate"), 72).GetComponent<LayoutElement>().preferredHeight = 72;
-            Text(brt, "Title", "The Ascension Gate stands complete", 28f, UiPalette.Gold, true, true, TextAlignmentOptions.Center);
-            Text(brt, "Flavour", "Talisman, star steel and dragon scale hum as one. The path beyond the grounds opens — step through, and begin again as something greater.",
-                19.5f, UiPalette.Text, false, true, TextAlignmentOptions.Center);
-            var count = Text(brt, "Count", "", 19.5f, UiPalette.Text, false, true, TextAlignmentOptions.Center);
-
-            var keep = NewUi("KeepReset", brt);
-            var kr = Row(keep.gameObject, 0, 0, 15);
-            kr.childAlignment = TextAnchor.UpperLeft; kr.childForceExpandWidth = true;
-            void Column(string name, string head, Color c, string[] items)
-            {
-                var chip = Chip(keep, name, UiPalette.Panel, UiPalette.Line);
-                ColW(chip.gameObject, 12, 4);
-                Le(chip, flexW: 1);
-                Text(chip.rectTransform, "Title", head, 19.5f, c, true, true);
-                Text(chip.rectTransform, "Body", "• " + string.Join("\n• ", items), 18f, UiPalette.Muted, false, true);
-            }
-            Column("Keep", "Keep", UiPalette.Accent, new[] { "Perks + Ascension Points", "Ascension speed + vow marks", "Dragon's blessing", "Lifetime stats", "Know-how (tutorial skipped)" });
-            Column("Reset", "Reset", UiPalette.Danger, new[] { "Buildings & regions", "Resources", "Dragon stages", "Upgrades" });
-
-            var vows = Chip(brt, "Vows", UiPalette.Panel, UiPalette.Line);
-            ColW(vows.gameObject, 12, 5);
-            Text(vows.rectTransform, "Title", "Vows for the next run (optional)", 19.5f, UiPalette.Gold, true, true);
-            var hint = Text(vows.rectTransform, "Hint", "", 18f, UiPalette.Muted, false, true);
-            var vowRows = NewUi("Rows", vows.rectTransform);
-            ColW(vowRows.gameObject, 0, 4);
-
-            var row = ButtonRow(brt);
-            var go = BigButton(row, "Ascend", "Ascend", UiPalette.Gold);
-            var later = BigButton(row, "Later", "Keep playing", UiPalette.Text);
-            var perks = BigButton(row, "Perks", "See perks", UiPalette.Text);
-
-            var tpl = Templates(root);
-            var vr = NewUi("VowTemplate", tpl);
-            Row(vr.gameObject, 0, 2, 10).childAlignment = TextAnchor.MiddleLeft;
-            var vv = vr.gameObject.AddComponent<VowRowView>();
-            vv.toggle = CheckBox(vr);
-            vv.icon = Icon(vr, "Icon", Emoji("ui_vow_burden"), 27);
-            vv.label = Text(vr, "Label", "Vow", 18f, UiPalette.Text, false, true);
-            EditorUtility.SetDirty(vv);
-
-            Set(view, "modal", modal);
-            Set(view, "countText", count);
-            Set(view, "vowsBox", vows.gameObject);
-            Set(view, "vowsHint", hint);
-            Set(view, "vowsRoot", vowRows);
-            Set(view, "vowTemplate", vv);
-            Set(view, "ascendButton", go);
-            Set(view, "laterButton", later);
-            Set(view, "perksButton", perks);
-            modal.SetActive(false);
-            Save(root.gameObject, UiPrefabDir + "/AscendDialog.prefab");
-        }
-
-        static void BuildPostAscensionPrefab()
-        {
-            var root = Stretch(NewUi("PostAscension", null));
-            var view = root.gameObject.AddComponent<PostAscensionCardView>();
-            var (modal, box, _) = FitBox(root, UiPalette.Gold, 780f);
-            var brt = box.rectTransform;
-            Icon(brt, "Icon", Emoji("ui_ascend"), 72).GetComponent<LayoutElement>().preferredHeight = 72;
-            var title = Text(brt, "Title", "Ascension 1 complete", 28f, UiPalette.Gold, true, true, TextAlignmentOptions.Center);
-            var body = Text(brt, "Body", "", 19.5f, UiPalette.Text, false, true, TextAlignmentOptions.Center);
-            var row = ButtonRow(brt);
-            var shrine = BigButton(row, "Shrine", "Open Shrine", UiPalette.Gold);
-            var begin = BigButton(row, "Begin", "Begin run 2", UiPalette.Text);
-            Set(view, "modal", modal);
-            Set(view, "titleText", title);
-            Set(view, "bodyText", body);
-            Set(view, "shrineButton", shrine);
-            Set(view, "beginButton", begin);
-            Set(view, "beginLabel", begin.GetComponentInChildren<TextMeshProUGUI>());
-            modal.SetActive(false);
-            Save(root.gameObject, UiPrefabDir + "/PostAscension.prefab");
-        }
-
         static void BuildWelcomePrefab()
         {
             var root = Stretch(NewUi("WelcomeModal", null));
@@ -562,64 +404,48 @@ namespace IdleGrounds.Editor
                 var old = canvas.transform.Find(n);
                 if (old != null) Object.DestroyImmediate(old.gameObject);
             }
+            foreach (var n in RetiredPrefabs)
+            {
+                var old = canvas.transform.Find(n);
+                if (old != null) Object.DestroyImmediate(old.gameObject);
+            }
             var made = new Dictionary<string, GameObject>();
             foreach (var n in Prefabs)
                 made[n] = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(UiPrefabDir + "/" + n + ".prefab"), canvas.transform);
             T Get<T>(string n) where T : Component { var c = made[n].GetComponent<T>(); Set(c, "runner", runner); return c; }
             var help = Get<HelpModalView>("HelpModal");
             var stats = Get<StatsPanelView>("StatsPanel");
-            var shop = Get<PerkShopView>("PerkShop");
-            var ascend = Get<AscendDialogView>("AscendDialog");
-            var post = Get<PostAscensionCardView>("PostAscension");
             var welcome = Get<WelcomeModalView>("WelcomeModal");
             var toast = made["Toast"].GetComponent<ToastView>();
             var confirm = Get<ConfirmDialogView>("ConfirmDialog");
-            Set(ascend, "confirm", confirm);
-            Set(ascend, "perkShop", shop);
-            Set(post, "perkShop", shop);
 
             var meta = Ensure<MetaUiController>(FindOrCreate("MetaUi", systems));
             Set(meta, "runner", runner);
             Set(meta, "build", bc);
             Set(meta, "help", help);
             Set(meta, "stats", stats);
-            Set(meta, "perkShop", shop);
-            Set(meta, "ascend", ascend);
-            Set(meta, "postAscension", post);
             Set(meta, "welcome", welcome);
             Set(meta, "toast", toast);
             Set(meta, "confirm", confirm);
 
             // bottom bar additions
-            InstallBar(bar, runner, help, stats, shop, confirm);
+            InstallBar(bar, runner, help, stats, confirm);
 
             var cursor = canvas.transform.Find("HandCursor");
             if (cursor != null) cursor.SetAsLastSibling();
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
         }
 
-        static void InstallBar(BottomBarView bar, GameRunner runner, HelpModalView help, StatsPanelView stats, PerkShopView shop, ConfirmDialogView confirm)
+        static void InstallBar(BottomBarView bar, GameRunner runner, HelpModalView help, StatsPanelView stats, ConfirmDialogView confirm)
         {
             var t = bar.transform;
-            foreach (var n in new[] { "ShrinePill", "MuteButton", "MotionButton" })
+            foreach (var n in new[] { "ShrinePill", "MuteButton", "MotionButton" })   // ShrinePill: retired (ADR 0007)
             {
                 var old = t.Find(n);
                 if (old != null) Object.DestroyImmediate(old.gameObject);
             }
             var area = t.Find("AreaPill");
             if (area != null) { var oldTag = area.Find("AscTag"); if (oldTag != null) Object.DestroyImmediate(oldTag.gameObject); }
-
-            // ☯ Shrine pill after the buff pill (or the hand pill)
-            var pillImg = Chip(t, "ShrinePill", UiPalette.Panel, UiPalette.Line, raycast: true);
-            Row(pillImg.gameObject, 12, 6, 6);
-            UiSkin.Attach(pillImg.gameObject, "ui_pill_gold", fit: true, uiPerArt: 1f);
-            Icon(pillImg.rectTransform, "Icon", Emoji("ui_ascend"), 22);
-            var pillText = Label(pillImg.rectTransform, "Count", "0", 19, UiPalette.Gold, true);
-            var pill = pillImg.gameObject.AddComponent<Button>();
-            pill.targetGraphic = pillImg;
-            var anchor = t.Find("BuffPill") ?? t.Find("HandPill");
-            if (anchor != null) pillImg.transform.SetSiblingIndex(anchor.GetSiblingIndex() + 1);
-            pillImg.gameObject.SetActive(false);
 
             // mute toggle before Help
             var mute = BarButton(t, "MuteButton", "Sound", null, UiPalette.Text);
@@ -628,18 +454,6 @@ namespace IdleGrounds.Editor
             // Reduce motion toggle right after Sound (persisted in PlayerPrefs ig_reduce_motion)
             var motion = BarButton(t, "MotionButton", "Motion", null, UiPalette.Text);
             motion.transform.SetSiblingIndex(mute.transform.GetSiblingIndex() + 1);
-
-            // ascensions + world speed tag in the area pill
-            GameObject tag = null; TextMeshProUGUI tagText = null;
-            if (area != null)
-            {
-                var tagRt = NewUi("AscTag", area);
-                Row(tagRt.gameObject, 0, 0, 3);
-                Icon(tagRt, "Icon", Emoji("ui_ascend"), 18);
-                tagText = Label(tagRt, "Label", "1  ×1.20", 17, UiPalette.Gold, true);
-                tag = tagRt.gameObject;
-                tag.SetActive(false);
-            }
 
             var view = Ensure<MetaBarView>(bar.gameObject);
             Set(view, "runner", runner);
@@ -652,14 +466,8 @@ namespace IdleGrounds.Editor
             Set(view, "muteLabel", mute.transform.Find("Label").GetComponent<TextMeshProUGUI>());
             Set(view, "motionButton", motion);
             Set(view, "motionLabel", motion.transform.Find("Label").GetComponent<TextMeshProUGUI>());
-            Set(view, "shrinePill", pill);
-            Set(view, "shrineText", pillText);
-            Set(view, "shrineBorder", pillImg.GetComponent<Outline>());
-            Set(view, "ascTag", tag);
-            Set(view, "ascText", tagText);
             Set(view, "help", help);
             Set(view, "stats", stats);
-            Set(view, "perkShop", shop);
             Set(view, "confirm", confirm);
         }
     }

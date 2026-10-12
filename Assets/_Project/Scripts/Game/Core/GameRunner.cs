@@ -10,7 +10,7 @@ namespace IdleGrounds.Game
     /// (<see cref="SaveService.LoadOrNull"/>, fresh state otherwise) and runs <see cref="Simulation.Boot"/>
     /// (engine-systems §2.1; no offline catch-up — ADR 0002). Live: gameTick on a 50 ms
     /// accumulator, automationTick every 1000 ms; Island unlock state is mirrored onto the scene's
-    /// <see cref="Island"/> objects (veils + camera bounds); Island positions come from the scene (ADR 0003). Ascension swaps the run in place (RunReset).
+    /// <see cref="Island"/> objects (veils + camera bounds); Island positions come from the scene (ADR 0003). An in-place load swaps the state (RunReset).
     /// </summary>
     [DefaultExecutionOrder(-100)]
     public class GameRunner : MonoBehaviour
@@ -33,8 +33,6 @@ namespace IdleGrounds.Game
         /// <summary>Simulation clock (Unix ms) — the time base of node.hitAt, surfaceUntil, …</summary>
         public double SimNow => Sim != null ? Sim.Ctx.Now : 0;
 
-        /// <summary>Fired after an ascension installed the fresh run (views already got Sim.Events.RunReset).</summary>
-        public event System.Action Ascended;
         /// <summary>True when this boot started a brand-new run (no save file / a bad one).</summary>
         public bool FreshRun { get; private set; }
 
@@ -105,17 +103,6 @@ namespace IdleGrounds.Game
             if (autoAcc >= AutomationMs) { Sim.AutomationTick(); autoAcc = autoAcc >= 2 * AutomationMs ? 0 : autoAcc - AutomationMs; }
 
             SyncIslands(force: false);
-        }
-
-        // ------------------------------------------------------------------ prestige
-
-        /// <summary>`ascend(nextVows)` then save (the JS saves + reloads; here the run is swapped in place).</summary>
-        public JustAscended Ascend(IEnumerable<string> vows)
-        {
-            var ja = Sim.Ascend(vows);
-            if (SaveService.Instance != null) SaveService.Instance.Save();
-            Ascended?.Invoke();
-            return ja;
         }
 
         void OnRunReset()

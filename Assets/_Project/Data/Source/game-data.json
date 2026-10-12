@@ -1310,15 +1310,16 @@
       "unlocked": true,
       "shrine": true
     },
-    "ascension_gate": {
-      "name": "Ascension Gate",
+    "heavenly_gate": {
+      "name": "Heavenly Gate",
       "icon": "⛩️",
       "size": {
         "w": 5,
         "h": 5
       },
       "unlocked": true,
-      "gate": true,
+      "ending": true,
+      "area": "celestial",
       "cost": {
         "talisman": 14,
         "star_steel": 20,
@@ -2628,9 +2629,10 @@
         "stage": 4
       }
     ],
-    "ascension_gate": [
+    "heavenly_gate": [
       {
-        "stage": 4
+        "stage": 4,
+        "region": "celestial"
       }
     ],
     "spirit_bridge": [
@@ -2688,245 +2690,13 @@
     "moonpetal": "Celestial Peak moon shrubs 💮"
   },
   "HAND_CAP": 20,
-  "PERKS": [
-    {
-      "id": "haste",
-      "name": "Eternal Haste",
-      "icon": "⚡",
-      "max": 5,
-      "cost": [
-        1,
-        2,
-        3,
-        5,
-        8
-      ],
-      "desc": "-2% to every timer in the world (regrow, batches, wisp beats, fields, foxes, your swings)."
-    },
-    {
-      "id": "hall",
-      "name": "Master's Hall",
-      "icon": "🏯",
-      "max": 5,
-      "cost": [
-        1,
-        2,
-        3,
-        4,
-        6
-      ],
-      "desc": "+1 disciple capacity at every Meditation Pavilion, per level."
-    },
-    {
-      "id": "slumber",
-      "name": "Tireless Wisps",
-      "icon": "💫",
-      "max": 4,
-      "cost": [
-        1,
-        2,
-        4,
-        6
-      ],
-      "desc": "Wisps fly 15% faster and lanterns and Spirit Bridges send 15% faster per level."
-    },
-    {
-      "id": "hands",
-      "name": "Fleet Hands",
-      "icon": "🤲",
-      "max": 5,
-      "cost": [
-        1,
-        2,
-        3,
-        4,
-        6
-      ],
-      "desc": "+5 permanent carrying capacity per level (on top of Hand Size)."
-    },
-    {
-      "id": "frugal",
-      "name": "Frugal Frontier",
-      "icon": "🧭",
-      "max": 3,
-      "cost": [
-        2,
-        4,
-        6
-      ],
-      "desc": "Region unlock costs -20% per level."
-    },
-    {
-      "id": "ember",
-      "name": "Ember Heart",
-      "icon": "🔥",
-      "max": 4,
-      "cost": [
-        2,
-        3,
-        5,
-        7
-      ],
-      "desc": "Burners consume fuel 15% slower per level."
-    },
-    {
-      "id": "apgain",
-      "name": "Ascendant Insight",
-      "icon": "🌟",
-      "max": 3,
-      "cost": [
-        3,
-        5,
-        8
-      ],
-      "desc": "+1 Ascension Point per ascension per level."
-    },
-    {
-      "id": "autoboost",
-      "name": "Keen Automation",
-      "icon": "⚙️",
-      "max": 3,
-      "cost": [
-        3,
-        5,
-        8
-      ],
-      "desc": "Automation harvests +1 extra node per tick per level."
-    },
-    {
-      "id": "regrow",
-      "name": "Deep Roots",
-      "icon": "🌿",
-      "max": 3,
-      "cost": [
-        2,
-        4,
-        6
-      ],
-      "desc": "Nodes respawn 10% faster per level."
-    },
-    {
-      "id": "gale",
-      "name": "Wisp Gale",
-      "icon": "🌀",
-      "max": 3,
-      "cost": [
-        2,
-        4,
-        6
-      ],
-      "desc": "Wisp lanterns send 10% faster per level."
-    },
-    {
-      "id": "fury",
-      "name": "Battle Fury",
-      "icon": "⚔️",
-      "max": 3,
-      "cost": [
-        2,
-        4,
-        6
-      ],
-      "desc": "+1 damage to beasts per strike per level."
-    },
-    {
-      "id": "bless",
-      "name": "Heaven's Favor",
-      "icon": "🌠",
-      "max": 3,
-      "cost": [
-        2,
-        4,
-        6
-      ],
-      "desc": "Dragon-pill blessings last +20% longer per level."
-    },
-    {
-      "id": "bounty",
-      "name": "Astral Bounty",
-      "icon": "☄️",
-      "max": 3,
-      "cost": [
-        2,
-        4,
-        6
-      ],
-      "desc": "Passive fields (clay, stone, wood, sand, spring water) well up 10% faster per level."
-    },
-    {
-      "id": "paths",
-      "name": "Remembered Paths",
-      "icon": "🗺️",
-      "max": 3,
-      "cost": [
-        3,
-        6,
-        12
-      ],
-      "desc": "Each run starts with the Mine already open; level 2 adds Fishing, level 3 the Farm."
-    },
-    {
-      "id": "legacy",
-      "name": "Legacy Automation",
-      "icon": "🤖",
-      "max": 3,
-      "cost": [
-        4,
-        8,
-        16
-      ],
-      "desc": "Each run starts with Automation L1 in the Center; level 2 adds the Farm, level 3 the Mine (works once that region is open)."
-    }
-  ],
   "TEST": {
     "ENABLED": false,
     "timeScale": 0.2,
     "costScale": 0.5
   },
   "VERSION": {
-    "num": 52,
-    "desc": "Design pass 2: idle loop that runs, reveal+quests, vows & legacy perks, readable logistics"
-  },
-  "VOWS": [
-    {
-      "id": "burden",
-      "name": "Vow of Burden",
-      "icon": "🎒",
-      "desc": "Your hands carry half as much."
-    },
-    {
-      "id": "coldhearth",
-      "name": "Vow of the Cold Hearth",
-      "icon": "🧊",
-      "desc": "Burners consume fuel twice as fast."
-    },
-    {
-      "id": "restless",
-      "name": "Vow of the Restless Dragon",
-      "icon": "🐉",
-      "desc": "Every dragon tribute is raised by half."
-    },
-    {
-      "id": "solitude",
-      "name": "Vow of Solitude",
-      "icon": "🕯️",
-      "desc": "The run starts without the starter wisp network."
-    }
-  ],
-  "VOW_MULT": [
-    1,
-    1.15,
-    1.3,
-    1.5,
-    1.75
-  ],
-  "GATE_OFFERINGS": {
-    "items": [
-      "talisman",
-      "star_steel",
-      "dragon_scale"
-    ],
-    "cap": 6,
-    "perType": 2
+    "num": 53,
+    "desc": "ADR 0007 phase 1: ascension removed (no perks, vows, offerings); the Heavenly Gate on Celestial Peak ends the game"
   }
 }

@@ -56,20 +56,18 @@ namespace IdleGrounds.Sim
         FuelSystem Fuel => _ctx.Fuel;
         ConverterSystem Conv => _ctx.Converters;
 
-        // ---- M5 hooks (dropFromHand steps 3, 4, 11) ----
+        // ---- M5 hooks (dropFromHand steps 3, 4) ----
         /// <summary>Step 3: built Altar. Default (null): no job / M5 not wired ⇒ handled, nothing happens.</summary>
         public HandSystem.BuildingFeedHook AltarFeed;
         /// <summary>Step 4: built Sleeping Dragon. Default (null): handled, nothing happens.</summary>
         public HandSystem.BuildingFeedHook DragonFeed;
-        /// <summary>Step 11: built Ascension Gate. Default (null): falls through (ground drop unless noGround).</summary>
-        public HandSystem.BuildingFeedHook GateFeed;
 
         // ================================================================
         // §8.3 unlock / reveal (pure queries for the UI)
         // ================================================================
 
-        /// <summary>`isVeteran()` = ascended or the quest chain is finished.</summary>
-        public bool IsVeteran() => S.ascensions > 0 || S.quest.idx >= Cfg.quests.Count;
+        /// <summary>`isVeteran()` = the quest chain is finished (quest/region reveals no longer wait).</summary>
+        public bool IsVeteran() => S.quest.idx >= Cfg.quests.Count;
 
         /// <summary>`questClaimed(id)`.</summary>
         public bool QuestClaimed(string id)
@@ -88,7 +86,7 @@ namespace IdleGrounds.Sim
         {
             switch (c.kind)
             {
-                case RevealKind.Stage: return S.dragon.stage >= c.stage;
+                case RevealKind.Stage: return S.dragon.stage >= c.stage && (string.IsNullOrEmpty(c.key) || S.world.IsUnlocked(c.key));
                 case RevealKind.Quest: return vet || QuestClaimed(c.key);
                 case RevealKind.Region: return vet || S.world.IsUnlocked(c.key);
                 case RevealKind.Islands: return UnlockedIslandCount() >= c.count;   // no veteran bypass: pairing needs two Islands anyway
@@ -132,7 +130,10 @@ namespace IdleGrounds.Sim
             {
                 case RevealKind.Quest: return "Revealed by a quest";
                 case RevealKind.Region: return "Open the " + (Cfg.Region(c.key)?.name ?? c.key);
-                case RevealKind.Stage: return "The Sleeping Dragon teaches this";
+                case RevealKind.Stage:
+                    if (!string.IsNullOrEmpty(c.key) && !S.world.IsUnlocked(c.key))
+                        return "Open " + (Cfg.Region(c.key)?.name ?? c.key) + (S.dragon.stage >= c.stage ? "" : " and awaken the Sleeping Dragon");
+                    return "The Sleeping Dragon teaches this";
                 case RevealKind.Islands: return "Unlock a second island";
             }
             return "Locked";
@@ -142,7 +143,7 @@ namespace IdleGrounds.Sim
         public bool IsBuildingAvailable(string type) => IsBuildingUnlocked(type);
 
         /// <summary>`isBuildingNew(type)` — "new" badge.</summary>
-        public bool IsBuildingNew(string type) => S.ascensions <= 0 && IsBuildingUnlocked(type) && S.buildSeen.Get(type) < 2;
+        public bool IsBuildingNew(string type) => IsBuildingUnlocked(type) && S.buildSeen.Get(type) < 2;
 
         /// <summary>`markBuildSeen(type)` (hover).</summary>
         public void MarkBuildSeen(string type) { if (Cfg.Building(type) != null) S.buildSeen.Set(type, 2); }
@@ -157,7 +158,6 @@ namespace IdleGrounds.Sim
         /// <summary>`buildMenuHasNew()`.</summary>
         public bool BuildMenuHasNew()
         {
-            if (S.ascensions > 0) return false;
             foreach (var b in Cfg.buildings) if (S.buildSeen.Get(b.key) < 1 && IsBuildingUnlocked(b.key)) return true;
             return false;
         }
@@ -236,13 +236,13 @@ namespace IdleGrounds.Sim
             }
             _ctx.Events.RaiseSound("build", areaKey);
             _ctx.Events.RaiseBuildingCompleted(areaKey, b);
-            if (def.gate) { S.ascendPrompt = true; _ctx.Events.RaiseAscendPrompt(); }
+            if (def.ending) _ctx.Events.RaiseHeavenlyGateRaised(areaKey, b);
         }
 
         /// <summary>
         /// `demolishBuilding(area,id)` engine.js:1814. Built: 100% cost + contents
         /// (store/seal, inv, converter stock + running batch inputs, disciples as
-        /// robes, gate offerings; fuel NOT refunded). Ghost: only paid. All at
+        /// robes; fuel NOT refunded). Ghost: only paid. All at
         /// the footprint centre tagged manual; lantern links to it are severed.
         /// </summary>
         public bool Demolish(string areaKey, int buildingId)
@@ -277,7 +277,6 @@ namespace IdleGrounds.Sim
                     if (b.smeltDoneAt > 0 && rec != null) foreach (var e in rec.inputs) Restore(e.item, e.qty);
                 }
                 if (def.roster.enabled && b.disciples > 0) Restore(def.roster.recruit, b.disciples);
-                if (def.gate && b.offered != null) foreach (var e in b.offered) Restore(e.item, e.qty);
                 if (b.fuelQ != null) foreach (var f in b.fuelQ) flow.Lose(f.item, 1);   // fuel is not refunded
             }
             else
@@ -645,8 +644,6 @@ namespace IdleGrounds.Sim
                 }
                 // 10. Storehouse
                 if (b.type == "storehouse") { result = Hand.DepositToStorehouse(b); return true; }
-                // 11. Ascension Gate (M5 hook; may fall through)
-                if (def.gate && GateFeed != null) return GateFeed(areaKey, b, out result);
                 return false;
             }
             // 12. Ghost
@@ -696,7 +693,7 @@ namespace IdleGrounds.Sim
             {
                 var g = b.built ? Cfg.Building(b.type)?.gen : null;
                 if (g == null || !g.enabled) continue;
-                var tm = _ctx.Timing.Periodic(b.nextGen, g.intervalMs * _ctx.Timing.TimeScale * _ctx.Timing.PrestigeFactor(S), now);
+                var tm = _ctx.Timing.Periodic(b.nextGen, g.intervalMs * _ctx.Timing.TimeScale * _ctx.Timing.WorldFactor(S), now);
                 if (tm.n == 0) continue;
                 b.nextGen = tm.next;
                 var (bx, by) = _ctx.World.BuildingCenterPx(b);

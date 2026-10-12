@@ -6,8 +6,8 @@ using System.Text;
 namespace IdleGrounds.Sim.Tests
 {
     /// <summary>
-    /// A deterministic "reasonable player" that plays one run to Ascension through the
-    /// <see cref="Simulation"/> API only (no state edits — the clock is the only thing it
+    /// A deterministic "reasonable player" that plays the game to its ending — "Ascend to Immortality" at the
+    /// Heavenly Gate on Celestial Peak (ADR 0007) — through the <see cref="Simulation"/> API only (no state edits — the clock is the only thing it
     /// touches directly). Used by <c>PlaythroughBotTests</c> to prove the game is completable.
     ///
     /// Input model (mirrors the Game layer, HandController / GameRunner):
@@ -42,7 +42,7 @@ namespace IdleGrounds.Sim.Tests
         readonly ManualClock _clock;
         public readonly long StartMs;
 
-        /// <summary>(sim ms since start, text) — quests, dragon stages, unlocks, first builds, ascension…</summary>
+        /// <summary>(sim ms since start, text) — quests, dragon stages, unlocks, first builds, the ending…</summary>
         public readonly List<(long ms, string what)> Timeline = new List<(long, string)>();
         /// <summary>Points where a sub-goal timed out / could not proceed (with the task stack).</summary>
         public readonly List<string> Stuck = new List<string>();
@@ -51,19 +51,14 @@ namespace IdleGrounds.Sim.Tests
         /// <summary>Accumulated sim ms per top-level phase.</summary>
         public readonly List<(string phase, long ms)> Phases = new List<(string, long)>();
 
-        public bool Ascended { get; private set; }
-        /// <summary>Ascensions to play (later runs are veteran runs: no tutorial chain).</summary>
-        public int RunsWanted = 1;
-        /// <summary>Vows chosen when ascending at the end of run n (only honoured from the 2nd ascension on).</summary>
-        public Func<int, IEnumerable<string>> VowsForNextRun;
-        public int RunIndex { get; private set; } = 1;
-        public int RunsDone { get; private set; }
-        public readonly List<long> AscendedAt = new List<long>();
+        /// <summary>Reached the ending: chose "Ascend to Immortality" at the built Heavenly Gate.</summary>
+        public bool Ended { get; private set; }
+        /// <summary>Sim ms (since start) of the ending; -1 = not reached.</summary>
+        public long EndedAt { get; private set; } = -1;
         /// <summary>Items that crossed the sky on a Spirit Bridge (arrivals at a receiving bridge).</summary>
         public int SkyDelivered;
         /// <summary>Items the bot withdrew from the storehouse its Spirit Bridge fills.</summary>
         public int TakenFromBridgeStore;
-        public string PerkBought { get; private set; }
         public bool Finished { get; private set; }
         public long Ticks { get; private set; }
         public int Actions { get; private set; }
@@ -105,7 +100,7 @@ namespace IdleGrounds.Sim.Tests
         GameConfig Cfg => Sim.Config;
 
         public static string Fmt(long ms) { var t = TimeSpan.FromMilliseconds(ms); return $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}"; }
-        void Log(string what) => Timeline.Add((Elapsed, RunsWanted > 1 ? "[run " + RunIndex + "] " + what : what));
+        void Log(string what) => Timeline.Add((Elapsed, what));
         void Note(string what) => Notes.Add(Fmt(Elapsed) + " " + what);
         string StackText() => string.Join(" › ", _names);
 
@@ -128,7 +123,7 @@ namespace IdleGrounds.Sim.Tests
             return sb.Length == 0 ? "empty" : sb.ToString().TrimEnd();
         }
 
-        /// <summary>Plays until ascended (and a perk bought) or the cap. Returns true when it ascended.</summary>
+        /// <summary>Plays until the ending or the cap. Returns true when it reached the ending.</summary>
         public bool Run(long capMs)
         {
             _stack.Push(Main());
@@ -157,7 +152,7 @@ namespace IdleGrounds.Sim.Tests
             }
             if (phase != null) Phases.Add((phase, Elapsed - phaseAt));
             if (!Finished) StuckAt("time cap reached");
-            return Ascended;
+            return Ended;
         }
 
         void Step()
@@ -200,7 +195,7 @@ namespace IdleGrounds.Sim.Tests
         /// during the world tick (field generators, generator buildings, Automation, disciples, dragon
         /// scales); <c>crafted</c> = converter outputs made during the world tick.
         /// </summary>
-        public sealed class ShareWindow { public int run; public long startMs; public long hand, auto, crafted; }
+        public sealed class ShareWindow { public long startMs; public long hand, auto, crafted; }
         public readonly List<ShareWindow> Share = new List<ShareWindow>();
         public long ProdHand, ProdAuto, ProdCrafted;
         /// <summary>Raw items made automatically, by item (whole session).</summary>
@@ -209,7 +204,6 @@ namespace IdleGrounds.Sim.Tests
         long[] _flowSnap = new long[64];
         int _flowSnapN;
         HashSet<string> _craftedItems;
-        long _runStartMs;
 
         void SnapFlow()
         {
@@ -241,30 +235,28 @@ namespace IdleGrounds.Sim.Tests
 
         ShareWindow CurWindow()
         {
-            long t = Elapsed - _runStartMs;
-            long start = _runStartMs + t / ShareWindowMs * ShareWindowMs;
-            if (Share.Count == 0 || Share[Share.Count - 1].startMs != start || Share[Share.Count - 1].run != RunIndex)
-                Share.Add(new ShareWindow { run = RunIndex, startMs = start });
+            long start = Elapsed / ShareWindowMs * ShareWindowMs;
+            if (Share.Count == 0 || Share[Share.Count - 1].startMs != start)
+                Share.Add(new ShareWindow { startMs = start });
             return Share[Share.Count - 1];
         }
 
-        /// <summary>auto ÷ hand over the windows of run <paramref name="run"/> whose start lies in [from, to) of that run's length (fractions).</summary>
-        public double AutoRatio(int run, double from, double to, bool withCrafted = false)
+        /// <summary>auto ÷ hand over the windows whose start lies in [from, to) of the game's length (fractions).</summary>
+        public double AutoRatio(double from, double to, bool withCrafted = false)
         {
             long h = 0, a = 0;
-            long rs = RunStart(run), len = RunLength(run);
+            long len = GameLength;
             foreach (var w in Share)
             {
-                if (w.run != run) continue;
-                double f = len > 0 ? (double)(w.startMs - rs) / len : 0;
+                double f = len > 0 ? (double)w.startMs / len : 0;
                 if (f < from || f >= to) continue;
                 h += w.hand; a += w.auto + (withCrafted ? w.crafted : 0);
             }
             return h == 0 ? (a > 0 ? double.PositiveInfinity : 0) : (double)a / h;
         }
 
-        public long RunStart(int run) => run <= 1 ? 0 : AscendedAt[run - 2];
-        public long RunLength(int run) => run - 1 < AscendedAt.Count ? AscendedAt[run - 1] - RunStart(run) : Elapsed - RunStart(run);
+        /// <summary>Start → ending (or → now when the ending was not reached).</summary>
+        public long GameLength => EndedAt >= 0 ? EndedAt : Elapsed;
 
         // ================================================================ invariants
 
@@ -315,19 +307,6 @@ namespace IdleGrounds.Sim.Tests
 
         IEnumerator Main()
         {
-            for (int run = 1; run <= RunsWanted; run++)
-            {
-                RunIndex = run;
-                _firstBuilt.Clear();
-                _cur = C;
-                int before = RunsDone;
-                yield return OneRun();
-                if (RunsDone == before) yield break;   // this run did not ascend
-            }
-        }
-
-        IEnumerator OneRun()
-        {
             Sim.MarkIntroSeen();
             // 1. the tutorial quest chain (it is also the natural path through dragon stages 1-3)
             while (S.quest.idx < Cfg.quests.Count)
@@ -344,7 +323,7 @@ namespace IdleGrounds.Sim.Tests
                 }
             }
             // 2. post-tutorial: grow the base — bigger hands, then machines (Automation, generator buildings).
-            //    Veterans skip the tutorial chain, so they wake the dragon to stage 3 first (Forge, Algae Farm, Herb Garden).
+            //    (Should the chain already be finished, wake the dragon to stage 3 first: Forge, Algae Farm, Herb Garden.)
             if (S.dragon.stage < 3) yield return T("dragon stages 1-3", FeedDragon(3));
             yield return T("hand upgrades", Upgrades());
             yield return T("invest 1", Invest(1));
@@ -353,16 +332,15 @@ namespace IdleGrounds.Sim.Tests
             // 3. awaken the dragon
             yield return T("dragon stage 4", FeedDragon(Cfg.dragonStages.Count));
             yield return T("invest 3", Invest(3));
-            // 4. remaining islands (more AP on ascending; volcano firestone / celestial)
+            // 4. remaining islands (volcano firestone; Celestial Peak holds the Heavenly Gate)
             foreach (var r in Cfg.regions)
                 if (!Sim.World.IsAreaUnlocked(r.key)) yield return T("unlock " + r.key, Unlock(r.key));
             // 5. a dragon pill blessing (Pill Furnace) — exercises the firestone-as-ingredient path
             yield return T("pill", PillBlessing());
             yield return T("invest 4", Invest(4));
-            // 6. raise the Ascension Gate, fill offerings, ascend, buy a perk
+            // 6. raise the Heavenly Gate on Celestial Peak and ascend to Immortality (the ending; free play after)
             yield return T("gate", RaiseGate());
-            yield return T("offerings", Offerings());
-            yield return T("ascend", AscendAndPerk());
+            yield return T("ending", AscendToImmortality());
         }
 
         IEnumerator DoQuest(string id)
@@ -730,74 +708,37 @@ namespace IdleGrounds.Sim.Tests
 
         IEnumerator RaiseGate()
         {
+            const string Gate = "heavenly_gate";
+            string isl = Cfg.Building(Gate).onlyArea ?? C;
+            if (!Sim.World.IsAreaUnlocked(isl)) yield return T("unlock " + isl, Unlock(isl));
             Building gate = null;
-            foreach (var b in S.Area(C).buildings) if (Cfg.Building(b.type)?.gate == true) gate = b;
+            foreach (var b in S.Area(isl).buildings) if (Cfg.Building(b.type)?.ending == true) gate = b;
             if (gate == null)
             {
                 var m = Sim.Milestone();
                 if (m.kind != MilestoneKind.RaiseGate) Note("milestone is " + m.kind + " before the gate");
                 var bx = new Box<Building>();
-                yield return BuildBuilding("ascension_gate", C, bx);
+                yield return BuildBuilding(Gate, isl, bx);
                 gate = bx.v;
             }
-            else if (!gate.built) yield return Deliver(C, gate, () => Sim.BuildingNeeds(gate), () => gate.built, "gate ghost");
+            else if (!gate.built) yield return Deliver(isl, gate, () => Sim.BuildingNeeds(gate), () => gate.built, "gate ghost");
             if (gate == null || !gate.built) StuckAt("gate not built");
         }
 
-        IEnumerator Offerings()
+        IEnumerator AscendToImmortality()
         {
-            var (_, gate) = Sim.Progression.BuiltGate();
-            if (gate == null) yield break;
-            var G = Cfg.gateOfferings;
-            foreach (var it in G.items)
-            {
-                _keep.Add(it);
-                long st = Elapsed;
-                while (Sim.GateOfferings(gate).offered.Get(it) < G.perType && Sim.GateOfferings(gate).count < G.cap)
-                {
-                    if (Elapsed - st > 30 * 60000) { StuckAt("offering " + it + " never filled"); break; }
-                    int want = G.perType - Sim.GateOfferings(gate).offered.Get(it);
-                    if (Hand.Count(it) < want) yield return Acquire(it, want);
-                    yield return Press(C, gate, () => Sim.GateOfferings(gate).offered.Get(it) >= G.perType);
-                }
-                _keep.Remove(it);
-            }
-            Log("gate offerings " + Sim.GateOfferings(gate).count + "/" + G.cap + " (ascend reward " + Sim.AscendReward() + " AP)");
-        }
-
-        IEnumerator AscendAndPerk()
-        {
-            if (Sim.Progression.BuiltGate().b == null) { StuckAt("no gate to ascend through"); yield break; }
-            int reward = Sim.AscendReward();
-            yield return null;   // the ascend dialog
-            var vows = VowsForNextRun?.Invoke(RunIndex);
-            Sim.Ascend(vows);
-            Ascended = true;
-            RunsDone++;
-            AscendedAt.Add(Elapsed);
-            _runStartMs = Elapsed;
-            Log($"ASCENDED (+{reward} AP, total {S.ascendPoints})" + (S.vows.active.Count > 0 ? " — next run vows: " + string.Join(",", S.vows.active) : ""));
+            if (!Sim.CanAscendToImmortality) { StuckAt("no Heavenly Gate to ascend through"); yield break; }
+            if (Sim.Milestone().kind != MilestoneKind.Ascend) Note("milestone is " + Sim.Milestone().kind + " at the built gate");
+            var (isl, _) = Sim.BuiltHeavenlyGate();
+            yield return Travel(isl);
+            yield return null;   // click the gate, confirm
+            Sim.AscendToImmortality();
+            Ended = true;
+            EndedAt = Elapsed;
+            Log("ASCENDED TO IMMORTALITY — the ending (free play continues)");
             yield return null;
-            // perk shop: spend AP on the most useful perks (one level per pass, preference order)
-            string[] prefs = { "hands", "haste", "paths", "legacy", "slumber", "frugal", "hall", "apgain" };
-            bool bought = true;
-            while (bought)
-            {
-                bought = false;
-                foreach (var id in prefs)
-                {
-                    var c = Sim.PerkCost(id);
-                    if (c != null && S.ascendPoints >= c.Value && Sim.BuyPerk(id))
-                    {
-                        PerkBought ??= id; bought = true;
-                        Log("perk bought: " + id + " L" + S.PerkLevel(id) + " (" + c.Value + " AP)");
-                        yield return null;
-                    }
-                }
-            }
-            if (PerkBought == null) StuckAt("no affordable perk with " + S.ascendPoints + " AP");
-            Sim.MarkPerkShopSeen();
-            Sim.ClearJustAscended();
+            Sim.MarkEndingSeen();
+            if (Sim.Milestone().kind != MilestoneKind.FreePlay) StuckAt("not in free play after the ending: " + Sim.Milestone().kind);
             yield return null;
         }
 

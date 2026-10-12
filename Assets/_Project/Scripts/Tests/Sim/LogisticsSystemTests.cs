@@ -349,7 +349,7 @@ namespace IdleGrounds.Sim.Tests
             double baseBeat = sim.Logistics.BeatMs(c, def, now);
             Assert.AreEqual(1000 * sim.Timing.TimeScale, baseBeat, 1e-9);
             c.upgrades.wispRate = 2;
-            sim.State.perks.Set("gale", 1);
+            sim.State.bonuses.Set("gale", 1);
             sim.State.buff = new BuffState { kind = "swiftwind_pill", until = now + 1000 };
             Assert.AreEqual(baseBeat * 0.85 * 0.85 * 0.9 * 0.5, sim.Logistics.BeatMs(c, def, now), 1e-9);
             Assert.AreEqual(170 * 1.5 / 0.5, sim.Logistics.WispSpeed(c, def, now), 1e-9);

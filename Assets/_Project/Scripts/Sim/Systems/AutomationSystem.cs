@@ -69,7 +69,7 @@ namespace IdleGrounds.Sim
                 int Loose(string t) => t != null && loose.TryGetValue(t, out int v) ? v : 0;
 
                 var skip = new List<string>();
-                int budget = Cfg.balance.AutomationClicks(level) + S.PerkLevel("autoboost");
+                int budget = Cfg.balance.AutomationClicks(level) + S.Bonus("autoboost");
                 // stable sort by tier desc (LINQ OrderBy is stable, like Array.prototype.sort)
                 var nodes = area.nodes.Where(n => !n.deco && !n.isFixed).OrderByDescending(n => n.tier).ToList();
                 var taps = area.nodes.Where(n => n.isFixed && !n.deco && IsAutoTapFixture(areaKey, n)).ToList();
@@ -118,7 +118,7 @@ namespace IdleGrounds.Sim
             if (area == null) return false;
             int level = area.upgrades.automation;
             into.level = level;
-            into.budget = level <= 0 ? 0 : Cfg.balance.AutomationClicks(level) + S.PerkLevel("autoboost");
+            into.budget = level <= 0 ? 0 : Cfg.balance.AutomationClicks(level) + S.Bonus("autoboost");
             into.paused = area.autoPaused;
             into.skipped ??= new List<string>();
             into.skipped.Clear();

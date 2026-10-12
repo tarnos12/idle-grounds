@@ -48,8 +48,6 @@ namespace IdleGrounds.Sim
                 for (int lvl = 1; ac.Has(lvl.ToString(CultureInfo.InvariantCulture)); lvl++)
                     bal.automationClicks.Add(Int(ac, lvl.ToString(CultureInfo.InvariantCulture), 0));
             }
-            var vm = Arr(root, "VOW_MULT");
-            if (vm != null) { bal.vowMult = new List<double>(); foreach (var v in vm) bal.vowMult.Add(ToNum(v)); }
             var ver = Obj(root, "VERSION");
             if (ver != null) { bal.versionNum = Int(ver, "num", 0); bal.versionDesc = Str(ver, "desc"); }
             var world = Obj(root, "WORLD");
@@ -198,7 +196,8 @@ namespace IdleGrounds.Sim
                         indestructible = Bool(b, "indestructible", false),
                         fuel = Bool(b, "fuel", false), anyZone = Bool(b, "anyZone", false),
                         waterOnly = Bool(b, "waterOnly", false), cap = Int(b, "cap", 0),
-                        shrine = Bool(b, "shrine", false), gate = Bool(b, "gate", false),
+                        shrine = Bool(b, "shrine", false), ending = Bool(b, "ending", false),
+                        onlyArea = b.Has("area") ? Str(b, "area") : null,
                     };
                     var sz = Obj(b, "size");
                     if (sz != null) { d.sizeW = Int(sz, "w", 3); d.sizeH = Int(sz, "h", 3); }
@@ -290,26 +289,14 @@ namespace IdleGrounds.Sim
                     foreach (var c in e.Value as List<object> ?? new List<object>())
                     {
                         if (!(c is JsonObject co)) continue;
-                        if (co.Has("stage")) rr.any.Add(new RevealCond { kind = RevealKind.Stage, stage = Int(co, "stage", 0) });
+                        // {"stage": n, "region": k} = both: the dragon stage AND that Island unlocked (Heavenly Gate, ADR 0007)
+                        if (co.Has("stage")) rr.any.Add(new RevealCond { kind = RevealKind.Stage, stage = Int(co, "stage", 0), key = co.Has("region") ? Str(co, "region") : null });
                         else if (co.Has("quest")) rr.any.Add(new RevealCond { kind = RevealKind.Quest, key = Str(co, "quest") });
                         else if (co.Has("islands")) rr.any.Add(new RevealCond { kind = RevealKind.Islands, count = Int(co, "islands", 2) });
                         else if (co.Has("region")) rr.any.Add(new RevealCond { kind = RevealKind.Region, key = Str(co, "region") });
                     }
                     cfg.reveal.Add(rr);
                 }
-
-            // ---- prestige ----
-            foreach (var p in Objs(root, "PERKS"))
-            {
-                var pd = new PerkDef { id = Str(p, "id"), name = Str(p, "name"), icon = Str(p, "icon"), max = Int(p, "max", 0), desc = Str(p, "desc") };
-                foreach (var c in Arr(p, "cost") ?? new List<object>()) pd.cost.Add(ToInt(c));
-                cfg.perks.Add(pd);
-            }
-            foreach (var v in Objs(root, "VOWS"))
-                cfg.vows.Add(new VowDef { id = Str(v, "id"), name = Str(v, "name"), icon = Str(v, "icon"), desc = Str(v, "desc") });
-            var go = Obj(root, "GATE_OFFERINGS");
-            if (go != null)
-                cfg.gateOfferings = new GateOffering { items = Strings(go, "items"), cap = Int(go, "cap", 6), perType = Int(go, "perType", 2) };
 
             return cfg.Build();
         }

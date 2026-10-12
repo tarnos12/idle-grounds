@@ -91,21 +91,16 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
-        public void PrestigeFactor_ScaledAndBuffScale()
+        public void WorldFactor_ScaledAndBuffScale()
         {
             var cfg = SimTestUtil.LoadConfig();
             var t = new Timing(cfg);
             var s = GameState.CreateInitial(cfg, 0);
-            Assert.AreEqual(1.0, t.PrestigeFactor(s), 1e-12);
-            s.ascensions = 1;
-            Assert.AreEqual(1.0, t.PrestigeFactor(s), 1e-12);        // ascensions no longer speed the run
-            s.perks.Set("haste", 2);
+            Assert.AreEqual(1.0, t.WorldFactor(s), 1e-12);
+            s.bonuses.Set("haste", 2);
             s.won = true;
-            s.vows.done.Set("burden", 1);
-            double hs = cfg.balance.hasteStep, aw = cfg.balance.awakenedSpeed, vm = cfg.balance.vowMarkStep;
-            Assert.AreEqual(hs * hs * aw * vm, t.PrestigeFactor(s), 1e-12);
-            s.vows.active.Add("restless");
-            Assert.AreEqual(hs * hs * aw * vm * vm, t.NextPrestigeFactor(s), 1e-12);
+            double hs = cfg.balance.hasteStep, aw = cfg.balance.awakenedSpeed;
+            Assert.AreEqual(hs * hs * aw, t.WorldFactor(s), 1e-12, "haste bonus + awakened dragon (no ascension / vow terms, ADR 0007)");
 
             Assert.AreEqual(5, t.Scaled(10));
             Assert.AreEqual(1, t.Scaled(1));

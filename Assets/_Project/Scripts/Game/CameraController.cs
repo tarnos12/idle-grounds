@@ -138,7 +138,7 @@ namespace IdleGrounds.Game
         /// <summary>Camera centre in world units.</summary>
         public Vector2 Centre => centre;
 
-        /// <summary>Back to the configured start cell (new run after an ascension).</summary>
+        /// <summary>Back to the configured start cell (e.g. after an in-place load).</summary>
         public void ResetToStart()
         {
             RecomputeBounds();
@@ -174,7 +174,7 @@ namespace IdleGrounds.Game
 
         /// <summary>
         /// The wheel zooms only over the world viewport (ui.js binds onWheel to #world-viewport): not over
-        /// UI (build strip, perk shop, help, quest panel…) and not while a modal is up.
+        /// UI (build strip, help, quest panel…) and not while a modal is up.
         /// </summary>
         static bool WheelOverUi()
         {

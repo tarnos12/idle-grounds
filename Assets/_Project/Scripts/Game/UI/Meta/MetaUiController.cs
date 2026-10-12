@@ -1,3 +1,4 @@
+using IdleGrounds.Sim;
 using UnityEngine;
 
 namespace IdleGrounds.Game
@@ -5,24 +6,25 @@ namespace IdleGrounds.Game
     /// <summary>
     /// Coordinates the M7 modals (main.js boot flow + ui.js modal priorities):
     /// <list type="bullet">
-    /// <item>Boot: an intro-unseen run → the welcome modal's intro shape (no offline catch-up, ADR 0002).</item>
-    /// <item>Per frame: the ascend dialog follows State.ascendPrompt and the post-ascension card follows
-    ///   State.justAscended — both held back while the welcome modal is up.</item>
-    /// <item>Esc chain (BuildController.Escape: confirm, then the world panels, then these): perk shop → ascend →
-    ///   stats → help → welcome → post-ascension card (ui.js order).</item>
-    /// <item>RunReset (ascension): closes the world panels (BuildController) and cancels hand holds.</item>
+    /// <item>Boot: an intro-unseen game → the welcome modal's intro shape (no offline catch-up, ADR 0002).</item>
+    /// <item>The ending (ADR 0007): when the Heavenly Gate is completed — or a built one is clicked
+    ///   (<see cref="AskAscend"/>) — the confirm dialog offers "Ascend to Immortality"; the ending card itself is
+    ///   <see cref="DragonDialogView"/> (pull-based on <see cref="Simulation.EndingPending"/>). Free play continues.</item>
+    /// <item>Esc chain (BuildController.Escape: confirm, then the world panels, then these): stats → help → welcome.</item>
+    /// <item>RunReset (in-place load): closes the world panels (BuildController) and cancels hand holds.</item>
     /// </list>
     /// </summary>
     [DefaultExecutionOrder(-50)]
     public class MetaUiController : MonoBehaviour
     {
+        public const string AscendText =
+            "The Heavenly Gate stands open. Ascend to Immortality?\nThe ending plays - then your grounds stay as they are and free play continues.";
+        public const string AscendAgainText = "You have already ascended. Watch the ending again?";
+
         [SerializeField] GameRunner runner;
         [SerializeField] BuildController build;
         [SerializeField] HelpModalView help;
         [SerializeField] StatsPanelView stats;
-        [SerializeField] PerkShopView perkShop;
-        [SerializeField] AscendDialogView ascend;
-        [SerializeField] PostAscensionCardView postAscension;
         [SerializeField] WelcomeModalView welcome;
         [SerializeField] ToastView toast;
         [SerializeField] ConfirmDialogView confirm;
@@ -31,17 +33,15 @@ namespace IdleGrounds.Game
 
         public HelpModalView Help => help;
         public StatsPanelView Stats => stats;
-        public PerkShopView PerkShop => perkShop;
-        public AscendDialogView Ascend => ascend;
-        public PostAscensionCardView PostAscension => postAscension;
         public WelcomeModalView Welcome => welcome;
         public ToastView Toast => toast;
         public ConfirmDialogView Confirm => confirm;
 
         public bool AnyOpen =>
-            (confirm != null && confirm.IsOpen) || (perkShop != null && perkShop.IsOpen) || (help != null && help.IsOpen) ||
-            (stats != null && stats.IsOpen) || (postAscension != null && postAscension.IsOpen) ||
-            (ascend != null && ascend.IsOpen) || (welcome != null && welcome.IsOpen);
+            (confirm != null && confirm.IsOpen) || (help != null && help.IsOpen) ||
+            (stats != null && stats.IsOpen) || (welcome != null && welcome.IsOpen);
+
+        Simulation subscribed;
 
         void Awake()
         {
@@ -53,14 +53,24 @@ namespace IdleGrounds.Game
         void OnDestroy()
         {
             if (Instance == this) Instance = null;
-            if (runner != null && runner.Sim != null) runner.Sim.Events.RunReset -= OnRunReset;
+            Unsubscribe();
         }
 
         void Start()
         {
             if (runner == null || runner.Sim == null) return;
-            runner.Sim.Events.RunReset += OnRunReset;
+            subscribed = runner.Sim;
+            subscribed.Events.RunReset += OnRunReset;
+            subscribed.Events.HeavenlyGateRaised += OnGateRaised;
             if (!runner.State.introSeen) welcome.ShowIntro();
+        }
+
+        void Unsubscribe()
+        {
+            if (subscribed == null) return;
+            subscribed.Events.RunReset -= OnRunReset;
+            subscribed.Events.HeavenlyGateRaised -= OnGateRaised;
+            subscribed = null;
         }
 
         void OnRunReset()
@@ -71,27 +81,29 @@ namespace IdleGrounds.Game
             if (hand != null) hand.CancelHolds();
         }
 
-        void LateUpdate()
+        void OnGateRaised(string area, Building gate) => AskAscend();
+
+        /// <summary>The built Heavenly Gate was clicked / completed: offer "Ascend to Immortality" (the ending).</summary>
+        public void AskAscend()
         {
-            if (runner == null || runner.Sim == null) return;
-            bool blocked = welcome.IsOpen;
-            postAscension.Sync(!blocked && runner.State.justAscended != null);
-            ascend.Sync(!blocked && runner.State.ascendPrompt);
+            if (runner == null || runner.Sim == null || confirm == null || !runner.Sim.CanAscendToImmortality) return;
+            var sim = runner.Sim;
+            confirm.Ask(sim.State.ascended ? AscendAgainText : AscendText, "Ascend to Immortality", () =>
+            {
+                if (sim.AscendToImmortality() && SaveService.Instance != null) SaveService.Instance.Save();
+            });
         }
 
         /// <summary>Esc on the confirm dialog (checked before every other layer). True = consumed.</summary>
         public bool EscapeConfirm() => confirm != null && confirm.Escape();
 
-        /// <summary>Esc for the M7 modals in ui.js order: perk → ascend → stats → help → welcome → ending (post-ascension card). True = consumed.</summary>
+        /// <summary>Esc for the M7 modals in ui.js order: stats → help → welcome. True = consumed.</summary>
         public bool Escape()
         {
             if (EscapeConfirm()) return true;
-            if (perkShop != null && perkShop.Escape()) return true;
-            if (ascend != null && ascend.Escape()) return true;
             if (stats != null && stats.Escape()) return true;
             if (help != null && help.Escape()) return true;
             if (welcome != null && welcome.Escape()) return true;
-            if (postAscension != null && postAscension.Escape()) return true;
             return false;
         }
     }

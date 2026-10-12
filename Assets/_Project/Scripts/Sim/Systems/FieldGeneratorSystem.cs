@@ -14,7 +14,7 @@ namespace IdleGrounds.Sim
             var s = _ctx.State;
             var t = _ctx.Timing;
             int upLvl = string.IsNullOrEmpty(gen.upgrade) ? 0 : area.upgrades.Get(gen.upgrade);
-            return gen.intervalMs * t.TimeScale * Math.Pow(0.8, upLvl) * Math.Pow(0.9, s.PerkLevel("bounty")) * t.PrestigeFactor(s);
+            return gen.intervalMs * t.TimeScale * Math.Pow(0.8, upLvl) * Math.Pow(0.9, s.Bonus("bounty")) * t.WorldFactor(s);
         }
 
         /// <summary>gameTick step 3 for one (unlocked) area. Returns the repaint hint.</summary>

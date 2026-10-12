@@ -12,8 +12,6 @@ namespace IdleGrounds.Game.Data
         public List<RegionAsset> regions = new List<RegionAsset>();
         public List<BuildingAsset> buildings = new List<BuildingAsset>();
         public List<UpgradeNodeAsset> upgrades = new List<UpgradeNodeAsset>();
-        public List<PerkAsset> perks = new List<PerkAsset>();
-        public List<VowAsset> vows = new List<VowAsset>();
         public List<QuestAsset> quests = new List<QuestAsset>();
         public List<DragonStageAsset> dragonStages = new List<DragonStageAsset>();
 
@@ -24,7 +22,6 @@ namespace IdleGrounds.Game.Data
         public List<DragonBuffDef> dragonBuffs = new List<DragonBuffDef>();
         public VitalityDef vitality = new VitalityDef();
         public List<RevealRule> reveal = new List<RevealRule>();
-        public GateOffering gateOfferings = new GateOffering();
 
         public Sprite missingSprite;
 
@@ -93,7 +90,7 @@ namespace IdleGrounds.Game.Data
         {
             var c = new GameConfig
             {
-                grid = grid, test = test, balance = balance, vitality = vitality, gateOfferings = gateOfferings,
+                grid = grid, test = test, balance = balance, vitality = vitality,
                 zones = new List<ZoneDef>(zones),
                 dragonBuffs = new List<DragonBuffDef>(dragonBuffs),
                 reveal = new List<RevealRule>(reveal),
@@ -104,8 +101,6 @@ namespace IdleGrounds.Game.Data
             foreach (var a in dragonStages) if (a) c.dragonStages.Add(a.def);
             foreach (var a in upgrades) if (a) c.upgradeTree.Add(a.def);
             foreach (var a in quests) if (a) c.quests.Add(a.def);
-            foreach (var a in perks) if (a) c.perks.Add(a.def);
-            foreach (var a in vows) if (a) c.vows.Add(a.def);
             return c.Build();
         }
 
@@ -142,8 +137,6 @@ namespace IdleGrounds.Game.Data
         public Sprite EnemySprite(string regionKey) => Or(FindRegion(regionKey)?.Find("enemy"));
         public Sprite BaitSprite(string regionKey) => Or(FindRegion(regionKey)?.Find("enemy_bait"));
         public Sprite UpgradeIcon(string id) { foreach (var a in upgrades) if (a && a.def.id == id) return Or(a.icon); return missingSprite; }
-        public Sprite PerkIcon(string id) { foreach (var a in perks) if (a && a.def.id == id) return Or(a.icon); return missingSprite; }
-        public Sprite VowIcon(string id) { foreach (var a in vows) if (a && a.def.id == id) return Or(a.icon); return missingSprite; }
         public Sprite QuestIcon(string id) { foreach (var a in quests) if (a && a.def.id == id) return Or(a.icon); return missingSprite; }
         public Sprite DragonStageIcon(int stage) =>
             stage >= 0 && stage < dragonStages.Count && dragonStages[stage] ? Or(dragonStages[stage].icon) : missingSprite;

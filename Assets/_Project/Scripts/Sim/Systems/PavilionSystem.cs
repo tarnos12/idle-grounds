@@ -21,7 +21,7 @@ namespace IdleGrounds.Sim
         {
             var r = Cfg.Building(b?.type)?.roster;
             if (r == null || !r.enabled) return 0;
-            return r.cap + 2 * (S.Area("center")?.upgrades.discipleCap ?? 0) + S.PerkLevel("hall");
+            return r.cap + 2 * (S.Area("center")?.upgrades.discipleCap ?? 0) + S.Bonus("hall");
         }
 
         /// <summary>Why Recruit would fail (null = can recruit): "Not built" / "Full" / "Needs Robe".</summary>
@@ -52,7 +52,7 @@ namespace IdleGrounds.Sim
 
         /// <summary>Cultivation cycle length (ms) right now.</summary>
         public double CycleMs(BuildingDef def) =>
-            def.roster.produceMs * _ctx.Timing.TimeScale * _ctx.Timing.PrestigeFactor(S);
+            def.roster.produceMs * _ctx.Timing.TimeScale * _ctx.Timing.WorldFactor(S);
 
         /// <summary>gameTick step 6, pavilion part (engine.js:2578) — one built roster building.</summary>
         public bool Tick(string areaKey, AreaState area, Building b, BuildingDef def, double now)

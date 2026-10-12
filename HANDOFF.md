@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12 Phase 1 (ADR 0007): ascension/AP/perks/vows/offerings/run reset removed; Heavenly Gate (Celestial, dragon stage 4) ends the game, free play continues (`Simulation.AscendToImmortality`). Perk effects live behind `Simulation.Bonus(key)` (empty on a fresh game) for Phase 3 requests. SaveCodec schema 2 + MigrateFromV1 (+SaveMigrationTests). Bot: 2:12:27 human pace to the ending. Tests: .NET 167 fast / 169 all, Unity EditMode 175/175, PlayMode 5/6 (Logistics_WispLaunches_ConverterCompletes fails before and after — timing). User save migrated to v2; v1 backup kept as idle-grounds-save.v1-backup-2026-10-12.json in the save folder. Next: Phase 2 (Sky-Bridge Shrine).
+
 - 2026-10-12: coast redo #2 — outline repainted from coastSeed with a fine 2–3 cell seeded lattice (organic, no 1-cell stairs, rounded islets); per-joint cliff walls (Run/End/Tuck via WallSide/Joint; composed joint sprites dress_cliffwall_<biome>_joints.png), inward side-face feet, 6 px wall tuck, shadow offset 6 px. Fast sim tests 168/168. Owner sign-off asked in the Hub (coast_signoff).
 
 - 2026-10-12: Hub upgraded to the hub-kit conventions: sources in docs/Design/ (plan.json with milestone status/goal/exit, questions.json, question-images/, owner-picks, islands.json), plan tools in tools/plan/ (set-task, build-plan → PLAN.md + Temp/plan/Idle-Grounds-Plan.pdf), new Islands tab (11-island map, unlock order, tributes, NPC requests, #islands/<id>).

@@ -29,15 +29,6 @@ namespace IdleGrounds.Sim
 
         public bool Awakened => CurrentStage == null;
 
-        /// <summary>`tributeMult(asc)` = max(floor, 1/(1 + shrink·asc)) — balance pass 1: shrink 0, so 1 (was 0.25 / floor 0.4).</summary>
-        public double TributeMult(int? asc = null)
-        {
-            var b = _ctx.Config.balance;
-            return Math.Max(b.tributeShrinkFloor, 1.0 / (1 + b.tributeShrinkPerRun * (asc ?? S.ascensions)));
-        }
-
-        /// <summary>Vow of the Restless Dragon: tributes ×balance.restlessTributeMult (balance pass 1: 1.5, was 2).</summary>
-        double RestlessMult => S.VowActive("restless") ? _ctx.Config.balance.restlessTributeMult : 1;
 
         /// <summary>`dragonNeeds()` — full per-item tribute of the current stage.</summary>
         public ItemCounts Needs()
@@ -53,9 +44,8 @@ namespace IdleGrounds.Sim
             into.ClearReuse();
             var st = CurrentStage;
             if (st == null) return;
-            double m = TributeMult();
             foreach (var n in st.needs)
-                into.Set(n.item, Math.Max(1, (int)Math.Ceiling(_ctx.Timing.Scaled(n.qty) * m * RestlessMult)));
+                into.Set(n.item, Math.Max(1, _ctx.Timing.Scaled(n.qty)));
         }
 
         /// <summary>`dragonRemaining()` — what the current stage still wants.</summary>
@@ -95,7 +85,7 @@ namespace IdleGrounds.Sim
                 return S.dragon.paid.Get(item) + _needsScratch2.Get(item);
             }
             int v = 0;
-            foreach (var n in st.needs) if (n.item == item) v = (int)Math.Ceiling(_ctx.Timing.Scaled(n.qty) * RestlessMult);
+            foreach (var n in st.needs) if (n.item == item) v = _ctx.Timing.Scaled(n.qty);
             return v;
         }
 
@@ -116,7 +106,7 @@ namespace IdleGrounds.Sim
                 foreach (var n in st.needs) res.Set(n.item, S.dragon.paid.Get(n.item) + rem.Get(n.item));
                 return res;
             }
-            foreach (var n in st.needs) res.Set(n.item, (int)Math.Ceiling(_ctx.Timing.Scaled(n.qty) * RestlessMult));
+            foreach (var n in st.needs) res.Set(n.item, _ctx.Timing.Scaled(n.qty));
             return res;
         }
 
@@ -134,7 +124,7 @@ namespace IdleGrounds.Sim
         {
             int affinity = S.Area("center")?.upgrades.affinity ?? 0;
             return (60000 + 30000 * affinity + (ShrineBuilt() ? 60000 : 0))
-                   * Math.Pow(1.2, S.PerkLevel("bless")) * _ctx.Timing.BuffScale;
+                   * Math.Pow(1.2, S.Bonus("bless")) * _ctx.Timing.BuffScale;
         }
 
         public bool IsPill(string item) => item != null && Cfg.DragonBuff(item) != null;
@@ -188,7 +178,7 @@ namespace IdleGrounds.Sim
             _ctx.Events.RaiseDragonStageAdvanced(dr.stage, st.text);
             if (CurrentStage == null)
             {
-                S.won = S.dragonBlessed = true;
+                S.won = true;
                 _ctx.Events.RaiseDragonAwakened();
             }
         }
@@ -201,7 +191,7 @@ namespace IdleGrounds.Sim
 
         /// <summary>Scale shedding interval (ms) right now.</summary>
         public double ScaleIntervalNowMs() =>
-            ScaleIntervalMs * _ctx.Timing.TimeScale * (ShrineBuilt() ? 0.5 : 1) * _ctx.Timing.PrestigeFactor(S);
+            ScaleIntervalMs * _ctx.Timing.TimeScale * (ShrineBuilt() ? 0.5 : 1) * _ctx.Timing.WorldFactor(S);
 
         /// <summary>gameTick step 9 (engine.js:2655) — center only, after awakening. Not catch-up.</summary>
         public bool TickScales(string areaKey, double now)

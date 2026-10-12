@@ -113,8 +113,8 @@ namespace IdleGrounds.Sim.Tests
             Assert.AreEqual(12, h.Take("clay", 99));
             Assert.AreEqual("wood", h.TakeFirst());
             Assert.AreEqual(4, h.Count("wood"));
-            sim.State.vows.active.Add("burden");
-            Assert.AreEqual(10, h.Cap());
+            sim.State.bonuses.Set("hands", 1);
+            Assert.AreEqual(25, h.Cap(), "hands bonus: +5 carry");
         }
 
         [Test]
@@ -231,7 +231,7 @@ namespace IdleGrounds.Sim.Tests
             double stoneBase = stoneGen.intervalMs * 0.2;                // TEST timeScale
             Assert.AreEqual(stoneBase, sim.FieldGenerators.IntervalMs(c, stoneGen), 1e-9);
             c.upgrades.quarry = 1;
-            sim.State.perks.Set("bounty", 1);
+            sim.State.bonuses.Set("bounty", 1);
             Assert.AreEqual(stoneBase * 0.8 * 0.9, sim.FieldGenerators.IntervalMs(c, stoneGen), 1e-9);
             var clayGen = sim.Config.Region("center").generators[0];
             Assert.AreEqual("quarry", clayGen.upgrade);

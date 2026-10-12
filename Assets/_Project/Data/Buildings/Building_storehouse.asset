@@ -29,7 +29,8 @@ MonoBehaviour:
     waterOnly: 0
     cap: 200
     shrine: 0
-    gate: 0
+    ending: 0
+    onlyArea: 
     recipes: []
     gather:
       enabled: 0

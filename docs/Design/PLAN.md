@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-12 09:20. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-12 10:09. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**12 of 25 tasks done**, 1 in progress, 0 to do, 3 blocked, 9 waiting.
+**13 of 26 tasks done**, 1 in progress, 1 to do, 3 blocked, 8 waiting.
 
 ## Being worked on now
 
@@ -12,7 +12,7 @@ Updated 2026-10-12 09:20. Source of truth: docs/Design/plan.json, edited with to
 |---|---|---|---|---|
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 2 |
-| M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 1 / 7 |
+| M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
 | M3 | 3/4 world look (ADR 0005) |  | In progress | 3 / 7 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
@@ -52,12 +52,13 @@ Replace ascension with optional Island requesters: eleven Islands unlocked in a 
 | Status | Task | Detail | Owner |
 |---|---|---|---|
 | Done | Island requesters design (ADR 0007) | Accepted 2026-10-12: 11 islands in a fixed order unlocked by tributes at the north Sky-Bridge Shrine; 11 NPCs (one per island) with 3 optional requests each; Heavenly Gate ending. | Claude |
-| Waiting | Phase 1: remove ascension, perks, vows, offerings; Heavenly Gate ending; save migration | Old saves keep their progress; the game stays playable on 7 islands. | Claude |
+| Done | Phase 1: remove ascension, perks, vows, offerings; Heavenly Gate ending; save migration | Done 2026-10-12: ascension, Ascension Points, perks, vows, offerings and the run reset removed; Heavenly Gate on Celestial is the ending (free play continues); old saves migrate (perks become bonuses where a requester replaces them). Playthrough bot: 2:12 human pace to the ending. | Claude |
 | Waiting | Phase 2: Sky-Bridge Shrine, fixed unlock order, Celestial moves north, Sky Paths | Replaces the unlock steles; quests retargeted to the new order. | Claude |
 | Waiting | Phase 3: requester NPCs on the 7 existing islands (21 requests) | Request panel, right-click feeding, rewards: new buildings and automation utilities. | Claude |
 | Waiting | Phase 4: 4 new islands (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) + their NPCs | Nodes, Azure Wolf, 9 buildings, 12 items, 4 NPCs; placeholder art until delivered. | Claude |
 | Waiting | Phase 5: balance to a ~3 h ending | Playthrough bot: greedy run 2:30-3:30, no-requests run under 4:15. | Claude |
 | Blocked | Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files) | P1 shrine + 7 NPC sprites first, then the new island tilesets, buildings and items. | Artist |
+| To do | Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes | The first converter batch takes 20.5 s of game time but the test waits only 18 s; it fails before and after phase 1. | Claude |
 
 ## M3: 3/4 world look (ADR 0005). In progress
 

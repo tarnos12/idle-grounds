@@ -19,8 +19,8 @@ namespace IdleGrounds.Editor
         const string UiPrefabDir = "Assets/_Project/Prefabs/UI/";
         const string DbPath = "Assets/_Project/Data/GameDatabase.asset";
 
-        static readonly HashSet<string> Skip = new HashSet<string> { "CardTemplate", "CellTemplate", "Chip", "Minimise", "ShrinePill" };
-        static readonly HashSet<string> Primary = new HashSet<string> { "Claim", "Ascend", "OK", "Begin", "Continue", "Buy", "Recruit" };
+        static readonly HashSet<string> Skip = new HashSet<string> { "CardTemplate", "CellTemplate", "Chip", "Minimise" };
+        static readonly HashSet<string> Primary = new HashSet<string> { "Claim", "OK", "Begin", "Continue", "Buy", "Recruit" };
 
         /// <summary>null = skip this button.</summary>
         public static UiButtonVariant? Classify(Button b)

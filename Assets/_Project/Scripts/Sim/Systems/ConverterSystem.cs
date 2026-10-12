@@ -121,12 +121,12 @@ namespace IdleGrounds.Sim
             return n;
         }
 
-        /// <summary>Real batch duration: timeMs · timeScale · prestigeFactor · (burner &amp; Ember blessing ? 0.5).</summary>
+        /// <summary>Real batch duration: timeMs · timeScale · world factor · (burner &amp; Ember blessing ? 0.5).</summary>
         public double BatchMs(Building b, double now)
         {
             var rec = RecipeOf(b);
             if (rec == null) return 0;
-            double cost = rec.timeMs * _ctx.Timing.TimeScale * _ctx.Timing.PrestigeFactor(S);
+            double cost = rec.timeMs * _ctx.Timing.TimeScale * _ctx.Timing.WorldFactor(S);
             if (IsBurner(b) && Timing.BuffActive(S, "ember_pill", now)) cost *= 0.5;
             return cost;
         }
@@ -231,7 +231,7 @@ namespace IdleGrounds.Sim
                 var rec = b.built ? RecipeOf(b) : null;
                 if (rec == null) continue;
                 bool isBurner = IsBurner(b);
-                double emberK = isBurner ? Math.Pow(0.85, S.PerkLevel("ember")) : 1;
+                double emberK = isBurner ? Math.Pow(0.85, S.Bonus("ember")) : 1;
                 var stock = Stock(b);
                 for (int ev = 0; ev < maxEv; ev++)
                 {

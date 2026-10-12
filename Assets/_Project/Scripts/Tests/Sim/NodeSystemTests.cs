@@ -230,11 +230,11 @@ namespace IdleGrounds.Sim.Tests
             var c = sim.State.Area("center");
             var bush = c.nodes.First(n => n.spawnerKind == "bush");
             Assert.AreEqual(2400, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
-            sim.State.perks.Set("haste", 1);                            // prestige x hasteStep
+            sim.State.bonuses.Set("haste", 1);                            // world factor x hasteStep
             double pf = sim.Config.balance.hasteStep;
             Assert.AreEqual(2400 * pf, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
             c.upgrades.speed = 1;                                        // ×0.8
-            sim.State.perks.Set("regrow", 1);                            // ×0.9
+            sim.State.bonuses.Set("regrow", 1);                            // ×0.9
             Assert.AreEqual(2400 * pf * 0.8 * 0.9, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);
             sim.Config.test.enabled = false;                             // no TEST timeScale
             Assert.AreEqual(12000 * pf * 0.8 * 0.9, sim.Nodes.RegrowDelayMs("center", bush), 1e-9);

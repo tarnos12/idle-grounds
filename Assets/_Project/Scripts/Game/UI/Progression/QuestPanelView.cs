@@ -13,7 +13,7 @@ namespace IdleGrounds.Game
     /// "Quest i/N" + minimise; quest icon + name; description; "Unlocks:" reward preview; progress bar;
     /// "cur/need" + Claim (hand-bound rewards float "+n Name to hand" at 35% of the view height);
     /// "Next: …" faded; then the "Next milestone" block from <see cref="Simulation.Milestone"/>
-    /// (spend-AP line, dragon tribute / raise the Gate / ascend with have/need rows + source hints,
+    /// (dragon tribute / open Celestial / raise the Heavenly Gate / ascend / free play with have/need rows + source hints,
     /// next step, hungry-disciples hint). Rebuilt only when its key string changes.
     /// </summary>
     public class QuestPanelView : MonoBehaviour
@@ -160,6 +160,7 @@ namespace IdleGrounds.Game
         }
 
         string ItemName(string it) => runner.Config.Item(it)?.name ?? it;
+        string RegionName(string k) => runner.Config.Region(k)?.name ?? k;
         string BuildingName(string t) => runner.Config.Building(t)?.name ?? t;
 
         public void Rebuild(bool force)
@@ -242,7 +243,6 @@ namespace IdleGrounds.Game
             if (hidden) return;
             var m = Sim.Milestone();
             if (m == null) return;
-            if (m.spendAp) Add(ascendSprite, "Spend " + m.ap + " AP at the Ascension Shrine (bottom bar)", UiPalette.Gold);
             switch (m.kind)
             {
                 case MilestoneKind.DragonTribute:
@@ -251,23 +251,24 @@ namespace IdleGrounds.Game
                     NeedRows(m);
                     msBarAt = msItems.Count; msBarValue = (float)m.tributeProgress;
                     break;
+                case MilestoneKind.OpenIsland:
+                    Add(sprites.Building("heavenly_gate"), "<b>Open " + RegionName(m.island) + "</b>", UiPalette.Text);
+                    Add(null, "The Heavenly Gate can only stand there. Pay its unlock stele - in hand / still needed:", UiPalette.Muted);
+                    NeedRows(m);
+                    break;
                 case MilestoneKind.RaiseGate:
-                    Add(sprites.Building("ascension_gate"), "<b>Raise the Ascension Gate</b>", UiPalette.Text);
-                    Add(null, m.gatePlaced ? "Feed its ghost (right-click). In hand / still needed:" : "Build it (B), then feed it. In hand / cost:", UiPalette.Muted);
+                    Add(sprites.Building("heavenly_gate"), "<b>Raise the Heavenly Gate</b>", UiPalette.Text);
+                    Add(null, m.gatePlaced ? "Feed its ghost (right-click). In hand / still needed:" : "Build it on Celestial Peak (B), then feed it. In hand / cost:", UiPalette.Muted);
                     NeedRows(m);
                     if (m.step != null && !string.IsNullOrEmpty(m.step.text)) Add(null, "Next step: " + m.step.text, UiPalette.Accent);
                     break;
                 case MilestoneKind.Ascend:
-                    Add(ascendSprite, "<b>Ascend for +" + m.ascendReward + " AP</b>", UiPalette.Gold);
-                    var off = m.offerings;
-                    if (m.allRegionsOpen)
-                    {
-                        Add(null, "Click the Ascension Gate to ascend - every Island is open.", UiPalette.Muted);
-                        if (off != null) Add(null, "Offerings " + off.count + "/" + off.cap + (off.count >= off.cap ? "" : " - right-click spares onto the Gate (+1 AP each)"), UiPalette.Text);
-                    }
-                    else
-                        Add(null, "Click the Ascension Gate to ascend - each Island unlocked (+2 AP) or gate offering (" +
-                                  (off != null ? off.count + "/" + off.cap : "0") + ") = more Ascension Points.", UiPalette.Muted);
+                    Add(ascendSprite, "<b>Ascend to Immortality</b>", UiPalette.Gold);
+                    Add(null, "Click the Heavenly Gate on Celestial Peak - the ending plays, then free play continues.", UiPalette.Muted);
+                    break;
+                case MilestoneKind.FreePlay:
+                    Add(ascendSprite, "<b>Free play</b>", UiPalette.Gold);
+                    Add(null, "You have ascended. The grounds are yours - keep building.", UiPalette.Muted);
                     break;
             }
             if (m.hungryDisciples)

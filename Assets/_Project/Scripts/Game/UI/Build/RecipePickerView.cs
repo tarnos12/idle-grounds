@@ -10,7 +10,7 @@ namespace IdleGrounds.Game
     /// Recipe picker (ui-input-render §4.3): left-click a built converter → popup centred above the
     /// building top (follows the camera, clamped on screen): "Recipes" + a 3-column icon grid. Hover a
     /// cell → the detail panel (bottom-right): output icon, name, gold "→ qty× Item · secs s" (secs =
-    /// timeMs × prestigeFactor), one row per input (icon + gold count badge + name). Click =
+    /// timeMs × world factor), one row per input (icon + gold count badge + name). Click =
     /// <see cref="Simulation.SetRecipe"/> + close. Closes when the building disappears / unbuilds.
     /// </summary>
     public class RecipePickerView : MonoBehaviour
@@ -116,7 +116,7 @@ namespace IdleGrounds.Game
             detailIcon.sprite = sprites.Item(r.output);
             string outName = runner.Config.Item(r.output)?.name ?? r.output;
             detailName.text = string.IsNullOrEmpty(r.name) ? outName : r.name;
-            double secs = r.timeMs * Sim.Timing.PrestigeFactor(Sim.State) / 1000.0;
+            double secs = r.timeMs * Sim.Timing.WorldFactor(Sim.State) / 1000.0;
             detailYield.text = $"→ {r.outputQty}× {outName} · " + System.Math.Round(secs, 1, System.MidpointRounding.AwayFromZero).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "s";   
             while (rows.Count < r.inputs.Count) rows.Add(Instantiate(rowTemplate, detailRows));
             for (int i = 0; i < rows.Count; i++)

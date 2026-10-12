@@ -44,8 +44,11 @@ namespace IdleGrounds.Sim
         // ---- §5.1 model ----
         public int Total() { int t = 0; foreach (var s in H) t += s.qty; return t; }
 
-        /// <summary>`handCap()` — Vow of Burden halves it.</summary>
-        public int Cap() => _ctx.State.VowActive("burden") ? Math.Max(1, _ctx.State.handCap / 2) : _ctx.State.handCap;
+        /// <summary>Carry capacity per "hands" bonus level (ex Fleet Hands perk).</summary>
+        public const int HandsPerBonus = 5;
+
+        /// <summary>`handCap()` — base (Hand Size upgrades) + the "hands" utility bonus.</summary>
+        public int Cap() => _ctx.State.handCap + HandsPerBonus * _ctx.State.Bonus("hands");
         public int Space() => Cap() - Total();
 
         public int IndexOf(string item) { for (int i = 0; i < H.Count; i++) if (H[i].item == item) return i; return -1; }

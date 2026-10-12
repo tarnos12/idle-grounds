@@ -13,7 +13,7 @@ namespace IdleGrounds.Game
     /// (HandController: at the cursor on every node click / auto-swing, at the enemy on every strike) = 4 light sparks. Sparks: random angle, 30-100 px/s, extra
     /// -30 px/s up, gravity 90 px/s², radius 1.5-3.5 px shrinking 40 %, life 380-640 ms, alpha 1→0.
     /// Nothing spawns while the sim events are muted.
-    /// Everything clears on RunReset (ascension).
+    /// Everything clears on RunReset (in-place load).
     /// </summary>
     public class FxService : MonoBehaviour
     {

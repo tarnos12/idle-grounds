@@ -40,8 +40,6 @@ namespace IdleGrounds.Game.Tests
             Assert.AreEqual(json.buildings.Sum(b => b.recipes.Count), built.buildings.Sum(b => b.recipes.Count), "recipes");
             Assert.AreEqual(json.upgradeTree.Count, built.upgradeTree.Count, "upgrades");
             Assert.AreEqual(json.quests.Count, built.quests.Count, "quests");
-            Assert.AreEqual(json.perks.Count, built.perks.Count, "perks");
-            Assert.AreEqual(json.vows.Count, built.vows.Count, "vows");
             Assert.AreEqual(json.dragonStages.Count, built.dragonStages.Count, "dragon stages");
             Assert.AreEqual(json.dragonBuffs.Count, built.dragonBuffs.Count, "dragon buffs");
             Assert.AreEqual(json.zones.Count, built.zones.Count, "zones");

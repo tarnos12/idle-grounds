@@ -385,7 +385,7 @@ namespace IdleGrounds.Sim.Tests
             var def = sim.Config.Building("spirit_bridge");
             var area = sim.State.Area(C);
             double beat0 = sim.Logistics.BeatMs(area, def, clock.NowMs);
-            sim.State.perks.Set(LogisticsSystem.TirelessPerk, 2);
+            sim.State.bonuses.Set(LogisticsSystem.TirelessPerk, 2);
             Assert.AreEqual(beat0 / 1.3, sim.Logistics.BeatMs(area, def, clock.NowMs), 1e-9);
             var (send, _) = Pair(sim);
             Fill(send, "wood", 1);

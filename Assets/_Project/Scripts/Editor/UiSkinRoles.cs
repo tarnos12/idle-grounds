@@ -24,12 +24,9 @@ namespace IdleGrounds.Editor
         /// <summary>prefab -> (path under the prefab root, "name:" prefix = deep search by name, skin key)</summary>
         public static readonly (string prefab, string path, string key)[] Roles =
         {
-            ("AscendDialog", "Modal/Box", Jade),
             ("DragonDialog", "Modal/Box", Jade),
             ("UpgradeTree", "Modal/Box", Jade),
             ("UpgradeTree", "name:Tooltip", Tip),
-            ("PerkShop", "Modal/Box", Jade),
-            ("PostAscension", "Modal/Box", Jade),
             ("StatsPanel", "Modal/Box", Jade),
             ("ConfirmDialog", "Modal/Box", Jade),
             ("HelpModal", "Modal/Box", Scroll),
@@ -111,7 +108,7 @@ namespace IdleGrounds.Editor
         /// <summary>Keeps the existing prefabs in line with the builders: content clear of the 32 px jade frame.</summary>
         static void Fixups(string prefab, Transform root)
         {
-            if (prefab == "HelpModal" || prefab == "PerkShop")
+            if (prefab == "HelpModal")
             {
                 var box = root.Find("Modal/Box");
                 var head = box != null ? box.Find("Header") as RectTransform : null;

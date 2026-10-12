@@ -1,6 +1,7 @@
 # ADR 0004 — Real balance targets
 
-Status: accepted (2026-10-07)
+Status: accepted (2026-10-07); its ascension parts (later runs, perks, vows) are superseded by ADR 0007 —
+ascension was removed (2026-10-12). The playthrough bot now measures start → the Heavenly Gate ending.
 
 ## Context
 
