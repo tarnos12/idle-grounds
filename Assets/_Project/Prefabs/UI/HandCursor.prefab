@@ -286,9 +286,9 @@ GameObject:
   - component: {fileID: 3921930073268836081}
   - component: {fileID: 4643351041708217236}
   - component: {fileID: 2139584220344562202}
+  - component: {fileID: 8216955496565586133}
   - component: {fileID: 8025864798969433608}
   - component: {fileID: 1360324012486298847}
-  - component: {fileID: 8216955496565586133}
   m_Layer: 5
   m_Name: Chip
   m_TagString: Untagged
@@ -369,6 +369,23 @@ MonoBehaviour:
   m_EffectColor: {r: 0.2901961, g: 0.87058824, b: 0.5019608, a: 1}
   m_EffectDistance: {x: 1, y: -1}
   m_UseGraphicAlpha: 1
+--- !u!114 &8216955496565586133
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6752098652967203481}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
+  key: ui_handchip_frame
+  fit: 0
+  tint: {r: 1, g: 1, b: 1, a: 1}
+  fitParent: 0
+  uiPerArt: 2
 --- !u!114 &8025864798969433608
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -409,23 +426,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 2
   m_VerticalFit: 2
---- !u!114 &8216955496565586133
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6752098652967203481}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3d3bb78855863849894e60dc2e4384c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.UiSkin
-  key: ui_handchip_frame
-  fit: 0
-  tint: {r: 1, g: 1, b: 1, a: 1}
-  fitParent: 0
-  uiPerArt: 2
 --- !u!1 &8358118507999418094
 GameObject:
   m_ObjectHideFlags: 0

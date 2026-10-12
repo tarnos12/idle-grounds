@@ -63,13 +63,13 @@ namespace IdleGrounds.Game
                 "<b>Nothing moves</b>: check the link dot (amber = source empty, or it holds nothing this target uses; red = target refused/full) and that both ends sit on the SAME Island — only Spirit Bridges carry items across the sky. " +
                 "<b>Automation skipping</b>: when too much of one item is lying around an Island, automation stops harvesting that item (a small amber 'Skipping' chip with its icon shows at the Island's top-left corner) until you vacuum it up or clear it away; other work carries on."));
             if (dr >= 4) S.Add(("⛩️ The Heavenly Gate",
-                "The game's ending. Open Celestial Peak, then craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Heavenly Gate there (it can only stand on Celestial Peak) — the built gate glows gold; click it to Ascend to Immortality. The ending plays, then your grounds stay exactly as they are and free play continues."));
+                "The game's ending. Open Celestial Peak, then craft Talismans (Atelier) and Star Steel (Anvil), gather Dragon Scales, and raise the Heavenly Gate there (it can only stand on Celestial Peak) — the built gate glows gold; click it and choose Ascend to Immortality to play the ending. Afterwards your grounds stay exactly as they are and free play continues."));
             if (U("farm") || U("mine") || U("fishing")) S.Add(("🗺️ Islands",
                 "Each Island has unique resources (Farm: rice & cotton & sand; Mine: iron ore; Fishing: fish, algae & spring water). Jade shards drop from the Center quarry rock and Mine jade veins. Each locked Island bordering an open one shows an unlock stele on its edge facing the Center — pan over the sky to it and pay there."));
             else S.Add(("🗺️ Islands",
                 "Locked Islands float beyond the sky — gather wood and pay at the stone unlock stele on a locked Island's edge to expand."));
             S.Add(("📊 Stats",
-                "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, whether you have ascended, and more."));
+                "The 📊 Stats button in the bottom bar tracks your running totals — playtime, everything gathered and crafted, foxes slain, buildings, whether you have reached the ending, and more."));
             return S;
         }
     }

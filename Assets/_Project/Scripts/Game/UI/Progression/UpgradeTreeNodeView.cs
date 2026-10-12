@@ -24,6 +24,10 @@ namespace IdleGrounds.Game
         [Tooltip("Selection frame: an Image BEHIND the background, a few px larger (reads as a ring).")]
         [SerializeField] Image brackets;
         [SerializeField] CanvasGroup group;
+        [Tooltip("Lock glyph on locked nodes (never colour alone).")]
+        [SerializeField] Image lockBadge;
+        [Tooltip("Remaining cost under the selected node.")]
+        [SerializeField] TextMeshProUGUI costLabel;
 
         UpgradeTreeView owner;
         public string Id { get; private set; }
@@ -40,7 +44,7 @@ namespace IdleGrounds.Game
             icon.sprite = sprite;
         }
 
-        public void Apply(UpgradeNodeState st, bool debug, bool selectedJob)
+        public void Apply(UpgradeNodeState st, bool debug, bool selectedJob, string costUnder = null)
         {
             State = st;
             Mystery = st.tier == UpgradeNodeTier.Mystery && !debug;
@@ -57,12 +61,27 @@ namespace IdleGrounds.Game
             ViewKit.Show(icon, !Mystery);
             ViewKit.Show(level, !Mystery);
             ViewKit.Show(mystery, Mystery);
-            string lv = st.level + "/" + st.max;
+            // state is never colour alone: maxed reads "MAX", locked carries a lock glyph, selected a thick white ring
+            string lv = st.maxed ? "MAX" : st.level + "/" + st.max;
             if (level.text != lv) level.text = lv;
             level.color = c;
+            bool locked = !Mystery && !st.selectable && !st.maxed;
+            if (lockBadge != null) ViewKit.Show(lockBadge, locked);
             bool frame = Hovered || selectedJob;
             ViewKit.Show(brackets, frame);
-            if (frame) brackets.color = selectedJob && !Hovered ? UiPalette.Gold : Color.white;
+            if (frame)
+            {
+                brackets.color = selectedJob ? Color.white : UiPalette.Hex("#9fb3c8");
+                var brt = brackets.rectTransform;
+                float ring = selectedJob ? 12f : 8f;                         // selected: thicker ring
+                brt.offsetMin = new Vector2(-ring, -ring); brt.offsetMax = new Vector2(ring, ring);
+            }
+            if (costLabel != null)
+            {
+                bool showCost = selectedJob && !string.IsNullOrEmpty(costUnder);
+                ViewKit.Show(costLabel, showCost);
+                if (showCost && costLabel.text != costUnder) costLabel.text = costUnder;
+            }
         }
 
         public static readonly Color Board = UiPalette.Hex("#232926");

@@ -19,6 +19,8 @@ namespace IdleGrounds.Game
         [SerializeField] Camera worldCamera;
         [SerializeField] RectTransform popup;
         [SerializeField] RectTransform grid;
+        [Tooltip("One line under the grid: the hovered recipe (else the active one), e.g. \"Glass: 3 Sand + fuel, 6 s\".")]
+        [SerializeField] TextMeshProUGUI caption;
         [SerializeField] RecipeCell cellTemplate;
         [SerializeField] RectTransform detail;
         [SerializeField] Image detailIcon;
@@ -62,6 +64,9 @@ namespace IdleGrounds.Game
             sprites ??= new SpriteCache(runner.Database, null);
             Area = area; BuildingId = b.id; HoverIndex = -1;
             var recs = def.recipes;
+            if (recs.Count < 2) { Close(); return; }      // nothing to choose: no popup
+            var gl = grid.GetComponent<GridLayoutGroup>();
+            if (gl != null) gl.constraintCount = Mathf.Clamp(recs.Count, 1, 3);      // the popup is as wide as its cells
             while (cells.Count < recs.Count) cells.Add(Instantiate(cellTemplate, grid));
             for (int i = 0; i < cells.Count; i++)
             {
@@ -71,8 +76,37 @@ namespace IdleGrounds.Game
             }
             popup.gameObject.SetActive(true);
             detail.gameObject.SetActive(false);
+            UpdateCaption(-1);
             LayoutRebuilder.ForceRebuildLayoutImmediate(popup);
             Position();
+        }
+
+        /// <summary>"Glass: 3 Sand + fuel, 6 s" (the active recipe carries " (current)").</summary>
+        string Summary(BuildingDef def, int index, Building b)
+        {
+            var r = def.recipes[index];
+            string outName = runner.Config.Item(r.output)?.name ?? r.output;
+            var sb = new System.Text.StringBuilder(string.IsNullOrEmpty(r.name) ? outName : r.name).Append(": ");
+            for (int i = 0; i < r.inputs.Count; i++)
+            {
+                if (i > 0) sb.Append(" + ");
+                sb.Append(r.inputs[i].qty).Append(' ').Append(runner.Config.Item(r.inputs[i].item)?.name ?? r.inputs[i].item);
+            }
+            if (def.fuel) sb.Append(" + fuel");
+            double secs = r.timeMs * Sim.Timing.WorldFactor(Sim.State) / 1000.0;
+            sb.Append(", ").Append(System.Math.Round(secs, 1, System.MidpointRounding.AwayFromZero).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)).Append(" s");
+            if (b != null && b.recipe == index) sb.Append(" (current)");
+            return sb.ToString();
+        }
+
+        void UpdateCaption(int hover)
+        {
+            if (caption == null) return;
+            var b = Target;
+            var def = b != null ? runner.Config.Building(b.type) : null;
+            if (def == null || def.recipes.Count == 0) { caption.text = ""; return; }
+            int i = hover >= 0 && hover < def.recipes.Count ? hover : Mathf.Clamp(b.recipe, 0, def.recipes.Count - 1);
+            caption.text = Summary(def, i, b);
         }
 
         /// <summary>Same-output siblings: the first input of this recipe that some sibling lacks.</summary>
@@ -108,6 +142,7 @@ namespace IdleGrounds.Game
         public void Hover(int index)
         {
             HoverIndex = index;
+            UpdateCaption(index);
             var b = Target;
             var def = b != null ? runner.Config.Building(b.type) : null;
             if (index < 0 || def == null || index >= def.recipes.Count) { detail.gameObject.SetActive(false); return; }

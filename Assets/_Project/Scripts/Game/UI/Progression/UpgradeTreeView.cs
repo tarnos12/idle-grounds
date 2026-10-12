@@ -38,6 +38,8 @@ namespace IdleGrounds.Game
         [SerializeField] Button cancelJobButton;
         [SerializeField] Button closeButton;
         [SerializeField] Button debugButton;
+        [SerializeField] Button recentreButton;
+        [SerializeField] TextMeshProUGUI panHint;
 
         readonly Dictionary<string, UpgradeTreeNodeView> nodes = new Dictionary<string, UpgradeTreeNodeView>();
         readonly List<(Image img, string a, string b)> edges = new List<(Image, string, string)>();
@@ -64,8 +66,16 @@ namespace IdleGrounds.Game
             if (nodeTemplate != null) nodeTemplate.gameObject.SetActive(false);
             if (closeButton != null) closeButton.onClick.AddListener(Close);
             if (cancelJobButton != null) cancelJobButton.onClick.AddListener(CancelJob);
-            if (debugButton != null) debugButton.onClick.AddListener(() => { RevealAll = !RevealAll; Refresh(); });
+            if (debugButton != null)
+            {
+                debugButton.onClick.AddListener(() => { RevealAll = !RevealAll; Refresh(); });
+                debugButton.gameObject.SetActive(DevToolsVisible);      // VP-04: never shown to players
+            }
+            if (recentreButton != null) recentreButton.onClick.AddListener(Recentre);
         }
+
+        /// <summary>Dev-only controls (Debug reveal): the editor or a development player, never a release build or a headless capture.</summary>
+        public static bool DevToolsVisible => (Application.isEditor || Debug.isDebugBuild) && !Application.isBatchMode;
 
         void OnDisable() => CameraController.PanSuspended = false;
 
@@ -77,8 +87,9 @@ namespace IdleGrounds.Game
             modal.SetActive(true);
             BuildOnce();
             LayoutBox();
-            treeCam = new Vector2(body.rect.width * 0.5f, body.rect.height * 0.5f);
-            ClampCam();
+            Canvas.ForceUpdateCanvases();
+            Reposition();
+            Recentre();
             hovered = null;
             LastRefusal = null;
             CameraController.PanSuspended = true;
@@ -93,14 +104,56 @@ namespace IdleGrounds.Game
             CameraController.PanSuspended = false;
         }
 
+        /// <summary>Bottom bar height (60 px): the window sits ABOVE it, centred in the rest of the screen (VP-05).</summary>
+        public const float BarHeight = 60f, WindowMargin = 14f;
+
         void LayoutBox()
         {
             var canvas = (RectTransform)modal.transform;
             Canvas.ForceUpdateCanvases();
             float w = Mathf.Min(920f * Scale, canvas.rect.width * 0.96f);
-            float h = Mathf.Min(880f * Scale, canvas.rect.height * 0.92f);
+            float h = Mathf.Min(880f * Scale, canvas.rect.height - BarHeight - 2f * WindowMargin);
             box.sizeDelta = new Vector2(w, h);
+            box.anchoredPosition = new Vector2(0f, BarHeight * 0.5f);
             LayoutRebuilder.ForceRebuildLayoutImmediate(box);
+        }
+
+        /// <summary>Centre the whole tree in the board (default view and the Recentre button).</summary>
+        public void Recentre()
+        {
+            if (body == null) return;
+            treeCam = new Vector2(body.rect.width * 0.5f - (minX + maxX) * 0.5f, body.rect.height * 0.5f - (minY + maxY) * 0.5f);
+            ClampCam();
+            ApplyCam();
+        }
+
+        float spread = 1f;
+        public float Spread => spread;
+
+        /// <summary>Node positions scaled (never the node art itself) so the whole tree fits the board: spread 1 .. 0.5 (nodes in the data are >= 130 px apart, so 0.5 never overlaps them).</summary>
+        void Reposition()
+        {
+            var cfg = runner.Config.upgradeTree;
+            float rminX = float.MaxValue, rmaxX = float.MinValue, rminY = float.MaxValue, rmaxY = float.MinValue;
+            foreach (var n in cfg)
+            {
+                rminX = Mathf.Min(rminX, n.x); rmaxX = Mathf.Max(rmaxX, n.x);
+                rminY = Mathf.Min(rminY, n.y); rmaxY = Mathf.Max(rmaxY, n.y);
+            }
+            float node = Half * 2f * Scale + 16f;      // node + selection ring
+            float fw = (body.rect.width - node - 24f) / Mathf.Max(1f, (rmaxX - rminX) * Scale);
+            float fh = (body.rect.height - node - 24f - 30f) / Mathf.Max(1f, (rmaxY - rminY) * Scale);   // 30: cost label under the lowest node
+            spread = Mathf.Clamp(Mathf.Min(1f, fw, fh), 0.5f, 1f);
+            minX = minY = float.MaxValue; maxX = maxY = float.MinValue;
+            foreach (var n in cfg)
+            {
+                if (!nodes.TryGetValue(n.id, out var v)) continue;
+                v.Rect.anchoredPosition = new Vector2(n.x * Scale * spread, -n.y * Scale * spread);
+                minX = Mathf.Min(minX, n.x * Scale * spread); maxX = Mathf.Max(maxX, n.x * Scale * spread);
+                minY = Mathf.Min(minY, n.y * Scale * spread); maxY = Mathf.Max(maxY, n.y * Scale * spread);
+            }
+            foreach (var (img, a, b) in edges)
+                Place(img.rectTransform, nodes[a].Rect.anchoredPosition, nodes[b].Rect.anchoredPosition);
         }
 
         void BuildOnce()
@@ -191,7 +244,7 @@ namespace IdleGrounds.Game
         /// <summary>treeCam = body-local position (x right, y down) of node (0,0); spec clamp with a 90 px margin.</summary>
         void ClampCam()
         {
-            float bw = body.rect.width, bh = body.rect.height, m = 90f * Scale;
+            float bw = body.rect.width, bh = body.rect.height, m = 60f * Scale;
             float x0 = Mathf.Min(bw / 2, bw - m - maxX), x1 = Mathf.Max(bw / 2, m - minX);
             float y0 = Mathf.Min(bh / 2, bh - m - maxY), y1 = Mathf.Max(bh / 2, m - minY);
             treeCam = new Vector2(Mathf.Clamp(treeCam.x, x0, x1), Mathf.Clamp(treeCam.y, y0, y1));
@@ -227,12 +280,25 @@ namespace IdleGrounds.Game
             sig = sig * 31 + (job != null ? job.paid.Total() + 1 : 0) + (RevealAll ? 1 : 0) + (hovered != null ? hovered.GetInstanceID() * 13L : 0L);
             if (!force && sig == lastSig) return;
             lastSig = sig;
+            string selectedCost = null;
+            if (job != null)
+            {
+                var sbc = new StringBuilder("needs ");
+                bool firstc = true;
+                foreach (var e in Sim.UpgradeJobRemaining())
+                {
+                    if (e.qty <= 0) continue;
+                    if (!firstc) sbc.Append(", "); firstc = false;
+                    sbc.Append(e.qty).Append(' ').Append(ItemName(e.item));
+                }
+                selectedCost = firstc ? "fully fed" : sbc.ToString();
+            }
             foreach (var kv in nodes)
             {
                 if (!byId.TryGetValue(kv.Key, out var st)) { kv.Value.gameObject.SetActive(false); continue; }
                 bool vis = st.visible || RevealAll;
                 if (kv.Value.gameObject.activeSelf != vis) kv.Value.gameObject.SetActive(vis);
-                kv.Value.Apply(st, RevealAll, st.selected);
+                kv.Value.Apply(st, RevealAll, st.selected, st.selected ? selectedCost : null);
             }
             foreach (var (img, a, b) in edges)
             {
@@ -271,9 +337,13 @@ namespace IdleGrounds.Game
                 if (st.maxed) sb.Append("\n<b>MAX</b>");
                 else if (st.nextCost != null)
                 {
-                    sb.Append("\n<color=#fbbf24>Cost: ");
+                    sb.Append("\n<color=#fbbf24>Next level costs: ");
                     bool first = true;
-                    foreach (var e in st.nextCost) { if (!first) sb.Append(", "); first = false; sb.Append(e.qty).Append(' ').Append(ItemName(e.item)); }
+                    foreach (var e in st.nextCost)
+                    {
+                        if (!first) sb.Append(", "); first = false;
+                        sb.Append(e.qty).Append(' ').Append(ItemName(e.item)).Append(" (in hand ").Append(Sim.Hand.Count(e.item)).Append(')');
+                    }
                     sb.Append("</color>");
                 }
             }
@@ -297,7 +367,7 @@ namespace IdleGrounds.Game
             if (jobText == null) return;
             if (job == null)
             {
-                jobText.text = "<color=#94a3b8>No upgrade selected - click a green node, then right-click its cost onto the Altar.</color>";
+                jobText.text = "<color=#94a3b8>No upgrade selected - click a node with a green ring, then right-click its cost onto the Altar.</color>";
                 if (cancelJobButton != null) cancelJobButton.gameObject.SetActive(false);
                 return;
             }

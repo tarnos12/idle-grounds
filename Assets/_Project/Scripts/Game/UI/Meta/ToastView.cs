@@ -1,37 +1,93 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace IdleGrounds.Game
 {
-    /// <summary>Top-centre toast line (ui.js showOfflineToast): 5 s, then a 0.6 s fade. The offline toast is gone (ADR 0002); kept as a generic toast.</summary>
+    public enum ToastKind { Info, Success, Warning }
+
+    /// <summary>
+    /// Top-centre toasts (VP-26): each message is a dark pill with a category icon; at most <see cref="MaxStacked"/> stack
+    /// (the oldest drops out), each shows for <see cref="HoldSeconds"/> then fades over <see cref="FadeSeconds"/>.
+    /// The offline toast is gone (ADR 0002); kept as a generic toast.
+    /// </summary>
     public class ToastView : MonoBehaviour
     {
-        public const float HoldSeconds = 5f, FadeSeconds = 0.6f;
+        public const float HoldSeconds = 3f, FadeSeconds = 0.6f;
+        public const int MaxStacked = 3;
 
         [SerializeField] GameObject root;
-        [SerializeField] CanvasGroup group;
-        [SerializeField] TextMeshProUGUI text;
+        [SerializeField] RectTransform stack;
+        [SerializeField] GameObject itemTemplate;
+        [SerializeField] Sprite infoIcon, successIcon, warningIcon;
 
-        float shownAt = -100f;
-        public bool Visible => root != null && root.activeSelf;
-        public string Text => text != null ? text.text : null;
+        class Item { public GameObject go; public CanvasGroup group; public Image icon; public TextMeshProUGUI text; public float shownAt; }
 
-        void Awake() { if (root != null) root.SetActive(false); }
+        readonly List<Item> live = new List<Item>();
+        readonly List<Item> pool = new List<Item>();
+        string lastText;
 
-        public void Show(string msg)
+        public bool Visible => live.Count > 0;
+        public int Count => live.Count;
+        public string Text => lastText;
+
+        void Awake()
         {
-            text.text = msg;
-            shownAt = Time.unscaledTime;
-            group.alpha = 1f;
+            if (itemTemplate != null) itemTemplate.SetActive(false);
+            if (root != null) root.SetActive(false);
+        }
+
+        public void Show(string msg) => Show(msg, ToastKind.Info);
+
+        public void Show(string msg, ToastKind kind)
+        {
+            if (string.IsNullOrEmpty(msg) || itemTemplate == null || stack == null) return;
+            while (live.Count >= MaxStacked) Release(live[0]);
+            var it = Acquire();
+            it.text.text = msg;
+            it.icon.sprite = kind == ToastKind.Success ? successIcon : kind == ToastKind.Warning ? warningIcon : infoIcon;
+            it.icon.enabled = it.icon.sprite != null;
+            it.shownAt = Time.unscaledTime;
+            it.group.alpha = 1f;
+            it.go.transform.SetAsLastSibling();
+            it.go.SetActive(true);
+            live.Add(it);
+            lastText = msg;
             root.SetActive(true);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(stack);
+        }
+
+        Item Acquire()
+        {
+            if (pool.Count > 0) { var p = pool[pool.Count - 1]; pool.RemoveAt(pool.Count - 1); return p; }
+            var go = Instantiate(itemTemplate, stack);
+            go.name = "Toast";
+            return new Item
+            {
+                go = go, group = go.GetComponent<CanvasGroup>(),
+                icon = go.transform.Find("Icon").GetComponent<Image>(), text = go.transform.Find("Text").GetComponent<TextMeshProUGUI>(),
+            };
+        }
+
+        void Release(Item it)
+        {
+            live.Remove(it);
+            it.go.SetActive(false);
+            pool.Add(it);
         }
 
         void Update()
         {
-            if (!Visible) return;
-            float t = Time.unscaledTime - shownAt;
-            if (t >= HoldSeconds + FadeSeconds) { root.SetActive(false); return; }
-            group.alpha = t <= HoldSeconds ? 1f : 1f - (t - HoldSeconds) / FadeSeconds;
+            if (live.Count == 0) return;
+            for (int i = live.Count - 1; i >= 0; i--)
+            {
+                var it = live[i];
+                float t = Time.unscaledTime - it.shownAt;
+                if (t >= HoldSeconds + FadeSeconds) { Release(it); continue; }
+                it.group.alpha = t <= HoldSeconds ? 1f : 1f - (t - HoldSeconds) / FadeSeconds;
+            }
+            if (live.Count == 0) root.SetActive(false);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace IdleGrounds.Editor
     /// Commands (island = key like center/farm; cells are Island-local row,col):
     ///   welcome | welcomeClose | closeall | keep
     ///   build | demolish | place:TYPE@island,row,col | ghost:TYPE@island,row,col | cursor:island,row,col | cursorW:x,y | hover:island,TYPE
-    ///   help | stats | statsFlow | statsLifetime | tree | confirm | toast:TEXT | ending | dragonDialog:TEXT
+    ///   help | stats | statsFlow | statsLifetime | tree | confirm | confirmReset | toast:TEXT | toasts:A|B|C | toastKind:Warning|TEXT | ending | dragonDialog:TEXT
     ///   questCollapse | questExpand
     ///   recipe:island,TYPE | link:island | bridge:island | pavilion:island   (first BUILT building of that type)
     ///   give:ITEM,N (hand) | clearHand
@@ -49,6 +49,13 @@ namespace IdleGrounds.Editor
             if (gr != null && gr.State != null) { gr.State.dragon.dialog = null; if (gr.State.ascended) gr.State.endingSeen = true; }   // story/ending cards are scripted per shot
             var hand = UnityEngine.Object.FindFirstObjectByType<HandController>();
             if (hand != null) { hand.CancelHolds(); hand.useDebugCursor = false; }
+        }
+
+        /// <summary>The quest panel rebuilds on a 0.2 s wall-clock timer, which a stepped capture never reaches: force it.</summary>
+        static void RefreshQuestPanel()
+        {
+            var q = UnityEngine.Object.FindFirstObjectByType<QuestPanelView>();
+            if (q != null) q.Rebuild(true);
         }
 
         static float F(string s) => float.Parse(s.Trim(), CultureInfo.InvariantCulture);
@@ -90,12 +97,15 @@ namespace IdleGrounds.Editor
                 case "statsFlow": meta.Stats.Show(true, false); meta.Stats.Open(); break;
                 case "statsLifetime": meta.Stats.Show(false, true); meta.Stats.Open(); break;
                 case "tree": build.OpenUpgradeTree(); break;
-                case "confirm": meta.Confirm.Ask(MetaUiController.AscendText, "Ascend to Immortality", null); break;
+                case "confirm": meta.Confirm.Ask(MetaUiController.AscendTitle, MetaUiController.AscendText, "Ascend to Immortality", null); break;
+                case "confirmReset": meta.Confirm.Ask("Start over?", MetaBarView.ResetText, "Reset", null); break;
                 case "toast": meta.Toast.Show(arg); break;
                 case "ending": runner.State.ascended = true; runner.State.endingSeen = false; break;
                 case "dragonDialog": runner.State.dragon.dialog = arg; break;
-                case "questCollapse": runner.Sim.SetQuestPanelHidden(true); break;
-                case "questExpand": runner.Sim.SetQuestPanelHidden(false); break;
+                case "questCollapse": runner.Sim.SetQuestPanelHidden(true); RefreshQuestPanel(); break;
+                case "questExpand": runner.Sim.SetQuestPanelHidden(false); RefreshQuestPanel(); break;
+                case "toasts": foreach (var t in arg.Split('|')) meta.Toast.Show(t, ToastKind.Info); break;
+                case "toastKind": { var p = arg.Split('|'); meta.Toast.Show(p[1], (ToastKind)System.Enum.Parse(typeof(ToastKind), p[0])); break; }
                 case "clearHand": runner.State.hand.Clear(); break;
                 case "give":
                 {

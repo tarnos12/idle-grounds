@@ -49,7 +49,7 @@ namespace IdleGrounds.Game
 
         public void AskReset()
         {
-            confirm.Ask(ResetText, "Reset", () => { if (SaveService.Instance != null) SaveService.Instance.ResetAll(); });
+            confirm.Ask("Start over?", ResetText, "Reset", () => { if (SaveService.Instance != null) SaveService.Instance.ResetAll(); });
         }
 
         public void ToggleMute()

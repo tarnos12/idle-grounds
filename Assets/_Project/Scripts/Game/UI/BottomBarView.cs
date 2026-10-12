@@ -28,6 +28,8 @@ namespace IdleGrounds.Game
         [SerializeField] Button buildButton;
         [SerializeField] Button demolishButton;
         [SerializeField] GameObject buildNewDot;
+        [Tooltip("\"Demolish: click a building - Esc to stop\" above the bar while demolish mode is on.")]
+        [SerializeField] GameObject modeBanner;
 
         bool lastBuildOn, lastDemolishOn;
 
@@ -39,6 +41,15 @@ namespace IdleGrounds.Game
             if (runner == null) runner = GameRunner.Instance;
             if (cameraController == null) cameraController = FindFirstObjectByType<CameraController>();
             if (build == null) build = FindFirstObjectByType<BuildController>();
+            // every button label shares one row height and centring, including the scene-added Sound / Motion buttons (VP-23)
+            foreach (var b in GetComponentsInChildren<Button>(true))
+            {
+                var l = b.transform.Find("Label");
+                if (l == null || l.GetComponent<LayoutElement>() != null) continue;
+                l.gameObject.AddComponent<LayoutElement>().preferredHeight = 24f;
+                var lt = l.GetComponent<TextMeshProUGUI>();
+                if (lt != null && b.GetComponent<LayoutGroup>() != null) lt.alignment = TextAlignmentOptions.Center;
+            }
             if (build != null)
             {
                 if (buildButton != null) buildButton.onClick.AddListener(build.ToggleBuildMenu);
@@ -64,6 +75,7 @@ namespace IdleGrounds.Game
             bool bOn = build.BuildMenuOpen, dOn = build.Demolishing;
             if (bOn != lastBuildOn) { lastBuildOn = bOn; Toggle(buildButton, bOn, false); }
             if (dOn != lastDemolishOn) { lastDemolishOn = dOn; Toggle(demolishButton, dOn, true); }
+            if (modeBanner != null && modeBanner.activeSelf != dOn) modeBanner.SetActive(dOn);
             if (buildNewDot != null)
             {
                 bool dot = !bOn && runner.Sim.Buildings.BuildMenuHasNew();

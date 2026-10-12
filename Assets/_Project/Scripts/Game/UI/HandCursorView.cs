@@ -41,7 +41,7 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null || chip == null) return;
             var h = runner.State.hand;
-            bool show = h.Count > 0 && hand != null && !hand.PointerOverUI;
+            bool show = h.Count > 0 && hand != null && !hand.PointerOverUI && !ModalScrim.Any;   // VP-08: never over a modal
             if (chip.gameObject.activeSelf != show) chip.gameObject.SetActive(show);
             if (!show) return;
 
@@ -70,8 +70,8 @@ namespace IdleGrounds.Game
         RectTransform barRect;
 
         /// <summary>
-        /// Keeps the chip on screen and OFF the bottom bar: near the bar it flips above the pointer (it used to hang
-        /// over the hand pill / Sound button), near the right edge it flips to the pointer's left.
+        /// Keeps the chip on screen and OFF the bottom bar and any open bottom dock: near them it flips above the pointer (it used to hang
+        /// over the hand pill / Sound button / dock text), near the right edge it flips to the pointer's left.
         /// </summary>
         Vector2 Clamp(Vector2 local)
         {
@@ -79,6 +79,8 @@ namespace IdleGrounds.Game
             var size = chip.rect.size;
             if (barRect == null) { var bar = FindFirstObjectByType<BottomBarView>(); if (bar != null) barRect = bar.transform as RectTransform; }
             float floor = r.yMin + (barRect != null ? barRect.rect.height + 4f : 0f);
+            float dock = UiDock.TopInCanvas(canvasRect);      // parks above an open dock (build menu, link editor, bridge / pavilion panel)
+            if (dock > floor) floor = dock + 4f;
             if (local.y - size.y < floor) local.y += 2f * offsetPx.y + size.y;          // above the pointer instead
             if (local.x + size.x > r.xMax) local.x -= 2f * offsetPx.x + size.x;          // left of the pointer instead
             local.x = Mathf.Max(local.x, r.xMin);

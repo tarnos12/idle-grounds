@@ -39,6 +39,15 @@ namespace IdleGrounds.Editor
             Debug.Log("[IdleGrounds] Island + bridge prefabs built.");
         }
 
+        /// <summary>The bridge panel prefab only. Used by <see cref="UiRebuild"/>.</summary>
+        internal static void BuildUiPrefabsOnly()
+        {
+            EnsureShapes();
+            Directory.CreateDirectory(UiPrefabDir);
+            BuildBridgePanelPrefab();
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("Idle Grounds/Scene/Install Islands, Sky + Bridges (ADR 0003)")]
         public static void InstallMenu()
         {
@@ -72,6 +81,7 @@ namespace IdleGrounds.Editor
             var view = root.gameObject.AddComponent<BridgePanelView>();
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.97f), UiPalette.Line, raycast: true);
             UiSkin.Attach(panel.gameObject, "ui_panel_jade");
+            panel.gameObject.AddComponent<UiDock>();
             var prt = panel.rectTransform;
             prt.anchorMin = new Vector2(0f, 0f); prt.anchorMax = new Vector2(1f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);
@@ -80,15 +90,18 @@ namespace IdleGrounds.Editor
             ColW(panel.gameObject, 14, 8);
             Fit(panel.gameObject, false, true);
 
+            // two lines: title bar (icon, title, Unpair, Close) over the state line (pairing status | buffer)
             var head = NewUi("Header", prt);
             Row(head.gameObject, 0, 0, 10);
             var icon = Icon(head, "Icon", Emoji("bld_wisp_lantern"), 33);
             var title = Label(head, "Title", "Spirit Bridge", 21f, UiPalette.Text, true);
-            var status = Label(head, "Status", "Unpaired", 19f, UiPalette.Muted, true);
-            var buffer = Label(head, "Buffer", "Buffer 0/20", 19f, UiPalette.Text, true);
             Le(NewUi("Spacer", head), flexW: 1);
             var unpair = SmallButton(head, "Unpair", "Unpair", UiPalette.Danger, 120, 36);
             var close = SmallButton(head, "Close", "x", UiPalette.Text, 42, 36);
+            var stateRow = NewUi("StateRow", prt);
+            Row(stateRow.gameObject, 0, 0, 24);
+            var status = Label(stateRow, "Status", "Unpaired", 19f, UiPalette.MutedSoft, true);
+            var buffer = Label(stateRow, "Buffer", "Buffer 0/20", 19f, UiPalette.Text, true);
 
             var hint = Wrap(Label(prt, "Hint", "", 18f, UiPalette.Muted, false));
             var empty = Wrap(Label(prt, "Empty", "", 18f, UiPalette.Amber, false));

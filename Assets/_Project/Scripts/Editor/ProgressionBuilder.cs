@@ -44,6 +44,20 @@ namespace IdleGrounds.Editor
             Debug.Log("[IdleGrounds] M5+M6 prefabs built.");
         }
 
+        /// <summary>The UI prefabs of this builder only (dragon dialog, Altar tree, quest panel, pavilion, buff pill, auto-skip chips). Used by <see cref="UiRebuild"/>.</summary>
+        internal static void BuildUiPrefabsOnly()
+        {
+            EnsureShapes();
+            Directory.CreateDirectory(UiPrefabDir);
+            BuildDragonDialogPrefab();
+            BuildUpgradeTreePrefab();
+            BuildQuestPanelPrefab();
+            BuildPavilionPanelPrefab();
+            BuildBuffPillPrefab();
+            BuildAutoSkipPrefab();
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("Idle Grounds/Scene/Install Progression+Combat (M5+M6)")]
         public static void InstallMenu()
         {
@@ -160,8 +174,9 @@ namespace IdleGrounds.Editor
         {
             var modal = Stretch(NewUi("Modal", root));
             var scrim = Stretch(NewUi("Scrim", modal)).gameObject.AddComponent<Image>();
-            scrim.color = new Color(0f, 0f, 0f, 0.55f);
+            scrim.color = new Color(0f, 0f, 0f, 0.45f);     // flat 45% dim, no art (VP-05)
             scrim.raycastTarget = true;
+            scrim.gameObject.AddComponent<ModalScrim>();      // counts open modals: quest panel / hand chip hide while one is open
             var box = Chip(modal, "Box", UiPalette.Bg2, border, raycast: true);
             box.GetComponent<Outline>().effectDistance = new Vector2(2f, -2f);
             UiSkin.Attach(box.gameObject, skin);
@@ -211,6 +226,9 @@ namespace IdleGrounds.Editor
             icon.GetComponent<LayoutElement>().preferredHeight = 84;
             var title = Label(brt, "Title", "The Dragon Awakens", 30f, UiPalette.Gold, true);
             title.alignment = TextAlignmentOptions.Center;
+            var speaker = Label(brt, "Speaker", "", 18f, UiPalette.MutedSoft, false);
+            speaker.alignment = TextAlignmentOptions.Center;
+            speaker.fontStyle = FontStyles.Italic;
             var body = Wrap(Label(brt, "Body", "The dragon stirs...", 21f, UiPalette.Text, false));
             body.alignment = TextAlignmentOptions.Center;
             var stats = Wrap(Label(brt, "Stats", "", 19f, UiPalette.Muted, false));
@@ -223,6 +241,7 @@ namespace IdleGrounds.Editor
             Set(view, "border", box.GetComponent<Outline>());
             Set(view, "icon", icon);
             Set(view, "titleText", title);
+            Set(view, "speakerText", speaker);
             Set(view, "bodyText", body);
             Set(view, "statsText", stats);
             Set(view, "continueButton", cont);
@@ -250,7 +269,9 @@ namespace IdleGrounds.Editor
             Icon(head, "Icon", Emoji("bld_center"), 36);
             Label(head, "Title", "Altar - Upgrades", 25f, UiPalette.Text, true);
             Le(NewUi("Spacer", head), flexW: 1);
-            var dbg = SmallButton(head, "Debug", "Debug", UiPalette.Muted, 105, 42);
+            var panHint = Label(head, "PanHint", "Drag or WASD to pan", 17f, UiPalette.MutedSoft, false);
+            var recentre = SmallButton(head, "Recentre", "Recentre", UiPalette.Text, 130, 42);
+            var dbg = SmallButton(head, "Debug", "Debug", UiPalette.Muted, 105, 42);       // hidden unless a dev flag is on (UpgradeTreeView.DevToolsVisible)
             var close = SmallButton(head, "Close", "x", UiPalette.Text, 48, 42);
 
             // body (board) — WASD / drag pans; edges under nodes
@@ -291,6 +312,23 @@ namespace IdleGrounds.Editor
             lv.alignment = TextAlignmentOptions.Center;
             lv.rectTransform.sizeDelta = new Vector2(n, 16f);
             lv.rectTransform.anchoredPosition = new Vector2(0f, -18f * S);
+            var lockBadge = Icon(node, "Lock", Emoji("ui_lock"), 20f);
+            lockBadge.GetComponent<LayoutElement>().ignoreLayout = true;
+            var lrt = lockBadge.rectTransform;
+            lrt.anchorMin = lrt.anchorMax = new Vector2(0f, 1f);
+            lrt.pivot = new Vector2(0f, 1f);
+            lrt.sizeDelta = new Vector2(20f, 20f);
+            lrt.anchoredPosition = new Vector2(4f, -4f);
+            var costLbl = Label(node, "Cost", "", 16f, UiPalette.Gold, true);
+            costLbl.alignment = TextAlignmentOptions.Center;
+            costLbl.fontSharedMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Art/Fonts/LiberationSans SDF - Floater.mat") ?? costLbl.fontSharedMaterial;   // outlined: readable over edges
+            var clrt = costLbl.rectTransform;
+            clrt.anchorMin = clrt.anchorMax = new Vector2(0.5f, 0f);
+            clrt.pivot = new Vector2(0.5f, 1f);
+            clrt.sizeDelta = new Vector2(220f, 24f);
+            clrt.anchoredPosition = new Vector2(0f, -10f);
+            costLbl.gameObject.SetActive(false);
+            lockBadge.gameObject.SetActive(false);
             var my = Label(node, "Mystery", "?", 26f * S, UiPalette.Danger, true);
             my.alignment = TextAlignmentOptions.Center;
             my.rectTransform.sizeDelta = new Vector2(n, n);
@@ -301,6 +339,8 @@ namespace IdleGrounds.Editor
             Set(nv, "mystery", my);
             Set(nv, "brackets", brackets);
             Set(nv, "group", group);
+            Set(nv, "lockBadge", lockBadge);
+            Set(nv, "costLabel", costLbl);
 
             // tooltip layer: same rect as the body, unmasked, never a raycast target
             var tipLayer = NewUi("TooltipLayer", brt);
@@ -343,6 +383,8 @@ namespace IdleGrounds.Editor
             Set(view, "cancelJobButton", cancel);
             Set(view, "closeButton", close);
             Set(view, "debugButton", dbg);
+            Set(view, "recentreButton", recentre);
+            Set(view, "panHint", panHint);
             edge.gameObject.SetActive(false);
             node.gameObject.SetActive(false);
             modal.SetActive(false);
@@ -401,7 +443,12 @@ namespace IdleGrounds.Editor
             Row(progRow.gameObject, 0, 0, 8);
             var prog = Label(progRow, "Progress", "0/5", 18f, UiPalette.Gold, true);
             Le(NewUi("Spacer", progRow), flexW: 1);
-            var claim = SmallButton(progRow, "Claim", "Claim", UiPalette.Accent, 120, 39);
+            var claim = SmallButton(progRow, "Claim", "Claim", UiPalette.Muted, 120, 39);
+            var claimGroup = claim.gameObject.AddComponent<CanvasGroup>();
+            var claimGlow = claim.gameObject.AddComponent<Outline>();
+            claimGlow.effectColor = new Color(UiPalette.Gold.r, UiPalette.Gold.g, UiPalette.Gold.b, 0.7f);
+            claimGlow.effectDistance = new Vector2(3f, -3f);
+            claimGlow.enabled = false;
             var nextLine = IconLine(qb, "Next", Emoji("ui_quest_leaves"), 21, 16.5f, UiPalette.Text, true);
 
             var ms = NewUi("Milestone", prt);
@@ -430,6 +477,8 @@ namespace IdleGrounds.Editor
             Set(view, "progText", prog);
             Set(view, "claimButton", claim);
             Set(view, "claimLabel", claim.GetComponentInChildren<TextMeshProUGUI>());
+            Set(view, "claimGroup", claimGroup);
+            Set(view, "claimGlow", claimGlow);
             Set(view, "nextLine", nextLine);
             Set(view, "msBlock", ms.gameObject);
             Set(view, "msHeader", msHead.gameObject);
@@ -453,6 +502,7 @@ namespace IdleGrounds.Editor
             var view = root.gameObject.AddComponent<PavilionPanelView>();
             var panel = Chip(root, "Panel", new Color(UiPalette.Bg2.r, UiPalette.Bg2.g, UiPalette.Bg2.b, 0.97f), UiPalette.Line, raycast: true);
             UiSkin.Attach(panel.gameObject, "ui_panel_jade");
+            panel.gameObject.AddComponent<UiDock>();
             var prt = panel.rectTransform;
             prt.anchorMin = new Vector2(0f, 0f); prt.anchorMax = new Vector2(1f, 0f);
             prt.pivot = new Vector2(0.5f, 0f);
@@ -462,11 +512,13 @@ namespace IdleGrounds.Editor
             Fit(panel.gameObject, false, true);
 
             var head = NewUi("Header", prt);
-            Row(head.gameObject, 0, 0, 10);
+            Row(head.gameObject, 0, 0, 14);
             var icon = Icon(head, "Icon", Emoji("bld_meditation_pavilion"), 33);
             var title = Label(head, "Title", "Meditation Pavilion", 21f, UiPalette.Text, true);
+            Le(NewUi("Gap", head), w: 18);
             Icon(head, "DiscipleIcon", Emoji("ui_disciple"), 27);
             var disc = Label(head, "Disciples", "Disciples 0/3", 19.5f, UiPalette.Text, true);
+            Le(NewUi("Gap2", head), w: 10);
             var food = Icon(head, "FoodIcon", Emoji("item_spirit_buns"), 27);
             var foodText = Label(head, "Food", "0/20", 19.5f, UiPalette.Text, true);
             Le(NewUi("Spacer", head), flexW: 1);
@@ -477,7 +529,7 @@ namespace IdleGrounds.Editor
             var row = NewUi("RecruitRow", prt);
             Row(row.gameObject, 0, 0, 12);
             var recImg = Chip(row, "Recruit", UiPalette.Panel, UiPalette.Accent, raycast: true);
-            Row(recImg.gameObject, 12, 6, 8);
+            Row(recImg.gameObject, 14, 6, 12);
             var rec = recImg.gameObject.AddComponent<Button>();
             rec.targetGraphic = recImg;
             var cb = rec.colors; cb.highlightedColor = new Color(1.15f, 1.15f, 1.15f, 1f); cb.disabledColor = new Color(1f, 1f, 1f, 0.4f); rec.colors = cb;
@@ -485,6 +537,7 @@ namespace IdleGrounds.Editor
             var recIcon = Icon(recImg.rectTransform, "Item", Emoji("item_robe"), 24);
             var recLabel = Label(recImg.rectTransform, "Label", "Recruit (1 Robe)", 19f, UiPalette.Text, true);
             var reason = Label(row, "Reason", "", 18f, UiPalette.Danger, true);
+            Le(reason, w: 520);
 
             Set(view, "panel", panel.gameObject);
             Set(view, "icon", icon);
