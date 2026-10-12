@@ -6,5 +6,17 @@
       "picked": "redo",
       "note": "Coastline has to look natural, the tiles need to connect better"
     }
-  }
+  },
+  "later": [
+    {
+      "when": "2026-10-12",
+      "verbatim": "Answers\ncoast_signoff: Closer, but make the steps finer / rounder  | note: We can't have 90degrees angles",
+      "answers": {
+        "coast_signoff": {
+          "picked": "finer",
+          "note": "We can't have 90degrees angles"
+        }
+      }
+    }
+  ]
 }
