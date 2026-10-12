@@ -90,6 +90,7 @@ namespace IdleGrounds.Editor
         [MenuItem("Idle Grounds/World/Build Islands")]
         public static void BuildIslands()
         {
+            using var edit = IslandPrefabs.Edit();      // the Islands live in prefabs (scene size); saved back on exit
             EnsureTiles();
             EnsureSkySortingLayer();
             IslandArtBuilder.EnsureArt();
@@ -289,6 +290,7 @@ namespace IdleGrounds.Editor
         public static void BuildZoneOverlays(GameDatabase db)
         {
             if (db == null) { Debug.LogError("[IdleGrounds] BuildZoneOverlays: no GameDatabase."); return; }
+            using var edit = IslandPrefabs.Edit();
             BuildingsBuilder.EnsureShapes();
             var square = BuildingsBuilder.square;
             var cfg = db.BuildConfig();

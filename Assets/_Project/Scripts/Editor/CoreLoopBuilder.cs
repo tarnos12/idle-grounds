@@ -551,6 +551,7 @@ namespace IdleGrounds.Editor
         /// <summary>Tilemaps on Ground; veils + Island labels on Overlay (above locked-Island nodes).</summary>
         public static void ApplyWorldSortingLayers()
         {
+            using var edit = IslandPrefabs.Edit();
             foreach (var r in Object.FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 foreach (var tr in r.GetComponentsInChildren<TilemapRenderer>(true)) tr.sortingLayerName = "Ground";

@@ -47,6 +47,7 @@ namespace IdleGrounds.Editor
 
         public static int BuildAll()
         {
+            using var edit = IslandPrefabs.Edit();
             int n = 0;
             foreach (var isl in Object.FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (!string.IsNullOrEmpty(isl.islandKey) && isl.name == "Island_" + isl.islandKey) { BuildIsland(isl); n++; }
