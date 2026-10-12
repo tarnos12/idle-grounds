@@ -34,6 +34,11 @@
       "supersedes": [
         "ascension_unlocks"
       ]
+    },
+    {
+      "when": "2026-10-12",
+      "decision": "requester_rules",
+      "verbatim": "Also we dont need to complete ALL requests on each island to move to the next. We unlock islands by paying certain resources to unlock a bridge(ideally some magical altar at the north part of the map that locks final island and paying tribute there unlocks each bridge(tribute consists of 5 different items per island, each requiring 5-20 of the item to make automation a reliable way to get them). Each npc unlocks: New building that produces something new/related to the island. utility(such as another part of automation)"
     }
   ]
 }
