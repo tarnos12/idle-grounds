@@ -1,1 +1,49 @@
-[]
+[
+  {
+    "g": "Agent team"
+  },
+  {
+    "id": "team_roles",
+    "q": "Which permanent designer roles should Idle Grounds have? Each gets an agent definition and owns a guide document in docs/guides/.",
+    "ctx": "My table in chat folds Level, Character, Encounter, Story, AI and Accessibility into others and skips Interior (no interiors in this game).",
+    "o": [
+      [
+        "trimmed",
+        "Trimmed set: World, Balance, Onboarding, UI/UX + UI QA, Art director + In-game art reviewer, Writer, Playtester, Performance, Code health (11)",
+        true
+      ],
+      [
+        "all",
+        "All 18 roles from the list"
+      ],
+      [
+        "core",
+        "Minimal: World, Balance, Art director, UI/UX, Playtester (5)"
+      ],
+      [
+        "none",
+        "None for now"
+      ]
+    ]
+  },
+  {
+    "id": "background_copy",
+    "q": "Should agents stop working in your open Unity editor and use their own background copy (git worktree + Unity in batch mode, no window)?",
+    "ctx": "Pros: your editor is never frozen, never put into Play mode, no reload dialogs. Cons: a second Library folder (several GB) and a long first import (shortened by copying yours). Results reach you via git pull + refresh.",
+    "o": [
+      [
+        "yes_all",
+        "Yes, for all agent work",
+        true
+      ],
+      [
+        "yes_heavy",
+        "Only for heavy work (tests, rebuilds, imports); quick checks may still use my editor"
+      ],
+      [
+        "no",
+        "No, keep using my open editor"
+      ]
+    ]
+  }
+]
