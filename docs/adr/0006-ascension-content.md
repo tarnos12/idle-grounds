@@ -1,6 +1,6 @@
 # ADR 0006 — Ascension unlocks content: Realm tiers, new Islands, harder Vows
 
-Status: proposed (2026-10-12). Owner choices pending in `hub/questions-draft-ascension.json`.
+Status: rejected (2026-10-12) — owner: "ascension is not fun, let's remove it"; replaced by island requesters (ADR 0007)
 
 ## Context
 

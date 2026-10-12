@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 09:13",
+  "updated": "2026-10-12 07:41",
   "milestones": [
     {
       "id": "M1",
@@ -38,45 +38,36 @@
           "status": "done",
           "size": "M",
           "owner": "Claude"
-        },
+        }
+      ]
+    },
+    {
+      "id": "M2b",
+      "title": "Island requesters replace ascension",
+      "tasks": [
         {
-          "title": "Decide what each ascension unlocks",
-          "detail": "Picked 2026-10-12: new islands after ascending, new buildings and higher-tier recipes, harder vows for more points (hub/owner-picks-2026-10-12.json).",
-          "status": "done",
+          "title": "Island requesters design (ADR 0007)",
+          "detail": "Each island has buildings/NPCs that ask for items you pick from a menu; fulfilling a request unlocks new recipes. Replaces ascension, perks and vows. Open choices come to you in the Questions tab.",
+          "status": "in-progress",
           "size": "M",
-          "owner": "Mariusz"
+          "owner": "Claude",
+          "now": "Opus agent: drafting ADR 0007 + questions"
         },
         {
-          "title": "Ascension design document (ADR 0006)",
-          "detail": "Turns the three picks into concrete content: which new islands, which buildings and recipe tiers, which harder vows, and when each unlocks. Specific choices come back to you in the Questions tab.",
+          "title": "Remove ascension (gate, points, perks, vows, prestige reset)",
+          "detail": "Take out the Ascension Gate, Ascension Points, perk shop, vows and the run reset; old saves keep their progress.",
           "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "ADR 0006 drafted (proposed); waiting for your answers in the Questions tab (Ascension design)"
+          "blockedBy": "Needs the requester design (ADR 0007) so nothing the game relies on is removed early"
         },
         {
-          "title": "New islands unlocked by ascending",
-          "detail": "Islands that only appear after an ascension, each with its own resources and buildings.",
+          "title": "Build island requesters",
+          "detail": "Requester buildings/NPCs per island with a request menu; each fulfilled request unlocks recipes.",
           "status": "blocked",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Needs the ascension design document (ADR 0006) and new island art"
-        },
-        {
-          "title": "New buildings and higher-tier recipes after ascending",
-          "detail": "Later runs open stronger converters and recipe tiers instead of just running faster.",
-          "status": "blocked",
-          "size": "L",
-          "owner": "Claude",
-          "blockedBy": "Needs the ascension design document (ADR 0006)"
-        },
-        {
-          "title": "Harder vows for more Ascension Points",
-          "detail": "New challenge rules you can opt into on ascending, each worth more points.",
-          "status": "blocked",
-          "size": "M",
-          "owner": "Claude",
-          "blockedBy": "Needs the ascension design document (ADR 0006)"
+          "blockedBy": "Needs your answers on the requester design"
         }
       ]
     },
@@ -95,34 +86,34 @@
         {
           "title": "Integrate vertical side walls (v2, with variants)",
           "detail": "Swap the rotated first version for the artist's corrected vertical side faces.",
-          "status": "blocked",
+          "status": "in-progress",
           "size": "S",
           "owner": "Claude",
-          "blockedBy": "Unity editor is not responding (likely a 'scene changed on disk - Reload' dialog)"
+          "now": "Opus agent: integrating + Play review"
         },
         {
           "title": "Integrate the new hanging undersides (3/4 rock, roots, vines)",
           "detail": "Replace the side-view rocks under the south cliffs with the redrawn 3/4 pieces.",
-          "status": "blocked",
+          "status": "in-progress",
           "size": "S",
           "owner": "Claude",
-          "blockedBy": "Unity editor is not responding"
+          "now": "Opus agent: integrating + Play review"
         },
         {
           "title": "Fishing ground patches (3rd version)",
           "detail": "Calm cool-grey shingle patches for the Fishing island; earlier two were rejected.",
-          "status": "blocked",
+          "status": "in-progress",
           "size": "S",
           "owner": "Claude",
-          "blockedBy": "Unity editor is not responding"
+          "now": "Opus agent: integrating + Play review"
         },
         {
           "title": "Rebuild the sky with the kept background islands",
           "detail": "Background islands now load from their own folder so new deliveries can't replace them.",
-          "status": "blocked",
+          "status": "in-progress",
           "size": "S",
           "owner": "Claude",
-          "blockedBy": "Unity editor is not responding"
+          "now": "Opus agent: integrating + Play review"
         },
         {
           "title": "Cliff wall seam and stripe fix",

@@ -1,10 +1,15 @@
 # Plan
 
-Updated 2026-10-12 09:13. in-progress: 1, blocked: 11, waiting: 3, done: 8
+Updated 2026-10-12 07:41. in-progress: 6, blocked: 5, waiting: 3, done: 7
 
 ## Being worked on now
 
+- Island requesters design (ADR 0007) (Opus agent: drafting ADR 0007 + questions)
 - South cliff walls, side faces, grass lips (art loop: integrating deliveries as they arrive)
+- Integrate vertical side walls (v2, with variants) (Opus agent: integrating + Play review)
+- Integrate the new hanging undersides (3/4 rock, roots, vines) (Opus agent: integrating + Play review)
+- Fishing ground patches (3rd version) (Opus agent: integrating + Play review)
+- Rebuild the sky with the kept background islands (Opus agent: integrating + Play review)
 
 ## M1: Unity port of the browser game
 
@@ -19,38 +24,36 @@ Updated 2026-10-12 09:13. in-progress: 1, blocked: 11, waiting: 3, done: 8
   - TEST mode off by default; playthrough bot checks the pacing (ADR 0004).
 - [x] **Island onboarding quests** (done, M, Claude)
   - Quests that teach bridges, caravans and cross-island trade, with next-step hints.
-- [x] **Decide what each ascension unlocks** (done, M, Mariusz)
-  - Picked 2026-10-12: new islands after ascending, new buildings and higher-tier recipes, harder vows for more points (hub/owner-picks-2026-10-12.json).
-- [ ] **Ascension design document (ADR 0006)** (blocked, M, Claude)
-  - Turns the three picks into concrete content: which new islands, which buildings and recipe tiers, which harder vows, and when each unlocks. Specific choices come back to you in the Questions tab.
-  - Why: ADR 0006 drafted (proposed); waiting for your answers in the Questions tab (Ascension design)
-- [ ] **New islands unlocked by ascending** (blocked, L, Claude)
-  - Islands that only appear after an ascension, each with its own resources and buildings.
-  - Why: Needs the ascension design document (ADR 0006) and new island art
-- [ ] **New buildings and higher-tier recipes after ascending** (blocked, L, Claude)
-  - Later runs open stronger converters and recipe tiers instead of just running faster.
-  - Why: Needs the ascension design document (ADR 0006)
-- [ ] **Harder vows for more Ascension Points** (blocked, M, Claude)
-  - New challenge rules you can opt into on ascending, each worth more points.
-  - Why: Needs the ascension design document (ADR 0006)
+
+## M2b: Island requesters replace ascension
+
+- [ ] **Island requesters design (ADR 0007)** (in-progress, M, Claude)
+  - Each island has buildings/NPCs that ask for items you pick from a menu; fulfilling a request unlocks new recipes. Replaces ascension, perks and vows. Open choices come to you in the Questions tab.
+  - Now: Opus agent: drafting ADR 0007 + questions
+- [ ] **Remove ascension (gate, points, perks, vows, prestige reset)** (blocked, M, Claude)
+  - Take out the Ascension Gate, Ascension Points, perk shop, vows and the run reset; old saves keep their progress.
+  - Why: Needs the requester design (ADR 0007) so nothing the game relies on is removed early
+- [ ] **Build island requesters** (blocked, L, Claude)
+  - Requester buildings/NPCs per island with a request menu; each fulfilled request unlocks recipes.
+  - Why: Needs your answers on the requester design
 
 ## M3: 3/4 world look (ADR 0005)
 
 - [ ] **South cliff walls, side faces, grass lips** (in-progress, L, Claude)
   - Islands show a 3-tile cliff on the south edge and a narrow earth face on the west/east edges, so they read as floating rock seen from above.
   - Now: art loop: integrating deliveries as they arrive
-- [ ] **Integrate vertical side walls (v2, with variants)** (blocked, S, Claude)
+- [ ] **Integrate vertical side walls (v2, with variants)** (in-progress, S, Claude)
   - Swap the rotated first version for the artist's corrected vertical side faces.
-  - Why: Unity editor is not responding (likely a 'scene changed on disk - Reload' dialog)
-- [ ] **Integrate the new hanging undersides (3/4 rock, roots, vines)** (blocked, S, Claude)
+  - Now: Opus agent: integrating + Play review
+- [ ] **Integrate the new hanging undersides (3/4 rock, roots, vines)** (in-progress, S, Claude)
   - Replace the side-view rocks under the south cliffs with the redrawn 3/4 pieces.
-  - Why: Unity editor is not responding
-- [ ] **Fishing ground patches (3rd version)** (blocked, S, Claude)
+  - Now: Opus agent: integrating + Play review
+- [ ] **Fishing ground patches (3rd version)** (in-progress, S, Claude)
   - Calm cool-grey shingle patches for the Fishing island; earlier two were rejected.
-  - Why: Unity editor is not responding
-- [ ] **Rebuild the sky with the kept background islands** (blocked, S, Claude)
+  - Now: Opus agent: integrating + Play review
+- [ ] **Rebuild the sky with the kept background islands** (in-progress, S, Claude)
   - Background islands now load from their own folder so new deliveries can't replace them.
-  - Why: Unity editor is not responding
+  - Now: Opus agent: integrating + Play review
 - [ ] **Cliff wall seam and stripe fix** (blocked, S, Artist)
   - The artist's cliff tiles still have transparent seams and a light-to-dark stripe per tile; patched in code for now.
   - Why: Waiting for the artist's corrected cliff walls (ART-SPEC delivery log)

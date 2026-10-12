@@ -1,9 +1,39 @@
 {
   "date": "2026-10-12",
   "answers": {
-    "ascension_unlocks": { "picked": ["islands", "recipes", "vows"], "labels": ["New islands that only appear after ascending", "New buildings and higher-tier recipes", "Harder vows (challenge rules) for more points"], "note": "" },
-    "smooth_coasts": { "picked": "now", "label": "Yes, now", "note": "" },
-    "scene_size": { "picked": "yes", "label": "Yes, move it out", "note": "" }
+    "ascension_unlocks": {
+      "picked": [
+        "islands",
+        "recipes",
+        "vows"
+      ],
+      "labels": [
+        "New islands that only appear after ascending",
+        "New buildings and higher-tier recipes",
+        "Harder vows (challenge rules) for more points"
+      ],
+      "note": ""
+    },
+    "smooth_coasts": {
+      "picked": "now",
+      "label": "Yes, now",
+      "note": ""
+    },
+    "scene_size": {
+      "picked": "yes",
+      "label": "Yes, move it out",
+      "note": ""
+    }
   },
-  "chat_note": "I'm assuming separate art doesn't mean it's not pushed to git? We need everything on GitHub"
+  "chat_note": "I'm assuming separate art doesn't mean it's not pushed to git? We need everything on GitHub",
+  "later": [
+    {
+      "when": "2026-10-12",
+      "decision": "remove_ascension",
+      "verbatim": "I think ascension is not fun, lets remove it. The other game does it by having various buildings/npcs on each island that request certain items(you select from menu) that unlock new recipes.",
+      "supersedes": [
+        "ascension_unlocks"
+      ]
+    }
+  ]
 }
