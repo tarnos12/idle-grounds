@@ -9,9 +9,10 @@
     "req_delivery": "feed_only",
     "ending": "heavenly_gate",
     "new_islands": {
-      "picked": "two",
+      "picked": "all4",
       "note": "Add all 4 as part of the gameplay with new npcs and buildings.",
-      "status": "ambiguous — follow-up asked"
+      "status": "resolved: the option list lacked 'all 4', so the note is the answer",
+      "owner_clarification": "You never gave me an option to choose 4 so I had to add it as a note."
     },
     "vows": "remove"
   }

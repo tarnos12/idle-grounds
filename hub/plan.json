@@ -51,7 +51,7 @@
           "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Waiting for your follow-up answers (new islands: how many, where in the order)"
+          "blockedBy": "Waiting for your answer on where the 4 new islands go in the unlock order"
         },
         {
           "title": "Remove ascension (gate, points, perks, vows, prestige reset)",
@@ -70,12 +70,12 @@
           "blockedBy": "Needs your answers on the requester design"
         },
         {
-          "title": "New islands (Lotus Marsh, Thunder Crag, maybe Beast Ravine and Tribulation Peak)",
-          "detail": "New islands in the unlock order, each with one NPC and new buildings; needs new island art.",
+          "title": "4 new islands: Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak",
+          "detail": "Picked 2026-10-12: all 4 join the unlock order, each with one NPC and new buildings; needs ~100 new art pieces.",
           "status": "blocked",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Waiting for your follow-up answers, then ADR 0007 update and art request"
+          "blockedBy": "Waiting for your answer on where they go in the unlock order"
         }
       ]
     },

@@ -3,24 +3,8 @@
     "g": "Island requesters — follow-up"
   },
   {
-    "id": "new_islands_count",
-    "q": "You picked 'Add Lotus Marsh and Thunder Crag', but your note says 'Add all 4'. Which do you mean?",
-    "ctx": "All 4 = Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak, each with 1 NPC and new buildings. 11 islands total; about 25 art pieces per new island (~100 for 4, ~50 for 2). Two would use the empty bottom slots; the other two need new positions.",
-    "o": [
-      [
-        "all4",
-        "All 4 new islands",
-        true
-      ],
-      [
-        "two",
-        "Only Lotus Marsh and Thunder Crag"
-      ]
-    ]
-  },
-  {
     "id": "new_islands_order",
-    "q": "Your fixed unlock order is Mine, Fishing, Farm, Grove, Volcano, then Celestial. Where do the new islands go?",
+    "q": "Your fixed unlock order is Mine, Fishing, Farm, Grove, Volcano, then Celestial. Where do the 4 new islands (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) go?",
     "ctx": "Celestial stays last (it holds the Heavenly Gate ending).",
     "o": [
       [
