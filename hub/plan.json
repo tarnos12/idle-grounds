@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 07:08",
+  "updated": "2026-10-12 09:13",
   "milestones": [
     {
       "id": "M1",
@@ -49,10 +49,10 @@
         {
           "title": "Ascension design document (ADR 0006)",
           "detail": "Turns the three picks into concrete content: which new islands, which buildings and recipe tiers, which harder vows, and when each unlocks. Specific choices come back to you in the Questions tab.",
-          "status": "in-progress",
+          "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "now": "Claude: drafting ADR 0006"
+          "blockedBy": "ADR 0006 drafted (proposed); waiting for your answers in the Questions tab (Ascension design)"
         },
         {
           "title": "New islands unlocked by ascending",

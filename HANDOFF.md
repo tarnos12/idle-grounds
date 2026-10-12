@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: ADR 0006 ascension content drafted (proposed): 4 realm tiers, each adds an island (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak), buildings, higher recipes, Gate items and weighted vows. 5 decisions posted in the Hub Questions tab (asc_tiers, asc_island_themes, asc_island_mode, asc_vow_style, asc_postgame).
+
 - 2026-10-12 owner picks (hub/owner-picks-2026-10-12.json): ascension unlocks = new islands + new buildings/higher recipe tiers + harder vows; smooth coasts now; move generated island dressing out of Game.unity (into repo assets, still on GitHub). Next: ADR 0006 ascension design (in progress), coast smoothing + scene split once Unity responds.
 
 - 2026-10-12: Project Hub (CLAUDE.md section): hub/plan.json + hub/questions.json, tools/hub/build-hub.cjs + template + set-task + build-plan; published and pinned at https://claude.ai/artifact/EAabdoZhE79jgBc6THmrwG. Open owner questions: ascension unlocks, smoothing coasts, scene size.

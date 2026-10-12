@@ -1,10 +1,9 @@
 # Plan
 
-Updated 2026-10-12 07:08. in-progress: 2, blocked: 10, waiting: 3, done: 8
+Updated 2026-10-12 09:13. in-progress: 1, blocked: 11, waiting: 3, done: 8
 
 ## Being worked on now
 
-- Ascension design document (ADR 0006) (Claude: drafting ADR 0006)
 - South cliff walls, side faces, grass lips (art loop: integrating deliveries as they arrive)
 
 ## M1: Unity port of the browser game
@@ -22,9 +21,9 @@ Updated 2026-10-12 07:08. in-progress: 2, blocked: 10, waiting: 3, done: 8
   - Quests that teach bridges, caravans and cross-island trade, with next-step hints.
 - [x] **Decide what each ascension unlocks** (done, M, Mariusz)
   - Picked 2026-10-12: new islands after ascending, new buildings and higher-tier recipes, harder vows for more points (hub/owner-picks-2026-10-12.json).
-- [ ] **Ascension design document (ADR 0006)** (in-progress, M, Claude)
+- [ ] **Ascension design document (ADR 0006)** (blocked, M, Claude)
   - Turns the three picks into concrete content: which new islands, which buildings and recipe tiers, which harder vows, and when each unlocks. Specific choices come back to you in the Questions tab.
-  - Now: Claude: drafting ADR 0006
+  - Why: ADR 0006 drafted (proposed); waiting for your answers in the Questions tab (Ascension design)
 - [ ] **New islands unlocked by ascending** (blocked, L, Claude)
   - Islands that only appear after an ascension, each with its own resources and buildings.
   - Why: Needs the ascension design document (ADR 0006) and new island art
