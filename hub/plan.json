@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 07:54",
+  "updated": "2026-10-12 08:05",
   "milestones": [
     {
       "id": "M1",
@@ -43,39 +43,62 @@
     },
     {
       "id": "M2b",
-      "title": "Island requesters replace ascension",
+      "title": "Island requesters replace ascension (ADR 0007, accepted)",
       "tasks": [
         {
           "title": "Island requesters design (ADR 0007)",
-          "detail": "All decided 2026-10-12: unlock order Mine, Fishing, Farm, Grove, Volcano, Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak, Celestial; 1 NPC per island (11), 3 requests all open, right-click feeding only, Heavenly Gate ending, vows removed.",
-          "status": "in-progress",
+          "detail": "Accepted 2026-10-12: 11 islands in a fixed order unlocked by tributes at the north Sky-Bridge Shrine; 11 NPCs (one per island) with 3 optional requests each; Heavenly Gate ending.",
+          "status": "done",
           "size": "M",
-          "owner": "Claude",
-          "now": "Opus agent: finalising ADR 0007 with all answers + art request"
+          "owner": "Claude"
         },
         {
-          "title": "Remove ascension (gate, points, perks, vows, prestige reset)",
-          "detail": "Take out the Ascension Gate, Ascension Points, perk shop, vows and the run reset; old saves keep their progress.",
-          "status": "blocked",
-          "size": "M",
-          "owner": "Claude",
-          "blockedBy": "Needs the requester design (ADR 0007) so nothing the game relies on is removed early"
-        },
-        {
-          "title": "Build island requesters",
-          "detail": "Requester buildings/NPCs per island with a request menu; each fulfilled request unlocks recipes.",
-          "status": "blocked",
+          "title": "Phase 1: remove ascension, perks, vows, offerings; Heavenly Gate ending; save migration",
+          "detail": "Old saves keep their progress; the game stays playable on 7 islands.",
+          "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Needs your answers on the requester design"
+          "blockedBy": "Starts after the art integration agent leaves the Unity editor"
         },
         {
-          "title": "4 new islands: Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak",
-          "detail": "Picked 2026-10-12: all 4 join the unlock order, each with one NPC and new buildings; needs ~100 new art pieces.",
-          "status": "blocked",
+          "title": "Phase 2: Sky-Bridge Shrine, fixed unlock order, Celestial moves north, Sky Paths",
+          "detail": "Replaces the unlock steles; quests retargeted to the new order.",
+          "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Needs the final ADR 0007 and the new island art (art request goes out with the ADR)"
+          "blockedBy": "After phase 1"
+        },
+        {
+          "title": "Phase 3: requester NPCs on the 7 existing islands (21 requests)",
+          "detail": "Request panel, right-click feeding, rewards: new buildings and automation utilities.",
+          "status": "waiting",
+          "size": "L",
+          "owner": "Claude",
+          "blockedBy": "After phase 2"
+        },
+        {
+          "title": "Phase 4: 4 new islands (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) + their NPCs",
+          "detail": "Nodes, Azure Wolf, 9 buildings, 12 items, 4 NPCs; placeholder art until delivered.",
+          "status": "waiting",
+          "size": "L",
+          "owner": "Claude",
+          "blockedBy": "After phase 3 and the Game.unity split (M5)"
+        },
+        {
+          "title": "Phase 5: balance to a ~3 h ending",
+          "detail": "Playthrough bot: greedy run 2:30-3:30, no-requests run under 4:15.",
+          "status": "waiting",
+          "size": "M",
+          "owner": "Claude",
+          "blockedBy": "After phase 4"
+        },
+        {
+          "title": "Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files)",
+          "detail": "P1 shrine + 7 NPC sprites first, then the new island tilesets, buildings and items.",
+          "status": "blocked",
+          "size": "L",
+          "owner": "Artist",
+          "blockedBy": "Requested 2026-10-12 in ART-SPEC §3.7"
         }
       ]
     },

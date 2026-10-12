@@ -1,8 +1,8 @@
-# Idle Grounds — Art Request / Art Bible (v3 — 3/4 view correction, see §3.6)
+# Idle Grounds — Art Request / Art Bible (v4 — island requesters, Sky-Bridge Shrine, 4 new islands, see §3.7)
 
 Self-contained brief for the artist (human or AI image tool). Everything needed to produce, name, size and deliver the art is in this file. No other document is required.
 
-- Game: **Idle Grounds** — a cultivation (xianxia) sandbox idle game, ported to Unity 6 (URP 2D). The player gathers physical items by hand, builds and feeds buildings, automates hauling with spirit wisps, wakes the Sleeping Dragon and ascends.
+- Game: **Idle Grounds** — a cultivation (xianxia) sandbox idle game, ported to Unity 6 (URP 2D). The player gathers physical items by hand, builds and feeds buildings, automates hauling with spirit wisps, wakes the Sleeping Dragon, unlocks 11 floating Islands at the Sky-Bridge Shrine, fulfils NPC requests and raises the Heavenly Gate (ending).
 - Current state: the game runs with **placeholder emoji** for everything. 183 sprite keys are placeholders (list in section 4 / 5); each needs a real asset. Section 3 lists brand-new art (floating islands, sky, Spirit Bridge) that has no placeholder yet.
 - Delivery: Google Drive folder `AI files/Idle Grounds Art/incoming/<category>/`. Anything in `incoming` is imported into Unity and the **Status** column of this document is updated.
 
@@ -12,7 +12,7 @@ Self-contained brief for the artist (human or AI image tool). Everything needed 
 
 | Term | Meaning |
 |---|---|
-| **Island** | One of 7 floating landmasses (93×93 cells each = 2976×2976 px): Center, Farm, Mine, Fishing, Volcano, Spirit Grove, Celestial Peak. Separated by open sky. |
+| **Island** | One of 11 floating landmasses (93×93 cells each = 2976×2976 px): Center, Mine, Fishing, Farm, Spirit Grove, Volcano, Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak, Celestial Peak (v4). Separated by open sky. |
 | **Zone** | A named rectangle inside an Island (corner, field, ...). |
 | **Center** | The starting Island. Never the Altar building. |
 | **Altar** | The upgrade-shrine building in the Center (file key `bld_center`). |
@@ -21,7 +21,10 @@ Self-contained brief for the artist (human or AI image tool). Everything needed 
 | **Generator building** | Makes an item from nothing on a timer: Algae Farm, Herb Garden. |
 | **Spirit Bridge** | Building paired one-to-one with a Spirit Bridge on another Island; wisps carry items across the sky one way. |
 | **Wisp** | Small glowing spirit that carries one item along a lantern link. |
-| **Tribute / Offering / Cost** | Items fed to the Dragon / the Ascension Gate / a construction ghost, Island unlock or Altar upgrade. |
+| **Tribute / Cost** | Items fed to the Dragon or to the Sky-Bridge Shrine (to unlock the next Island) / to a construction ghost or Altar upgrade. (Offerings and the Ascension Gate are retired, ADR 0007.) |
+| **Sky-Bridge Shrine** | 5×5 shrine on the north edge of the Center where Island Tributes are paid; it guards the path to Celestial Peak. |
+| **Requester** | An NPC on each Island who asks for items (3 requests) and rewards a new building or a utility. |
+| **Sky Path** | Glowing jade bridge (visual only) that appears to an Island when its Tribute is paid. |
 
 ---
 
@@ -81,7 +84,7 @@ Chinese ink-and-wash *shan shui* landscapes with peaks rising out of mist; the s
 
 Colour roles (to keep the world readable): **green/jade = nature and spirit herbs; cinnabar red = sect buildings and talismans; gold = rewards, Altar, Dragon, fuel/value; cyan = wisps, qi, water, sky; orange = fire and lava; violet = celestial / star items.**
 
-Island ground palettes: Center = P13 P14 P15 + path P05 P06; Farm = P22 P23 P15 + paddy water P27 P28; Mine = P03 P04 P05 P06; Fishing = P26 P27 P28 + shore P23 P14; Volcano = P01 P02 P03 + lava P30 P19; Spirit Grove = P08 P09 P13 P14; Celestial Peak = P06 P07 P29 P31 P32.
+Island ground palettes: Center = P13 P14 P15 + path P05 P06; Farm = P22 P23 P15 + paddy water P27 P28; Mine = P03 P04 P05 P06; Fishing = P26 P27 P28 + shore P23 P14; Volcano = P01 P02 P03 + lava P30 P19; Spirit Grove = P08 P09 P13 P14; Celestial Peak = P06 P07 P29 P31 P32; (v4) Lotus Marsh = P08 P09 P13 + shallows P26 P27 P28; Thunder Crag = P02 P03 P04 + crystal P28 P29 P32; Azure Beast Ravine = P09 P13 P14 + rock P21 P22 P05 + bone P06 P07; Tribulation Peak = P06 P09 P10 P11 + scorch P01 P02 P20 (see §3.7).
 
 ---
 
@@ -113,7 +116,8 @@ Footprint = what the object occupies in cells. **Canvas** = PNG size. Art may ex
 | 1×1 logistics buildings (Gathering Stone, Wisp Lantern, Warding Seal, Furnace Spirit) | 1×1 | **32×48** | Up to 16 px above the cell. |
 | Standard buildings (Workbench, Paper Mill, Infusion Array, Loom, Mill, Brewery, Cauldron, Jade Carver, Talisman Atelier, Dragon Shrine, Charcoal Pit, Meditation Pavilion, Storehouse, Algae Farm, Herb Garden) | 3×3 | **96×128** | 32 px roof overhang above the 96×96 footprint. |
 | **Burners** (Forge, Kiln, Pill Furnace, Star Anvil) | **3×5** | **96×192** | Tall furnace/kiln; chimney or roof may use the top 32 px. The fuel rack is a separate UI sprite drawn to the left (section 5). |
-| Altar, Sleeping/Awake Dragon, Ascension Gate | 5×5 | **160×192** | Big landmark pieces. |
+| Altar, Sleeping/Awake Dragon, Ascension (Heavenly) Gate, Sky-Bridge Shrine, Beast Pen, Tribulation Array | 5×5 | **160×192** | Big landmark pieces. |
+| Requester NPCs (v4) | 1×1 | **32×48** | Stationary, face the viewer (3/4 front); feet on the bottom edge. Portraits 64×64 (ui). |
 | Spirit Bridge (new) | **2×1** | **64×64** | Footprint 64×32, up to 32 px above. |
 | Fixture: Spirit Tree | 4×4 | **160×192** | Trunk base inside the 128×128 footprint; **canopy overhangs 16 px left/right and 64 px above** (this is the only left/right exception). |
 | Fixture: Quarry Rock, Spring | 2×2 | **64×80** | Up to 16 px above. |
@@ -244,9 +248,9 @@ A locked island is covered by a veil of mist and shows an **unlock sign** (stone
 |---|---|---|---|---|---|
 | `island_veil_mist_256x256_4f.png` | Seamless-tiling **veil/mist overlay**: dense swirling pale-lilac-grey fog, mostly 50–75% alpha with a few holes, slow 4-frame drift loop. Tiles in both directions. | 256×256 | 4 | P2 | requested |
 | `island_veil_edge_64x64.png` | Veil fringe tile, edge variant (fog thins out into wisps) — placed around the island silhouette. Seamless along its long axis. | 64×64 | 1 | P3 | requested |
-| `island_unlock_stele_locked.png` | **Unlock sign, locked state**: 2×2-cell carved stone stele with a red-sealed talisman strip and a simple chain/lock glyph. Canvas **64×96**, pivot bottom-centre. | 64×96 | 1 | P2 | requested |
-| `island_unlock_stele_ready_64x96_4f.png` | Same stele, **affordable** state: seal broken, gold glow runs through carved grooves (pulsing 4f). | 64×96 | 4 | P2 | requested |
-| `island_unlock_stele_partial.png` | Same stele, **partly paid** state: half the grooves glow gold. | 64×96 | 1 | P3 | requested |
+| `island_unlock_stele_locked.png` | **Unlock sign, locked state**: 2×2-cell carved stone stele with a red-sealed talisman strip and a simple chain/lock glyph. Canvas **64×96**, pivot bottom-centre. | 64×96 | 1 | P2 | retired (ADR 0007: replaced by the Sky-Bridge Shrine, §3.7) — delivered 2026-10-08, kept unused |
+| `island_unlock_stele_ready_64x96_4f.png` | Same stele, **affordable** state: seal broken, gold glow runs through carved grooves (pulsing 4f). | 64×96 | 4 | P2 | retired (ADR 0007: replaced by the Sky-Bridge Shrine, §3.7) — delivered 2026-10-08, kept unused |
+| `island_unlock_stele_partial.png` | Same stele, **partly paid** state: half the grooves glow gold. | 64×96 | 1 | P3 | retired (ADR 0007: replaced by the Sky-Bridge Shrine, §3.7) — delivered 2026-10-08, kept unused |
 
 ### 3.6 NEW (v3, 2026-10-09) — 3/4 view correction: cliff walls, cloud sea, ground richness — **TOP PRIORITY**
 
@@ -278,6 +282,176 @@ A locked island is covered by a veil of mist and shows an **unlock sign** (stone
 | `island_<biome>_macro_96x96_4f.png` | **Large organic ground variation decals** for each biome: soft patches one palette step lighter or darker (sunlit meadow, worn earth, clover, moss), irregular blob shapes with dithered edges, binary alpha. Placed at random to break up the fill at medium and far zoom. Frames = 4 shapes. | 96×96 | 4 | P1 | requested |
 | `island_<biome>_flowers_32x32_4f.png` | Clusters of small flowers, grass tufts and pebbles (denser than scatter). | 32×32 | 4 | P2 | requested |
 | `island_center_path_32x32_15f.png` v2 | Flagstone path redraw with more stone shading and variation, plus moss between the stones (the v1 read flat). | 32×32 | 15 | P2 | requested |
+
+---
+
+### 3.7 NEW (v4, 2026-10-12) — island requesters, shrine and 4 new islands
+
+**Why:** ascension is removed (ADR 0007). The game is now one continuous run over **11 Islands**, unlocked in a fixed order by paying a Tribute at the **Sky-Bridge Shrine** on the north edge of the Center: Mine, Fishing, Farm, Spirit Grove, Volcano, **Lotus Marsh**, **Thunder Crag**, **Azure Beast Ravine**, **Tribulation Peak**, then Celestial Peak (which now floats **north** of the Center, behind the Shrine). Each Island has **one requester NPC** who asks for items and rewards new buildings. Paying a Tribute raises a glowing **Sky Path** to the Island.
+
+**Rules (same as everything since §3.6):** **3/4 top-down view** (we see the top and the front/south face; light from the upper left), **only the 32 palette colours** of §1.3, binary alpha (4-step alpha only for glows/mist), **PPU 32**, sizes and pivots as §2.1/§2.2. The four new biomes follow the **same process as §3.0–3.6** and the **same file formats as the delivered Center set** (blob order of §3.0 + `blob_mask_reference.json`, the v2 cliff-wall seam fix, the **vertical** side walls of Islands-034, calm fills per the Center v2.1 recipe: one base colour, sparse detail ≤ ~8 %). NPCs are stationary and **face the viewer** (south, 3/4 front), unlike creatures (facing right).
+
+**Priorities for this set:** **P1** = Shrine, Sky Path, the 7 NPCs on the existing Islands, the request marker. **P2** = the 4 new biome tilesets, their nodes, buildings (static), items, the 4 new NPCs, portraits, reward buildings for existing Islands, Azure Wolf. **P3** = working loops, overlays, scatter, one-shot FX, the remaining icons.
+
+**New biomes (ground palettes, use exactly these):**
+
+| Biome key | Island | Look | Palette |
+|---|---|---|---|
+| `lotus` | Lotus Marsh | Misty shallows: wet moss banks and dark mud between shallow open water, giant lotus pads, reed beds, bamboo stilt walkways. Calm, cool, damp. | ground P08 P09 P13; shallows P26 P27 P28; lotus P07 + P19; reeds P15 P23 |
+| `thunder` | Thunder Crag | Storm-black layered slate with crackling crystal spires and lightning-split trees; a few glowing crack lines. | slate P02 P03 P04; crystal P28 P29 P32; lightning P25; split wood P20 P21 |
+| `ravine` | Azure Beast Ravine | Mossy canyon floor, giant bleached ribcages and skulls half-buried, beast dens, glowing azure vines. | moss P09 P13 P14; rock P21 P22 P05; bone P06 P07; glow P11 P28 |
+| `tribulation` | Tribulation Peak | Scorched jade terraces with carved rune circles; storm-violet sky glints; peach trees. | jade P06 P09 P10 P11; scorch P01 P02 P20; runes P24 P18; storm P31 P32 |
+
+**Sky-Bridge Shrine and Sky Paths** (`buildings`, `fx`)
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `bld_sky_shrine.png` | **Sky-Bridge Shrine** (5×5, fixed): raised white-jade terrace with stairs facing south (toward the viewer), a round moon-gate of carved jade framed by cinnabar pillars and gold-trimmed double eaves, a slow swirl of pale qi cloud inside the gate, two stone lantern posts. Reads as "the gate to the sky"; pivot bottom-centre. | 160×192 | 1 | P1 | requested |
+| `bld_sky_shrine_glow_160x192_4f.png` | Same, **Tribute being paid / ready**: the moon-gate swirl brightens cyan-gold, lanterns flicker, carved grooves pulse gold. | 160×192 | 4 | P1 | requested |
+| `fx_sky_path_h_64x32_4f.png` | **Sky Path, horizontal segment** seen from front-above: floating jade slabs with glowing cyan seams and tiny gold rail posts, a thin shadow on the cloud sea below; light ripple runs left→right. **Seamless horizontally.** | 64×32 | 4 | P1 | requested |
+| `fx_sky_path_v_32x64_4f.png` | Sky Path, **vertical** (north–south) segment, same style; ripple runs top→bottom. **Seamless vertically.** | 32×64 | 4 | P1 | requested |
+| `fx_sky_path_corner_32x32_4f.png` | Corner pieces joining h and v: frames = **4 orientations** (NE, NW, SE, SW), static (not an animation). | 32×32 | 4 | P1 | requested |
+| `fx_sky_path_end_32x32_4f.png` | Landing pad where a path meets an Island coast: small jade disc with a pulsing cyan ring. | 32×32 | 4 | P1 | requested |
+| `fx_sky_path_raise_96x96_6f.png` | One-shot **path reveal**: jade slabs rise out of the clouds with a gold flash and qi motes (played along the path once). | 96×96 | 6 | P3 | requested |
+
+**Requester NPCs** (`creatures`; portraits `ui`). Idle 4f @ 6 fps, feet on the bottom edge, pivot bottom-centre, 3/4 front view, 1 px ink outline. Portraits: head and shoulders, 3/4 front, transparent background, centre pivot, shown at 2× in the Request panel.
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `npc_lin_idle_32x48_4f.png` | **Steward Lin** (Center) — plump outer-sect steward in a grey-blue robe, ledger scroll and abacus, brush behind the ear; idle: flicks abacus beads. | 32×48 | 4 | P1 | requested |
+| `npc_kang_idle_32x48_4f.png` | **Foreman Kang** (Mine) — broad miner, rolled sleeves, leather apron, headband with a small lamp, pickaxe on the shoulder; idle: wipes brow, lamp flickers. | 32×48 | 4 | P1 | requested |
+| `npc_jiang_idle_32x48_4f.png` | **Fisher-Hermit Jiang** (Fishing) — old hermit in a straw hat and grass cape with a bamboo rod and a straight hook; idle: line sways, beard flutters. | 32×48 | 4 | P1 | requested |
+| `npc_tian_idle_32x48_4f.png` | **Rice Immortal Tian** (Farm) — serene farmer-immortal, wide conical hat, rice sheaf in the arm, faint gold glints; idle: sheaf sways, gentle nod. | 32×48 | 4 | P1 | requested |
+| `npc_qingyun_idle_32x48_4f.png` | **Abbess Qingyun** (Spirit Grove) — tall abbess in jade-green robes with prayer beads and a horsetail whisk; idle: beads slide, whisk sways. | 32×48 | 4 | P1 | requested |
+| `npc_ouyang_idle_32x48_4f.png` | **Flame Smith Ouyang** (Volcano) — muscled smith, singed cinnabar vest, soot smudges, a hammer with a glowing head; idle: hammer glows, sparks pop. | 32×48 | 4 | P1 | requested |
+| `npc_xuan_idle_32x48_4f.png` | **Star-Gazer Elder Xuan** (Celestial Peak) — elder in deep violet robes embroidered with constellations, holding a small armillary sphere; idle: rings turn, star glints. | 32×48 | 4 | P1 | requested |
+| `npc_he_idle_32x48_4f.png` | **Lotus Maiden He** (Lotus Marsh) — graceful maiden in layered white and vermilion-edged robes holding a tall lotus stem, standing on a lily pad; idle: lotus opens and closes, ripples. | 32×48 | 4 | P2 | requested |
+| `npc_lei_idle_32x48_4f.png` | **Storm Sage Lei** (Thunder Crag) — wild-haired sage in a slate-blue robe with a crystal-topped staff; idle: staff crackles with small sparks. | 32×48 | 4 | P2 | requested |
+| `npc_yao_idle_32x48_4f.png` | **Beast-Tamer Yao** (Azure Beast Ravine) — young tamer in a fur-trimmed vest with a bone necklace and an azure wolf pup at her feet; idle: pup wags, she whistles. | 32×48 | 4 | P2 | requested |
+| `npc_mo_idle_32x48_4f.png` | **Tribulation Elder Mo** (Tribulation Peak) — ancient elder with scorched robe hems, a jade gourd and faint glowing lightning scars; idle: robe flutters, scars glint gold. | 32×48 | 4 | P2 | requested |
+| `npc_<id>_portrait_64x64.png` (11: lin, kang, jiang, tian, qingyun, ouyang, xuan, he, lei, yao, mo) | Request-panel **portrait** of each NPC above: same character, head and shoulders, expressive face, readable at 64 and 128 px. | 64×64 | 1 | P2 | requested |
+
+**Request and Shrine UI** (`ui`, 32×32 icons unless stated, centre pivot)
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `ui_request_marker_16x16_4f.png` | **World marker** over an NPC with an unfinished request: small white speech bubble with a gold "!" bobbing 1 px. | 16×16 | 4 | P1 | requested |
+| `ui_request` | Request card / panel icon: rolled scroll with a red seal. | 32×32 | 1 | P2 | requested |
+| `ui_request_done` | Completed request: the scroll with a gold check-mark seal. | 32×32 | 1 | P2 | requested |
+| `ui_utility` | **Utility reward** glyph: gold talisman with a small cog and qi swirl. | 32×32 | 1 | P2 | requested |
+| `ui_shrine` | Sky-Bridge Shrine glyph (moon-gate on a terrace), Shrine panel and milestones. | 32×32 | 1 | P2 | requested |
+| `ui_sky_path` | Jade bridge arc over a cloud (Island unlocked / Tribute paid). | 32×32 | 1 | P3 | requested |
+| `ui_area_lotus` / `ui_action_lotus` | Lotus flower on a pad (Lotus Marsh) / sickle cutting reeds (Gather) | 32×32 | 1 | P3 | requested |
+| `ui_area_thunder` / `ui_action_thunder` | Crystal spire with a lightning bolt (Thunder Crag) / axe with a spark (Split) | 32×32 | 1 | P3 | requested |
+| `ui_area_ravine` / `ui_action_ravine` | Ribcage arch over a canyon (Azure Beast Ravine) / claw marks (Hunt) | 32×32 | 1 | P3 | requested |
+| `ui_area_tribulation` / `ui_action_tribulation` | Jade peak in a storm ring (Tribulation Peak) / peach in a hand (Pick) | 32×32 | 1 | P3 | requested |
+
+**New biome tilesets** (`islands`) — formats identical to the delivered Center files; one row per biome below
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `island_lotus_ground_blob_32x32_47f.png` | Lotus Marsh ground, 47-tile blob (§3.0 order): wet moss bank + mud, coast lip. | 32×32 | 47 | P2 | requested |
+| `island_lotus_ground_fill_32x32_3f.png` | 3 calm seamless fill variants (frame 46 of the blob = fill v0). | 32×32 | 3 | P2 | requested |
+| `island_lotus_cliffwall_32x96_8f.png` | South cliff wall (§3.6 frame order): damp mossy rock, dripping water, roots; frame 7 waterfall spout. | 32×96 | 8 | P2 | requested |
+| `island_lotus_sidewall_32x32_4f.png` | Vertical W/E side walls (Islands-034 format). | 32×32 | 4 | P2 | requested |
+| `island_lotus_sidewall_variants_32x32_8f.png` | 3 straight variants per side + end pieces (Islands-034 format). | 32×32 | 8 | P2 | requested |
+| `island_lotus_macro_96x96_4f.png` | Macro patches: slightly darker wet moss, lighter dry bank, reed litter (±1 palette step). | 96×96 | 4 | P2 | requested |
+| `island_lotus_flowers_32x32_4f.png` | Small lotus buds, reed tufts, frog, pebbles. | 32×32 | 4 | P2 | requested |
+| `island_lotus_scatter_32x32_4f.png` | Sparse scatter overlays: fallen petals, snail, twig, mist puff. | 32×32 | 4 | P3 | requested |
+| `island_lotus_water_32x32_4f.png` | **Shallow marsh water**, seamless, 4f ripple loop with lily-pad shadows (Lotus Pond is built on it). | 32×32 | 4 | P2 | requested |
+| `island_thunder_ground_blob_32x32_47f.png` | Thunder Crag ground, 47-tile blob: storm-black slate plates, faint cyan cracks. | 32×32 | 47 | P2 | requested |
+| `island_thunder_ground_fill_32x32_3f.png` | 3 calm fill variants. | 32×32 | 3 | P2 | requested |
+| `island_thunder_cliffwall_32x96_8f.png` | South cliff wall: stacked slate shelves with crystal glints; frame 7 a crystal seep instead of water. | 32×96 | 8 | P2 | requested |
+| `island_thunder_sidewall_32x32_4f.png` | Vertical side walls. | 32×32 | 4 | P2 | requested |
+| `island_thunder_sidewall_variants_32x32_8f.png` | Side-wall variants + ends. | 32×32 | 8 | P2 | requested |
+| `island_thunder_macro_96x96_4f.png` | Macro patches: scorched slate, lighter weathered slate, crystal grit. | 96×96 | 4 | P2 | requested |
+| `island_thunder_flowers_32x32_4f.png` | Crystal shards, charred twigs, blue storm-flowers, pebbles. | 32×32 | 4 | P2 | requested |
+| `island_thunder_scatter_32x32_4f.png` | Scatter overlays: small crystals, scorch mark, ash. | 32×32 | 4 | P3 | requested |
+| `island_thunder_spark_32x32_4f.png` | Transparent overlay: tiny crackling sparks running along slate cracks, loop. | 32×32 | 4 | P3 | requested |
+| `island_ravine_ground_blob_32x32_47f.png` | Azure Beast Ravine ground, 47-tile blob: mossy canyon floor over ochre rock. | 32×32 | 47 | P2 | requested |
+| `island_ravine_ground_fill_32x32_3f.png` | 3 calm fill variants. | 32×32 | 3 | P2 | requested |
+| `island_ravine_cliffwall_32x96_8f.png` | South cliff wall: banded ochre canyon rock with moss and dangling glowvines; frame 7 waterfall spout. | 32×96 | 8 | P2 | requested |
+| `island_ravine_sidewall_32x32_4f.png` | Vertical side walls. | 32×32 | 4 | P2 | requested |
+| `island_ravine_sidewall_variants_32x32_8f.png` | Side-wall variants + ends. | 32×32 | 8 | P2 | requested |
+| `island_ravine_macro_96x96_4f.png` | Macro patches: denser moss, bare ochre earth, paw-trodden dirt. | 96×96 | 4 | P2 | requested |
+| `island_ravine_flowers_32x32_4f.png` | Ferns, small bones, glow-mushrooms, pebbles. | 32×32 | 4 | P2 | requested |
+| `island_ravine_scatter_32x32_4f.png` | Scatter overlays: paw prints, tuft of fur, rib bone, leaf. | 32×32 | 4 | P3 | requested |
+| `island_ravine_glowvine_32x32_4f.png` | Transparent overlay: creeping azure glowvine that pulses slowly. | 32×32 | 4 | P3 | requested |
+| `island_tribulation_ground_blob_32x32_47f.png` | Tribulation Peak ground, 47-tile blob: pale jade terrace stone with scorch streaks. | 32×32 | 47 | P2 | requested |
+| `island_tribulation_ground_fill_32x32_3f.png` | 3 calm fill variants. | 32×32 | 3 | P2 | requested |
+| `island_tribulation_cliffwall_32x96_8f.png` | South cliff wall: stepped jade terraces, scorched edges, a lightning-split seam; frame 7 waterfall spout. | 32×96 | 8 | P2 | requested |
+| `island_tribulation_sidewall_32x32_4f.png` | Vertical side walls. | 32×32 | 4 | P2 | requested |
+| `island_tribulation_sidewall_variants_32x32_8f.png` | Side-wall variants + ends. | 32×32 | 8 | P2 | requested |
+| `island_tribulation_macro_96x96_4f.png` | Macro patches: scorched jade, polished jade, peach-blossom litter. | 96×96 | 4 | P2 | requested |
+| `island_tribulation_flowers_32x32_4f.png` | Peach petals, jade pebbles, burnt grass tufts. | 32×32 | 4 | P2 | requested |
+| `island_tribulation_scatter_32x32_4f.png` | Scatter overlays: talisman scrap, ash, jade chip. | 32×32 | 4 | P3 | requested |
+| `island_tribulation_runes_32x32_4f.png` | Transparent overlay: fragments of carved rune circles glinting gold in turn. | 32×32 | 4 | P3 | requested |
+
+**New resource nodes, fixture and creatures** (`nodes`, `fixtures`, `creatures`; §4.3 frame rules: break/chop nodes 2f intact + cracked/stripped; `<key>_2x2` = big spawns)
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `node_lotuspad_32x48_4f.png` | Lotus Marsh, 1×1: **surfacing spirit lotus** — a glowing lotus rising on its pad, ripple ring (loop like `node_fish`) → `spirit_lotus`. | 32×48 | 4 | P2 | requested |
+| `node_reedbed_1x1_32x48_2f.png` | Lotus Marsh: tall reed clump with seed heads; frame 2 = cut stubs → `reed`. | 32×48 | 2 | P2 | requested |
+| `node_reedbed_2x2_64x80_2f.png` | Lotus Marsh: big reed bed; frame 2 = cut. | 64×80 | 2 | P2 | requested |
+| `node_thundertree_64x80_2f.png` | Thunder Crag, 2×2: lightning-split dead tree, glowing cyan core in the split; frame 2 = felled stump → `thunderwood`. | 64×80 | 2 | P2 | requested |
+| `node_stormspire_1x1_32x48_2f.png` | Thunder Crag: crackling cyan-violet crystal spire; frame 2 = cracked → `storm_crystal`. | 32×48 | 2 | P2 | requested |
+| `node_stormspire_2x2_64x80_2f.png` | Thunder Crag: cluster of storm spires; frame 2 = cracked. | 64×80 | 2 | P2 | requested |
+| `node_boneheap_64x80_2f.png` | Azure Beast Ravine, 2×2: heap of giant bleached bones and a horned skull; frame 2 = scattered → `beast_bone`. | 64×80 | 2 | P2 | requested |
+| `node_soulvine_32x48_2f.png` | Azure Beast Ravine, 1×1: twisting azure vine with glowing soul-buds; frame 2 = cut → `soulvine`. | 32×48 | 2 | P2 | requested |
+| `node_scarjade_64x80_2f.png` | Tribulation Peak, 2×2: lightning-scarred jade outcrop with gold burn lines; frame 2 = cracked → jade shards. | 64×80 | 2 | P2 | requested |
+| `fix_peachtree.png` | Tribulation Peak fixture, 3×3: **immortal peach tree** — gnarled jade-bark tree, pink-gold glowing peaches (P19/P24/P25), blossoms; canopy up to 32 px above the footprint → `immortal_peach`. | 96×128 | 1 | P2 | requested |
+| `enemy_wolf_idle_48x32_4f.png` | **Azure Wolf** — lean spirit wolf, azure-grey fur with glowing cyan markings and a bone collar; breathing idle. | 48×32 | 4 | P2 | requested |
+| `enemy_wolf_move_48x32_4f.png` | Azure Wolf loping run. | 48×32 | 4 | P2 | requested |
+| `enemy_wolf_hit_48x32_2f.png` | Azure Wolf flinch (white flash). | 48×32 | 2 | P2 | requested |
+| `enemy_wolf_die_48x32_4f.png` | Azure Wolf dissolves into azure motes, a beast core drops, once. | 48×32 | 4 | P3 | requested |
+| `npc_pen_beast_idle_32x32_4f.png` | **Tamed spirit beast** for the Beast Pen: small azure qilin calf with a red ribbon, contentedly chewing. | 32×32 | 4 | P2 | requested |
+
+**New buildings** (`buildings`; static art = idle; `_working_*_4f` = same canvas, loops while active; pivot bottom-centre)
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `bld_bamboo_nursery.png` | Center reward, 3×3 generator: fenced bed of young jade bamboo shoots with a bamboo trellis and watering ladle. | 96×128 | 1 | P2 | requested |
+| `bld_spirit_snare.png` | Center reward, 1×1: carved post with a talisman net strung from it, red tassels. | 32×48 | 1 | P2 | requested |
+| `bld_deep_shaft.png` | Mine reward, 3×3 generator: wooden mine headframe over a dark shaft, winch, ore cart on rails, lanterns. | 96×128 | 1 | P2 | requested |
+| `bld_blast_forge.png` | Mine reward, 3×5 Burner: tall brick blast furnace with a bellows wheel and charcoal heap, glowing tap hole. | 96×192 | 1 | P2 | requested |
+| `bld_koi_pond.png` | Fishing reward, 3×3 generator on water: round stone-rimmed koi pond with a tiny arched bridge and lotus pads. | 96×128 | 1 | P2 | requested |
+| `bld_spirit_paddy.png` | Farm reward, 3×3 generator: terraced spirit-rice plot with gold-glinting stalks and a small shrine post. | 96×128 | 1 | P2 | requested |
+| `bld_elixir_still.png` | Farm reward, 3×3 converter: copper-and-clay still with coiled pipes, wine jars, herb bundles. | 96×128 | 1 | P2 | requested |
+| `bld_essence_well.png` | Spirit Grove reward, 3×3 converter: carved stone well with cyan qi rising, herb baskets, a bucket on a rope. | 96×128 | 1 | P2 | requested |
+| `bld_fire_vent.png` | Volcano reward, 3×3 generator: ring of black stones around a glowing lava vent, firestone crystals forming at its rim. | 96×128 | 1 | P2 | requested |
+| `bld_star_well.png` | Celestial reward, 3×3 generator: white-marble well with a violet starlit surface, star fragments floating up. | 96×128 | 1 | P2 | requested |
+| `bld_lotus_pond.png` | Lotus Marsh, 3×3 generator on water: bamboo-framed lotus pond with glowing spirit lotuses. | 96×128 | 1 | P2 | requested |
+| `bld_reed_press.png` | Lotus Marsh, 3×3 converter: stilt hut with a wooden screw press, reed bundles, paper sheets and rope coils drying. | 96×128 | 1 | P2 | requested |
+| `bld_lotus_distillery.png` | Lotus Marsh reward, 3×3 converter: lotus-shaped bronze vessel on a stilt platform, cyan vapour, pill trays. | 96×128 | 1 | P2 | requested |
+| `bld_lightning_rod.png` | Thunder Crag, 1×1 generator: tall iron-and-crystal rod on a stone base, talisman strips, storm crystal at the top. | 32×48 | 1 | P2 | requested |
+| `bld_thunder_forge.png` | Thunder Crag, 3×5 Burner: slate forge with a crystal-capped chimney, anvil crackling with lightning, thunderwood stack. | 96×192 | 1 | P2 | requested |
+| `bld_soul_refinery.png` | Azure Beast Ravine, 3×3 converter: bone-and-jade altar with a glowing cauldron of soul light, hanging soul lamps. | 96×128 | 1 | P2 | requested |
+| `bld_beast_pen.png` | Azure Beast Ravine reward, **5×5**: bamboo-fenced paddock with a straw shelter, water trough, feeding bowls (empty; tamed beasts are separate sprites). | 160×192 | 1 | P2 | requested |
+| `bld_tribulation_array.png` | Tribulation Peak, **5×5** converter: great carved rune circle on jade flagstones with four lightning pillars and a central altar. | 160×192 | 1 | P2 | requested |
+| `bld_immortal_furnace.png` | Tribulation Peak reward, 3×5 Burner: towering jade-and-gold alchemy furnace with peach motifs and a storm-scarred lid. | 96×192 | 1 | P2 | requested |
+| `bld_<key>_working_<size>_4f.png` (19: one per building above, canvas = its static size) | Working loops: bamboo_nursery shoots grow · spirit_snare net flashes · deep_shaft winch turns, cart rolls · blast_forge tap hole roars · koi_pond koi circle · spirit_paddy stalks sway and glint · elixir_still drips · essence_well motes rise · fire_vent lava bubbles · star_well surface twinkles · lotus_pond lotuses pulse · reed_press screw turns · lotus_distillery vapour swirls · lightning_rod strike flicker · thunder_forge sparks and lightning · soul_refinery soul light swirls · beast_pen trough shimmer, gate sways · tribulation_array heavenly strike into the centre · immortal_furnace gold flames. | as static | 4 | P3 | requested |
+
+**New items** (`items`, 32×32, 1 frame, centre pivot, §4.1 rules)
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `item_spirit_lotus.png` | Glowing white lotus with vermilion-tipped petals | 32×32 | 1 | P2 | requested |
+| `item_reed.png` | Bundle of tan reeds tied with a cord | 32×32 | 1 | P2 | requested |
+| `item_foundation_pill.png` | Large pale-gold pill with a jade ring band | 32×32 | 1 | P2 | requested |
+| `item_thunderwood.png` | Split log with a glowing cyan lightning core | 32×32 | 1 | P2 | requested |
+| `item_storm_crystal.png` | Cyan-violet crystal with a tiny spark inside | 32×32 | 1 | P2 | requested |
+| `item_thunder_steel.png` | Dark slate ingot with crackling cyan veins | 32×32 | 1 | P2 | requested |
+| `item_soulvine.png` | Coil of azure vine with glowing buds | 32×32 | 1 | P2 | requested |
+| `item_beast_core.png` | Round azure beast core with a slit-pupil glow | 32×32 | 1 | P2 | requested |
+| `item_soul_lamp.png` | Small bone-and-jade lamp holding an azure soul flame | 32×32 | 1 | P2 | requested |
+| `item_immortal_peach.png` | Pink-gold glowing peach with two jade leaves | 32×32 | 1 | P2 | requested |
+| `item_tribulation_essence.png` | Gold-violet lightning orb in a small swirl | 32×32 | 1 | P2 | requested |
+| `item_immortal_pill.png` | Radiant gold pill with a violet cloud swirl | 32×32 | 1 | P2 | requested |
+
+**Reused, not redrawn:** `bld_ascension_gate` (+ `_pulse`) is now the **Heavenly Gate** (built on Celestial Peak; the ending). `fx_ascend_pillar` plays at the ending. Island undersides and the locked-island veil are shared by all 11 Islands.
+
+**Counts (v4):** Shrine + Sky Path 7 · NPC idle 11 + portraits 11 · UI 14 · biome tilesets 36 · nodes + fixture 10 · creatures 5 · buildings 19 static + 19 working · items 12 = **144 new files**.
 
 ---
 
@@ -366,7 +540,7 @@ Static art is the idle state. Facing: front face toward the viewer (south), roof
 | `bld_star_anvil.png` | **3×5** → 96×192 | **Star Anvil** (Burner) — massive dark anvil with a violet star-metal glow, a hammer, sparks rising, a meteor-iron slab; forge shed behind. | P2 | requested |
 | `bld_talisman_atelier.png` | 3×3 → 96×128 | **Talisman Atelier** — scholar's pavilion: low desk, brush stand, ink stone, yellow talisman strips drying on a line, red lacquer posts. | P2 | requested |
 | `bld_dragon_shrine.png` | 3×3 → 96×128 | **Dragon Shrine** — small shrine with a carved gold-and-cinnabar dragon coiled round a pillar, offering bowl, incense. | P2 | requested |
-| `bld_ascension_gate.png` | 5×5 → **160×192** | **Ascension Gate** — a monumental gold-and-cinnabar torii/pailou gate on a stair platform, cloud-patterned beams, a swirling taiji portal between the posts. Final monument. (Optional glow-pulse variant in 4.2.1.) | P2 | requested |
+| `bld_ascension_gate.png` | 5×5 → **160×192** | **Ascension Gate** — a monumental gold-and-cinnabar torii/pailou gate on a stair platform, cloud-patterned beams, a swirling taiji portal between the posts. Final monument. (Optional glow-pulse variant in 4.2.1.) | P2 | integrated; reused as the **Heavenly Gate** (ADR 0007) |
 | `bld_charcoal_pit.png` | 3×3 → 96×128 | **Charcoal Pit** — earthen mound kiln with a smoking vent, stacked logs, black soot. | P2 | requested |
 | `bld_furnace_spirit.png` | 1×1 → 32×48 | **Furnace Spirit** — a tiny stone lantern-brazier with a cute flame spirit face; orange (matches its orange stoker radius). | P2 | requested |
 | `bld_meditation_pavilion.png` | 3×3 → 96×128 | **Meditation Pavilion** — open-sided hexagonal pavilion, blue-grey tiled roof, red pillars, cushion mats, hanging bells. | P2 | requested |
@@ -397,7 +571,7 @@ Same canvas as the static file; same pivot. 4 frames, loops. Frame 1 = the stati
 | `bld_algae_farm_working_96x128_4f.png` | bubbles, algae sway | P3 | requested |
 | `bld_herb_garden_working_96x128_4f.png` | herbs glow and sway | P3 | requested |
 | `bld_meditation_pavilion_occupied_96x128_4f.png` | glowing qi motes drift while disciples cultivate | P3 | requested |
-| `bld_ascension_gate_pulse_160x192_4f.png` | portal swirls, gold glow pulses (once built) | P3 | requested |
+| `bld_ascension_gate_pulse_160x192_4f.png` | portal swirls, gold glow pulses (once built) | P3 | integrated; reused as the Heavenly Gate pulse (ADR 0007) |
 | `bld_wisp_lantern_glow_32x48_4f.png` | wisp bobs, light flickers | P3 | requested |
 | `bld_gathering_stone_pulse_32x48_4f.png` | rune pulses (when pulling items) | P3 | requested |
 | `bld_furnace_spirit_flame_32x48_4f.png` | flame dances | P3 | requested |
@@ -482,14 +656,14 @@ Icons share one visual language: 1 px ink outline, flat 3–4-tone fill, readabl
 | `ui_area_celestial` | Cloud with a star above a peak (Celestial Peak) | P3 | requested |
 | `ui_action_celestial` | Sparkle / star-dust (Gather) | P3 | requested |
 
-#### 4.5.2 Vow icons
+#### 4.5.2 Vow icons — retired (ADR 0007: vows removed)
 
 | Key | Depicts | Pri | Status |
 |---|---|---|---|
-| `ui_vow_burden` | Heavy pack / sack (Vow of Burden) | P3 | requested |
-| `ui_vow_coldhearth` | Ice-blue cold brazier / snowflake (Vow of the Cold Hearth) | P3 | requested |
-| `ui_vow_restless` | Angry dragon eye (Vow of the Restless Dragon) | P3 | requested |
-| `ui_vow_solitude` | Single candle / lone lantern (Vow of Solitude) | P3 | requested |
+| `ui_vow_burden` | Heavy pack / sack (Vow of Burden) | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `ui_vow_coldhearth` | Ice-blue cold brazier / snowflake (Vow of the Cold Hearth) | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `ui_vow_restless` | Angry dragon eye (Vow of the Restless Dragon) | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `ui_vow_solitude` | Single candle / lone lantern (Vow of Solitude) | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
 
 #### 4.5.3 Quest icons (14 quests)
 
@@ -522,7 +696,7 @@ Icons share one visual language: 1 px ink outline, flat 3–4-tone fill, readabl
 | `ui_target` | Target / bullseye ring (milestone, quest goal) | P3 | requested |
 | `ui_quests` | Scroll (quest panel chip) | P3 | requested |
 | `ui_alert` | Red exclamation mark (claimable) | P3 | requested |
-| `ui_ascend` | Taiji (yin-yang) with a golden rim (Ascension Points) | P3 | requested |
+| `ui_ascend` | Taiji (yin-yang) with a golden rim (Ascension Points) | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
 | `ui_disciple` | Head-and-shoulders silhouette (disciple count) | P3 | requested |
 | `ui_add` | Plus sign | P3 | requested |
 | `ui_demolish` | Trash bin / hammer-smash | P3 | requested |
@@ -544,25 +718,25 @@ Icons share one visual language: 1 px ink outline, flat 3–4-tone fill, readabl
 | `glyph_cross` | Red cross "✗" (refused) | 16×16 | P3 | requested |
 | `glyph_redo` | Circular arrow "↺" (reset) | 16×16 | P3 | requested |
 
-#### 4.5.6 Perk icons (Ascension Shrine, 15)
+#### 4.5.6 Perk icons (Ascension Shrine, 15) — retired (ADR 0007: perks removed; utilities come from requesters)
 
 | Key | Perk | Depicts | Pri | Status |
 |---|---|---|---|---|
-| `perk_haste` | Eternal Haste | Lightning bolt with gold trail | P3 | requested |
-| `perk_hall` | Master's Hall | Small temple hall | P3 | requested |
-| `perk_slumber` | Long Slumber | Moon and a "z" | P3 | requested |
-| `perk_hands` | Fleet Hands | Two cupped hands | P3 | requested |
-| `perk_frugal` | Frugal Frontier | Compass rose | P3 | requested |
-| `perk_ember` | Ember Heart | Flame heart | P3 | requested |
-| `perk_apgain` | Ascendant Insight | Glowing star | P3 | requested |
-| `perk_autoboost` | Keen Automation | Cog with qi wisp | P3 | requested |
-| `perk_regrow` | Deep Roots | Sprout with long roots | P3 | requested |
-| `perk_gale` | Wisp Gale | Swirling wind spiral | P3 | requested |
-| `perk_fury` | Battle Fury | Crossed swords | P3 | requested |
-| `perk_bless` | Heaven's Favor | Shooting star over clouds | P3 | requested |
-| `perk_bounty` | Astral Bounty | Meteor with sparkles | P3 | requested |
-| `perk_paths` | Remembered Paths | Folded map / winding path | P3 | requested |
-| `perk_legacy` | Legacy Automation | Gear with a scroll | P3 | requested |
+| `perk_haste` | Eternal Haste | Lightning bolt with gold trail | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_hall` | Master's Hall | Small temple hall | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_slumber` | Long Slumber | Moon and a "z" | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_hands` | Fleet Hands | Two cupped hands | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_frugal` | Frugal Frontier | Compass rose | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_ember` | Ember Heart | Flame heart | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_apgain` | Ascendant Insight | Glowing star | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_autoboost` | Keen Automation | Cog with qi wisp | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_regrow` | Deep Roots | Sprout with long roots | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_gale` | Wisp Gale | Swirling wind spiral | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_fury` | Battle Fury | Crossed swords | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_bless` | Heaven's Favor | Shooting star over clouds | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_bounty` | Astral Bounty | Meteor with sparkles | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_paths` | Remembered Paths | Folded map / winding path | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
+| `perk_legacy` | Legacy Automation | Gear with a scroll | P3 | retired (ADR 0007) — delivered 2026-10-09, kept unused |
 
 #### 4.5.7 Altar upgrade-node icons (19)
 
@@ -717,7 +891,7 @@ Particles and effects. Centre pivot. 4-alpha rule applies to glow parts only. Co
 | `fx_qi_swirl_small_32x32_6f.png` | Same, small (1×1 buildings) | 32×32 | 6 | P3 | requested |
 | `fx_craft_done_32x32_6f.png` | "Ding": ring burst at output on batch complete | 32×32 | 6 | P3 | requested |
 | `fx_levelup_glow_64x64_6f.png` | **Level-up glow**: golden radial pulse and rising motes (Altar upgrade applied, perk bought) | 64×64 | 6 | P3 | requested |
-| `fx_ascend_pillar_96x256_6f.png` | Pillar of gold-white qi rising from the Gate (ascension) | 96×256 | 6 | P3 | requested |
+| `fx_ascend_pillar_96x256_6f.png` | Pillar of gold-white qi rising from the Gate (ascension) | 96×256 | 6 | P3 | delivered; reused for the Heavenly Gate ending (ADR 0007) |
 | `fx_dragon_breath_32x32_4f.png` | Steam/mist puff from the dragon nostril | 32×32 | 4 | P3 | requested |
 | `fx_smoke_16x16_4f.png` | Rising grey smoke puff (chimneys, charcoal pit) — white/greyscale | 16×16 | 4 | P3 | requested |
 | `fx_flame_16x24_4f.png` | Small flame loop (fuel slot burning, forge mouth) | 16×24 | 4 | P3 | requested |
@@ -800,6 +974,7 @@ Review process: files in `incoming` are imported into Unity, checked in-game, an
 | Version | Date | Change |
 |---|---|---|
 | v1 — initial request | 2026-10-04 | First full art request: 32-colour xianxia palette, technical spec, floating-island tilesets, sky, Spirit Bridge, all 183 manifest keys, UI chrome and FX. All statuses `requested`. |
+| v4 — requesters, shrine, 4 new islands | 2026-10-12 | New §3.7 (ADR 0007): ascension removed; Sky-Bridge Shrine + Sky Paths, 11 requester NPCs (idle + portrait), request UI, four new biomes (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) with full tilesets, nodes, Azure Wolf, 19 new buildings (+ working loops) and 12 items — 144 new files. Retired: perk_* (15), ui_vow_* (4), ui_ascend, island_unlock_stele_* (3). Ascension Gate art reused as the Heavenly Gate. |
 | v2 — irregular islands | 2026-10-04 | New §3.0: islands are hand-painted irregular shapes (never squares); the coast is a visual margin 8–30 cells (bold lobes, bays, islets) around the square 93×93 playable area. Ground tilesets become 47-tile blob sets per biome (`island_<biome>_ground_blob_32x32_47f.png`; the 19-tile strip stays as a minimum); cliff rim must cover diagonals, corners and end caps; underside decorations must combine under any coastline. |
 
 ### Delivery log
@@ -855,3 +1030,4 @@ Intake: `node tools/art-intake/pull.js` (Drive `incoming/<category>/` -> `Assets
 | 2026-10-12 | Islands-035 `island_underside_*_3q` ×5 (underside-only redraw) | `incoming/islands/Idle-Grounds-Islands-035.zip` | **REJECTED on quality (file review).** The orientation is now right: a flat top cut, tapering down, no grass. But the craft is far below the cliff walls and the rest of the world. Each piece is a **flat dark-navy triangle scattered with light polygon flecks** (it reads as confetti, not rock), the "roots" are straight 1-px brown lines, and there is no stratified rock, no top-left lighting and no form; the files are ~3 KB vs ~30 KB for the first set. Wanted: the **same rendering quality as `island_<biome>_cliffwall`** and the first `_3q` set. That means chunky stratified rock masses lit from the top-left, with dark undersides, 3–4 tones plus dithering, roots that wrap around and over the rock, hanging moss/vines, and a dithered fade into mist at the bottom tip. Keep the flat ragged top cut, the sizes, keys and top-centre pivot. (We kept the first `_3q` mini-islands as background islands under `Art/Sky/BackgroundIslands`; no change needed there.) |
 | 2026-10-12 | Islands-036 `island_underside_*_3q` ×5 (quality redo) | `incoming/islands/Idle-Grounds-Islands-036.zip` | **Delivered and validated (files). A big improvement:** chunky stratified rock lit from the top-left, roots wrapping the rock, hanging moss/vines, a flat top cut, no grass. **Integration and in-game acceptance are blocked:** the Unity editor is unresponsive. These will replace the side-view underside pieces under the south cliff walls once it is back. Minor: `island_underside_roots_3q_192x160` has a small stray grey mark in the **bottom-left corner** (around x 0–20, y 150–158). Please remove it in the next touch-up; we can also mask it in code. |
 | 2026-10-12 | Islands-037 `island_underside_roots_3q_192x160` (touch-up) | `incoming/islands/Idle-Grounds-Islands-037.zip` | **Delivered and validated (file).** The stray mark is gone except a **4-px speck** at the bottom-left (x<24, y≥145); we will mask that in code, so no further redo is needed. The in-game review of the Islands-036/037 undersides, the vertical side walls and Fishing macro v3 is **still blocked**: the Unity editor is unresponsive. |
+| 2026-10-12 | **New request (v4) — see §3.7** | — | **Ascension is removed (ADR 0007).** The game is one continuous run over **11 Islands**, unlocked in a fixed order at a new **Sky-Bridge Shrine** north of the Center, with **one requester NPC per Island**. **144 new files requested**, all 3/4 top-down, exact palette, PPU 32. Order of work: <br>• **P1 first:** `bld_sky_shrine` (+ `_glow_4f`), Sky Path pieces (`fx_sky_path_h/v/corner/end`), the 7 NPC idle sprites for the existing Islands (`npc_lin/kang/jiang/tian/qingyun/ouyang/xuan_idle_32x48_4f`), `ui_request_marker_16x16_4f`. <br>• **P2 next:** the 4 new biome tilesets (`lotus`, `thunder`, `ravine`, `tribulation`) in the same process as §3.0–3.6: ground blob 47f + fill 3f + cliffwall 32×96 8f + sidewall 4f + sidewall variants 8f + macro + flowers (+ Lotus water); their nodes and `fix_peachtree`; the 19 new buildings (static); 12 items; the 4 new NPCs; 11 portraits; Azure Wolf + tamed pen beast; request/shrine icons. <br>• **P3:** working loops, scatter and overlays, `fx_sky_path_raise`, area/action icons, wolf die. <br>**Retired (no further work):** `perk_*` (15), `ui_vow_*` (4), `ui_ascend`, `island_unlock_stele_*` (3). `bld_ascension_gate` (+ pulse) and `fx_ascend_pillar` are reused for the Heavenly Gate ending. | requested |

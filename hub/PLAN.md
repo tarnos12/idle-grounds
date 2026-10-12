@@ -1,10 +1,9 @@
 # Plan
 
-Updated 2026-10-12 07:54. in-progress: 6, blocked: 6, waiting: 3, done: 7
+Updated 2026-10-12 08:05. in-progress: 5, blocked: 4, waiting: 8, done: 8
 
 ## Being worked on now
 
-- Island requesters design (ADR 0007) (Opus agent: finalising ADR 0007 with all answers + art request)
 - South cliff walls, side faces, grass lips (art loop: integrating deliveries as they arrive)
 - Integrate vertical side walls (v2, with variants) (Opus agent: integrating + Play review)
 - Integrate the new hanging undersides (3/4 rock, roots, vines) (Opus agent: integrating + Play review)
@@ -25,20 +24,28 @@ Updated 2026-10-12 07:54. in-progress: 6, blocked: 6, waiting: 3, done: 7
 - [x] **Island onboarding quests** (done, M, Claude)
   - Quests that teach bridges, caravans and cross-island trade, with next-step hints.
 
-## M2b: Island requesters replace ascension
+## M2b: Island requesters replace ascension (ADR 0007, accepted)
 
-- [ ] **Island requesters design (ADR 0007)** (in-progress, M, Claude)
-  - All decided 2026-10-12: unlock order Mine, Fishing, Farm, Grove, Volcano, Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak, Celestial; 1 NPC per island (11), 3 requests all open, right-click feeding only, Heavenly Gate ending, vows removed.
-  - Now: Opus agent: finalising ADR 0007 with all answers + art request
-- [ ] **Remove ascension (gate, points, perks, vows, prestige reset)** (blocked, M, Claude)
-  - Take out the Ascension Gate, Ascension Points, perk shop, vows and the run reset; old saves keep their progress.
-  - Why: Needs the requester design (ADR 0007) so nothing the game relies on is removed early
-- [ ] **Build island requesters** (blocked, L, Claude)
-  - Requester buildings/NPCs per island with a request menu; each fulfilled request unlocks recipes.
-  - Why: Needs your answers on the requester design
-- [ ] **4 new islands: Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak** (blocked, L, Claude)
-  - Picked 2026-10-12: all 4 join the unlock order, each with one NPC and new buildings; needs ~100 new art pieces.
-  - Why: Needs the final ADR 0007 and the new island art (art request goes out with the ADR)
+- [x] **Island requesters design (ADR 0007)** (done, M, Claude)
+  - Accepted 2026-10-12: 11 islands in a fixed order unlocked by tributes at the north Sky-Bridge Shrine; 11 NPCs (one per island) with 3 optional requests each; Heavenly Gate ending.
+- [ ] **Phase 1: remove ascension, perks, vows, offerings; Heavenly Gate ending; save migration** (waiting, L, Claude)
+  - Old saves keep their progress; the game stays playable on 7 islands.
+  - Why: Starts after the art integration agent leaves the Unity editor
+- [ ] **Phase 2: Sky-Bridge Shrine, fixed unlock order, Celestial moves north, Sky Paths** (waiting, L, Claude)
+  - Replaces the unlock steles; quests retargeted to the new order.
+  - Why: After phase 1
+- [ ] **Phase 3: requester NPCs on the 7 existing islands (21 requests)** (waiting, L, Claude)
+  - Request panel, right-click feeding, rewards: new buildings and automation utilities.
+  - Why: After phase 2
+- [ ] **Phase 4: 4 new islands (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) + their NPCs** (waiting, L, Claude)
+  - Nodes, Azure Wolf, 9 buildings, 12 items, 4 NPCs; placeholder art until delivered.
+  - Why: After phase 3 and the Game.unity split (M5)
+- [ ] **Phase 5: balance to a ~3 h ending** (waiting, M, Claude)
+  - Playthrough bot: greedy run 2:30-3:30, no-requests run under 4:15.
+  - Why: After phase 4
+- [ ] **Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files)** (blocked, L, Artist)
+  - P1 shrine + 7 NPC sprites first, then the new island tilesets, buildings and items.
+  - Why: Requested 2026-10-12 in ART-SPEC §3.7
 
 ## M3: 3/4 world look (ADR 0005)
 
