@@ -1,0 +1,12 @@
+{
+  "mode": "play",
+  "width": 1920,
+  "height": 1080,
+  "warmupFrames": 60,
+  "ui": false,
+  "save": "",
+  "shots": [
+    { "name": "veil_farm_whole", "island": "farm", "fit": true },
+    { "name": "veil_farm_close", "island": "farm", "x": -40, "y": -40, "size": 14 }
+  ]
+}

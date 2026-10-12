@@ -23,8 +23,9 @@ namespace IdleGrounds.Editor
     ///   - Shadow: a translucent black copy of the silhouette offset 6 px down-right onto the sky (contact shadow),
     ///   - Veil: tiled fog masked (SpriteMask) to the landmass + rim + underside while the Island is locked,
     ///   - Boundary: a low stone wall marking the playable square.
-    /// Every painted coast is re-cut by <see cref="SmoothCoast"/> (blurred seed outline on a fine irregular 2-3 cell
-    /// lattice: follows the curve, runs of 2+ cells, no 1-cell staircases; islets redrawn as rounded clumps). The Islands live in prefabs (<see cref="IslandPrefabs"/>); the menus
+    /// Every painted coast is re-cut by <see cref="SmoothCoast"/> into a CURVE (<see cref="CoastCurves"/>: wide-blurred seed
+    /// outline, one straight segment per crossed cell, curved walls / lips / side faces composed per cell; islets redrawn as
+    /// rounded superellipses). The Islands live in prefabs (<see cref="IslandPrefabs"/>); the menus
     /// unpack them, rebuild and save them back.
     /// </summary>
     public static class IslandCoastBuilder
@@ -358,7 +359,7 @@ namespace IdleGrounds.Editor
             tm.SetTilesBlock(bounds, tiles);
             tm.CompressBounds();
             isl.coastSeed = seed;
-            SmoothCoast(isl);           // long straight runs + 3-4 cell steps (no 1-cell staircases)
+            SmoothCoast(isl);           // curved coast (CoastCurves): arcs, no right angles, no stairs
             EditorUtility.SetDirty(tm);
             EditorUtility.SetDirty(isl);
         }
@@ -373,8 +374,10 @@ namespace IdleGrounds.Editor
         // the outline therefore becomes a 45° diagonal instead of a stair. Vertex clean-up removes every remaining right
         // angle: convex square corners are cut to a diagonal, 1-vertex spikes / strands and diagonal pinches are removed,
         // 1-vertex notches are filled (a concave corner always holds a diagonal cell by construction). Result: an outline
-        // of straight runs and 45° runs with 135° turns only.
-        const int SmoothBlur = 2;
+        // of straight runs and 45° runs with 135° turns only - "also round the corners into curves" (coast redo #4): the
+        // seed outline is now blurred wide (~4.5 cells) with a gentle seeded swell, and every crossed cell holds ONE straight
+        // segment between interpolated edge points (CoastCurves, marching squares, 2 px quantum): corners become arcs of
+        // 4-8+ cells, any slope is possible, joints are exact. Curved cells are CoastShapeTiles in the Coast tilemap.
 
         /// <summary>
         /// Re-paints every Island's coast from its recorded <see cref="Island.coastSeed"/> (the same outline as before)
@@ -402,30 +405,34 @@ namespace IdleGrounds.Editor
 
         static int FloorTo(int v, int s) => Mathf.FloorToInt(v / (float)s) * s;
 
-        /// <summary>Re-cuts the Island's painted Coast on the cell corners (full + 45° diagonal cells, deterministic). The play square stays land.</summary>
+        /// <summary>Re-cuts the Island's painted Coast as a curve (full cells + one-segment curved cells, CoastCurves.Cut; deterministic). The play square stays land.</summary>
         public static bool SmoothCoast(Island isl)
         {
             var tm = EnsureCoastTilemap(isl);
             var tile = AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CoastTilePath(isl.islandKey));
             if (tile == null) { Debug.LogError("[IdleGrounds] Coast Rule Tile missing for " + isl.islandKey); return false; }
-            var diag = IslandDressingBuilder.EnsureDiagGround(isl.islandKey);
             var land = ReadLand(isl);
-            int ox = FloorTo(land.x0 - 10, 2), oy = FloorTo(land.y0 - 10, 2);
-            int w = land.x1 + 10 - ox + 1, h = land.y1 + 10 - oy + 1;
+            int ox = FloorTo(land.x0 - 14, 2), oy = FloorTo(land.y0 - 14, 2);
+            int w = land.x1 + 14 - ox + 1, h = land.y1 + 14 - oy + 1;
             var a = new bool[w, h];
             for (int x = 0; x < w; x++) for (int y = 0; y < h; y++) a[x, y] = land[ox + x, oy + y];
-            VertexCut(a, ox, oy, KeySeed(isl.islandKey) ^ (isl.coastSeed * 31), out var full, out var tri);
+            // curved coast (coast redo #4): field on the cell corners -> full cells + one straight segment per crossed cell
+            CoastCurves.Cut(a, ox, oy, KeySeed(isl.islandKey) ^ (isl.coastSeed * 31), Cells, out var full, out var geo);
+            var keys = new HashSet<long>();
+            for (int x = 0; x < w; x++)
+                for (int y = 0; y < h; y++)
+                    if (geo[x, y] != 0) keys.Add(((long)geo[x, y] << 2) | (long)CoastCurves.GroundVariant(ox + x, oy + y));
+            var shapes = CoastCurves.EnsureGround(isl.islandKey, keys);
             var bounds = new BoundsInt(ox, oy, 0, w, h, 1);
             var tiles = new TileBase[w * h];
-            int nd = 0;
             for (int x = 0; x < w; x++)
                 for (int y = 0; y < h; y++)
                 {
                     if (full[x, y]) tiles[x + y * w] = tile;
-                    else if (tri[x, y] != 0)
+                    else if (geo[x, y] != 0)
                     {
-                        if (diag != null) { tiles[x + y * w] = diag[tri[x, y] - 1]; nd++; }
-                        else tiles[x + y * w] = tile;           // no diagonal art: a full cell (old staircase look)
+                        long k = ((long)geo[x, y] << 2) | (long)CoastCurves.GroundVariant(ox + x, oy + y);
+                        tiles[x + y * w] = shapes != null && shapes.TryGetValue(k, out var st) ? st : tile;
                     }
                 }
             tm.ClearAllTiles();
@@ -437,182 +444,45 @@ namespace IdleGrounds.Editor
 
         static bool InSquare(int x, int y) => x >= 0 && x < Cells && y >= -Cells && y <= -1;
 
-        static float[,] Blur(bool[,] a)
+        /// <summary>Debug (batch): Logs/bg/coastdbg_&lt;key&gt;.png per Island prefab - curved landmass at 8 px per cell
+        /// (green full, yellow curved land, red raw seed outline cells that ended up sky, dark sky), play square outlined.</summary>
+        public static void DebugDumpCoasts()
         {
-            int w = a.GetLength(0), h = a.GetLength(1);
-            var f = new float[w, h];
-            for (int x = 0; x < w; x++) for (int y = 0; y < h; y++) f[x, y] = a[x, y] ? 1f : 0f;
-            for (int pass = 0; pass < 2; pass++)
+            string dir = Path.Combine(Directory.GetCurrentDirectory(), "Logs/bg");
+            Directory.CreateDirectory(dir);
+            foreach (var path in Directory.GetFiles("Assets/_Project/Prefabs/Islands/Generated", "*.prefab"))
             {
-                var t = new float[w, h];
-                for (int y = 0; y < h; y++)
-                    for (int x = 0; x < w; x++)
-                    {
-                        float sum = 0f;
-                        for (int k = -SmoothBlur; k <= SmoothBlur; k++) { int xx = x + k; if (xx >= 0 && xx < w) sum += f[xx, y]; }
-                        t[x, y] = sum / (2 * SmoothBlur + 1);
-                    }
-                for (int x = 0; x < w; x++)
-                    for (int y = 0; y < h; y++)
-                    {
-                        float sum = 0f;
-                        for (int k = -SmoothBlur; k <= SmoothBlur; k++) { int yy = y + k; if (yy >= 0 && yy < h) sum += t[x, yy]; }
-                        f[x, y] = sum / (2 * SmoothBlur + 1);
-                    }
-            }
-            return f;
-        }
-
-        /// <summary>
-        /// Blurred outline -> vertex mask -> clean-up -> cells (see the section comment). <paramref name="a"/> is the raw
-        /// cell mask over [ox, ox + w) x [oy, oy + h); vertex (i, j) is the lower-left corner of cell (i, j).
-        /// <paramref name="tri"/> holds the diagonal code (IslandDressingBuilder.SkyNE ..) of every half cell.
-        /// </summary>
-        static void VertexCut(bool[,] a, int ox, int oy, int seed, out bool[,] full, out byte[,] tri)
-        {
-            int w = a.GetLength(0), h = a.GetLength(1);
-            var f = Blur(a);
-            int vw = w + 1, vh = h + 1;
-            var v = new bool[vw, vh];
-            var val = new float[vw, vh];
-            var locked = new bool[vw, vh];
-            float F(int x, int y) => x >= 0 && y >= 0 && x < w && y < h ? f[x, y] : 0f;
-            for (int i = 0; i < vw; i++)
-                for (int j = 0; j < vh; j++)
+                var root = PrefabUtility.LoadPrefabContents(path.Replace(System.IO.Path.DirectorySeparatorChar, '/'));
+                var isl = root.GetComponent<Island>();
+                if (isl != null && isl.coast != null)
                 {
-                    val[i, j] = (F(i - 1, j - 1) + F(i, j - 1) + F(i - 1, j) + F(i, j)) * 0.25f;
-                    v[i, j] = val[i, j] >= 0.5f;
-                    int wx = ox + i, wy = oy + j;
-                    if (wx >= 0 && wx <= Cells && wy >= -Cells && wy <= 0) { v[i, j] = true; locked[i, j] = true; }
-                }
-            bool L(int i, int j) => i >= 0 && j >= 0 && i < vw && j < vh && v[i, j];
-            var dirs = new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-            var q = new Queue<Vector2Int>();
-
-            // main land only (vertices 4-connected to the play square); islets are redrawn below
-            {
-                var main = new bool[vw, vh];
-                for (int i = 0; i < vw; i++) for (int j = 0; j < vh; j++) if (locked[i, j]) { main[i, j] = true; q.Enqueue(new Vector2Int(i, j)); }
-                while (q.Count > 0)
-                {
-                    var p = q.Dequeue();
-                    foreach (var d in dirs) { var n = p + d; if (L(n.x, n.y) && !main[n.x, n.y]) { main[n.x, n.y] = true; q.Enqueue(n); } }
-                }
-                for (int i = 0; i < vw; i++) for (int j = 0; j < vh; j++) v[i, j] = main[i, j];
-            }
-
-            // satellite islets: each detached clump of the raw outline becomes a rounded superellipse over its bounds (at
-            // least 7 x 7 cells: the corner cut eats a ring, so smaller ones read as posts), slightly squashed per islet, kept 3 vertices clear of the main land
-            var mainV = (bool[,])v.Clone();
-            var seen = new bool[w, h];
-            int isletN = 0;
-            for (int sx = 0; sx < w; sx++)
-                for (int sy = 0; sy < h; sy++)
-                {
-                    if (!a[sx, sy] || seen[sx, sy]) continue;
-                    var cells = new List<Vector2Int>();
-                    bool touchesSquare = false;
-                    seen[sx, sy] = true; q.Enqueue(new Vector2Int(sx, sy));
-                    while (q.Count > 0)
-                    {
-                        var p = q.Dequeue(); cells.Add(p);
-                        touchesSquare |= InSquare(ox + p.x, oy + p.y);
-                        foreach (var d in dirs) { var n = p + d; if (n.x >= 0 && n.y >= 0 && n.x < w && n.y < h && a[n.x, n.y] && !seen[n.x, n.y]) { seen[n.x, n.y] = true; q.Enqueue(n); } }
-                    }
-                    if (touchesSquare || cells.Count < 4) continue;
-                    // part of the main land after the blur? then it is not an islet
-                    bool merged = false;
-                    foreach (var c in cells) if (mainV[c.x, c.y] && mainV[c.x + 1, c.y + 1] && mainV[c.x + 1, c.y] && mainV[c.x, c.y + 1]) { merged = true; break; }
-                    if (merged) continue;
-                    int x0 = int.MaxValue, y0 = int.MaxValue, x1 = int.MinValue, y1 = int.MinValue;
-                    foreach (var c in cells) { x0 = Mathf.Min(x0, c.x); x1 = Mathf.Max(x1, c.x); y0 = Mathf.Min(y0, c.y); y1 = Mathf.Max(y1, c.y); }
-                    while (x1 - x0 + 1 < 7) { if (((x1 - x0) & 1) == 0) x0--; else x1++; }
-                    while (y1 - y0 + 1 < 7) { if (((y1 - y0) & 1) == 0) y0--; else y1++; }
-                    float cx = (x0 + x1 + 1) * 0.5f, cy = (y0 + y1 + 1) * 0.5f, rx = (x1 - x0 + 1) * 0.5f, ry = (y1 - y0 + 1) * 0.5f;
-                    float pw = 2.2f + (HashU(isletN++, x0, seed + 31) % 100) / 100f * 0.8f;      // 2.2 (round) .. 3.0 (squarer)
-                    for (int i = Mathf.Max(0, x0); i <= Mathf.Min(vw - 1, x1 + 1); i++)
-                        for (int j = Mathf.Max(0, y0); j <= Mathf.Min(vh - 1, y1 + 1); j++)
+                    var map = CoastCurves.Map.Read(isl.coast, Cells);
+                    var raw = Outline(isl.coastSeed != 0 ? isl.coastSeed : KeySeed(isl.islandKey));
+                    int x0 = map.x0 - 2, y0 = map.y0 - 2, x1 = map.x1 + 2, y1 = map.y1 + 2, S = 8;
+                    int W = (x1 - x0 + 1) * S, H = (y1 - y0 + 1) * S;
+                    var tex = new Texture2D(W, H, TextureFormat.RGBA32, false);
+                    var px = new Color32[W * H];
+                    for (int y = 0; y < H; y++)
+                        for (int x = 0; x < W; x++)
                         {
-                            float dx = Mathf.Abs((i - cx) / rx), dy = Mathf.Abs((j - cy) / ry);
-                            if (Mathf.Pow(dx, pw) + Mathf.Pow(dy, pw) > 1f) continue;
-                            bool near = false;
-                            for (int ka = -3; ka <= 3 && !near; ka++)
-                                for (int kb = -3; kb <= 3 && !near; kb++)
-                                {
-                                    int ni = i + ka, nj = j + kb;
-                                    near = ni >= 0 && nj >= 0 && ni < vw && nj < vh && mainV[ni, nj];
-                                }
-                            if (!near) v[i, j] = true;
+                            int cx = x0 + x / S, cy = y0 + y / S;
+                            int gx = cx * 32 + (x % S) * 4 + 2, gy = cy * 32 + (y % S) * 4 + 2;
+                            bool land = map.PixelLand(gx, gy);
+                            bool curvedCell = map.geo.ContainsKey(new Vector2Int(cx, cy));
+                            int ix = cx + Pad, iy = -cy - 1 + Pad;
+                            bool r = ix >= 0 && iy >= 0 && ix < Size && iy < Size && raw[ix, iy];
+                            Color32 c = land ? (curvedCell ? new Color32(220, 200, 60, 255) : new Color32(90, 160, 70, 255)) : (r ? new Color32(150, 40, 40, 255) : new Color32(20, 30, 50, 255));
+                            if (!land && !r && curvedCell) c = new Color32(40, 50, 80, 255);
+                            if ((cx == 0 || cx == Cells - 1) && cy <= -1 && cy >= -Cells && (x % S == 0)) c = new Color32(255, 255, 255, 255);
+                            px[y * W + x] = c;
                         }
+                    tex.SetPixels32(px);
+                    File.WriteAllBytes(Path.Combine(dir, "coastdbg_" + isl.islandKey + ".png"), tex.EncodeToPNG());
+                    Object.DestroyImmediate(tex);
+                    Debug.Log("[IdleGrounds] coast dump " + isl.islandKey + ": curved cells " + map.geo.Count + ", seed " + isl.coastSeed);
                 }
-
-            // clean-up: no right angles, no spikes, no pinches
-            for (int iter = 0; iter < 200; iter++)
-            {
-                bool changed = false;
-                for (int i = 0; i < vw; i++)
-                    for (int j = 0; j < vh; j++)
-                    {
-                        if (locked[i, j]) continue;
-                        bool n = L(i, j + 1), e = L(i + 1, j), s = L(i, j - 1), wv = L(i - 1, j);
-                        int cnt = (n ? 1 : 0) + (e ? 1 : 0) + (s ? 1 : 0) + (wv ? 1 : 0);
-                        if (v[i, j])
-                        {
-                            bool cut = cnt <= 1 || (!n && !s) || (!e && !wv);
-                            // convex square corner: the full cell in quadrant (dx, dy) and sky on both outer sides
-                            for (int dx = -1; dx <= 1 && !cut; dx += 2)
-                                for (int dy = -1; dy <= 1 && !cut; dy += 2)
-                                    cut = L(i + dx, j) && L(i, j + dy) && L(i + dx, j + dy)
-                                          && !L(i, j - dy) && !L(i + dx, j - dy) && !L(i - dx, j) && !L(i - dx, j + dy);
-                            if (cut) { v[i, j] = false; changed = true; }
-                        }
-                        else if (cnt >= 3) { v[i, j] = true; changed = true; }
-                    }
-                // diagonal pinches (2 x 2 checkerboard): bridge with the stronger of the two sky vertices
-                for (int i = 0; i < vw - 1; i++)
-                    for (int j = 0; j < vh - 1; j++)
-                    {
-                        bool p00 = v[i, j], p10 = v[i + 1, j], p01 = v[i, j + 1], p11 = v[i + 1, j + 1];
-                        if (p00 && p11 && !p10 && !p01) { if (val[i + 1, j] >= val[i, j + 1]) v[i + 1, j] = true; else v[i, j + 1] = true; changed = true; }
-                        else if (p10 && p01 && !p00 && !p11) { if (val[i, j] >= val[i + 1, j + 1]) v[i, j] = true; else v[i + 1, j + 1] = true; changed = true; }
-                    }
-                if (!changed) break;
+                PrefabUtility.UnloadPrefabContents(root);
             }
-
-            // vertices -> cells
-            full = new bool[w, h];
-            tri = new byte[w, h];
-            for (int x = 0; x < w; x++)
-                for (int y = 0; y < h; y++)
-                {
-                    bool c00 = v[x, y], c10 = v[x + 1, y], c01 = v[x, y + 1], c11 = v[x + 1, y + 1];
-                    int cnt = (c00 ? 1 : 0) + (c10 ? 1 : 0) + (c01 ? 1 : 0) + (c11 ? 1 : 0);
-                    if (cnt == 4) full[x, y] = true;
-                    else if (cnt == 3)
-                        tri[x, y] = (byte)(!c11 ? IslandDressingBuilder.SkyNE : !c01 ? IslandDressingBuilder.SkyNW : !c10 ? IslandDressingBuilder.SkySE : IslandDressingBuilder.SkySW);
-                }
-
-            // specks: detached clumps under 8 cells go
-            var comp = new bool[w, h];
-            for (int x = 0; x < w; x++)
-                for (int y = 0; y < h; y++)
-                {
-                    if ((!full[x, y] && tri[x, y] == 0) || comp[x, y]) continue;
-                    var cells = new List<Vector2Int>();
-                    bool sq = false;
-                    comp[x, y] = true; q.Enqueue(new Vector2Int(x, y));
-                    while (q.Count > 0)
-                    {
-                        var p = q.Dequeue(); cells.Add(p); sq |= InSquare(ox + p.x, oy + p.y);
-                        foreach (var d in dirs)
-                        {
-                            var n = p + d;
-                            if (n.x < 0 || n.y < 0 || n.x >= w || n.y >= h || comp[n.x, n.y] || (!full[n.x, n.y] && tri[n.x, n.y] == 0)) continue;
-                            comp[n.x, n.y] = true; q.Enqueue(n);
-                        }
-                    }
-                    if (!sq && cells.Count < 8) foreach (var c in cells) { full[c.x, c.y] = false; tri[c.x, c.y] = 0; }
-                }
         }
 
         // ------------------------------------------------------------------ land read-back (hand-edits included)
@@ -622,6 +492,8 @@ namespace IdleGrounds.Editor
         sealed class Land
         {
             public int x0, y0, x1, y1;      // inclusive tilemap cell bounds
+            /// <summary>Pixel-level landmass (curved coast cells, coast redo #4); <c>map.Curved</c> when any curved cell exists.</summary>
+            public CoastCurves.Map map;
             readonly bool[,] a;
             readonly byte[,] t;
             public Land(int x0, int y0, int x1, int y1) { this.x0 = x0; this.y0 = y0; this.x1 = x1; this.y1 = y1; a = new bool[x1 - x0 + 1, y1 - y0 + 1]; t = new byte[x1 - x0 + 1, y1 - y0 + 1]; }
@@ -666,6 +538,7 @@ namespace IdleGrounds.Editor
                     if (code > 0) land.SetTri(p.x, p.y, code); else land[p.x, p.y] = true;
                 }
             for (int x = 0; x < Cells; x++) for (int y = -Cells; y <= -1; y++) land[x, y] = true;     // the play area is always ground
+            land.map = CoastCurves.Map.Read(tm, Cells);
             return land;
         }
 
@@ -699,6 +572,18 @@ namespace IdleGrounds.Editor
             }
             else cliff = go.GetComponent<Tilemap>();
             cliff.ClearAllTiles();
+            if (land.map != null && land.map.Curved)
+            {
+                // curved coast: one sheared wall piece per south-facing curved cell, tilemap at the Island origin
+                HasWall = File.Exists(IslandArtBuilder.CliffWallPath(isl.islandKey));
+                cliff.transform.localPosition = Vector3.zero;
+                var crc = cliff.GetComponent<TilemapRenderer>();
+                if (crc != null) { crc.sortingOrder = -3; crc.sortOrder = TilemapRenderer.SortOrder.TopLeft; }
+                var cells = CoastCurves.BuildWalls(isl.islandKey, land.map, cliff);
+                cliff.CompressBounds();
+                EditorUtility.SetDirty(cliff);
+                return cells;
+            }
             // wall cells (the sky cell under a south-facing coast edge) by kind: 0 straight (under a full cell or a diagonal
             // whose south edge is land), 1 rise (under a sky-SE diagonal: the coast rises to the right), 2 fall (sky-SW)
             var kind = new Dictionary<Vector2Int, int>();
@@ -826,12 +711,32 @@ namespace IdleGrounds.Editor
             int w = land.x1 - land.x0 + 1;
             var prof = new int[Profiles][];
             var gap = new int[Profiles][];
-            for (int p = 0; p < Profiles; p++) { prof[p] = new int[w]; gap[p] = new int[w]; }
+            var edgeY = new float[Profiles][];           // curved coast: the exact coast line (cells) at the column centre
+            for (int p = 0; p < Profiles; p++) { prof[p] = new int[w]; gap[p] = new int[w]; edgeY[p] = new float[w]; }
             int minH = int.MaxValue;
+            bool curved = land.map != null && land.map.Curved;
             for (int i = 0; i < w; i++)
             {
                 int x = land.x0 + i;
                 for (int p = 0; p < Profiles; p++) { prof[p][i] = NoEdge; gap[p][i] = 0; }
+                if (curved)
+                {
+                    // pixel scan up the column centre: every land-over-sky transition is a south-facing edge
+                    int gx = x * CoastCurves.P + CoastCurves.P / 2, q0 = 0, lastLandCell = int.MinValue;
+                    for (int py = land.y0 * CoastCurves.P; py <= (land.y1 + 1) * CoastCurves.P + CoastCurves.P - 1 && q0 < Profiles; py++)
+                    {
+                        bool here = land.map.PixelLand(gx, py), below = land.map.PixelLand(gx, py - 1);
+                        if (here && !below)
+                        {
+                            int c = CoastCurves.FloorDiv(py - 1);
+                            int g = lastLandCell == int.MinValue ? 99 : c - lastLandCell;
+                            if (q0 == 0 || g >= 4) { prof[q0][i] = c; gap[q0][i] = g; edgeY[q0][i] = py / (float)CoastCurves.P; q0++; }
+                        }
+                        if (here) lastLandCell = CoastCurves.FloorDiv(py);
+                    }
+                    if (prof[0][i] != NoEdge) minH = Mathf.Min(minH, prof[0][i]);
+                    continue;
+                }
                 int p0 = 0, lastLand = int.MinValue;
                 for (int y = land.y0; y <= land.y1 + 1 && p0 < Profiles; y++)
                 {
@@ -916,7 +821,8 @@ namespace IdleGrounds.Editor
             {
                 // the opaque 3/4 cliff wall replaces the dark fill + body rows: its ragged, fading bottom shows the sky,
                 // and the pieces below tuck behind it. Only report the wall's cells (veil mask).
-                foreach (var c in cliff) for (int r = -1; r <= WallBelowRim; r++) covered.Add(new Vector2Int(c.x, c.y - r));      // -1: a 45° wall reaches into the cell above
+                if (curved) { }      // curved coast: the veil samples the walls per pixel (BuildVeil)
+                else foreach (var c in cliff) for (int r = -1; r <= WallBelowRim; r++) covered.Add(new Vector2Int(c.x, c.y - r));      // -1: a 45° wall reaches into the cell above
                 Object.DestroyImmediate(bodyT.gameObject);
             }
             else foreach (var c in cliff) cellSet.Add(new Vector3Int(c.x, c.y, 0));
@@ -965,12 +871,14 @@ namespace IdleGrounds.Editor
                     int a = Mathf.FloorToInt(x0) - land.x0, b = Mathf.CeilToInt(x1) - 1 - land.x0;
                     if (a < 0 || b >= w || b < a) return float.NaN;
                     int m = int.MinValue;
+                    float me = float.MinValue;
                     for (int i = a; i <= b; i++)
                     {
                         if (f[i] <= 0.05f || (i > a && Mathf.Abs(h[i] - h[i - 1]) > ChainStep)) return float.NaN;
                         m = Mathf.Max(m, h[i]);
+                        me = Mathf.Max(me, edgeY[p][i]);
                     }
-                    return m;
+                    return curved ? me - 1f : m;          // curved: the coast line itself is "rim cell top" (top + 1)
                 }
                 bool Hang(Sprite sp, float cx, float dropBelowRim, int order, float dark)
                 {
@@ -1078,9 +986,9 @@ namespace IdleGrounds.Editor
                 var arr = new TileBase[pos.Count];
                 for (int i = 0; i < arr.Length; i++) arr[i] = cliffTile;
                 var rim = Map("Rim");
-                if (wallTile != null) rim.transform.localPosition = new Vector3(0f, -WallDrop, 0f);     // follows the 3-cell wall
                 // the wall's per-joint pieces (BuildCliff) when present, so the shadow keeps the same end caps
                 var built = isl.transform.Find("CliffRim") != null ? isl.transform.Find("CliffRim").GetComponent<Tilemap>() : null;
+                if (wallTile != null) rim.transform.localPosition = built != null ? built.transform.localPosition : new Vector3(0f, -WallDrop, 0f);     // follows the wall
                 if (wallTile != null && built != null)
                     for (int i = 0; i < arr.Length; i++) { var t = built.GetTile(pos[i]); if (t != null) arr[i] = t; }
                 rim.SetTiles(pos.ToArray(), arr);
@@ -1109,9 +1017,61 @@ namespace IdleGrounds.Editor
                     for (int a = -1; a <= 1; a++) for (int b = -1; b <= 1; b++) { int nx = x + a, ny = y + b; if (nx >= 0 && ny >= 0 && nx < gw && ny < gh) dil[nx, ny] = true; }
                 }
 
-            int tw = gw * MaskPpu, th = gh * MaskPpu;
+            bool curvedMask = land.map != null && land.map.Curved;
+            int mppu = curvedMask ? 8 : MaskPpu;
+            int tw = gw * mppu, th = gh * mppu;
             var a0 = new float[tw, th];
-            for (int x = 0; x < tw; x++) for (int y = 0; y < th; y++) a0[x, y] = dil[x / MaskPpu, y / MaskPpu] ? 1f : 0f;
+            if (!curvedMask) for (int x = 0; x < tw; x++) for (int y = 0; y < th; y++) a0[x, y] = dil[x / mppu, y / mppu] ? 1f : 0f;
+            else
+            {
+                // curved coast: the landmass + its south walls at 4 px resolution (no cell steps), the hanging pieces per
+                // cell, then a round ~0.4-cell dilation so the fog hugs the curve
+                int step = CoastCurves.P / mppu;
+                var core = new bool[tw, th];
+                for (int x = 0; x < tw; x++)
+                    for (int y = 0; y < th; y++)
+                    {
+                        int gx = (gx0 * mppu + x) * step + step / 2, gy = (gy0 * mppu + y) * step + step / 2;
+                        bool on = land.map.PixelLand(gx, gy);
+                        for (int k = 1; !on && k * step <= 100; k++) on = land.map.PixelLand(gx, gy + k * step);      // wall below a coast pixel
+                        core[x, y] = on;
+                    }
+                // the hanging pieces by their own opaque pixels (no cell boxes)
+                var ut = isl.transform.Find("Underside");
+                var pxCache = new Dictionary<string, (Color32[] px, int w)>();
+                if (ut != null)
+                    foreach (var psr in ut.GetComponentsInChildren<SpriteRenderer>())
+                    {
+                        var sp = psr.sprite;
+                        if (sp == null || !psr.name.StartsWith("Piece")) continue;
+                        string ppath = AssetDatabase.GetAssetPath(sp.texture);
+                        if (!pxCache.TryGetValue(ppath, out var pc)) { var arr = CoastCurves.ReadPng(ppath, out int pw, out _); pc = (arr, pw); pxCache[ppath] = pc; }
+                        if (pc.px == null) continue;
+                        var r = sp.rect; float ppu = sp.pixelsPerUnit;
+                        var lp = psr.transform.localPosition + ut.localPosition;
+                        for (int iy = (int)r.y; iy < (int)r.yMax; iy += 2)
+                            for (int ix = (int)r.x; ix < (int)r.xMax; ix += 2)
+                            {
+                                if (pc.px[iy * pc.w + ix].a == 0) continue;
+                                float wx = lp.x + (psr.flipX ? -1f : 1f) * (ix - r.x + 0.5f - sp.pivot.x) / ppu, wy = lp.y + (iy - r.y + 0.5f - sp.pivot.y) / ppu;
+                                int mx = Mathf.FloorToInt((wx - gx0) * mppu), my = Mathf.FloorToInt((wy - gy0) * mppu);
+                                if (mx >= 0 && my >= 0 && mx < tw && my < th) core[mx, my] = true;
+                            }
+                    }
+                const int R = 3;
+                for (int x = 0; x < tw; x++)
+                    for (int y = 0; y < th; y++)
+                    {
+                        if (!core[x, y]) continue;
+                        for (int a = -R; a <= R; a++)
+                            for (int b = -R; b <= R; b++)
+                            {
+                                if (a * a + b * b > R * R + 1) continue;
+                                int nx = x + a, ny = y + b;
+                                if (nx >= 0 && ny >= 0 && nx < tw && ny < th) a0[nx, ny] = 1f;
+                            }
+                    }
+            }
             for (int pass = 0; pass < 2; pass++)
             {
                 var a1 = new float[tw, th];
@@ -1136,7 +1096,7 @@ namespace IdleGrounds.Editor
             var imp = (TextureImporter)AssetImporter.GetAtPath(path);
             imp.textureType = TextureImporterType.Sprite;
             imp.spriteImportMode = SpriteImportMode.Single;
-            imp.spritePixelsPerUnit = MaskPpu;
+            imp.spritePixelsPerUnit = mppu;
             imp.filterMode = FilterMode.Bilinear;
             imp.textureCompression = TextureImporterCompression.Uncompressed;
             imp.mipmapEnabled = false;
