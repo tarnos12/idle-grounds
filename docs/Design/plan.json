@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-12 13:51",
+  "updated": "2026-10-12 14:27",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -292,10 +292,9 @@
         {
           "title": "Background copy: git worktree + headless Unity for all agent work",
           "detail": "A second copy of the project where agents import, rebuild, take screenshots and run tests without touching your open editor; results arrive via git.",
-          "status": "waiting",
+          "status": "done",
           "size": "L",
-          "owner": "Claude",
-          "blockedBy": "Starts when the coast agent leaves your open editor (so the copy starts from its finished state)"
+          "owner": "Claude"
         }
       ]
     }

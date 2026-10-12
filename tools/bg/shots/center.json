@@ -1,0 +1,12 @@
+{
+  "mode": "play",
+  "width": 1920,
+  "height": 1080,
+  "warmupFrames": 60,
+  "ui": false,
+  "save": "",
+  "shots": [
+    { "name": "center_whole", "island": "center", "fit": true },
+    { "name": "center_close", "island": "center", "x": 0, "y": 0, "size": 9 }
+  ]
+}

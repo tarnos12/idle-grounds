@@ -90,6 +90,38 @@ Single-context: one root `CONTEXT.md` + `docs/adr/` (created lazily). See `docs/
 - **Full Unity EditMode + PlayMode (+ Slow playthroughs) only at milestones / before
   builds** — they block the editor (~177 EditMode tests incl. 4 Game tests, several minutes).
 
+## Background copy (headless Unity for agents)
+
+The owner's editor has **this folder** open. Agents never touch it (no unityMCP, no scene/prefab/asset
+writes here); they use a **git worktree with its own Library** driven by headless Unity:
+
+- Copy: `D:\WORK\Unity\idle-grounds-bg` on branch `bg/main` (tracks `origin/master`). Unity:
+  `C:\Program Files\Unity\Hub\Editor\6000.3.12f1\Editor\Unity.exe` (auto-found from ProjectVersion.txt;
+  override `UNITY_EXE`). Logs, test XML and screenshots go to `<bg>/Logs/bg/` (git-ignored).
+- Scripts `tools/bg/*.sh` (Git Bash; PowerShell: `tools/bg/bg.ps1 <cmd> ...`). Run them from either
+  checkout; they always target the bg copy (`--bg <dir>` / `IG_BG` for a task copy). Exit 0 = ok.
+  - `sync.sh [branch] [--force]` — bg copy → latest `origin/master` (or branch); refuses to drop
+    uncommitted/unpushed work without `--force`.
+  - `compile.sh` — open headless, import, report compile errors.
+  - `test.sh editmode|playmode|all [--filter regex]` — Unity Test Framework; prints totals + failures.
+  - `menu.sh "Idle Grounds/..." [--no-scene]` — run a menu item (Game.unity opened first), save, list
+    the files it changed.
+  - `shot.sh <spec.json|preset> [--edit] [--ui] [--save file] [--out dir]` — PNGs from the game
+    camera after a real Play-mode boot (fresh run unless `--save`); presets in `tools/bg/shots/`
+    (`center` = whole Center Island + close-up). `--ui` draws the HUD (best effort).
+  - `unity.sh <Class.Method>` — any static editor method; `build.sh windows|webgl|all` — player builds.
+  - `publish-back.sh <task> -m "msg"` — commit the bg copy's work on `bg/<task>` and push it.
+  - `task.sh new|rm|list <name>` — extra copy `D:\WORK\Unity\idle-grounds-bg-<name>` for parallel
+    agents (Library seeded in ~15 s).
+- Entry points live in `Assets/_Project/Scripts/Editor/Batch.cs` (batch-mode only). Play mode in the
+  bg copy uses `IDLEGROUNDS_SAVE_DIR=<bg>/Library/bg-save` (see `SaveService.SaveDir`), never the
+  owner's save. MCP for Unity stays off in batch mode. Two editors on two folders are fine.
+- **Flow:** `sync.sh` → work + `compile.sh`/`test.sh`/`shot.sh` in the bg copy → `publish-back.sh
+  <task>` → orchestrator merges `origin/bg/<task>` into `master` (HANDOFF.md, gate, push, delete the
+  branch) → the owner pulls and Unity refreshes → `sync.sh` puts the bg copy back on master.
+- Timings (2026-10-12): first open ~55 s with the copied Library, EditMode 175 tests ~6 min, menu
+  item ~25 s, 2 screenshots ~50 s.
+
 ## Agent team (owner decision 2026-10-12: `docs/Design/owner-picks-2026-10-12-team.json`)
 
 A permanent team of 11 role agents lives in `.claude/agents/` (world-designer, balance-designer,
@@ -103,8 +135,8 @@ session orchestrates, reviews, integrates and commits. Rules for every agent:
 2. Each agent has its own plan task with a "now" line (`node tools/plan/set-task.cjs ...`).
 3. Owner questions only via the Hub Questions tab (`docs/Design/questions.json`, with pictures if
    visual); offer every plausible option, including "all" / the maximal one.
-4. **All agent work happens in the background copy** (git worktree + headless Unity), never in the
-   owner's open project or editor.
+4. **All agent work happens in the background copy** (git worktree + headless Unity, see
+   "Background copy" above: `tools/bg/*`), never in the owner's open project or editor.
 5. Run the test gate before pushing (fast `bash tools/simtests/run.sh`; full Unity only at
    milestones) and report results plainly.
 6. Never `cat > file` without a heredoc; never reset the owner's save.

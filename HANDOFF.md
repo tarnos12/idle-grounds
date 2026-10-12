@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: background copy — git worktree D:WORKUnityidle-grounds-bg (branch bg/main) + headless Unity via tools/bg/* (sync, compile, test, menu, shot, unity, build, publish-back, task). Editor entry points in Editor/Batch.cs; SaveService honours IDLEGROUNDS_SAVE_DIR in the Editor so background Play/tests never touch the owner's save. Verified: compile 53 s, EditMode 175/175 in 6 min, menu 26 s, Play screenshots 47 s; owner's editor and save untouched. Flow: CLAUDE.md 'Background copy'. Known: PlayMode GameSmokeTests.Logistics_WispLaunches_ConverterCompletes fails (pre-existing timing issue, plan task).
+
 - 2026-10-12: coast redo #3 — corner-sampled coast model with 45° diagonal cells (CoastDiag_<biome> tiles; runtime CoastRuleTile treats them as land), corner clean-up (no square corners/spikes), rounded ≥7×7 islets; diagonal south walls (rise/fall, sheared from repaired frames), diagonal ground edges + north lips composed from delivered art; hooks for island_<biome>_ground_diag / cliffwall_diag when delivered. Owner sign-off asked (coast3_signoff).
 
 - 2026-10-12: agent team — 11 role agents in .claude/agents (world, balance, onboarding, ui-ux, ui-qa, art-director, ingame-art-reviewer, writer, playtester, performance, code-health) with guides in docs/guides (README = team table + task-specialist briefs); CLAUDE.md 'Agent team' section. Agents have no Unity-MCP/Artifact tools; they work in the background copy (M6 task, not set up yet).

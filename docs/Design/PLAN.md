@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-12 13:51. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-12 14:27. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**14 of 28 tasks done**, 1 in progress, 1 to do, 3 blocked, 9 waiting.
+**15 of 28 tasks done**, 1 in progress, 1 to do, 3 blocked, 8 waiting.
 
 ## Being worked on now
 
@@ -16,7 +16,7 @@ Updated 2026-10-12 13:51. Source of truth: docs/Design/plan.json, edited with to
 | M3 | 3/4 world look (ADR 0005) |  | In progress | 3 / 7 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
-| M6 | Agent team and background copy |  | In progress | 1 / 2 |
+| M6 | Agent team and background copy |  | In progress | 2 / 2 |
 
 **Task status:** Done: built and checked. In progress: someone (an agent) is working on it now; the "now" line says who. Next: the next thing to start. Later: planned, not started. To do: planned and can start. Blocked: cannot start; needs art, an owner answer or another task (the reason is shown). Waiting: could start, but not a good time yet (the reason is shown).
 
@@ -111,4 +111,4 @@ Agents work like a small studio: permanent designer roles with their own guide d
 | Status | Task | Detail | Owner |
 |---|---|---|---|
 | Done | Define the 11 role agents and their guide documents | World, Balance, Onboarding, UI/UX, UI QA, Art director, In-game art reviewer, Writer, Playtester, Performance, Code health — each an agent definition with a guide doc it owns. | Claude |
-| Waiting | Background copy: git worktree + headless Unity for all agent work | A second copy of the project where agents import, rebuild, take screenshots and run tests without touching your open editor; results arrive via git. | Claude |
+| Done | Background copy: git worktree + headless Unity for all agent work | A second copy of the project where agents import, rebuild, take screenshots and run tests without touching your open editor; results arrive via git. | Claude |

@@ -23,7 +23,24 @@ namespace IdleGrounds.Game
         [SerializeField] GameRunner runner;
 
         public static SaveService Instance { get; private set; }
-        public static string SavePath => Path.Combine(Application.persistentDataPath, FileName);
+        public static string SavePath => Path.Combine(SaveDir, FileName);
+
+        /// <summary>
+        /// Folder of the save file: persistentDataPath, except in the Editor when the env var
+        /// IDLEGROUNDS_SAVE_DIR is set (tools/bg/* set it so the headless background copy never reads or
+        /// writes the owner's real save, which every copy of the project shares via persistentDataPath).
+        /// </summary>
+        public static string SaveDir
+        {
+            get
+            {
+#if UNITY_EDITOR
+                string d = Environment.GetEnvironmentVariable("IDLEGROUNDS_SAVE_DIR");
+                if (!string.IsNullOrEmpty(d)) return d;
+#endif
+                return Application.persistentDataPath;
+            }
+        }
 
         /// <summary>Set by Reset: nothing is written again until the scene reloads.</summary>
         public bool SavingDisabled { get; private set; }
