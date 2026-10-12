@@ -9,6 +9,7 @@ namespace IdleGrounds.Sim.Tests
     /// lantern — a few dozen bytes per tick on average. Before the non-alloc pass this was ~64
     /// allocations / ~15 KB per tick.
     /// </summary>
+    [Category("UnityOnly")]   // needs the Unity profiler GC counters; excluded from the plain .NET run (tools/simtests)
     public class SimTickAllocTests
     {
         [Test]

@@ -8,7 +8,18 @@ namespace IdleGrounds.Sim.Tests
         public const string DataPath = "Assets/_Project/Data/Source/game-data.json";
         static string _json;
 
-        public static string Json => _json ??= File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), DataPath));
+        public static string Json => _json ??= File.ReadAllText(Resolve());
+
+        // Unity runs tests with the project root as cwd; plain .NET (tools/simtests) runs from bin/, so walk up to the repo root.
+        static string Resolve()
+        {
+            for (var dir = new DirectoryInfo(Directory.GetCurrentDirectory()); dir != null; dir = dir.Parent)
+            {
+                var p = Path.Combine(dir.FullName, DataPath);
+                if (File.Exists(p)) return p;
+            }
+            return Path.Combine(Directory.GetCurrentDirectory(), DataPath);
+        }
 
         /// <summary>
         /// Fresh config each call (tests may mutate it), with TEST scaling ON (timers ×0.2, costs ×0.5): the unit

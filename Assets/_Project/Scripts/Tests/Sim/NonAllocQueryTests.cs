@@ -152,6 +152,7 @@ namespace IdleGrounds.Sim.Tests
         // ---- allocation ----
 
         [Test]
+        [Category("UnityOnly")]   // needs the Unity profiler GC counters; excluded from the plain .NET run (tools/simtests)
         public void NonAllocQueries_DoNotAllocate()
         {
             var sim = Played();

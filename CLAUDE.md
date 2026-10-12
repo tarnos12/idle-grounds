@@ -69,3 +69,15 @@ Default five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `
 ### Domain docs
 
 Single-context: one root `CONTEXT.md` + `docs/adr/` (created lazily). See `docs/agents/domain.md`.
+
+## Testing
+
+- **After every change: run the fast .NET sim tests** — `tools/simtests/run.sh`
+  (or `powershell -ExecutionPolicy Bypass -File tools/simtests/run.ps1`). Plain
+  `dotnet test` over the linked Sim sources + `Tests/Sim`; no Unity editor needed
+  (168 tests, ~30 s). Excludes `Slow` and `UnityOnly`.
+- `tools/simtests/run.sh --all` also runs the `Slow` playthrough bots (171 tests, ~70 s).
+- `UnityOnly` tests (profiler GC-allocation: `SimTickAllocTests`, `NonAllocQueries_DoNotAllocate`)
+  only run in Unity.
+- **Full Unity EditMode + PlayMode (+ Slow playthroughs) only at milestones / before
+  builds** — they block the editor (~177 EditMode tests incl. 4 Game tests, several minutes).

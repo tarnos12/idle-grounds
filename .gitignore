@@ -48,3 +48,7 @@ old-game/dist/
 /Assets/Screenshots/
 /Assets/Screenshots.meta
 /Screenshots/
+
+# .NET sim tests
+/tools/simtests/bin/
+/tools/simtests/obj/

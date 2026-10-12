@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: .NET sim test runner (tools/simtests, dotnet test over linked Sim + Tests/Sim): fast 168 tests ~30 s (`tools/simtests/run.sh`), `--all` adds 3 Slow playthroughs (171, ~70 s); UnityOnly alloc tests stay in Unity. Full Unity EditMode/PlayMode only at milestones (CLAUDE.md Testing).
+
 - 2026-10-12: Game.unity split — each Island_<key> generated hierarchy is a prefab (Assets/_Project/Prefabs/Islands/Generated, 10–12 MB each); scene 78 MB → 0.4 MB. Builders wrap edits in `using (IslandPrefabs.Edit())`; menu Idle Grounds/World/Save Islands To Prefabs. Coast smoothing (SmoothCoast + 'Re-cut Island Coasts From Seed') is applied but came out boxy; owner asked for a redo (natural coastline, tiles must connect) — next task. Tests 177/177.
 
 - 2026-10-12 art: vertical sidewalls + variants (no rotation; seeded variants), _3q undersides under the south walls (WallTuck 2.2, roots speck masked), fishing macro v3 enabled (needs repair), sky background islands confirmed. Tests 177/177; Game.unity 78.4 MB. Sidewall width/end frames and the fishing macro sent back to the artist.
