@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-13: visual pass A1 merged (UI): confirm dialog title + growing button, current wording (no ascension), MetaText.FmtPlaytime, Debug only in editor/dev builds, EnforceLayerOrder + ModalScrim, UiDock, recipe captions, Altar tree fit/pan/state cues, build menu paging, docks/bottom bar/quest claim/stats/help/toast polish. New menu Idle Grounds/UI/Rebuild UI Prefabs + Skins (UiRebuild.cs). EditMode 175 pass/1 skip.
+
 - 2026-10-13: designer-team visual pass — 100-shot tour (scratchpad/tour, tools/bg/tour.sh), 4 reviews in docs/reviews/2026-10-13-*, merged plan docs/reviews/2026-10-13-visual-pass-plan.md (A 27 no-input fixes, B 9 needing answers, C 77 art files). 8 owner questions in the Hub. Batch A split into 3 builders in separate background task copies.
 
 - 2026-10-12: coast redo #4 merged from bg/coast-curves (first background-copy feature): curved coastlines — wide-blurred seed outline + gentle swell, one straight segment per crossed cell (CoastShapeTile, Editor/CoastCurves.cs), walls laid by arc length with taper, curved lips/side faces, per-pixel veil masks. EditMode 175/175 in the bg copy, fast sim 167/167. Art hook: island_<biome>_cliffwall_round_32x96_4f. Sign-off asked (coast4_signoff).

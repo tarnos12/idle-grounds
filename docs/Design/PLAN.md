@@ -1,14 +1,13 @@
 # Idle Grounds: plan
 
-Updated 2026-10-12 23:16. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-12 23:54. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**16 of 34 tasks done**, 5 in progress, 1 to do, 4 blocked, 8 waiting.
+**17 of 34 tasks done**, 4 in progress, 1 to do, 4 blocked, 8 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A fixes in the background copy (3 builders)
-- **M3** Visual pass batch A1: UI fixes (buttons, wording, dialogs, scrim, tree, menus): Sonnet builder in background copy ui-fixes
 - **M3** Visual pass batch A2: world labels and overlays: Opus builder in background copy world-labels
 - **M3** Visual pass batch A3: world art in code (veil, ground, cliffs, paths, rack/bridge): Opus builder in background copy world-art
 
@@ -17,7 +16,7 @@ Updated 2026-10-12 23:16. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 2 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 4 / 13 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 5 / 13 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -81,7 +80,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Blocked | Cliff wall seam and stripe fix | The artist's cliff tiles still have transparent seams and a light-to-dark stripe per tile; patched in code for now. | Artist |
 | Done | Smooth stepped and long-straight coasts | Signed off 2026-10-12: curved coastlines with walls, lips and side faces following the curve. | Claude |
 | In progress | Designer team visual pass: find and fix what makes the game look off **(NOW)** | 4 reviews done (docs/reviews/2026-10-13-*); merged plan docs/reviews/2026-10-13-visual-pass-plan.md: Batch A 27 fixes (no input), Batch B 9 (your answers), Batch C 77 new art files. | Claude |
-| In progress | Visual pass batch A1: UI fixes (buttons, wording, dialogs, scrim, tree, menus) **(NOW)** | VP-01..05, 08, 09, 18, 21-26: stale ascension wording, overflowing confirm button, playtime, Debug button, dim behind dialogs, hand chip overlap, recipe names, Altar tree fit and states, build menu, bars and docks, dialog text. | Claude |
+| Done | Visual pass batch A1: UI fixes (buttons, wording, dialogs, scrim, tree, menus) | VP-01..05, 08, 09, 18, 21-26: stale ascension wording, overflowing confirm button, playtime, Debug button, dim behind dialogs, hand chip overlap, recipe names, Altar tree fit and states, build menu, bars and docks, dialog text. | Claude |
 | In progress | Visual pass batch A2: world labels and overlays **(NOW)** | VP-06, 07, 10, 13, 15, 19, 20: readable plated world labels, Heavenly Gate captions, converter strips by zoom, pixel-line overlays, decor vs interactable, hover tags, placement/demolish feedback. | Claude |
 | In progress | Visual pass batch A3: world art in code (veil, ground, cliffs, paths, rack/bridge) **(NOW)** | VP-11, 12, 14, 16, 17: veil seams + coast leak, interim rack and bridge backings, seeded ground variety, cliff/underside/lip noise, rounded paths/plaza/islets. | Claude |
 | Blocked | Visual pass batch B: changes that need your answers | VP-28..36: zoom vs crisp pixels, Shrine/Request panels, first-run guidance, UI look, bottom bar, ground/sky mood, prop redraws, Fishing ground. | Claude |

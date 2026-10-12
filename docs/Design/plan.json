@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-12 23:16",
+  "updated": "2026-10-12 23:54",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -213,10 +213,9 @@
         {
           "title": "Visual pass batch A1: UI fixes (buttons, wording, dialogs, scrim, tree, menus)",
           "detail": "VP-01..05, 08, 09, 18, 21-26: stale ascension wording, overflowing confirm button, playtime, Debug button, dim behind dialogs, hand chip overlap, recipe names, Altar tree fit and states, build menu, bars and docks, dialog text.",
-          "status": "in-progress",
+          "status": "done",
           "size": "L",
-          "owner": "Claude",
-          "now": "Sonnet builder in background copy ui-fixes"
+          "owner": "Claude"
         },
         {
           "title": "Visual pass batch A2: world labels and overlays",
