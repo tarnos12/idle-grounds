@@ -52,7 +52,8 @@ namespace IdleGrounds.Game
             {
                 float f = canvas.rootCanvas.scaleFactor;
                 var screen = hand.CursorScreen + new Vector2(offsetPx.x, -offsetPx.y) * f;
-                RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, null, out var local);
+                var rc = canvas.rootCanvas;   // Screen Space - Camera canvases (the batch screenshot tool) need their camera here
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, rc.renderMode == RenderMode.ScreenSpaceOverlay ? null : rc.worldCamera, out var local);
                 chip.anchoredPosition = Clamp(local);
             }
             float s = 1f;

@@ -5,7 +5,11 @@
 #   mode "play" (default: real Play-mode boot through GameRunner, fresh run or `save`) | "edit" (scene as authored)
 #   width/height (1920x1080), warmupFrames (60), ui (false: world only; true: canvases drawn too),
 #   save (path to an idle-grounds-save.json to boot from), timeoutSeconds (300),
-#   shots: [{ name, island ("center", "farm", ...; empty = absolute), fit (whole Island), x, y (offset / position, cells), size (ortho half-height, cells) }]
+#   shots: [{ name, island ("center", "farm", ...; empty = absolute), fit (whole Island), x, y (offset / position, cells), size (ortho half-height, cells),
+#            zoom (1..6 game zoom: goes through the real CameraController, so zoom limits + pan clamp apply), startView, veils ("on"|"off"),
+#            frames (stepped frames before the shot, default 4; 1 frame = 20 ms of game time), act: ["welcomeClose", "build", "place:kiln@center,66,48", ...] }]
+#   act commands: see Assets/_Project/Scripts/Editor/BatchActs.cs. Play mode steps the player loop itself (EditorApplication.Step), so Update/HUD run.
+#   spec.hideVeils hides every locked Island veil. Visual tour: bash tools/bg/tour.sh <outDir>.
 # PNGs go to --out (default <bg>/Logs/bg/shots/<time>/); the path list is printed at the end.
 source "$(dirname "$0")/common.sh" "$@"; set -- "${ARGS[@]}"
 [ -n "$1" ] || die "usage: shot.sh <spec.json|preset> [--out dir] [--edit] [--ui] [--save file]" 64

@@ -20,7 +20,7 @@ namespace IdleGrounds.Editor
     ///                                 (mode "play": real Play mode boot via GameRunner; mode "edit": scene as authored).
     /// </summary>
     [InitializeOnLoad]
-    public static class Batch
+    public static partial class Batch
     {
         const string DefaultScene = "Assets/_Project/Scenes/Game.unity";
         const string Tag = "[Batch] ";
@@ -143,6 +143,17 @@ namespace IdleGrounds.Editor
             public float x, y;
             /// <summary>Orthographic half-height in cells (0 = 12).</summary>
             public float size;
+            /// <summary>Game zoom 1..6 (view width = 17.5 cells x zoom): positions the camera through the real
+            /// CameraController (zoom limits AND pan clamp to the unlocked Islands apply, as for a player). 0 = use size.</summary>
+            public float zoom;
+            /// <summary>Start view of a run (CameraController.ResetToStart at its start zoom).</summary>
+            public bool startView;
+            /// <summary>"on" = locked Islands' fog veils shown, "off" = hidden, "" = spec.hideVeils decides.</summary>
+            public string veils = "";
+            /// <summary>Tour scripting: commands run before this shot (see Batch.RunActs): welcome, closeall, build, place:type@island,row,col, ...</summary>
+            public string[] act = new string[0];
+            /// <summary>Frames to let the scene run after placing/acting before the capture (0 = 4).</summary>
+            public int frames;
         }
 
         const string KActive = "IG.Batch.Shots.Active", KSpec = "IG.Batch.Shots.Spec", KOut = "IG.Batch.Shots.Out",
@@ -220,6 +231,9 @@ namespace IdleGrounds.Editor
             int phase = SessionState.GetInt(KPhase, 0);
             if (phase == 2) { if (!EditorApplication.isPlaying) Finish(-1, null); return; }    // waiting for Play mode to stop
             if (!EditorApplication.isPlaying) return;                                           // still entering
+            // batch mode never advances the player loop on its own (Time.frameCount stays 1, no Update): step it
+            if (!EditorApplication.isPaused) EditorApplication.isPaused = true;
+            EditorApplication.Step();
 
             if (phase == 0) { SessionState.SetInt(KPhase, 1); playFrames = 0; shotIndex = 0; settle = -1; captured = 0; }
             if (++playFrames < Math.Max(1, playSpec.warmupFrames)) return;
@@ -235,13 +249,15 @@ namespace IdleGrounds.Editor
                     // (UI canvases included), then let a few frames run so LateUpdate followers (parallax sky) catch up
                     var cc = UnityEngine.Object.FindFirstObjectByType<CameraController>();
                     if (cc != null) cc.enabled = false;
+                    RunActs(shots[shotIndex]);
                     if (!Place(playSpec, shots[shotIndex])) { shotIndex++; return; }
-                    BeginLoopCapture(playSpec);
-                    settle = 4;
+                    BeginLoopCapture(playSpec, shots[shotIndex]);
+                    settle = shots[shotIndex].frames > 0 ? shots[shotIndex].frames : 4;
                     return;
                 }
                 if (--settle > 0) return;
                 string outDir = SessionState.GetString(KOut, "");
+                Debug.Log(Tag + "capture " + shots[shotIndex].name + ": frame " + Time.frameCount + ", time " + Time.time.ToString("0.00") + " real " + Time.realtimeSinceStartup.ToString("0.00") + " simNow " + GameRunner.Instance.SimNow.ToString("0") + " editorUpdates " + playFrames + ", camera renders since placed " + loopRenders + ", welcome " + (MetaUiController.Instance != null && MetaUiController.Instance.Welcome.IsOpen));
                 bool ok = loopRenders > 0
                     ? SaveRT(loopRT, Path.Combine(outDir, Sanitize(shots[shotIndex].name) + ".png"), shots[shotIndex].name, "player loop")
                     : CaptureShot(playSpec, shots[shotIndex], outDir, true);   // fallback: explicit render request
@@ -260,7 +276,7 @@ namespace IdleGrounds.Editor
 
         static void CountRender(ScriptableRenderContext ctx, Camera c) { if (c == GameCamera()) loopRenders++; }
 
-        static void BeginLoopCapture(ShotSpec spec)
+        static void BeginLoopCapture(ShotSpec spec, Shot shot)
         {
             var cam = GameCamera();
             int w = Mathf.Max(16, spec.width), h = Mathf.Max(16, spec.height);
@@ -272,9 +288,9 @@ namespace IdleGrounds.Editor
             }
             cam.targetTexture = loopRT;
             cam.aspect = w / (float)h;
-            if (spec.hideVeils)
-                foreach (var isl in UnityEngine.Object.FindObjectsByType<IdleGrounds.Game.Island>(FindObjectsSortMode.None))
-                    if (isl.veil != null) isl.veil.SetActive(false);
+            bool hide = shot.veils == "off" || (shot.veils != "on" && spec.hideVeils);
+            foreach (var isl in UnityEngine.Object.FindObjectsByType<IdleGrounds.Game.Island>(FindObjectsSortMode.None))
+                if (isl.veil != null) isl.veil.SetActive(!hide && !isl.unlocked);
             if (spec.ui)
             {
                 // re-attach every shot: a camera-space canvas only refits to the camera when it is (re)assigned
@@ -368,10 +384,18 @@ namespace IdleGrounds.Editor
                 else c = isl.Centre + new Vector2(s.x, s.y);
             }
             var p = cam.transform.position;
-            cam.transform.position = new Vector3(c.x, c.y, p.z);
             cam.orthographic = true;
-            cam.orthographicSize = size;
             cam.aspect = aspect;
+            var cc = UnityEngine.Object.FindFirstObjectByType<CameraController>();
+            if ((s.zoom > 0 || s.startView) && cc != null)
+            {
+                cam.transform.position = new Vector3(c.x, c.y, p.z);
+                if (s.startView) { cc.SetZoomImmediate(2f); cc.ResetToStart(); }
+                else { cc.SetZoomImmediate(s.zoom); cc.CenterOn(c); }
+                return true;
+            }
+            cam.transform.position = new Vector3(c.x, c.y, p.z);
+            cam.orthographicSize = size;
             return true;
         }
 
