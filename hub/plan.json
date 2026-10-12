@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-12 10:41",
+  "updated": "2026-10-12 10:44",
   "milestones": [
     {
       "id": "M1",
@@ -154,10 +154,10 @@
         {
           "title": "Smooth stepped and long-straight coasts",
           "detail": "Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.",
-          "status": "blocked",
+          "status": "waiting",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Smoothed version came out boxy; your pick in the Questions tab ('coast_shape')"
+          "blockedBy": "Your pick: redo — natural coastline, tiles must connect better. Starts after the test run finishes"
         }
       ]
     },

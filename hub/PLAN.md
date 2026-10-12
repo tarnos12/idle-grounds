@@ -1,6 +1,6 @@
 # Plan
 
-Updated 2026-10-12 10:41. in-progress: 1, blocked: 4, waiting: 8, done: 12
+Updated 2026-10-12 10:44. in-progress: 1, blocked: 3, waiting: 9, done: 12
 
 ## Being worked on now
 
@@ -60,9 +60,9 @@ Updated 2026-10-12 10:41. in-progress: 1, blocked: 4, waiting: 8, done: 12
 - [ ] **Cliff wall seam and stripe fix** (blocked, S, Artist)
   - The artist's cliff tiles still have transparent seams and a light-to-dark stripe per tile; patched in code for now.
   - Why: Waiting for the artist's corrected cliff walls (ART-SPEC delivery log)
-- [ ] **Smooth stepped and long-straight coasts** (blocked, M, Claude)
+- [ ] **Smooth stepped and long-straight coasts** (waiting, M, Claude)
   - Diagonal coasts read as rows of short pillars; reshape the coastline so cliffs run in longer, natural stretches.
-  - Why: Smoothed version came out boxy; your pick in the Questions tab ('coast_shape')
+  - Why: Your pick: redo — natural coastline, tiles must connect better. Starts after the test run finishes
 
 ## M4: Art coverage
 
