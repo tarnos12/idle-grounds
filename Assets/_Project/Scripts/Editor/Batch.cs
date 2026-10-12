@@ -126,6 +126,8 @@ namespace IdleGrounds.Editor
             /// <summary>Play mode: save file to boot from (copied into IDLEGROUNDS_SAVE_DIR). Empty = fresh run.</summary>
             public string save = "";
             public int timeoutSeconds = 300;
+            /// <summary>Hide every locked Island's fog veil while shooting (art review of locked Islands).</summary>
+            public bool hideVeils;
             public Shot[] shots = new Shot[0];
         }
 
@@ -270,6 +272,9 @@ namespace IdleGrounds.Editor
             }
             cam.targetTexture = loopRT;
             cam.aspect = w / (float)h;
+            if (spec.hideVeils)
+                foreach (var isl in UnityEngine.Object.FindObjectsByType<IdleGrounds.Game.Island>(FindObjectsSortMode.None))
+                    if (isl.veil != null) isl.veil.SetActive(false);
             if (spec.ui)
             {
                 // re-attach every shot: a camera-space canvas only refits to the camera when it is (re)assigned

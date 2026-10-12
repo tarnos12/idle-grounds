@@ -16,7 +16,7 @@ Judge art as it appears in the running game and run the art-intake accept / reje
 1. **Sixteen standing Drive rules** (summary): read status first; start new actionable work at once; follow the latest priorities; identify new files via ledger + intake log; inspect before integrating; integrate per manifest within technical constraints; confirm in Play screenshots before accepting; delivered / validated / integrated / accepted are different; document defects with exact filenames + evidence; re-read and merge before writing; upload requested outputs and verify; recheck Drive after each integration; blockers per task; stop only when nothing actionable remains (leave a resume point in HANDOFF); stay quiet when nothing changed; never claim work without evidence.
 2. Accept only after seeing it in Play at closest and furthest zoom.
 3. Never replace a good pinned asset with a regression.
-4. Coast: no 90-degree angles, no 1-cell staircases, tiles connect (owner rule).
+4. Coast: no 90-degree angles, no 1-cell staircases, tiles connect, corners read as curves (owner rules). Since coast redo #4 the coast is a curve (`Editor/CoastCurves.cs`): one straight segment per crossed cell, ground / wall / lip / side-face pieces composed at build time into `Art/Islands/Coast/coast_{ground,wall,edge}_<biome>.png` (tiles in `Tiles/Coast`). Review curves at closest zoom for wall streaks on steep W/E turns, lip gaps on N coasts and tile-edge lines; screenshots: `bash tools/bg/shot.sh coast4` (veils hidden) and `coast4-veil`.
 5. 3/4 view only; PPU 32; Point; integer scale.
 
 ## Checklists

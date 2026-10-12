@@ -1091,10 +1091,12 @@ namespace IdleGrounds.Editor
             var b = isl.coast.cellBounds;
             var land = new HashSet<Vector2Int>();
             var triAt = new Dictionary<Vector2Int, int>();         // 45° diagonal half cells (land for every neighbour test)
+            bool curved = false;                                   // curved coast (CoastCurves): its cells carry the edge art themselves
             foreach (var p in b.allPositionsWithin)
             {
                 var tt = isl.coast.GetTile(p);
                 if (tt == null) continue;
+                if (tt is CoastShapeTile) { curved = true; continue; }      // partial cells: never "land" for decals / scatter
                 land.Add(new Vector2Int(p.x, p.y));
                 int dc = DiagCode(tt);
                 if (dc > 0) triAt[new Vector2Int(p.x, p.y)] = dc;
@@ -1372,8 +1374,11 @@ namespace IdleGrounds.Editor
                     }
             }
 
+            // ---- curved coast: lip + W / E side faces follow the curve (composed per cell, CoastCurves)
+            if (curved) CoastCurves.BuildEdges(isl, root, CoastCurves.Map.Read(isl.coast, Cells));
+
             // ---- coast grass lip on the W / E / N coasts (ART-SPEC §3.6; the south coast has the 3/4 cliff wall)
-            if (kit.lip != null)
+            if (kit.lip != null && !curved)
             {
                 // the 4 px overhang sticks OUT of the coast: each direction is its own tilemap nudged outward so the lip
                 // starts at the blob tiles' visible edge (CoastInset px inside the cell) and overhangs 4 px past it
@@ -1411,7 +1416,7 @@ namespace IdleGrounds.Editor
             //      cliff wall (Ground -3): a side face belongs to land further south, in front of a recessed wall. The cell
             //      that also faces south (the wall starts under it) gets the tapering end frame. Sky-layer shadow copies keep
             //      the drop shadow matching the silhouette; the veil mask already covers one cell around the land.
-            if (kit.sideW != null)
+            if (kit.sideW != null && !curved)
             {
                 // the face is drawn in the sky cell beside the coast; the tilemap is nudged toward the island so the face's
                 // grass column lands 1 px outside the blob tiles' visible edge (under the lip), the rock hanging past it

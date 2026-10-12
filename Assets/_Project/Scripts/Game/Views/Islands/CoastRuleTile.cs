@@ -17,7 +17,8 @@ namespace IdleGrounds.Game
 
         public override bool RuleMatch(int neighbor, TileBase other)
         {
-            if (other != null && other != this && kin != null && System.Array.IndexOf(kin, other) >= 0) other = this;
+            if (other is CoastShapeTile) other = this;
+            else if (other != null && other != this && kin != null && System.Array.IndexOf(kin, other) >= 0) other = this;
             return base.RuleMatch(neighbor, other);
         }
     }

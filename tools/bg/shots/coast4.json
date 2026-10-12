@@ -1,0 +1,89 @@
+{
+  "mode": "play",
+  "width": 1920,
+  "height": 1080,
+  "warmupFrames": 60,
+  "ui": false,
+  "save": "",
+  "hideVeils": true,
+  "shots": [
+    {
+      "name": "center_whole",
+      "island": "center",
+      "fit": true
+    },
+    {
+      "name": "center_sw",
+      "island": "center",
+      "x": -46,
+      "y": -46,
+      "size": 14
+    },
+    {
+      "name": "center_se",
+      "island": "center",
+      "x": 40,
+      "y": -60,
+      "size": 14
+    },
+    {
+      "name": "center_s",
+      "island": "center",
+      "x": -5,
+      "y": -56,
+      "size": 12
+    },
+    {
+      "name": "center_n",
+      "island": "center",
+      "x": 0,
+      "y": 50,
+      "size": 14
+    },
+    {
+      "name": "center_e",
+      "island": "center",
+      "x": 56,
+      "y": 10,
+      "size": 14
+    },
+    {
+      "name": "center_islet",
+      "island": "center",
+      "x": -62,
+      "y": 7,
+      "size": 10
+    },
+    {
+      "name": "fishing_whole",
+      "island": "fishing",
+      "fit": true
+    },
+    {
+      "name": "fishing_s",
+      "island": "fishing",
+      "x": 0,
+      "y": -50,
+      "size": 16
+    },
+    {
+      "name": "volcano_whole",
+      "island": "volcano",
+      "fit": true
+    },
+    {
+      "name": "volcano_sw",
+      "island": "volcano",
+      "x": -46,
+      "y": -46,
+      "size": 16
+    },
+    {
+      "name": "farm_s",
+      "island": "farm",
+      "x": 0,
+      "y": -52,
+      "size": 14
+    }
+  ]
+}
