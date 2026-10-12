@@ -17,13 +17,14 @@ namespace IdleGrounds.Editor
     /// builders) and from then on belongs to the scene - it is never overwritten unless you explicitly run
     /// "Idle Grounds/World/Regenerate Island Coasts (overwrites)". Paint over it by hand in the Tile Palette
     /// whenever you like; "Rebuild Island Rim + Underside + Veil" then re-derives everything that hangs off it:
-    ///   - CliffRim tilemap: a cliff cell under every south-facing edge (diagonals, corners, end caps),
+    ///   - CliffRim tilemap: the 3-cell south wall under every south-facing edge, one piece per joint (BuildCliff: run /
+    ///     free end at an outer corner / tucked end at a concave step),
     ///   - Underside (3/4 view): compact native-scale hanging rock under SOUTH-facing edges only + pixel cloud puffs,
-    ///   - Shadow: a translucent black copy of the silhouette offset half a cell down-right onto the sky,
+    ///   - Shadow: a translucent black copy of the silhouette offset 6 px down-right onto the sky (contact shadow),
     ///   - Veil: tiled fog masked (SpriteMask) to the landmass + rim + underside while the Island is locked,
     ///   - Boundary: a low stone wall marking the playable square.
-    /// Every painted coast is re-cut by <see cref="SmoothCoast"/> (coarse irregular lattice: straight runs of 4+ cells,
-    /// steps of 3+ rows, no 1-cell staircases). The Islands live in prefabs (<see cref="IslandPrefabs"/>); the menus
+    /// Every painted coast is re-cut by <see cref="SmoothCoast"/> (blurred seed outline on a fine irregular 2-3 cell
+    /// lattice: follows the curve, runs of 2+ cells, no 1-cell staircases; islets redrawn as rounded clumps). The Islands live in prefabs (<see cref="IslandPrefabs"/>); the menus
     /// unpack them, rebuild and save them back.
     /// </summary>
     public static class IslandCoastBuilder
@@ -365,12 +366,12 @@ namespace IdleGrounds.Editor
         // ------------------------------------------------------------------ coast smoothing (owner pick 2026-10-12)
 
         // Diagonal coasts painted cell by cell read as rows of 1-cell pillars once the 3-cell south cliff wall and the
-        // W/E side faces hang off every step. The coast is therefore re-cut on a coarse, IRREGULAR lattice (column
-        // widths StepMinX-StepMaxX, row heights StepMinY-StepMaxY, seeded per Island): every edge then runs in straight
-        // stretches of at least 4 cells (south / north faces: the cliff wall) and 3 rows (W / E faces: the wall's
-        // height), steps vary in size so diagonals read as hand-cut terraces rather than a regular staircase, and a soft
-        // blur first rounds the outline so lobes stay organic (a stepped curve, not a rectangle).
-        const int StepMinX = 4, StepMaxX = 7, StepMinY = 3, StepMaxY = 5, SmoothBlur = 2;
+        // W/E side faces hang off every step; a coarse 4-7 x 3-5 lattice (the first redo) read as boxy terraces. The
+        // seed outline is therefore blurred (organic curve, no noise jaggies) and re-cut on a FINE irregular lattice
+        // (column widths StepMinX-StepMaxX, row heights StepMinY-StepMaxY, seeded per Island): the outline follows the
+        // true curve, but every straight run is at least 2 cells and a diagonal becomes a staircase whose step lengths
+        // vary (2, 3, 4, 5, 6 ...) with the local slope - never a 1-cell stair, never a big rectangular block.
+        const int StepMinX = 2, StepMaxX = 3, StepMinY = 2, StepMaxY = 3, SmoothBlur = 2;
 
         /// <summary>
         /// Re-paints every Island's coast from its recorded <see cref="Island.coastSeed"/> (the same outline as before)
@@ -483,6 +484,8 @@ namespace IdleGrounds.Editor
             bool B(int x, int y) => x >= 0 && y >= 0 && x < bw && y < bh && b[x, y];
             int Nb(int x, int y) => (B(x + 1, y) ? 1 : 0) + (B(x - 1, y) ? 1 : 0) + (B(x, y + 1) ? 1 : 0) + (B(x, y - 1) ? 1 : 0);
 
+            void Clean()
+            {
             for (int iter = 0; iter < 8; iter++)
             {
                 bool changed = false;
@@ -505,13 +508,16 @@ namespace IdleGrounds.Editor
                     }
                 if (!changed) break;
             }
+            }
+            Clean();
 
             var q = new Queue<Vector2Int>();
             var dirs = new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
 
             // satellite islets: the blur and the strand rule erase small ones, so each detached islet of the input is
-            // re-cut from its raw coverage - the best-covered 2x2 blocks plus the best neighbouring block (>= 40%
-            // covered, an L-shaped chunk) - as long as it stays clear of other land
+            // re-cut from its raw coverage - every block at least half covered (a rounded clump of fine blocks), or for
+            // a tiny islet the best-covered 2x2 blocks plus the best neighbouring block - as long as it stays clear of
+            // other land
             var seen = new bool[w, h];
             for (int sx = 0; sx < w; sx++)
                 for (int sy = 0; sy < h; sy++)
@@ -543,7 +549,11 @@ namespace IdleGrounds.Editor
                                 if (sum > bestSum || (sum == bestSum && (wx < best.x || (wx == best.x && wy < best.y)))) { bestSum = sum; best = new Vector2Int(wx, wy); }
                             }
                     if (best.x < 0) continue;
-                    var pick = new List<Vector2Int> { best, best + Vector2Int.right, best + Vector2Int.up, best + Vector2Int.one };
+                    var pick = new List<Vector2Int>();
+                    foreach (var kv in cov) if (kv.Value * 2 >= area[kv.Key.x, kv.Key.y]) pick.Add(kv.Key);
+                    pick.Sort((p1, p2) => p1.x != p2.x ? p1.x.CompareTo(p2.x) : p1.y.CompareTo(p2.y));
+                    if (pick.Count >= 5) best = new Vector2Int(-1, -1);
+                    else pick = new List<Vector2Int> { best, best + Vector2Int.right, best + Vector2Int.up, best + Vector2Int.one };
                     Vector2Int extra = new Vector2Int(-1, -1); int extraCov = 0;
                     foreach (var pk in pick)
                         foreach (var d in dirs)
@@ -553,7 +563,7 @@ namespace IdleGrounds.Editor
                             int cv = Cov(n);
                             if (cv >= 0.4f * area[n.x, n.y] && cv > extraCov) { extraCov = cv; extra = n; }
                         }
-                    if (extra.x >= 0) pick.Add(extra);
+                    if (extra.x >= 0 && best.x >= 0) pick.Add(extra);
                     bool clear = true;
                     foreach (var pk in pick)
                         for (int dx = -1; dx <= 1 && clear; dx++)
@@ -583,8 +593,11 @@ namespace IdleGrounds.Editor
                     }
                 }
 
+            Clean();
+
             // specks: islets smaller than 2 blocks go; enclosed sea (lakes) is filled
             var comp = new int[bw, bh];
+            var isletIds = new HashSet<int>();
             int id = 0;
             for (int x = 0; x < bw; x++)
                 for (int y = 0; y < bh; y++)
@@ -600,6 +613,7 @@ namespace IdleGrounds.Editor
                         foreach (var d in dirs) { var n = p + d; if (B(n.x, n.y) && comp[n.x, n.y] == 0) { comp[n.x, n.y] = id; q.Enqueue(n); } }
                     }
                     if (!hasSq && cells.Count < 2) foreach (var c in cells) b[c.x, c.y] = false;
+                    else if (!hasSq) isletIds.Add(id);
                 }
             var sea = new bool[bw, bh];
             for (int x = 0; x < bw; x++) for (int y = 0; y < bh; y++)
@@ -611,9 +625,41 @@ namespace IdleGrounds.Editor
             }
 
             var o = new bool[w, h];
+            bool Isle(int x, int y) { int bx = colOf[x], by = rowOf[y]; return b[bx, by] && isletIds.Contains(comp[bx, by]); }
             for (int x = 0; x < w; x++)
                 for (int y = 0; y < h; y++)
-                    o[x, y] = InSquare(ox + x, oy + y) || b[colOf[x], rowOf[y]] || !sea[colOf[x], rowOf[y]];
+                    o[x, y] = InSquare(ox + x, oy + y) || ((b[colOf[x], rowOf[y]] || !sea[colOf[x], rowOf[y]]) && !Isle(x, y));
+
+            // satellite islets: block unions read as little rectangles, so each is redrawn at cell resolution as a rounded
+            // clump (superellipse) filling its block bounds (at least 5 x 5 cells), slightly squashed per islet; cells
+            // within 2 of the main land are left out so it stays detached
+            var mainLand = (bool[,])o.Clone();
+            foreach (int iid in isletIds)
+            {
+                int x0 = int.MaxValue, y0 = int.MaxValue, x1 = int.MinValue, y1 = int.MinValue;
+                for (int x = 0; x < w; x++)
+                    for (int y = 0; y < h; y++)
+                        if (b[colOf[x], rowOf[y]] && comp[colOf[x], rowOf[y]] == iid) { x0 = Mathf.Min(x0, x); x1 = Mathf.Max(x1, x); y0 = Mathf.Min(y0, y); y1 = Mathf.Max(y1, y); }
+                if (x0 > x1) continue;
+                while (x1 - x0 + 1 < 5) { if (((x1 - x0) & 1) == 0) x0--; else x1++; }
+                while (y1 - y0 + 1 < 5) { if (((y1 - y0) & 1) == 0) y0--; else y1++; }
+                float cx = (x0 + x1 + 1) * 0.5f, cy = (y0 + y1 + 1) * 0.5f, rx = (x1 - x0 + 1) * 0.5f, ry = (y1 - y0 + 1) * 0.5f;
+                float p = 2.2f + (HashU(iid, x0, seed + 31) % 100) / 100f * 0.8f;      // 2.2 (round) .. 3.0 (squarer)
+                for (int x = Mathf.Max(0, x0); x <= Mathf.Min(w - 1, x1); x++)
+                    for (int y = Mathf.Max(0, y0); y <= Mathf.Min(h - 1, y1); y++)
+                    {
+                        float dx = Mathf.Abs((x + 0.5f - cx) / rx), dy = Mathf.Abs((y + 0.5f - cy) / ry);
+                        if (Mathf.Pow(dx, p) + Mathf.Pow(dy, p) > 1f) continue;
+                        bool near = false;
+                        for (int ka = -2; ka <= 2 && !near; ka++)
+                            for (int kc = -2; kc <= 2 && !near; kc++)
+                            {
+                                int nx = x + ka, ny = y + kc;
+                                near = nx >= 0 && ny >= 0 && nx < w && ny < h && mainLand[nx, ny];
+                            }
+                        if (!near) o[x, y] = true;
+                    }
+            }
             return o;
         }
 
@@ -695,7 +741,35 @@ namespace IdleGrounds.Editor
             cliff.transform.localPosition = wall != null ? new Vector3(0f, -WallDrop, 0f) : Vector3.zero;
             if (cr0 != null) cr0.sortingOrder = wall != null ? -3 : -1;
             var tile = wall != null ? wall : AssetDatabase.LoadAssetAtPath<TileBase>(IslandArtBuilder.CliffTilePath(isl.islandKey));
-            if (tile != null)
+            var ws = wall != null ? IslandDressingBuilder.EnsureWallSet(isl.islandKey) : null;
+            if (ws != null)
+            {
+                // a wall further south on screen belongs to land in front: draw the rows top-down so it overlaps the one behind
+                if (cr0 != null) cr0.sortOrder = TilemapRenderer.SortOrder.TopLeft;
+                int seed = KeySeed(isl.islandKey) + 517;
+                var sorted = new List<Vector2Int>(set);
+                sorted.Sort((a, b) => a.y != b.y ? a.y.CompareTo(b.y) : a.x.CompareTo(b.x));
+                var mid = new Dictionary<Vector2Int, int>();
+                foreach (var c in sorted)
+                {
+                    var l = WallSide(set, land, c, -1);
+                    var r = WallSide(set, land, c, 1);
+                    TileBase t;
+                    if (l == Joint.Run && r == Joint.Run)
+                    {
+                        // mid variants: seeded, never the same one as the wall cell to the left
+                        int v = (int)(HashU(c.x, c.y, seed) % 3u);
+                        if (mid.TryGetValue(c + Vector2Int.left, out var pv) && pv == v) v = (v + 1 + (int)(HashU(c.x, c.y, seed + 1) % 2u)) % 3;
+                        mid[c] = v;
+                        t = ws.mid[v];
+                    }
+                    else if (r == Joint.Run) t = l == Joint.End ? ws.endL : ws.tuckL;
+                    else if (l == Joint.Run) t = r == Joint.End ? ws.endR : ws.tuckR;
+                    else t = ws.pair[(l == Joint.End ? 0 : 2) + (r == Joint.End ? 0 : 1)];
+                    cliff.SetTile(new Vector3Int(c.x, c.y, 0), t);
+                }
+            }
+            else if (tile != null)
             {
                 var pos = new List<Vector3Int>(set.Count);
                 foreach (var c in set) pos.Add(new Vector3Int(c.x, c.y, 0));
@@ -707,12 +781,29 @@ namespace IdleGrounds.Editor
             return set;
         }
 
+        enum Joint { Run, End, Tuck }
+
+        /// <summary>
+        /// How the south wall under rim cell <paramref name="c"/> meets its side <paramref name="dx"/> (-1 left, +1 right):
+        /// Run - the wall goes on (a rim cell beside it); Tuck - land further south stands beside it (a concave step: the
+        /// wall runs on behind that land, whose side face covers the joint) or a higher wall one row up overlaps it; End -
+        /// open sky (an outer corner: the free end cap, under the side face's tapering end frame).
+        /// </summary>
+        static Joint WallSide(HashSet<Vector2Int> rim, Land land, Vector2Int c, int dx)
+        {
+            var n = new Vector2Int(c.x + dx, c.y);
+            if (rim.Contains(n)) return Joint.Run;
+            if (land[n.x, n.y]) return Joint.Tuck;
+            if (rim.Contains(new Vector2Int(n.x, n.y + 1))) return Joint.Tuck;
+            return Joint.End;
+        }
+
         // 3/4 top-down: only the SOUTH-facing coast shows its cliff face, and the hanging underside is a compact
         // band of native-scale pieces under that south cliff (never beside the island, never stretched).
         const int BodyMaxRows = 3;                 // dark rock band right under the cliff rim (cells)
-        const int ChainStep = StepMaxY;            // an edge chain continues across a step of up to one lattice row (smoothed coasts step by 3-5)
+        const int ChainStep = 3;                   // an edge chain continues across a step of up to one lattice row (smoothed coasts step by 2-3)
         const float SecondRowDrop = 1.5f;          // the deeper, central second row of pieces starts this far down
-        const float WallDrop = 1f - 4f / 32f;      // the cliff-wall tilemap is shifted this many cells down: the wall's ragged top 4 px tuck behind the coast edge
+        const float WallDrop = 1f - 6f / 32f;      // the cliff-wall tilemap is shifted this many cells down: the wall's ragged top 6 px tuck behind the coast edge (4 px left sky specks under the blob tiles' 3 px inset)
         const int WallBelowRim = 2;                // the 3-cell wall reaches this many cells below the rim cell
         static bool HasWall;                       // set by BuildCliff: the delivered 3/4 cliff wall is in use
         const float WallTuck = 2.2f;               // rim cell top -> first opaque row of a hanging piece (the wall's dense part ends ~2.4 cells down, then dithers out)
@@ -949,9 +1040,13 @@ namespace IdleGrounds.Editor
 
         /// <summary>
         /// Soft drop shadow onto the sky: a black, semi-transparent copy of the landmass (same blob Rule Tile, so the
-        /// silhouette matches exactly) + cliff rim, offset half a cell down-right. Pixel-crisp, no blur; drawn on the
-        /// Sky layer above the cloud sea and below the underside.
+        /// silhouette matches exactly) + cliff rim, offset <see cref="ShadowOffset"/> down-right. Pixel-crisp, no blur; drawn
+        /// on the Sky layer above the cloud sea and below the underside.
         /// </summary>
+        // a contact shadow hugging the side faces and wall ends: half a cell (the old offset) left a detached dark block
+        // beside every W / E step of the coast
+        const float ShadowOffset = 6f / 32f;
+
         static void BuildShadow(Island isl, Land land, HashSet<Vector2Int> cliff)
         {
             var old = isl.transform.Find("Shadow");
@@ -959,7 +1054,7 @@ namespace IdleGrounds.Editor
             var root = new GameObject("Shadow").transform;
             root.SetParent(isl.transform, false);
             root.SetSiblingIndex(0);
-            root.localPosition = new Vector3(0.5f, -0.5f, 0f);
+            root.localPosition = new Vector3(ShadowOffset, -ShadowOffset, 0f);
             var shade = new Color(0f, 0f, 0f, 0.35f);
             Tilemap Map(string name)
             {
@@ -993,6 +1088,10 @@ namespace IdleGrounds.Editor
                 for (int i = 0; i < arr.Length; i++) arr[i] = cliffTile;
                 var rim = Map("Rim");
                 if (wallTile != null) rim.transform.localPosition = new Vector3(0f, -WallDrop, 0f);     // follows the 3-cell wall
+                // the wall's per-joint pieces (BuildCliff) when present, so the shadow keeps the same end caps
+                var built = isl.transform.Find("CliffRim") != null ? isl.transform.Find("CliffRim").GetComponent<Tilemap>() : null;
+                if (wallTile != null && built != null)
+                    for (int i = 0; i < arr.Length; i++) { var t = built.GetTile(pos[i]); if (t != null) arr[i] = t; }
                 rim.SetTiles(pos.ToArray(), arr);
             }
             EditorUtility.SetDirty(root.gameObject);

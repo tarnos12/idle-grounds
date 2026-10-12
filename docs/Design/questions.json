@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "g": "World look"
+  },
+  {
+    "id": "coast_signoff",
+    "q": "Coast redo: organic outline from the original shape, diagonals as 2-3 tile steps, and cliff walls, side faces and grass edges now join at every step and corner. Is this the look you want?",
+    "ctx": "Click a picture for full size. The playable area is unchanged.",
+    "imgs": [
+      {
+        "file": "question-images/coast2-whole.png",
+        "cap": "Center, whole island"
+      },
+      {
+        "file": "question-images/coast2-se-steps.png",
+        "cap": "South-east steps, normal zoom"
+      },
+      {
+        "file": "question-images/coast2-sw-corner.png",
+        "cap": "South-west corner, normal zoom"
+      },
+      {
+        "file": "question-images/coast2-fishing.png",
+        "cap": "Fishing, whole island"
+      }
+    ],
+    "o": [
+      [
+        "ok",
+        "Yes, keep it",
+        true
+      ],
+      [
+        "finer",
+        "Closer, but make the steps finer / rounder"
+      ],
+      [
+        "redo",
+        "No, redo with my note"
+      ]
+    ]
+  }
+]

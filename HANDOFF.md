@@ -145,6 +145,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-12: coast redo #2 — outline repainted from coastSeed with a fine 2–3 cell seeded lattice (organic, no 1-cell stairs, rounded islets); per-joint cliff walls (Run/End/Tuck via WallSide/Joint; composed joint sprites dress_cliffwall_<biome>_joints.png), inward side-face feet, 6 px wall tuck, shadow offset 6 px. Fast sim tests 168/168. Owner sign-off asked in the Hub (coast_signoff).
+
 - 2026-10-12: Hub upgraded to the hub-kit conventions: sources in docs/Design/ (plan.json with milestone status/goal/exit, questions.json, question-images/, owner-picks, islands.json), plan tools in tools/plan/ (set-task, build-plan → PLAN.md + Temp/plan/Idle-Grounds-Plan.pdf), new Islands tab (11-island map, unlock order, tributes, NPC requests, #islands/<id>).
 
 - 2026-10-12: .NET sim test runner (tools/simtests, dotnet test over linked Sim + Tests/Sim): fast 168 tests ~30 s (`tools/simtests/run.sh`), `--all` adds 3 Slow playthroughs (171, ~70 s); UnityOnly alloc tests stay in Unity. Full Unity EditMode/PlayMode only at milestones (CLAUDE.md Testing).

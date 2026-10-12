@@ -62,7 +62,7 @@ namespace IdleGrounds.Editor
             public Tile[] scatter, patch, path, plaza;
             public Tile[] macroArt, flowers, lip;      // ART-SPEC §3.6 delivered macro patches, flower clusters, coast grass lip (recoloured per biome)
             public Tile[] sideW, sideE;                // W / E 3/4 side faces: straight variants (delivered, Islands-034)
-            public Tile sideWEnd, sideEEnd;            // ... and the end pieces above the south cliff wall
+            public Tile[] sideWEnd, sideEEnd;          // ... and their feet above the south wall's free end (composed, per variant)
             public AnimatedTile pond;
             public AnimatedTile[] glow;
             public Color light, dark;
@@ -97,13 +97,14 @@ namespace IdleGrounds.Editor
             var sw = EnsureSideWall(biome);
             if (sw != null)
             {
-                var all = new List<Sprite>(sw.w); all.AddRange(sw.e); all.Add(sw.wEnd); all.Add(sw.eEnd);
+                var all = new List<Sprite>(sw.w); all.AddRange(sw.e); all.AddRange(sw.wEnd); all.AddRange(sw.eEnd);
                 var t = Tiles("SideWall_" + biome, all.ToArray());
                 int nw = sw.w.Length, ne = sw.e.Length;
-                k.sideW = new Tile[nw]; k.sideE = new Tile[ne];
+                k.sideW = new Tile[nw]; k.sideE = new Tile[ne]; k.sideWEnd = new Tile[nw]; k.sideEEnd = new Tile[ne];
                 System.Array.Copy(t, 0, k.sideW, 0, nw);
                 System.Array.Copy(t, nw, k.sideE, 0, ne);
-                k.sideWEnd = t[nw + ne]; k.sideEEnd = t[nw + ne + 1];
+                System.Array.Copy(t, nw + ne, k.sideWEnd, 0, nw);
+                System.Array.Copy(t, nw + ne + nw, k.sideEEnd, 0, ne);
             }
             FillTones(biome, out k.light, out k.dark, out k.textured);
             k.pale = k.light.r + k.light.g + k.light.b > 2.0f;
@@ -254,11 +255,145 @@ namespace IdleGrounds.Editor
                         px[i] = new Color32((byte)Mathf.Clamp(c.r * k, 0, 255), (byte)Mathf.Clamp(c.g * k, 0, 255), (byte)Mathf.Clamp(c.b * k, 0, 255), c.a);
                     }
             }
+            // the ragged grass top dips up to ~10 px deep in places; the wall tucks its top 6 px behind the coast edge
+            // (IslandCoastBuilder.WallDrop), so deeper dips showed sky specks between the coast edge and the wall's grass.
+            // Each body column's first opaque pixel is repeated up to that tuck line.
+            const int Tuck = 6;
+            for (int f = 0; f < 8; f++)
+                for (int x = 0; x < 32; x++)
+                {
+                    int t = -1;
+                    for (int r = 0; r < 16 && t < 0; r++) if (px[(h - 1 - r) * w + f * 32 + x].a > 0) t = r;
+                    if (t <= Tuck) continue;
+                    bool body = px[(h - 1 - 20) * w + f * 32 + x].a > 0;       // a wall column, not the open side of an end frame
+                    if (!body) continue;
+                    var c = px[(h - 1 - t) * w + f * 32 + x];
+                    for (int r = Tuck; r < t; r++) px[(h - 1 - r) * w + f * 32 + x] = c;
+                }
             string path = $"{ArtDir}/dress_cliffwall_{biome}_32x96_8f.png";
             WriteIfChanged(path, w, h, px);
             Import(path, 8, 32);
             return IslandArtBuilder.Frames(path);
         }
+
+        /// <summary>Px the free wall ends reach past their cell: out to the W / E side face's outer column, so the face's
+        /// tapering foot lands on the wall's end instead of beside it (the blob coast edge is 3 px inside the cell).</summary>
+        public const int WallEndReach = 3;
+        /// <summary>Px a tucked wall end reaches under the land beside it: fills the blob tiles' 3 px transparent inset,
+        /// so no sky shows between that land's grass edge and the wall behind it.</summary>
+        public const int WallTuckReach = 4;
+
+        /// <summary>
+        /// The south cliff wall as explicit per-joint tiles (IslandCoastBuilder.BuildCliff picks one per rim cell from the
+        /// LAND around it, not just the neighbouring wall cells): 3 mid variants (0-2) and joint pieces composed at build
+        /// time from the delivered frames (<c>dress_cliffwall_&lt;biome&gt;_joints</c>, custom-pivot sprites wider than a cell):
+        ///   endL / endR - free end (frame 3 / 4) at an outer corner, reaching <see cref="WallEndReach"/> px outward so it
+        ///                 meets the side face above it (a mid column fills the 3 px it leaves on the inner side);
+        ///   tuckL / tuckR - inner frame (5 / 6) where the wall runs on behind land further south (a concave step) or a
+        ///                 higher wall, reaching <see cref="WallTuckReach"/> px under that land (mid columns);
+        ///   pair[l * 2 + r] - a cell special on BOTH sides (l, r: 0 end, 1 tuck): left half of one, right half of the other
+        ///                 (art request: a delivered narrow wall piece).
+        /// </summary>
+        public static WallSet EnsureWallSet(string biome)
+        {
+            if (!File.Exists(IslandArtBuilder.CliffWallPath(biome))) return null;
+            var f = RepairedCliffWall(biome);
+            if (f.Length < 7) return null;
+            string src = $"{ArtDir}/dress_cliffwall_{biome}_32x96_8f.png";
+            var px = ReadPng(src, out int w, out int h);
+            if (px == null || w != 256 || h != 96) return null;
+            Color32 C(int frame, int col, int y) => px[y * w + frame * 32 + col];
+            int E = WallEndReach, T = WallTuckReach;
+            // each piece: u range (px relative to the cell's left edge) and the source column for every u
+            var pieces = new List<(int u0, int u1, System.Func<int, int, Color32> at)>
+            {
+                (-E, 31, (u, y) => u <= 31 - E ? C(3, u + E, y) : C(0, u, y)),          // endL
+                (0, 31 + E, (u, y) => u < E ? C(0, u, y) : C(4, u - E, y)),             // endR
+                (-T, 31, (u, y) => u < 0 ? C(0, u + 32, y) : C(5, u, y)),               // tuckL
+                (0, 31 + T, (u, y) => u <= 31 ? C(6, u, y) : C(0, u - 32, y)),          // tuckR
+            };
+            for (int l = 0; l < 2; l++)
+                for (int r = 0; r < 2; r++)
+                {
+                    var L = pieces[l == 0 ? 0 : 2];
+                    var R = pieces[r == 0 ? 1 : 3];
+                    pieces.Add((L.u0, R.u1, (u, y) => u < 16 ? L.at(u, y) : R.at(u, y)));
+                }
+            int total = 0;
+            foreach (var p in pieces) total += p.u1 - p.u0 + 1;
+            var o = new Color32[total * 96];
+            var rects = new List<(int x, int w, float pivot)>();
+            int x0 = 0;
+            foreach (var p in pieces)
+            {
+                int pw = p.u1 - p.u0 + 1;
+                for (int y = 0; y < 96; y++)
+                    for (int u = p.u0; u <= p.u1; u++) o[y * total + x0 + u - p.u0] = p.at(u, y);
+                rects.Add((x0, pw, (16f - p.u0) / pw));
+                x0 += pw;
+            }
+            string path = $"{ArtDir}/dress_cliffwall_{biome}_joints.png";
+            WriteIfChanged(path, total, 96, o);
+            var js = ImportRects(path, rects);
+            if (js.Length < 8) return null;
+            var t = Tiles("CliffWall_" + biome, new[] { f[0], f[1], f[2], js[0], js[1], js[2], js[3], js[4], js[5], js[6], js[7] });
+            return new WallSet { mid = new[] { t[0], t[1], t[2] }, endL = t[3], endR = t[4], tuckL = t[5], tuckR = t[6], pair = new[] { t[7], t[8], t[9], t[10] } };
+        }
+
+        /// <summary>Imports a horizontal strip of sprites with their own widths and horizontal pivots (vertical pivot centred,
+        /// PPU 32); returns them in strip order.</summary>
+        static Sprite[] ImportRects(string path, List<(int x, int w, float pivot)> rects)
+        {
+            var imp = (TextureImporter)AssetImporter.GetAtPath(path);
+            if (imp == null) return new Sprite[0];
+            imp.textureType = TextureImporterType.Sprite;
+            imp.spriteImportMode = SpriteImportMode.Multiple;
+            imp.spritePixelsPerUnit = 32;
+            imp.filterMode = FilterMode.Point;
+            imp.textureCompression = TextureImporterCompression.Uncompressed;
+            imp.mipmapEnabled = false;
+            imp.alphaIsTransparency = true;
+            imp.wrapMode = TextureWrapMode.Clamp;
+            imp.maxTextureSize = 4096;
+            var st = new TextureImporterSettings();
+            imp.ReadTextureSettings(st);
+            st.spriteMeshType = SpriteMeshType.FullRect;
+            st.spriteGenerateFallbackPhysicsShape = false;
+            imp.SetTextureSettings(st);
+            imp.SaveAndReimport();
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            var factory = new SpriteDataProviderFactories();
+            factory.Init();
+            var provider = factory.GetSpriteEditorDataProviderFromObject(imp);
+            provider.InitSpriteEditorDataProvider();
+            var existing = provider.GetSpriteRects();
+            bool same = existing != null && existing.Length == rects.Count;
+            for (int i = 0; same && i < rects.Count; i++)
+                same = existing[i].rect == new Rect(rects[i].x, 0, rects[i].w, tex.height) && Mathf.Abs(existing[i].pivot.x - rects[i].pivot) < 1e-4f;
+            if (!same)
+            {
+                string baseName = Path.GetFileNameWithoutExtension(path);
+                var list = new SpriteRect[rects.Count];
+                for (int i = 0; i < rects.Count; i++)
+                    list[i] = new SpriteRect
+                    {
+                        name = baseName + "_" + i,
+                        rect = new Rect(rects[i].x, 0, rects[i].w, tex.height),
+                        alignment = SpriteAlignment.Custom,
+                        pivot = new Vector2(rects[i].pivot, 0.5f),
+                        spriteID = existing != null && i < existing.Length ? existing[i].spriteID : GUID.Generate(),
+                    };
+                provider.SetSpriteRects(list);
+                provider.Apply();
+                imp.SaveAndReimport();
+            }
+            var all = new List<Sprite>();
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path)) if (o is Sprite s) all.Add(s);
+            all.Sort((a, b) => a.rect.x.CompareTo(b.rect.x));
+            return all.ToArray();
+        }
+
+        public class WallSet { public Tile[] mid, pair; public Tile endL, endR, tuckL, tuckR; }
 
         /// <summary>Transparent margin (px) of the delivered 47-blob coast tiles on their W / E / N edges (all 7 biomes):
         /// the visible coast edge sits this far inside the cell.</summary>
@@ -275,16 +410,57 @@ namespace IdleGrounds.Editor
         /// </summary>
         public static SideSet EnsureSideWall(string biome)
         {
-            var v = IslandArtBuilder.Frames($"{Inc}island_{biome}_sidewall_variants_32x32_8f.png");
-            if (v.Length >= 8)
-                return new SideSet { w = new[] { v[0], v[1], v[2] }, e = new[] { v[3], v[4], v[5] }, wEnd = v[6], eEnd = v[7] };
-            var f = IslandArtBuilder.Frames($"{Inc}island_{biome}_sidewall_32x32_4f.png");
-            if (f.Length >= 4)
-                return new SideSet { w = new[] { f[0] }, e = new[] { f[1] }, wEnd = f[2], eEnd = f[3] };
-            return null;
+            string vp = $"{Inc}island_{biome}_sidewall_variants_32x32_8f.png", fp = $"{Inc}island_{biome}_sidewall_32x32_4f.png";
+            var v = IslandArtBuilder.Frames(vp);
+            SideSet s = null;
+            if (v.Length >= 8) s = InwardEnds(biome, vp, new[] { 0, 1, 2 }, new[] { 3, 4, 5 }, 6, 7, new[] { v[0], v[1], v[2] }, new[] { v[3], v[4], v[5] });
+            else
+            {
+                var f = IslandArtBuilder.Frames(fp);
+                if (f.Length >= 4) s = InwardEnds(biome, fp, new[] { 0 }, new[] { 1 }, 2, 3, new[] { f[0] }, new[] { f[1] });
+            }
+            return s;
         }
 
-        public class SideSet { public Sprite[] w, e; public Sprite wEnd, eEnd; }
+        /// <summary>
+        /// The foot of a W / E face (the coast cell that also faces south, where the south wall's free end starts below it).
+        /// The delivered end frames taper OUTWARD (toward the sky), so the face ended in a dark stub beside the wall's end
+        /// cap. Composed instead from each straight variant: the same per-row width as the delivered end frame, but kept on
+        /// the grass side, so the band narrows INTO the corner and lands on the wall's end cap (which reaches out to meet
+        /// it, <see cref="WallEndReach"/>). Strip <c>dress_sidewall_&lt;biome&gt;_feet_32x32_&lt;2n&gt;f</c>: W feet, then E feet.
+        /// </summary>
+        static SideSet InwardEnds(string biome, string src, int[] wf, int[] ef, int wEndF, int eEndF, Sprite[] w, Sprite[] e)
+        {
+            var px = ReadPng(src, out int iw, out int ih);
+            if (px == null || ih != 32) return new SideSet { w = w, e = e, wEnd = w, eEnd = e };
+            int n = wf.Length, fw = 2 * n * 32;
+            var o = new Color32[fw * 32];
+            for (int y = 0; y < 32; y++)
+            {
+                int wdW = 0, wdE = 0;
+                for (int x = 0; x < 32; x++)
+                {
+                    if (px[y * iw + wEndF * 32 + x].a > 0) wdW++;
+                    if (px[y * iw + eEndF * 32 + x].a > 0) wdE++;
+                }
+                for (int i = 0; i < n; i++)
+                {
+                    for (int x = SideGrassCol + 1 - wdW; x <= SideGrassCol; x++) if (x >= 0) o[y * fw + i * 32 + x] = px[y * iw + wf[i] * 32 + x];
+                    int ge = 31 - SideGrassCol;
+                    for (int x = ge; x < ge + wdE && x < 32; x++) o[y * fw + (n + i) * 32 + x] = px[y * iw + ef[i] * 32 + x];
+                }
+            }
+            string path = $"{ArtDir}/dress_sidewall_{biome}_feet_32x32_{2 * n}f.png";
+            WriteIfChanged(path, fw, 32, o);
+            Import(path, 2 * n, 32);
+            var ft = IslandArtBuilder.Frames(path);
+            if (ft.Length < 2 * n) return new SideSet { w = w, e = e, wEnd = w, eEnd = e };
+            var we = new Sprite[n]; var ee = new Sprite[n];
+            System.Array.Copy(ft, 0, we, 0, n); System.Array.Copy(ft, n, ee, 0, n);
+            return new SideSet { w = w, e = e, wEnd = we, eEnd = ee };
+        }
+
+        public class SideSet { public Sprite[] w, e, wEnd, eEnd; }
 
         static readonly Dictionary<Sprite, int> _topMargin = new Dictionary<Sprite, int>();
 
@@ -1067,11 +1243,51 @@ namespace IdleGrounds.Editor
                 }
                 var sorted = new List<Vector2Int>(land);
                 sorted.Sort((a, b) => b.y != a.y ? b.y.CompareTo(a.y) : a.x.CompareTo(b.x));     // north first: memo depth stays 1
+                // a sky cell the 3-cell south wall of land above it hangs across: a face drawn there would stand in front
+                // of that recessed wall like a post (a concave step). The land's grass edge meets the wall directly instead
+                // (the wall's tucked end reaches under it, IslandCoastBuilder.BuildCliff).
+                bool OverWall(int fx, int fy)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        if (land.Contains(new Vector2Int(fx, fy + k + 1))) return true;
+                        if (land.Contains(new Vector2Int(fx, fy + k))) return false;
+                    }
+                    return false;
+                }
+                // ... but only when the wall spans the whole face run (a step of 1-3 rows). A deeper step shows sky beside
+                // the run's lower part, so the run keeps its face from top to foot (in front of the recessed wall) rather
+                // than a band starting in mid-air under the wall's ragged bottom.
+                bool SkipRun(Vector2Int v, int dx)
+                {
+                    if (!OverWall(v.x + dx, v.y)) return false;
+                    var p = v;
+                    while (land.Contains(p + Vector2Int.down) && !land.Contains(p + Vector2Int.down + new Vector2Int(dx, 0))) p += Vector2Int.down;
+                    return OverWall(p.x + dx, p.y);
+                }
+                // inner (concave) corner: the face's sky cell has land below it. That land's grass starts CoastInset px under
+                // the cell edge, so a copy of the face reaching CoastInset px further down (under that land's N lip) closes
+                // the sky notch at the corner
+                var footW = NewMap(root, "SideWallWFoot", 7, new Vector3(nudge, -CoastInset / 32f, 0f));
+                var footE = NewMap(root, "SideWallEFoot", 7, new Vector3(-nudge, -CoastInset / 32f, 0f));
+                footE.color = SideEastShade;
                 foreach (var v in sorted)
                 {
                     bool w = !land.Contains(v + Vector2Int.left), e = !land.Contains(v + Vector2Int.right), s = !land.Contains(v + Vector2Int.down);
-                    if (w) sideW.SetTile(new Vector3Int(v.x - 1, v.y, 0), s ? kit.sideWEnd : kit.sideW[Variant(pickW, v, true, kit.sideW.Length)]);
-                    if (e) sideE.SetTile(new Vector3Int(v.x + 1, v.y, 0), s ? kit.sideEEnd : kit.sideE[Variant(pickE, v, false, kit.sideE.Length)]);
+                    if (w && !SkipRun(v, -1))
+                    {
+                        int k = Variant(pickW, v, true, kit.sideW.Length);
+                        var p = new Vector3Int(v.x - 1, v.y, 0);
+                        sideW.SetTile(p, s ? kit.sideWEnd[k] : kit.sideW[k]);
+                        if (!s && land.Contains(new Vector2Int(v.x - 1, v.y - 1))) footW.SetTile(p, kit.sideW[k]);
+                    }
+                    if (e && !SkipRun(v, 1))
+                    {
+                        int k = Variant(pickE, v, false, kit.sideE.Length);
+                        var p = new Vector3Int(v.x + 1, v.y, 0);
+                        sideE.SetTile(p, s ? kit.sideEEnd[k] : kit.sideE[k]);
+                        if (!s && land.Contains(new Vector2Int(v.x + 1, v.y - 1))) footE.SetTile(p, kit.sideE[k]);
+                    }
                 }
                 var shadow = isl.transform.Find("Shadow");
                 if (shadow != null)
