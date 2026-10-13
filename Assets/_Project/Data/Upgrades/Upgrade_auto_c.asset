@@ -21,7 +21,7 @@ MonoBehaviour:
     area: center
     type: automation
     desc: "Auto-harvests Center bushes and taps the Spirit Tree \U0001F333 (1 swing/s
-      per level) \u2014 its wood flows to the starter wood line."
+      per level) \u2014 its wood flows to the wood line you build."
     links:
     - act_fi
     costs:

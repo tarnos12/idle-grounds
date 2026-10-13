@@ -586,14 +586,12 @@ namespace IdleGrounds.Sim.Tests
             // a useful link: the starter wood seal feeds the Forge's fuel rack
             var forge = FindBuilt("forge");
             if (forge.b == null) { var bx = new Box<Building>(); yield return BuildBuilding("forge", C, bx); forge = (C, bx.v); }
-            var area = S.Area(C);
-            Building lantern = null, seal = null;
-            foreach (var b in area.buildings)
-            {
-                if (b.type == "wisp_lantern" && b.links != null && b.links.Exists(l => area.BuildingById(l.from)?.type == "warding_seal" && area.BuildingById(l.from)?.item == "wood")) lantern = b;
-                if (b.type == "warding_seal" && b.item == "wood") seal = b;
-            }
-            if (lantern == null || seal == null || forge.b == null) { StuckAt("starter wood lantern/seal missing"); yield break; }
+            // empty start (owner 2026-10-13): nothing is pre-placed, so lay a tiny line: a Gathering Stone feeding the Forge
+            // through a Wisp Lantern
+            var gsBox = new Box<Building>(); yield return BuildBuilding("gathering_stone", C, gsBox);
+            var lanBox = new Box<Building>(); yield return BuildBuilding("wisp_lantern", C, lanBox);
+            Building lantern = lanBox.v, seal = gsBox.v;
+            if (lantern == null || seal == null || forge.b == null) { StuckAt("link line not built (stone/lantern/forge)"); yield break; }
             yield return Travel(C);
             string why = Sim.AddLink(C, lantern.id, seal.id, forge.b.id);
             if (why != null) StuckAt("link refused: " + why);

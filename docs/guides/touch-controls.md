@@ -16,7 +16,7 @@ Code: `Game/Input/TouchInputController.cs` (gestures), `Game/UI/MobileLayer.cs` 
 ## Two fingers
 Pinch = continuous zoom anchored under the fingers (1..6), two-finger drag = pan. A running hold is released first.
 ## Info / back
-Tooltips show on press and linger 2.4 s after a tap; world hover info lingers 2 s after a tap on a building. Android Back closes the topmost panel, else opens the Menu (Resume / Help / Stats / Keep screen on / Save and quit).
+Tooltips show on press and linger 2.4 s after a tap; world hover info lingers 2 s after a tap on a building. Android Back closes the topmost panel, else opens the Menu (jade panel, 3-column grid: Resume / Help / Stats / Sound / Motion / Keep awake / New game (confirm, wipes the save, starts with NO buildings) / Save and quit; it fits above the bar inside the safe area).
 ## Phone UI
 CanvasScaler: match = height, reference height = 200 logical units per physical inch (520..760), so a phone shows ~533 units tall. HUD sits in a safe-area root (scrims still bleed to the edge). Controls under 48 dp get a 48 dp raycast padding (visual unchanged). Modal boxes shrink to fit. Quest panel starts collapsed and expands at 85 % scale. `EventSystem.pixelDragThreshold` = 12 dp.
 Settings: 60 fps, vSync off, landscape L/R, saves on `OnApplicationPause` (SaveService).

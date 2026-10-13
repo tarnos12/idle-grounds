@@ -31,6 +31,7 @@ namespace IdleGrounds.Editor
 
         static void CloseAll()
         {
+            if (MobileLayer.Instance != null) MobileLayer.Instance.ClosePause();
             var meta = MetaUiController.Instance;
             var build = UnityEngine.Object.FindFirstObjectByType<BuildController>();
             if (meta != null)
@@ -93,12 +94,14 @@ namespace IdleGrounds.Editor
                 case "build": build.OpenBuildMenu(); break;
                 case "demolish": build.ToggleDemolish(); break;
                 case "help": meta.Help.Open(); break;
+                case "pause": MobileLayer.Instance.OpenPause(); break;
+                case "pauseClose": MobileLayer.Instance.ClosePause(); break;
                 case "stats": meta.Stats.Show(false, false); meta.Stats.Open(); break;
                 case "statsFlow": meta.Stats.Show(true, false); meta.Stats.Open(); break;
                 case "statsLifetime": meta.Stats.Show(false, true); meta.Stats.Open(); break;
                 case "tree": build.OpenUpgradeTree(); break;
                 case "confirm": meta.Confirm.Ask(MetaUiController.AscendTitle, MetaUiController.AscendText, "Ascend to Immortality", null); break;
-                case "confirmReset": meta.Confirm.Ask("Start over?", MetaBarView.ResetText, "Reset", null); break;
+                case "confirmReset": meta.Confirm.Ask(MetaBarView.NewGameTitle, MetaBarView.ResetText, MetaBarView.NewGameButton, null); break;
                 case "toast": meta.Toast.Show(arg); break;
                 case "ending": runner.State.ascended = true; runner.State.endingSeen = false; break;
                 case "dragonDialog": runner.State.dragon.dialog = arg; break;

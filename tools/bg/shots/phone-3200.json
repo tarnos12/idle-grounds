@@ -22,7 +22,7 @@
     {
       "name": "phone3200_start",
       "startView": true,
-      "frames": 8,
+      "frames": 40,
       "act": [
         "welcomeClose"
       ]
@@ -30,7 +30,7 @@
     {
       "name": "phone3200_quest",
       "startView": true,
-      "frames": 8,
+      "frames": 40,
       "act": [
         "questExpand"
       ]
@@ -38,7 +38,7 @@
     {
       "name": "phone3200_build",
       "startView": true,
-      "frames": 8,
+      "frames": 40,
       "act": [
         "questCollapse",
         "build"
@@ -47,7 +47,7 @@
     {
       "name": "phone3200_help",
       "startView": true,
-      "frames": 8,
+      "frames": 40,
       "act": [
         "closeall",
         "help"
@@ -60,6 +60,15 @@
       "act": [
         "closeall",
         "demolish"
+      ]
+    },
+    {
+      "name": "phone3200_menu",
+      "startView": true,
+      "frames": 40,
+      "act": [
+        "closeall",
+        "pause"
       ]
     }
   ]

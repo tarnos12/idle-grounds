@@ -132,7 +132,7 @@ namespace IdleGrounds.PlayMode.Tests
             Assert.IsNotNull(altar, "Altar");
             Assert.IsNotNull(dragon, "Dragon");
             int starter = c.buildings.Count(b => b.starter);
-            Assert.Greater(starter, 10, "starter network");
+            Assert.AreEqual(0, starter, "a new game places no starter buildings (owner 2026-10-13)");
 
             var bvs = Object.FindFirstObjectByType<BuildingViewSync>();
             Assert.IsNotNull(bvs, "BuildingViewSync");
@@ -192,6 +192,9 @@ namespace IdleGrounds.PlayMode.Tests
             var wispViews = Object.FindFirstObjectByType<WispViewSync>();
             Assert.IsNotNull(wispViews, "WispViewSync");
 
+            // a new game has no buildings (owner 2026-10-13): lay the legacy starter network for this logistics smoke
+            S.starterPlaced = false;
+            Sim.Buildings.SetupStarterNetwork();
             bool sawWispView = false, crafted = false;
             float end = Time.realtimeSinceStartup + 18f;
             while (Time.realtimeSinceStartup < end && !(launches > 0 && sawWispView && crafted))
