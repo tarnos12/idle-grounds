@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-13 17:35",
+  "updated": "2026-10-13 18:48",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -358,11 +358,10 @@
       "tasks": [
         {
           "title": "Touch controls, phone UI, landscape, Android build",
-          "detail": "Tap/hold to harvest, long-press or a feed button instead of right-click, pinch zoom and drag pan, finger-sized targets, safe areas, readable text; landscape locked; debug APK.",
-          "status": "in-progress",
+          "detail": "Merged 2026-10-13: tap/hold/long-press feed, Give + Swap buttons, drag pan, pinch zoom, drag-ghost placement with Place/Cancel, tap-linger tooltips, Back menu; safe area, dpi canvas scale, 48dp hit areas; landscape lock; APK 51 MB. Touch PlayMode tests 15/15.",
+          "status": "done",
           "size": "L",
-          "owner": "Claude",
-          "now": "Sonnet builder in background copy android"
+          "owner": "Claude"
         },
         {
           "title": "Run the APK on an Android emulator",
@@ -370,15 +369,15 @@
           "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Your OK to download the Android emulator (~2-3 GB)"
+          "blockedBy": "Not possible here: Unity 6.3 builds Android for ARM64 only and the x86 emulator's ARM translation crashes in Unity's engine library during loading. Needs a real phone."
         },
         {
           "title": "Owner tests the APK on his phone",
           "detail": "You install the APK and report anything that feels wrong.",
-          "status": "waiting",
+          "status": "in-progress",
           "size": "S",
           "owner": "Mariusz (owner)",
-          "blockedBy": "After the APK passes our checks"
+          "now": "APK sent to you; checklist in docs/guides/touch-controls.md"
         }
       ]
     }
