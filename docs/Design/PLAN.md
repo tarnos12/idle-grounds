@@ -1,25 +1,25 @@
 # Idle Grounds: plan
 
-Updated 2026-10-13 20:43. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-13 21:42. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**21 of 39 tasks done**, 3 in progress, 2 to do, 5 blocked, 8 waiting.
+**22 of 41 tasks done**, 3 in progress, 3 to do, 5 blocked, 8 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M7** Phone fixes round 1 + new game with no buildings: Sonnet builder in background copy phone1
+- **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
 |---|---|---|---|---|
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
-| M2 | Balance and onboarding |  | Done | 2 / 2 |
+| M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
 | M3 | 3/4 world look (ADR 0005) |  | In progress | 7 / 14 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
-| M7 | Android build |  | In progress | 2 / 4 |
+| M7 | Android build |  | In progress | 3 / 5 |
 
 **Task status:** Done: built and checked. In progress: someone (an agent) is working on it now; the "now" line says who. Next: the next thing to start. Later: planned, not started. To do: planned and can start. Blocked: cannot start; needs art, an owner answer or another task (the reason is shown). Waiting: could start, but not a good time yet (the reason is shown).
 
@@ -46,6 +46,7 @@ Make the first run take about 2 to 3 hours, with machines overtaking hand work i
 |---|---|---|---|
 | Done | Real balance: 2-3 h first run, machines beat hands mid-game | TEST mode off by default; playthrough bot checks the pacing (ADR 0004). | Claude |
 | Done | Island onboarding quests | Quests that teach bridges, caravans and cross-island trade, with next-step hints. | Claude |
+| To do | Rebalance after the empty start | With no starter buildings, machines out-produce hands only 3.8x mid-run (target 5-10x, ADR 0004); ending at 2:33 is still in the 2-3 h band. | Claude |
 
 ## M2b: Island requesters replace ascension (ADR 0007, accepted). Waiting
 
@@ -134,4 +135,5 @@ The game runs and plays well on an Android phone in landscape, with touch contro
 | Done | Touch controls, phone UI, landscape, Android build | Merged 2026-10-13: tap/hold/long-press feed, Give + Swap buttons, drag pan, pinch zoom, drag-ghost placement with Place/Cancel, tap-linger tooltips, Back menu; safe area, dpi canvas scale, 48dp hit areas; landscape lock; APK 51 MB. Touch PlayMode tests 15/15. | Claude |
 | Blocked | Run the APK on an Android emulator | Install the Android emulator + a system image (large download from Google) to test the APK before you do. | Claude |
 | Done | Owner tests the APK on his phone | 2026-10-13: runs on the owner's phone. Feedback: Menu overflows, bottom bar crowded/clipped, desktop control words in quest/help text, Swap/Give buttons unstyled, wants a fresh start with no buildings (screenshots in docs/Design/feedback/phone-2026-10-13-*). | Mariusz (owner) |
-| In progress | Phone fixes round 1 + new game with no buildings **(NOW)** | Menu fits, compact bottom bar, touch wording in quests/help, styled Swap/Give buttons, New game from the Menu that starts with no buildings placed; new APK on Drive. | Claude |
+| Done | Phone fixes round 1 + new game with no buildings | Merged 2026-10-13: Menu fits (jade, 3-column), compact phone bar (Stats/Build/Demolish/Menu), touch wording (ControlWords), styled Swap/Give, New game starts with NO buildings (bot: 2:33 human pace, auto/hand 3.8x mid-run - below the 5x target). | Claude |
+| In progress | Owner tests APK round 2 **(NOW)** | Check the Menu, bar, touch wording, Swap/Give and New game on the phone; quest panel looked semi-transparent in captures - confirm on device. | Mariusz (owner) |

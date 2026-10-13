@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-13 20:43",
+  "updated": "2026-10-13 21:42",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -68,6 +68,13 @@
           "title": "Island onboarding quests",
           "detail": "Quests that teach bridges, caravans and cross-island trade, with next-step hints.",
           "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Rebalance after the empty start",
+          "detail": "With no starter buildings, machines out-produce hands only 3.8x mid-run (target 5-10x, ADR 0004); ending at 2:33 is still in the 2-3 h band.",
+          "status": "todo",
           "size": "M",
           "owner": "Claude"
         }
@@ -380,11 +387,18 @@
         },
         {
           "title": "Phone fixes round 1 + new game with no buildings",
-          "detail": "Menu fits, compact bottom bar, touch wording in quests/help, styled Swap/Give buttons, New game from the Menu that starts with no buildings placed; new APK on Drive.",
-          "status": "in-progress",
+          "detail": "Merged 2026-10-13: Menu fits (jade, 3-column), compact phone bar (Stats/Build/Demolish/Menu), touch wording (ControlWords), styled Swap/Give, New game starts with NO buildings (bot: 2:33 human pace, auto/hand 3.8x mid-run - below the 5x target).",
+          "status": "done",
           "size": "M",
-          "owner": "Claude",
-          "now": "Sonnet builder in background copy phone1"
+          "owner": "Claude"
+        },
+        {
+          "title": "Owner tests APK round 2",
+          "detail": "Check the Menu, bar, touch wording, Swap/Give and New game on the phone; quest panel looked semi-transparent in captures - confirm on device.",
+          "status": "in-progress",
+          "size": "S",
+          "owner": "Mariusz (owner)",
+          "now": "APK round 2 on Drive"
         }
       ]
     }
