@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-13 00:06",
+  "updated": "2026-10-13 08:57",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -208,7 +208,7 @@
           "status": "in-progress",
           "size": "L",
           "owner": "Claude",
-          "now": "Batch A fixes in the background copy (3 builders)"
+          "now": "Batch A done; waiting for your answers (batch B) and sending the art request (batch C)"
         },
         {
           "title": "Visual pass batch A1: UI fixes (buttons, wording, dialogs, scrim, tree, menus)",
@@ -227,10 +227,9 @@
         {
           "title": "Visual pass batch A3: world art in code (veil, ground, cliffs, paths, rack/bridge)",
           "detail": "VP-11, 12, 14, 16, 17: veil seams + coast leak, interim rack and bridge backings, seeded ground variety, cliff/underside/lip noise, rounded paths/plaza/islets.",
-          "status": "in-progress",
+          "status": "done",
           "size": "L",
-          "owner": "Claude",
-          "now": "Opus builder in background copy world-art"
+          "owner": "Claude"
         },
         {
           "title": "Visual pass batch B: changes that need your answers",
@@ -247,6 +246,13 @@
           "size": "L",
           "owner": "Artist",
           "blockedBy": "Art request goes to Drive with the batch A results"
+        },
+        {
+          "title": "Follow-ups from batch A",
+          "detail": "Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27).",
+          "status": "todo",
+          "size": "S",
+          "owner": "Claude"
         }
       ]
     },
