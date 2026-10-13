@@ -20,8 +20,22 @@ namespace IdleGrounds.Game
         public Color LineColour => line.color;
         public bool DotVisible => dot != null && dot.gameObject.activeSelf;
 
+        bool pixelDash;
+
+        /// <summary>VP-13: 2-on / 2-off texel dashes (palette colour from the caller), at least one screen pixel wide.</summary>
+        void UsePixelDash()
+        {
+            if (pixelDash || line == null) return;
+            pixelDash = true;
+            line.sprite = PixelSprites.Dash;
+            line.drawMode = SpriteDrawMode.Tiled;
+            line.tileMode = SpriteTileMode.Continuous;
+        }
+
         public void Set(Vector3 a, Vector3 b, Color c, float widthPx)
         {
+            UsePixelDash();
+            widthPx = Mathf.Max(widthPx, WorldLabelSystem.UnitsPerPixel * ViewKit.Cell);
             From = a; To = b;
             var d = b - a;
             float len = d.magnitude;

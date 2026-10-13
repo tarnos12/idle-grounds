@@ -14,6 +14,12 @@ namespace IdleGrounds.Game
         readonly List<IconCount> pool = new List<IconCount>();
         readonly List<Entry> last = new List<Entry>();
         float lastPx, lastMaxW; Color lastColour; string lastPrefix; bool hasLast;
+        /// <summary>Laid-out width (units, after the fit-to-width scale) and height of the last <see cref="Set"/>.</summary>
+        public float Width { get; private set; }
+        public float Height { get; private set; }
+        /// <summary>Optional per-entry mark (tick / cross) drawn at each icon's corner; null = none.</summary>
+        public System.Func<int, Sprite> MarkFor;
+        readonly List<SpriteRenderer> marks = new List<SpriteRenderer>();
 
         public struct Entry
         {
@@ -54,6 +60,7 @@ namespace IdleGrounds.Game
                 ViewKit.Font(ic.a, px);
                 ic.a.fontStyle = FontStyles.Bold;
                 ic.a.color = c;
+                ViewKit.Outline(ic.a);
                 ic.a.text = txt;
                 float tw = ic.a.GetPreferredValues(txt).x;
                 ViewKit.Show(ic.icon, !isPrefix);
@@ -64,6 +71,7 @@ namespace IdleGrounds.Game
             }
             float scale = maxWidthUnits > 0f && total > maxWidthUnits ? maxWidthUnits / total : 1f;
             transform.localScale = new Vector3(scale, scale, 1f);
+            Width = total * scale; Height = iconU * scale;
             float x = -total * 0.5f;
             for (int i = 0; i < n; i++)
             {
@@ -75,6 +83,24 @@ namespace IdleGrounds.Game
                 ic.a.transform.localPosition = Vector3.zero;
                 float tw = ic.a.GetPreferredValues(ic.a.text).x;
                 ic.icon.transform.localPosition = new Vector3(tw + iconU * 0.55f, 0f, 0f);
+                bool isPrefix = !string.IsNullOrEmpty(prefix) && i == 0;
+                int ei = i - (string.IsNullOrEmpty(prefix) ? 0 : 1);
+                var mk = MarkFor != null && !isPrefix ? MarkFor(ei) : null;
+                while (marks.Count <= i) marks.Add(null);
+                if (mk != null)
+                {
+                    if (marks[i] == null)
+                    {
+                        marks[i] = new GameObject("Mark").AddComponent<SpriteRenderer>();
+                        marks[i].transform.SetParent(ic.transform, false);
+                        var mr = ic.a.GetComponent<MeshRenderer>();
+                        marks[i].sortingLayerID = mr.sortingLayerID; marks[i].sortingOrder = mr.sortingOrder + 2;
+                    }
+                    ViewKit.Show(marks[i], true);
+                    marks[i].sprite = mk;
+                    marks[i].transform.localPosition = ic.icon.transform.localPosition + new Vector3(iconU * 0.4f, -iconU * 0.35f, 0f);
+                }
+                else if (marks[i] != null) ViewKit.Show(marks[i], false);
                 x += widths[i] + gapU;
             }
         }

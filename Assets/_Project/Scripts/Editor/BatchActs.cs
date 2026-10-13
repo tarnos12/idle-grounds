@@ -12,7 +12,7 @@ namespace IdleGrounds.Editor
     /// <c>closeall</c> (panels, placement/demolish, cursor released) unless its first act is <c>keep</c>.
     /// Commands (island = key like center/farm; cells are Island-local row,col):
     ///   welcome | welcomeClose | closeall | keep
-    ///   build | demolish | place:TYPE@island,row,col | ghost:TYPE@island,row,col | cursor:island,row,col | cursorW:x,y | hover:island,TYPE
+    ///   build | demolish | place:TYPE@island,row,col | ghost:TYPE@island,row,col | cursor:island,row,col | cursorW:x,y | hover:island,TYPE | hoverNode:island,row,col (nearest interactable node)
     ///   help | stats | statsFlow | statsLifetime | tree | confirm | confirmReset | toast:TEXT | toasts:A|B|C | toastKind:Warning|TEXT | ending | dragonDialog:TEXT
     ///   questCollapse | questExpand
     ///   recipe:island,TYPE | link:island | bridge:island | pavilion:island   (first BUILT building of that type)
@@ -135,6 +135,20 @@ namespace IdleGrounds.Editor
                     var p = arg.Substring(at + 1).Split(',');
                     var gb = runner.Sim.PlaceGhost(p[0].Trim(), arg.Substring(0, at), int.Parse(p[1]), int.Parse(p[2]));
                     if (gb == null) Debug.LogError(Tag + "ghost refused: " + arg);
+                    break;
+                }
+                case "hoverNode":
+                {
+                    var p = arg.Split(',');
+                    var ar = runner.State.Area(p[0].Trim());
+                    float hr = F(p[1]), hc = F(p[2]); float best = float.MaxValue; IdleGrounds.Sim.Node bn = null;
+                    foreach (var n in ar.nodes)
+                    {
+                        if (n.deco) continue;
+                        float d = (n.row - hr) * (n.row - hr) + (n.col - hc) * (n.col - hc);
+                        if (d < best) { best = d; bn = n; }
+                    }
+                    if (bn != null) hand.DebugPointAt(CellWorld(p[0].Trim(), bn.row + bn.size * 0.5f, bn.col + bn.size * 0.5f));
                     break;
                 }
                 case "hover":

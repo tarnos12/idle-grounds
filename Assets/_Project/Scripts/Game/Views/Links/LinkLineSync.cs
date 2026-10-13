@@ -12,8 +12,12 @@ namespace IdleGrounds.Game
     /// </summary>
     public class LinkLineSync : MonoBehaviour
     {
-        public const float WidthPx = 1.5f;
-        public static readonly Color Faint = ViewKit.Rgba(251, 191, 36, 0.22f), Hover = ViewKit.Rgba(251, 191, 36, 0.45f), Edit = ViewKit.Rgba(251, 191, 36, 0.65f);
+        /// <summary>VP-13: 1 texel (at least 1 screen px), P28 qi cyan, 2-on / 2-off texel dashes.</summary>
+        public const float WidthPx = 1f;
+        public static readonly Color Faint = PixelSprites.C(PixelSprites.P28, 0.45f), Hover = PixelSprites.C(PixelSprites.P28, 0.75f), Edit = PixelSprites.C(PixelSprites.P28, 0.95f);
+        /// <summary>At rest the threads are hidden; they show in build / demolish mode, while the link editor is open,
+        /// and for the hovered lantern or a hovered building at either end (VP-13: overlay lines only when they help).</summary>
+        public static bool ShowAtRest = false;
 
         [SerializeField] GameRunner runner;
         [SerializeField] LinkLineView prefab;
@@ -61,17 +65,21 @@ namespace IdleGrounds.Game
                     bool editing = editor != null && editor.IsOpen && editor.Area == area.key && editor.LanternId == lb.id;
                     bool hovered = !editing && build != null && build.Hovered == lb && build.HoveredArea == area.key;
                     var col = editing ? Edit : hovered ? Hover : Faint;
+                    bool hoverEnd = build != null && build.Hovered != null && build.HoveredArea == area.key;
+                    bool showAll = ShowAtRest || editing || hovered || build != null && (build.Placing != null || build.Demolishing || build.LinkEditorOpen);
                     for (int i = 0; i < lb.links.Count; i++)
                     {
                         var l = lb.links[i];
                         var f = area.BuildingById(l.from); var t = area.BuildingById(l.to);
                         if (f == null || t == null) continue;
+                        if (!showAll && !(hoverEnd && (build.Hovered == f || build.Hovered == t))) continue;
                         long k = Key(ai, lb.id, i);
                         if (!views.TryGetValue(k, out var v)) { v = pool.Get(); views[k] = v; }
                         v.seenFrame = frame;
                         var (fx, fy) = sim.World.BuildingCenterPx(f);
                         var (tx, ty) = sim.World.BuildingCenterPx(t);
-                        v.Set(space.PxToWorld(area.key, fx, fy), space.PxToWorld(area.key, tx, ty), col, WidthPx);
+                        bool endHover = hoverEnd && (build.Hovered == f || build.Hovered == t);
+                        v.Set(space.PxToWorld(area.key, fx, fy), space.PxToWorld(area.key, tx, ty), endHover && !editing ? Hover : col, WidthPx);
                         bool hasSt = editing && sim.LinkStatus(area.key, lb.id, i, stBuf);
                         v.SetDot(hasSt, hasSt ? LinkLineView.DotColour(stBuf.dot) : default);
                     }

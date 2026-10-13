@@ -34,37 +34,69 @@ namespace IdleGrounds.Game
 
         void Awake() { if (inputTemplate != null) inputTemplate.gameObject.SetActive(false); }
 
-        // ---- real-art variant: one compact strip BELOW the footprint (inputs have/need → result ×n, thin bar, status dot) ----
-        SpriteRenderer dot;
+        // ---- real-art variant: one compact strip ABOVE the art in the shared WorldLabel style (VP-07 / VP-10):
+        //      [status shape] [input icon + tick/cross + have/need]... → [result icon ×n], thin progress bar along the plate bottom.
+        //      Zoom LOD: full at zoom ≤ 2.5, compact (status + result ×n) up to 4.5, status shape only beyond.
+        WorldLabel strip;
+        SpriteRenderer statusShape;
+        readonly List<SpriteRenderer> marks = new List<SpriteRenderer>();
         bool real, relayout;
+        int lastLod = -1;
         BuildingView view;
-        static readonly string HaveOk = ColorUtility.ToHtmlStringRGB(UiPalette.Accent), HaveLow = ColorUtility.ToHtmlStringRGB(UiPalette.Danger), NeedCol = ColorUtility.ToHtmlStringRGB(UiPalette.Gold);
+        static readonly string HaveOk = ColorUtility.ToHtmlStringRGB(WorldLabel.GoodColour), HaveLow = ColorUtility.ToHtmlStringRGB(WorldLabel.BadColour), NeedCol = ColorUtility.ToHtmlStringRGB(WorldLabel.GoldColour);
+
+        /// <summary>The strip label (null for placeholder art).</summary>
+        public WorldLabel Strip => real ? strip : null;
+        /// <summary>Shape shown for the current state (VP-10: never colour alone).</summary>
+        public Sprite StatusShape => statusShape != null ? statusShape.sprite : null;
+
+        void EnsureStrip()
+        {
+            if (strip != null) return;
+            strip = WorldLabel.Create(transform, "Strip");
+            strip.compactAboveZoom = 2.5f; strip.hideAboveZoom = 4.5f;
+            backing = WorldLabel.NewPlate(strip.content);
+            statusShape = WorldLabel.NewSprite(strip.transform, "Status", PixelSprites.Idle, WorldLabel.OrderKeep);
+            strip.keep = statusShape.transform;
+        }
+
+        /// <summary>Move the strip parts under the label (real art) or back onto the face (placeholder).</summary>
+        void Adopt(bool intoStrip)
+        {
+            var dst = intoStrip ? strip.content : transform;
+            if (nameText.transform.parent != dst) nameText.transform.SetParent(dst, false);
+            if (inputsRoot.parent != dst) inputsRoot.SetParent(dst, false);
+            if (result.transform.parent != dst) result.transform.SetParent(dst, false);
+            if (progressTrack.transform.parent != dst) progressTrack.transform.SetParent(dst, false);
+            if (progressFill.transform.parent != dst) progressFill.transform.SetParent(dst, false);
+        }
 
         void LayoutReal(BuildingView v)
         {
             view = v;
-            var like = progressTrack.GetComponent<SpriteRenderer>();
-            if (backing == null) backing = ViewKit.NewSquare(transform, "Backing", like, -2, ViewKit.PlateColour);
-            backing.gameObject.SetActive(true);
-            if (dot == null) dot = ViewKit.NewSquare(transform, "StatusDot", like, 1, UiPalette.Muted);
-            dot.gameObject.SetActive(true);
+            EnsureStrip();
+            Adopt(true);
+            ViewKit.Show(strip, true);
             ViewKit.Show(nameIcon, false); ViewKit.Show(statusText, false); ViewKit.Show(statusIcon, false);
             // the (hidden-name) text doubles as the "→" between inputs and result
             ViewKit.Show(nameText, true);
+            WorldLabel.Style(nameText, 9f, WorldLabel.MutedColour);
             nameText.rectTransform.pivot = new Vector2(0.5f, 0.5f);
             nameText.rectTransform.sizeDelta = new Vector2(ViewKit.U(20f), ViewKit.U(12f));
-            nameText.text = "→"; ViewKit.Font(nameText, 9f); nameText.color = UiPalette.Muted; ViewKit.Outline(nameText);
-            ViewKit.Font(result.b, 9f); ViewKit.Outline(result.b);
+            nameText.text = "→";
+            WorldLabel.Style(result.b, 9f, WorldLabel.GoldColour);
             result.b.rectTransform.sizeDelta = new Vector2(ViewKit.U(40f), ViewKit.U(12f));
+            WorldLabel.Sort(result.icon, WorldLabel.OrderContent);
             ViewKit.Show(inputsRoot, true);
             inputsRoot.localPosition = Vector3.zero;
             result.transform.localPosition = Vector3.zero;
             result.b.transform.localPosition = Vector3.zero;
-            barH = ViewKit.U(2f); barY = v.ArtTop + ViewKit.U(3.5f);   // strip sits ABOVE the art so the dumped output pile (below the footprint) never covers it
+            WorldLabel.Sort(progressTrack, WorldLabel.OrderPlate + 1);
+            WorldLabel.Sort(progressFill, WorldLabel.OrderPlate + 2);
             progressTrack.color = Track;
-            progressFill.color = UiPalette.Gold;
-            ViewKit.ToOverlay(this);
-            lastRecipe = -2; LastFace = null; relayout = true; lastHadStatus = false;
+            progressFill.color = WorldLabel.GoldColour;
+            strip.SetAnchor(new Vector3(v.W * 0.5f, v.ArtTop + ViewKit.U(2f), 0f));
+            lastRecipe = -2; LastFace = null; relayout = true; lastHadStatus = false; lastLod = -1;
         }
 
         float TextW(TextMeshPro t, string s) => t.GetPreferredValues(s).x + ViewKit.U(2f);
@@ -72,41 +104,52 @@ namespace IdleGrounds.Game
         void RelayoutReal(BuildingView v, ConverterFace f)
         {
             relayout = false;
-            float gap = ViewKit.U(5f), ic = ViewKit.U(12f), ig = ViewKit.U(2f), dotW = ViewKit.U(5f);
-            float y = v.ArtTop + ViewKit.U(10.5f);
+            bool compact = strip.Compact;
+            float gap = ViewKit.U(4f), ic = ViewKit.U(12f), ig = ViewKit.U(2f), sw = ViewKit.U(11f), pad = ViewKit.U(4f);
+            float y = ViewKit.U(10.5f), ph = ViewKit.U(18f);
             int n = f.inputs.Count;
-            float total = dotW + gap;
-            var iw = new float[n];
-            for (int i = 0; i < n; i++) { iw[i] = TextW(inputs[i].a, inputs[i].a.text); total += ic + ig + iw[i] + gap; }
+            float total = sw + gap;
+            if (!compact)
+                for (int i = 0; i < n; i++) total += ic + ig + TextW(inputs[i].a, inputs[i].a.text) + gap;
             float aw = TextW(nameText, "→");
             float rw = TextW(result.b, result.b.text);
-            total += aw + gap + ic + ig + rw;
-            float x = v.W * 0.5f - total * 0.5f;
-            dot.transform.localPosition = new Vector3(x + dotW * 0.5f, y, 0f);
-            dot.transform.localScale = new Vector3(dotW, dotW, 1f);
-            x += dotW + gap;
-            for (int i = 0; i < n; i++)
+            if (!compact) total += aw + gap;
+            total += ic + ig + rw;
+            float x = -total * 0.5f;
+            var home = new Vector3(x + sw * 0.5f, y, 0f);
+            x += sw + gap;
+            ViewKit.Show(inputsRoot, !compact);
+            ViewKit.Show(nameText, !compact);
+            if (!compact)
             {
-                var c = inputs[i];
-                c.icon.transform.localPosition = new Vector3(x + ic * 0.5f, y, 0f); x += ic + ig;
-                c.a.transform.localPosition = new Vector3(x + iw[i] * 0.5f, y, 0f); x += iw[i] + gap;
+                for (int i = 0; i < n; i++)
+                {
+                    var c = inputs[i];
+                    float iw = TextW(c.a, c.a.text);
+                    c.icon.transform.localPosition = new Vector3(x + ic * 0.5f, y, 0f);
+                    if (i < marks.Count && marks[i] != null) marks[i].transform.localPosition = new Vector3(x + ic - ViewKit.U(1f), y - ViewKit.U(4f), 0f);
+                    x += ic + ig;
+                    c.a.transform.localPosition = new Vector3(x + iw * 0.5f, y, 0f); x += iw + gap;
+                }
+                nameText.transform.localPosition = new Vector3(x + aw * 0.5f, y, 0f); x += aw + gap;
             }
-            nameText.transform.localPosition = new Vector3(x + aw * 0.5f, y, 0f); x += aw + gap;
             result.icon.transform.localPosition = new Vector3(x + ic * 0.5f, y, 0f); x += ic + ig;
             result.b.transform.localPosition = new Vector3(x + rw * 0.5f, y, 0f);
-            float pw = total + ViewKit.U(10f);
-            backing.transform.localPosition = new Vector3(v.W * 0.5f, v.ArtTop + ViewKit.U(8.75f), 0f);
-            backing.transform.localScale = new Vector3(pw, ViewKit.U(16.5f), 1f);
-            barW = pw - ViewKit.U(4f); barX0 = v.W * 0.5f - barW * 0.5f;
+            float pw = total + 2f * pad;
+            WorldLabel.SizePlate(backing, 0f, ph * 0.5f, pw, ph);
+            barW = pw - ViewKit.U(6f); barX0 = -barW * 0.5f; barY = ViewKit.U(3.5f); barH = ViewKit.U(2f);
             ViewKit.Bar(progressTrack, barX0, barY, barW, barH);
+            strip.SetBounds(-pw * 0.5f, 0f, pw, ph);
+            strip.SetKeep(home, new Vector3(0f, ViewKit.U(6f), 0f));
+            strip.SetAnchor(new Vector3(v.W * 0.5f, v.ArtTop + ViewKit.U(2f), 0f));
         }
 
         public override void Layout(BuildingView v)
         {
             real = v.RealArt;
             if (real) { LayoutReal(v); return; }
-            if (backing != null) backing.gameObject.SetActive(false);
-            if (dot != null) dot.gameObject.SetActive(false);
+            if (strip != null) { Adopt(false); ViewKit.Show(strip, false); }
+            foreach (var mk in marks) if (mk != null) ViewKit.Show(mk, false);
             ViewKit.Show(nameIcon, true); ViewKit.Show(nameText, true); ViewKit.Show(statusText, true);
             float wU = v.W;
             // name row (emoji + muted name 9.5 px), y + 8 px
@@ -129,6 +172,8 @@ namespace IdleGrounds.Game
             statusText.transform.localPosition = v.L(0.5f, 0.755f);
             statusText.rectTransform.sizeDelta = new Vector2(wU - ViewKit.U(4f), ViewKit.U(12f));
             ViewKit.Font(statusText, 9.5f);
+            statusText.textWrappingMode = TextWrappingModes.NoWrap; statusText.overflowMode = TextOverflowModes.Overflow;   // never clipped ("Output pile ful")
+            ViewKit.Outline(statusText);
             barW = 1f; barH = ViewKit.U(4f);
             barX0 = wU * 0.5f - barW * 0.5f; barY = -0.90f * v.H;
             ViewKit.Bar(progressTrack, barX0, barY, barW, barH);
@@ -153,7 +198,7 @@ namespace IdleGrounds.Game
             LastFace = v.Sync.Sim.ConverterFace(v.Area, v.Building, faceBuf) ? faceBuf : null;
             var f = LastFace;
             if (f == null) { ViewKit.Show(inputsRoot, false); ViewKit.Show(result, false); return; }
-            ViewKit.Show(inputsRoot, true); ViewKit.Show(result, true);
+            ViewKit.Show(inputsRoot, !real || !strip.Compact); ViewKit.Show(result, true);
             var sprites = v.Sync.Sprites;
             if (f.recipeIndex != lastRecipe)
             {
@@ -162,8 +207,10 @@ namespace IdleGrounds.Game
                 {
                     var ic = Instantiate(inputTemplate, inputsRoot);
                     ic.name = "Input" + inputs.Count;
-                    if (real) ViewKit.ToOverlay(ic);
                     inputs.Add(ic);
+                    var mk = WorldLabel.NewSprite(ic.transform, "Mark", PixelSprites.Tick, WorldLabel.OrderContent + 2);
+                    mk.gameObject.SetActive(false);
+                    marks.Add(mk);
                 }
                 float sp = ViewKit.U(24f), x = -(f.inputs.Count - 1) * sp * 0.5f;
                 for (int i = 0; i < inputs.Count; i++)
@@ -175,7 +222,9 @@ namespace IdleGrounds.Game
                     if (real)
                     {
                         ViewKit.Fit(ic.icon, sprites.Item(f.inputs[i].item), 12f);
-                        ViewKit.Font(ic.a, 8.5f); ViewKit.Outline(ic.a); ViewKit.Show(ic.b, false);
+                        WorldLabel.Style(ic.a, 8.5f, WorldLabel.TextColour); ViewKit.Show(ic.b, false);
+                        WorldLabel.Sort(ic.icon, WorldLabel.OrderContent);
+                        ViewKit.Show(marks[i], true);
                         ic.a.rectTransform.sizeDelta = new Vector2(ViewKit.U(44f), ViewKit.U(12f));
                         ic.transform.localPosition = Vector3.zero; ic.a.transform.localPosition = Vector3.zero; ic.icon.transform.localPosition = Vector3.zero;
                         continue;
@@ -202,6 +251,8 @@ namespace IdleGrounds.Game
                     if (real)
                     {
                         ViewKit.Text(inputs[i].a, "<color=#" + (iv.have >= iv.need ? HaveOk : HaveLow) + ">" + iv.have + "</color><color=#" + NeedCol + ">/" + iv.need + "</color>");
+                        var want = iv.have >= iv.need ? PixelSprites.Tick : PixelSprites.Cross;
+                        if (marks[i].sprite != want) marks[i].sprite = want;
                         relayout = true; continue;
                     }
                     ViewKit.Text(inputs[i].a, iv.have.ToString());
@@ -241,7 +292,7 @@ namespace IdleGrounds.Game
                         default: txt = ""; break;
                     }
                 }
-                if (real) { dot.color = c; ViewKit.Text(statusText, txt); goto afterStatus; }   // strip: status is a coloured dot (full text lives in the hover tooltip)
+                if (real) { statusShape.sprite = PixelSprites.ForState(st != null ? st.state : (BuildingState?)null); ViewKit.Text(statusText, txt); goto afterStatus; }   // strip: status is a shape (full text lives in the hover tooltip)
                 ViewKit.Text(statusText, txt);
                 ViewKit.Colour(statusText, c);
                 ViewKit.Show(statusIcon, icon != null);
@@ -256,6 +307,7 @@ namespace IdleGrounds.Game
             }
 
         afterStatus:
+            if (real && strip.LodVersion != lastLod) { lastLod = strip.LodVersion; relayout = true; }
             if (real && relayout) RelayoutReal(v, f);
 
             // progress: extrapolated every frame from the batch end time and the sampled batch length

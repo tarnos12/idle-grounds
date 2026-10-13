@@ -86,6 +86,7 @@ namespace IdleGrounds.Game
                 Hovered = Sim.World.BuildingAt(hand.CursorArea, hand.LRow, hand.LCol);
             }
             UpdatePreview();
+            UpdateDemolishTag();
         }
 
         // ================= modes =================
@@ -287,6 +288,196 @@ namespace IdleGrounds.Game
             preview.Show(runner.Space.PxToWorld(area, col * cell, row * cell), def.sizeW, def.sizeH,
                 buildings != null && buildings.Sprites != null ? buildings.Sprites.Building(Placing) : runner.Database.BuildingIcon(Placing),
                 reason, def.fuel, reach, rgb, nearBottom, runner.Database.BuildingArt(Placing));
+            UpdateFeedback(area, def, row, col, reason, nearBottom);
+        }
+
+        // ================= VP-20: placement / demolish feedback =================
+
+        string fbArea, fbType, fbReason; int fbRow = int.MinValue, fbCol, fbHandSig = int.MinValue; bool[] fbBlocked = new bool[0];
+        string fbText;
+
+        /// <summary>Text shown on the ghost: a precise reason when blocked, else the click hint and the cost with what the hand holds.</summary>
+        public string FeedbackText => fbText;
+
+        int HandSignature()
+        {
+            int h = 17;
+            var hs = runner.State.hand;
+            for (int i = 0; i < hs.Count; i++) h = h * 31 + (hs[i].item != null ? hs[i].item.GetHashCode() : 0) * 7 + hs[i].qty;
+            return h;
+        }
+
+        int HandCount(string item)
+        {
+            int n = 0;
+            var hs = runner.State.hand;
+            for (int i = 0; i < hs.Count; i++) if (hs[i].item == item) n += hs[i].qty;
+            return n;
+        }
+
+        string ItemName(string item) => runner.Config.Item(item)?.name ?? item;
+
+        void UpdateFeedback(string area, BuildingDef def, int row, int col, string reason, bool nearBottom)
+        {
+            int sig = reason == null ? HandSignature() : 0;
+            if (area == fbArea && Placing == fbType && row == fbRow && col == fbCol && reason == fbReason && sig == fbHandSig)
+            {
+                preview.SetFeedback(fbText, reason == null, nearBottom, fbBlocked);
+                return;
+            }
+            fbArea = area; fbType = Placing; fbRow = row; fbCol = col; fbReason = reason; fbHandSig = sig;
+            int w = def.sizeW, h = def.sizeH;
+            if (fbBlocked.Length < w * h) fbBlocked = new bool[w * h];
+            System.Array.Clear(fbBlocked, 0, fbBlocked.Length);
+            var areaState = runner.State.Area(area);
+            int N = runner.Space.Cells;
+            if (areaState != null)
+                for (int r = 0; r < h; r++)
+                    for (int c = 0; c < w; c++)
+                    {
+                        int rr = row + r, cc = col + c;
+                        bool bad = rr < 0 || cc < 0 || rr >= N || cc >= N || Sim.Occupancy.IsOccupied(areaState, rr, cc)
+                            || (!def.anyZone && !def.waterOnly && Sim.World.InNoBuild(area, rr, cc));
+                        fbBlocked[r * w + c] = bad;
+                    }
+            fbText = reason != null ? DescribeRefusal(area, def, row, col, reason) : DescribeCost(def);
+            preview.SetFeedback(fbText, reason == null, nearBottom, fbBlocked);
+        }
+
+        static readonly System.Text.StringBuilder sb = new System.Text.StringBuilder(128);
+        static readonly string OkHex = ColorUtility.ToHtmlStringRGB(WorldLabel.GoodColour), BadHex = ColorUtility.ToHtmlStringRGB(WorldLabel.BadColour),
+            GoldHex = ColorUtility.ToHtmlStringRGB(WorldLabel.GoldColour), MutedHex = ColorUtility.ToHtmlStringRGB(WorldLabel.MutedColour);
+
+        /// <summary>Which quest / Island / stage reveals a locked type ("finish Quest 4: Bush whacker").</summary>
+        string LockedHint(string type)
+        {
+            var cfg = runner.Config;
+            foreach (var r in cfg.reveal)
+            {
+                if (r.building != type || r.any.Count == 0) continue;
+                var c = r.any[0];
+                if (c.kind == RevealKind.Quest)
+                {
+                    int qi = cfg.QuestIndex(c.key);
+                    if (qi >= 0) return "finish Quest " + (qi + 1) + ": " + cfg.quests[qi].name;
+                }
+                break;
+            }
+            return Sim.Buildings.UnlockReason(type) ?? "not available yet";
+        }
+
+        string DescribeCost(BuildingDef def)
+        {
+            sb.Clear();
+            sb.Append("Click: place  <color=#").Append(MutedHex).Append(">(Esc: cancel)</color>");
+            if (def.cost != null && def.cost.Count > 0)
+            {
+                sb.Append("\n<color=#").Append(MutedHex).Append(">Cost (in hand/need):</color> ");
+                for (int i = 0; i < def.cost.Count; i++)
+                {
+                    var c = def.cost[i];
+                    int have = HandCount(c.item);
+                    if (i > 0) sb.Append("  ");
+                    sb.Append(ItemName(c.item)).Append(' ')
+                      .Append("<color=#").Append(have >= c.qty ? OkHex : BadHex).Append('>').Append(have).Append("</color>")
+                      .Append("<color=#").Append(GoldHex).Append(">/").Append(c.qty).Append("</color>");
+                }
+            }
+            return sb.ToString();
+        }
+
+        string DescribeRefusal(string area, BuildingDef def, int row, int col, string reason)
+        {
+            switch (reason)
+            {
+                case "Locked":
+                    return "Locked: " + LockedHint(fbType);
+                case "Island locked":
+                    return "Locked: open this Island first";
+                case "Off the edge":
+                    return "Off the edge of the Island";
+                case "Blocked":
+                    for (int r = row; r < row + def.sizeH; r++)
+                        for (int c = col; c < col + def.sizeW; c++)
+                        {
+                            var b = Sim.World.BuildingAt(area, r, c);
+                            if (b != null) return "Blocked: overlaps " + (runner.Config.Building(b.type)?.name ?? b.type);
+                        }
+                    return "Blocked: something is in the way (red cells)";
+                case "Fuel rack blocked":
+                    return "Blocked: the fuel rack needs 3x2 free cells on the left";
+                case "Water only":
+                    return "Not here: build it on the water";
+                default:
+                    return reason.StartsWith("Build ") ? "Not here: " + char.ToLowerInvariant(reason[0]) + reason.Substring(1) : reason;
+            }
+        }
+
+        // demolish: a tag over the hovered building with the refund preview, or a mode hint at the cursor
+        PlatedText demolishTag;
+        Building dmBuilding; bool dmBuilt; string dmText;
+        /// <summary>Demolish-mode tag text (refund preview / mode hint), null when hidden.</summary>
+        public string DemolishText => demolishTag != null && demolishTag.isActiveAndEnabled ? demolishTag.Shown : null;
+
+        void UpdateDemolishTag()
+        {
+            bool on = Demolishing && hand != null && hand.CursorOver && hand.CursorArea != null;
+            if (!on) { if (demolishTag != null) demolishTag.Show(false); dmBuilding = null; return; }
+            if (demolishTag == null)
+            {
+                demolishTag = PlatedText.Create(null, "DemolishTag", WorldLabel.TextPx, PlatedText.Pivot.Above);
+                demolishTag.Label.priority = 30; demolishTag.Label.hideAboveZoom = 99f; demolishTag.Label.clampToView = true;
+            }
+            demolishTag.Show(true);
+            int cell = runner.Space.Cell;
+            var b = Hovered;
+            if (b == null)
+            {
+                if (dmBuilding != null || dmText == null || !dmText.StartsWith("Demolish:"))
+                { dmBuilding = null; dmText = "Demolish: click a building  <color=#" + MutedHex + ">(Esc: stop)</color>"; }
+                demolishTag.Label.SetAnchor(runner.Space.PxToWorld(hand.CursorArea, (hand.LCol + 0.5) * cell, hand.LRow * cell - 4));
+                demolishTag.Set(dmText, WorldLabel.TextColour, PixelSprites.Blocked);
+                return;
+            }
+            var def = runner.Config.Building(b.type);
+            if (b != dmBuilding || b.built != dmBuilt)
+            {
+                dmBuilding = b; dmBuilt = b.built;
+                dmText = DescribeRefund(b, def);
+            }
+            var view = buildings != null ? buildings.Find(HoveredArea, b.id) : null;
+            float top = view != null ? view.ArtTop : 0f;
+            var tl = runner.Space.PxToWorld(HoveredArea, b.col * cell, b.row * cell);
+            demolishTag.Label.SetAnchor(tl + new Vector3((def != null ? def.sizeW : 1) * 0.5f, top + ViewKit.U(3f), 0f));
+            demolishTag.Set(dmText, WorldLabel.TextColour, def == null || def.indestructible ? PixelSprites.Blocked : PixelSprites.Box);
+        }
+
+        string DescribeRefund(Building b, BuildingDef def)
+        {
+            string name = def != null ? def.name : b.type;
+            if (def == null || def.indestructible) return "Can't demolish " + name;
+            sb.Clear();
+            sb.Append("Click: demolish ").Append(name).Append("  <color=#").Append(MutedHex).Append(">(Esc: stop)</color>\n");
+            int parts = 0;
+            if (b.built)
+            {
+                foreach (var c in def.cost)
+                {
+                    if (c.qty <= 0) continue;
+                    sb.Append(parts++ == 0 ? "Returns " : ", ").Append("<color=#").Append(OkHex).Append(">+").Append(c.qty).Append("</color> ").Append(ItemName(c.item));
+                }
+                if ((b.type == "storehouse" || def.seal.enabled) && b.item != null && b.qty > 0)
+                    sb.Append(parts++ == 0 ? "Returns " : ", ").Append("<color=#").Append(OkHex).Append(">+").Append(b.qty).Append("</color> ").Append(ItemName(b.item)).Append(" stored");
+            }
+            else
+                foreach (var e in b.paid)
+                {
+                    int q = e.qty;
+                    if (q <= 0) continue;
+                    sb.Append(parts++ == 0 ? "Returns " : ", ").Append("<color=#").Append(OkHex).Append(">+").Append(q).Append("</color> ").Append(ItemName(e.item));
+                }
+            if (parts == 0) sb.Append("<color=#").Append(MutedHex).Append(">Nothing to return</color>");
+            return sb.ToString();
         }
 
         (bool, bool, bool, bool) HighlightFor(BuildingView v)

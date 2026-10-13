@@ -27,6 +27,9 @@ namespace IdleGrounds.Game
         [SerializeField] int sortingOrder = 5;
 
         SpriteRenderer[] segs;
+        SpriteRenderer ring;
+        /// <summary>Ring line width in texels (1 texel = 1 world px).</summary>
+        public const int RingTexels = 2;
         Transform circleRoot;
         bool has, isZone;
         Vector3 topLeft;          // world, +y up
@@ -52,6 +55,11 @@ namespace IdleGrounds.Game
                 sr.sortingOrder = sortingOrder;
                 segs[i] = sr;
             }
+            // VP-13: one pixel ring (2 texels, palette gold) replaces the 56 anti-aliased segments
+            foreach (var sg in segs) sg.gameObject.SetActive(false);
+            ring = new GameObject("PixelRing").AddComponent<SpriteRenderer>();
+            ring.transform.SetParent(circleRoot, false);
+            ring.sortingLayerName = sortingLayer; ring.sortingOrder = sortingOrder;
             circleRoot.gameObject.SetActive(false);
             if (zoneFrame != null) zoneFrame.gameObject.SetActive(false);
         }
@@ -112,8 +120,8 @@ namespace IdleGrounds.Game
             if (!on) return;
 
             float k = 0.5f + 0.5f * Mathf.Sin((float)(Time.realtimeSinceStartupAsDouble * 1000.0 % 2_000_000d / 320.0));
-            var c = new Color(Gold.r, Gold.g, Gold.b, 0.35f + 0.4f * k);
-            float lw = ViewKit.U(LinePx);
+            var c = PixelSprites.C(PixelSprites.P24, 0.45f + 0.45f * k);
+            float lw = ViewKit.U(RingTexels);
             if (isZone)
             {
                 if (zoneFrame == null) return;
@@ -124,16 +132,11 @@ namespace IdleGrounds.Game
             }
             float rad = Mathf.Max(wU, hU) * 0.62f + ViewKit.U(6f + 6f * k);
             circleRoot.position = new Vector3(topLeft.x + wU * 0.5f, topLeft.y - hU * 0.5f, 0f);
-            float seg = 2f * Mathf.PI * rad / Segments * 1.04f;      // slight overlap: no gaps between segments
-            for (int i = 0; i < Segments; i++)
-            {
-                float a = (i + 0.5f) / Segments * Mathf.PI * 2f;
-                var sr = segs[i];
-                sr.transform.localPosition = new Vector3(Mathf.Cos(a) * rad, Mathf.Sin(a) * rad, 0f);
-                sr.transform.localRotation = Quaternion.Euler(0f, 0f, a * Mathf.Rad2Deg + 90f);
-                sr.transform.localScale = new Vector3(seg, lw, 1f);
-                if (sr.color != c) sr.color = c;
-            }
+            // radius in whole texels, in 2-texel steps (a handful of cached ring sprites per target)
+            int rt = Mathf.Max(4, Mathf.RoundToInt(rad * PixelSprites.Ppu * 0.5f) * 2);
+            var s = PixelSprites.Ring(rt, RingTexels, false);
+            if (ring.sprite != s) ring.sprite = s;
+            if (ring.color != c) ring.color = c;
         }
     }
 }

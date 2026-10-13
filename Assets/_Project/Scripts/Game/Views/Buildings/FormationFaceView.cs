@@ -30,6 +30,23 @@ namespace IdleGrounds.Game
         public const float BeatBarPx = 18f;
 
         public bool ReachVisible => reach != null && reach.gameObject.activeSelf;
+        /// <summary>Real-art badge in the shared WorldLabel style (null for placeholder art).</summary>
+        PlatedText tag;
+        bool real;
+        public string TagText => tag != null && tag.isActiveAndEnabled ? tag.Shown : null;
+
+        /// <summary>VP-13: the reach circle is a 1-texel dashed pixel ring at its true radius (cached sprite per radius).</summary>
+        public static void PixelRing(Transform reach, SpriteRenderer ring, SpriteRenderer fill, float radiusCells, Color rgb)
+        {
+            if (reach == null || ring == null) return;
+            float d = Mathf.Max(0.01f, 2f * radiusCells);
+            reach.localScale = new Vector3(d, d, 1f);
+            ring.sprite = PixelSprites.Ring(Mathf.RoundToInt(radiusCells * PixelSprites.Ppu), 1, true);
+            ring.drawMode = SpriteDrawMode.Simple;
+            ring.transform.localScale = new Vector3(1f / d, 1f / d, 1f);
+            ring.color = new Color(rgb.r, rgb.g, rgb.b, 0.85f);
+            if (fill != null) fill.color = new Color(rgb.r, rgb.g, rgb.b, 0.06f);
+        }
 
         public override void Layout(BuildingView v)
         {
@@ -40,6 +57,17 @@ namespace IdleGrounds.Game
             badge.transform.localPosition = new Vector3(0.5f, -1f - ViewKit.U(8f), 0f);
             ViewKit.Font(badge, 9f);
             if (v.RealArt) ViewKit.Outline(badge);
+            real = v.RealArt;
+            if (real)
+            {
+                if (tag == null) tag = PlatedText.Create(transform, "Tag", WorldLabel.SmallPx, PlatedText.Pivot.Below);
+                tag.Show(true);
+                tag.SetIconPx(10f);
+                tag.Label.SetAnchor(new Vector3(0.5f, -1f - ViewKit.U(1f), 0f));
+                ViewKit.Show(badge, false);
+                if (badgeIcon != null) ViewKit.Show(badgeIcon, false);
+            }
+            else { if (tag != null) tag.Show(false); ViewKit.Show(badge, true); }
             lastTw = 0f;
             ViewKit.Show(icon, !v.RealArt);     // delivered art is the body
             if (itemIcon != null) itemIcon.transform.localPosition = v.RealArt ? badge.transform.localPosition : new Vector3(0.5f, v.ArtTop + ViewKit.U(8f), 0f);
@@ -54,12 +82,11 @@ namespace IdleGrounds.Game
             if (reach != null)
             {
                 float r = 0; Color rgb = UiPalette.Accent;
-                if (kind == Kind.GatheringStone) { r = v.Def.gather.radius; rgb = ViewKit.Rgba(74, 222, 128, 1f); }
-                else if (kind == Kind.FurnaceSpirit) { r = v.Def.stoker.radius + StokeSlackCells; rgb = ViewKit.Rgba(251, 146, 60, 1f); }
+                if (kind == Kind.GatheringStone) { r = v.Def.gather.radius; rgb = WorldLabel.GoodColour; }
+                else if (kind == Kind.FurnaceSpirit) { r = v.Def.stoker.radius + StokeSlackCells; rgb = WorldLabel.GoldColour; }
                 reach.localPosition = v.L(0.5f, 0.5f);
-                reach.localScale = new Vector3(2f * r, 2f * r, 1f);
-                reachFill.color = new Color(rgb.r, rgb.g, rgb.b, 0.07f);
-                reachRing.color = new Color(rgb.r, rgb.g, rgb.b, 0.5f);
+                PixelRing(reach, reachRing, reachFill, r, rgb);
+                WorldLabel.Sort(reachRing, 20);
                 ViewKit.Show(reach, false);
             }
         }
@@ -105,6 +132,13 @@ namespace IdleGrounds.Game
                 }
             }
             ViewKit.Colour(badge, c);
+            if (real)
+            {
+                bool full = c == UiPalette.Danger;
+                Sprite lead = kind == Kind.WardingSeal && b.item != null ? v.Sync.Sprites.Item(b.item) : null;
+                tag.Set(badge.text, full ? WorldLabel.BadColour : WorldLabel.GoldColour, full ? PixelSprites.Box : null, lead,
+                    kind == Kind.WispLantern && badgeIcon != null ? badgeIcon.sprite : null);
+            }
             if (beatTrack != null)
             {
                 // beat indicator: fills toward the next beat while the lantern has links
@@ -121,10 +155,10 @@ namespace IdleGrounds.Game
                     ViewKit.Bar(beatFill, 0.5f - w * 0.5f, -0.9f, w * frac, ViewKit.U(2f));
                 }
             }
-            if (badgeIcon != null) ViewKit.Show(badgeIcon, kind == Kind.WispLantern);
+            if (badgeIcon != null) ViewKit.Show(badgeIcon, kind == Kind.WispLantern && !real);
             if (itemIcon != null)
             {
-                bool show = kind == Kind.WardingSeal && b.item != null;
+                bool show = kind == Kind.WardingSeal && b.item != null && !real;
                 ViewKit.Show(itemIcon, show);
                 if (show)
                 {
@@ -158,7 +192,7 @@ namespace IdleGrounds.Game
             shownAcceptCount = n;
             float ip = ViewKit.U(AcceptPx), step = ViewKit.U(AcceptPx + 1f);
             // badge centre is 8 px under the tile; icons sit bpx*0.5 + ip*0.5 + 1 px lower (bpx = 10 floor)
-            float y = badge.transform.localPosition.y - ViewKit.U(5f + AcceptPx * 0.5f + 1f);
+            float y = real ? -1f - ViewKit.U(1f + 15f + 2f + AcceptPx * 0.5f) : badge.transform.localPosition.y - ViewKit.U(5f + AcceptPx * 0.5f + 1f);
             float x0 = 0.5f - (n - 1) * step * 0.5f;
             for (int i = 0; i < MaxAccepts; i++)
             {

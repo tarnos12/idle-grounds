@@ -56,6 +56,22 @@ namespace IdleGrounds.Game
         bool replaces;
         int lastBuilt = -1;
         readonly List<IconRow.Entry> needs = new List<IconRow.Entry>();
+        WorldLabel needsLabel;
+        SpriteRenderer needsPlate;
+        int[] needLeft = new int[0], needHave = new int[0];
+        string[] needText = new string[0];
+        readonly List<bool> needOk = new List<bool>();
+        static readonly string NeedOk = ColorUtility.ToHtmlStringRGB(WorldLabel.GoodColour), NeedBad = ColorUtility.ToHtmlStringRGB(WorldLabel.BadColour), NeedGold = ColorUtility.ToHtmlStringRGB(WorldLabel.GoldColour);
+        /// <summary>The ghost's remaining-cost tag ("have/need" per item), for automation.</summary>
+        public string NeedsShown { get { if (needsLabel == null || !needsLabel.isActiveAndEnabled) return null; var s = ""; foreach (var e in needs) s += e.item + " " + e.label + " "; return s.Trim(); } }
+
+        int HandCount(string item)
+        {
+            int n = 0;
+            var hand = Sync.Runner.State.hand;
+            for (int i = 0; i < hand.Count; i++) if (hand[i].item == item) n += hand[i].qty;
+            return n;
+        }
 
         public IReadOnlyList<BuildingFace> Faces => faces;
         public SpriteRenderer Panel => panel;
@@ -104,15 +120,17 @@ namespace IdleGrounds.Game
                 art.transform.localPosition = new Vector3(W * 0.5f, -H, 0f);   // bottom-centre pivot on the footprint's bottom edge
                 ArtSize = new Vector2(artSprite.bounds.size.x * k, artSprite.bounds.size.y * k);
                 ArtTop = Mathf.Max(0f, ArtSize.y - H);
-                float pad = ViewKit.U(2f);
-                highlight.transform.localPosition = new Vector3(W * 0.5f - ArtSize.x * 0.5f - pad, -H + ArtSize.y + pad, 0f);
-                highlight.Set(ArtSize.x + 2f * pad, ArtSize.y + 2f * pad, ViewKit.U(2f), Color.white, false);
+                // VP-13: 1-texel rim on the texel grid, 1 texel outside the art
+                float pad = ViewKit.U(1f);
+                float hx = Mathf.Round((W * 0.5f - ArtSize.x * 0.5f - pad) * ViewKit.Cell) / ViewKit.Cell;
+                highlight.transform.localPosition = new Vector3(hx, -H + ArtSize.y + pad, 0f);
+                highlight.Set(Mathf.Round((ArtSize.x + 2f * pad) * ViewKit.Cell) / ViewKit.Cell, ArtSize.y + 2f * pad, ViewKit.U(1f), Color.white, false);
             }
             else
             {
                 ArtSize = Vector2.zero; ArtTop = 0f;
-                highlight.transform.localPosition = new Vector3(-ViewKit.U(3f), ViewKit.U(3f), 0f);
-                highlight.Set(W + ViewKit.U(6f), H + ViewKit.U(6f), ViewKit.U(2f), Color.white, false);
+                highlight.transform.localPosition = new Vector3(-ViewKit.U(2f), ViewKit.U(2f), 0f);
+                highlight.Set(W + ViewKit.U(4f), H + ViewKit.U(4f), ViewKit.U(1f), Color.white, false);
             }
             if (art != null) ViewKit.Show(art, RealArt);
             ViewKit.Show(highlight, false);
@@ -126,7 +144,21 @@ namespace IdleGrounds.Game
             nameText.rectTransform.sizeDelta = new Vector2(W - ViewKit.U(4f), ViewKit.U(14f));
             nameText.transform.localPosition = L(0.5f, 0.66f);
             // real art covers the footprint: the ghost's remaining-cost line sits just below it
-            needsRow.transform.localPosition = RealArt ? new Vector3(W * 0.5f, -H - ViewKit.U(9f), 0f) : L(0.5f, small ? 1.4f : 0.86f);
+            // VP-20: the ghost's remaining cost is a plated tag with "in hand / still needed" per item
+            if (needsLabel == null)
+            {
+                needsLabel = WorldLabel.Create(transform, "NeedsTag");
+                needsLabel.priority = 15;
+                needsPlate = WorldLabel.NewPlate(needsLabel.content);
+                needsRow.transform.SetParent(needsLabel.content, false);
+                needsRow.MarkFor = i => i >= 0 && i < needOk.Count && needOk[i] ? PixelSprites.Tick : PixelSprites.Cross;
+            }
+            needsLabel.SetAnchor(RealArt ? new Vector3(W * 0.5f, -H - ViewKit.U(9f), 0f) : L(0.5f, small ? 1.4f : 0.86f));
+            needsRow.transform.localPosition = Vector3.zero;
+            foreach (var r in needsRow.GetComponentsInChildren<Renderer>(true)) WorldLabel.Sort(r, r is MeshRenderer ? WorldLabel.OrderContent + 1 : WorldLabel.OrderContent);
+            int nc = def != null ? def.cost.Count : 0;
+            if (needLeft.Length != nc) { needLeft = new int[nc]; needHave = new int[nc]; }
+            for (int i = 0; i < nc; i++) needLeft[i] = needHave[i] = int.MinValue;
             needsRow.Clear();
 
             foreach (var f in faces) f.Layout(this);
@@ -159,7 +191,7 @@ namespace IdleGrounds.Game
             Hovered = hovered; Selected = selected; DemolishHover = demolish; ReachForced = reach;
             bool on = hovered || selected || demolish;
             ViewKit.Show(highlight, on);
-            if (on) highlight.SetColour(demolish ? UiPalette.Danger : selected ? UiPalette.Gold : new Color(1f, 1f, 1f, 0.55f));
+            if (on) highlight.SetColour(demolish ? PixelSprites.C(PixelSprites.P18) : selected ? PixelSprites.C(PixelSprites.P24) : PixelSprites.C(PixelSprites.P07, 0.9f));
             foreach (var f in faces) f.SetHighlight(this, (hovered || selected || reach) && !demolish);
         }
 
@@ -199,16 +231,41 @@ namespace IdleGrounds.Game
                 ViewKit.Show(nameText, showDefault && !RealArt && !(W <= 1 && H <= 1));
                 var ic = icon.color; ic.a = b.built ? 1f : 0.7f; icon.color = ic;
                 ViewKit.Show(needsRow, !b.built);
+                if (needsLabel != null) ViewKit.Show(needsLabel, !b.built);
                 foreach (var f in faces) ViewKit.Show(f.gameObject, b.built);
                 if (b.built) needsRow.Clear();
             }
             if (!b.built)
             {
-                needs.Clear();
-                // = Sim.BuildingNeeds(b) (cost − paid) without the per-frame ItemCounts allocation
+                // = Sim.BuildingNeeds(b) (cost − paid) without the per-frame ItemCounts allocation; label "have/need"
+                // strings are rebuilt only when a remaining amount or the hand count changes
+                bool changed = false;
                 if (Def != null)
-                    foreach (var c in Def.cost) { int r = c.qty - b.paid.Get(c.item); if (r > 0) needs.Add(new IconRow.Entry(c.item, r)); }
-                needsRow.Set(needs, 10f, UiPalette.Gold, Sync.Sprites, null, W - ViewKit.U(4f));
+                {
+                    if (needText.Length != Def.cost.Count) needText = new string[Def.cost.Count];
+                    for (int i = 0; i < Def.cost.Count && i < needLeft.Length; i++)
+                    {
+                        var c = Def.cost[i];
+                        int r = c.qty - b.paid.Get(c.item), h = r > 0 ? HandCount(c.item) : 0;
+                        if (r != needLeft[i] || h != needHave[i])
+                        {
+                            changed = true; needLeft[i] = r; needHave[i] = h;
+                            needText[i] = r > 0 ? "<color=#" + (h >= r ? NeedOk : NeedBad) + ">" + h + "</color><color=#" + NeedGold + ">/" + r + "</color>" : null;
+                        }
+                    }
+                }
+                if (changed || needs.Count == 0)
+                {
+                    needs.Clear(); needOk.Clear();
+                    if (Def != null)
+                        for (int i = 0; i < Def.cost.Count && i < needText.Length; i++)
+                            if (needText[i] != null) { needs.Add(new IconRow.Entry(Def.cost[i].item, needText[i])); needOk.Add(needHave[i] >= needLeft[i]); }
+                    needsRow.Set(needs, 9f, UiPalette.Gold, Sync.Sprites, null, 0f);
+                    float pw = needsRow.Width + ViewKit.U(8f), ph = needsRow.Height + ViewKit.U(5f);
+                    WorldLabel.SizePlate(needsPlate, 0f, 0f, pw, ph);
+                    needsLabel.SetBounds(-pw * 0.5f, -ph * 0.5f, pw, ph);
+                    ViewKit.Show(needsPlate, needs.Count > 0);
+                }
                 return;
             }
             foreach (var f in faces) f.Refresh(this);

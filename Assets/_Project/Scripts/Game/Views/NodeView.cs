@@ -117,7 +117,9 @@ namespace IdleGrounds.Game
             spriteRenderer.transform.localPosition = spriteLocal;
             spriteRenderer.flipX = flipX;
             if (overlay != null) overlay.flipX = flipX;
-            var c = spriteRenderer.color; c.a = node.deco && !decoArt ? 0.55f : 1f; spriteRenderer.color = c;
+            // VP-15: decor one value step toward the ground; interactables keep full value (+ hover rim)
+            var c = node.deco ? DecorStyle.DecorTint : Color.white; c.a = node.deco && !decoArt ? 0.55f : 1f; spriteRenderer.color = c;
+            ShowRim(false); rimValid = false;
 
             pad.gameObject.SetActive(!node.deco && !realArt);
             if (!node.deco && !realArt)
@@ -152,6 +154,52 @@ namespace IdleGrounds.Game
             punchAt = -10f; punchFinal = false; seenHitAt = node.hitAt;
         }
 
+        // ---- VP-15: 1-texel P07 hover rim around an interactable node (decor never gets one) ----
+        SpriteRenderer[] rim;
+        bool rimOn, rimValid;
+        public bool RimShown => rimOn;
+
+        void ShowRim(bool on)
+        {
+            if (on == rimOn && (!on || rimValid)) return;
+            rimOn = on;
+            if (on && rim == null)
+            {
+                rim = new SpriteRenderer[4];
+                for (int i = 0; i < 4; i++)
+                {
+                    var sr = new GameObject("Rim" + i).AddComponent<SpriteRenderer>();
+                    sr.transform.SetParent(transform, false);
+                    sr.sprite = PixelSprites.Pixel;
+                    sr.sortingLayerID = spriteRenderer.sortingLayerID; sr.sortingOrder = spriteRenderer.sortingOrder + 50;
+                    sr.color = PixelSprites.C(PixelSprites.P07, 0.9f);
+                    rim[i] = sr;
+                }
+            }
+            if (rim == null) return;
+            if (on && !rimValid)
+            {
+                rimValid = true;
+                var bd = spriteRenderer.bounds;
+                var p = transform.position;
+                float t = PixelSprites.Texel;
+                float x0 = Mathf.Floor((bd.min.x - p.x) / t) * t - t, x1 = Mathf.Ceil((bd.max.x - p.x) / t) * t + t;
+                float y0 = Mathf.Floor((bd.min.y - p.y) / t) * t - t, y1 = Mathf.Ceil((bd.max.y - p.y) / t) * t + t;
+                Line(rim[0], x0, y1 - t * 0.5f, x1 - x0, t, true);
+                Line(rim[1], x0, y0 + t * 0.5f, x1 - x0, t, true);
+                Line(rim[2], x0 + t * 0.5f, (y0 + y1) * 0.5f, y1 - y0, t, false);
+                Line(rim[3], x1 - t * 0.5f, (y0 + y1) * 0.5f, y1 - y0, t, false);
+            }
+            for (int i = 0; i < 4; i++) ViewKit.Show(rim[i], on);
+        }
+
+        static void Line(SpriteRenderer sr, float x, float y, float len, float t, bool horizontal)
+        {
+            sr.transform.localPosition = horizontal ? new Vector3(x + len * 0.5f, y, 0f) : new Vector3(x, y, 0f);
+            // Pixel sprite is 1 texel at PPU 32: scale in texels
+            sr.transform.localScale = horizontal ? new Vector3(len / t, 1f, 1f) : new Vector3(1f, len / t, 1f);
+        }
+
         float punchAt = -10f;
         double seenHitAt;
         bool punchFinal;
@@ -163,6 +211,7 @@ namespace IdleGrounds.Game
         public void Refresh(double now, int cell, bool autoFlash = false, bool unlocked = true, bool hovered = false)
         {
             var n = Node;
+            ShowRim(hovered && unlocked && !n.deco);
             if (autoBadge != null && autoBadge.gameObject.activeSelf != autoFlash) autoBadge.gameObject.SetActive(autoFlash);
             // juice: squash-and-stretch punch (0.9 / 1.1 over ~120 ms) on every hit, soft shake on the final one
             if (n.hitAt != seenHitAt) { seenHitAt = n.hitAt; if (n.hitAt > 0) punchAt = Time.unscaledTime; }
