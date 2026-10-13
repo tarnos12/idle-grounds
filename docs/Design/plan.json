@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-13 08:57",
+  "updated": "2026-10-13 17:35",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -346,6 +346,39 @@
           "status": "done",
           "size": "L",
           "owner": "Claude"
+        }
+      ]
+    },
+    {
+      "id": "M7",
+      "name": "Android build",
+      "status": "in-progress",
+      "goal": "The game runs and plays well on an Android phone in landscape, with touch controls, and the owner gets an APK to test.",
+      "exit": "Touch controls cover every mouse action; UI readable on a phone; landscape locked; full test gate green; APK built and tested (emulator or device); owner confirms on his phone.",
+      "tasks": [
+        {
+          "title": "Touch controls, phone UI, landscape, Android build",
+          "detail": "Tap/hold to harvest, long-press or a feed button instead of right-click, pinch zoom and drag pan, finger-sized targets, safe areas, readable text; landscape locked; debug APK.",
+          "status": "in-progress",
+          "size": "L",
+          "owner": "Claude",
+          "now": "Sonnet builder in background copy android"
+        },
+        {
+          "title": "Run the APK on an Android emulator",
+          "detail": "Install the Android emulator + a system image (large download from Google) to test the APK before you do.",
+          "status": "blocked",
+          "size": "M",
+          "owner": "Claude",
+          "blockedBy": "Your OK to download the Android emulator (~2-3 GB)"
+        },
+        {
+          "title": "Owner tests the APK on his phone",
+          "detail": "You install the APK and report anything that feels wrong.",
+          "status": "waiting",
+          "size": "S",
+          "owner": "Mariusz (owner)",
+          "blockedBy": "After the APK passes our checks"
         }
       ]
     }

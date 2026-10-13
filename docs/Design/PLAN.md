@@ -1,13 +1,14 @@
 # Idle Grounds: plan
 
-Updated 2026-10-13 08:57. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-13 17:35. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**19 of 35 tasks done**, 2 in progress, 2 to do, 4 blocked, 8 waiting.
+**19 of 38 tasks done**, 3 in progress, 2 to do, 5 blocked, 9 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
+- **M7** Touch controls, phone UI, landscape, Android build: Sonnet builder in background copy android
 
 | # | Milestone | Gate | Status | Tasks done |
 |---|---|---|---|---|
@@ -18,6 +19,7 @@ Updated 2026-10-13 08:57. Source of truth: docs/Design/plan.json, edited with to
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
+| M7 | Android build |  | In progress | 0 / 3 |
 
 **Task status:** Done: built and checked. In progress: someone (an agent) is working on it now; the "now" line says who. Next: the next thing to start. Later: planned, not started. To do: planned and can start. Blocked: cannot start; needs art, an owner answer or another task (the reason is shown). Waiting: could start, but not a good time yet (the reason is shown).
 
@@ -120,3 +122,15 @@ Agents work like a small studio: permanent designer roles with their own guide d
 |---|---|---|---|
 | Done | Define the 11 role agents and their guide documents | World, Balance, Onboarding, UI/UX, UI QA, Art director, In-game art reviewer, Writer, Playtester, Performance, Code health — each an agent definition with a guide doc it owns. | Claude |
 | Done | Background copy: git worktree + headless Unity for all agent work | A second copy of the project where agents import, rebuild, take screenshots and run tests without touching your open editor; results arrive via git. | Claude |
+
+## M7: Android build. In progress
+
+The game runs and plays well on an Android phone in landscape, with touch controls, and the owner gets an APK to test.
+
+**Exit:** Touch controls cover every mouse action; UI readable on a phone; landscape locked; full test gate green; APK built and tested (emulator or device); owner confirms on his phone.
+
+| Status | Task | Detail | Owner |
+|---|---|---|---|
+| In progress | Touch controls, phone UI, landscape, Android build **(NOW)** | Tap/hold to harvest, long-press or a feed button instead of right-click, pinch zoom and drag pan, finger-sized targets, safe areas, readable text; landscape locked; debug APK. | Claude |
+| Blocked | Run the APK on an Android emulator | Install the Android emulator + a system image (large download from Google) to test the APK before you do. | Claude |
+| Waiting | Owner tests the APK on his phone | You install the APK and report anything that feels wrong. | Mariusz (owner) |
