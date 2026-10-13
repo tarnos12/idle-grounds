@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-12 23:54",
+  "updated": "2026-10-13 00:06",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -220,10 +220,9 @@
         {
           "title": "Visual pass batch A2: world labels and overlays",
           "detail": "VP-06, 07, 10, 13, 15, 19, 20: readable plated world labels, Heavenly Gate captions, converter strips by zoom, pixel-line overlays, decor vs interactable, hover tags, placement/demolish feedback.",
-          "status": "in-progress",
+          "status": "done",
           "size": "L",
-          "owner": "Claude",
-          "now": "Opus builder in background copy world-labels"
+          "owner": "Claude"
         },
         {
           "title": "Visual pass batch A3: world art in code (veil, ground, cliffs, paths, rack/bridge)",
