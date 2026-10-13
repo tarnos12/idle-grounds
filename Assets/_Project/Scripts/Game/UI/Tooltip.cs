@@ -79,7 +79,9 @@ namespace IdleGrounds.Game
             var mouse = UnityEngine.InputSystem.Mouse.current;
             if (mouse == null) return;
             float f = canvas.rootCanvas.scaleFactor;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, mouse.position.ReadValue() + new Vector2(16f, -20f) * f, null, out var p);
+            var rc = canvas.rootCanvas;     // VP-19: Screen Space-Camera canvases need their camera here (null only for Overlay)
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, mouse.position.ReadValue() + new Vector2(16f, -20f) * f,
+                rc.renderMode == RenderMode.ScreenSpaceOverlay ? null : rc.worldCamera, out var p);
             var half = canvasRect.rect;           // canvas rect is centred (pivot 0.5)
             float x = p.x, y = p.y;
             if (x + rt.sizeDelta.x > half.xMax) x = half.xMax - rt.sizeDelta.x;

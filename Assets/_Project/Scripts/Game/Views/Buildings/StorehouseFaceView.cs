@@ -15,8 +15,10 @@ namespace IdleGrounds.Game
         [SerializeField] SpriteRenderer lockIcon;
 
         string lastItem = "?";
-        SpriteRenderer plate;
+        PlatedText tag;
         bool real;
+        /// <summary>Real-art counter tag (shared WorldLabel style).</summary>
+        public string TagText => tag != null && tag.isActiveAndEnabled ? tag.Shown : null;
         int lastQty = -1, lastCapShown = -1; string lastLabelItem = "?"; bool? lastLocked;
 
         public override void Layout(BuildingView v)
@@ -25,36 +27,21 @@ namespace IdleGrounds.Game
             real = v.RealArt;
             if (real)
             {
-                if (plate == null) plate = ViewKit.NewSquare(transform, "Plate", label.GetComponent<MeshRenderer>(), -2, ViewKit.PlateColour);
-                plate.gameObject.SetActive(true);
-                ViewKit.ToOverlay(this);
-                ViewKit.Font(label, 9f);
-                ViewKit.Outline(label);
-                label.rectTransform.sizeDelta = new Vector2(ViewKit.U(60f), ViewKit.U(12f));
-                ViewKit.Fit(lockIcon, lockIcon.sprite, 9f);
+                if (tag == null) tag = PlatedText.Create(transform, "Tag", WorldLabel.TextPx, PlatedText.Pivot.Below);
+                tag.Show(true);
+                tag.Label.hideAboveZoom = 4.5f;
+                tag.Label.SetAnchor(new Vector3(v.W * 0.5f, -v.H - ViewKit.U(2f), 0f));
+                ViewKit.Show(label, false); ViewKit.Show(itemIcon, false); ViewKit.Show(lockIcon, false);
                 return;
             }
-            if (plate != null) plate.gameObject.SetActive(false);
+            if (tag != null) tag.Show(false);
+            ViewKit.Show(label, true);
             itemIcon.transform.localPosition = v.L(0.5f, 0.40f);
             label.transform.localPosition = v.L(0.5f, 0.78f);
             label.rectTransform.sizeDelta = new Vector2(v.W - ViewKit.U(4f), ViewKit.U(14f));
             ViewKit.Font(label, 10f);
             lockIcon.transform.localPosition = v.L(1f, 0f) + new Vector3(-ViewKit.U(8f), -ViewKit.U(8f), 0f);
             ViewKit.Fit(lockIcon, lockIcon.sprite, 10f);
-        }
-
-        void LayoutPill(BuildingView v, bool hasItem, bool locked, string text)
-        {
-            float iconW = hasItem ? ViewKit.U(13f) : 0f, lockW = locked ? ViewKit.U(10f) : 0f, gap = ViewKit.U(3f);
-            float tw = label.GetPreferredValues(text).x;
-            float total = iconW + (hasItem ? gap : 0f) + tw + (locked ? gap + lockW : 0f);
-            float y = -v.H - ViewKit.U(9f), x = v.W * 0.5f - total * 0.5f;
-            plate.transform.localPosition = new Vector3(v.W * 0.5f, y, 0f);
-            plate.transform.localScale = new Vector3(total + ViewKit.U(10f), ViewKit.U(14f), 1f);
-            if (hasItem) { itemIcon.transform.localPosition = new Vector3(x + iconW * 0.5f, y, 0f); x += iconW + gap; }
-            label.transform.localPosition = new Vector3(x + tw * 0.5f, y, 0f);
-            x += tw + gap;
-            if (locked) lockIcon.transform.localPosition = new Vector3(x + lockW * 0.5f, y, 0f);
         }
 
         public override void Refresh(BuildingView v)
@@ -67,7 +54,7 @@ namespace IdleGrounds.Game
                 if (real) ViewKit.Fit(itemIcon, item != null ? v.Sync.Sprites.Item(item) : null, 13f);
                 else if (item != null) ViewKit.Fit(itemIcon, v.Sync.Sprites.Item(item), 26f);
                 else ViewKit.Fit(itemIcon, v.Sync.Sprites.Building(b.type), 24f);
-                ViewKit.Show(itemIcon, item != null || !real);
+                ViewKit.Show(itemIcon, !real);
             }
             int cap = v.Sync.Sim.Buildings.StorehouseCap();
             bool full = b.qty >= cap;
@@ -78,10 +65,10 @@ namespace IdleGrounds.Game
                     lastQty = b.qty; lastLabelItem = item; lastCapShown = cap; lastLocked = b.locked;
                     string txt = b.qty + "/" + cap;
                     ViewKit.Text(label, txt);
-                    LayoutPill(v, item != null, b.locked, txt);
+                    // full = red text plus the crate shape (never colour alone)
+                    tag.Set(txt, full ? WorldLabel.BadColour : WorldLabel.TextColour, full ? PixelSprites.Box : null,
+                        item != null ? v.Sync.Sprites.Item(item) : null, b.locked ? lockIcon.sprite : null);
                 }
-                ViewKit.Colour(label, full ? UiPalette.Danger : UiPalette.Text);
-                ViewKit.Show(lockIcon, b.locked);
                 return;
             }
             string name = item != null ? (v.Sync.Sim.Config.Item(item)?.name ?? item) : null;

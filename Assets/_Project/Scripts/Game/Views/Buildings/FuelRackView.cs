@@ -64,6 +64,19 @@ namespace IdleGrounds.Game
             burningGhost.transform.localPosition = SlotCentre(0);
             noFuelText.transform.localPosition = new Vector3(Cols * 0.5f, ViewKit.U(8f), 0f);
             ViewKit.Font(noFuelText, 10f);
+            LayoutNoFuelTag();
+        }
+
+        // VP-07: "No fuel" as a shared-style tag (blocked shape + text) above the rack
+        PlatedText noFuelTag;
+        public string NoFuelShown => noFuelTag != null && noFuelTag.isActiveAndEnabled ? noFuelTag.Shown : null;
+        void LayoutNoFuelTag()
+        {
+            if (noFuelTag == null) noFuelTag = PlatedText.Create(transform, "NoFuelTag", WorldLabel.TextPx, PlatedText.Pivot.Above);
+            noFuelTag.Label.SetAnchor(new Vector3(Cols * 0.5f, ViewKit.U(2f), 0f));
+            noFuelTag.Label.priority = 5;
+            noFuelTag.Set("No fuel", WorldLabel.BadColour, PixelSprites.Blocked);
+            if (noFuelText != null) noFuelText.gameObject.SetActive(false);
         }
 
         static Vector3 SlotCentre(int i) => new Vector3(i % Cols + 0.5f, -(i / Cols) - 0.5f, 0f);
@@ -92,7 +105,7 @@ namespace IdleGrounds.Game
                 burnMask.transform.localPosition = new Vector3(frac * 0.5f, -0.5f, 0f);
                 burnMask.transform.localScale = new Vector3(Mathf.Max(0.0001f, frac), 1f, 1f);
             }
-            ViewKit.Show(noFuelText, n == 0);
+            if (noFuelTag != null) noFuelTag.Show(n == 0); else ViewKit.Show(noFuelText, n == 0);
         }
 
         static ConverterFaceView FindConverter(BuildingView v)
