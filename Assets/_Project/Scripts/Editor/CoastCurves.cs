@@ -169,8 +169,9 @@ namespace IdleGrounds.Editor
             {
                 int cx = Mathf.FloorToInt(gp.x / P), cy = Mathf.FloorToInt(gp.y / P);
                 var sum = Vector2.zero;
-                for (int dx = -2; dx <= 2; dx++)
-                    for (int dy = -2; dy <= 2; dy++)
+                int rc = Mathf.Max(2, Mathf.CeilToInt(radius / P) + 1);
+                for (int dx = -rc; dx <= rc; dx++)
+                    for (int dy = -rc; dy <= rc; dy++)
                     {
                         var c = new Vector2Int(cx + dx, cy + dy);
                         if (!geo.TryGetValue(c, out var g) || !Segment(g, out var s)) continue;
@@ -197,6 +198,7 @@ namespace IdleGrounds.Editor
         }
 
         const float Swell = 0.18f;
+        static readonly int[] Bayer4 = { 0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5 };
 
         /// <summary>Smooth value noise in [0, 1] (smoothstep-interpolated hashed lattice).</summary>
         static float VNoise(float x, float y, int seed)
@@ -330,10 +332,16 @@ namespace IdleGrounds.Editor
                             if (!fits) { rx -= 1f; ry -= 1f; if (rx < 3.5f || ry < 3f) break; }
                         }
                         if (!fits) continue;
-                        for (int i = Mathf.Max(0, Mathf.FloorToInt(cx - rx) - 1); i <= Mathf.Min(vw - 1, Mathf.CeilToInt(cx + rx) + 1); i++)
-                            for (int j = Mathf.Max(0, Mathf.FloorToInt(cy - ry) - 1); j <= Mathf.Min(vh - 1, Mathf.CeilToInt(cy + ry) + 1); j++)
+                        // VP-17: not a perfect disc - the radius swells and dips in seeded lobes (3rd-5th harmonics, ~3-6
+                        // cells of outline each, up to ~+-18%), so the islet reads as a broken-off rock, not a coin
+                        int ls = seed + 101 + isletN * 7;
+                        float ph3 = (Hash(3, ls, 41) % 1000) / 1000f * 6.283f, ph4 = (Hash(4, ls, 41) % 1000) / 1000f * 6.283f, ph5 = (Hash(5, ls, 41) % 1000) / 1000f * 6.283f;
+                        float Lobe(float ang) => 1f + 0.09f * Mathf.Sin(3f * ang + ph3) + 0.06f * Mathf.Sin(4f * ang + ph4) + 0.04f * Mathf.Sin(5f * ang + ph5);
+                        for (int i = Mathf.Max(0, Mathf.FloorToInt(cx - rx) - 2); i <= Mathf.Min(vw - 1, Mathf.CeilToInt(cx + rx) + 2); i++)
+                            for (int j = Mathf.Max(0, Mathf.FloorToInt(cy - ry) - 2); j <= Mathf.Min(vh - 1, Mathf.CeilToInt(cy + ry) + 2); j++)
                             {
-                                float s = Mathf.Pow(Mathf.Abs((i - cx) / rx), pw) + Mathf.Pow(Mathf.Abs((j - cy) / ry), pw);
+                                float lk = Lobe(Mathf.Atan2((j - cy) / ry, (i - cx) / rx));
+                                float s = (Mathf.Pow(Mathf.Abs((i - cx) / rx), pw) + Mathf.Pow(Mathf.Abs((j - cy) / ry), pw)) / Mathf.Pow(lk, pw);
                                 val[i, j] = Mathf.Max(val[i, j], 0.5f + 0.5f * (1f - s));
                             }
                     }
@@ -439,9 +447,9 @@ namespace IdleGrounds.Editor
             AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
         }
 
-        sealed class Piece { public string key; public int geo; public Color32[] px; }
+        internal sealed class Piece { public string key; public int geo; public Color32[] px; }
 
-        static ulong ContentHash(Color32[] px)
+        internal static ulong ContentHash(Color32[] px)
         {
             unchecked
             {
@@ -461,7 +469,7 @@ namespace IdleGrounds.Editor
         /// keeps one tile per piece as a sub-asset of <see cref="TileDir"/>/<paramref name="name"/>.asset (existing tiles are
         /// reused by key, unused ones removed). Pieces with a geo become <see cref="CoastShapeTile"/>s.
         /// </summary>
-        static Dictionary<string, Tile> Atlas(string name, int pw, int ph, float pivotY, List<Piece> pieces)
+        internal static Dictionary<string, Tile> Atlas(string name, int pw, int ph, float pivotY, List<Piece> pieces)
         {
             Directory.CreateDirectory(ArtDir);
             Directory.CreateDirectory(TileDir);
@@ -708,11 +716,76 @@ namespace IdleGrounds.Editor
             for (int i = 0; i < segs.Count; i++) if (!hasPrev.Contains(i)) Walk(i);
             for (int i = 0; i < segs.Count; i++) if (!done[i]) Walk(i);          // closed loops (islets)
 
-            int Variant(int ch, int block)
+            // VP-16: the wall texture is laid in RUNS of irregular length (18-41 px of u), each taking its own frame (never
+            // the previous one) from its own column offset, so the frames' vertical accents (lava cracks, crystals, vines,
+            // frame-edge joints) no longer repeat every 32 px like a barcode. Three of four runs pick the calmest window
+            // (least column-to-column contrast) of a few seeded candidates. A new run dithers in over its first 5 px and
+            // the top cap rows (grass / crust) always come from frame 0 (at the run offset), so the lip reads as one
+            // strip instead of per-run slabs.
+            float[][] energy = new float[nv][];
+            for (int f = 0; f < nv; f++)
             {
-                int v = (int)(Hash(ch, block, seed) % (uint)nv);
-                if (nv > 1 && (int)(Hash(ch, block - 1, seed) % (uint)nv) == v) v = (v + 1) % nv;
-                return v;
+                energy[f] = new float[32];
+                var fr = frames[f];
+                for (int x = 0; x < 32; x++)
+                {
+                    float e = 0f;
+                    for (int y = 0; y < 96; y++)
+                    {
+                        var a = fr[y * 32 + x]; var b = fr[y * 32 + ((x + 1) & 31)];
+                        if (a.a == 0 && b.a == 0) continue;
+                        e += Mathf.Abs((a.r * 0.3f + a.g * 0.59f + a.b * 0.11f) - (b.r * 0.3f + b.g * 0.59f + b.b * 0.11f)) / 255f;
+                    }
+                    energy[f][x] = e;
+                }
+            }
+            var runs = new Dictionary<int, List<(float start, int frame, int off)>>();
+            List<(float start, int frame, int off)> Runs(int ch)
+            {
+                if (runs.TryGetValue(ch, out var list)) return list;
+                list = new List<(float, int, int)>();
+                float u = 0f;
+                int prev = -1;
+                for (int k = 0; k < 4096 && u < 1e5f; k++)
+                {
+                    int len = 18 + (int)(Hash(ch, k, seed + 3) % 24u);
+                    int bestF = 0, bestO = 0;
+                    float bestE = float.MaxValue;
+                    bool calm = Hash(ch, k, seed + 5) % 4u != 0u;
+                    for (int c = 0; c < (calm ? 8 : 1); c++)
+                    {
+                        int f = (int)(Hash(ch * 31 + c, k, seed + 7) % (uint)nv);
+                        if (nv > 1 && f == prev) f = (f + 1) % nv;
+                        int o = (int)(Hash(ch * 17 + c, k, seed + 11) & 31u);
+                        float e = 0f;
+                        for (int i = 0; i < len; i++) e += energy[f][(o + i) & 31];
+                        if (e < bestE) { bestE = e; bestF = f; bestO = o; }
+                    }
+                    list.Add((u, bestF, bestO));
+                    prev = bestF;
+                    u += len;
+                    if (list.Count > 1 && u > 1e5f) break;
+                    if (u > 20000f) break;
+                }
+                runs[ch] = list;
+                return list;
+            }
+            const int Blend = 5, CapRows = WallTuck + 6, CapFade = 3;
+            Color32 Sample(int ch, float u, int tf, int dither)
+            {
+                // the cap rows always come from frame 0 (one continuous lip, no per-run slabs), at the run's own offset
+                bool cap = tf < CapRows + CapFade && (tf < CapRows || ((tf - CapRows) * 16 + 8) / CapFade <= dither);
+                var list = Runs(ch);
+                int lo = 0, hi = list.Count - 1;
+                while (lo < hi) { int mid = (lo + hi + 1) >> 1; if (list[mid].start <= u) lo = mid; else hi = mid - 1; }
+                var r = list[lo];
+                float local = u - r.start;
+                if (lo > 0 && local < Blend && (int)(local * 16f / Blend) <= dither)
+                {
+                    var p = list[lo - 1];
+                    return frames[cap ? 0 : p.frame][(95 - tf) * 32 + ((p.off + Mathf.FloorToInt(u - p.start)) & 31)];
+                }
+                return frames[cap ? 0 : r.frame][(95 - tf) * 32 + ((r.off + Mathf.FloorToInt(local)) & 31)];
             }
             var pieces = new Dictionary<ulong, Piece>();
             var at = new List<(Vector2Int c, ulong h)>();
@@ -733,20 +806,19 @@ namespace IdleGrounds.Editor
                     float yl = a.y + (b.y - a.y) * f - cy0;              // coast line in cell-local px
                     int r0 = Mathf.CeilToInt(yl - 0.5f);                 // lowest land pixel row of this column
                     float u = u0[i] + f * len;
-                    int ui = Mathf.FloorToInt(u);
-                    var fr = frames[Variant(chain[i], ui >> 5)];
-                    int col = ui & 31;
                     // where the coast turns to face west / east the visible face narrows AND shortens: the wall height
                     // follows the smoothed coast normal (full from ~25° off south-facing, nothing at the vertical tangent),
-                    // compressing the frame below its tuck rows so the ragged bottom stays (no 1-px "posts")
-                    var sn = map.SmoothNormal(new Vector2(xc, a.y + (b.y - a.y) * f));
-                    int H = Mathf.RoundToInt(96f * Mathf.Clamp01((-Mathf.Min(sn.y, n.y) - 0.1f) / 0.4f));
+                    // compressing the frame below its tuck rows so the ragged bottom stays (no 1-px "posts"). The normal is
+                    // smoothed over ~3.5 cells (VP-16), so a wall turning vertical tapers over 3-4 segments, not one.
+                    var sn = map.SmoothNormal(new Vector2(xc, a.y + (b.y - a.y) * f), 112f);
+                    int H = Mathf.RoundToInt(96f * Mathf.Clamp01((-Mathf.Min(sn.y, n.y * 0.5f + sn.y * 0.5f) - 0.1f) / 0.4f));
                     if (H < WallTuck + 6) continue;
                     for (int t = 0; t < H; t++)
                     {
                         int y = r0 + WallTuck - 1 - t;                   // frame row t (from the top): its top 6 rows tuck under the land
                         int tf = t < WallTuck ? t : WallTuck + (t - WallTuck) * (96 - WallTuck) / (H - WallTuck);
-                        var cc = fr[(95 - tf) * 32 + col];
+                        int gxp = cx0 + x, gyp = cy0 + y;
+                        var cc = Sample(chain[i], u, tf, Bayer4[((gyp & 3) << 2) | (gxp & 3)]);
                         if (cc.a == 0) continue;
                         if (turn > 0f) cc = new Color32((byte)Mathf.Clamp(cc.r * k, 0, 255), (byte)Mathf.Clamp(cc.g * k, 0, 255), (byte)Mathf.Clamp(cc.b * k, 0, 255), cc.a);
                         int row = y + WallBase;

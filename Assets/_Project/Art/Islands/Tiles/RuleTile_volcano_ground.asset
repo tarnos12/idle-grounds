@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
+  m_Script: {fileID: 11500000, guid: 141495f650add3c429d5d259b8ee55e1, type: 3}
   m_Name: RuleTile_volcano_ground
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
   m_DefaultSprite: {fileID: 1660513221480031229, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
@@ -39,3 +39,8 @@ MonoBehaviour:
     - {x: 0, y: -1, z: 0}
     - {x: 1, y: -1, z: 0}
     m_RuleTransform: 0
+  kin: []
+  fill:
+  - {fileID: 1660513221480031229, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
+  - {fileID: -5539466292282716202, guid: 108af55150e887541b4fd309a6040d5c, type: 3}
+  - {fileID: -1317803899554053724, guid: 108af55150e887541b4fd309a6040d5c, type: 3}

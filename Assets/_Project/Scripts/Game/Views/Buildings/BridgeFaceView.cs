@@ -48,13 +48,18 @@ namespace IdleGrounds.Game
             {
                 ViewKit.Font(buffer, 9f);
                 buffer.rectTransform.sizeDelta = new Vector2(v.W, ViewKit.U(12f));
-                buffer.transform.localPosition = new Vector3(v.W * 0.5f, -v.H * 0.5f, 0f);
+                // VP-12: below the footprint (under the status line), not printed over the bridge art
+                buffer.transform.localPosition = new Vector3(v.W * 0.5f, -v.H - ViewKit.U(18f), 0f);
             }
             Current = (State)(-1);
         }
 
         public override void Refresh(BuildingView v)
         {
+            // VP-12: the bridge art has its own transparent corners; the base view's opaque slate footprint plate behind it
+            // read as a placeholder box. The plate and its border stay hidden while the bridge face is drawn.
+            ViewKit.Show(v.Panel, false);
+            ViewKit.Show(v.Border, false);
             var sim = v.Sync.Sim;
             var b = v.Building;
             var partner = sim.BridgePartner(v.Area, b);

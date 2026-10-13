@@ -240,7 +240,8 @@ namespace IdleGrounds.Editor
                 if (g.Length >= 3)
                 {
                     // playable-area fill: centre variants only (the coast blob underneath draws every edge)
-                    var fill = LoadOrCreate(GroundTilePath(key));
+                    var fill = LoadOrCreateCoast(GroundTilePath(key));      // VP-14: a CoastRuleTile (converted in place) for the hashed fill pick
+                    fill.fill = new[] { g[0], g[1], g[2] };
                     fill.m_DefaultSprite = g[0];
                     fill.m_DefaultColliderType = Tile.ColliderType.None;
                     fill.m_TilingRules.Clear();
@@ -255,6 +256,7 @@ namespace IdleGrounds.Editor
                     var diag = IslandDressingBuilder.EnsureDiagGround(key);
                     coast.kin = diag != null ? (TileBase[])diag : new TileBase[0];
                     coast.m_DefaultSprite = g[0];
+                    coast.fill = new[] { g[0], g[1], g[2] };      // VP-14: hashed fill variants (CoastRuleTile.GetTileData)
                     coast.m_DefaultColliderType = Tile.ColliderType.None;
                     var rules = coast.m_TilingRules;
                     rules.Clear();
@@ -310,6 +312,28 @@ namespace IdleGrounds.Editor
                     EditorUtility.SetDirty(tile);
                 }
             }
+        }
+
+        /// <summary>VP-14: the coast blob tile and the play-area ground tile pick their fill variant by a seeded cell hash
+        /// (<see cref="IdleGrounds.Game.CoastRuleTile.fill"/>); the ground tile is converted to a CoastRuleTile in place.</summary>
+        public static void EnsureFillVariety(string key)
+        {
+            var delivered = Frames($"Assets/_Project/Art/Incoming/islands/island_{key}_ground_fill_32x32_3f.png");
+            var g = delivered.Length >= 3 ? delivered : Frames(GroundPath(key));
+            if (g.Length < 3) return;
+            var fill = new[] { g[0], g[1], g[2] };
+            foreach (var path in new[] { GroundTilePath(key), CoastTilePath(key) })
+            {
+                if (!File.Exists(path)) continue;
+                var t = LoadOrCreateCoast(path);
+                if (t == null) continue;
+                bool same = t.fill != null && t.fill.Length == 3;
+                for (int i = 0; same && i < 3; i++) same = t.fill[i] == fill[i];
+                if (same) continue;
+                t.fill = fill;
+                EditorUtility.SetDirty(t);
+            }
+            AssetDatabase.SaveAssets();
         }
 
         /// <summary>The coast blob tile as a <see cref="IdleGrounds.Game.CoastRuleTile"/>. An older plain RuleTile asset is
