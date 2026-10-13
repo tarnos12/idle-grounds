@@ -16,10 +16,11 @@ MonoBehaviour:
     id: dragon2
     icon: "\U0001F409"
     name: Stone & clay for the dragon
-    desc: "The dragon's next tribute is stone and clay. The starter Gathering Stones
-      \U0001F9FF by the quarry rock and the clay field (bottom corners of the Center)
-      collect both \u2014 LEFT-click (or hold) one to withdraw into your hand, then
-      right-click the dragon."
+    desc: "The dragon's next tribute is stone and clay. Stone comes from the quarry
+      rock and clay from the clay field (bottom corners of the Center): hold left-click
+      near the drops to vacuum them into your hand, or build a Gathering Stone \U0001F9FF
+      beside each to collect them for you and left-click it to withdraw. Then right-click
+      the dragon."
     goalKind: 3
     goalItem: 
     goalStat: 

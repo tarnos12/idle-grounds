@@ -57,6 +57,7 @@ namespace IdleGrounds.Game
         public static void Show(object who, string text, TMP_FontAsset font = null, Vector2? screenPos = null)
         {
             if (string.IsNullOrEmpty(text)) { Hide(who); return; }
+            text = ControlWords.Apply(text);
             var t = Ensure(font);
             if (t == null) return;
             t.owner = who;

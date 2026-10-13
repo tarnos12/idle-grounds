@@ -24,7 +24,9 @@ namespace IdleGrounds.Game
         /// One punctuation convention for UI text (VP-26): ASCII " - " for dashes and middle dots, "->" for arrows
         /// (the data strings were ported with em dashes, middle dots and arrows).
         /// </summary>
-        public static string Ascii(string s)
+        public static string Ascii(string s) => ControlWords.Apply(AsciiPunctuation(s));      // data strings also get touch wording on a phone
+
+        static string AsciiPunctuation(string s)
         {
             if (string.IsNullOrEmpty(s)) return s;
             if (s.IndexOf('\u2014') < 0 && s.IndexOf('\u00B7') < 0 && s.IndexOf('\u2192') < 0 && s.IndexOf('\u2013') < 0) return s;

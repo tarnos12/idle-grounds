@@ -25,8 +25,9 @@ namespace IdleGrounds.Game
             int gatherCap = gs != null ? gs.gather.cap : 0;
 
             var S = new List<(string, string)>();
-            S.Add(("🕹️ Controls",
-                "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Q / E rotate the stacks in your hand, Esc cancels/closes."));
+            S.Add(("🕹️ Controls", MobileUi.IsMobile
+                ? "Drag one finger to look around, pinch to zoom. Tap a node, enemy or building; HOLD to keep harvesting, vacuuming or attacking. GIVE = hold on a building with items in hand (or switch the Give button on: every touch gives, tap drops one, hold keeps feeding). Swap rotates the stacks in your hand. Build opens the build menu: drag the ghost over the island, then confirm with Place. Back closes a panel, or opens the Menu."
+                : "WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Q / E rotate the stacks in your hand, Esc cancels/closes."));
             S.Add(("✋ Gathering & the hand",
                 "Left-click resource nodes to harvest; HOLD to auto-swing. Items fall on the ground — hold left-click near them to vacuum into your hand (cap shown in the bottom bar); if you START the hold on an item, only that item type is vacuumed. RIGHT-click drops items / feeds buildings; the front stack feeds first (Q / E change which stack is in front). Holding right-click keeps feeding but stops at the target: it never spills onto the ground once the building is full."));
             S.Add(("🏗️ Buildings",

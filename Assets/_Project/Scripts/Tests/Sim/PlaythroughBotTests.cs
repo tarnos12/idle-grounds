@@ -24,6 +24,7 @@ namespace IdleGrounds.Sim.Tests
             var cfg = SimTestUtil.LoadConfig();
             cfg.test.enabled = testMode;
             var sim = SimTestUtil.NewSim(out var clock, seed, cfg, init: false);
+            sim.State.starterPlaced = true;          // owner 2026-10-13: a new game starts with no buildings placed
             sim.Boot();
             var bot = new PlaythroughBot(sim, clock);
             if (human) bot.UseHumanPacing();
@@ -79,7 +80,9 @@ namespace IdleGrounds.Sim.Tests
             var (h, a) = FirstMinutes(bot, 20 * Min);
             Assert.Greater(h, a, "hand work dominates the first 20 minutes");
             double mid = bot.AutoRatio(0.4, 0.8);
-            Assert.GreaterOrEqual(mid, 5.0, "by mid-run automated production is ≥ 5× hand production");
+            // owner 2026-10-13: a new game starts with no buildings, so the player builds the first machines by hand and the
+            // mid-run ratio drops (starter network: 8.8x, empty start: 3.8x). Floor lowered 5 -> 3; retune in the balance pass.
+            Assert.GreaterOrEqual(mid, 3.0, "by mid-run automated production is ≥ 3× hand production (empty start)");
             Assert.LessOrEqual(mid, 12.0, "…but hand work still matters mid-run (target 5–10×)");
             var tl = bot.Timeline.Select(t => t.what).ToList();
             Assert.GreaterOrEqual(tl.Count(t => t.Contains("/automation")), 3, "bought Automation (several Islands / levels)");

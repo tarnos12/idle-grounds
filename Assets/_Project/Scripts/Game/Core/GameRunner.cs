@@ -48,7 +48,7 @@ namespace IdleGrounds.Game
             var clock = new SystemClock();
             var state = SaveService.LoadOrNull(Config, clock.NowMs);
             FreshRun = state == null;
-            if (state == null) state = GameState.CreateInitial(Config, clock.NowMs);
+            if (state == null) state = GameState.CreateNewGame(Config, clock.NowMs);
             ulong s = seed != 0 ? seed : (ulong)clock.NowMs;
             Sim = new Simulation(Config, state, clock, new XorShiftRng(s));
             Sim.Events.RunReset += OnRunReset;

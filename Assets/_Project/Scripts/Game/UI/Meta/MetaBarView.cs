@@ -11,7 +11,8 @@ namespace IdleGrounds.Game
     /// </summary>
     public class MetaBarView : MonoBehaviour
     {
-        public const string ResetText = "Reset ALL progress and start over?";
+        public const string ResetText = "Start a new game? Your save is deleted and the new run starts with no buildings placed.";
+        public const string NewGameTitle = "New game?", NewGameButton = "New game";
 
         [SerializeField] GameRunner runner;
         [SerializeField] Button helpButton;
@@ -43,13 +44,14 @@ namespace IdleGrounds.Game
             TooltipTrigger.Attach(motionButton, "Reduce motion: no screen shake, squash or flight tweens, no ambient motes");
             TooltipTrigger.Attach(helpButton, "How to play");
             TooltipTrigger.Attach(statsButton, "Your progress so far");
-            TooltipTrigger.Attach(resetButton, "Wipe the save and start over");
+            TooltipTrigger.Attach(resetButton, "New game: wipe the save and start again with no buildings placed");
+            if (resetButton != null) { var rl = resetButton.transform.Find("Label")?.GetComponent<TextMeshProUGUI>(); if (rl != null) rl.text = "New game"; }
             TooltipTrigger.Attach(muteButton, "Mute / unmute sound");
         }
 
         public void AskReset()
         {
-            confirm.Ask("Start over?", ResetText, "Reset", () => { if (SaveService.Instance != null) SaveService.Instance.ResetAll(); });
+            confirm.Ask(NewGameTitle, ResetText, NewGameButton, () => { if (SaveService.Instance != null) SaveService.Instance.ResetAll(); });
         }
 
         public void ToggleMute()

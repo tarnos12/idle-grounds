@@ -107,6 +107,20 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
+        public void NewGame_StartsWithNoBuildings_OnlyAltarAndDragon()
+        {
+            // owner 2026-10-13: a new game places no starter buildings (storehouses, workbench, kiln, lanterns...)
+            var cfg = SimTestUtil.LoadConfig();
+            var clock = new ManualClock(1_000_000);
+            var sim = new Simulation(cfg, GameState.CreateNewGame(cfg, clock.NowMs), clock, new XorShiftRng(12345));
+            sim.Boot();
+            var c = sim.State.Area("center");
+            CollectionAssert.AreEquivalent(new[] { "center", "dragon" }, c.buildings.Select(b => b.type).ToArray());
+            Assert.AreEqual(0, c.buildings.Count(b => b.starter));
+            Assert.AreEqual(0, SimTestUtil.CountGround(c, "jade_shard"), "no seeded starter piles");
+        }
+
+        [Test]
         public void StarterNetwork_RandomWorld_AllPlacedLegally()
         {
             for (ulong seed = 1; seed <= 5; seed++)

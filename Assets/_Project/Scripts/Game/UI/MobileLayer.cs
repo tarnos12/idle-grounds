@@ -33,7 +33,10 @@ namespace IdleGrounds.Game
         GameRunner runner;
         BuildController build;
         TouchInputController touch;
-        bool built, dirty = true, appSettingsDone, questHandled;
+        bool built, dirty = true, appSettingsDone, questHandled, lastGive;
+        const string SwapLabel = "<sprite name=\"glyph_redo\">\nSwap";
+        static string GiveLabel(bool on) => "<sprite name=\"ui_hand\">\n" + (on ? "Give ON" : "Give");
+        static float HandButtonSize => 66f;
         Vector4 lastInsets = new Vector4(-1, -1, -1, -1);
         float lastScaleKey, nextHitScan;
         int setupCountdown;
@@ -65,11 +68,21 @@ namespace IdleGrounds.Game
             Instance = this;
             touch = GetComponent<TouchInputController>();
             SceneManager.sceneLoaded += OnSceneLoaded;
+            TMPro.TMPro_EventManager.TEXT_CHANGED_EVENT.Add(OnTextChanged);
+        }
+
+        /// <summary>Touch wording for every text the game shows (see <see cref="ControlWords"/>).</summary>
+        static void OnTextChanged(Object o)
+        {
+            if (!MobileUi.IsMobile || !(o is TMP_Text tmp)) return;
+            string s = tmp.text, r = ControlWords.Rewrite(s);
+            if (s != r) tmp.text = r;
         }
 
         void OnDestroy()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
+            TMPro.TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(OnTextChanged);
             if (Instance == this) Instance = null;
         }
 
@@ -97,7 +110,7 @@ namespace IdleGrounds.Game
                 if (!TryBuild()) return;
             }
             float key = MobileUi.RefHeight() + MobileUi.ScreenH * 7f + MobileUi.ScreenW * 13f;
-            if (dirty || key != lastScaleKey) { ApplyScale(); lastScaleKey = key; dirty = false; }
+            if (dirty || key != lastScaleKey) { ApplyScale(); StyleBar(); lastScaleKey = key; dirty = false; }
             var ins = MobileUi.SafeInsets();
             if (ins != lastInsets) { ApplySafeArea(ins); lastInsets = ins; }
             if (Time.unscaledTime >= nextHitScan) { nextHitScan = Time.unscaledTime + 0.75f; ExpandHitAreas(); FitModals(); }
@@ -183,6 +196,67 @@ namespace IdleGrounds.Game
             scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
             scaler.matchWidthOrHeight = 1f;                    // height decides: the phone shows the same UI height in any aspect
             Canvas.ForceUpdateCanvases();
+        }
+
+        /// <summary>
+        /// Compact phone bottom bar: the logo, the area pill, the hand pill and the frequent buttons (Stats, Build, Demolish) plus a Menu
+        /// button; the title, version, Help, Sound, Motion and Reset move into the Menu. Every button is at least 48 dp tall and the docks
+        /// above the bar move up with it.
+        /// </summary>
+        void StyleBar()
+        {
+            var bar = FindFirstObjectByType<BottomBarView>();
+            if (bar == null || canvas == null) return;
+            var bt = (RectTransform)bar.transform;
+            float f = Mathf.Max(0.01f, MobileUi.ScreenH / MobileUi.RefHeight());   // px per canvas unit (canvas.scaleFactor lags a frame)
+            float btnH = Mathf.Max(40f, Mathf.Min(Mathf.Ceil(MobileUi.DpToPx(MobileUi.MinTargetDp) / f) + 2f, 0.125f * MobileUi.RefHeight()));   // 48 dp, but never more than 1/8 of the screen (tiny / odd densities)
+            var menu = bt.Find("MenuButton");
+            if (menu == null)
+            {
+                var help = bt.Find("HelpButton");
+                if (help != null)
+                {
+                    var go = Instantiate(help.gameObject, bt);
+                    go.name = "MenuButton";
+                    go.SetActive(true);
+                    var mb = go.GetComponent<Button>();
+                    mb.onClick = new Button.ButtonClickedEvent();
+                    mb.onClick.AddListener(() => { if (PauseOpen) ClosePause(); else OpenPause(); });
+                    var lbl = go.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
+                    if (lbl != null) lbl.text = "Menu";
+                    var tt = go.GetComponent<TooltipTrigger>(); if (tt != null) Destroy(tt);
+                    TooltipTrigger.Attach(mb, "Menu: help, stats, sound, new game");
+                    go.transform.SetAsLastSibling();
+                    menu = go.transform;
+                }
+            }
+            foreach (var n in new[] { "Title", "VersionBadge", "MuteButton", "MotionButton", "HelpButton", "ResetButton" })
+            {
+                var c = bt.Find(n);
+                if (c != null && c.gameObject.activeSelf) c.gameObject.SetActive(false);
+            }
+            var area = bt.Find("AreaPill");
+            if (area != null)
+            {
+                var le = area.GetComponent<LayoutElement>(); if (le != null) le.preferredWidth = 180f;
+                var rn = area.Find("RegionName")?.GetComponent<TextMeshProUGUI>();
+                if (rn != null) { rn.textWrappingMode = TextWrappingModes.NoWrap; rn.overflowMode = TextOverflowModes.Ellipsis; rn.enableAutoSizing = true; rn.fontSizeMin = 13f; rn.fontSizeMax = 19f; }
+            }
+            foreach (var b in bt.GetComponentsInChildren<Button>(false))
+            {
+                var le = b.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
+                le.minHeight = le.preferredHeight = btnH;
+                var lt = b.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
+                if (lt != null) lt.fontSize = 20f;
+            }
+            float barH = btnH + 16f;
+            if (!Mathf.Approximately(bt.sizeDelta.y, barH)) bt.sizeDelta = new Vector2(bt.sizeDelta.x, barH);
+            foreach (var d in FindObjectsByType<UiDock>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var rt = (RectTransform)d.transform;
+                if (rt.anchorMin.y == 0f && rt.anchorMax.y == 0f) rt.anchoredPosition = new Vector2(rt.anchoredPosition.x, barH + 8f);
+            }
+            LayoutRebuilder.MarkLayoutForRebuild(bt);
         }
 
         void ApplySafeArea(Vector4 insetsPx)
@@ -277,7 +351,7 @@ namespace IdleGrounds.Game
             return t;
         }
 
-        Button NewButton(Transform parent, string name, string label, Vector2 size, Color bg, UnityAction onClick, out TextMeshProUGUI text, out Image img)
+        Button NewButton(Transform parent, string name, string label, Vector2 size, Color bg, UnityAction onClick, out TextMeshProUGUI text, out Image img, UiButtonVariant variant = UiButtonVariant.Standard, float fontSize = 26f)
         {
             var rt = NewRect(name, parent);
             rt.sizeDelta = size;
@@ -291,7 +365,8 @@ namespace IdleGrounds.Game
             colors.pressedColor = new Color(0.75f, 0.75f, 0.75f, 1f);
             b.colors = colors;
             b.onClick.AddListener(onClick);
-            text = NewText(rt, label, 26f, TextAlignmentOptions.Center, UiPalette.Text);
+            UiButtonSkin.Attach(rt.gameObject, variant);        // the game's button art (falls back to the flat placeholder without it)
+            text = NewText(rt, label, fontSize, TextAlignmentOptions.Center, UiPalette.Text);
             text.fontStyle = FontStyles.Bold;
             return b;
         }
@@ -302,18 +377,20 @@ namespace IdleGrounds.Game
             hud = NewRect("TouchHud", safe);
             Stretch(hud);
 
-            // right edge, mid-height: Swap (Q/E) and Give (right-click mode)
+            // left edge, lower half: Swap (Q/E) and Give (right-click mode). The quest panel lives on the right, the world centre stays free
             var col = NewRect("HandButtons", hud);
-            col.anchorMin = col.anchorMax = new Vector2(0f, 0.42f);     // left edge: the quest panel / build dock live on the right and bottom
+            col.anchorMin = col.anchorMax = new Vector2(0f, 0.34f);
             col.pivot = new Vector2(0f, 0.5f);
-            col.anchoredPosition = new Vector2(14f, 0f);
-            col.sizeDelta = new Vector2(96f, 214f);
-            swapBtn = NewButton(col, "Swap", "Swap", new Vector2(96f, 96f), UiPalette.Panel, OnSwap, out _, out _);
+            col.anchoredPosition = new Vector2(12f, 0f);
+            float bs = HandButtonSize;
+            col.sizeDelta = new Vector2(bs, bs * 2f + 12f);
+            swapBtn = NewButton(col, "Swap", SwapLabel, new Vector2(bs, bs), UiPalette.Panel, OnSwap, out _, out _, UiButtonVariant.Standard, 17f);
             var sr = (RectTransform)swapBtn.transform; sr.anchorMin = sr.anchorMax = new Vector2(0.5f, 1f); sr.pivot = new Vector2(0.5f, 1f); sr.anchoredPosition = Vector2.zero;
-            giveBtn = NewButton(col, "Give", "Give", new Vector2(96f, 96f), UiPalette.Panel, OnGive, out giveLabel, out giveImg);
+            giveBtn = NewButton(col, "Give", GiveLabel(false), new Vector2(bs, bs), UiPalette.Panel, OnGive, out giveLabel, out giveImg, UiButtonVariant.Standard, 17f);
             var gr = (RectTransform)giveBtn.transform; gr.anchorMin = gr.anchorMax = new Vector2(0.5f, 0f); gr.pivot = new Vector2(0.5f, 0f); gr.anchoredPosition = Vector2.zero;
-            TooltipTrigger.Attach(swapBtn, "Swap the hand stacks (Q / E): the front stack goes to the back");
-            TooltipTrigger.Attach(giveBtn, "Give mode: touch = right click. Tap drops or feeds one item, hold keeps feeding");
+            foreach (var hb in new[] { swapBtn, giveBtn }) { var tx = hb.GetComponentInChildren<TextMeshProUGUI>(); if (tx != null) { tx.textWrappingMode = TextWrappingModes.NoWrap; tx.lineSpacing = -12f; } }
+            TooltipTrigger.Attach(swapBtn, "Swap the hand stacks: the front stack goes to the back");
+            TooltipTrigger.Attach(giveBtn, "Give mode: every touch gives. Tap drops or feeds one item, hold keeps feeding. (Or hold on a building with items in hand.)");
 
             // bottom centre, above the bar: Place / Demolish + Cancel and the reason line
             aimBar = NewRect("AimBar", hud);
@@ -327,11 +404,12 @@ namespace IdleGrounds.Game
             var lbg = lbgRt.gameObject.AddComponent<Image>(); lbg.color = new Color(UiPalette.Bg.r, UiPalette.Bg.g, UiPalette.Bg.b, 0.85f); lbg.raycastTarget = false;
             lbgRt.anchorMin = new Vector2(0f, 1f); lbgRt.anchorMax = new Vector2(1f, 1f); lbgRt.pivot = new Vector2(0.5f, 1f); lbgRt.anchoredPosition = Vector2.zero; lbgRt.sizeDelta = new Vector2(0f, 40f);
             lbgRt.SetAsFirstSibling(); lr.anchorMin = new Vector2(0f, 1f); lr.anchorMax = new Vector2(1f, 1f); lr.pivot = new Vector2(0.5f, 1f); lr.anchoredPosition = Vector2.zero; lr.sizeDelta = new Vector2(0f, 40f);
-            aimConfirm = NewButton(aimBar, "Confirm", "Place", new Vector2(300f, 84f), UiPalette.AccentDk, OnAimConfirm, out aimConfirmLabel, out _);
+            aimConfirm = NewButton(aimBar, "Confirm", "Place", new Vector2(300f, 84f), UiPalette.AccentDk, OnAimConfirm, out aimConfirmLabel, out _, UiButtonVariant.Primary);
             var cr = (RectTransform)aimConfirm.transform; cr.anchorMin = cr.anchorMax = new Vector2(0f, 0f); cr.pivot = new Vector2(0f, 0f); cr.anchoredPosition = Vector2.zero;
             aimCancel = NewButton(aimBar, "Cancel", "Cancel", new Vector2(200f, 84f), UiPalette.Panel, OnAimCancel, out _, out _);
             var xr = (RectTransform)aimCancel.transform; xr.anchorMin = xr.anchorMax = new Vector2(1f, 0f); xr.pivot = new Vector2(1f, 0f); xr.anchoredPosition = Vector2.zero;
             aimBar.gameObject.SetActive(false);
+            lastGive = touch != null && !touch.GiveMode;
         }
 
         void OnSwap()
@@ -359,8 +437,14 @@ namespace IdleGrounds.Game
             if (cols != null && cols.gameObject.activeSelf == dockOpen) cols.gameObject.SetActive(!dockOpen);
 
             bool give = touch.GiveMode;
-            if (giveImg != null) giveImg.color = give ? UiPalette.AccentDk : UiPalette.Panel;
-            if (giveLabel != null) giveLabel.text = give ? "Give ON" : "Give";
+            if (give != lastGive)
+            {
+                lastGive = give;
+                var skin = giveBtn != null ? giveBtn.GetComponent<UiButtonSkin>() : null;
+                if (skin == null || !skin.SetToggle(give ? UiToggleState.On : UiToggleState.Off))
+                    if (giveImg != null) giveImg.color = give ? UiPalette.AccentDk : UiPalette.Panel;     // no art: tint
+                if (giveLabel != null) giveLabel.text = GiveLabel(give);
+            }
 
             bool aim = build != null && build.AimActive;
             if (aimBar.gameObject.activeSelf != aim) aimBar.gameObject.SetActive(aim);
@@ -409,13 +493,41 @@ namespace IdleGrounds.Game
         {
             if (!built) return;
             if (pausePanel == null) BuildPause();
-            keepAwakeLabel.text = "Keep screen on: " + (KeepAwake ? "On" : "Off");
+            RefreshPauseLabels();
             pausePanel.gameObject.SetActive(true);
             pausePanel.SetAsLastSibling();
-            if (touch != null) { /* gestures stay; the panel's scrim blocks the world */ }
+            FitPause();
         }
 
         public void ClosePause() { if (pausePanel != null) pausePanel.gameObject.SetActive(false); }
+
+        TextMeshProUGUI soundLabel, motionLabel;
+        RectTransform pauseBox;
+
+        void RefreshPauseLabels()
+        {
+            if (keepAwakeLabel != null) keepAwakeLabel.text = "Keep awake: " + (KeepAwake ? "On" : "Off");
+            var a = AudioService.Instance;
+            if (soundLabel != null) soundLabel.text = "Sound: " + (a != null && a.Muted ? "Off" : "On");
+            if (motionLabel != null) motionLabel.text = "Motion: " + (Juice.ReduceMotion ? "Calm" : "On");
+        }
+
+        /// <summary>The menu box shrinks (never grows) to fit the canvas height inside the safe area, so every button stays on screen.</summary>
+        void FitPause()
+        {
+            if (pauseBox == null || canvasRect == null) return;
+            pauseBox.localScale = Vector3.one;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(pauseBox);
+            float f = Mathf.Max(0.01f, MobileUi.ScreenH / MobileUi.RefHeight());
+            var bar = FindFirstObjectByType<BottomBarView>();
+            float reserve = (bar != null ? ((RectTransform)bar.transform).rect.height : 0f) + MobileUi.SafeInsets().y / f + 10f;      // the bar (and the gesture inset) stay clear
+            float availH = canvasRect.rect.height - reserve - MobileUi.SafeInsets().w / f - 16f;
+            pauseBox.anchoredPosition = new Vector2(0f, (reserve - MobileUi.SafeInsets().w / f) * 0.5f);
+            float availW = canvasRect.rect.width - 24f;
+            float h = Mathf.Max(1f, pauseBox.rect.height), w = Mathf.Max(1f, pauseBox.rect.width);
+            float k = Mathf.Min(1f, availH / h, availW / w);
+            pauseBox.localScale = new Vector3(k, k, 1f);
+        }
 
         void BuildPause()
         {
@@ -426,26 +538,42 @@ namespace IdleGrounds.Game
             scrim.raycastTarget = true;
             pausePanel.gameObject.AddComponent<ModalScrim>();
             var box = NewRect("Box", pausePanel);
+            pauseBox = box;
             box.anchorMin = box.anchorMax = box.pivot = new Vector2(0.5f, 0.5f);
-            box.sizeDelta = new Vector2(420f, 440f);
             var bi = box.gameObject.AddComponent<Image>(); bi.color = UiPalette.Bg2;
             var bo = box.gameObject.AddComponent<Outline>(); bo.effectColor = UiPalette.Accent; bo.effectDistance = new Vector2(2f, -2f);
             var vl = box.gameObject.AddComponent<VerticalLayoutGroup>();
-            vl.padding = new RectOffset(24, 24, 20, 20); vl.spacing = 12f;
-            vl.childAlignment = TextAnchor.UpperCenter; vl.childControlWidth = true; vl.childControlHeight = false; vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
-            var title = NewText(box, "Menu", 34f, TextAlignmentOptions.Center, UiPalette.Accent);
+            vl.padding = new RectOffset(24, 24, 20, 22); vl.spacing = 12f;
+            vl.childAlignment = TextAnchor.UpperCenter; vl.childControlWidth = true; vl.childControlHeight = true; vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
+            var fit = box.gameObject.AddComponent<ContentSizeFitter>(); fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize; fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            UiSkin.Attach(box.gameObject, "ui_panel_jade");       // jade panel like the other modals (applies the frame padding)
+            var title = NewText(box, "Menu", 34f, TextAlignmentOptions.Center, UiPalette.Gold);
             title.fontStyle = FontStyles.Bold;
-            var tle = title.gameObject.AddComponent<LayoutElement>(); tle.preferredHeight = 48f;
-            title.rectTransform.sizeDelta = new Vector2(0f, 48f);
-            void Row(string label, UnityAction act, out TextMeshProUGUI t)
+            var tle = title.gameObject.AddComponent<LayoutElement>(); tle.preferredHeight = 44f; tle.minHeight = 44f;
+            // two rows of buttons in a 3 column grid: all of them fit a 533 unit tall phone canvas with room to spare
+            var grid = NewRect("Grid", box);
+            var gl = grid.gameObject.AddComponent<GridLayoutGroup>();
+            float cellH = Mathf.Ceil(MobileUi.DpToPx(MobileUi.MinTargetDp) / Mathf.Max(0.01f, MobileUi.ScreenH / MobileUi.RefHeight())) + 4f;
+            gl.cellSize = new Vector2(240f, Mathf.Max(60f, cellH)); gl.spacing = new Vector2(12f, 12f);
+            gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount; gl.constraintCount = 3;
+            gl.childAlignment = TextAnchor.UpperCenter;
+            void Row(string label, UnityAction act, out TextMeshProUGUI t, UiButtonVariant v = UiButtonVariant.Standard)
             {
-                var b = NewButton(box, label, label, new Vector2(0f, 72f), UiPalette.Panel, act, out t, out _);
-                b.gameObject.AddComponent<LayoutElement>().preferredHeight = 72f;
+                var b = NewButton(grid, label, label, new Vector2(240f, gl.cellSize.y), UiPalette.Panel, act, out t, out _, v, 22f);
+                t.textWrappingMode = TextWrappingModes.Normal; t.enableAutoSizing = true; t.fontSizeMin = 14f; t.fontSizeMax = 22f;
             }
-            Row("Resume", ClosePause, out _);
+            Row("Resume", ClosePause, out _, UiButtonVariant.Primary);
             Row("Help", () => { ClosePause(); var m = MetaUiController.Instance; if (m != null) m.Help.Open(); }, out _);
             Row("Stats", () => { ClosePause(); var m = MetaUiController.Instance; if (m != null) { m.Stats.Show(false, false); m.Stats.Open(); } }, out _);
-            Row("Keep screen on", () => { KeepAwake = !KeepAwake; keepAwakeLabel.text = "Keep screen on: " + (KeepAwake ? "On" : "Off"); }, out keepAwakeLabel);
+            Row("Sound", () => { var mb = FindFirstObjectByType<MetaBarView>(); if (mb != null) mb.ToggleMute(); RefreshPauseLabels(); }, out soundLabel);
+            Row("Motion", () => { var mb = FindFirstObjectByType<MetaBarView>(); if (mb != null) mb.ToggleMotion(); RefreshPauseLabels(); }, out motionLabel);
+            Row("Keep awake", () => { KeepAwake = !KeepAwake; RefreshPauseLabels(); }, out keepAwakeLabel);
+            Row("New game", () =>
+            {
+                ClosePause();
+                var m = MetaUiController.Instance;
+                if (m != null) m.Confirm.Ask(MetaBarView.NewGameTitle, MetaBarView.ResetText, MetaBarView.NewGameButton, () => { if (SaveService.Instance != null) SaveService.Instance.ResetAll(); });
+            }, out _);
             Row("Save and quit", () => { if (SaveService.Instance != null) SaveService.Instance.Save(); Application.Quit(); }, out _);
             pausePanel.gameObject.SetActive(false);
         }

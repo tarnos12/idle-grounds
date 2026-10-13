@@ -424,6 +424,18 @@ namespace IdleGrounds.Sim
         /// <summary>Per-item produced / consumed / lost counters (Stats - Flow).</summary>
         public FlowLedger flow = new FlowLedger();
 
+        /// <summary>
+        /// A brand-new run as the player starts it (owner decision 2026-10-13): nothing is pre-placed. The §16 starter
+        /// network (workbench, kiln, storehouses, lanterns, seeded piles) is marked done, so the player builds every
+        /// building the quest chain reveals. <see cref="CreateInitial"/> stays the legacy start used by the golden tests.
+        /// </summary>
+        public static GameState CreateNewGame(GameConfig cfg, long nowMs)
+        {
+            var s = CreateInitial(cfg, nowMs);
+            s.starterPlaced = true;
+            return s;
+        }
+
         /// <summary>`makeInitialState()` (state.js:31). Areas in config region order.</summary>
         public static GameState CreateInitial(GameConfig cfg, long nowMs)
         {
