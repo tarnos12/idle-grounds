@@ -4,6 +4,10 @@
     "references": [
         "IdleGrounds.Sim",
         "IdleGrounds.Game",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

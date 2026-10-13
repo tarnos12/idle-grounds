@@ -155,7 +155,7 @@ namespace IdleGrounds.Game
                 var p1 = worldCamera.WorldToScreenPoint(new Vector3(r.xMax, r.yMax, 0f));
                 if (ui.Overlaps(Rect.MinMaxRect(Mathf.Min(p0.x, p1.x), Mathf.Min(p0.y, p1.y), Mathf.Max(p0.x, p1.x), Mathf.Max(p0.y, p1.y)))) { over = true; break; }
             }
-            var mouse = UnityEngine.InputSystem.Mouse.current;
+            var mouse = UnityEngine.InputSystem.Pointer.current;      // mouse, pen or the finger
             bool pointerOnPanel = mouse != null && ui.Contains(mouse.position.ReadValue());
             float goal = over && !pointerOnPanel ? 0.18f : 1f;
             fadeGroup.alpha = Mathf.MoveTowards(fadeGroup.alpha, goal, Time.unscaledDeltaTime * 6f);

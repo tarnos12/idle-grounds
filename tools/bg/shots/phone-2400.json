@@ -1,0 +1,66 @@
+{
+  "mode": "play",
+  "width": 2400,
+  "height": 1080,
+  "warmupFrames": 60,
+  "ui": true,
+  "save": "",
+  "mobileDpi": 405,
+  "insetL": 96,
+  "insetB": 24,
+  "insetR": 48,
+  "insetT": 0,
+  "shots": [
+    {
+      "name": "phone2400_welcome",
+      "startView": true,
+      "frames": 8,
+      "act": [
+        "welcome"
+      ]
+    },
+    {
+      "name": "phone2400_start",
+      "startView": true,
+      "frames": 8,
+      "act": [
+        "welcomeClose"
+      ]
+    },
+    {
+      "name": "phone2400_quest",
+      "startView": true,
+      "frames": 8,
+      "act": [
+        "questExpand"
+      ]
+    },
+    {
+      "name": "phone2400_build",
+      "startView": true,
+      "frames": 8,
+      "act": [
+        "questCollapse",
+        "build"
+      ]
+    },
+    {
+      "name": "phone2400_help",
+      "startView": true,
+      "frames": 8,
+      "act": [
+        "closeall",
+        "help"
+      ]
+    },
+    {
+      "name": "phone2400_demolish",
+      "startView": true,
+      "frames": 8,
+      "act": [
+        "closeall",
+        "demolish"
+      ]
+    }
+  ]
+}
