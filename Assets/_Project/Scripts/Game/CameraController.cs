@@ -132,6 +132,40 @@ namespace IdleGrounds.Game
             Apply();
         }
 
+        // ---- touch (TouchInputController): one-finger drag pan, two-finger pinch zoom ----
+
+        /// <summary>Drag pan: the world follows the finger by <paramref name="screenDelta"/> pixels.</summary>
+        public void TouchPan(Vector2 screenDelta)
+        {
+            if (cam == null || PanSuspended) return;
+            float worldPerPx = cam.orthographicSize * 2f / Mathf.Max(1, cam.pixelHeight);
+            centre -= screenDelta * worldPerPx;
+            Clamp();
+            Apply();
+        }
+
+        /// <summary>World point under a screen point (orthographic, ignores the camera's z).</summary>
+        public Vector2 ScreenToWorld(Vector2 screen)
+        {
+            if (cam == null) return screen;
+            return cam.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -cam.transform.position.z));
+        }
+
+        /// <summary>
+        /// Pinch step: continuous zoom (clamped 1..zoomMax, no smoothing while the fingers move) that keeps
+        /// <paramref name="anchorWorld"/> under <paramref name="midScreen"/>, so the pinch also pans.
+        /// </summary>
+        public void TouchZoom(float newZoom, Vector2 anchorWorld, Vector2 midScreen)
+        {
+            if (cam == null || PanSuspended) return;
+            zoom = zoomTarget = Mathf.Clamp(newZoom, ZoomMin, ZoomMax);
+            ApplyZoom();
+            transform.position = new Vector3(centre.x, centre.y, transform.position.z);
+            centre += anchorWorld - ScreenToWorld(midScreen);
+            Clamp();
+            Apply();
+        }
+
         /// <summary>Alias of <see cref="CenterOn"/>.</summary>
         public void Teleport(Vector2 world) => CenterOn(world);
 

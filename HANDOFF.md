@@ -5,6 +5,9 @@ commit, git fetch first) live in `CLAUDE.md` — not repeated here.
 
 ## ▶ NEXT SESSION: start here
 
+**Android (2026-10-13, branch bg/android):** touch controls + phone UI + `BuildScript.BuildAndroid` landed (see `docs/guides/touch-controls.md`).
+Next: the owner sideloads `Builds/Android/IdleGrounds.apk` and runs the manual checklist (Back key mapping, safe area on a real notch, feel of hold times); then tune constants in TouchInputController / MobileUi.
+
 **State:** the Unity port is fully playable (all sim + view milestones and
 parity audits done). On top of it the post-port design is implemented:
 floating **Islands** with sky/parallax, one-way paired **Spirit Bridges**
@@ -144,6 +147,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-13: Android/touch port. TouchInputController (tap / hold / drag-pan / pinch / Give mode / aim-confirm), MobileLayer (canvas scale by dpi, safe area, 48 dp hit padding, Swap/Give/Place/Cancel buttons, Back-key menu, 60 fps, landscape), UI input actions got Touchscreen bindings, tooltips work on touch, BuildScript.BuildAndroid + build.sh android, phone screenshot presets. Tests: 15 new PlayMode touch tests (class A_TouchInputTests, sorts first on purpose), 4 EditMode MobileUi tests. GameSmokeTests.Logistics_WispLaunches_ConverterCompletes fails on master too (pre-existing).
 
 - 2026-10-13: visual pass A3 merged (world art in code): VeilArt (soft mist veil, no seams/coast leak), interim rack/bridge backings (quiet translucent rack, loud on hover/low fuel), seeded ground variety + prop jitter, cliff/underside/lip noise, rounded paths/plaza/islets. Opus builder hit the weekly limit at the end; finished by the orchestrator (rebuild + shots + gate). Batch A complete: master gate compile OK, EditMode 175/176 (1 skipped).
 

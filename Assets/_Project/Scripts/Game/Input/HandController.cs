@@ -104,7 +104,8 @@ namespace IdleGrounds.Game
             if (!mod && controls.Gameplay.RotateLeft.WasPressedThisFrame()) Sim.RotateHand(+1);    // Q: front stack to the back
             if (!mod && controls.Gameplay.RotateRight.WasPressedThisFrame()) Sim.RotateHand(-1);   // E: back stack to the front
 
-            if (!useDebugCursor)
+            if (touchLingerUntil != 0 && Now >= touchLingerUntil) touchLingerUntil = 0;
+            if (!useDebugCursor && !TouchSource)
             {
                 if (controls.Gameplay.Primary.WasPressedThisFrame() && CursorOver) LeftDown();
                 if (controls.Gameplay.Secondary.WasPressedThisFrame() && CursorOver) RightDown();
@@ -122,6 +123,14 @@ namespace IdleGrounds.Game
                 CursorWorld = debugCursorWorld;
                 CursorScreen = worldCamera != null ? (Vector2)worldCamera.WorldToScreenPoint(debugCursorWorld) : Vector2.zero;
                 CursorOver = true;
+            }
+            else if (TouchSource)
+            {
+                // a finger drives the cursor (TouchInputController): its touch started in the world, never over UI
+                PointerOverUI = false;
+                CursorScreen = touchScreen;
+                CursorOver = touchScreen.x >= 0 && touchScreen.y >= 0 && touchScreen.x < Screen.width && touchScreen.y < Screen.height;
+                if (worldCamera != null) CursorWorld = worldCamera.ScreenToWorldPoint(new Vector3(touchScreen.x, touchScreen.y, -worldCamera.transform.position.z));
             }
             else
             {
@@ -146,6 +155,70 @@ namespace IdleGrounds.Game
             if (Sim.EnemyAt(CursorArea, Lx, Ly) != null) { HoverHittable = true; return; }
             var node = NodeAtCell(S.Area(CursorArea), LRow, LCol);
             HoverHittable = node != null && !node.deco;
+        }
+
+        // ================= touch driver (TouchInputController) =================
+
+        Vector2 touchScreen;
+        bool touchDown, touchPinned;
+        double touchLingerUntil;
+
+        /// <summary>A finger (or its pinned aim point / info linger) drives the cursor instead of the mouse.</summary>
+        public bool TouchSource => touchDown || touchPinned || (touchLingerUntil != 0 && Now < touchLingerUntil);
+        public bool TouchDown => touchDown;
+
+        public enum TouchTarget { Empty, Node, Enemy, Withdraw, Building, Sign }
+
+        /// <summary>Move the virtual cursor to a screen point. <paramref name="down"/> = a finger is on the glass;
+        /// <paramref name="pinned"/> = keep the cursor there after the finger lifts (placement / demolish aim).</summary>
+        public void TouchPoint(Vector2 screen, bool down, bool pinned = false)
+        {
+            touchScreen = screen; touchDown = down; touchPinned = pinned;
+            if (down) touchLingerUntil = 0;
+            UpdateCursor(); UpdateHover();
+        }
+
+        /// <summary>Finger lifted: the cursor stays for <paramref name="lingerSec"/> (hover info stays readable) unless pinned.</summary>
+        public void TouchUp(float lingerSec = 0f)
+        {
+            touchDown = false;
+            touchLingerUntil = lingerSec > 0f ? Now + lingerSec * 1000.0 : 0;
+        }
+
+        /// <summary>Drop the pinned aim point (placement / demolish ended).</summary>
+        public void TouchUnpin() { touchPinned = false; }
+
+        public void TouchLeftDown() { UpdateCursor(); if (CursorOver) LeftDown(); }
+        public void TouchLeftUp() => LeftUp();
+        public void TouchRightDown() { UpdateCursor(); if (CursorOver) RightDown(); }
+        public void TouchRightUp() => RightUp();
+
+        /// <summary>What a press at the current touch point would hit (decides the tap / hold behaviour of the gesture layer).</summary>
+        public TouchTarget TouchClassify()
+        {
+            UpdateCursor();
+            if (unlockSigns != null && unlockSigns.HitTest(CursorWorld) != null) return TouchTarget.Sign;
+            string area = CursorArea;
+            if (area == null || !runner.IsUnlocked(area)) return TouchTarget.Empty;
+            if (Sim.EnemyAt(area, Lx, Ly) != null) return TouchTarget.Enemy;
+            var b = Sim.World.BuildingAt(area, LRow, LCol);
+            if (b != null && !EdgePickRedirect(b, area, Lx, Ly))
+            {
+                var def = runner.Config.Building(b.type);
+                if (b.built && def != null && (b.type == "storehouse" || def.seal.enabled || def.gather.enabled)) return TouchTarget.Withdraw;
+                // with an empty hand there is nothing to feed: a hold falls through like a click (node / vacuum)
+                if (S.hand.Count > 0) return TouchTarget.Building;
+            }
+            var node = NodeAtCell(S.Area(area), LRow, LCol);
+            return node != null && !node.deco ? TouchTarget.Node : TouchTarget.Empty;
+        }
+
+        /// <summary>True when the touch point is on a building (a tap on it shows its info / opens its panel).</summary>
+        public bool TouchOnBuilding()
+        {
+            UpdateCursor();
+            string area = CursorArea;
+            return area != null && runner.IsUnlocked(area) && Sim.World.BuildingAt(area, LRow, LCol) != null;
         }
 
         // ================= public drive API (debug / automation / tests) =================

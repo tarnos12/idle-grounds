@@ -124,9 +124,14 @@ namespace IdleGrounds.Game
                 if (k >= 1f) { r.t.localScale = r.baseScale; r.t = null; continue; }
                 r.t.localScale = r.baseScale * (PressScale + (1f - PressScale) * Juice.OutBack(k));
             }
-            var m = Mouse.current; var es = EventSystem.current;
-            if (m == null || es == null) return;
-            if (m.leftButton.wasPressedThisFrame && !Juice.ReduceMotion && es.IsPointerOverGameObject())
+            var m = Mouse.current; var tc = Touchscreen.current; var es = EventSystem.current;
+            if ((m == null && tc == null) || es == null) return;
+            bool wasPressed = (m != null && m.leftButton.wasPressedThisFrame) || (tc != null && tc.primaryTouch.press.wasPressedThisFrame);
+            bool wasReleased = (m != null && m.leftButton.wasReleasedThisFrame) || (tc != null && tc.primaryTouch.press.wasReleasedThisFrame);
+            bool isPressed = (m != null && m.leftButton.isPressed) || (tc != null && tc.primaryTouch.press.isPressed);
+            bool overUi = (m != null && m.leftButton.wasPressedThisFrame && es.IsPointerOverGameObject())
+                          || (tc != null && tc.primaryTouch.press.wasPressedThisFrame && MobileUi.IsOverUi(tc.primaryTouch.position.ReadValue()));
+            if (wasPressed && !Juice.ReduceMotion && overUi)
             {
                 var sel = es.currentSelectedGameObject;
                 if (sel != null && sel.TryGetComponent<Button>(out var b) && b.interactable)
@@ -139,7 +144,7 @@ namespace IdleGrounds.Game
                     held.localScale = heldBase * PressScale;
                 }
             }
-            if (held != null && (m.leftButton.wasReleasedThisFrame || !m.leftButton.isPressed))
+            if (held != null && (wasReleased || !isPressed))
             {
                 for (int i = 0; i < rests.Length; i++)
                     if (rests[i].t == null) { rests[i] = new Rest { t = held, baseScale = heldBase, age = 0f }; held = null; break; }

@@ -17,6 +17,8 @@ namespace IdleGrounds.Game
         TextMeshProUGUI label;
         Canvas canvas;
         object owner;
+        Vector2? pointerOverride;      // touch: where the finger pressed (no mouse)
+        float hideAt = -1f;            // touch: the tooltip lingers a couple of seconds after the finger lifts
 
         public static string ShownText => instance != null && instance.rt != null && instance.rt.gameObject.activeSelf ? instance.label.text : null;
 
@@ -52,12 +54,14 @@ namespace IdleGrounds.Game
         }
 
         /// <summary>Show <paramref name="text"/> at the pointer; <paramref name="who"/> identifies the owner for <see cref="Hide"/>.</summary>
-        public static void Show(object who, string text, TMP_FontAsset font = null)
+        public static void Show(object who, string text, TMP_FontAsset font = null, Vector2? screenPos = null)
         {
             if (string.IsNullOrEmpty(text)) { Hide(who); return; }
             var t = Ensure(font);
             if (t == null) return;
             t.owner = who;
+            t.hideAt = -1f;
+            t.pointerOverride = screenPos;
             t.transform.SetAsLastSibling();
             if (t.label.text != text) t.label.text = text;
             t.Place(true);
@@ -67,6 +71,22 @@ namespace IdleGrounds.Game
         {
             if (instance == null || instance.owner != who) return;
             instance.owner = null;
+            instance.hideAt = -1f;
+            instance.rt.gameObject.SetActive(false);
+        }
+
+        /// <summary>Touch: keep the tooltip readable for <paramref name="seconds"/> after the finger lifts, then hide it.</summary>
+        public static void HideLater(object who, float seconds)
+        {
+            if (instance == null || instance.owner != who) return;
+            instance.hideAt = Time.unscaledTime + seconds;
+        }
+
+        /// <summary>Hide whatever tooltip is up (a new touch gesture started elsewhere).</summary>
+        public static void DismissAll()
+        {
+            if (instance == null || instance.rt == null) return;
+            instance.owner = null; instance.hideAt = -1f;
             instance.rt.gameObject.SetActive(false);
         }
 
@@ -77,20 +97,25 @@ namespace IdleGrounds.Game
             rt.sizeDelta = new Vector2(Mathf.Ceil(size.x) + 20f, Mathf.Ceil(size.y) + 12f);
             if (show && !rt.gameObject.activeSelf) rt.gameObject.SetActive(true);
             var mouse = UnityEngine.InputSystem.Mouse.current;
-            if (mouse == null) return;
+            if (mouse == null && !pointerOverride.HasValue) return;
             float f = canvas.rootCanvas.scaleFactor;
             var rc = canvas.rootCanvas;     // VP-19: Screen Space-Camera canvases need their camera here (null only for Overlay)
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, mouse.position.ReadValue() + new Vector2(16f, -20f) * f,
+            // touch: sit up-left of the finger so the hand does not cover it
+            var at = pointerOverride.HasValue ? pointerOverride.Value + new Vector2(-rt.sizeDelta.x * 0.5f * f, 70f * f) : mouse.position.ReadValue() + new Vector2(16f, -20f) * f;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, at,
                 rc.renderMode == RenderMode.ScreenSpaceOverlay ? null : rc.worldCamera, out var p);
             var half = canvasRect.rect;           // canvas rect is centred (pivot 0.5)
             float x = p.x, y = p.y;
             if (x + rt.sizeDelta.x > half.xMax) x = half.xMax - rt.sizeDelta.x;
+            if (x < half.xMin) x = half.xMin;
             if (y - rt.sizeDelta.y < half.yMin) y = p.y + 40f + rt.sizeDelta.y;   // flip above the pointer
+            if (y > half.yMax) y = half.yMax;
             rt.anchoredPosition = new Vector2(x - half.xMin, y - half.yMax);
         }
 
         void LateUpdate()
         {
+            if (hideAt >= 0f && Time.unscaledTime >= hideAt) { Hide(owner); return; }
             if (rt.gameObject.activeSelf) Place(false);
         }
     }
@@ -101,6 +126,7 @@ namespace IdleGrounds.Game
         public string text;
         public System.Func<string> provider;
         bool over;
+        Vector2? touchPos;     // set when a finger (not a mouse) entered
 
         public static TooltipTrigger Attach(Component target, string text, System.Func<string> provider = null)
         {
@@ -118,8 +144,15 @@ namespace IdleGrounds.Game
             return tmp != null ? tmp.font : null;
         }
 
-        public void OnPointerEnter(PointerEventData e) { over = true; Refresh(); }
-        public void OnPointerExit(PointerEventData e) { over = false; Tooltip.Hide(this); }
+        static bool IsTouch(PointerEventData e) => e is UnityEngine.InputSystem.UI.ExtendedPointerEventData x && x.pointerType == UnityEngine.InputSystem.UI.UIPointerType.Touch;
+
+        public void OnPointerEnter(PointerEventData e) { over = true; touchPos = IsTouch(e) ? e.position : (Vector2?)null; Refresh(); }
+        public void OnPointerExit(PointerEventData e)
+        {
+            over = false;
+            if (touchPos.HasValue) Tooltip.HideLater(this, 2.4f);     // a tap reads the tip, then it fades by itself
+            else Tooltip.Hide(this);
+        }
         void OnDisable() { if (over) { over = false; Tooltip.Hide(this); } }
 
         void Update()
@@ -127,6 +160,6 @@ namespace IdleGrounds.Game
             if (over && provider != null) Refresh();
         }
 
-        void Refresh() => Tooltip.Show(this, provider != null ? provider() : text, Font());
+        void Refresh() => Tooltip.Show(this, provider != null ? provider() : text, Font(), touchPos);
     }
 }

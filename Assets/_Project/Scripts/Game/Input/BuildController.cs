@@ -77,7 +77,7 @@ namespace IdleGrounds.Game
         {
             if (runner == null || runner.Sim == null) return;
             if (controls.Gameplay.Build.WasPressedThisFrame()) ToggleBuildMenu();
-            if (controls.Gameplay.Cancel.WasPressedThisFrame()) Escape();
+            if (controls.Gameplay.Cancel.WasPressedThisFrame() && !TryEscape()) MobileLayer.OnBackWithNothingOpen();
 
             Hovered = null; HoveredArea = null;
             if (hand != null && hand.CursorOver && hand.CursorArea != null)
@@ -132,20 +132,28 @@ namespace IdleGrounds.Game
         /// link editor → dragon dialog → stats → help → welcome
         /// (MetaUiController) → placing/demolish + build menu.
         /// </summary>
-        public void Escape()
+        public void Escape() => TryEscape();
+
+        /// <summary>The Esc chain; true = something was closed / cancelled (Android Back opens the pause menu when false).</summary>
+        public bool TryEscape()
         {
             var meta = MetaUiController.Instance;
-            if (meta != null && meta.EscapeConfirm()) return;          // a yes/no confirm sits above everything
-            if (UpgradeTreeOpen) { upgradeTree.Close(); return; }
-            if (RecipePickerOpen) { CloseRecipePicker(); return; }
-            if (PavilionOpen) { pavilionPanel.Close(); return; }
-            if (BridgePanelOpen) { bridgePanel.Close(); return; }
-            if (LinkEditorOpen) { linkEditor.Escape(); return; }      // picking backs out to the menu, then closes
-            if (DragonDialogOpen) { dragonDialog.Continue(); return; }
-            if (meta != null && meta.Escape()) return;                 // M7 modals
+            if (meta != null && meta.EscapeConfirm()) return true;     // a yes/no confirm sits above everything
+            if (UpgradeTreeOpen) { upgradeTree.Close(); return true; }
+            if (RecipePickerOpen) { CloseRecipePicker(); return true; }
+            if (PavilionOpen) { pavilionPanel.Close(); return true; }
+            if (BridgePanelOpen) { bridgePanel.Close(); return true; }
+            if (LinkEditorOpen) { linkEditor.Escape(); return true; }  // picking backs out to the menu, then closes
+            if (DragonDialogOpen) { dragonDialog.Continue(); return true; }
+            if (meta != null && meta.Escape()) return true;            // M7 modals
+            bool any = Placing != null || Demolishing || BuildMenuOpen;
             CancelModes();
             CloseBuildMenu();
+            return any;
         }
+
+        /// <summary>Placement or demolish mode is waiting for a world click (touch: drag the ghost, then tap the confirm button).</summary>
+        public bool AimActive => Placing != null || Demolishing;
 
         // ================= world clicks (called by HandController) =================
 

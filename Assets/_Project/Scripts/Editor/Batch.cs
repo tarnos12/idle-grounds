@@ -128,6 +128,8 @@ namespace IdleGrounds.Editor
             public int timeoutSeconds = 300;
             /// <summary>Hide every locked Island's fog veil while shooting (art review of locked Islands).</summary>
             public bool hideVeils;
+            /// <summary>Phone layout preview (play mode + ui): pretend to be a touch device of this dpi (0 = desktop). Safe-area insets in screen px.</summary>
+            public float mobileDpi, insetL, insetB, insetR, insetT;
             public Shot[] shots = new Shot[0];
         }
 
@@ -218,6 +220,7 @@ namespace IdleGrounds.Editor
         }
 
         static int playFrames, shotIndex, settle, captured;
+        static bool mobileForced;
         static ShotSpec playSpec;
 
         static void PlayTick()
@@ -237,6 +240,14 @@ namespace IdleGrounds.Editor
 
             if (phase == 0) { SessionState.SetInt(KPhase, 1); playFrames = 0; shotIndex = 0; settle = -1; captured = 0; }
             if (++playFrames < Math.Max(1, playSpec.warmupFrames)) return;
+            if (playSpec.mobileDpi > 0f && !mobileForced)
+            {
+                mobileForced = true;
+                MobileLayer.Ensure();
+                MobileUi.Force(true, playSpec.mobileDpi, new Vector2Int(playSpec.width, playSpec.height), new Vector4(playSpec.insetL, playSpec.insetB, playSpec.insetR, playSpec.insetT));
+                playFrames = playSpec.warmupFrames - 12;      // let MobileLayer build its HUD (it waits a few frames) before the first shot
+                return;
+            }
 
             try
             {
