@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
+  m_Script: {fileID: 11500000, guid: 141495f650add3c429d5d259b8ee55e1, type: 3}
   m_Name: RuleTile_fishing_ground
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
   m_DefaultSprite: {fileID: -3468383245725221193, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}
@@ -39,3 +39,8 @@ MonoBehaviour:
     - {x: 0, y: -1, z: 0}
     - {x: 1, y: -1, z: 0}
     m_RuleTransform: 0
+  kin: []
+  fill:
+  - {fileID: -3468383245725221193, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}
+  - {fileID: -3434420453592037078, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}
+  - {fileID: 1287274258889325703, guid: 560ef8f8c1eed1446a14b1c0105866bf, type: 3}

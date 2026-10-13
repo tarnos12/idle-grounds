@@ -66,6 +66,7 @@ namespace IdleGrounds.Editor
             public AnimatedTile pond;
             public AnimatedTile[] glow;
             public Color light, dark;
+            public Color fillBase;     // the fill's most common colour (VP-14 value layer)
             public bool textured;
             public bool busy;          // textured or pale fill: fewer macro decals
             public bool pale;
@@ -107,6 +108,7 @@ namespace IdleGrounds.Editor
                 System.Array.Copy(t, nw + ne + nw, k.sideEEnd, 0, ne);
             }
             FillTones(biome, out k.light, out k.dark, out k.textured);
+            k.fillBase = FillBase(biome);
             k.pale = k.light.r + k.light.g + k.light.b > 2.0f;
             k.busy = k.textured || k.pale;
             if (biome == "fishing") k.pond = Animated("Pond_fishing", EnsurePond(), 0, 3f);
@@ -788,6 +790,16 @@ namespace IdleGrounds.Editor
             return t;
         }
 
+        /// <summary>Mean colour of the delivered fill (opaque pixels).</summary>
+        static Color FillBase(string biome)
+        {
+            var px = ReadPng($"{Inc}island_{biome}_ground_fill_32x32_3f.png", out _, out _);
+            if (px == null) return new Color(0.5f, 0.7f, 0.3f, 1f);
+            float r = 0f, g = 0f, b = 0f; int n = 0;
+            foreach (var c in px) if (c.a > 200) { r += c.r; g += c.g; b += c.b; n++; }
+            return n > 0 ? new Color(r / n / 255f, g / n / 255f, b / n / 255f, 1f) : new Color(0.5f, 0.7f, 0.3f, 1f);
+        }
+
         /// <summary>
         /// Base / light-fleck / dark-fleck colours of the delivered centre fill -> the macro light and dark tones.
         /// Flat fills (one dominant colour: center, farm, fishing, grove, celestial) get OPAQUE decals in a colour one
@@ -952,6 +964,20 @@ namespace IdleGrounds.Editor
                 return d + (Noise(x / 9f, y / 9f, seed) - 0.5f) * 0.08f;
             }
             float p1 = 1f / hy;      // ~one pixel in d units
+            // VP-14: lotus / koi are stamped at seeded free positions (min 40 px apart, random flip), not kept on the
+            // delivered tile's 32-px grid: the water itself is the plain tile with its detail pixels removed
+            var stamps = new List<(int x, int y, bool flip)>();
+            {
+                var srng = new System.Random(seed + 9);
+                for (int tries = 0; tries < 400 && stamps.Count < 16; tries++)
+                {
+                    int sx = srng.Next(8, PondW - 40), sy = srng.Next(8, PondH - 40);
+                    bool ok = D(sx + 16, sy + 16) < 0.78f && D(sx, sy) < 0.95f && D(sx + 31, sy + 31) < 0.95f && D(sx, sy + 31) < 0.95f && D(sx + 31, sy) < 0.95f;
+                    foreach (var q in stamps) if ((q.x - sx) * (q.x - sx) + (q.y - sy) * (q.y - sy) < 40 * 40) { ok = false; break; }
+                    if (ok) stamps.Add((sx, sy, srng.NextDouble() < 0.5));
+                }
+            }
+            bool Plain(Color32 c) => c.b > c.r && c.b >= c.g;
             for (int f = 0; f < frames; f++)
                 for (int y = 0; y < PondH; y++)
                     for (int x = 0; x < PondW; x++)
@@ -963,9 +989,21 @@ namespace IdleGrounds.Editor
                             if (d > 1f - 1.2f * p1) c = rim;                                       // 1 px dark waterline
                             else
                             {
-                                c = water != null ? water[(y % 32) * ww + f * 32 + (x % 32)] : plain;
-                                bool decor = Hash(x / 32, y / 32, seed) < 0.28f;
-                                if (!decor && !(c.b > c.r && c.b >= c.g)) c = plain;              // drop lotus / koi in most tiles
+                                // the water motif is sampled with a different offset in each irregular (noise-warped,
+                                // ~40 px) region, so its crests no longer line up on the 32-px grid
+                                int wx = x + (int)((Noise(x / 23f, y / 23f, seed + 3) - 0.5f) * 30f), wy = y + (int)((Noise(x / 23f + 7.1f, y / 23f, seed + 4) - 0.5f) * 30f);
+                                uint ro = (uint)(Hash(Mathf.FloorToInt(wx / 40f), Mathf.FloorToInt(wy / 40f), seed + 5) * 1024f);
+                                int ox = (int)(ro & 31u), oy = (int)((ro >> 5) & 31u);
+                                c = water != null ? water[((y + oy) % 32) * ww + f * 32 + ((x + ox) % 32)] : plain;
+                                if (!Plain(c)) c = plain;                                          // the tile's own lotus / koi go
+                                if (water != null)
+                                    foreach (var st in stamps)
+                                    {
+                                        int lx = x - st.x, ly = y - st.y;
+                                        if (lx < 0 || ly < 0 || lx > 31 || ly > 31) continue;
+                                        var sc = water[ly * ww + f * 32 + (st.flip ? 31 - lx : lx)];
+                                        if (sc.a > 0 && !Plain(sc)) c = sc;
+                                    }
                                 if (D(x, y + 5) >= 1f) c = new Color32((byte)(c.r * 0.7f), (byte)(c.g * 0.76f), (byte)(c.b * 0.86f), 255);   // north bank shade
                             }
                         }
@@ -1068,6 +1106,112 @@ namespace IdleGrounds.Editor
             if (color.HasValue) tm.SetColor(p, color.Value);
         }
 
+        /// <summary>
+        /// VP-17: the Center plaza + paths as curves (see the call site). Geometry in Island cells, x = col, y = row (down).
+        /// Fills <paramref name="busy"/> (no scatter on stone), <paramref name="tufts"/> (clover between stones) and
+        /// <paramref name="steps"/> (loose stones past each path end).
+        /// </summary>
+        static void BuildCenterPath(Transform root, int seed, HashSet<Vector2Int> busy, List<Vector2Int> tufts, List<Vector2Int> steps)
+        {
+            var src = ReadPng($"{ArtDir}/dress_center_path_warm_32x32_15f.png", out int sw, out int sh);
+            if (src == null || sh != 32) return;
+            const int P = 32;
+            var plazaC = new Vector2(46.5f, 46.5f);
+            const float PlazaR = 4.55f;
+            // spurs: quadratic Beziers from the plaza toward the work areas (end points as before), bent by a seeded side offset
+            var spurs = new List<(Vector2[] pts, float[] hw)>();
+            void Spur(Vector2 end, float bend, int salt)
+            {
+                var dir = (end - plazaC).normalized;
+                var nrm = new Vector2(-dir.y, dir.x);
+                var start = plazaC + dir * (PlazaR - 1f);
+                var mid = (start + end) * 0.5f + nrm * bend * (0.6f + Hash(salt, 3, seed) * 0.8f);
+                const int N = 48;
+                var pts = new Vector2[N + 1];
+                var hw = new float[N + 1];
+                for (int i = 0; i <= N; i++)
+                {
+                    float t = i / (float)N, u = 1f - t;
+                    pts[i] = u * u * start + 2f * u * t * mid + t * t * end;
+                    float taper = t < 0.62f ? 1f : Mathf.Lerp(1f, 0.32f, (t - 0.62f) / 0.38f);
+                    hw[i] = (1.12f + (Noise(t * 5f, salt, seed + 21) - 0.5f) * 0.22f) * taper;
+                }
+                spurs.Add((pts, hw));
+                // three loose stones continuing the last direction
+                var tdir = (pts[N] - pts[N - 2]).normalized;
+                for (int j = 1; j <= 3; j++)
+                {
+                    var p = pts[N] + tdir * (1.7f * j) + new Vector2(-tdir.y, tdir.x) * ((Hash(j, salt, seed) - 0.5f) * 1.4f);
+                    steps.Add(new Vector2Int(Mathf.FloorToInt(p.x), -Mathf.FloorToInt(p.y) - 1));
+                }
+            }
+            Spur(new Vector2(45.5f, 29.5f), 2.2f, 1);      // north, toward the wood field - stops well short
+            Spur(new Vector2(30.5f, 61.5f), -2.6f, 2);     // south-west, toward the quarry field
+            Spur(new Vector2(62.5f, 61.5f), 2.4f, 3);      // south-east, toward the clay field
+
+            // signed distance (cells, > 0 inside) of an Island point (x = col, y = row) to the stone
+            float Inside(float x, float y)
+            {
+                var q = new Vector2(x, y);
+                var d0 = q - plazaC;
+                float ang = Mathf.Atan2(d0.y, d0.x);
+                float best = PlazaR * (1f + 0.035f * Mathf.Sin(3f * ang + 1.1f) + 0.025f * Mathf.Sin(5f * ang + 4.2f)) - d0.magnitude;
+                foreach (var (pts, hw) in spurs)
+                    for (int i = 0; i < pts.Length - 1; i++)
+                    {
+                        var a = pts[i]; var ab = pts[i + 1] - a;
+                        float t = Mathf.Clamp01(Vector2.Dot(q - a, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude));
+                        float r = Mathf.Lerp(hw[i], hw[i + 1], t);
+                        float v = r - Vector2.Distance(q, a + ab * t);
+                        if (v > best) best = v;
+                    }
+                return best;
+            }
+
+            var pieces = new Dictionary<ulong, CoastCurves.Piece>();
+            var at = new List<(Vector3Int c, ulong h)>();
+            var dark = new Color32(0x3D, 0x26, 0x16, 255);      // P20 dark wood: the south-facing shadow line only
+            for (int row = 24; row <= 68; row++)
+                for (int col = 24; col <= 68; col++)
+                {
+                    // quick reject: the cell centre is far from any stone
+                    if (Inside(col + 0.5f, row + 0.5f) < -0.9f) continue;
+                    Color32[] px = null;
+                    int frame = (int)(Hash(col, row, seed + 61) * 3f) % 3;
+                    int stoneN = 0;
+                    for (int ly = 0; ly < P; ly++)          // texture rows, y up
+                        for (int lx = 0; lx < P; lx++)
+                        {
+                            float fx = col + (lx + 0.5f) / P, fy = row + (P - 1 - ly + 0.5f) / P;
+                            float s = Inside(fx, fy) * P;            // px, > 0 inside
+                            if (s <= 0f) continue;
+                            int gx = col * P + lx, gy = row * P + (P - 1 - ly);
+                            // the pixel just south of this one is grass: a south-facing edge -> one continuous P20 line
+                            bool south = s < 1.5f && Inside(fx, fy + 1f / P) <= 0f;
+                            if (!south && s < 1.8f && Hash(gx, gy, seed + 71) > s / 1.8f * 0.75f + 0.15f) continue;     // frayed rim
+                            var c = src[ly * sw + frame * P + lx];
+                            if (c.a == 0) continue;
+                            if (south) c = dark;
+                            if (px == null) px = new Color32[P * P];
+                            px[ly * P + lx] = c;
+                            stoneN++;
+                        }
+                    if (px == null) continue;
+                    var cell = C(row, col);
+                    var v = new Vector2Int(cell.x, cell.y);
+                    if (stoneN > P * P / 3) busy.Add(v);
+                    if (stoneN > P * P * 3 / 4 && Hash(col, row, seed + 31) < 0.035f) tufts.Add(v);
+                    ulong h = CoastCurves.ContentHash(px);
+                    if (!pieces.ContainsKey(h)) pieces[h] = new CoastCurves.Piece { key = "p" + h.ToString("X16"), px = px };
+                    at.Add((cell, h));
+                }
+            var tiles = CoastCurves.Atlas("dress_path_center", P, P, 0.5f, new List<CoastCurves.Piece>(pieces.Values));
+            var pathMap = NewMap(root, "Path", 4, Vector3.zero);
+            foreach (var (c, h) in at) if (tiles.TryGetValue(pieces[h].key, out var t)) pathMap.SetTile(c, t);
+            foreach (var v in steps) busy.Add(v);
+            foreach (var v in tufts) busy.Add(v);
+        }
+
         public static void BuildIsland(Island isl)
         {
             var old = isl.transform.Find(RootName);
@@ -1079,6 +1223,11 @@ namespace IdleGrounds.Editor
             var def = cfg?.Region(key);
             var kit = LoadKit(key);
             int seed = KeySeed(key);
+            // VP-14: hashed fill variants on the coast + play-area ground tiles; re-run the tile rules so the tilemaps'
+            // stored sprites follow
+            IslandArtBuilder.EnsureFillVariety(key);
+            if (isl.tilemap != null) isl.tilemap.RefreshAllTiles();
+            isl.coast.RefreshAllTiles();
             var rng = new System.Random(seed);
 
             var root = new GameObject(RootName).transform;
@@ -1127,28 +1276,67 @@ namespace IdleGrounds.Editor
             var placed = new List<(Vector2 p, float r, bool lightTone)>();
             Color tintL = kit.light / MacroBase, tintD = kit.dark / MacroBase;
             tintL.a = kit.light.a; tintD.a = kit.dark.a;
+            // distance (cells) from the play square's centre, normalised: 0 = build zone, ~1 = square edge, > 1 = coast margin
+            float Outer(int x, int y) => Mathf.Max(Mathf.Abs(x + 0.5f - Cells * 0.5f), Mathf.Abs(y + 0.5f + Cells * 0.5f)) / (Cells * 0.5f);
             if (kit.macroArt != null)
             {
-                // delivered 96x96 macro patches (3 cells, 1x): clustered by low-frequency noise so the meadow reads as
-                // sunlit / shaded stretches, never an even wallpaper; whole footprint on interior land
-                const int mstep = 3;
-                for (int gy = yMin; gy <= yMax; gy += mstep)
-                    for (int gx = xMin; gx <= xMax; gx += mstep)
-                    {
-                        int x = gx + rng.Next(-1, 2), y = gy + rng.Next(-1, 2);
-                        float n = Fbm(x / 20f, y / 20f, seed);
-                        if (InCorner(x, y)) n += 0.08f;
-                        double p = n > 0.6f ? 0.9 : n > 0.55f ? 0.35 : 0.0;
-                        if (kit.busy) p *= 0.35;
-                        if (rng.NextDouble() >= p) continue;
-                        bool ok = true;
-                        for (int dy = -1; dy <= 1 && ok; dy++) for (int dx = -1; dx <= 1 && ok; dx++) if (!Interior(x + dx, y + dy)) ok = false;
-                        if (!ok) continue;
-                        foreach (var q in placed) if ((q.p - new Vector2(x, y)).sqrMagnitude < 2.2f * 2.2f) { ok = false; break; }
-                        if (!ok) continue;
-                        placed.Add((new Vector2(x, y), 1.5f, true));
-                        Place(macro, new Vector3Int(x, y, 0), kit.macroArt[rng.Next(kit.macroArt.Length)], rng.NextDouble() < 0.5, false);
-                    }
+                // delivered 96x96 macro patches (3 cells, 1x), VP-14: scattered (not on a lattice), flipped X and / or Y at
+                // random (no rotation: pixel rule), always >= 1 cell of plain ground between two patches, clustered by a
+                // low-frequency noise and in two densities - denser around the build zone, sparse toward the coast - so the
+                // meadow reads as sunlit / shaded stretches, never as wallpaper; whole footprint on interior land
+                int area = (xMax - xMin + 1) * (yMax - yMin + 1);
+                for (int tries = 0; tries < area / 5; tries++)
+                {
+                    int x = rng.Next(xMin, xMax + 1), y = rng.Next(yMin, yMax + 1);
+                    float n = Fbm(x / 18f, y / 18f, seed);
+                    if (InCorner(x, y)) n += 0.06f;
+                    double p = n > 0.64f ? 0.55 : n > 0.57f ? 0.18 : 0.0;      // only in the noise clusters: stretches, not polka dots
+                    p *= Outer(x, y) < 0.75f ? 1.0 : Outer(x, y) < 1.0f ? 0.55 : 0.25;
+                    if (kit.busy) p *= 0.4;
+                    if (rng.NextDouble() >= p) continue;
+                    bool ok = true;
+                    for (int dy = -1; dy <= 1 && ok; dy++) for (int dx = -1; dx <= 1 && ok; dx++) if (!Interior(x + dx, y + dy)) ok = false;
+                    if (!ok) continue;
+                    foreach (var q in placed) if ((q.p - new Vector2(x, y)).sqrMagnitude < 4.0f * 4.0f) { ok = false; break; }
+                    if (!ok) continue;
+                    placed.Add((new Vector2(x, y), 1.5f, true));
+                    Place(macro, new Vector3Int(x, y, 0), kit.macroArt[rng.Next(kit.macroArt.Length)], rng.NextDouble() < 0.5, rng.NextDouble() < 0.5);
+                }
+            }
+
+            // ---- VP-14 large-scale value layer: soft 4-7 cell blobs (the generated dithered-rim decals, overlapping into drifts), half a step lighter
+            //      or darker than the ground, laid by a low-frequency noise mask so the fill has slow light / shade drifts
+            //      instead of reading as one flat stamp. Equal light and dark coverage: the Island's mean brightness stays.
+            //      Translucent tints keep the fill's own texture and colours underneath.
+            {
+                var value = NewMap(root, "Value", 0, Vector3.zero);
+                var vrng = new System.Random(seed ^ 0x5A17);
+                var vplaced = new List<Vector2>();
+                Color baseC = kit.fillBase;
+                Color lightT = new Color(Mathf.Min(1f, baseC.r * 1.35f + 0.08f), Mathf.Min(1f, baseC.g * 1.35f + 0.08f), Mathf.Min(1f, baseC.b * 1.25f + 0.06f), 1f) / MacroBase;
+                Color darkT = new Color(baseC.r * 0.55f, baseC.g * 0.58f, baseC.b * 0.66f, 1f) / MacroBase;
+                lightT.a = 0.07f; darkT.a = 0.12f;
+                int area = (xMax - xMin + 1) * (yMax - yMin + 1);
+                int nl = 0, nd = 0;
+                for (int tries = 0; tries < area / 6; tries++)
+                {
+                    int x = vrng.Next(xMin, xMax + 1), y = vrng.Next(yMin, yMax + 1);
+                    float n = Fbm(x / 13f, y / 13f, seed + 303);
+                    bool light = n > 0.6f, dark = n < 0.4f;
+                    if (!light && !dark) continue;
+                    if (light && nl > nd + 2 || dark && nd > nl + 2) continue;      // keep the two balanced
+                    bool big = vrng.NextDouble() < 0.4;
+                    int ri = big ? 4 : 3;
+                    bool ok = true;
+                    for (int dy = -ri; dy <= ri && ok; dy++) for (int dx = -ri; dx <= ri && ok; dx++) if (!land.Contains(new Vector2Int(x + dx, y + dy))) ok = false;
+                    if (!ok) continue;
+                    foreach (var q in vplaced) if ((q - new Vector2(x, y)).sqrMagnitude < 3.5f * 3.5f) { ok = false; break; }
+                    if (!ok) continue;
+                    vplaced.Add(new Vector2(x, y));
+                    if (light) nl++; else nd++;
+                    var tiles = big ? kit.macroBig : kit.macroSmall;
+                    Place(value, new Vector3Int(x, y, 0), tiles[vrng.Next(tiles.Length)], vrng.NextDouble() < 0.5, vrng.NextDouble() < 0.5, light ? lightT : darkT);
+                }
             }
             const int step = 5;
             for (int gy = yMin; gy <= yMax && kit.macroArt == null; gy += step)
@@ -1201,8 +1389,13 @@ namespace IdleGrounds.Editor
                     {
                         int mr = (r.r0 + r.r1) / 2, mc = (r.c0 + r.c1) / 2;
                         Place(fieldBase, C(mr, mc), kit.macroBig[rng.Next(kit.macroBig.Length)], rng.NextDouble() < 0.5, rng.NextDouble() < 0.5, earth);
-                        foreach (var (dr, dc) in new[] { (-2, -2), (-2, 2), (2, -2), (2, 2) })
-                            Place(fieldBase, C(mr + dr, mc + dc), kit.macroBig[rng.Next(kit.macroBig.Length)], rng.NextDouble() < 0.5, rng.NextDouble() < 0.5, earth);
+                        // VP-14: 3-5 more worn-earth decals at seeded spots inside the field (was a fixed X of 4 corners)
+                        int extra = 3 + rng.Next(3);
+                        for (int e = 0; e < extra; e++)
+                        {
+                            int er = rng.Next(r.r0, r.r1 + 1), ec = rng.Next(r.c0, r.c1 + 1);
+                            Place(fieldBase, C(er, ec), kit.macroBig[rng.Next(kit.macroBig.Length)], rng.NextDouble() < 0.5, rng.NextDouble() < 0.5, earth);
+                        }
                         for (int row = r.r0 - 1; row <= r.r1 + 1; row++)
                             for (int col = r.c0 - 1; col <= r.c1 + 1; col++)
                             {
@@ -1231,99 +1424,17 @@ namespace IdleGrounds.Editor
                 for (int row = pr - hh; row <= pr + hh; row++) for (int col = pc - hw; col <= pc + hw; col++) { var cc = C(row, col); busy.Add(new Vector2Int(cc.x, cc.y)); }
             }
 
-            // ---- Center courtyard: a small round flagstone plaza around the Altar + short paths that fade out toward the
-            //      work areas (weathered warm stone sitting IN the grass; carved glyph slabs only at the 4 corners)
+            // ---- Center courtyard: a round flagstone plaza under the Altar + three short paths that wind toward the work
+            //      areas and fade out in a few loose stones. VP-17 (owner rule "no 90 degree angles", extended from the coasts):
+            //      the stone is cut at PIXEL level from one distance field (plaza disc + three curved, tapering spurs), so
+            //      every edge is a curve - no cell staircases, no right-angled notches, no second plaza edge. Interior pixels
+            //      copy the warm stone fill frames; the last 1-2 px fray into the grass (seeded speckle, no outline) and only
+            //      the south-facing edge gets a 1 px P20 shadow line (3/4 view). Pieces are composed per cell and
+            //      de-duplicated into one atlas (CoastCurves.Atlas).
             var pathTufts = new List<Vector2Int>();      // grass growing between the stones (scatter clover on path cells)
             var stepStones = new List<Vector2Int>();     // where a path runs out: a few loose stones (scatter pebbles)
             if (key == "center" && kit.path.Length >= 15)
-            {
-                var path = new HashSet<Vector2Int>();
-                Vector2Int K(int row, int col) { var cc = C(row, col); return new Vector2Int(cc.x, cc.y); }
-                                // Altar = 5x5 at rows/cols 44-48: a disc of ~9 cells across, its rim softened by the path edge frames
-                const float cr0 = 46f, cc0 = 46f;
-                for (int row = 40; row <= 52; row++)
-                    for (int col = 40; col <= 52; col++)
-                    {
-                        float d = Mathf.Sqrt((row - cr0) * (row - cr0) + (col - cc0) * (col - cc0));
-                        if (d <= 4.0f || (d <= 4.8f && Hash(row, col, seed + 5) < 0.35f)) path.Add(K(row, col));
-                    }
-                // carved slabs (gold sun glyph) just off the Altar's 4 corners: make sure stone surrounds them
-                var glyphs = new[] { (43, 44), (43, 48), (49, 44), (49, 48) };
-                foreach (var (gr, gc) in glyphs) foreach (var (dr, dc) in new[] { (0, 0), (-1, 0), (1, 0), (0, -1), (0, 1) }) path.Add(K(gr + dr, gc + dc));
-                // short 2-wide spurs that wind toward a work area in orthogonal runs of 2-4 cells (no ruler-straight
-                // diagonals or long roads), thin out over the last cells and end in a few loose stones
-                void Spur(int r0, int c0, int r1, int c1, int fade, int salt)
-                {
-                    var cells = new List<(int r, int c)>();
-                    int row = r0, col = c0, step = 0;
-                    bool vertical = Mathf.Abs(r1 - r0) >= Mathf.Abs(c1 - c0);
-                    while ((row != r1 || col != c1) && cells.Count < 200)
-                    {
-                        int dr = r1 - row, dc = c1 - col;
-                        if (dr == 0) vertical = false; else if (dc == 0) vertical = true;
-                        int run = 2 + (int)(Hash(step, salt, seed + 13) * 3f);
-                        for (int k = 0; k < run && (vertical ? row != r1 : col != c1); k++)
-                        {
-                            if (vertical) row += System.Math.Sign(dr); else col += System.Math.Sign(dc);
-                            cells.Add((row, col));
-                        }
-                        // switch axis, weighted by how far is left on each
-                        float wr = Mathf.Abs(r1 - row), wc = Mathf.Abs(c1 - col);
-                        vertical = wr + wc > 0 && Hash(step, salt, seed + 17) * (wr + wc) < wr;
-                        step++;
-                    }
-                    int n = cells.Count;
-                    for (int i = 0; i < n; i++)
-                    {
-                        var (r, c) = cells[i];
-                        int left = n - 1 - i;
-                        if (left < fade && Hash(r, c, seed + 11 + salt) > (float)left / fade + 0.2f) continue;     // thinning out
-                        for (int a = 0; a < 2; a++) for (int b = 0; b < 2; b++) path.Add(K(r + a, c + b));
-                    }
-                    // beyond the end: three loose stones continuing the last direction
-                    if (n >= 2)
-                    {
-                        int sr = System.Math.Sign(cells[n - 1].r - cells[n - 2].r), sc = System.Math.Sign(cells[n - 1].c - cells[n - 2].c);
-                        for (int j = 1; j <= 3; j++)
-                            stepStones.Add(K(cells[n - 1].r + sr * 2 * j + (Hash(j, salt, seed) < 0.5f ? 0 : 1), cells[n - 1].c + sc * 2 * j + (Hash(j, salt, seed + 1) < 0.5f ? 0 : 1)));
-                    }
-                }
-                Spur(42, 45, 29, 45, 5, 1);        // north, toward the wood field (rows 12-20) - stops well short
-                Spur(49, 42, 61, 30, 5, 2);        // south-west, toward the quarry field (rows 76-84, cols 8-16)
-                Spur(49, 49, 61, 61, 5, 3);        // south-east, toward the clay field (rows 76-84, cols 76-84)
-                // drop any cell left 1 wide (the tileset has no 1-wide frames)
-                bool Has(Vector2Int v) => path.Contains(v);
-                for (bool changed = true; changed;)
-                {
-                    changed = false;
-                    foreach (var v in new List<Vector2Int>(path))
-                        if ((!Has(v + Vector2Int.up) && !Has(v + Vector2Int.down)) || (!Has(v + Vector2Int.left) && !Has(v + Vector2Int.right)))
-                        { path.Remove(v); changed = true; }
-                }
-                var pathMap = NewMap(root, "Path", 4, Vector3.zero);
-                bool P(int x, int y) => path.Contains(new Vector2Int(x, y));
-                foreach (var v in path)
-                {
-                    int x = v.x, y = v.y;
-                    bool n = P(x, y + 1), e = P(x + 1, y), s = P(x, y - 1), w = P(x - 1, y);
-                    int f;
-                    if (!n && !w) f = 7; else if (!n && !e) f = 8; else if (!s && !e) f = 9; else if (!s && !w) f = 10;
-                    else if (!n) f = 3; else if (!e) f = 4; else if (!s) f = 5; else if (!w) f = 6;
-                    else if (!P(x - 1, y + 1)) f = 11; else if (!P(x + 1, y + 1)) f = 12; else if (!P(x + 1, y - 1)) f = 13; else if (!P(x - 1, y - 1)) f = 14;
-                    else f = rng.Next(3);
-                    if (Hash(x, y, seed + 31) < (f < 3 ? 0.015f : 0.04f)) pathTufts.Add(v);      // grass between / creeping over the stones
-                    pathMap.SetTile(new Vector3Int(x, y, 0), kit.path[f]);
-                    busy.Add(v);
-                }
-                // the 4 carved slabs (no grout grid / glyph anywhere else)
-                if (kit.plaza.Length >= 3)
-                {
-                    var plaza = NewMap(root, "Plaza", 5, Vector3.zero);
-                    foreach (var (gr, gc) in glyphs) if (path.Contains(K(gr, gc))) plaza.SetTile(C(gr, gc), kit.plaza[2]);
-                }
-                foreach (var v in stepStones) busy.Add(v);
-                foreach (var v in pathTufts) busy.Add(v);
-            }
+                BuildCenterPath(root, seed, busy, pathTufts, stepStones);
 
             // ---- sparse scatter (+ denser pebbles / tufts in the wild corners)
             if (kit.scatter.Length > 0)

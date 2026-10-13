@@ -245,6 +245,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1835306
+--- !u!114 &-9096987241827224622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g00069A2_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 990039815, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 27042
 --- !u!114 &-9076513637664610306
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -280,41 +315,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 917706
---- !u!114 &-9056641213493967160
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g01A01E5_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -64768440, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 1704421
 --- !u!114 &-9045577465876999044
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -490,6 +490,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 8461
+--- !u!114 &-8766572574526357081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0085807_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 1089555588, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 546823
 --- !u!114 &-8717987415413848402
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -560,6 +595,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 92276748
+--- !u!114 &-8692979664664120031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g016002A_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -847582565, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 1441834
 --- !u!114 &-8664857625516077125
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -840,6 +910,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 50724868
+--- !u!114 &-8505409882371802942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g1801803_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1446270982, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 25171971
 --- !u!114 &-8493222486246598405
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1260,6 +1365,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 75522051
+--- !u!114 &-8211857895973075209
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g000496D_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 2116263969, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 18797
 --- !u!114 &-8211727380481756060
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1680,6 +1820,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 117450764
+--- !u!114 &-7827157044572678103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0105008_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1265907751, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 1069064
 --- !u!114 &-7794814690012554859
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2205,6 +2380,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 101711883
+--- !u!114 &-7444384850352203510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g480008E_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -227545547, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 75497614
 --- !u!114 &-7439363640819867362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2590,41 +2800,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 655498
---- !u!114 &-7211391850068610814
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g410000B_2
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1308157912, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 68157451
 --- !u!114 &-7205930046827413207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3010,6 +3185,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 28717
+--- !u!114 &-6734017912931216102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g18000E1_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -274932665, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 25166049
 --- !u!114 &-6707525345080769736
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3185,6 +3395,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 41967628
+--- !u!114 &-6629783725087245127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g500008E_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -752249614, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 83886222
 --- !u!114 &-6590601840386742419
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3710,6 +3955,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 50724875
+--- !u!114 &-6132190224378335301
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g38E000B_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1791824140, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 59637771
 --- !u!114 &-6125000344039376829
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3885,41 +4165,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 101842955
---- !u!114 &-5906405356952512220
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g0003102_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1199464982, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 12546
 --- !u!114 &-5824842275283187294
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4375,6 +4620,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 16799756
+--- !u!114 &-5488824102691006623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g5980004_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -256447566, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 93847556
 --- !u!114 &-5468498148017260498
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4480,6 +4760,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 16781324
+--- !u!114 &-5390230663645775854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g6000803_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1451115152, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 100665347
 --- !u!114 &-5349986324916887404
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4830,7 +5145,7 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 655530
---- !u!114 &-5026529078616226102
+--- !u!114 &-5085035144594713158
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4840,9 +5155,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g7806803_2
+  m_Name: g00E6007_0
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 900201676, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Sprite: {fileID: -925296965, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
@@ -4864,7 +5179,7 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 0
   m_ColliderType: 0
-  geo: 125855747
+  geo: 942087
 --- !u!114 &-5018312027944960000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5880,6 +6195,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1452040
+--- !u!114 &-4268670716131524827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0163808_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 693589379, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 1456136
 --- !u!114 &-4192984826005936373
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6125,41 +6475,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 26765
---- !u!114 &-3996869434851154220
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g01801E5_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1431474082, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 1573349
 --- !u!114 &-3995339882247035269
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6335,41 +6650,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 25171980
---- !u!114 &-3886923732463247212
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g01E0185_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -484258290, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 1966469
 --- !u!114 &-3873539681530547284
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6545,6 +6825,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 83912707
+--- !u!114 &-3726786686465319344
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0001942_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -2080325624, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 6466
 --- !u!114 &-3696180673068922614
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6755,41 +7070,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 278535
---- !u!114 &-3541650527776189350
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g7807803_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1312114343, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 125859843
 --- !u!114 &-3536010829458334219
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7140,6 +7420,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 83886414
+--- !u!114 &-3382373976936298420
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g008018A_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 334590724, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 524682
 --- !u!114 &-3366093417571421938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7175,6 +7490,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1442154
+--- !u!114 &-3340934537841503750
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g5803803_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1775780343, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 92289027
 --- !u!114 &-3339998124177414207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7665,6 +8015,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 534535
+--- !u!114 &-2842833603658154241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g01C5008_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1393882385, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 1855496
 --- !u!114 &-2835634840098386509
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7700,6 +8085,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 75509763
+--- !u!114 &-2833977017207238868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g000118D_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1297903040, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 4493
 --- !u!114 &-2798555781178225246
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8120,41 +8540,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 67109249
---- !u!114 &-2536999432433470703
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g180500C_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -707959049, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 25186316
 --- !u!114 &-2513559690273870938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8365,6 +8750,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 18690
+--- !u!114 &-2353367292376952280
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0960004_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 200814083, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 9830404
 --- !u!114 &-2287060983060999334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8470,41 +8890,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 92305411
---- !u!114 &-2158394871095860768
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g002006A_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 970096802, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 131178
 --- !u!114 &-2103534130498047638
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8925,6 +9310,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 109080588
+--- !u!114 &-1866425455313092652
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g380010E_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 2088317321, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 58720526
 --- !u!114 &-1821050125235880569
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9100,41 +9520,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 8405004
---- !u!114 &-1683615759930147008
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g008016A_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 300672889, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 524650
 --- !u!114 &-1621850818568170611
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9170,41 +9555,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 41943233
---- !u!114 &-1603939081318033344
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g5100004_2
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 1855899357, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 84934660
 --- !u!114 &-1579027373084303999
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9870,41 +10220,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 26989
---- !u!114 &-1096474546771122478
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g3006803_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1740948588, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 50358275
 --- !u!114 &-1068349868601769001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11269,6 +11584,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 125829345
+--- !u!114 &89424999414190974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g01A00A5_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -688986007, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 1704101
 --- !u!114 &116508964420020658
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11479,6 +11829,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1454088
+--- !u!114 &189772423821722935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g28C0004_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1552211989, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 42729476
 --- !u!114 &191043693304975464
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11514,7 +11899,7 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 41951244
---- !u!114 &210611127530412029
+--- !u!114 &229465189261039839
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -11524,9 +11909,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g180080C_0
+  m_Name: g01200C5_1
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 761253930, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Sprite: {fileID: -2103602290, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
@@ -11548,7 +11933,7 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 0
   m_ColliderType: 0
-  geo: 25167884
+  geo: 1179845
 --- !u!114 &243365805718728961
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12389,6 +12774,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1310794
+--- !u!114 &1062184066029260586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0184808_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1053537559, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 1591304
 --- !u!114 &1077399301909438879
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12844,7 +13264,7 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 25165870
---- !u!114 &1357869940801899290
+--- !u!114 &1378555690705068158
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -12854,9 +13274,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g01800A5_2
+  m_Name: g494000B_1
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1988029043, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Sprite: {fileID: -1475958559, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
@@ -12878,7 +13298,7 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 0
   m_ColliderType: 0
-  geo: 1573029
+  geo: 76808203
 --- !u!114 &1406217661594722630
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13754,41 +14174,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 24685
---- !u!114 &1971644423878842250
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g40000A1_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1607119688, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 67109025
 --- !u!114 &1984714871533519246
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14489,6 +14874,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 8398860
+--- !u!114 &2474746396778835281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g01A6807_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 58295024, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 1730567
 --- !u!114 &2543222263874910080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14594,6 +15014,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 109078531
+--- !u!114 &2635485465065318089
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g500380C_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -838795994, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 83900428
 --- !u!114 &2639006766408484423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14804,41 +15259,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1835498
---- !u!114 &2732916066361654992
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g0104007_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1101456083, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 1064967
 --- !u!114 &2758766939207883900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15364,6 +15784,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 8394764
+--- !u!114 &3239566140073160088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0003962_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1284450208, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 14690
 --- !u!114 &3271428140752840890
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15644,41 +16099,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1990663
---- !u!114 &3600016110053308909
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g002008A_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -365827566, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 131210
 --- !u!114 &3617113836494619176
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15749,41 +16169,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 1179909
---- !u!114 &3681332547482191998
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g008002A_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 1793085285, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 524330
 --- !u!114 &3738696204652909635
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16519,41 +16904,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 93716484
---- !u!114 &4239240260912798557
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g000410D_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 255887959, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 16653
 --- !u!114 &4258238713546126790
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16799,41 +17149,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 917541
---- !u!114 &4529627113269603707
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g40A0004_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -189130664, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 67764228
 --- !u!114 &4584949278730721793
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17044,6 +17359,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 917861
+--- !u!114 &4697478581992190751
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g00048E2_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -115047807, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 18658
 --- !u!114 &4708867878867164009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17324,6 +17674,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 109052302
+--- !u!114 &5076852100288229585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g6800101_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 1933621601, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 109052161
 --- !u!114 &5103569258012330867
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17429,41 +17814,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 33554702
---- !u!114 &5170030494800186179
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g00A0185_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 268522127, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 655749
 --- !u!114 &5171484137753552472
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17709,6 +18059,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 58742796
+--- !u!114 &5351364499562673915
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g38001A1_1
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 1781393478, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 58720673
 --- !u!114 &5358163042590018900
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17884,7 +18269,7 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 58720686
---- !u!114 &5598630466123680319
+--- !u!114 &5599474158943635934
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -17894,9 +18279,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g0164008_0
+  m_Name: g0100125_1
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -761177262, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Sprite: {fileID: -1390820877, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
@@ -17918,7 +18303,7 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 0
   m_ColliderType: 0
-  geo: 1458184
+  geo: 1048869
 --- !u!114 &5630256456414702960
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18059,6 +18444,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 75497550
+--- !u!114 &5809766376956771571
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g0800081_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1947115970, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 8388737
 --- !u!114 &5834719931114118749
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18794,6 +19214,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 12674
+--- !u!114 &6570270716391608916
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g008016A_2
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 54457574, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 524650
 --- !u!114 &6584506593697692136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19179,41 +19634,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 8482
---- !u!114 &6986886761553537348
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g006002A_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1247993542, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 393258
 --- !u!114 &7021827946215307745
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19564,41 +19984,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 117440897
---- !u!114 &7323898284497429406
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g3000101_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 287113986, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 50331905
 --- !u!114 &7329235777021185243
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19634,41 +20019,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 75503619
---- !u!114 &7338549799335865151
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g6807803_0
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: 617910873, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 109082627
 --- !u!114 &7421874555397114511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20509,6 +20859,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 8419340
+--- !u!114 &8167331879295838008
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g11E0004_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: 273306812, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 18743300
 --- !u!114 &8175622166291870932
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20684,41 +21069,6 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 9961483
---- !u!114 &8349691326571677038
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g0105008_1
-  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1370846007, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Transform:
-    e00: 1
-    e01: 0
-    e02: 0
-    e03: 0
-    e10: 0
-    e11: 1
-    e12: 0
-    e13: 0
-    e20: 0
-    e21: 0
-    e22: 1
-    e23: 0
-    e30: 0
-    e31: 0
-    e32: 0
-    e33: 1
-  m_InstancedGameObject: {fileID: 0}
-  m_Flags: 0
-  m_ColliderType: 0
-  geo: 1069064
 --- !u!114 &8379794228485447941
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21314,7 +21664,7 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 8482
---- !u!114 &8695474787526657890
+--- !u!114 &8716662863708080741
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -21324,9 +21674,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
-  m_Name: g01E01A5_1
+  m_Name: g48A0004_2
   m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
-  m_Sprite: {fileID: -1585854540, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Sprite: {fileID: -556664426, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Transform:
     e00: 1
@@ -21348,7 +21698,42 @@ MonoBehaviour:
   m_InstancedGameObject: {fileID: 0}
   m_Flags: 0
   m_ColliderType: 0
-  geo: 1966501
+  geo: 76152836
+--- !u!114 &8742199482122918564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g00029AD_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -2071171507, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 10669
 --- !u!114 &8776838960966422481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21524,6 +21909,41 @@ MonoBehaviour:
   m_Flags: 0
   m_ColliderType: 0
   geo: 109314052
+--- !u!114 &8865233886516865312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f1a6f1014cddc445a0478752617b957, type: 3}
+  m_Name: g682000B_0
+  m_EditorClassIdentifier: IdleGrounds.Game::IdleGrounds.Game.CoastShapeTile
+  m_Sprite: {fileID: -1376188670, guid: 1417eba78b4204143aa7a3715953e53e, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Transform:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_InstancedGameObject: {fileID: 0}
+  m_Flags: 0
+  m_ColliderType: 0
+  geo: 109182987
 --- !u!114 &8941228450023286161
 MonoBehaviour:
   m_ObjectHideFlags: 0

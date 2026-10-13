@@ -114,11 +114,22 @@ namespace IdleGrounds.Game
             spriteLocal = new Vector3(0f, bottom, 0f);
             }
             if (node.deco) spriteLocal += new Vector3(node.decoDx / (float)cell, -node.decoDy / (float)cell, 0f);
+            {
+                // VP-14: generator rows (trees, quarry rocks) and the deco tree rings are laid on the cell grid by the Sim;
+                // a seeded visual jitter (whole art px: nodes +-4 across / +-2 up-down, deco +-10 / +-6) keeps a row from
+                // reading as a ruler line. Visual only: the node's cell, hit area and sorting row are unchanged.
+                uint hj = unchecked((uint)(node.col * 0x27D4EB2F) ^ (uint)(node.row * 0x165667B1) ^ 0x9E3779B9u);
+                hj ^= hj >> 15; hj = unchecked(hj * 0x2C1B3C6Du); hj ^= hj >> 12;
+                int ax = node.deco ? 10 : 4, ay = node.deco ? 6 : 2;
+                int jx = (int)(hj % (uint)(2 * ax + 1)) - ax, jy = (int)((hj >> 8) % (uint)(2 * ay + 1)) - ay;
+                spriteLocal += new Vector3(jx / 32f, jy / 32f, 0f);
+            }
             spriteRenderer.transform.localPosition = spriteLocal;
             spriteRenderer.flipX = flipX;
             if (overlay != null) overlay.flipX = flipX;
             // VP-15: decor one value step toward the ground; interactables keep full value (+ hover rim)
-            var c = node.deco ? DecorStyle.DecorTint : Color.white; c.a = node.deco && !decoArt ? 0.55f : 1f; spriteRenderer.color = c;
+            // VP-14: placeholder deco (no art) used to be drawn at 55% alpha and read as a rendering glitch: full alpha now
+            var c = node.deco ? DecorStyle.DecorTint : Color.white; c.a = 1f; spriteRenderer.color = c;
             ShowRim(false); rimValid = false;
 
             pad.gameObject.SetActive(!node.deco && !realArt);

@@ -106,7 +106,18 @@ namespace IdleGrounds.Game
                 burnMask.transform.localScale = new Vector3(Mathf.Max(0.0001f, frac), 1f, 1f);
             }
             if (noFuelTag != null) noFuelTag.Show(n == 0); else ViewKit.Show(noFuelText, n == 0);
+            // VP-12 interim (until the fix_fuel_rack art, VP-34): the delivered rack is an opaque black box with a bright
+            // grid, the loudest thing in the base. It now sits back as a translucent, ground-toned wooden frame and only
+            // comes forward when it matters: on hover / selection or when 0-1 fuel is left.
+            if (ArtActive)
+            {
+                var want = v.Hovered || v.Selected || n <= 1 ? RackLoud : RackQuiet;
+                if (panel.color != want) panel.color = want;
+            }
         }
+
+        /// <summary>Interim rack tints (multiplied into the delivered art): quiet = warm earth at 55%, loud = full colour.</summary>
+        public static readonly Color RackQuiet = new Color(0.78f, 0.66f, 0.52f, 0.55f), RackLoud = new Color(1f, 1f, 1f, 0.92f);
 
         static ConverterFaceView FindConverter(BuildingView v)
         {

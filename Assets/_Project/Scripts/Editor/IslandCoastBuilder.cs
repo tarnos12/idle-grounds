@@ -871,13 +871,19 @@ namespace IdleGrounds.Editor
                     int a = Mathf.FloorToInt(x0) - land.x0, b = Mathf.CeilToInt(x1) - 1 - land.x0;
                     if (a < 0 || b >= w || b < a) return float.NaN;
                     int m = int.MinValue;
-                    float me = float.MinValue;
+                    float me = float.MinValue, mn = float.MaxValue;
                     for (int i = a; i <= b; i++)
                     {
                         if (f[i] <= 0.05f || (i > a && Mathf.Abs(h[i] - h[i - 1]) > ChainStep)) return float.NaN;
                         m = Mathf.Max(m, h[i]);
                         me = Mathf.Max(me, edgeY[p][i]);
+                        mn = Mathf.Min(mn, edgeY[p][i]);
                     }
+                    // curved coast + 3/4 wall (VP-16): a piece hangs from the wall's BOTTOM edge, which follows the coast. Its
+                    // flat top can only sit under a nearly level stretch: on a slope (> 0.6 cell over its width) it would start
+                    // mid-wall on the low side, so the span is refused (a narrower piece is tried); it hangs from the LOWEST
+                    // coast point of the span, so its top tucks 2-3 px under the wall's ragged bottom all along.
+                    if (curved && HasWall) return me - mn > 0.6f ? float.NaN : mn - 1f;
                     return curved ? me - 1f : m;          // curved: the coast line itself is "rim cell top" (top + 1)
                 }
                 bool Hang(Sprite sp, float cx, float dropBelowRim, int order, float dark)
@@ -906,13 +912,28 @@ namespace IdleGrounds.Editor
                 for (float x = land.x0 + 1.5f; x < land.x1 - 0.5f;)
                 {
                     int i = Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1);
-                    if (f[i] <= (HasWall ? 0.3f : 0.05f) || (HasWall && rng.NextDouble() < 0.3)) { x += HasWall ? 2f : 1f; continue; }
-                    var sp = Pick(f[i]);
+                    if (f[i] <= (HasWall ? 0.3f : 0.05f) || (HasWall && rng.NextDouble() < 0.4)) { x += HasWall ? R(2f, 4f) : 1f; continue; }
+                    // with the wall: fewer, larger pieces (VP-16: rows of small teeth read as a paper fringe at zoom 4+)
+                    var sp = HasWall && f[i] > 0.5f && rock != null && rng.NextDouble() < 0.45 ? rock : Pick(f[i]);
                     int order = 38 + pieceN % 3;
                     if (Hang(sp, x, R(0f, 0.6f), order, R(0f, 0.12f))) { x += sp.bounds.size.x * (HasWall ? R(0.85f, 1.15f) : R(0.55f, 0.75f)); continue; }
                     var narrow = Narrow();       // the wide piece would leave the chain: try a narrow one
                     if (Hang(narrow, x, R(0f, 0.4f), order, R(0f, 0.12f))) { x += narrow.bounds.size.x * R(0.65f, 0.85f); continue; }
                     x += 1f;
+                }
+                // with the wall: one or two long pieces per Island hang ~1.5x deeper behind the first row (VP-16), on the
+                // strongest southern stretches, so the underside has a few accents instead of one even band
+                if (p == 0 && HasWall && spike != null)
+                {
+                    int want = 1 + rng.Next(2), got = 0;
+                    for (int tries = 0; tries < 40 && got < want; tries++)
+                    {
+                        float x = R(land.x0 + 6f, land.x1 - 6f);
+                        int i = Mathf.Clamp(Mathf.FloorToInt(x) - land.x0, 0, w - 1);
+                        if (f[i] < 0.8f || h[i] - minH > 6) continue;
+                        Sprite sp = volcano && lava.Length > 0 ? lava[rng.Next(lava.Length)] : spike;
+                        if (Hang(sp, x, 4.5f, 34, R(0.15f, 0.25f))) got++;
+                    }
                 }
                 // second, deeper row under the southernmost stretch: behind the first row -> an inverted-cone taper
                 if (p == 0 && !HasWall)
@@ -1001,7 +1022,7 @@ namespace IdleGrounds.Editor
             // cell mask of everything the fog must cover: ground + cliff rim + the hanging underside
             int uy0 = land.y0, ux0 = land.x0, ux1 = land.x1;
             foreach (var c in under) { uy0 = Mathf.Min(uy0, c.y); ux0 = Mathf.Min(ux0, c.x); ux1 = Mathf.Max(ux1, c.x); }
-            int gx0 = ux0 - 3, gx1 = ux1 + 3, gy0 = uy0 - 4, gy1 = land.y1 + 3;
+            int gx0 = ux0 - 5, gx1 = ux1 + 5, gy0 = uy0 - 5, gy1 = land.y1 + 5;      // room for the feathered halo (VP-11)
             int gw = gx1 - gx0 + 1, gh = gy1 - gy0 + 1;
             var m = new bool[gw, gh];
             for (int x = land.x0; x <= land.x1; x++)
@@ -1058,7 +1079,7 @@ namespace IdleGrounds.Editor
                                 if (mx >= 0 && my >= 0 && mx < tw && my < th) core[mx, my] = true;
                             }
                     }
-                const int R = 3;
+                const int R = 5;      // VP-11: 5 mask px (~0.6 cell) so the coast lip, side faces and wall ends never peek out of the fog
                 for (int x = 0; x < tw; x++)
                     for (int y = 0; y < th; y++)
                     {
@@ -1071,6 +1092,58 @@ namespace IdleGrounds.Editor
                                 if (nx >= 0 && ny >= 0 && nx < tw && ny < th) a0[nx, ny] = 1f;
                             }
                     }
+                // VP-11: morphological closing (~1.5 cells) so the fog does not trace every hanging rock as a sawtooth: the
+                // gaps between pieces fill, the outline reads as one soft mass
+                const int C = 12;
+                var grown = new bool[tw, th];
+                for (int x = 0; x < tw; x++)
+                    for (int y = 0; y < th; y++)
+                    {
+                        if (a0[x, y] < 1f) continue;
+                        for (int a = -C; a <= C; a++)
+                            for (int b = -C; b <= C; b++)
+                            {
+                                if (a * a + b * b > C * C + 1) continue;
+                                int nx = x + a, ny = y + b;
+                                if (nx >= 0 && ny >= 0 && nx < tw && ny < th) grown[nx, ny] = true;
+                            }
+                    }
+                for (int x = 0; x < tw; x++)
+                    for (int y = 0; y < th; y++)
+                    {
+                        if (!grown[x, y] || a0[x, y] >= 1f) continue;
+                        bool keep = true;
+                        for (int a = -C; a <= C && keep; a++)
+                            for (int b = -C; b <= C && keep; b++)
+                            {
+                                if (a * a + b * b > C * C + 1) continue;
+                                int nx = x + a, ny = y + b;
+                                if (nx < 0 || ny < 0 || nx >= tw || ny >= th || !grown[nx, ny]) keep = false;
+                            }
+                        if (keep) a0[x, y] = 1f;
+                    }
+                // ... and the hanging pieces' lower edge becomes one smooth envelope (per column the lowest fogged row,
+                // taken as the min over +-2 cells and averaged over +-2 cells), filled up to the fog above it: no teeth
+                {
+                    const int Wn = 16;
+                    var low = new int[tw];
+                    for (int x = 0; x < tw; x++) { low[x] = -1; for (int y = 0; y < th; y++) if (a0[x, y] >= 1f) { low[x] = y; break; } }
+                    var mn = new float[tw];
+                    for (int x = 0; x < tw; x++)
+                    {
+                        int lm = int.MaxValue;
+                        for (int k = -Wn; k <= Wn; k++) { int xx = x + k; if (xx >= 0 && xx < tw && low[xx] >= 0) lm = Mathf.Min(lm, low[xx]); }
+                        mn[x] = lm == int.MaxValue ? -1 : lm;
+                    }
+                    for (int x = 0; x < tw; x++)
+                    {
+                        if (low[x] < 0) continue;
+                        float s = 0f; int n = 0;
+                        for (int k = -Wn; k <= Wn; k++) { int xx = x + k; if (xx >= 0 && xx < tw && mn[xx] >= 0) { s += mn[xx]; n++; } }
+                        int env = Mathf.RoundToInt(s / Mathf.Max(1, n));
+                        for (int y = Mathf.Max(0, env); y < low[x]; y++) a0[x, y] = 1f;
+                    }
+                }
             }
             for (int pass = 0; pass < 2; pass++)
             {
@@ -1123,8 +1196,40 @@ namespace IdleGrounds.Editor
             veil.transform.localScale = Vector3.one;
             veil.transform.localPosition = new Vector3(gx0 + gw * 0.5f, gy0 + gh * 0.5f, 0f);
             var sr = Get<SpriteRenderer>(veil);
+            // VP-11 (code half): an opaque fog base (the ground no longer shows through the mist's holes), the mist as a
+            // seamless 256-texel tile plus a second seamless 192-texel layer from another frame at a different offset (the
+            // two periods never line up, so no seam grid and no visible repeat), and a feathered halo outside the mask.
+            SpriteRenderer Layer(string name, Sprite s, int order, Color c, bool masked, Vector2 offset)
+            {
+                var t = veil.transform.Find(name);
+                var go = t != null ? t.gameObject : new GameObject(name);
+                go.transform.SetParent(veil.transform, false);
+                go.transform.localPosition = offset;
+                var r = Get<SpriteRenderer>(go);
+                r.sprite = s;
+                r.drawMode = masked ? SpriteDrawMode.Tiled : SpriteDrawMode.Simple;
+                if (masked) { r.tileMode = SpriteTileMode.Continuous; r.size = new Vector2(gw, gh); }
+                r.color = c;
+                r.maskInteraction = masked ? SpriteMaskInteraction.VisibleInsideMask : SpriteMaskInteraction.None;
+                r.sortingLayerName = "Overlay";
+                r.sortingOrder = order;
+                return r;
+            }
             var fog = IslandArtBuilder.Frames(IslandArtBuilder.VeilMist);
-            if (fog.Length > 0)
+            if (VeilArt.Ensure(IslandArtBuilder.VeilMist, out var mistA, out var mistB, out var mistBase))
+            {
+                sr.sprite = mistA;
+                sr.drawMode = SpriteDrawMode.Tiled;
+                sr.tileMode = SpriteTileMode.Continuous;
+                sr.size = new Vector2(gw, gh);
+                sr.color = new Color(0.80f, 0.78f, 0.88f, 0.8f);
+                Layer("Base", mistBase, -2, new Color(0.60f, 0.59f, 0.69f, 1f), true, Vector2.zero);
+                // offset by a non-multiple of either period so the two tiles start out of phase
+                Layer("MistB", mistB, 1, new Color(0.86f, 0.85f, 0.93f, 0.4f), true, new Vector2(2.71875f, -3.40625f));
+                var halo = VeilArt.Halo(isl.islandKey, a0, mppu, 16);
+                Layer("Halo", halo, -1, Color.white, false, Vector2.zero);
+            }
+            else if (fog.Length > 0)
             {
                 sr.sprite = fog[0];
                 sr.drawMode = SpriteDrawMode.Tiled;
@@ -1178,6 +1283,7 @@ namespace IdleGrounds.Editor
                         float kind = (float)rng.NextDouble();
                         int type = kind < 0.3f ? 0 : kind < 0.58f ? 1 : kind < 0.9f || trees == null ? 2 : 3;       // rock, shrub, tuft, tree
                         var p = a + dir * s + new Vector2(-dir.y, dir.x) * R(-0.9f, 0.9f);
+                        if (type == 2) continue;      // VP-14: the placeholder grass tufts are faint (30-40% alpha art) and read as glitches: dropped
                         var sr = new GameObject(type == 0 ? "Rock" : type == 1 ? "Shrub" : type == 2 ? "Tuft" : "Tree").AddComponent<SpriteRenderer>();
                         sr.transform.SetParent(root, false);
                         float sc = type == 0 ? R(0.5f, 1.0f) : type == 1 ? R(0.6f, 1.1f) : R(0.6f, 1.0f);

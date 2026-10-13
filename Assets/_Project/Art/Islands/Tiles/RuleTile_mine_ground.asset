@@ -9,7 +9,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9d1514134bc4fbd41bb739b1b9a49231, type: 3}
+  m_Script: {fileID: 11500000, guid: 141495f650add3c429d5d259b8ee55e1, type: 3}
   m_Name: RuleTile_mine_ground
   m_EditorClassIdentifier: Unity.2D.Tilemap.Extras::UnityEngine.RuleTile
   m_DefaultSprite: {fileID: -1015069614217309924, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
@@ -39,3 +39,8 @@ MonoBehaviour:
     - {x: 0, y: -1, z: 0}
     - {x: 1, y: -1, z: 0}
     m_RuleTransform: 0
+  kin: []
+  fill:
+  - {fileID: -1015069614217309924, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
+  - {fileID: -4362343920177566343, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
+  - {fileID: -3953364086757825421, guid: ce7ac97fddd59ed4a9bd0f1bd3226388, type: 3}
