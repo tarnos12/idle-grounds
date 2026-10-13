@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-13 18:48",
+  "updated": "2026-10-13 20:43",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -373,11 +373,18 @@
         },
         {
           "title": "Owner tests the APK on his phone",
-          "detail": "You install the APK and report anything that feels wrong.",
-          "status": "in-progress",
+          "detail": "2026-10-13: runs on the owner's phone. Feedback: Menu overflows, bottom bar crowded/clipped, desktop control words in quest/help text, Swap/Give buttons unstyled, wants a fresh start with no buildings (screenshots in docs/Design/feedback/phone-2026-10-13-*).",
+          "status": "done",
           "size": "S",
-          "owner": "Mariusz (owner)",
-          "now": "APK sent to you; checklist in docs/guides/touch-controls.md"
+          "owner": "Mariusz (owner)"
+        },
+        {
+          "title": "Phone fixes round 1 + new game with no buildings",
+          "detail": "Menu fits, compact bottom bar, touch wording in quests/help, styled Swap/Give buttons, New game from the Menu that starts with no buildings placed; new APK on Drive.",
+          "status": "in-progress",
+          "size": "M",
+          "owner": "Claude",
+          "now": "Sonnet builder in background copy phone1"
         }
       ]
     }

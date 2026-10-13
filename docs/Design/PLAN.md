@@ -1,14 +1,14 @@
 # Idle Grounds: plan
 
-Updated 2026-10-13 18:48. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-13 20:43. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**20 of 38 tasks done**, 3 in progress, 2 to do, 5 blocked, 8 waiting.
+**21 of 39 tasks done**, 3 in progress, 2 to do, 5 blocked, 8 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M7** Owner tests the APK on his phone: APK sent to you; checklist in docs/guides/touch-controls.md
+- **M7** Phone fixes round 1 + new game with no buildings: Sonnet builder in background copy phone1
 
 | # | Milestone | Gate | Status | Tasks done |
 |---|---|---|---|---|
@@ -19,7 +19,7 @@ Updated 2026-10-13 18:48. Source of truth: docs/Design/plan.json, edited with to
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
-| M7 | Android build |  | In progress | 1 / 3 |
+| M7 | Android build |  | In progress | 2 / 4 |
 
 **Task status:** Done: built and checked. In progress: someone (an agent) is working on it now; the "now" line says who. Next: the next thing to start. Later: planned, not started. To do: planned and can start. Blocked: cannot start; needs art, an owner answer or another task (the reason is shown). Waiting: could start, but not a good time yet (the reason is shown).
 
@@ -133,4 +133,5 @@ The game runs and plays well on an Android phone in landscape, with touch contro
 |---|---|---|---|
 | Done | Touch controls, phone UI, landscape, Android build | Merged 2026-10-13: tap/hold/long-press feed, Give + Swap buttons, drag pan, pinch zoom, drag-ghost placement with Place/Cancel, tap-linger tooltips, Back menu; safe area, dpi canvas scale, 48dp hit areas; landscape lock; APK 51 MB. Touch PlayMode tests 15/15. | Claude |
 | Blocked | Run the APK on an Android emulator | Install the Android emulator + a system image (large download from Google) to test the APK before you do. | Claude |
-| In progress | Owner tests the APK on his phone **(NOW)** | You install the APK and report anything that feels wrong. | Mariusz (owner) |
+| Done | Owner tests the APK on his phone | 2026-10-13: runs on the owner's phone. Feedback: Menu overflows, bottom bar crowded/clipped, desktop control words in quest/help text, Swap/Give buttons unstyled, wants a fresh start with no buildings (screenshots in docs/Design/feedback/phone-2026-10-13-*). | Mariusz (owner) |
+| In progress | Phone fixes round 1 + new game with no buildings **(NOW)** | Menu fits, compact bottom bar, touch wording in quests/help, styled Swap/Give buttons, New game from the Menu that starts with no buildings placed; new APK on Drive. | Claude |
