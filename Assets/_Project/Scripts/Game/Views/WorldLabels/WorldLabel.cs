@@ -30,7 +30,7 @@ namespace IdleGrounds.Game
         /// <summary>Sort orders on the Overlay layer: plate, then content, then the status shape.</summary>
         public const int OrderPlate = 60, OrderContent = 62, OrderKeep = 64;
         /// <summary>Text sizes in world px at zoom 2 (8 world px = ~14 screen px at 1080p).</summary>
-        public const float TextPx = 9f, SmallPx = 8f, TitlePx = 11f;
+        public const float TextPx = 11f, SmallPx = 11f, TitlePx = 11f;      // 11 = the world text floor (ViewKit.MinTextPx)
         public static readonly Color TextColour = PixelSprites.C(PixelSprites.P07), MutedColour = PixelSprites.C(PixelSprites.P06),
             GoldColour = PixelSprites.C(PixelSprites.P24), GoodColour = PixelSprites.C(PixelSprites.P11), BadColour = PixelSprites.C(PixelSprites.P19),
             WarnColour = PixelSprites.C(PixelSprites.P30);

@@ -48,6 +48,7 @@ namespace IdleGrounds.Game
             if (panel != null)
             {
                 anchor = BuildingPanelAnchor.Attach(panel, PanelWidth);
+                anchor.OnLeftScreen = Close;
                 // beside the building the panel is narrower than the old bottom dock: the reason line wraps under the Recruit button
                 if (reasonText != null && recruitButton != null && reasonText.transform.parent == recruitButton.transform.parent)
                 {

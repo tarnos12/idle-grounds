@@ -72,7 +72,12 @@ namespace IdleGrounds.Game
                 debugButton.gameObject.SetActive(DevToolsVisible);      // VP-04: never shown to players
             }
             if (recentreButton != null) recentreButton.onClick.AddListener(Recentre);
+            if (panHint != null) panHint.text = MobileUi.IsMobile ? "Drag to pan" : PanHintText;
+            if (jobText != null) { jobText.overflowMode = TextOverflowModes.Ellipsis; jobText.textWrappingMode = TextWrappingModes.Normal; }
         }
+
+        /// <summary>Header hint (short, so it never runs into Recentre at 1280x720; UI QA batch B #5).</summary>
+        public const string PanHintText = "Drag / [WASD]: pan";
 
         /// <summary>Dev-only controls (Debug reveal): the editor or a development player, never a release build or a headless capture.</summary>
         public static bool DevToolsVisible => (Application.isEditor || Debug.isDebugBuild) && !Application.isBatchMode;
@@ -115,7 +120,30 @@ namespace IdleGrounds.Game
             float h = Mathf.Min(880f * Scale, canvas.rect.height - BarHeight - 2f * WindowMargin);
             box.sizeDelta = new Vector2(w, h);
             box.anchoredPosition = new Vector2(0f, BarHeight * 0.5f);
+            FitChrome();
             LayoutRebuilder.ForceRebuildLayoutImmediate(box);
+        }
+
+        /// <summary>
+        /// Buttons as wide as their labels and a two-line status footer at the snapped pixel-font size (1280x720 draws
+        /// 22 px text on a 0.67 canvas: "Recentre" and "Cancel &amp; refund" overflowed their fixed widths; UI QA batch B #5).
+        /// </summary>
+        void FitChrome()
+        {
+            UiFit.FitButton(recentreButton, 130f);
+            UiFit.FitButton(cancelJobButton, 210f);
+            if (jobText == null || body == null) return;
+            UiFont.Apply(jobText);
+            float line = jobText.GetPreferredValues("Ag", 9999f, 9999f).y;
+            float footH = Mathf.Max(60f, Mathf.Ceil(line * 2f + 10f));
+            if (jobText.transform.parent is RectTransform foot && foot != box)
+            {
+                foot.sizeDelta = new Vector2(foot.sizeDelta.x, footH);
+                var le = jobText.GetComponent<LayoutElement>();
+                if (le != null) { le.preferredHeight = footH; le.flexibleWidth = 1f; }
+            }
+            body.offsetMin = new Vector2(body.offsetMin.x, footH + 18f);
+            if (tooltip != null && tooltip.parent is RectTransform tipLayer && tipLayer != box) tipLayer.offsetMin = body.offsetMin;
         }
 
         /// <summary>Centre the whole tree in the board (default view and the Recentre button).</summary>
@@ -280,25 +308,14 @@ namespace IdleGrounds.Game
             sig = sig * 31 + (job != null ? job.paid.Total() + 1 : 0) + (RevealAll ? 1 : 0) + (hovered != null ? hovered.GetInstanceID() * 13L : 0L);
             if (!force && sig == lastSig) return;
             lastSig = sig;
-            string selectedCost = null;
-            if (job != null)
-            {
-                var sbc = new StringBuilder("needs ");
-                bool firstc = true;
-                foreach (var e in Sim.UpgradeJobRemaining())
-                {
-                    if (e.qty <= 0) continue;
-                    if (!firstc) sbc.Append(", "); firstc = false;
-                    sbc.Append(e.qty).Append(' ').Append(ItemName(e.item));
-                }
-                selectedCost = firstc ? "fully fed" : sbc.ToString();
-            }
             foreach (var kv in nodes)
             {
                 if (!byId.TryGetValue(kv.Key, out var st)) { kv.Value.gameObject.SetActive(false); continue; }
                 bool vis = st.visible || RevealAll;
                 if (kv.Value.gameObject.activeSelf != vis) kv.Value.gameObject.SetActive(vis);
-                kv.Value.Apply(st, RevealAll, st.selected, st.selected ? selectedCost : null);
+                // the remaining cost lives in the status line only: under the node it sat beneath the neighbouring nodes
+                // and edges (UI QA batch B #5)
+                kv.Value.Apply(st, RevealAll, st.selected, null);
             }
             foreach (var (img, a, b) in edges)
             {
@@ -373,15 +390,16 @@ namespace IdleGrounds.Game
             }
             string nm = job.type;
             foreach (var st in states) if (st.selected) { nm = st.node.name; break; }
-            var sb = new StringBuilder("Selected: <b>").Append(nm).Append("</b>  <color=#fbbf24>still needs ");
+            var sb = new StringBuilder("Selected: <b>").Append(nm).Append("</b> - <color=#fbbf24>");
             bool first = true;
             foreach (var e in Sim.UpgradeJobRemaining())
             {
                 if (e.qty <= 0) continue;
-                if (!first) sb.Append(", "); first = false;
+                sb.Append(first ? "needs " : ", "); first = false;
                 sb.Append(e.qty).Append(' ').Append(ItemName(e.item));
             }
-            sb.Append("</color> - right-click the Altar to feed it");
+            if (first) sb.Append("fully fed");
+            sb.Append("</color>. Right-click the Altar to feed it.");
             jobText.text = sb.ToString();
             if (cancelJobButton != null) cancelJobButton.gameObject.SetActive(true);
         }

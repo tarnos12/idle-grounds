@@ -283,6 +283,7 @@ namespace IdleGrounds.Game
             {
                 var box = s.transform.parent != null ? s.transform.parent.Find("Box") as RectTransform : null;
                 if (box == null) continue;
+                if (box.GetComponentInParent<ModalView>(true) != null) continue;     // a ModalView fits itself: fixed header + scrolling body (UI QA #3)
                 var ls = box.localScale;
                 box.localScale = Vector3.one;
                 float w = box.rect.width, h = box.rect.height;

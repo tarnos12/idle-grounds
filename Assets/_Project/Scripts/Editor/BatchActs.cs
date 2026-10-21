@@ -24,7 +24,7 @@ namespace IdleGrounds.Editor
         {
             var acts = shot.act ?? new string[0];
             if (!(acts.Length > 0 && acts[0] == "keep")) CloseAll();
-            foreach (var a in acts) { try { Act(a); } catch (Exception e) { Debug.LogError(Tag + "act '" + a + "' failed: " + e.Message); } }
+            foreach (var a in acts) { try { Act(a); } catch (Exception e) { Debug.LogError(Tag + "act '" + a + "' failed: " + e); } }
             var m = MetaUiController.Instance;
             Debug.Log(Tag + "acts [" + string.Join(" | ", acts) + "] -> welcomeOpen=" + (m != null && m.Welcome.IsOpen) + " helpOpen=" + (m != null && m.Help.IsOpen) + " questHidden=" + GameRunner.Instance.State.quest.hidden);
         }

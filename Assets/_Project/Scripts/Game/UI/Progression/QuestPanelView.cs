@@ -168,10 +168,37 @@ namespace IdleGrounds.Game
             if (runner == null || runner.Sim == null || sprites == null) return;
             FadeOverSteles();
             PulseClaim();
+            FitWidth();
             if (Time.unscaledTime < nextRefresh) return;
             nextRefresh = Time.unscaledTime + RefreshEvery;
             Rebuild(false);
         }
+
+        /// <summary>Panel width at 1920x1080 (canvas units).</summary>
+        public const float DesignWidth = 375f, MaxCanvasShare = 0.34f;
+        float designW = -1f, widthFor = -1f;
+
+        /// <summary>
+        /// The expanded panel grows with the snapped text (UI QA batch B #11): at 1280x720 the 22 px pixel font is 1.5x the
+        /// 1080p layout, and a 375-unit panel broke lines after one or two words. Capped at a third of the canvas width.
+        /// </summary>
+        void FitWidth()
+        {
+            if (panel == null || !panel.activeInHierarchy) return;
+            var rt = (RectTransform)panel.transform;
+            var cv = rt.GetComponentInParent<Canvas>();
+            if (cv == null) return;
+            float g = UiFit.TextGrowth(cv);
+            if (Mathf.Approximately(g, widthFor)) return;
+            widthFor = g;
+            if (designW < 0f) designW = rt.sizeDelta.x > 1f ? rt.sizeDelta.x : DesignWidth;
+            var root = (RectTransform)cv.rootCanvas.transform;
+            float w = Mathf.Round(Mathf.Min(designW * g, Mathf.Max(designW, root.rect.width * MaxCanvasShare)));
+            if (!Mathf.Approximately(rt.sizeDelta.x, w)) rt.sizeDelta = new Vector2(w, rt.sizeDelta.y);
+        }
+
+        /// <summary>Width of the expanded panel now (canvas units).</summary>
+        public float PanelWidth => panel != null ? ((RectTransform)panel.transform).rect.width : 0f;
 
         void PulseClaim()
         {

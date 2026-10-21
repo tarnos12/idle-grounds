@@ -22,6 +22,12 @@ Design screens, flows and interaction rules, and keep the UI skin system coheren
 5. No fractional UI scaling of pixel art; text crisp.
 6. Honour reduce-motion (HUD Motion/Calm toggle) for every effect.
 7. Never colour-only signalling (see `ui-qa.md`).
+8. **Esc / Back order (top layer first):** yes/no confirm -> Menu (`GameMenuView`, always drawn on top, so it closes before anything under it) -> Altar tree -> recipe picker -> pavilion -> bridge -> link editor (picking backs out to its menu first) -> Dragon dialog -> Stats / Help / Welcome -> placing / demolish / build menu. With nothing open, Esc opens the Menu (desktop) and Back opens it (phone). Code: `BuildController.TryEscape`. A new panel goes into this chain at its drawing layer.
+9. **Windows fit the screen; text never shrinks below the floor.** Centred windows (`ModalView`) sit between the bottom bar and the top of the safe area; when too tall, their header (title, tabs, close) stays and the body scrolls (`ShrinkBody`); a uniform scale is the last resort only. Building panels (`BuildingPanelAnchor`) take the screen width when wider (text wraps) and scroll everything under their title bar when taller (dock top/bottom); they shrink only if they cannot scroll.
+10. **A building panel closes when its building leaves the screen** (panned or zoomed out of view after it was on screen), unless the player is still working with it elsewhere (link editor while picking a source or target). It never points at nothing.
+11. **Layouts follow the snapped text.** At 1280x720 the canvas is 0.67 but text stays 22 screen px, so text is 1.5x larger relative to the layout: size buttons to their labels (`UiFit.FitButton`), widen text panels by `UiFit.TextGrowth` (quest panel, Stats), wrap filter/notes onto their own line, never auto-size names below the floor. Check every screen at 1920x1080, 1280x720 and phone 2400x1080.
+12. **World text floor:** 11 world px (`ViewKit.MinTextPx`: one Pixelify pixel per art pixel at the zoom-2 label size, about 19 screen px at 1080p and 12.5 at 720p). UI text floor: 22 screen px desktop, 33 phone. Badges carry a word at body size (the build card "New" sits on the card's top edge).
+13. **Key names are key-caps:** `[B]`, `[Q] / [E]`, `[Esc]`, `[WASD]` in Help and tooltips (`ControlWords` turns them into touch words on phones).
 
 ## Checklists
 - **New panel spec:** purpose, trigger, layout, states (empty / partial / full / disabled), input (mouse, keys), roles and art keys, strings (writer), what QA checks.
@@ -30,6 +36,8 @@ Design screens, flows and interaction rules, and keep the UI skin system coheren
 - **Build through builders** so scenes can be regenerated; save scene/prefabs after.
 
 ## Open issues
+- Pixelify Sans look-alikes (5/S, 1/7, 3/8, B/8, E/C): owner question `font_read` (Hub), pick pending; candidates Jersey 10 (30 px), VT323, Atkinson Hyperlegible, all OFL.
+- Building-card names and world pills grew with the text floors (UI QA batch B #7): watch label collisions in dense areas.
 - Emoji to real `ui_*` icons; the scroll redo for Help/Welcome; scrim.
 - Shrine and Request panels do not exist yet.
 - Camera range 17.5 to 52 tiles wide: HUD must stay readable at both.

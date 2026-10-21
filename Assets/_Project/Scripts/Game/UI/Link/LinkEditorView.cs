@@ -72,6 +72,8 @@ namespace IdleGrounds.Game
             if (panel != null)
             {
                 anchor = BuildingPanelAnchor.Attach(panel, PanelWidth);
+                anchor.OnLeftScreen = Close;
+                anchor.KeepOffScreen = () => Picking;      // picking a source / target may need the camera elsewhere on the Island
                 // beside the lantern the panel is one link row wide: the long subtitle becomes a wrapped line under the title bar
                 var sub = panel.transform.Find("TitleBar/Subtitle");
                 if (sub != null)

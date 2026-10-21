@@ -53,6 +53,14 @@ namespace IdleGrounds.Game
             menu = m; Type = def.key; IsNew = isNew; IsTarget = target && lockedReason == null; Affordable = affordable; Locked = lockedReason != null; Tooltip = tooltip;
             name = "Card_" + def.key;
             icon.sprite = iconSprite;
+            if (nameText.enableAutoSizing)
+            {
+                // the name keeps the body size (22 px on screen) and the card grows to fit it: auto-size drew 10-13 px names at
+                // 1280x720, under the 12 px floor (UI QA batch B #7)
+                nameText.enableAutoSizing = false;
+                nameText.fontSize = 19.5f;
+                nameText.textWrappingMode = TextWrappingModes.NoWrap;
+            }
             nameText.text = def.name;
             newBadge.SetActive(isNew && !Locked);
             lockedText.gameObject.SetActive(Locked);
@@ -96,8 +104,29 @@ namespace IdleGrounds.Game
             {
                 newLabel = newBadge.GetComponentInChildren<TextMeshProUGUI>(true);
                 UiSkin.Attach(newBadge, "ui_pill_gold", fit: true, uiPerArt: 1f).Apply(db);
-                ((RectTransform)newBadge.transform).sizeDelta = new Vector2(56f, 26f);    // 1x pill: 8 px caps around a 14 px label
-                if (newLabel != null) newLabel.color = UiPalette.Gold;       // the pill art is dark with a gold rim
+                var brt = (RectTransform)newBadge.transform;
+                brt.sizeDelta = new Vector2(56f, 26f);    // 1x pill: 8 px caps around the label
+                if (newLabel != null)
+                {
+                    newLabel.color = UiPalette.Gold;       // the pill art is dark with a gold rim
+                    // the word at the body text size (22 px on screen, plain cut: no outline material, no fake bold); the old
+                    // 14 px outlined label rendered ~8 px and read "DEW" (UI QA batch B #7)
+                    if (newLabel.font != null) newLabel.fontSharedMaterial = newLabel.font.material;
+                    newLabel.fontStyle = FontStyles.Normal;
+                    newLabel.enableAutoSizing = false;
+                    newLabel.fontSize = UiFont.PixelSize;
+                    newLabel.text = "New";
+                    newLabel.textWrappingMode = TextWrappingModes.NoWrap;
+                    newLabel.overflowMode = TextOverflowModes.Overflow;
+                    UiFont.Apply(newLabel);
+                    var pref = newLabel.GetPreferredValues("New", 9999f, 9999f);
+                    brt.sizeDelta = new Vector2(Mathf.Ceil(pref.x + 20f), Mathf.Max(26f, Mathf.Ceil(pref.y + 4f)));
+                    // centred on the card's top edge, so it never covers the name; the strip leaves room above the cards
+                    brt.pivot = new Vector2(1f, 0.5f);
+                    brt.anchoredPosition = new Vector2(-8f, 0f);
+                    if (transform.parent != null && transform.parent.TryGetComponent<HorizontalLayoutGroup>(out var strip) && strip.padding.top < 16)
+                        strip.padding = new RectOffset(strip.padding.left, strip.padding.right, 16, strip.padding.bottom);
+                }
             }
         }
 

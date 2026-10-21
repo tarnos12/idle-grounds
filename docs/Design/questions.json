@@ -51,5 +51,63 @@
         "Decide after you see the crisp zoom steps in game; until then only the 8 corner-view buildings are redrawn, at 32"
       ]
     ]
+  },
+  {
+    "id": "font_read",
+    "q": "Pixelify Sans makes 5 look like S, 1 like 7, 3 and B like 8, E like C and ( ) like { }. Which font should the game use for text and numbers?",
+    "ctx": "Picture 1 is the game today at 1920x1080: the quest panel shows 0/450 as '0/4S0' and Iron Bar 0/10 as '0/70', a build cost of 25 reads '2S', and in Help '[B] opens the build menu' reads '(8) opens...'. I already show key names as key-caps ([B], [Q] / [E], [Esc]) and fixed the layout bugs from the UI check, but the look-alikes are in Pixelify's letter shapes themselves: picture 2, row B shows that 33 px (3 screen pixels per font pixel) is bigger but still reads 5 as S and B as 8. Picture 2 compares the candidates with the same lines at their crisp sizes, drawn from the real font files with hard pixel edges like the game. Jersey 10 at 30 px (3 screen pixels per font pixel) keeps the pixel look, tells every pair apart and takes the same line width as Pixelify at 22 px, so the panels keep their size (it is only a little taller). VT323 is very clear but thin and typewriter-like. Atkinson Hyperlegible is a smooth font made for legibility, not pixel art. Picture 3 shows the others I tried and why they fall short (Micro 5, Press Start 2P, Silkscreen, Tiny5, DotGothic16); m5x7 / m6x11 were left out because their licence is not clearly OFL or CC0. Every candidate shown is SIL Open Font License (free to ship; the licence file goes into the repo with the font). On phones all text uses the smooth (SDF) cut at 3-4 screen pixels per font pixel, so the choice looks the same there, just larger. My pick: keep Pixelify Sans for titles and headings (the look you chose stays) and use Jersey 10 for body text and every number, as one fixed rule across all panels, pills and tooltips.",
+    "imgs": [
+      {
+        "file": "question-images/font-read-1.png",
+        "cap": "In game now (1920x1080): Help key names, quest numbers, build costs and world pills in Pixelify Sans 22 px"
+      },
+      {
+        "file": "question-images/font-read-2.png",
+        "cap": "Same lines, real font files at crisp sizes: A Pixelify 22 (now), B Pixelify 33, C Jersey 10, D VT323, E Atkinson Hyperlegible"
+      },
+      {
+        "file": "question-images/font-read-3.png",
+        "cap": "Also tried and not offered: Micro 5, Press Start 2P, Silkscreen, Tiny5, DotGothic16"
+      }
+    ],
+    "o": [
+      [
+        "keep",
+        "Keep Pixelify Sans at 22 px everywhere as it is (key-caps [B] stay; 5 / S and B / 8 stay alike)"
+      ],
+      [
+        "px33",
+        "Pixelify Sans at 33 px for body text (bigger and crisper, but 5 / S and B / 8 still look alike, and every panel grows by half)"
+      ],
+      [
+        "digits",
+        "Keep Pixelify for all letters; draw only digits and number signs (0-9 / + - : x %) in Jersey 10. Fixes every number; key letters like B and E stay as they are"
+      ],
+      [
+        "mix_jersey",
+        "Pixelify Sans for titles and headings; Jersey 10 for body text and all numbers (same line width as today)",
+        true
+      ],
+      [
+        "mix_vt323",
+        "Pixelify Sans for titles and headings; VT323 for body text and all numbers"
+      ],
+      [
+        "jersey_all",
+        "Replace Pixelify everywhere with Jersey 10 (titles too: one pixel font for all text)"
+      ],
+      [
+        "vt323_all",
+        "Replace Pixelify everywhere with VT323"
+      ],
+      [
+        "clean_body",
+        "Pixelify Sans for titles; a smooth, non-pixel font (Atkinson Hyperlegible) for body text and numbers"
+      ],
+      [
+        "setting",
+        "All of them as a player choice in Menu > Settings (\"Text font\": Pixelify only, Pixelify titles + Jersey 10, Jersey 10 only, VT323, Smooth); the game starts on Pixelify titles + Jersey 10"
+      ]
+    ]
   }
 ]

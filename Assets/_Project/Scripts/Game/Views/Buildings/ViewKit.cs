@@ -33,7 +33,14 @@ namespace IdleGrounds.Game
             if (t != null && t.text != s) t.text = s;
         }
 
-        public static void Font(TextMeshPro t, float px) { if (t != null) t.fontSize = px * FontPerPx; }
+        /// <summary>
+        /// Smallest world text: 11 world px = one Pixelify font pixel per art pixel at the zoom-2 label size (about 19 screen px
+        /// at 1920x1080, 12.5 at 1280x720). Below it the 1-pixel slits that tell 5 from S close up and pills read under the
+        /// 12 px floor (UI QA batch B #7).
+        /// </summary>
+        public const float MinTextPx = 11f;
+
+        public static void Font(TextMeshPro t, float px) { if (t != null) t.fontSize = Mathf.Max(MinTextPx, px) * FontPerPx; }
 
         public static void Colour(TextMeshPro t, Color c) { if (t != null && t.color != c) t.color = c; }
 
