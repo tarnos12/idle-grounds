@@ -162,6 +162,18 @@ namespace IdleGrounds.Editor
                     hand.DebugPointAt(CellWorld(p[0].Trim(), b.row + def.sizeH * 0.5f, b.col + def.sizeW * 0.5f));
                     break;
                 }
+                case "barTip":   // tooltip of a bottom-bar control as if hovered: barTip:StatsButton (names: Stats/Build/Demolish/Mute/Motion/Menu + Button)
+                {
+                    var bar = BottomBarView.Instance;
+                    var tr = bar != null ? bar.transform.Find(arg.Trim()) : null;
+                    var trig = tr != null ? tr.GetComponent<TooltipTrigger>() : null;
+                    if (trig == null) { Debug.LogError(Tag + "no tooltip trigger on bar child " + arg); break; }
+                    var rtb = (RectTransform)tr;
+                    var wc = new Vector3[4]; rtb.GetWorldCorners(wc);
+                    var cvs = tr.GetComponentInParent<Canvas>().rootCanvas; Vector2 sp = RectTransformUtility.WorldToScreenPoint(cvs.renderMode == RenderMode.ScreenSpaceOverlay ? null : cvs.worldCamera, (wc[0] + wc[2]) * 0.5f);
+                    Tooltip.Show(trig, trig.provider != null ? trig.provider() : trig.text, null, sp);
+                    break;
+                }
                 case "recipe": { var p = arg.Split(','); build.OpenRecipePicker(p[0].Trim(), FirstBuilt(p[0].Trim(), p[1].Trim())); break; }
                 case "link": build.OpenLinkEditor(arg.Trim(), FirstBuilt(arg.Trim(), "wisp_lantern")); break;
                 case "bridge": build.OpenBridgePanel(arg.Trim(), FirstBuilt(arg.Trim(), "spirit_bridge")); break;

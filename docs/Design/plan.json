@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-21 19:55",
+  "updated": "2026-10-21 20:09",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -275,6 +275,13 @@
           "size": "M",
           "owner": "Claude",
           "blockedBy": "Art request ART-SPEC 3.8 on Drive since 2026-10-21, waiting on the artist. On delivery, code hooks: ice edge along the pond curve, ice floes, per-biome snow lip, snow trees/props on Fishing, fix_spring_snow, snowfall overlay"
+        },
+        {
+          "title": "UI QA: batch B review",
+          "detail": "UI QA pass of visual pass batch B (anchored panels, Pixelify Sans, icon bar + menu, crisp zoom). Findings in docs/reviews/2026-10-21-ui-qa-batch-b.md.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
         }
       ]
     },
