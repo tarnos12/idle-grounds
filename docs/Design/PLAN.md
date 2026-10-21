@@ -91,8 +91,8 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | In progress | Visual pass batch B: changes that need your answers **(NOW)** | Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island. | Claude |
 | Waiting | Visual pass batch C: new art (77 files) | Ground fills, macro patches, veil mist v2, shadows, rack/bridge, icons, item drops; 45 files can start now, 32 wait on your answers. | Artist |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
-| In progress | Building art redo: reference sheet for all 26 buildings **(NOW)** | Owner: all buildings look too pixelated / low quality. Art director makes one reference sheet, checks all 26 and writes the redo request (and asks the owner if the pixel density rule itself should change). | Claude (art director) |
-| In progress | Snowy northern Fishing island **(NOW)** | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude (art director) |
+| In progress | Building art redo: reference sheet for all 26 buildings **(NOW)** | Owner: all buildings look too pixelated / low quality. Art director makes one reference sheet, checks all 26 and writes the redo request (and asks the owner if the pixel density rule itself should change). | Claude |
+| In progress | Snowy northern Fishing island **(NOW)** | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
 
 ## M4: Art coverage. Later
 
