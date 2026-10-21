@@ -148,6 +148,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-21: merged bg/artdir: 26-building audit (docs/art/reference/buildings-sheet.png, ART-SPEC 3.9 pending), Hub question art_density (pixel density), snowy Fishing brief ART-SPEC 3.8 mirrored to Drive.
+
 - 2026-10-21: owner answered the 8 visual-pass batch B questions (docs/Design/owner-picks-2026-10-21-visual.json): panels anchored on buildings, Pixelify Sans + icons everywhere, icon-only bar, map zoom step at 120 cells, calmer ground, all 26 buildings redone (too pixelated), snowy Fishing island. Batch B code + art-director brief started in bg copies.
 
 - 2026-10-21: large art delivery found on Drive (Islands-038..050, Buildings-014..024, Creatures-006..008, Items-009, Nodes-007, UI-022..024, FX-005/006; 156 new + 15 updated files); ingame-art-reviewer agent started on intake in a bg task copy.
