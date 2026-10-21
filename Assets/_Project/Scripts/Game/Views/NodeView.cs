@@ -129,7 +129,7 @@ namespace IdleGrounds.Game
             if (overlay != null) overlay.flipX = flipX;
             // VP-15: decor one value step toward the ground; interactables keep full value (+ hover rim)
             // VP-14: placeholder deco (no art) used to be drawn at 55% alpha and read as a rendering glitch: full alpha now
-            var c = node.deco ? DecorStyle.DecorTint : Color.white; c.a = 1f; spriteRenderer.color = c;
+            var c = node.deco ? DecorStyle.DecorTintOn(area) : Color.white; c.a = 1f; spriteRenderer.color = c;      // VP-33: decor also follows the calmer ground
             ShowRim(false); rimValid = false;
 
             pad.gameObject.SetActive(!node.deco && !realArt);

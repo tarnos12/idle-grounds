@@ -38,7 +38,7 @@ namespace IdleGrounds.Game
 
         /// <summary>Sprite from rows of chars (top row first). Legend: '.' clear, 'o' P01 ink, others via <paramref name="map"/>.
         /// <paramref name="outline"/> adds a 1-texel P01 ring around every filled texel (canvas grows by 2).</summary>
-        static Sprite FromRows(string key, string[] rows, System.Func<char, Color32> map, bool outline, Vector4 border = default, Vector2? pivot = null)
+        public static Sprite FromRows(string key, string[] rows, System.Func<char, Color32> map, bool outline, Vector4 border = default, Vector2? pivot = null)
         {
             if (cache.TryGetValue(key, out var s) && s != null) return s;
             int h = rows.Length, w = rows[0].Length, pad = outline ? 1 : 0;

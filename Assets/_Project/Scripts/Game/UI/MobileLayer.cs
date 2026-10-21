@@ -25,10 +25,10 @@ namespace IdleGrounds.Game
         // ---- runtime pieces (rebuilt for every loaded scene)
         Canvas canvas;
         CanvasScaler scaler;
-        RectTransform canvasRect, safe, hud, aimBar, pausePanel;
+        RectTransform canvasRect, safe, hud, aimBar;
         Button swapBtn, giveBtn, aimConfirm, aimCancel;
         Image giveImg;
-        TextMeshProUGUI giveLabel, aimLabel, aimConfirmLabel, keepAwakeLabel;
+        TextMeshProUGUI giveLabel, aimLabel, aimConfirmLabel;
         TMP_FontAsset font;
         GameRunner runner;
         BuildController build;
@@ -41,7 +41,8 @@ namespace IdleGrounds.Game
         float lastScaleKey, nextHitScan;
         int setupCountdown;
 
-        public bool PauseOpen => pausePanel != null && pausePanel.gameObject.activeSelf;
+        /// <summary>The shared Help / Settings menu (<see cref="GameMenuView"/>, same on desktop) is open.</summary>
+        public bool PauseOpen => GameMenuView.Instance != null && GameMenuView.Instance.IsOpen;
         public bool Built => built;
         public RectTransform SafeArea => safe;
         public RectTransform Hud => hud;
@@ -91,12 +92,8 @@ namespace IdleGrounds.Game
         /// <summary>Re-apply scale / safe area / HUD (after <see cref="MobileUi.Force"/>).</summary>
         public void Refresh() { dirty = true; lastInsets = new Vector4(-1, -1, -1, -1); lastScaleKey = 0; }
 
-        /// <summary>Android Back with no panel open: toggle the pause menu (no-op on desktop).</summary>
-        public static void OnBackWithNothingOpen()
-        {
-            if (!MobileUi.IsMobile || Instance == null) return;
-            if (Instance.PauseOpen) Instance.ClosePause(); else Instance.OpenPause();
-        }
+        /// <summary>Esc / Android Back with no panel open: toggle the shared menu (desktop and phone, owner pick vp_bar).</summary>
+        public static void OnBackWithNothingOpen() => GameMenuView.Toggle();
 
         // ================================================================ lifecycle
 
@@ -210,26 +207,7 @@ namespace IdleGrounds.Game
             var bt = (RectTransform)bar.transform;
             float f = Mathf.Max(0.01f, MobileUi.ScreenH / MobileUi.RefHeight());   // px per canvas unit (canvas.scaleFactor lags a frame)
             float btnH = Mathf.Max(40f, Mathf.Min(Mathf.Ceil(MobileUi.DpToPx(MobileUi.MinTargetDp) / f) + 2f, 0.125f * MobileUi.RefHeight()));   // 48 dp, but never more than 1/8 of the screen (tiny / odd densities)
-            var menu = bt.Find("MenuButton");
-            if (menu == null)
-            {
-                var help = bt.Find("HelpButton");
-                if (help != null)
-                {
-                    var go = Instantiate(help.gameObject, bt);
-                    go.name = "MenuButton";
-                    go.SetActive(true);
-                    var mb = go.GetComponent<Button>();
-                    mb.onClick = new Button.ButtonClickedEvent();
-                    mb.onClick.AddListener(() => { if (PauseOpen) ClosePause(); else OpenPause(); });
-                    var lbl = go.transform.Find("Label")?.GetComponent<TextMeshProUGUI>();
-                    if (lbl != null) lbl.text = "Menu";
-                    var tt = go.GetComponent<TooltipTrigger>(); if (tt != null) Destroy(tt);
-                    TooltipTrigger.Attach(mb, "Menu: help, stats, sound, new game");
-                    go.transform.SetAsLastSibling();
-                    menu = go.transform;
-                }
-            }
+            // the Menu button itself is the bar's own (BottomBarView, shared with desktop): one menu for both
             foreach (var n in new[] { "Title", "VersionBadge", "MuteButton", "MotionButton", "HelpButton", "ResetButton" })
             {
                 var c = bt.Find(n);
@@ -432,7 +410,8 @@ namespace IdleGrounds.Game
             bool modal = ModalScrim.Any;
             if (hud.gameObject.activeSelf == modal) hud.gameObject.SetActive(!modal);
             if (modal || touch == null) return;
-            bool dockOpen = build != null && build.BuildMenuOpen;
+            // the hand buttons step aside for the build menu and for building panels (they sit where an anchored panel may go)
+            bool dockOpen = build != null && (build.BuildMenuOpen || build.RecipePickerOpen || build.LinkEditorOpen || build.PavilionOpen || build.BridgePanelOpen);
             var cols = hud.Find("HandButtons");
             if (cols != null && cols.gameObject.activeSelf == dockOpen) cols.gameObject.SetActive(!dockOpen);
 
@@ -489,93 +468,9 @@ namespace IdleGrounds.Game
 
         // ================================================================ pause menu (Android Back)
 
-        public void OpenPause()
-        {
-            if (!built) return;
-            if (pausePanel == null) BuildPause();
-            RefreshPauseLabels();
-            pausePanel.gameObject.SetActive(true);
-            pausePanel.SetAsLastSibling();
-            FitPause();
-        }
+        /// <summary>Open the shared menu (<see cref="GameMenuView"/>).</summary>
+        public void OpenPause() { var m = GameMenuView.Ensure(); if (m != null) m.Open(); }
 
-        public void ClosePause() { if (pausePanel != null) pausePanel.gameObject.SetActive(false); }
-
-        TextMeshProUGUI soundLabel, motionLabel;
-        RectTransform pauseBox;
-
-        void RefreshPauseLabels()
-        {
-            if (keepAwakeLabel != null) keepAwakeLabel.text = "Keep awake: " + (KeepAwake ? "On" : "Off");
-            var a = AudioService.Instance;
-            if (soundLabel != null) soundLabel.text = "Sound: " + (a != null && a.Muted ? "Off" : "On");
-            if (motionLabel != null) motionLabel.text = "Motion: " + (Juice.ReduceMotion ? "Calm" : "On");
-        }
-
-        /// <summary>The menu box shrinks (never grows) to fit the canvas height inside the safe area, so every button stays on screen.</summary>
-        void FitPause()
-        {
-            if (pauseBox == null || canvasRect == null) return;
-            pauseBox.localScale = Vector3.one;
-            LayoutRebuilder.ForceRebuildLayoutImmediate(pauseBox);
-            float f = Mathf.Max(0.01f, MobileUi.ScreenH / MobileUi.RefHeight());
-            var bar = FindFirstObjectByType<BottomBarView>();
-            float reserve = (bar != null ? ((RectTransform)bar.transform).rect.height : 0f) + MobileUi.SafeInsets().y / f + 10f;      // the bar (and the gesture inset) stay clear
-            float availH = canvasRect.rect.height - reserve - MobileUi.SafeInsets().w / f - 16f;
-            pauseBox.anchoredPosition = new Vector2(0f, (reserve - MobileUi.SafeInsets().w / f) * 0.5f);
-            float availW = canvasRect.rect.width - 24f;
-            float h = Mathf.Max(1f, pauseBox.rect.height), w = Mathf.Max(1f, pauseBox.rect.width);
-            float k = Mathf.Min(1f, availH / h, availW / w);
-            pauseBox.localScale = new Vector3(k, k, 1f);
-        }
-
-        void BuildPause()
-        {
-            pausePanel = NewRect("PauseMenu", canvasRect);     // full screen, above the safe-area HUD
-            Stretch(pausePanel);
-            var scrim = pausePanel.gameObject.AddComponent<Image>();
-            scrim.color = new Color(0f, 0f, 0f, 0.55f);
-            scrim.raycastTarget = true;
-            pausePanel.gameObject.AddComponent<ModalScrim>();
-            var box = NewRect("Box", pausePanel);
-            pauseBox = box;
-            box.anchorMin = box.anchorMax = box.pivot = new Vector2(0.5f, 0.5f);
-            var bi = box.gameObject.AddComponent<Image>(); bi.color = UiPalette.Bg2;
-            var bo = box.gameObject.AddComponent<Outline>(); bo.effectColor = UiPalette.Accent; bo.effectDistance = new Vector2(2f, -2f);
-            var vl = box.gameObject.AddComponent<VerticalLayoutGroup>();
-            vl.padding = new RectOffset(24, 24, 20, 22); vl.spacing = 12f;
-            vl.childAlignment = TextAnchor.UpperCenter; vl.childControlWidth = true; vl.childControlHeight = true; vl.childForceExpandWidth = true; vl.childForceExpandHeight = false;
-            var fit = box.gameObject.AddComponent<ContentSizeFitter>(); fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize; fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            UiSkin.Attach(box.gameObject, "ui_panel_jade");       // jade panel like the other modals (applies the frame padding)
-            var title = NewText(box, "Menu", 34f, TextAlignmentOptions.Center, UiPalette.Gold);
-            title.fontStyle = FontStyles.Bold;
-            var tle = title.gameObject.AddComponent<LayoutElement>(); tle.preferredHeight = 44f; tle.minHeight = 44f;
-            // two rows of buttons in a 3 column grid: all of them fit a 533 unit tall phone canvas with room to spare
-            var grid = NewRect("Grid", box);
-            var gl = grid.gameObject.AddComponent<GridLayoutGroup>();
-            float cellH = Mathf.Ceil(MobileUi.DpToPx(MobileUi.MinTargetDp) / Mathf.Max(0.01f, MobileUi.ScreenH / MobileUi.RefHeight())) + 4f;
-            gl.cellSize = new Vector2(240f, Mathf.Max(60f, cellH)); gl.spacing = new Vector2(12f, 12f);
-            gl.constraint = GridLayoutGroup.Constraint.FixedColumnCount; gl.constraintCount = 3;
-            gl.childAlignment = TextAnchor.UpperCenter;
-            void Row(string label, UnityAction act, out TextMeshProUGUI t, UiButtonVariant v = UiButtonVariant.Standard)
-            {
-                var b = NewButton(grid, label, label, new Vector2(240f, gl.cellSize.y), UiPalette.Panel, act, out t, out _, v, 22f);
-                t.textWrappingMode = TextWrappingModes.Normal; t.enableAutoSizing = true; t.fontSizeMin = 14f; t.fontSizeMax = 22f;
-            }
-            Row("Resume", ClosePause, out _, UiButtonVariant.Primary);
-            Row("Help", () => { ClosePause(); var m = MetaUiController.Instance; if (m != null) m.Help.Open(); }, out _);
-            Row("Stats", () => { ClosePause(); var m = MetaUiController.Instance; if (m != null) { m.Stats.Show(false, false); m.Stats.Open(); } }, out _);
-            Row("Sound", () => { var mb = FindFirstObjectByType<MetaBarView>(); if (mb != null) mb.ToggleMute(); RefreshPauseLabels(); }, out soundLabel);
-            Row("Motion", () => { var mb = FindFirstObjectByType<MetaBarView>(); if (mb != null) mb.ToggleMotion(); RefreshPauseLabels(); }, out motionLabel);
-            Row("Keep awake", () => { KeepAwake = !KeepAwake; RefreshPauseLabels(); }, out keepAwakeLabel);
-            Row("New game", () =>
-            {
-                ClosePause();
-                var m = MetaUiController.Instance;
-                if (m != null) m.Confirm.Ask(MetaBarView.NewGameTitle, MetaBarView.ResetText, MetaBarView.NewGameButton, () => { if (SaveService.Instance != null) SaveService.Instance.ResetAll(); });
-            }, out _);
-            Row("Save and quit", () => { if (SaveService.Instance != null) SaveService.Instance.Save(); Application.Quit(); }, out _);
-            pausePanel.gameObject.SetActive(false);
-        }
+        public void ClosePause() { if (GameMenuView.Instance != null) GameMenuView.Instance.Close(); }
     }
 }

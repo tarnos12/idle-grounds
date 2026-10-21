@@ -69,7 +69,35 @@ namespace IdleGrounds.Game
             if (rubberBand != null) rubberBand.gameObject.SetActive(false);
             if (addButton != null) addButton.onClick.AddListener(BeginAddLink);
             if (closeButton != null) closeButton.onClick.AddListener(Close);
+            if (panel != null)
+            {
+                anchor = BuildingPanelAnchor.Attach(panel, PanelWidth);
+                // beside the lantern the panel is one link row wide: the long subtitle becomes a wrapped line under the title bar
+                var sub = panel.transform.Find("TitleBar/Subtitle");
+                if (sub != null)
+                {
+                    sub.SetParent(panel.transform, false);
+                    sub.SetSiblingIndex(1);
+                    var st = sub.GetComponent<TMPro.TextMeshProUGUI>();
+                    if (st != null) st.textWrappingMode = TMPro.TextWrappingModes.Normal;
+                }
+                if (tipText != null) tipText.textWrappingMode = TMPro.TextWrappingModes.Normal;
+                // the picking hint and the refusal line leave the Add-link row and wrap under it
+                var header = addButton != null ? addButton.transform.parent : null;
+                int at = header != null && header.parent == panel.transform ? header.GetSiblingIndex() + 1 : -1;
+                foreach (var t in new[] { warnText, hintText })
+                {
+                    if (t == null) continue;
+                    t.textWrappingMode = TMPro.TextWrappingModes.Normal;
+                    if (at >= 0 && t.transform.parent == header) { t.transform.SetParent(panel.transform, false); t.transform.SetSiblingIndex(at); }
+                }
+            }
         }
+
+        /// <summary>Panel width (canvas units) beside the lantern (owner pick vp_panels): one link row (600) plus the frame.</summary>
+        public const float PanelWidth = 640f;
+        BuildingPanelAnchor anchor;
+        public BuildingPanelAnchor Anchor => anchor;
 
         // ================= state =================
 
@@ -81,6 +109,7 @@ namespace IdleGrounds.Game
             refuse = null; voidHint = false;
             State = Mode.Menu;
             panel.SetActive(true);
+            if (anchor != null) anchor.Bind(area, lantern.id);
             candidates.Clear();
             Refresh();
         }

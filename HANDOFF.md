@@ -5,6 +5,8 @@ commit, git fetch first) live in `CLAUDE.md` — not repeated here.
 
 ## ▶ NEXT SESSION: start here
 
+**Visual pass batch B (2026-10-21, branch bg/visb, not merged):** building panels anchored on their building (BuildingPanelAnchor), Pixelify Sans for all text (UiFont runtime swap + static TMP asset, menu Idle Grounds/UI/Build Pixel Font), icon-only desktop bar + one shared Help/Settings menu (GameMenuView, Esc opens it), crisp zoom stops 15/20/30/60 + 120-cell map stop, calmer ground tints (DecorStyle). Next: orchestrator merges bg/visb, UI QA review, art for ui_sound/ui_motion/ui_menu/ui_help/ui_reset and the jade primary button.
+
 **Android (2026-10-13, branch bg/android):** touch controls + phone UI + `BuildScript.BuildAndroid` landed (see `docs/guides/touch-controls.md`).
 Next: the owner sideloads `Builds/Android/IdleGrounds.apk` and runs the manual checklist (Back key mapping, safe area on a real notch, feel of hold times); then tune constants in TouchInputController / MobileUi.
 
@@ -147,6 +149,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-21 (bg/visb): visual pass batch B code. vp_panels: BuildingPanelAnchor puts the recipe picker (above first), link editor, bridge and pavilion panels beside the building art, follows the camera, clamps to the safe area above the bar, avoids the quest panel, docks top/bottom when no side fits; Stats/Help/Altar/Menu stay centred. vp_look: Pixelify Sans (OFL, Art/Fonts/PixelifySans) as a static SDF TMP asset (TMP default, LiberationSans fallback for arrows/ticks); UiFont swaps serialized LiberationSans texts at runtime (no scene rewrite). vp_bar: desktop bar = icon-only Stats/Build/Demolish/Sound/Motion/Menu with tooltips; Help + New game moved into GameMenuView (shared with phone; MobileLayer pause menu delegates to it). vp_zoom: CameraController crisp stops (k = 4/3/2/1 px per texel + 1/2 map stop), wheel / +- keys / pinch-release snap, pixel-grid snap at rest. vp_mood: per-Island multiply ground tint (Volcano unchanged; needs art). Also fixed UiButtonSkin.Attach ignoring the variant on active objects (Primary/Close buttons built at runtime now get their art). Tests: simtests 168/168, EditMode UI 21/21, PlayMode 20/21 (Logistics_WispLaunches_ConverterCompletes fails on master too).
 
 - 2026-10-21: owner answered the 8 visual-pass batch B questions (docs/Design/owner-picks-2026-10-21-visual.json): panels anchored on buildings, Pixelify Sans + icons everywhere, icon-only bar, map zoom step at 120 cells, calmer ground, all 26 buildings redone (too pixelated), snowy Fishing island. Batch B code + art-director brief started in bg copies.
 

@@ -139,6 +139,7 @@ namespace IdleGrounds.Game
         {
             var meta = MetaUiController.Instance;
             if (meta != null && meta.EscapeConfirm()) return true;     // a yes/no confirm sits above everything
+            if (GameMenuView.Instance != null && GameMenuView.Instance.Escape()) return true;   // the Help / Settings menu (vp_bar)
             if (UpgradeTreeOpen) { upgradeTree.Close(); return true; }
             if (RecipePickerOpen) { CloseRecipePicker(); return true; }
             if (PavilionOpen) { pavilionPanel.Close(); return true; }

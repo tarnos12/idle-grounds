@@ -33,7 +33,10 @@ namespace IdleGrounds.Game
         {
             var s = go.GetComponent<UiButtonSkin>();
             if (s == null) s = go.AddComponent<UiButtonSkin>();
+            bool changed = s.variant != v;
             s.variant = v;
+            // AddComponent on an active object already ran OnEnable with the default (Standard) variant: re-apply
+            if (changed && (s.applied || s.isActiveAndEnabled)) s.TryApply();
             return s;
         }
 

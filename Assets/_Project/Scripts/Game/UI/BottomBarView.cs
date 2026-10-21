@@ -8,9 +8,25 @@ namespace IdleGrounds.Game
     /// Bottom bar (ui-input-render §4.1): title + version badge on the left; area pill (region under
     /// the camera centre, lock + sprint tags), hand pill "n/cap" (green, gold ≥90%, red at cap) and the
     /// button row on the right. Help/Stats/Reset/mute/Shrine pill are wired by MetaBarView (M7).
+    /// <para><b>Icon bar (owner pick vp_bar, 2026-10-21):</b> on desktop Stats, Build, Demolish, Sound, Motion and Menu are
+    /// icon-only square buttons with hover tooltips; Help and New game (Reset) live in the shared <see cref="GameMenuView"/>
+    /// opened by the Menu button (or Esc). The phone bar (MobileLayer) shows the same buttons, icons and menu, with short
+    /// labels next to the icons because touch has no hover.</para>
     /// </summary>
     public class BottomBarView : MonoBehaviour
     {
+        public static BottomBarView Instance { get; private set; }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStatics() { Instance = null; }
+
+        /// <summary>Square icon-button size on the desktop bar (canvas units).</summary>
+        public const float IconButtonSize = 44f;
+        static readonly string[] IconButtons = { "StatsButton", "BuildButton", "DemolishButton", "MuteButton", "MotionButton", "MenuButton" };
+        bool styled, styledMobile;
+        Button menuButton;
+        public Button MenuButton => menuButton;
+
         [SerializeField] GameRunner runner;
         [SerializeField] CameraController cameraController;
         [SerializeField] TextMeshProUGUI versionText;
@@ -38,6 +54,7 @@ namespace IdleGrounds.Game
 
         void Awake()
         {
+            Instance = this;
             if (runner == null) runner = GameRunner.Instance;
             if (cameraController == null) cameraController = FindFirstObjectByType<CameraController>();
             if (build == null) build = FindFirstObjectByType<BuildController>();
@@ -125,9 +142,117 @@ namespace IdleGrounds.Game
             if (s != lastPillScale) { lastPillScale = s; handPill.rectTransform.localScale = new Vector3(s, s, 1f); }
         }
 
+        void OnDestroy() { if (Instance == this) Instance = null; }
+
+        // ================================================================ icon bar + menu button (vp_bar)
+
+        /// <summary>The Menu button (Help / settings / New game): a copy of the Help button, created once.</summary>
+        void EnsureMenuButton()
+        {
+            if (menuButton != null) return;
+            var t = transform;
+            var existing = t.Find("MenuButton");
+            if (existing == null)
+            {
+                var help = t.Find("HelpButton");
+                if (help == null) return;
+                var go = Instantiate(help.gameObject, t);
+                go.name = "MenuButton";
+                existing = go.transform;
+                var old = go.GetComponent<TooltipTrigger>(); if (old != null) Destroy(old);
+            }
+            existing.gameObject.SetActive(true);
+            existing.SetAsLastSibling();
+            menuButton = existing.GetComponent<Button>();
+            menuButton.onClick = new Button.ButtonClickedEvent();
+            menuButton.onClick.AddListener(GameMenuView.Toggle);
+            var lbl = existing.Find("Label")?.GetComponent<TextMeshProUGUI>();
+            if (lbl != null) { lbl.text = "Menu"; lbl.color = UiPalette.Text; }
+        }
+
+        static int IconPx(Sprite s)
+        {
+            if (s == null) return 28;
+            int w = Mathf.RoundToInt(s.rect.width);
+            if (w <= 0 || w > 32) return 32;
+            return w * Mathf.Max(1, 32 / w);     // whole multiples of the art size (14 -> 28, 16 -> 32, 32 -> 32)
+        }
+
+        /// <summary>The button's icon Image (created for text-only buttons), sized to whole art pixels.</summary>
+        static Image EnsureIcon(Transform b, Sprite sprite)
+        {
+            var ic = b.Find("Icon")?.GetComponent<Image>();
+            if (ic == null)
+            {
+                var go = new GameObject("Icon", typeof(RectTransform));
+                go.transform.SetParent(b, false);
+                go.transform.SetSiblingIndex(0);
+                ic = go.AddComponent<Image>();
+                ic.raycastTarget = false;
+                ic.preserveAspect = true;
+            }
+            if (sprite != null) ic.sprite = sprite;
+            int px = IconPx(ic.sprite);
+            var le = ic.GetComponent<LayoutElement>() ?? ic.gameObject.AddComponent<LayoutElement>();
+            le.minWidth = le.preferredWidth = px; le.minHeight = le.preferredHeight = px;
+            ic.rectTransform.sizeDelta = new Vector2(px, px);
+            ic.enabled = ic.sprite != null;
+            return ic;
+        }
+
+        /// <summary>Sound / Motion icons follow their state (MetaBarView calls this after a toggle).</summary>
+        public void PaintToggleIcons()
+        {
+            var a = AudioService.Instance;
+            var mute = transform.Find("MuteButton");
+            if (mute != null) EnsureIcon(mute, UiIcons.Get(a != null && a.Muted ? UiIcons.SoundOff : UiIcons.Sound));
+            var motion = transform.Find("MotionButton");
+            if (motion != null) EnsureIcon(motion, UiIcons.Get(Juice.ReduceMotion ? UiIcons.MotionCalm : UiIcons.Motion));
+        }
+
+        /// <summary>Desktop: icon-only square buttons with tooltips, Help and Reset hidden (they are in the menu). Phone: the
+        /// same icons with a label each (MobileLayer hides the rest and sizes the bar for fingers).</summary>
+        void ApplyStyle(bool mobile)
+        {
+            EnsureMenuButton();
+            PaintToggleIcons();
+            var menu = transform.Find("MenuButton");
+            if (menu != null) EnsureIcon(menu, UiIcons.Get(UiIcons.Menu));
+            // order: actions (Stats, Build, Demolish), then settings (Sound, Motion), then Menu at the far right
+            foreach (var n in new[] { "MuteButton", "MotionButton", "MenuButton" }) { var c = transform.Find(n); if (c != null) c.SetAsLastSibling(); }
+            foreach (var n in new[] { "HelpButton", "ResetButton" })
+            {
+                var c = transform.Find(n);
+                if (c != null && c.gameObject.activeSelf) c.gameObject.SetActive(false);
+            }
+            foreach (var n in IconButtons)
+            {
+                var b = transform.Find(n);
+                if (b == null) continue;
+                EnsureIcon(b, null);
+                var lbl = b.Find("Label");
+                if (lbl != null) lbl.gameObject.SetActive(mobile);
+                var h = b.GetComponent<HorizontalLayoutGroup>();
+                if (h != null) { h.padding = mobile ? new RectOffset(12, 12, 6, 6) : new RectOffset(6, 6, 6, 6); h.childAlignment = TextAnchor.MiddleCenter; }
+                var le = b.GetComponent<LayoutElement>() ?? b.gameObject.AddComponent<LayoutElement>();
+                le.minWidth = le.preferredWidth = mobile ? -1f : IconButtonSize;
+                if (!mobile) le.minHeight = le.preferredHeight = IconButtonSize;
+            }
+            // icon-only controls say what they do in a tooltip (keys in brackets)
+            TooltipTrigger.Attach(transform.Find("StatsButton"), "Stats: your progress so far");
+            TooltipTrigger.Attach(buildButton, "Build (B): place buildings");
+            TooltipTrigger.Attach(demolishButton, "Demolish: remove a building (refunds its resources)");
+            TooltipTrigger.Attach(transform.Find("MuteButton"), null, () => AudioService.Instance != null && AudioService.Instance.Muted ? "Sound is off - click to turn it on" : "Sound is on - click to mute");
+            TooltipTrigger.Attach(transform.Find("MotionButton"), null, () => Juice.ReduceMotion ? "Calm motion is on (no shake or flight tweens) - click for full motion" : "Full motion - click for calm (no screen shake, squash or flight tweens)");
+            TooltipTrigger.Attach(menuButton, "Menu (Esc): help, sound, motion, new game");
+            LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
+            styled = true; styledMobile = mobile;
+        }
+
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
+            if (!styled || styledMobile != MobileUi.IsMobile) ApplyStyle(MobileUi.IsMobile);      // after every Start (tooltips, toggle paint)
             SyncBuildButtons();
             var cam =cameraController != null ? cameraController.transform.position : Vector3.zero;
             // regionAtCamCentre (ui.js:377): the Island under the view centre, "🌫 Open sky" between Islands

@@ -8,8 +8,8 @@ namespace IdleGrounds.Game
 {
     /// <summary>
     /// Recipe picker (ui-input-render §4.3): left-click a built converter → popup centred above the
-    /// building top (follows the camera, clamped on screen): "Recipes" + a 3-column icon grid. Hover a
-    /// cell → the detail panel (bottom-right): output icon, name, gold "→ qty× Item · secs s" (secs =
+    /// building top (<see cref="BuildingPanelAnchor"/>: follows the camera, clamped to the safe area; owner pick
+    /// vp_panels): "Recipes" + a 3-column icon grid. Hover a cell → the detail card beside the popup: output icon, name, gold "→ qty× Item · secs s" (secs =
     /// timeMs × world factor), one row per input (icon + gold count badge + name). Click =
     /// <see cref="Simulation.SetRecipe"/> + close. Closes when the building disappears / unbuilds.
     /// </summary>
@@ -53,7 +53,10 @@ namespace IdleGrounds.Game
             if (rowTemplate != null) rowTemplate.gameObject.SetActive(false);
             if (popup != null) popup.gameObject.SetActive(false);
             if (detail != null) detail.gameObject.SetActive(false);
+            if (popup != null) anchor = BuildingPanelAnchor.Attach(popup.gameObject, 0f, preferAbove: true);
         }
+
+        BuildingPanelAnchor anchor;
 
         Building Target => Sim?.State.Area(Area)?.BuildingById(BuildingId);
 
@@ -78,7 +81,7 @@ namespace IdleGrounds.Game
             detail.gameObject.SetActive(false);
             UpdateCaption(-1);
             LayoutRebuilder.ForceRebuildLayoutImmediate(popup);
-            Position();
+            if (anchor != null) anchor.Bind(area, b.id); else Position();
         }
 
         /// <summary>"Glass: 3 Sand + fuel, 6 s" (the active recipe carries " (current)").</summary>
@@ -161,6 +164,7 @@ namespace IdleGrounds.Game
                 if (on) rows[i].Set(sprites.Item(r.inputs[i].item), r.inputs[i].qty.ToString(), runner.Config.Item(r.inputs[i].item)?.name ?? r.inputs[i].item);
             }
             LayoutRebuilder.ForceRebuildLayoutImmediate(detail);
+            BuildingPanelAnchor.PlaceBeside(detail, popup);
         }
 
         void LateUpdate()
@@ -169,10 +173,11 @@ namespace IdleGrounds.Game
             var b = Target;
             if (b == null || !b.built) { Close(); return; }
             foreach (var c in cells) if (c.gameObject.activeSelf) c.SetActive(c.Index == b.recipe);
-            Position();
+            if (anchor == null) Position();     // else BuildingPanelAnchor keeps the popup on the building
+            if (detail != null && detail.gameObject.activeSelf) BuildingPanelAnchor.PlaceBeside(detail, popup);    // the detail card sits next to the popup
         }
 
-        /// <summary>Centred above the building's top edge, clamped inside the canvas.</summary>
+        /// <summary>Fallback without an anchor: centred above the building's top edge, clamped inside the canvas.</summary>
         void Position()
         {
             var b = Target;
