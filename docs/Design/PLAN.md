@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-21 18:08. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-21 18:24. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**22 of 43 tasks done**, 7 in progress, 3 to do, 3 blocked, 8 waiting.
+**22 of 43 tasks done**, 5 in progress, 3 to do, 3 blocked, 10 waiting.
 
 ## Being worked on now
 
@@ -10,8 +10,6 @@ Updated 2026-10-21 18:08. Source of truth: docs/Design/plan.json, edited with to
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
 - **M3** Visual pass batch B: changes that need your answers: UI/UX feature builder implementing in a background copy
-- **M3** Building art redo: reference sheet for all 26 buildings: Art director writing the reference sheet and redo brief
-- **M3** Snowy northern Fishing island: Art director adding it to the art request
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
@@ -91,8 +89,8 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | In progress | Visual pass batch B: changes that need your answers **(NOW)** | Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island. | Claude |
 | Waiting | Visual pass batch C: new art (77 files) | Ground fills, macro patches, veil mist v2, shadows, rack/bridge, icons, item drops; 45 files can start now, 32 wait on your answers. | Artist |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
-| In progress | Building art redo: reference sheet for all 26 buildings **(NOW)** | Owner: all buildings look too pixelated / low quality. Art director makes one reference sheet, checks all 26 and writes the redo request (and asks the owner if the pixel density rule itself should change). | Claude |
-| In progress | Snowy northern Fishing island **(NOW)** | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
+| Waiting | Building art redo: reference sheet for all 26 buildings | Owner: all buildings look too pixelated / low quality. Art director makes one reference sheet, checks all 26 and writes the redo request (and asks the owner if the pixel density rule itself should change). | Claude |
+| Waiting | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
 
 ## M4: Art coverage. Later
 

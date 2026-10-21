@@ -1,5 +1,55 @@
 [
   {
     "g": "Visual pass"
+  },
+  {
+    "id": "art_density",
+    "q": "The buildings look too pixelated. How many pixels per cell should the world art use?",
+    "ctx": "I checked all 26 buildings on one sheet (picture 4). They pass every technical rule (palette, clean edges, sizes). 8 are drawn from the corner instead of the front, and 10 more need a clean-up (single-pixel noise, too narrow for their footprint, weak outline); those 18 get fixed whatever you pick. Two things make them look blocky. (1) Today's zoom draws each art pixel 1, 2 or 3 screen pixels wide (picture 1); the crisp zoom steps you already picked fix that. (2) The art has 32 pixels per cell, so at the closest zoom each art pixel is a 3-4 px block. 64 pixels per cell keeps every building the same size on screen with 4 times the pixels (picture 2, made from the artist's own drawing of the Spring). Mixing 64 and 32 shows when you zoom in close (picture 3). Cost: each piece in the chosen scope is redrawn once (about the same work per piece as a clean redraw, because the artist draws at high resolution anyway); the 19 new buildings would be drawn at the new density from the start. With 64 px art, the 20-cell zoom step shows slightly uneven fine pixels and the far 60-cell step can flicker a little when panning; the 15- and 30-cell steps stay crisp. My pick: 64 for everything standing on the ground, because that is where the eye goes; the calmer ground you picked hides the mix, and the coasts you signed off stay as they are.",
+    "imgs": [
+      {
+        "file": "question-images/art-density-1.png",
+        "cap": "In game: today's zoom 2 makes pixels uneven (left); the crisp zoom step you picked (right)"
+      },
+      {
+        "file": "question-images/art-density-2.png",
+        "cap": "One object, same size on screen: 16 / 32 (today) / 64 px per cell / painted"
+      },
+      {
+        "file": "question-images/art-density-3.png",
+        "cap": "Closest zoom: a 64 px object next to 32 px grass and bush"
+      },
+      {
+        "file": "question-images/art-density-4.png",
+        "cap": "All 26 buildings: green = reference look, gold = clean-up, red = redraw (corner view or noisy)"
+      }
+    ],
+    "o": [
+      [
+        "keep",
+        "Keep 32 px per cell: clean redraw of the 18 weak buildings only (front view, less noise). Crisp after the zoom fix, but still chunky up close"
+      ],
+      [
+        "bld64",
+        "64 px per cell for buildings only (the 26 existing and the 19 new ones); nodes, trees, props and ground stay 32"
+      ],
+      [
+        "obj64",
+        "64 px per cell for everything standing on the ground: buildings, resource nodes, trees, props, NPCs and creatures; ground and coast tiles stay 32. Start with a 3-building pilot (Paper Mill, Kiln, Workbench) that you check in game first",
+        true
+      ],
+      [
+        "all64",
+        "64 px per cell for all world art: everything above, plus ground, coast walls, items and icons (the maximal option; it also redoes the coasts you signed off)"
+      ],
+      [
+        "painted",
+        "Leave pixel art: a hi-res painted look (smooth, no visible pixels) for all world art"
+      ],
+      [
+        "later",
+        "Decide after you see the crisp zoom steps in game; until then only the 8 corner-view buildings are redrawn, at 32"
+      ]
+    ]
   }
 ]
