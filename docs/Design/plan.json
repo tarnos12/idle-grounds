@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-21 18:24",
+  "updated": "2026-10-21 18:30",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -136,10 +136,10 @@
         {
           "title": "Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files)",
           "detail": "P1 shrine + 7 NPC sprites first, then the new island tilesets, buildings and items.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "now": "Delivery arrived (~30 zips, 156 new files): art reviewer pulling, checking and integrating in the background copy"
+          "blockedBy": "Reviewed 2026-10-21 (art38): 76 files rejected with repair notes in the ART-SPEC Delivery log (NPC idles, sky path, working loops, 4 floating-base buildings, new-island tilesets); 74 validated files wait on ADR 0007 Phase 2 code for the in-game check"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
@@ -252,7 +252,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Art request goes to Drive with the batch A results"
+          "blockedBy": "Art request goes to Drive with the batch A results; the round cliff walls of C1 arrived early (Islands-040) and were rejected in Play on 2026-10-21"
         },
         {
           "title": "Follow-ups from batch A",
