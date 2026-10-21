@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-21 20:09",
+  "updated": "2026-10-21 20:10",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -282,6 +282,22 @@
           "status": "done",
           "size": "M",
           "owner": "Claude"
+        },
+        {
+          "title": "UI QA fixes after batch B",
+          "detail": "From docs/reviews/2026-10-21-ui-qa-batch-b.md: Stats doesn't fit phone safe area (#3), Stats Flow overlap at 720p (#4), Altar tree crowding (#5), world pill / NEW badge text under 12 px (#7), phone panels shrink below the text floor (#10), narrow quest panel at 720p (#11), off-screen anchored panels (#8).",
+          "status": "in-progress",
+          "size": "M",
+          "owner": "Claude",
+          "now": "UI/UX agent fixing layouts in a background copy"
+        },
+        {
+          "title": "Pixel font readability: 5 reads as S, 3 as 8, B as 8",
+          "detail": "UI QA #1/#2: Pixelify Sans at 22 px makes digits and some capitals ambiguous. Hub question with side-by-side font samples.",
+          "status": "in-progress",
+          "size": "S",
+          "owner": "Claude",
+          "now": "UI/UX agent rendering font comparisons for a Hub question"
         }
       ]
     },
