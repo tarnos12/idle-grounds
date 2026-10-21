@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-21 18:30",
+  "updated": "2026-10-21 19:55",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -241,10 +241,9 @@
         {
           "title": "Visual pass batch B: changes that need your answers",
           "detail": "Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island.",
-          "status": "in-progress",
+          "status": "done",
           "size": "L",
-          "owner": "Claude",
-          "now": "UI/UX feature builder implementing in a background copy"
+          "owner": "Claude"
         },
         {
           "title": "Visual pass batch C: new art (77 files)",

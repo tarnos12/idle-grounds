@@ -1,14 +1,13 @@
 # Idle Grounds: plan
 
-Updated 2026-10-21 18:30. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-21 19:55. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**22 of 43 tasks done**, 4 in progress, 3 to do, 3 blocked, 11 waiting.
+**23 of 43 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M3** Visual pass batch B: changes that need your answers: UI/UX feature builder implementing in a background copy
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
@@ -16,7 +15,7 @@ Updated 2026-10-21 18:30. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 7 / 16 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 8 / 16 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -85,7 +84,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Visual pass batch A1: UI fixes (buttons, wording, dialogs, scrim, tree, menus) | VP-01..05, 08, 09, 18, 21-26: stale ascension wording, overflowing confirm button, playtime, Debug button, dim behind dialogs, hand chip overlap, recipe names, Altar tree fit and states, build menu, bars and docks, dialog text. | Claude |
 | Done | Visual pass batch A2: world labels and overlays | VP-06, 07, 10, 13, 15, 19, 20: readable plated world labels, Heavenly Gate captions, converter strips by zoom, pixel-line overlays, decor vs interactable, hover tags, placement/demolish feedback. | Claude |
 | Done | Visual pass batch A3: world art in code (veil, ground, cliffs, paths, rack/bridge) | VP-11, 12, 14, 16, 17: veil seams + coast leak, interim rack and bridge backings, seeded ground variety, cliff/underside/lip noise, rounded paths/plaza/islets. | Claude |
-| In progress | Visual pass batch B: changes that need your answers **(NOW)** | Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island. | Claude |
+| Done | Visual pass batch B: changes that need your answers | Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island. | Claude |
 | Waiting | Visual pass batch C: new art (77 files) | Ground fills, macro patches, veil mist v2, shadows, rack/bridge, icons, item drops; 45 files can start now, 32 wait on your answers. | Artist |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
 | Waiting | Building art redo: reference sheet for all 26 buildings | Owner: all buildings look too pixelated / low quality. Art director makes one reference sheet, checks all 26 and writes the redo request (and asks the owner if the pixel density rule itself should change). | Claude |
