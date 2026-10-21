@@ -778,6 +778,17 @@ MonoBehaviour:
     frames: []
     realArt: 1
     overlay: []
+  - key: fx_sky_path_raise
+    sprite: {fileID: 572300391865497901, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
+    frames:
+    - {fileID: 572300391865497901, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
+    - {fileID: 8155601178082640550, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
+    - {fileID: -8831884789329152294, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
+    - {fileID: -2760463339330222770, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
+    - {fileID: -1019685597555951156, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
+    - {fileID: -7691652784512415397, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
+    realArt: 1
+    overlay: []
   enemyAnims:
   - key: enemy_fox_hit
     sprite: {fileID: 7469885723045225228, guid: 07b4045cda90aec4ca1e0fe488591685, type: 3}
@@ -845,6 +856,40 @@ MonoBehaviour:
     - {fileID: -5397735054874582342, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
     - {fileID: -8434625005386893878, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
     - {fileID: 8550383261260450600, guid: b1d7cc6592a66ac449da3f120a5bc654, type: 3}
+    realArt: 1
+    overlay: []
+  - key: enemy_wolf_die
+    sprite: {fileID: -7091114077824303874, guid: d605eec5e6842a34d9dc7ddde1d9ca37, type: 3}
+    frames:
+    - {fileID: -7091114077824303874, guid: d605eec5e6842a34d9dc7ddde1d9ca37, type: 3}
+    - {fileID: -9146912232005157355, guid: d605eec5e6842a34d9dc7ddde1d9ca37, type: 3}
+    - {fileID: 3590985570694220086, guid: d605eec5e6842a34d9dc7ddde1d9ca37, type: 3}
+    - {fileID: 6646280455866777877, guid: d605eec5e6842a34d9dc7ddde1d9ca37, type: 3}
+    realArt: 1
+    overlay: []
+  - key: enemy_wolf_hit
+    sprite: {fileID: 2666907164200491350, guid: ab3635750887b584cbd8cddc0473029a, type: 3}
+    frames:
+    - {fileID: 2666907164200491350, guid: ab3635750887b584cbd8cddc0473029a, type: 3}
+    - {fileID: -9117731598972665289, guid: ab3635750887b584cbd8cddc0473029a, type: 3}
+    realArt: 1
+    overlay: []
+  - key: enemy_wolf_idle
+    sprite: {fileID: -13795319345753545, guid: 8cdbcb8483f2ccd4d92dfb374a02e745, type: 3}
+    frames:
+    - {fileID: -13795319345753545, guid: 8cdbcb8483f2ccd4d92dfb374a02e745, type: 3}
+    - {fileID: 5369229320993194019, guid: 8cdbcb8483f2ccd4d92dfb374a02e745, type: 3}
+    - {fileID: 4419957693014575335, guid: 8cdbcb8483f2ccd4d92dfb374a02e745, type: 3}
+    - {fileID: -1566521778106316955, guid: 8cdbcb8483f2ccd4d92dfb374a02e745, type: 3}
+    realArt: 1
+    overlay: []
+  - key: enemy_wolf_move
+    sprite: {fileID: 7204583475749675777, guid: f9aecf3fd7c1ea54793c9488fb8cbee7, type: 3}
+    frames:
+    - {fileID: 7204583475749675777, guid: f9aecf3fd7c1ea54793c9488fb8cbee7, type: 3}
+    - {fileID: 3984510999358875452, guid: f9aecf3fd7c1ea54793c9488fb8cbee7, type: 3}
+    - {fileID: 6249796763879745042, guid: f9aecf3fd7c1ea54793c9488fb8cbee7, type: 3}
+    - {fileID: -5674658196118550093, guid: f9aecf3fd7c1ea54793c9488fb8cbee7, type: 3}
     realArt: 1
     overlay: []
   ui:
@@ -1227,6 +1272,35 @@ MonoBehaviour:
     overlay: []
   - key: ui_wisp
     sprite: {fileID: 21300000, guid: b20c0809e62014c42a308f2589ec9efc, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_request
+    sprite: {fileID: 21300000, guid: 2d7b1eac9a15e4f418ed5a42bfbd87ac, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_request_done
+    sprite: {fileID: 21300000, guid: 4b09096a35d9d8640a68bbe3f36e178a, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_request_marker
+    sprite: {fileID: -5874955181597907939, guid: a3d3f60d740b4a343bce2cf92c25746d, type: 3}
+    frames:
+    - {fileID: -5874955181597907939, guid: a3d3f60d740b4a343bce2cf92c25746d, type: 3}
+    - {fileID: 5612726331141151446, guid: a3d3f60d740b4a343bce2cf92c25746d, type: 3}
+    - {fileID: 4247810535961095205, guid: a3d3f60d740b4a343bce2cf92c25746d, type: 3}
+    - {fileID: -2434582775942686029, guid: a3d3f60d740b4a343bce2cf92c25746d, type: 3}
+    realArt: 1
+    overlay: []
+  - key: ui_shrine
+    sprite: {fileID: 21300000, guid: b6c15a6f0527ae64e9fa81595bfec1b1, type: 3}
+    frames: []
+    realArt: 1
+    overlay: []
+  - key: ui_utility
+    sprite: {fileID: 21300000, guid: ad1b9195b1aa05042b0d6adff60f415b, type: 3}
     frames: []
     realArt: 1
     overlay: []

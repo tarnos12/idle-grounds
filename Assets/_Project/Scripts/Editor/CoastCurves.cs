@@ -42,8 +42,8 @@ namespace IdleGrounds.Editor
         const int Quantum = 2;                  // crossing positions snap to 2 px
         const int BlurR = 4, BlurPasses = 3;    // ~4.5-cell Gaussian: corners become arcs of 4-8+ cells
         const float SquareMargin = 2f;          // the field stays land up to 2 cells around the play square (rounded)
-        const int SideWidth = 11;               // delivered W / E face width (px)
-        const int SideGrassCol = 10;            // grass column of the W face (E: 31 - this)
+        const int SideWidth = 18;               // delivered W / E face width (px; Islands-038 widened 11 -> 18)
+        const int SideGrassCol = 17;            // grass column of the W face (E: 31 - this)
         const string Inc = "Assets/_Project/Art/Incoming/islands/";
         const string DressDir = IslandArtBuilder.IslandDir + "/Dressing";
         public const string ArtDir = IslandArtBuilder.IslandDir + "/Coast";

@@ -1,12 +1,11 @@
 # Idle Grounds: plan
 
-Updated 2026-10-21 18:24. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-21 18:30. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**22 of 43 tasks done**, 5 in progress, 3 to do, 3 blocked, 10 waiting.
+**22 of 43 tasks done**, 4 in progress, 3 to do, 3 blocked, 11 waiting.
 
 ## Being worked on now
 
-- **M2b** Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files): Delivery arrived (~30 zips, 156 new files): art reviewer pulling, checking and integrating in the background copy
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
 - **M3** Visual pass batch B: changes that need your answers: UI/UX feature builder implementing in a background copy
@@ -64,7 +63,7 @@ Replace ascension with optional Island requesters: eleven Islands unlocked in a 
 | Waiting | Phase 3: requester NPCs on the 7 existing islands (21 requests) | Request panel, right-click feeding, rewards: new buildings and automation utilities. | Claude |
 | Waiting | Phase 4: 4 new islands (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) + their NPCs | Nodes, Azure Wolf, 9 buildings, 12 items, 4 NPCs; placeholder art until delivered. | Claude |
 | Waiting | Phase 5: balance to a ~3 h ending | Playthrough bot: greedy run 2:30-3:30, no-requests run under 4:15. | Claude |
-| In progress | Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files) **(NOW)** | P1 shrine + 7 NPC sprites first, then the new island tilesets, buildings and items. | Artist |
+| Waiting | Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files) | P1 shrine + 7 NPC sprites first, then the new island tilesets, buildings and items. | Artist |
 | To do | Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes | The first converter batch takes 20.5 s of game time but the test waits only 18 s; it fails before and after phase 1. | Claude |
 
 ## M3: 3/4 world look (ADR 0005). In progress

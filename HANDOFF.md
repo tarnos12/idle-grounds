@@ -5,6 +5,8 @@ commit, git fetch first) live in `CLAUDE.md` — not repeated here.
 
 ## ▶ NEXT SESSION: start here
 
+**Art intake 2026-10-21 (branch bg/art38):** 37 Drive zips reviewed (ART-SPEC Delivery log row 2026-10-21). In Play: sidewall v3 x7 and Fishing macro v4 accepted (CoastCurves side face 11 -> 18 px; Fishing macro now softened like the other biomes); `cliffwall_round` x7 rejected (flat stripes), straight walls stay pinned. 69 more files rejected on file review (NPC idles, sky path pieces, 19 working loops, 4 floating-base buildings, new-island blob/fill/wall/side/macro, lotus water, 6 portraits) and moved to `docs/art/rejected/`; 74 validated files sit unwired in Art/Incoming until ADR 0007 Phase 2. Next: artist redo; ArtIntake should prune stale GameDatabase entries when art is removed.
+
 **Android (2026-10-13, branch bg/android):** touch controls + phone UI + `BuildScript.BuildAndroid` landed (see `docs/guides/touch-controls.md`).
 Next: the owner sideloads `Builds/Android/IdleGrounds.apk` and runs the manual checklist (Back key mapping, safe area on a real notch, feel of hold times); then tune constants in TouchInputController / MobileUi.
 
@@ -147,6 +149,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-21: art intake (ingame-art-reviewer, bg/art38): pull.js skips SOURCE-STUDY images; 15 files accepted in Play (Islands-038 sidewalls, -039 Fishing macro), Islands-040 round walls rejected in Play, 69 files rejected on file review with repair notes, 74 validated and waiting on Phase 2. Evidence on Drive feedback/2026-10-21_*.png; ART-SPEC log row mirrored to Drive (3.9 stays repo-only).
 
 - 2026-10-21: merged bg/artdir: 26-building audit (docs/art/reference/buildings-sheet.png, ART-SPEC 3.9 pending), Hub question art_density (pixel density), snowy Fishing brief ART-SPEC 3.8 mirrored to Drive.
 
