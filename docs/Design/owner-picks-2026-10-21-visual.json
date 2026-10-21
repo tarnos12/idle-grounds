@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-21",
+  "verbatim": "Answers\nvp_panels: Centred window, like the Altar and Stats (simple, but it covers the world while you feed)  | note: All pop up panels should be on the building we interact with.\nvp_guidance: Leave as it is (text only)\nvp_look: Icons, plus one pixel font (Pixelify Sans) for all text  | note: all UI needs to be consistent.\nvp_bar: Icon-only buttons with tooltips; Reset moves into a Help/Settings menu\nvp_zoom: The four crisp steps plus one far 'map' step at 120 cells (half size, slight shimmer)\nvp_mood: Calmer ground on every island: darker, less saturated, so buildings and resources stand out\nvp_props: Check all 26 existing buildings against one reference sheet  | note: All of them look too pixelated/low quality\nvp_fishing: Make it a snowy northern fishing island on purpose (snow props, ice at the pond edge)",
+  "answers": {
+    "vp_panels": "modal",
+    "vp_guidance": "none",
+    "vp_look": "font",
+    "vp_bar": "icons",
+    "vp_zoom": "crisp_map",
+    "vp_mood": "ground",
+    "vp_props": "audit",
+    "vp_fishing": "snow"
+  },
+  "notes": {
+    "vp_panels": "All pop up panels should be on the building we interact with.",
+    "vp_look": "all UI needs to be consistent.",
+    "vp_props": "All of them look too pixelated/low quality"
+  },
+  "interpretation": {
+    "vp_panels": "The note is the answer: every pop-up panel opens anchored on the building being used (not a centred window).",
+    "vp_props": "Pick + note: review all 26 buildings against one reference sheet; owner finds all of them too pixelated / low quality, so the redo targets higher detail."
+  }
+}
