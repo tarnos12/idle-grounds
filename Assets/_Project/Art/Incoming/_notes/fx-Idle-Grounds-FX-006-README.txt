@@ -1,0 +1,1 @@
+One-shot sky path reveal. Import PPU 32, Point, no compression, no mipmaps. Slice 96x96, six horizontal frames. Center pivot, 10 fps, play once. Jade slabs emerge from clouds, golden flash, settled walkway. Do not loop. Native generated artwork was fitted at a consistent scale and position in each frame. In-engine review pending.

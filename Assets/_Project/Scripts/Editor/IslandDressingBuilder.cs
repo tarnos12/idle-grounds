@@ -88,9 +88,9 @@ namespace IdleGrounds.Editor
             }
             k.macroBig = _macroBig; k.macroSmall = _macroSmall; k.path = _path; k.plaza = _plaza;
             k.scatter = Tiles("Scatter_" + biome, IslandArtBuilder.Frames($"{Inc}island_{biome}_scatter_32x32_4f.png"));
-            // fishing v3 macro (Islands-033): its patches are already the fill colour with sparse pebbles, so it is used
-            // as delivered (softening would only erase the pebbles); the other biomes are softened toward their fill
-            var mf = EnsureSoftened($"{Inc}island_{biome}_macro_96x96_4f.png", $"dress_macro_{biome}_96x96_4f.png", 4, 96, biome == "fishing" ? 1f : MacroStrength, $"{Inc}island_{biome}_ground_fill_32x32_3f.png");
+            // every biome macro (incl. fishing v4, Islands-039: P05 damp / P07 dry patches, too hard-edged at full strength)
+            // is softened toward its fill
+            var mf = EnsureSoftened($"{Inc}island_{biome}_macro_96x96_4f.png", $"dress_macro_{biome}_96x96_4f.png", 4, 96, MacroStrength, $"{Inc}island_{biome}_ground_fill_32x32_3f.png");
             k.macroArt = mf.Length >= 4 ? Tiles("MacroArt_" + biome, mf) : null;
             var ff = IslandArtBuilder.Frames($"{Inc}island_{biome}_flowers_32x32_4f.png");
             k.flowers = ff.Length > 0 ? Tiles("Flowers_" + biome, ff) : null;

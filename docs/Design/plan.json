@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-21 17:53",
+  "updated": "2026-10-21 17:54",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -139,7 +139,7 @@
           "status": "in-progress",
           "size": "L",
           "owner": "Artist",
-          "now": "Delivery arrived (~30 zips, 156 new files): art reviewer pulling, checking and integrating in the background copy"
+          "now": "In-game art reviewer: inspecting ~37 zips (Islands-038..050, Buildings-013..024, NPCs, items, nodes, UI, FX) in bg copy art38"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",

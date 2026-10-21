@@ -1,0 +1,1 @@
+Derived deterministically from the accepted Islands-030 biome cliff-wall rendering: preserve each biome palette and strata, remove per-frame horizontal lighting ramps, eliminate strong vertical features, enforce arbitrary-order seams, reserve the top 6 px for ground tuck, and retain a ragged 16 px mist fade.

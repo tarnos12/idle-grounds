@@ -2,6 +2,7 @@
 // Art intake pull: Drive "incoming/<category>/" -> Assets/_Project/Art/Incoming/<category>/
 // - unzips zips (PowerShell Expand-Archive), loose files are copied as-is
 // - *mask*.json / *reference*.json companions (e.g. blob_mask_reference.json) are copied next to the art
+// - artist SOURCE-STUDY images are skipped (multi-MB references, not game art)
 // - README/NOTES (.md/.txt) go to Incoming/_notes/ (prefixed with the source name)
 // - Incoming/intake-log.json records every imported file (name,size,sha1,date,source); reruns only bring new/changed files
 // Usage: node tools/art-intake/pull.js [--src <incoming dir>] [--dry]
@@ -41,6 +42,7 @@ function importFile(file, category, source) {
   const base = path.basename(file);
   const hash = sha1(file), size = fs.statSync(file).size;
   let rel, destPath;
+  if (/source[-_ ]?study/i.test(base)) { stats.ignored++; console.log('  ignored (artist source study, not game art): ' + base); return; }
   const isPreview = /preview/i.test(base); // contact sheets for review, not game sprites
   if ((ART_EXT.has(ext) && !isPreview) || isCompanionJson(base)) { rel = category + '/' + base; }
   else if (NOTE_EXT.has(ext) || (ART_EXT.has(ext) && isPreview)) { rel = '_notes/' + category + '-' + source.replace(/\.zip$/i, '') + '-' + base; }
