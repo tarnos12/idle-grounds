@@ -159,7 +159,7 @@ namespace IdleGrounds.Game
                 var go = Instantiate(help.gameObject, t);
                 go.name = "MenuButton";
                 existing = go.transform;
-                var old = go.GetComponent<TooltipTrigger>(); if (old != null) Destroy(old);
+                var old = go.GetComponent<TooltipTrigger>(); if (old != null) DestroyImmediate(old);   // not Destroy: ApplyStyle attaches the Menu tooltip in the same frame and the deferred Destroy would remove it
             }
             existing.gameObject.SetActive(true);
             existing.SetAsLastSibling();
