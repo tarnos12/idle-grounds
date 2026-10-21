@@ -5,6 +5,8 @@ commit, git fetch first) live in `CLAUDE.md` — not repeated here.
 
 ## ▶ NEXT SESSION: start here
 
+**Now (2026-10-21):** waiting on owner Hub answers `art_density` (building pixel density) and `font_read` (UI font); then font build + UI QA pass, building redo request (ART-SPEC 3.9). ADR 0007 Phase 2 (Shrine) still needs owner go-ahead; 74 validated Phase 2 art files wait for it. Art check cron hourly.
+
 **Art intake 2026-10-21 (branch bg/art38):** 37 Drive zips reviewed (ART-SPEC Delivery log row 2026-10-21). In Play: sidewall v3 x7 and Fishing macro v4 accepted (CoastCurves side face 11 -> 18 px; Fishing macro now softened like the other biomes); `cliffwall_round` x7 rejected (flat stripes), straight walls stay pinned. 69 more files rejected on file review (NPC idles, sky path pieces, 19 working loops, 4 floating-base buildings, new-island blob/fill/wall/side/macro, lotus water, 6 portraits) and moved to `docs/art/rejected/`; 74 validated files sit unwired in Art/Incoming until ADR 0007 Phase 2. Next: artist redo; ArtIntake should prune stale GameDatabase entries when art is removed.
 **Visual pass batch B (2026-10-21, merged):** building panels anchored on their building (BuildingPanelAnchor), Pixelify Sans for all text (UiFont runtime swap + static TMP asset, menu Idle Grounds/UI/Build Pixel Font), icon-only desktop bar + one shared Help/Settings menu (GameMenuView, Esc opens it), crisp zoom stops 15/20/30/60 + 120-cell map stop, calmer ground tints (DecorStyle). Next: orchestrator merges bg/visb, UI QA review, art for ui_sound/ui_motion/ui_menu/ui_help/ui_reset and the jade primary button.
 
@@ -150,6 +152,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-21: merged bg/uifix: ModalView.FitToScreen + Stats scroll body, Stats Flow / Altar tree layouts, world text floor 11 px (ViewKit.MinTextPx), BuildingPanelAnchor docks+scrolls on phone and closes when its building leaves the screen, quest panel width, Help key-caps [B]. Hub question font_read (recommended: Pixelify titles + Jersey 10 body).
 
 - 2026-10-21: art intake (ingame-art-reviewer, bg/art38): pull.js skips SOURCE-STUDY images; 15 files accepted in Play (Islands-038 sidewalls, -039 Fishing macro), Islands-040 round walls rejected in Play, 69 files rejected on file review with repair notes, 74 validated and waiting on Phase 2. Evidence on Drive feedback/2026-10-21_*.png; ART-SPEC log row mirrored to Drive (3.9 stays repo-only).
 
