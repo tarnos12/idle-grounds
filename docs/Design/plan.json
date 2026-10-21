@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-13 21:42",
+  "updated": "2026-10-21 17:53",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -136,10 +136,10 @@
         {
           "title": "Art for the shrine, NPCs and 4 new islands (ART-SPEC §3.7, 144 files)",
           "detail": "P1 shrine + 7 NPC sprites first, then the new island tilesets, buildings and items.",
-          "status": "blocked",
+          "status": "in-progress",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Requested 2026-10-12 in ART-SPEC §3.7"
+          "now": "Delivery arrived (~30 zips, 156 new files): art reviewer pulling, checking and integrating in the background copy"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
