@@ -53,7 +53,7 @@ namespace IdleGrounds.Game
             if (rowTemplate != null) rowTemplate.gameObject.SetActive(false);
             if (popup != null) popup.gameObject.SetActive(false);
             if (detail != null) detail.gameObject.SetActive(false);
-            if (popup != null) anchor = BuildingPanelAnchor.Attach(popup.gameObject, 0f, preferAbove: true);
+            if (popup != null) { anchor = BuildingPanelAnchor.Attach(popup.gameObject, 0f, preferAbove: true); anchor.OnLeftScreen = Close; }
         }
 
         BuildingPanelAnchor anchor;

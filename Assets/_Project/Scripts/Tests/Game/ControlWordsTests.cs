@@ -18,6 +18,10 @@ namespace IdleGrounds.Game.Tests
         [TestCase("Build a Forge (B), feed it", "Build a Forge, feed it")]
         [TestCase("Demolish: click a building - Esc to stop", "Demolish: tap a building - tap Demolish to stop")]
         [TestCase("the front stack feeds first (Q / E change which stack is in front)", "the front stack feeds first (Swap changes which stack is in front)")]
+        [TestCase("Build [B]: place buildings", "Build: place buildings")]
+        [TestCase("Menu [Esc]: help, sound, motion, new game", "Menu (Back): help, sound, motion, new game")]
+        [TestCase("[B] places a ghost; right-click-feed it its cost to build.", "Build places a ghost; Give it its cost to build.")]
+        [TestCase("the front stack feeds first ([Q] / [E] change which stack is in front)", "the front stack feeds first (Swap changes which stack is in front)")]
         [TestCase("Nothing special here", "Nothing special here")]
         public void Rewrite_Uses_Touch_Wording(string src, string want) => Assert.AreEqual(want, ControlWords.Rewrite(src));
 
@@ -26,6 +30,15 @@ namespace IdleGrounds.Game.Tests
         {
             string s = ControlWords.Rewrite("WASD pans the camera (Shift toggles 2× sprint), mouse wheel zooms, B opens the build menu, Q / E rotate the stacks in your hand, Esc cancels/closes.");
             foreach (var bad in new[] { "WASD", "click", "wheel", "Esc", "Q / E" }) StringAssert.DoesNotContain(bad, s);
+        }
+
+        [Test]
+        public void Rewrite_Handles_KeyCap_Help_Line()
+        {
+            // the Help controls line names keys as key-caps ([B]) since UI QA batch B (#2: B read as 8 in the pixel font)
+            string s = ControlWords.Rewrite("[WASD] pans the camera ([Shift] toggles 2× sprint), mouse wheel zooms, [B] opens the build menu, [Q] / [E] rotate the stacks in your hand, [Esc] cancels/closes or opens the Menu.");
+            StringAssert.StartsWith("Drag pans the camera, pinch zooms", s);
+            foreach (var bad in new[] { "WASD", "[", "]", "wheel", "Esc", "Shift" }) StringAssert.DoesNotContain(bad, s);
         }
 
         [Test]

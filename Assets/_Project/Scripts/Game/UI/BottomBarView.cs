@@ -240,11 +240,11 @@ namespace IdleGrounds.Game
             }
             // icon-only controls say what they do in a tooltip (keys in brackets)
             TooltipTrigger.Attach(transform.Find("StatsButton"), "Stats: your progress so far");
-            TooltipTrigger.Attach(buildButton, "Build (B): place buildings");
+            TooltipTrigger.Attach(buildButton, "Build [B]: place buildings");
             TooltipTrigger.Attach(demolishButton, "Demolish: remove a building (refunds its resources)");
             TooltipTrigger.Attach(transform.Find("MuteButton"), null, () => AudioService.Instance != null && AudioService.Instance.Muted ? "Sound is off - click to turn it on" : "Sound is on - click to mute");
             TooltipTrigger.Attach(transform.Find("MotionButton"), null, () => Juice.ReduceMotion ? "Calm motion is on (no shake or flight tweens) - click for full motion" : "Full motion - click for calm (no screen shake, squash or flight tweens)");
-            TooltipTrigger.Attach(menuButton, "Menu (Esc): help, sound, motion, new game");
+            TooltipTrigger.Attach(menuButton, "Menu [Esc]: help, sound, motion, new game");
             LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
             styled = true; styledMobile = mobile;
         }

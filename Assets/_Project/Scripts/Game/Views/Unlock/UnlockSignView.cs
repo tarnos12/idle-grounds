@@ -71,7 +71,7 @@ namespace IdleGrounds.Game
             title.text = "Unlock " + islandName;
             ViewKit.Font(title, 15f);
             title.enableAutoSizing = true;
-            title.fontSizeMin = 8f * ViewKit.FontPerPx; title.fontSizeMax = 15f * ViewKit.FontPerPx;
+            title.fontSizeMin = ViewKit.MinTextPx * ViewKit.FontPerPx; title.fontSizeMax = 15f * ViewKit.FontPerPx;
             title.rectTransform.sizeDelta = new Vector2(W - ViewKit.U(14f), ViewKit.U(22f));
             title.transform.localPosition = new Vector3(0f, H * 0.5f - ViewKit.U(46f), 0f);
             cost.transform.localPosition = new Vector3(0f, H * 0.5f - ViewKit.U(70f), 0f);

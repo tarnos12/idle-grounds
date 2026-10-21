@@ -188,7 +188,7 @@ namespace IdleGrounds.Game
             closeSkin = UiButtonSkin.Attach(close.gameObject, UiButtonVariant.Close);
             closeImg = ci;
             closeX = NewText(close, "x", 24f, UiPalette.Text).gameObject;
-            TooltipTrigger.Attach(cb, "Close (Esc)");
+            TooltipTrigger.Attach(cb, "Close [Esc]");
 
             var grid = NewRect("Grid", box);
             var gl = grid.gameObject.AddComponent<GridLayoutGroup>();

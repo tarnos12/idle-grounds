@@ -19,11 +19,12 @@ namespace IdleGrounds.Game
 
         static readonly Rule[] Rules = Build(
             // whole sentences first
-            (@"WASD pans the camera[^.]*?Esc cancels/closes", "Drag pans the camera, pinch zooms, the Build button opens the build menu, Swap rotates the stacks in your hand, Back closes panels"),
+            (@"\[?WASD\]? pans the camera[^.]*?\[?Esc\]? cancels/closes( or opens the Menu)?", "Drag pans the camera, pinch zooms, the Build button opens the build menu, Swap rotates the stacks in your hand, Back closes panels"),
             (@"(?-i:Hold left-click)", "Hold"),
             (@"(?-i:hold left-click)", "hold"),
             (@"WASD to look around, mouse[- ]wheel to zoom", "drag to look around, pinch to zoom"),
             (@"\(WASD\)", "(drag)"),
+            (@"\[WASD\]", "drag"),
             (@"WASD to look around", "drag to look around"),
             (@"WASD", "drag"),
             (@"mouse[- ]?wheel", "pinch"),
@@ -35,15 +36,16 @@ namespace IdleGrounds.Game
             (@"\bclicked\b", "tapped"),
             (@"\bclicks\b", "taps"),
             (@"\bclick\b", "tap"),
-            (@" \(B\)", ""),
+            (@"(\[B\]|\bB) places\b", "Build places"),
+            (@" ?(\(B\)|\[B\])", ""),
             (@"\bPress B\b", "Open Build"),
-            (@"\bB places\b", "Build places"),
             (@"(?-i:\bEsc to stop\b)", "tap Demolish to stop"),
             (@"\(Esc: (stop|cancel)\)", "(Cancel button)"),
             (@"(?-i:\bEsc cancels\b)", "Cancel stops it"),
+            (@"\[Esc\]", "(Back)"),
             (@"\bEsc\b", "Back"),
-            (@"\bQ / E change\b", "Swap changes"),
-            (@"\bQ / E\b", "Swap"),
+            (@"(\[Q\] / \[E\]|\bQ / E) change\b", "Swap changes"),
+            (@"\[Q\] / \[E\]|\bQ / E\b", "Swap"),
             (@"\bhovered\b", "pressed"),
             (@"\bhover\b", "press"));
 
@@ -64,7 +66,7 @@ namespace IdleGrounds.Game
             return r;
         }
 
-        static readonly string[] Triggers = { "lick", "WASD", "wheel", "Esc", "hover", "(B)", "Press B", "B places", "Q / E" };
+        static readonly string[] Triggers = { "lick", "WASD", "wheel", "Esc", "hover", "(B)", "[B]", "Press B", "B places", "Q / E", "[Q]" };
         static readonly Dictionary<string, string> cache = new Dictionary<string, string>();
 
         /// <summary>The text as shown on this device: touch wording on a phone, unchanged elsewhere.</summary>

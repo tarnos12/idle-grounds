@@ -53,7 +53,7 @@ namespace IdleGrounds.Game
             if (rowTemplate != null) rowTemplate.gameObject.SetActive(false);
             if (unpairButton != null) unpairButton.onClick.AddListener(() => Unpair());
             if (closeButton != null) closeButton.onClick.AddListener(Close);
-            if (panel != null) anchor = BuildingPanelAnchor.Attach(panel, PanelWidth);
+            if (panel != null) { anchor = BuildingPanelAnchor.Attach(panel, PanelWidth); anchor.OnLeftScreen = Close; }
         }
 
         /// <summary>Panel width (canvas units) beside the bridge (owner pick vp_panels): fits a candidate row with both buttons.</summary>

@@ -9,7 +9,14 @@ namespace IdleGrounds.Game
     /// <see cref="Bind"/> the panel sits beside the building's art (right, else left, else above, else below), follows it
     /// while the camera pans or zooms, and is clamped to the safe area above the bottom bar. A side is kept while it still
     /// fits (no flip-flopping while panning). When no side fits (a phone, or a panel taller than the space) the panel
-    /// docks to the top or bottom screen edge away from the building, and shrinks uniformly if it is still too big.
+    /// docks to the top or bottom screen edge away from the building.
+    /// <para>Never shrunk below the text floor (UI QA batch B #10): a panel wider than the space takes the space's width
+    /// (its text wraps); a panel taller than the space keeps its title bar and the rest scrolls (the body is wrapped in a
+    /// ScrollRect the first time that happens). Only a panel that cannot scroll (no vertical layout) still shrinks.</para>
+    /// <para>Leaving the screen (UI QA batch B #8): once the building has been on screen, the panel closes when the building
+    /// is panned or zoomed completely out of view (<see cref="OnLeftScreen"/>, default: hide the panel) unless
+    /// <see cref="KeepOffScreen"/> says the player is still using it (the link editor while picking a source or target).
+    /// A panel never points at nothing.</para>
     /// Global windows (Stats, Help, the Altar tree, Menu) stay centred and do not use this.
     /// </summary>
     [DisallowMultipleComponent]
@@ -52,12 +59,25 @@ namespace IdleGrounds.Game
             return a;
         }
 
+        /// <summary>Called when the building leaves the screen (null = hide the panel). The views pass their Close.</summary>
+        public System.Action OnLeftScreen;
+        /// <summary>True = keep the panel while its building is off screen (the player is working with it elsewhere).</summary>
+        public System.Func<bool> KeepOffScreen;
+        /// <summary>The building has been on screen since <see cref="Bind"/> (only then does leaving the screen close the panel).</summary>
+        public bool SeenOnScreen { get; private set; }
+        /// <summary>Uniform scale of the last placement (1 unless the panel cannot scroll).</summary>
+        public float Shrink { get; private set; } = 1f;
+        /// <summary>The panel body scrolls (it was taller than the space at least once).</summary>
+        public bool Scrolls => scrollLe != null;
+
         /// <summary>Anchor to building <paramref name="buildingId"/> on <paramref name="area"/> and place at once.</summary>
         public void Bind(string area, int buildingId)
         {
             Area = area; BuildingId = buildingId; Current = Side.None;
+            SeenOnScreen = false;
             Init();
             Convert();
+            heightCheck = 0;
             LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
             Place();
         }
@@ -85,6 +105,125 @@ namespace IdleGrounds.Game
             var size = rt.rect.size;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
             rt.sizeDelta = new Vector2(width > 0f ? width : size.x, size.y);
+        }
+
+        // ---------------------------------------------------------------- fit (no shrinking below the text floor)
+
+        LayoutElement scrollLe;
+        RectTransform scrollContent;
+        bool wrapFailed;
+        int heightCheck;
+        float lastAreaH = -1f;
+
+        /// <summary>Everything under the first layout child (the title bar) moves into a vertical ScrollRect.</summary>
+        bool WrapForScroll()
+        {
+            if (scrollLe != null) return true;
+            if (wrapFailed) return false;
+            var vlg = GetComponent<VerticalLayoutGroup>();
+            var csf = GetComponent<ContentSizeFitter>();
+            int first = -1;
+            for (int i = 0; i < rt.childCount; i++)
+            {
+                var c = rt.GetChild(i);
+                if (!c.gameObject.activeSelf) continue;
+                var le = c.GetComponent<LayoutElement>();
+                if (le != null && le.ignoreLayout) continue;
+                first = i; break;
+            }
+            if (vlg == null || csf == null || csf.verticalFit != ContentSizeFitter.FitMode.PreferredSize || first < 0 || first >= rt.childCount - 1)
+            {
+                wrapFailed = true;
+                return false;
+            }
+            var moving = new System.Collections.Generic.List<Transform>();
+            for (int i = first + 1; i < rt.childCount; i++)
+            {
+                var c = rt.GetChild(i);
+                var le = c.GetComponent<LayoutElement>();
+                if (le != null && le.ignoreLayout) continue;       // badges / overlays stay where they are
+                moving.Add(c);
+            }
+            var body = new GameObject("ScrollBody", typeof(RectTransform)).GetComponent<RectTransform>();
+            body.SetParent(rt, false);
+            body.SetSiblingIndex(first + 1);
+            scrollLe = body.gameObject.AddComponent<LayoutElement>();
+            scrollLe.flexibleWidth = 1f;
+            var vp = new GameObject("Viewport", typeof(RectTransform)).GetComponent<RectTransform>();
+            vp.SetParent(body, false);
+            vp.anchorMin = Vector2.zero; vp.anchorMax = Vector2.one; vp.offsetMin = vp.offsetMax = Vector2.zero;
+            var vimg = vp.gameObject.AddComponent<Image>(); vimg.color = new Color(0f, 0f, 0f, 0f); vimg.raycastTarget = true;
+            vp.gameObject.AddComponent<RectMask2D>();
+            scrollContent = new GameObject("Content", typeof(RectTransform)).GetComponent<RectTransform>();
+            scrollContent.SetParent(vp, false);
+            scrollContent.anchorMin = new Vector2(0f, 1f); scrollContent.anchorMax = new Vector2(1f, 1f); scrollContent.pivot = new Vector2(0.5f, 1f);
+            scrollContent.anchoredPosition = Vector2.zero; scrollContent.sizeDelta = Vector2.zero;
+            var cl = scrollContent.gameObject.AddComponent<VerticalLayoutGroup>();
+            cl.spacing = vlg.spacing; cl.childAlignment = vlg.childAlignment;
+            cl.childControlWidth = vlg.childControlWidth; cl.childControlHeight = vlg.childControlHeight;
+            cl.childForceExpandWidth = vlg.childForceExpandWidth; cl.childForceExpandHeight = false;
+            cl.padding = new RectOffset(0, 0, 0, 0);
+            var cf = scrollContent.gameObject.AddComponent<ContentSizeFitter>();
+            cf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained; cf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            foreach (var c in moving) c.SetParent(scrollContent, false);
+            var sr = body.gameObject.AddComponent<ScrollRect>();
+            sr.viewport = vp; sr.content = scrollContent; sr.horizontal = false; sr.vertical = true;
+            sr.movementType = ScrollRect.MovementType.Clamped; sr.scrollSensitivity = 40f;
+            AddScrollbar(sr);
+            cl.padding = new RectOffset(0, 22, 0, 4);      // clear of the 16 px scrollbar
+            return true;
+        }
+
+        /// <summary>A vertical scrollbar like the builders' (ui_scrollbar art: tinted track + handle), shown only when needed.</summary>
+        static void AddScrollbar(ScrollRect sr)
+        {
+            const float W = 16f;
+            var go = new GameObject("Scrollbar", typeof(RectTransform), typeof(Image), typeof(Scrollbar));
+            var bar = (RectTransform)go.transform;
+            bar.SetParent(sr.transform, false);
+            bar.anchorMin = new Vector2(1f, 0f); bar.anchorMax = new Vector2(1f, 1f); bar.pivot = new Vector2(1f, 0.5f);
+            bar.sizeDelta = new Vector2(W, 0f); bar.anchoredPosition = Vector2.zero;
+            go.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.35f);
+            var handle = new GameObject("Handle", typeof(RectTransform), typeof(Image));
+            var hrt = (RectTransform)handle.transform;
+            hrt.SetParent(bar, false);
+            hrt.anchorMin = Vector2.zero; hrt.anchorMax = Vector2.one; hrt.offsetMin = hrt.offsetMax = Vector2.zero;
+            var himg = handle.GetComponent<Image>(); himg.color = new Color(1f, 1f, 1f, 0.35f);
+            var sb = go.GetComponent<Scrollbar>();
+            sb.handleRect = hrt; sb.targetGraphic = himg; sb.direction = Scrollbar.Direction.BottomToTop;
+            var db = GameRunner.Instance != null ? GameRunner.Instance.Database : null;
+            if (db != null)
+            {
+                UiSkin.Attach(go, "ui_scrollbar", fit: true, tint: new Color(1f, 1f, 1f, 0.6f)).Apply(db);
+                UiSkin.Attach(handle, "ui_scrollbar", fit: true).Apply(db);
+            }
+            sr.verticalScrollbar = sb;
+            sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide;
+            sr.verticalScrollbarSpacing = 0f;
+        }
+
+        /// <summary>Width capped to the space (text wraps); height capped by scrolling the body. Returns the uniform shrink still needed.</summary>
+        float FitInto(Rect area)
+        {
+            if (width > 0f)
+            {
+                float w = Mathf.Floor(Mathf.Min(width, area.width));
+                if (!Mathf.Approximately(rt.sizeDelta.x, w)) { rt.sizeDelta = new Vector2(w, rt.sizeDelta.y); LayoutRebuilder.ForceRebuildLayoutImmediate(rt); heightCheck = 0; }
+            }
+            bool areaChanged = !Mathf.Approximately(area.height, lastAreaH);
+            lastAreaH = area.height;
+            if (rt.rect.height > area.height + 0.5f && scrollLe == null && WrapForScroll()) { areaChanged = true; heightCheck = 0; }
+            if (scrollLe != null && (areaChanged || heightCheck-- <= 0))
+            {
+                heightCheck = 15;          // content can grow (new link rows, a refusal line): re-measure a few times a second
+                LayoutRebuilder.ForceRebuildLayoutImmediate(scrollContent);
+                float contentH = LayoutUtility.GetPreferredHeight(scrollContent);
+                float rest = LayoutUtility.GetPreferredHeight(rt) - LayoutUtility.GetPreferredHeight((RectTransform)scrollLe.transform);
+                float want = Mathf.Floor(Mathf.Max(60f, Mathf.Min(contentH, area.height - rest)));
+                if (!Mathf.Approximately(scrollLe.preferredHeight, want)) { scrollLe.preferredHeight = want; scrollLe.minHeight = want; LayoutRebuilder.ForceRebuildLayoutImmediate(rt); }
+            }
+            Vector2 size = rt.rect.size;
+            return Mathf.Min(1f, area.width / Mathf.Max(1f, size.x), area.height / Mathf.Max(1f, size.y));
         }
 
         void LateUpdate()
@@ -179,12 +318,22 @@ namespace IdleGrounds.Game
             if (rt == null) Init();
             if (canvasRect == null || worldCam == null || !TargetInCanvas(out var target)) return;
             var area = Bounds();
+            // the building left the screen: close (a panel never points at nothing; UI QA batch B #8)
+            bool onScreen = target.Overlaps(canvasRect.rect);
+            if (onScreen) SeenOnScreen = true;
+            else if (SeenOnScreen && (KeepOffScreen == null || !KeepOffScreen()))
+            {
+                Unbind();
+                if (OnLeftScreen != null) OnLeftScreen(); else gameObject.SetActive(false);
+                return;
+            }
             rt.localScale = Vector3.one;
+            // wider than the space: take its width; taller: the body scrolls; only a panel that cannot scroll shrinks
+            float k = FitInto(area);
+            Shrink = k;
             Vector2 size = rt.rect.size;
             var q = quest != null && quest.isActiveAndEnabled ? quest.VisibleRect : null;
             obstacle = q != null ? CanvasRectOf(q) : default;
-            // too big for the space: shrink uniformly (text stays readable; it only happens on small phone canvases)
-            float k = Mathf.Min(1f, area.width / Mathf.Max(1f, size.x), area.height / Mathf.Max(1f, size.y));
             Vector2 s = size * k;
 
             Side side = Current;

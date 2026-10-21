@@ -41,6 +41,7 @@ namespace IdleGrounds.Game
         protected override void Awake()
         {
             base.Awake();
+            BuildFitLayout();
             if (overviewTab != null) overviewTab.onClick.AddListener(() => SetTab(false));
             if (flowTab != null) flowTab.onClick.AddListener(() => SetTab(true));
             if (scopeButton != null) scopeButton.onClick.AddListener(() => { lifetime = !lifetime; Refresh(); });
@@ -50,14 +51,154 @@ namespace IdleGrounds.Game
         public override void Open()
         {
             if (Sim == null) return;
-            base.Open();
+            if (modal != null) modal.SetActive(true);
             Refresh();
+            base.Open();
         }
 
-        void SetTab(bool flow) { showFlow = flow; Refresh(); }
+        void SetTab(bool flow) { showFlow = flow; Refresh(); FitToScreen(); }
 
         /// <summary>Test / tooling hook: switch tab and scope.</summary>
-        public void Show(bool flow, bool lifetimeTotals) { showFlow = flow; lifetime = lifetimeTotals; if (IsOpen) Refresh(); }
+        public void Show(bool flow, bool lifetimeTotals) { showFlow = flow; lifetime = lifetimeTotals; if (IsOpen) { Refresh(); FitToScreen(); } }
+
+        // ---- fit (UI QA batch B #3 / #4): fixed header + tabs, a scrolling body of one shared height, number columns
+        //      sized to the snapped pixel font, the Flow note on its own line under the Scope / Sort buttons
+
+        /// <summary>Design height of the tab body (both tabs: switching never makes the window jump).</summary>
+        public const float BodyHeight = 570f, MinBodyHeight = 150f, DesignWidth = 720f;
+        /// <summary>The note under the Flow filter buttons.</summary>
+        public const string FlowNote = "Net = change per minute over the last ~5 min";
+        GameObject overviewRoot;
+        LayoutElement overviewLe, flowLe, flowScrollLe;
+        float bodyH = BodyHeight, columnsAt = -1f;
+        /// <summary>Current body height (canvas units) after fitting the screen.</summary>
+        public float BodyNow => bodyH;
+        public ScrollRect OverviewScroll { get; private set; }
+
+        void BuildFitLayout()
+        {
+            if (Box == null || rowsRoot == null) return;
+            // Overview rows -> a ScrollRect (like the Flow list): a short phone screen scrolls the rows instead of pushing
+            // the title, tabs and close button off the top
+            var area = new GameObject("RowsScroll", typeof(RectTransform)).GetComponent<RectTransform>();
+            area.SetParent(rowsRoot.parent, false);
+            area.SetSiblingIndex(rowsRoot.GetSiblingIndex());
+            overviewLe = area.gameObject.AddComponent<LayoutElement>();
+            overviewLe.minHeight = overviewLe.preferredHeight = BodyHeight;
+            var vp = new GameObject("Viewport", typeof(RectTransform)).GetComponent<RectTransform>();
+            vp.SetParent(area, false);
+            vp.anchorMin = Vector2.zero; vp.anchorMax = Vector2.one; vp.offsetMin = vp.offsetMax = Vector2.zero;
+            var vimg = vp.gameObject.AddComponent<Image>(); vimg.color = new Color(0f, 0f, 0f, 0f); vimg.raycastTarget = true;
+            vp.gameObject.AddComponent<RectMask2D>();
+            rowsRoot.SetParent(vp, false);
+            rowsRoot.anchorMin = new Vector2(0f, 1f); rowsRoot.anchorMax = new Vector2(1f, 1f); rowsRoot.pivot = new Vector2(0.5f, 1f);
+            rowsRoot.anchoredPosition = Vector2.zero; rowsRoot.sizeDelta = Vector2.zero;
+            var rle = rowsRoot.GetComponent<LayoutElement>();
+            if (rle != null) rle.minHeight = -1f;
+            var vl = rowsRoot.GetComponent<VerticalLayoutGroup>();
+            if (vl != null) vl.padding = new RectOffset(vl.padding.left, Mathf.Max(vl.padding.right, 26), vl.padding.top, Mathf.Max(vl.padding.bottom, 8));
+            var fit = rowsRoot.GetComponent<ContentSizeFitter>();
+            if (fit == null) fit = rowsRoot.gameObject.AddComponent<ContentSizeFitter>();
+            fit.horizontalFit = ContentSizeFitter.FitMode.Unconstrained; fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            var sr = area.gameObject.AddComponent<ScrollRect>();
+            sr.viewport = vp; sr.content = rowsRoot; sr.horizontal = false; sr.vertical = true;
+            sr.movementType = ScrollRect.MovementType.Clamped; sr.scrollSensitivity = 40f;
+            var flowSr = flowContent != null ? flowContent.GetComponentInParent<ScrollRect>(true) : null;
+            if (flowSr != null && flowSr.verticalScrollbar != null)
+            {
+                var bar = Instantiate(flowSr.verticalScrollbar.gameObject, area, false);
+                bar.name = "Scrollbar";
+                sr.verticalScrollbar = bar.GetComponent<Scrollbar>();
+                sr.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHide; sr.verticalScrollbarSpacing = 0f;
+            }
+            OverviewScroll = sr;
+            overviewRoot = area.gameObject;
+
+            if (flowRoot == null) return;
+            flowLe = flowRoot.GetComponent<LayoutElement>();
+            if (flowSr != null) flowScrollLe = flowSr.GetComponent<LayoutElement>();
+            // the note leaves the button row and wraps on its own line (at 1280x720 the 22 px text no longer fits one row)
+            var ctl = scopeButton != null ? scopeButton.transform.parent : null;
+            var hint = ctl != null ? ctl.Find("Hint") : null;
+            if (hint != null && ctl.parent == flowRoot.transform)
+            {
+                hint.SetParent(flowRoot.transform, false);
+                hint.SetSiblingIndex(ctl.GetSiblingIndex() + 1);
+                var ht = hint.GetComponent<TextMeshProUGUI>();
+                if (ht != null)
+                {
+                    ht.text = FlowNote;
+                    ht.alignment = TextAlignmentOptions.MidlineLeft;
+                    ht.textWrappingMode = TextWrappingModes.Normal;
+                }
+            }
+            // shorter column head ("Net"; the note says it is per minute)
+            var header = flowRoot.transform.Find("ColumnHeader");
+            if (header != null)
+                foreach (Transform c in header)
+                    if (c.name == "Net/min") { c.name = "Net"; var t = c.GetComponent<TextMeshProUGUI>(); if (t != null) t.text = "Net"; }
+        }
+
+        static readonly string[] Cols = { "Made", "Used", "Lost", "Net" };
+        static readonly float[] ColDesign = { 86f, 86f, 76f, 90f };
+
+        /// <summary>Box width, filter buttons and number columns follow the snapped text size (once per canvas scale).</summary>
+        void FitColumns()
+        {
+            var box = Box;
+            var cv = box != null ? box.GetComponentInParent<Canvas>(true) : null;
+            if (cv == null) return;
+            float ppu = UiFont.PixelsPerUnit(cv.rootCanvas);
+            float key = ppu + (flowRoot != null && flowRoot.activeInHierarchy ? 1000f : 0f);     // hidden texts cannot be measured: refit per tab
+            if (Mathf.Approximately(key, columnsAt)) return;
+            columnsAt = key;
+            float g = UiFit.TextGrowth(cv);
+            box.sizeDelta = new Vector2(Mathf.Round(DesignWidth * Mathf.Min(g, 1.35f)), box.sizeDelta.y);
+            UiFit.FitButton(overviewTab, 150f);
+            UiFit.FitButton(flowTab, 150f);
+            if (scopeButton != null && scopeLabel != null)
+                UiFit.FitButton(scopeButton, Mathf.Max(150f, UiFit.WidestText(scopeLabel, "This run", "Lifetime") + 32f));
+            if (sortButton != null && sortLabel != null)
+                UiFit.FitButton(sortButton, Mathf.Max(210f, UiFit.WidestText(sortLabel, "Sort: net / min", "Sort: net total", "Sort: name") + 32f));
+            var header = flowRoot != null ? flowRoot.transform.Find("ColumnHeader") : null;
+            for (int i = 0; i < Cols.Length; i++)
+            {
+                var hc = header != null ? header.Find(Cols[i]) : null;
+                var ht = hc != null ? hc.GetComponent<TextMeshProUGUI>() : null;
+                float w = Mathf.Max(ColDesign[i], UiFit.WidestText(ht, Cols[i], "99.9k", "+99.9") + 8f);
+                SetWidth(hc, w);
+                if (flowRowTemplate != null) SetWidth(flowRowTemplate.transform.Find(Cols[i]), w);
+                foreach (var r in flowRows) if (r != null) SetWidth(r.transform.Find(Cols[i]), w);
+            }
+        }
+
+        static void SetWidth(Transform t, float w)
+        {
+            if (t == null) return;
+            var le = t.GetComponent<LayoutElement>();
+            if (le == null) le = t.gameObject.AddComponent<LayoutElement>();
+            le.preferredWidth = w; le.minWidth = w;
+        }
+
+        void ApplyBody(float h)
+        {
+            bodyH = h;
+            if (overviewLe != null) overviewLe.minHeight = overviewLe.preferredHeight = h;
+            if (flowLe != null) { flowLe.minHeight = h; flowLe.preferredHeight = h; }
+            if (flowScrollLe == null || flowRoot == null || !flowRoot.activeSelf) return;
+            // the list gets what the buttons, the note and the column heads leave
+            var fr = (RectTransform)flowRoot.transform;
+            var vl = fr.GetComponent<VerticalLayoutGroup>();
+            if (vl == null) return;
+            // a full pass first, so the wrapped note is measured at its real width
+            if (Box != null) LayoutRebuilder.ForceRebuildLayoutImmediate(Box);
+            float other = vl.preferredHeight - LayoutUtility.GetPreferredHeight((RectTransform)flowScrollLe.transform);
+            flowScrollLe.minHeight = 0f;
+            flowScrollLe.preferredHeight = Mathf.Max(60f, Mathf.Floor(h - other));
+        }
+
+        protected override void ResetBody() { FitColumns(); ApplyBody(BodyHeight); }
+        protected override void ShrinkBody(float over) => ApplyBody(Mathf.Max(MinBodyHeight, bodyH - over));
 
         void Update()
         {
@@ -113,7 +254,8 @@ namespace IdleGrounds.Game
         void Refresh()
         {
             nextRefresh = Time.unscaledTime + 1f;
-            if (rowsRoot != null) rowsRoot.gameObject.SetActive(!showFlow);
+            if (overviewRoot != null) overviewRoot.SetActive(!showFlow);
+            else if (rowsRoot != null) rowsRoot.gameObject.SetActive(!showFlow);
             if (flowRoot != null) flowRoot.SetActive(showFlow);
             Tint(overviewTab, !showFlow);
             Tint(flowTab, showFlow);
