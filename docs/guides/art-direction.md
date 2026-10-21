@@ -34,6 +34,11 @@ Set and protect the look: style rules, palette, sizes, the look of NPCs, enemies
 - Diagonal / rounded coast and joint pieces; wall width and end frames; fishing macro; `sky_depth`.
 - Placeholders under `Art/Islands|Sky|Bridges` until replaced by same-named delivery.
 - Section 3.7 batch (144 keys) is `blocked` on the artist in the plan.
+- **Building density (2026-10-21):** owner says all buildings look too pixelated / low quality (`vp_props`). Audit + reference sheet done (`docs/art/reference/buildings-sheet.png`, `tools/art-ref/buildings-sheet.ps1`: 8 REF, 10 CLEAN, 8 REDRAW); redo draft ART-SPEC 3.9 waits on Hub question `art_density` (32 vs 64 px per cell, scope) and is not on Drive yet.
+- **Snowy Fishing (2026-10-21, `vp_fishing`):** ART-SPEC 3.8 sent to Drive. Snow is a mid-value field (P06 base, P07 only on crests) to respect `vp_mood`; ice shelf strip laid along the pond curve; no green decor on Fishing.
+
+## Rule change log
+- 2026-10-21: Fishing palette (ART-SPEC 1.3) is now snow P05-P07 + ice P27-P29 + water P26-P27. Building target rules (ART-SPEC 3.9, pending density): projection test beside Paper Mill / Storehouse / Meditation Pavilion, silhouette at least ~85 % of the footprint width, smallest detail a 2x2 cluster, 1-px noise at most ~16 % (sheet metric), no baked shadow or steam in static frames.
 
 ## Owner feedback that constrains this role
-`owner-picks-2026-10-12-coast.json` (both answers above), ADR 0005 (user: "the perspective of the floating island backgrounds doesn't match the game island perspective"), and the ongoing owner sign-off on coast looks through the Hub (`coast_signoff`).
+`owner-picks-2026-10-12-coast.json` (both answers above), `owner-picks-2026-10-21-visual.json` (`vp_props` audit + "too pixelated", `vp_fishing` snow, `vp_mood` calmer ground, `vp_zoom` crisp steps), ADR 0005 (user: "the perspective of the floating island backgrounds doesn't match the game island perspective"), and the ongoing owner sign-off on coast looks through the Hub (`coast_signoff`).

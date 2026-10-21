@@ -148,6 +148,10 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-21: merged bg/artdir: 26-building audit (docs/art/reference/buildings-sheet.png, ART-SPEC 3.9 pending), Hub question art_density (pixel density), snowy Fishing brief ART-SPEC 3.8 mirrored to Drive.
+
+- 2026-10-21: owner answered the 8 visual-pass batch B questions (docs/Design/owner-picks-2026-10-21-visual.json): panels anchored on buildings, Pixelify Sans + icons everywhere, icon-only bar, map zoom step at 120 cells, calmer ground, all 26 buildings redone (too pixelated), snowy Fishing island. Batch B code + art-director brief started in bg copies.
+
 - 2026-10-21: large art delivery found on Drive (Islands-038..050, Buildings-014..024, Creatures-006..008, Items-009, Nodes-007, UI-022..024, FX-005/006; 156 new + 15 updated files); ingame-art-reviewer agent started on intake in a bg task copy.
 
 - 2026-10-13: Android/touch port. TouchInputController (tap / hold / drag-pan / pinch / Give mode / aim-confirm), MobileLayer (canvas scale by dpi, safe area, 48 dp hit padding, Swap/Give/Place/Cancel buttons, Back-key menu, 60 fps, landscape), UI input actions got Touchscreen bindings, tooltips work on touch, BuildScript.BuildAndroid + build.sh android, phone screenshot presets. Tests: 15 new PlayMode touch tests (class A_TouchInputTests, sorts first on purpose), 4 EditMode MobileUi tests. GameSmokeTests.Logistics_WispLaunches_ConverterCompletes fails on master too (pre-existing).
