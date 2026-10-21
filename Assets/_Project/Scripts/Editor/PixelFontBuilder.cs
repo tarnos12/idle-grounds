@@ -9,8 +9,8 @@ namespace IdleGrounds.Editor
 {
     /// <summary>
     /// "Idle Grounds/UI/Build Pixel Font (Pixelify Sans)" (owner pick vp_look = font, 2026-10-21: one pixel font for all
-    /// UI text). Builds a STATIC TMP font asset from the OFL TTF in <see cref="Dir"/> (bold is TMP's synthetic bold: a
-    /// weight-table typeface would draw bold glyphs in a sub-mesh, which lost its sorting layer on world text), a Floater material twin
+    /// UI text). Builds two STATIC TMP font assets (regular and bold, sampled on the font's pixel grid) from the OFL TTFs in
+    /// <see cref="Dir"/>, a Floater material twin
     /// (outlined world text), sets the regular as the TMP default font and keeps LiberationSans SDF as the fallback for
     /// glyphs Pixelify Sans lacks. Static atlases never change in Play, so they never dirty the repo; only the existing
     /// dynamic "LiberationSans SDF - Fallback" still collects rare glyphs (do not commit that churn).
@@ -20,16 +20,21 @@ namespace IdleGrounds.Editor
     public static class PixelFontBuilder
     {
         public const string Dir = "Assets/_Project/Art/Fonts/PixelifySans";
-        const string RegularTtf = Dir + "/PixelifySans-Regular.ttf";
-        public const string RegularAsset = Dir + "/PixelifySans SDF.asset";
-        const string OldBoldAsset = Dir + "/PixelifySans Bold SDF.asset";
+        const string RegularTtf = Dir + "/PixelifySans-Regular.ttf", BoldTtf = Dir + "/PixelifySans-Bold.ttf";
+        public const string RasterAsset = Dir + "/Resources/" + IdleGrounds.Game.UiFont.RasterResource + ".asset";
+        public const string RegularAsset = Dir + "/PixelifySans SDF.asset", BoldAsset = Dir + "/Resources/" + IdleGrounds.Game.UiFont.BoldResource + ".asset";
         public const string FloaterMat = Dir + "/PixelifySans SDF - Floater.mat";
         const string LiberationAsset = "Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset";
         const string LiberationFloater = "Assets/_Project/Art/Fonts/LiberationSans SDF - Floater.mat";
         const string SettingsAsset = "Assets/TextMesh Pro/Resources/TMP Settings.asset";
 
-        /// <summary>Sampling size / padding: 48 pt with 6 px padding gives clean SDF edges from 12 to 40 px on screen.</summary>
-        const int SamplingPt = 48, Padding = 6, AtlasSize = 1024;
+        /// <summary>
+        /// Pixelify Sans is drawn on a grid of ~91 font units (1000 / 11): one font pixel = 1/11 em. Sampling at 44 pt puts
+        /// every font pixel on exactly 4 x 4 atlas texels, so the SDF keeps square corners and the 1-pixel counters (c, e,
+        /// B, 8) stay open; 6 texels of padding is 1.5 font pixels of spread. (The first build sampled at 48 pt = 4.36
+        /// texels per font pixel and, with the synthetic bold, closed the counters.)
+        /// </summary>
+        public const int GridPerEm = 11, SamplingPt = 44, Padding = 6, AtlasSize = 1024;
 
         /// <summary>ASCII, Latin-1 and the symbols the UI strings use (missing ones fall back to LiberationSans).</summary>
         static string Charset()
@@ -47,7 +52,13 @@ namespace IdleGrounds.Editor
             var liberation = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(LiberationAsset);
             var reg = Make(RegularTtf, RegularAsset, "PixelifySans SDF", liberation);
             if (reg == null) { Debug.LogError("[PixelFont] build failed"); return; }
-            if (File.Exists(OldBoldAsset)) AssetDatabase.DeleteAsset(OldBoldAsset);     // first build made a bold typeface asset
+            // the real bold cut as its own asset: UiFont gives it to Bold texts (TMP's synthetic bold dilates the glyphs
+            // and fills the 1-pixel counters of a pixel font; a weight-table link would draw bold in a sub-mesh)
+            var bold = Make(BoldTtf, BoldAsset, "PixelifySans Bold SDF", liberation);
+            if (bold == null) { Debug.LogError("[PixelFont] bold build failed"); return; }
+            // pixel-exact cuts for screen UI: hinted raster at 22 px (2 px per font pixel), point-filtered, drawn 1:1
+            var r22 = Make(RegularTtf, RasterAsset, IdleGrounds.Game.UiFont.RasterResource, reg, raster: true);
+            if (r22 == null) { Debug.LogError("[PixelFont] raster build failed"); return; }
 
             // outlined world-text twin of the LiberationSans Floater material
             var lf = AssetDatabase.LoadAssetAtPath<Material>(LiberationFloater);
@@ -74,7 +85,7 @@ namespace IdleGrounds.Editor
                 EditorUtility.SetDirty(settings);
             }
             AssetDatabase.SaveAssets();
-            Debug.Log("[PixelFont] RESULT OK: " + RegularAsset + " (" + reg.characterTable.Count + " chars); TMP default font set");
+            Debug.Log("[PixelFont] RESULT OK: " + RegularAsset + " (" + reg.characterTable.Count + " chars) + " + BoldAsset + " (" + bold.characterTable.Count + " chars); TMP default font set");
         }
 
         /// <summary>Point an SDF material at <paramref name="font"/>'s atlas (texture, size, gradient scale).</summary>
@@ -89,18 +100,29 @@ namespace IdleGrounds.Editor
             m.SetFloat(ShaderUtilities.ID_WeightBold, font.boldStyle);
         }
 
-        static TMP_FontAsset Make(string ttfPath, string assetPath, string name, TMP_FontAsset fallback)
+        static TMP_FontAsset Make(string ttfPath, string assetPath, string name, TMP_FontAsset fallback, bool raster = false)
         {
             var ttf = AssetDatabase.LoadAssetAtPath<Font>(ttfPath);
             if (ttf == null) { Debug.LogError("[PixelFont] missing " + ttfPath); return null; }
-            var fa = TMP_FontAsset.CreateFontAsset(ttf, SamplingPt, Padding, GlyphRenderMode.SDFAA, AtlasSize, AtlasSize, AtlasPopulationMode.Dynamic, true);
+            var fa = raster
+                ? TMP_FontAsset.CreateFontAsset(ttf, (int)IdleGrounds.Game.UiFont.PixelSize, 2, GlyphRenderMode.RASTER_HINTED, 512, 512, AtlasPopulationMode.Dynamic, true)
+                : TMP_FontAsset.CreateFontAsset(ttf, SamplingPt, Padding, GlyphRenderMode.SDFAA, AtlasSize, AtlasSize, AtlasPopulationMode.Dynamic, true);
             if (fa == null) { Debug.LogError("[PixelFont] CreateFontAsset failed for " + ttfPath); return null; }
             fa.name = name;
             fa.TryAddCharacters(Charset(), out string missing);
             if (!string.IsNullOrEmpty(missing)) Debug.Log("[PixelFont] " + name + " lacks " + missing.Length + " char(s) (LiberationSans fallback): " + missing);
             fa.atlasPopulationMode = AtlasPopulationMode.Static;       // never grows in Play: no repo churn
+            if (raster)
+            {
+                if (fa.atlasTexture != null) fa.atlasTexture.filterMode = FilterMode.Point;
+                var bmp = Shader.Find("TextMeshPro/Bitmap");
+                if (fa.material != null && bmp != null && fa.material.shader != bmp) fa.material.shader = bmp;
+                if (fa.material != null) fa.material.SetTexture(ShaderUtilities.ID_MainTex, fa.atlasTexture);
+            }
+            fa.boldStyle = 0.2f;        // inline <b> on the regular cut: a light dilation only (0.75 fills 1-pixel counters)
             fa.fallbackFontAssetTable = fallback != null ? new List<TMP_FontAsset> { fallback } : new List<TMP_FontAsset>();
 
+            Directory.CreateDirectory(Path.GetDirectoryName(assetPath));
             if (File.Exists(assetPath)) AssetDatabase.DeleteAsset(assetPath);
             AssetDatabase.CreateAsset(fa, assetPath);
             var tex = fa.atlasTextures != null && fa.atlasTextures.Length > 0 ? fa.atlasTextures[0] : fa.atlasTexture;

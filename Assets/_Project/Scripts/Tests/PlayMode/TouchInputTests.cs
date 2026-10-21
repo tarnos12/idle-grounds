@@ -68,6 +68,10 @@ namespace IdleGrounds.PlayMode.Tests
             layer.Refresh();
             for (int i = 0; i < 40 && !layer.Built; i++) yield return null;
             Assert.IsTrue(layer.Built, "MobileLayer built its HUD");
+            // the 640x480 test screen is far smaller than a phone: with the 22 px pixel font an expanded quest panel reaches the
+            // screen centre where these tests touch the world, so start collapsed (as MobileLayer does on a real phone session)
+            Sim.SetQuestPanelHidden(true);
+            var qp = Object.FindFirstObjectByType<QuestPanelView>(); if (qp != null) qp.Rebuild(true);
             for (int i = 0; i < 4; i++) yield return null;
 
             hand = Object.FindFirstObjectByType<HandController>();

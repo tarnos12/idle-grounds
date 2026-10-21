@@ -82,6 +82,17 @@ namespace IdleGrounds.Game
                     if (st != null) st.textWrappingMode = TMPro.TextWrappingModes.Normal;
                 }
                 if (tipText != null) tipText.textWrappingMode = TMPro.TextWrappingModes.Normal;
+                // the pixel font is drawn at 22 (2 px per font pixel): wider link rows, room for the state word and the number
+                var gl = grid != null ? grid.GetComponent<GridLayoutGroup>() : null;
+                if (gl != null) gl.cellSize = new Vector2(PanelWidth - 40f, 44f);
+                if (rowTemplate != null)
+                {
+                    foreach (var (n, w) in new[] { ("StateWord", 100f), ("Index", 36f) })
+                    {
+                        var le = rowTemplate.transform.Find(n)?.GetComponent<LayoutElement>();
+                        if (le != null) le.minWidth = le.preferredWidth = w;
+                    }
+                }
                 // the picking hint and the refusal line leave the Add-link row and wrap under it
                 var header = addButton != null ? addButton.transform.parent : null;
                 int at = header != null && header.parent == panel.transform ? header.GetSiblingIndex() + 1 : -1;
@@ -95,7 +106,7 @@ namespace IdleGrounds.Game
         }
 
         /// <summary>Panel width (canvas units) beside the lantern (owner pick vp_panels): one link row (600) plus the frame.</summary>
-        public const float PanelWidth = 640f;
+        public const float PanelWidth = 820f;
         BuildingPanelAnchor anchor;
         public BuildingPanelAnchor Anchor => anchor;
 
