@@ -61,6 +61,7 @@ namespace IdleGrounds.Game
             a.SetMuted(!a.Muted);
             PaintMute();
             if (!a.Muted) AudioService.Play("click");
+            if (BottomBarView.Instance != null) BottomBarView.Instance.PaintToggleIcons();
         }
 
         public void ToggleMotion()
@@ -68,6 +69,7 @@ namespace IdleGrounds.Game
             Juice.SetReduceMotion(!Juice.ReduceMotion);
             PaintMotion();
             AudioService.Play("click");
+            if (BottomBarView.Instance != null) BottomBarView.Instance.PaintToggleIcons();
         }
 
         void PaintMotion()

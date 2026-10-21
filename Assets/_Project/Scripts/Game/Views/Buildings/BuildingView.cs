@@ -75,6 +75,8 @@ namespace IdleGrounds.Game
 
         public IReadOnlyList<BuildingFace> Faces => faces;
         public SpriteRenderer Panel => panel;
+        /// <summary>The real building art (null for placeholder buildings); used to anchor building panels beside the art.</summary>
+        public SpriteRenderer ArtRenderer => RealArt ? art : null;
         public EdgeFrame Border => border;
         public float BorderUnits => ViewKit.U(2f);
 

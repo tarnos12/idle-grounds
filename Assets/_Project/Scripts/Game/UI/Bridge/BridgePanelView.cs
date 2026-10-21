@@ -53,7 +53,13 @@ namespace IdleGrounds.Game
             if (rowTemplate != null) rowTemplate.gameObject.SetActive(false);
             if (unpairButton != null) unpairButton.onClick.AddListener(() => Unpair());
             if (closeButton != null) closeButton.onClick.AddListener(Close);
+            if (panel != null) anchor = BuildingPanelAnchor.Attach(panel, PanelWidth);
         }
+
+        /// <summary>Panel width (canvas units) beside the bridge (owner pick vp_panels): fits a candidate row with both buttons.</summary>
+        public const float PanelWidth = 760f;
+        BuildingPanelAnchor anchor;
+        public BuildingPanelAnchor Anchor => anchor;
 
         public void Open(string area, Building b)
         {
@@ -62,6 +68,7 @@ namespace IdleGrounds.Game
             Area = area; BuildingId = b.id;
             Reason = null; listSig = long.MinValue; panelKey = long.MinValue;
             panel.SetActive(true);
+            if (anchor != null) anchor.Bind(area, b.id);
             var def = runner.Config.Building(b.type);
             if (icon != null) icon.sprite = sprites.Building(b.type);
             ViewKit.SetText(titleText, (def != null ? def.name : "Spirit Bridge") + " - " + IslandName(area));

@@ -66,6 +66,8 @@ namespace IdleGrounds.Game
         float nextRefresh;
 
         public string Key => lastKey;
+        /// <summary>The part on screen (expanded panel or the collapsed chip), or null; building panels keep clear of it.</summary>
+        public RectTransform VisibleRect => panel != null && panel.activeInHierarchy ? (RectTransform)panel.transform : chip != null && chip.gameObject.activeInHierarchy ? (RectTransform)chip.transform : null;
         public bool Collapsed => runner != null && runner.State != null && runner.State.quest.hidden;
         public bool ClaimInteractable => claimButton != null && claimButton.interactable;
         /// <summary>Active quest description (+ "Next step" hint line) as shown.</summary>

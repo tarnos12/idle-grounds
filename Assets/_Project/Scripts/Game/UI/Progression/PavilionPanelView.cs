@@ -45,7 +45,33 @@ namespace IdleGrounds.Game
             if (panel != null) panel.SetActive(false);
             if (recruitButton != null) recruitButton.onClick.AddListener(() => Recruit());
             if (closeButton != null) closeButton.onClick.AddListener(Close);
+            if (panel != null)
+            {
+                anchor = BuildingPanelAnchor.Attach(panel, PanelWidth);
+                // beside the building the panel is narrower than the old bottom dock: the reason line wraps under the Recruit button
+                if (reasonText != null && recruitButton != null && reasonText.transform.parent == recruitButton.transform.parent)
+                {
+                    var row = reasonText.transform.parent;
+                    var h = row.GetComponent<HorizontalLayoutGroup>();
+                    if (h != null)
+                    {
+                        DestroyImmediate(h);
+                        var v = row.gameObject.AddComponent<VerticalLayoutGroup>();
+                        v.spacing = 6f; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandWidth = false; v.childForceExpandHeight = false;
+                        v.childAlignment = TextAnchor.UpperLeft;
+                    }
+                    var le = reasonText.GetComponent<LayoutElement>();
+                    if (le != null) le.preferredWidth = PanelWidth - 60f;
+                    reasonText.textWrappingMode = TMPro.TextWrappingModes.Normal;
+                }
+                if (hintText != null) hintText.textWrappingMode = TMPro.TextWrappingModes.Normal;
+            }
         }
+
+        /// <summary>Panel width (canvas units) beside the pavilion (owner pick vp_panels).</summary>
+        public const float PanelWidth = 640f;
+        BuildingPanelAnchor anchor;
+        public BuildingPanelAnchor Anchor => anchor;
 
         public void Open(string area, Building b)
         {
@@ -53,6 +79,7 @@ namespace IdleGrounds.Game
             sprites ??= new SpriteCache(runner.Database, null);
             Area = area; BuildingId = b.id;
             panel.SetActive(true);
+            if (anchor != null) anchor.Bind(area, b.id);
             var def = runner.Config.Building(b.type);
             icon.sprite = sprites.Building(b.type);
             titleText.text = def != null ? def.name : b.type;
