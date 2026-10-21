@@ -1,4 +1,4 @@
-# Idle Grounds — Art Request / Art Bible (v4 — island requesters, Sky-Bridge Shrine, 4 new islands, see §3.7)
+# Idle Grounds — Art Request / Art Bible (v5 — snowy Fishing, see §3.8; v4 — island requesters, Sky-Bridge Shrine, 4 new islands, see §3.7)
 
 Self-contained brief for the artist (human or AI image tool). Everything needed to produce, name, size and deliver the art is in this file. No other document is required.
 
@@ -84,7 +84,7 @@ Chinese ink-and-wash *shan shui* landscapes with peaks rising out of mist; the s
 
 Colour roles (to keep the world readable): **green/jade = nature and spirit herbs; cinnabar red = sect buildings and talismans; gold = rewards, Altar, Dragon, fuel/value; cyan = wisps, qi, water, sky; orange = fire and lava; violet = celestial / star items.**
 
-Island ground palettes: Center = P13 P14 P15 + path P05 P06; Farm = P22 P23 P15 + paddy water P27 P28; Mine = P03 P04 P05 P06; Fishing = P26 P27 P28 + shore P23 P14; Volcano = P01 P02 P03 + lava P30 P19; Spirit Grove = P08 P09 P13 P14; Celestial Peak = P06 P07 P29 P31 P32; (v4) Lotus Marsh = P08 P09 P13 + shallows P26 P27 P28; Thunder Crag = P02 P03 P04 + crystal P28 P29 P32; Azure Beast Ravine = P09 P13 P14 + rock P21 P22 P05 + bone P06 P07; Tribulation Peak = P06 P09 P10 P11 + scorch P01 P02 P20 (see §3.7).
+Island ground palettes: Center = P13 P14 P15 + path P05 P06; Farm = P22 P23 P15 + paddy water P27 P28; Mine = P03 P04 P05 P06; Fishing (v5, snowy, §3.8) = snow P05 P06 P07 + ice P27 P28 P29 + open water P26 P27; Volcano = P01 P02 P03 + lava P30 P19; Spirit Grove = P08 P09 P13 P14; Celestial Peak = P06 P07 P29 P31 P32; (v4) Lotus Marsh = P08 P09 P13 + shallows P26 P27 P28; Thunder Crag = P02 P03 P04 + crystal P28 P29 P32; Azure Beast Ravine = P09 P13 P14 + rock P21 P22 P05 + bone P06 P07; Tribulation Peak = P06 P09 P10 P11 + scorch P01 P02 P20 (see §3.7).
 
 ---
 
@@ -182,8 +182,8 @@ Edge tiles show a small lip/rim of the ground type fading to the cliff colour (n
 | `island_center_plaza_32x32_3f.png` | Center | Altar plaza: carved flagstone with a faint gold taiji / bagua ring pattern (3 variants, centre ones seamless). | 32×32 | 3 | P1 | integrated |
 | `island_farm_ground_32x32_19f.png` | **Farm** — rice paddies | Tilled dark-tan soil with flooded **rice-paddy terrace** look (shallow water P27/P28 reflections between earth bunds, young rice shoots). Sandy band variant in frame 2. Scatter: reeds, frog, straw. | 32×32 | 19 | P2 | requested |
 | `island_mine_ground_32x32_19f.png` | **Mine** — grey rock | Grey layered rock and gravel with faint ore flecks; hard, angular. Scatter: pebbles, cracks, a lantern-lit lichen. | 32×32 | 19 | P2 | requested |
-| `island_fishing_ground_32x32_19f.png` | **Fishing** — lotus pond | Wet pond bank: mossy shore, wet sand, reeds at the corners. (The pond itself uses the water tile below.) Scatter: lotus pads, reeds, stepping stones. | 32×32 | 19 | P2 | requested |
-| `island_fishing_water_32x32_4f.png` | Fishing | Animated pond water, seamless, 4-frame ripple loop with soft lotus pads and koi shadows. Used inside the centre zone. | 32×32 | 4 | P2 | requested |
+| `island_fishing_ground_32x32_19f.png` | **Fishing** — lotus pond | Wet pond bank: mossy shore, wet sand, reeds at the corners. (The pond itself uses the water tile below.) Scatter: lotus pads, reeds, stepping stones. | 32×32 | 19 | P2 | superseded by §3.8 (snow) |
+| `island_fishing_water_32x32_4f.png` | Fishing | Animated pond water, seamless, 4-frame ripple loop with soft lotus pads and koi shadows. Used inside the centre zone. | 32×32 | 4 | P2 | superseded by §3.8 (snow) |
 | `island_volcano_ground_32x32_19f.png` | **Volcano** — obsidian | Black-violet obsidian plates (P01–P03, sheen P31) with **glowing lava cracks** (P30/P19) between them. Scatter: embers, ash piles, small crystals. | 32×32 | 19 | P2 | requested |
 | `island_volcano_lavacrack_32x32_4f.png` | Volcano | Transparent overlay: glowing crack glimmer loop placed over centre fill. | 32×32 | 4 | P3 | requested |
 | `island_grove_ground_32x32_19f.png` | **Spirit Grove** — bamboo moss | Deep teal moss, bamboo-leaf litter, dappled light patches, faint jade glow spots. Scatter: mushrooms, ferns, fallen bamboo leaves, glowing spores. | 32×32 | 19 | P2 | requested |
@@ -452,6 +452,129 @@ A locked island is covered by a veil of mist and shows an **unlock sign** (stone
 **Reused, not redrawn:** `bld_ascension_gate` (+ `_pulse`) is now the **Heavenly Gate** (built on Celestial Peak; the ending). `fx_ascend_pillar` plays at the ending. Island undersides and the locked-island veil are shared by all 11 Islands.
 
 **Counts (v4):** Shrine + Sky Path 7 · NPC idle 11 + portraits 11 · UI 14 · biome tilesets 36 · nodes + fixture 10 · creatures 5 · buildings 19 static + 19 working · items 12 = **144 new files**.
+
+### 3.8 NEW (v5, 2026-10-21) — Fishing becomes a snowy northern Island
+
+**Why (owner decision 2026-10-21, `vp_fishing`):** Fishing already reads as snow, but by accident: its ground is a flat pale grey (P06), green lily pads, reeds and summer bushes stand on it, and the south wall is saturated teal with a green moss lip (evidence: `feedback/fishing_snow_current.png`). The owner chose to make it **snowy on purpose: snow props and ice at the pond edge.** The pond in the middle stays open water (fish and algae still surface there).
+
+**Mood:** Liu Zongyuan's poem *River Snow*: a lone old man in a straw cape, fishing alone in the cold river snow. That is our Fisher-Hermit Jiang. Quiet, hushed, cold-blue light, a little humorous (a snowman wearing a spare straw hat, a fish rack with one fish missing).
+
+**Rules (same as §3.6 / §3.7, plus the owner's coast rules):**
+- **3/4 top-down view**, light from the upper left, shadows down-right one tone darker. **PPU 32**, 32 px per cell. Only the 32 palette colours (§1.3). Binary alpha; 4 alpha steps only for snowfall, mist and ice glints. Formats identical to the delivered Center set (blob order §3.0 + `blob_mask_reference.json`, cliff-wall frame order §3.6, the curved-coast pieces of the 2026-10-12 Delivery log rows).
+- **Value band (owner pick `vp_mood`: calmer ground so buildings and resources stand out):** snow is **not** a white field. Fill base = **P06**; drift hollows and wind ripples **P05**; **P07 only** on sunlit drift crests and snow caps (at most ~10 % of a fill tile, never a white patch larger than ~6×6 px on the ground); cold accents P04.
+- **Coast (owner, binding):** natural coastline, tiles connect, **no 90-degree corners**, no 1-cell stair-steps, rounded lobes. Only the **south** coast shows a wall; W/E/N coasts show a **snow cornice lip** (3–4 px snow overhang with a 1 px P05 rim), no rock face.
+- Calm fills per the Center v2.1 recipe: one base colour, sparse detail (≤ ~8 %), no visible 32-px grid (no regular sparkle dots; place glints irregularly). Check fills tiled 4×4 at 2× before delivery.
+- Same-kind objects look the same across Islands: a snowy pine is still clearly a tree; props keep the silhouettes of their green cousins.
+- No green ground decor on land (no lily pads or lotus on snow). Lotus and lily pads leave Fishing entirely; Lotus Marsh keeps them.
+
+**Fishing palette (replaces the old Fishing line in §1.3):** snow P05 P06 P07 · cold shadow P04 · ice P27 P28 P29 · open water P26 P27 · rock P03 P04 P05 · pine needles P08 P09 · straw, reeds, wood P21 P22 P23 · accents P18 (lanterns, cloth), P24 (rare).
+
+**Order:** after the §3.7 P1 set (Shrine, Sky Path, 7 NPCs). Inside this section: P1 first (the identity: fill, macro, decor, curved wall, water, ice edge, snowy trees and small props), then P2, then P3.
+
+**Ground and coast** (`islands`) — same keys as the current Fishing files; the snow versions replace them.
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `island_fishing_ground_fill_32x32_3f.png` (snow) | 3 calm, seamless **packed-snow** fills: base P06, long low P05 wind ripples running from the upper left, a few P07 glints placed irregularly. | 32×32 | 3 | P1 | requested |
+| `island_fishing_macro_96x96_4f.png` (snow) | 4 organic patches, ±1 palette step from the fill, dithered edges, binary alpha: a deeper drift (P07 crest, P05 shadow on the down-right side), a wind-scoured patch with a few frozen grass tips (P22, sparse), a blue-grey hollow (P05/P04), a soft trail of small footprints. | 96×96 | 4 | P1 | requested |
+| `island_fishing_flowers_32x32_4f.png` (snow) | Small decor, no ink outline, one value step from the ground: frozen reed tuft, snow-capped pebbles, a frost flower, small bird tracks. | 32×32 | 4 | P1 | requested |
+| `island_fishing_scatter_32x32_4f.png` (snow) | Sparse overlays: snowflake glint, twig, fish bone, small ice shard. | 32×32 | 4 | P2 | requested |
+| `island_fishing_ground_blob_32x32_47f.png` (snow) + `blob_mask_reference.json` | Snow ground, 47-tile blob (§3.0 order); the coast rim is a rounded snow cornice, rounded outer corners, soft inner corners. | 32×32 | 47 | P2 | requested |
+| `island_fishing_cliffwall_round_32x96_4f.png` (snow) | **Curved south wall** (rules of the 2026-10-12 curved-coast request: 4 mid frames that tile seamlessly in any order, evenly lit, no left-to-right ramp, horizontal strata, top 6 px reserved for the tuck, ragged 16-px fade at the bottom, no strong vertical features): icy blue-grey rock P03–P05 with snow on the ledges and a snow lip; short, irregular icicles hang from the lip (not on every column). | 32×96 | 4 | P1 | requested |
+| `island_fishing_cliffwall_32x96_8f.png` (snow) | Straight south wall, §3.6 frame order, same rock; frame 7 = a **frozen waterfall** (icicle curtain) instead of a spout. | 32×96 | 8 | P2 | requested |
+| `island_fishing_sidewall_32x32_4f.png`, `island_fishing_sidewall_variants_32x32_8f.png` (snow) | W/E faces (Islands-034 format): icy rock with snow on the ledges. | 32×32 | 4 / 8 | P2 | requested |
+| `island_fishing_coast_edge_profile_32x8_2f.png` | Cross-section of the coast edge (rows run outward to inward): frame 0 = north edge with the snow overhang, frame 1 = the south rim. | 32×8 | 2 | P2 | requested |
+| `island_fishing_edge_lip_32x32_4f.png` (new key) | **Snow cornice lip** for the W/E/N coasts, frames as `island_edge_lip` (W, E, N, outer corner); replaces the shared green lip on Fishing. | 32×32 | 4 | P2 | requested |
+
+**Pond with an ice edge** (`islands`) — the pond is built in the game from the water tile with an organic shoreline; the ice edge is laid along that curve, like the curved coast wall.
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `island_fishing_water_32x32_4f.png` (snow) | **Cold open water**, seamless 4f loop: P26 base, slow P27 ripples, a few drifting ice crumbs (P28). **No lotus or lily pads**; faint koi shadows allowed (sparse). | 32×32 | 4 | P1 | requested |
+| `island_fishing_ice_edge_32x16_4f.png` (new key) | **Ice shelf along the pond shore**, seamless horizontally; frames = 4 variants that tile in any order. Rows from top (bank side) to bottom (water side): snow-dusted bank, flat ice P28 with P29 glints and a few P27 cracks, a thin broken edge, a 1 px dark waterline. No strong vertical features (the game bends it along curves). | 32×16 | 4 | P1 | requested |
+| `island_fishing_ice_floe_32x32_4f.png` (new key) | Loose ice floes and slush pans floating near the edge (4 shapes, binary alpha), stamped at random positions on the water. | 32×32 | 4 | P2 | requested |
+| `island_fishing_ice_hole_32x32_2f.png` (new key) | An ice-fishing hole cut into the shelf, with a tiny wooden stool and a line; frame 2: a fish tail flicks out. | 32×32 | 2 | P3 | requested |
+
+**Snow props** (`fixtures`; pivot bottom-centre; decoration only, not gatherable)
+
+| Key / file | Depicts | Size | Frames | Pri | Status |
+|---|---|---|---|---|---|
+| `deco_pine_snow_32x48_3f.png` (new key) | 3 snow-laden trees, same round silhouettes and size as `deco_tree_32x48_3f` (P08/P09 needles under P06/P07 snow caps, snow on the lit upper-left side); they replace the green decor trees on Fishing. | 32×48 | 3 | P1 | requested |
+| `deco_snow_props_32x48_8f.png` (new key) | 8 small 1×1 props: snow-capped stone lantern (warm P18/P24 glow), snowman wearing a straw hat, drift mound, frozen reed clump, stack of ice blocks, half-buried barrel, net post with icicles, snow-covered rock. | 32×48 | 8 | P1 | requested |
+| `deco_snow_props_64x64_4f.png` (new key) | 4 larger 2×1 props (art in the lower 32 px, up to 32 px above): fish-drying rack under a small snow roof (one fish missing), upturned snow-covered boat, woodpile under snow, small sampan frozen into ice. | 64×64 | 4 | P2 | requested |
+| `fix_spring_snow.png` (new key) | The Spring (`fix_spring`, same 2×2 shape) as a **warm spring in the snow**: open water with soft steam, snow on the stone rim, no moss or lotus. | 64×80 | 1 | P2 | requested |
+| `fix_spring_snow_flow_64x80_4f.png` (new key) | Same, working loop: the spout flows and steam drifts. | 64×80 | 4 | P3 | requested |
+| `island_underside_icicles_128x128.png` (new key) | Fishing underside piece, 3/4 like the `_3q` set: hanging rock with long icicles and frost, the bottom fading into 4-step alpha mist; pivot top-centre. | 128×128 | 1 | P3 | requested |
+| `fx_snowfall_256x256_4f.png` (new key, `fx`) | Light snowfall overlay for Fishing only: sparse 1–2 px flakes drifting down-right, seamless in both axes, 4 alpha steps, 4f loop. | 256×256 | 4 | P3 | requested |
+
+**Not redrawn for snow:** buildings (Algae Farm, Spirit Bridge, the Koi Pond of §3.7) keep their art; the game draws their contact shadow on the snow. `node_fish` and `node_algae` stay (they surface in the open water). **Jiang** (§3.7 P1) already fits: keep the straw hat and grass cape; please add a light dusting of snow on the hat brim and shoulders.
+
+**Expected result:** at zoom 2, Fishing reads at a glance as a calm snowy island: mid-light snow ground (darker than white), a dark open pond ringed by pale ice, snowy trees and a few props, an icy south cliff with icicles, nothing green on the ground. Buildings and the pond stay the most contrasted things on screen.
+
+### 3.9 PENDING (draft 2026-10-21) — building art redo: audit of all 26 buildings — **not sent to the artist yet**
+
+**Status: waiting on the owner's answer to Hub question `art_density`** (how many pixels per cell the world art uses). This section stays out of the Drive copy until the answer arrives; then the density-dependent part below is finalised and mirrored.
+
+**Owner decision 2026-10-21 (`vp_props`):** "Check all 26 existing buildings against one reference sheet", note: "All of them look too pixelated/low quality".
+
+**Reference sheet:** `docs/art/reference/buildings-sheet.png` (all 26 static sprites + Spirit Bridge at 2×, footprint box, verdict tag, metrics), in-game evidence `docs/art/reference/buildings-ingame.png`. Regenerate with `powershell -ExecutionPolicy Bypass -File tools/art-ref/buildings-sheet.ps1` (it also prints the metrics table).
+
+**Findings (measured from the PNGs and in-game captures at 1920×1080):**
+1. **Technically clean.** All 26: 100 % palette colours, binary alpha, canvases per §2.2. The problem is not the format.
+2. **Uneven pixels in game.** Zoom 2 draws one art pixel as 1.71 screen px, so art pixels come out 1, 2 or 3 px wide (mixels). This alone makes good pieces look rough. Fix in progress: the crisp zoom steps (owner pick `vp_zoom`: 4 / 3 / 2 / 1 screen px per art pixel = 15 / 20 / 30 / 60 cells across, plus a 120-cell map step).
+3. **Projection clash (8 pieces).** Kiln, Workbench, Brewery, Cauldron, Jade Carver, Star Anvil, Algae Farm and Herb Garden are drawn from a corner (isometric, diamond footprint). The rest are front 3/4. Corner pieces look rotated and off the grid.
+4. **1-px noise.** Our noise metric (share of interior pixels that differ from all 4 neighbours) is 13–16 % on the best pieces (Paper Mill, Loom, Mill, Storehouse, Forge, Altar) and 20–37 % on 13 others. Single-pixel detail turns to grit at zoom 2 and shimmers at the far zoom.
+5. **Weak footprint use.** Dragon Shrine fills 66 of 96 px width (reads as a thin pole), Brewery uses 84 of 128 px height (squat, small), Charcoal Pit is low with a weak outline (32 % dark edge pixels; others 55–93 %) and melts into the ground.
+6. **No contact shadow.** Every building looks pasted on the grass. The game adds a shared shadow (`fx_contact_shadow`, 2026-10-13 review P2-2); do not bake one.
+7. **Density.** At 32 px per cell, the closest zoom steps show each art pixel as a 3–4 px block. This is the owner's "too pixelated", and it is the open question.
+
+**Audit table** (n = 1-px noise %, c = colours; verdict REF = target look, CLEAN = keep the design, clean-up pass, REDRAW = new drawing):
+
+| Key | Canvas | n / c | What makes it look low quality | Verdict | Fix |
+|---|---|---|---|---|---|
+| `bld_center` (Altar) | 160×192 | 15 / 28 | Front 3/4, rich and readable; shared issues only (uneven zoom pixels, no shadow, density). | REF | — |
+| `bld_dragon` | 160×192 | 20 / 19 | Scale dither over the whole coil turns to grey grit at zoom 2–3; the head does not read at a glance; busy mossy nest. | CLEAN | 3-tone scale bands instead of dither, larger head and eye, calmer nest rim. |
+| `bld_ascension_gate` (Heavenly Gate) | 160×192 | 22 / 31 | Front, strong silhouette; gold filigree is 1-px work that shimmers at far zoom. | REF | Simplify filigree to 2-px clusters at the next pass. |
+| `bld_kiln` | 96×192 | 16 / 19 | Long dragon kiln receding diagonally up-right (corner view); sits off its 3×5 cells. | REDRAW | Upright brick kiln, mouth facing south, chimney at the back. |
+| `bld_forge` | 96×192 | 15 / 27 | Front 3/4 with a lit side face, clear glowing mouth. | REF | — |
+| `bld_pill_furnace` | 96×192 | 14 / 18 | Front and readable, but narrow (79 of 96 px); steam is baked into the static frame as white 1-px wisps. | CLEAN | Widen the base platform to the footprint; steam only in the working loop. |
+| `bld_star_anvil` | 96×192 | 18 / 23 | Corner view; a tower of small shapes with no clear anvil silhouette; violet sparkle noise. | REDRAW | Front 3/4: one big anvil on a stone plinth, forge shed behind, one violet glow. |
+| `bld_paper_mill` | 96×128 | 14 / 27 | Best balance of detail and readability. **Projection reference.** | REF | — |
+| `bld_storehouse` | 96×128 | 16 / 20 | Front, clear silhouette and colour. | REF | — |
+| `bld_loom` | 96×128 | 13 / 25 | Front, clean shapes. | REF | — |
+| `bld_mill` | 96×128 | 13 / 22 | Front, clean shapes. | REF | — |
+| `bld_infusion_array` | 96×128 | 14 / 25 | Readable, but the flat grey disc reads as a grey blob from far; corner pillars are tiny. | CLEAN | Stronger rune ring glow, taller pillars, darker base rim. |
+| `bld_workbench` | 96×128 | 14 / 18 | Corner view, diamond footprint. | REDRAW | Front-facing bench under a red awning, seen from front-above. |
+| `bld_talisman_atelier` | 96×128 | 21 / 25 | Roof seen from a slight corner; busy interior of 1-px strips. | CLEAN | Square the roof to the front; 3–4 interior shapes; the drying talisman line as the one clear motif. |
+| `bld_meditation_pavilion` | 96×128 | 19 / 23 | Front, clear hexagonal pavilion. | REF | — |
+| `bld_brewery` | 96×128 | 21 / 21 | Corner view; uses only 84 of 128 px height so it reads small; jar row becomes red noise. | REDRAW | Front 3/4 tavern shed, jars in a row along the front, flag sign rising into the overhang. |
+| `bld_cauldron` | 96×128 | 24 / 31 | Corner-view platform (diamond); vapour and clutter merge at zoom 2. | REDRAW | Front 3/4: ding cauldron centred on a square stone base, stairs facing south, vapour only in the working loop. |
+| `bld_jade_carver` | 96×128 | 30 / 29 | Corner view; many tiny tools and chips (noisiest 3×3 workshop). | REDRAW | Front stall: one big carving wheel and a jade block; drop the small tools. |
+| `bld_dragon_shrine` | 96×128 | 24 / 21 | Front, but only 66 of 96 px wide (reads as a pole); noisy dragon scales. | CLEAN | Widen the base and platform to the footprint; cleaner dragon coil. |
+| `bld_charcoal_pit` | 96×128 | 15 / 18 | Low mound with a weak outline; melts into the ground. | CLEAN | Darker selective outline, taller vent, more readable log stack. |
+| `bld_algae_farm` | 96×128 | 32 / 31 | Isometric diamond on stilts; four tanks of speckled green. | REDRAW | Rectangular platform seen front-above; 2×2 tanks with calm water and algae bands. |
+| `bld_herb_garden` | 96×128 | 35 / 27 | Isometric diamond grid of 9 beds; the noisiest building. | REDRAW | Rectangular raised bed seen front-above, 3 rows of glowing herbs, small bamboo shade. |
+| `bld_gathering_stone` | 32×48 | 37 / 15 | Swirl rune and dither turn to noise at 1×. | CLEAN | 2-px rune lines, solid stone planes. |
+| `bld_wisp_lantern` | 32×48 | 21 / 14 | Readable red lantern. | CLEAN | Minor: cleaner post. |
+| `bld_warding_seal` | 32×48 | 22 / 18 | Readable seal; 1-px talisman script is noise. | CLEAN | Seal circle as one clean 2-px ring; script as 2–3 strokes. |
+| `bld_furnace_spirit` | 32×48 | 33 / 19 | The cute face is not readable; it looks like a small brazier blob. | CLEAN | Bigger face in the flame (2-px eyes), simpler brazier. |
+
+Totals: **REF 8** (Altar, Heavenly Gate, Forge, Paper Mill, Storehouse, Loom, Mill, Meditation Pavilion), **CLEAN 10**, **REDRAW 8**. (Spirit Bridge, not one of the 26: CLEAN, n 23.)
+
+**Shared target (applies whatever the density answer):**
+1. **Projection test:** rectangular footprint, front (south) face and roof/top visible, no diamond footprints, no corner-on views. Check every piece beside `bld_paper_mill`, `bld_storehouse` and `bld_meditation_pavilion`.
+2. **Fill the footprint:** silhouette at least ~85 % of the footprint width; base flat on the bottom edge; roofs may use the overhang of §2.2.
+3. **Big shapes first:** 3–4 major shapes per building and one dominant colour (colour roles of §1.3), so each reads at a glance at zoom 2 and as a silhouette at the far zoom.
+4. **Clusters, not noise:** the smallest detail is a 2×2 cluster (single pixels only for highlights and glints); noise metric at or under ~16 %; dithering only as 2-tone bands, never checkerboard over large areas.
+5. **Shading:** light from the upper left, 3–4 tone ramps per material from the palette, selective outline with a closed outer silhouette.
+6. **Static frame = idle:** no baked ground shadow, steam or smoke in the static art (working loops only).
+7. Palette and alpha rules unchanged.
+
+**Density-dependent request (finalise after `art_density`):**
+- **`keep` (32 px per cell):** same keys and canvases; the 8 REDRAW pieces first (Kiln and Workbench before the rest: they are in the starter area), then the 10 CLEAN pieces.
+- **`bld64` / `obj64` / `all64` (64 px per cell):** same keys, **canvases doubled** (1×1 32×48 → 64×96; 3×3 96×128 → 192×256; Burner 96×192 → 192×384; 5×5 160×192 → 320×384; Spirit Bridge 64×64 → 128×128; working strips likewise, e.g. `bld_kiln_working_192x384_4f.png`), imported at **PPU 64** so the world size stays the same. Rules at 64: the outer silhouette outline is 2 px (so it survives the far zoom); the smallest detail is still a 2×2 cluster of the new pixels; light, palette and alpha as before. **Pilot first:** `bld_paper_mill` (proves a good piece gains from the density), `bld_kiln` and `bld_workbench` (the two starter-area redraws), checked in game at every zoom step before the rest. Then the starter area (Altar, Storehouse, Gathering Stone, Wisp Lantern, Warding Seal), then by Island unlock order. The 19 new buildings of §3.7 are drawn at 64 from the start. For `obj64` / `all64` the same rule extends to nodes, fixtures, trees, props, NPCs and creatures (and for `all64` to ground, coast, items and icons); those lists are added here once chosen.
+- **`painted`:** not a redo of this list; it needs a new style bible (§1–2 rewritten). Nothing is requested until that is written.
+- **`later`:** only the 8 REDRAW pieces at 32 px per cell; the rest waits.
 
 ---
 
@@ -975,6 +1098,8 @@ Review process: files in `incoming` are imported into Unity, checked in-game, an
 |---|---|---|
 | v1 — initial request | 2026-10-04 | First full art request: 32-colour xianxia palette, technical spec, floating-island tilesets, sky, Spirit Bridge, all 183 manifest keys, UI chrome and FX. All statuses `requested`. |
 | v4 — requesters, shrine, 4 new islands | 2026-10-12 | New §3.7 (ADR 0007): ascension removed; Sky-Bridge Shrine + Sky Paths, 11 requester NPCs (idle + portrait), request UI, four new biomes (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) with full tilesets, nodes, Azure Wolf, 19 new buildings (+ working loops) and 12 items — 144 new files. Retired: perk_* (15), ui_vow_* (4), ui_ascend, island_unlock_stele_* (3). Ascension Gate art reused as the Heavenly Gate. |
+| v5 — snowy Fishing | 2026-10-21 | New §3.8 (owner pick `vp_fishing`): Fishing becomes a snowy northern Island on purpose. Snow ground fill, macro, decor, blob, curved and straight south walls with icicles, side walls, snow cornice lip and edge profile; cold open water with an ice shelf along the pond shore, floes and an ice-fishing hole; snowy trees, snow props, a warm spring in the snow, an icicle underside and a snowfall overlay. Fishing palette in §1.3 changed to snow + ice + water; the old Fishing ground/water rows of §3.1 are superseded. |
+| draft — building audit | 2026-10-21 | New §3.9 (owner pick `vp_props`, "all of them look too pixelated / low quality"): audit of all 26 buildings against one reference sheet (8 REF, 10 CLEAN, 8 REDRAW), shared target rules, and a density-dependent redo request. **Pending the owner answer `art_density`; not sent to the artist.** |
 | v2 — irregular islands | 2026-10-04 | New §3.0: islands are hand-painted irregular shapes (never squares); the coast is a visual margin 8–30 cells (bold lobes, bays, islets) around the square 93×93 playable area. Ground tilesets become 47-tile blob sets per biome (`island_<biome>_ground_blob_32x32_47f.png`; the 19-tile strip stays as a minimum); cliff rim must cover diagonals, corners and end caps; underside decorations must combine under any coastline. |
 
 ### Delivery log
