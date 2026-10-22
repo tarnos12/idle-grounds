@@ -65,7 +65,7 @@ namespace IdleGrounds.Game
             spriteRenderer.flipX = false;
             if (RealArt)
             {
-                // native PPU-32 size (1 world unit = 32 px), bottom-pivot art with feet just below the sim position
+                // native size (1 world unit = 1 cell = 32 texels at PPU 32, 64 at PPU 64 / obj64), bottom-pivot art with feet just below the sim position
                 spriteRenderer.sprite = idle[0];
                 spriteRenderer.transform.localScale = Vector3.one;
                 spriteRenderer.transform.localPosition = new Vector3(0f, -ViewKit.U(FeetDropPx), 0f);

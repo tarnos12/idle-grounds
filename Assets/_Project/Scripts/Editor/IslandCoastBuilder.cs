@@ -1292,7 +1292,8 @@ namespace IdleGrounds.Editor
                         if (type == 0 && stone != null) { pick = stone; sc = 1f; }
                         else if (type == 1 && bush != null) { pick = bush; sc = 1f; }
                         else if (type == 3) { pick = trees[rng.Next(trees.Length)]; sc = 1f; }
-                        float k = pick.pixelsPerUnit / 32f;
+                        // obj64 (ART-SPEC §3.9): PPU-64 art's bounds are already in cells (scale 1), like PPU-32 art
+                        float k = Mathf.Approximately(pick.pixelsPerUnit, IdleGrounds.Game.Data.ArtKeys.HighDensity) ? 1f : pick.pixelsPerUnit / 32f;
                         sr.transform.localPosition = new Vector3(p.x, p.y - 0.35f - pick.bounds.min.y * (sc / k), 0f);   // sprite bottom sits on the edge line (any pivot)
                         sr.transform.localScale = new Vector3(sc / k, sc / k, 1f);
                         sr.sprite = pick;

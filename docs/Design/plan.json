@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-22 06:13",
+  "updated": "2026-10-22 06:31",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -263,10 +263,10 @@
         {
           "title": "Building art redo: reference sheet for all 26 buildings",
           "detail": "Owner 2026-10-22: PPU 64 for everything standing on the ground; ground/coast stay 32. Pilot: Paper Mill, Kiln, Workbench checked in game first, then the rest.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "now": "Art director finalising ART-SPEC 3.9 pilot request + code support for PPU 64 objects"
+          "blockedBy": "ART-SPEC 3.9 v6 (obj64) mirrored to Drive 2026-10-22: pilot A (Paper Mill, Kiln, Workbench @64 + loops) requested; PPU 64 intake + views ready on bg/ppu64. Waiting on the artist's pilot delivery, then in-game check + owner sign-off before steps B-F"
         },
         {
           "title": "Snowy northern Fishing island",

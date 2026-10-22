@@ -1,4 +1,4 @@
-# Idle Grounds — Art Request / Art Bible (v5 — snowy Fishing, see §3.8; v4 — island requesters, Sky-Bridge Shrine, 4 new islands, see §3.7)
+# Idle Grounds — Art Request / Art Bible (v6 — 64 px per cell for standing objects, pilot first, see §3.9; v5 — snowy Fishing, see §3.8; v4 — island requesters, Sky-Bridge Shrine, 4 new islands, see §3.7)
 
 Self-contained brief for the artist (human or AI image tool). Everything needed to produce, name, size and deliver the art is in this file. No other document is required.
 
@@ -37,7 +37,7 @@ Self-contained brief for the artist (human or AI image tool). Everything needed 
 | Theme | **Xianxia / cultivation fantasy.** An immortal sect's grounds on floating islands above a sea of clouds. Jade, cinnabar red, gold, ink-black, misty whites. Spirit-qi glows in cyan / green / gold. |
 | Style | **Pixel art**, **top-down ¾ view** (like Stardew Valley / Eastward): we see the top of the ground and the front face + roof of objects. Crisp. **No anti-aliasing against transparency**, no blur, no gradients except dithered ones. |
 | Light | Soft light from the **upper left**. Shadows fall down-right, 1 tone darker than the ground (not black). One-pixel dark outline (palette ink) around items, creatures and icons; buildings and terrain use a darker shade of their own colour as outline ("selective outline"). |
-| Palette | 32 colours (below). Do not add colours; use only the palette (FX glows may use the 4-step alpha rule in section 2). |
+| Palette | 32 colours (below). Do not add colours; use only the palette (FX glows may use the 4-step alpha rule in section 2). **v6:** standing objects drawn at 64 px per cell may also use the 8 extension colours P33–P40 (§3.9.5). |
 | Camera | The player sees 17.5 tiles across at the closest zoom and up to 52 tiles across at the furthest. Silhouettes and colour blocking must read small; avoid 1-px noise. |
 | Tone | Calm, serene, a little humorous. Buildings look like handmade sect workshops (bamboo scaffolds, tiled eaves, paper lanterns), not heavy industry. Nothing grim, no blood. |
 
@@ -82,6 +82,8 @@ Chinese ink-and-wash *shan shui* landscapes with peaks rising out of mist; the s
 | P31 | Celestial violet dark | `#3A2A63` | night, star rock shadow, obsidian sheen |
 | P32 | Celestial violet | `#7D5FC4` | star rock, celestial peak accent |
 
+**v6 extension (64-px standing objects only):** P33 Ember `#C2521C`, P34 Ochre `#B8862E`, P35 Skin light `#F0C8A0`, P36 Skin shade `#C48B68`, P37 Violet light `#B9A2F0`, P38 Moss dark `#2C4A22`, P39 Roof blue `#3E5A7C`, P40 Rice paper `#F4E6C8` (uses in §3.9.5). 32-px art keeps the 32 colours above.
+
 Colour roles (to keep the world readable): **green/jade = nature and spirit herbs; cinnabar red = sect buildings and talismans; gold = rewards, Altar, Dragon, fuel/value; cyan = wisps, qi, water, sky; orange = fire and lava; violet = celestial / star items.**
 
 Island ground palettes: Center = P13 P14 P15 + path P05 P06; Farm = P22 P23 P15 + paddy water P27 P28; Mine = P03 P04 P05 P06; Fishing (v5, snowy, §3.8) = snow P05 P06 P07 + ice P27 P28 P29 + open water P26 P27; Volcano = P01 P02 P03 + lava P30 P19; Spirit Grove = P08 P09 P13 P14; Celestial Peak = P06 P07 P29 P31 P32; (v4) Lotus Marsh = P08 P09 P13 + shallows P26 P27 P28; Thunder Crag = P02 P03 P04 + crystal P28 P29 P32; Azure Beast Ravine = P09 P13 P14 + rock P21 P22 P05 + bone P06 P07; Tribulation Peak = P06 P09 P10 P11 + scorch P01 P02 P20 (see §3.7).
@@ -94,8 +96,8 @@ Island ground palettes: Center = P13 P14 P15 + path P05 P06; Farm = P22 P23 P15 
 
 | Topic | Rule |
 |---|---|
-| Grid | **1 cell = 32×32 px.** |
-| Unity import | **PPU 32**, Filter **Point (no filter)**, Compression **None**, no mipmaps, Wrap Clamp (tile/parallax art: Repeat). sRGB. Sprite mode Single (static) or Multiple/grid-sliced (strips). |
+| Grid | **1 cell = 32×32 px.** **v6:** standing objects (buildings, nodes, fixtures, trees, standing props, NPCs, creatures) are drawn at **1 cell = 64×64 px** on doubled canvases, files tagged `@64` (§3.9). |
+| Unity import | **PPU 32** (`@64` files: **PPU 64**, so they keep the same world size), Filter **Point (no filter)**, Compression **None**, no mipmaps, Wrap Clamp (tile/parallax art: Repeat). sRGB. Sprite mode Single (static) or Multiple/grid-sliced (strips). |
 | Pivot | **Bottom-centre** for buildings, nodes, fixtures, enemies, dragon (anchors on the ground). **Centre** for items, FX, UI icons, wisps, tiles. |
 | Format | PNG RGBA 8-bit (or `.aseprite` — Unity's Aseprite importer is installed; keep the layer/tag names tidy). Transparent background. **No padding, margins, borders or drop-shadows baked into the canvas** (except where a table says "shadow included"). |
 | Sprite sheets | **Horizontal strips**, equal frame size, no gaps, frame count and frame size in the file name: `fox_idle_32x32_4f.png`. Static art has no suffix: `bld_kiln.png`. 9-slice art states its border insets in the table (L,R,T,B px). |
@@ -109,6 +111,8 @@ Island ground palettes: Center = P13 P14 P15 + path P05 P06; Farm = P22 P23 P15 
 ### 2.2 Canvas size rules per category
 
 Footprint = what the object occupies in cells. **Canvas** = PNG size. Art may extend **up to 32 px above the footprint** (roof tips, canopies) but must not extend left/right/below the footprint (exceptions stated). The base of the object touches the bottom edge of the canvas.
+
+**v6:** standing objects are now delivered at **64 px per cell**: every canvas below for buildings, NPCs, fixtures, nodes, trees, props and creatures doubles, and the overhang above the footprint becomes 64 px (table in §3.9.3). The 32 sizes stay valid for files already delivered and for items, tiles, icons, UI and FX.
 
 | Category | Footprint (cells) | Canvas (px) | Notes |
 |---|---|---|---|
@@ -511,13 +515,15 @@ A locked island is covered by a veil of mist and shows an **unlock sign** (stone
 
 **Expected result:** at zoom 2, Fishing reads at a glance as a calm snowy island: mid-light snow ground (darker than white), a dark open pond ringed by pale ice, snowy trees and a few props, an icy south cliff with icicles, nothing green on the ground. Buildings and the pond stay the most contrasted things on screen.
 
-### 3.9 PENDING (draft 2026-10-21) — building art redo: audit of all 26 buildings — **not sent to the artist yet**
+### 3.9 NEW (v6, 2026-10-22) — 64 px per cell for everything standing on the ground; building redo starts with a 3-building pilot — **TOP PRIORITY**
 
-**Status: waiting on the owner's answer to Hub question `art_density`** (how many pixels per cell the world art uses). This section stays out of the Drive copy until the answer arrives; then the density-dependent part below is finalised and mirrored.
+**Owner decision 2026-10-22 (`art_density` = obj64):** "64 px per cell for everything standing on the ground: buildings, resource nodes, trees, props, NPCs and creatures; ground and coast tiles stay 32. Start with a 3-building pilot (Paper Mill, Kiln, Workbench) that you check in game first." This follows the 2026-10-21 decision `vp_props` ("check all 26 existing buildings against one reference sheet", note: "all of them look too pixelated / low quality").
 
-**Owner decision 2026-10-21 (`vp_props`):** "Check all 26 existing buildings against one reference sheet", note: "All of them look too pixelated/low quality".
+**In one line:** standing objects are drawn at **twice the pixel density** (a cell is 64×64 px instead of 32×32), on **doubled canvases**, and the game imports them at **PPU 64**, so they keep exactly the same size in the world. Flat things (ground, coast, sky, items, icons, UI, FX) stay at 32.
 
-**Reference sheet:** `docs/art/reference/buildings-sheet.png` (all 26 static sprites + Spirit Bridge at 2×, footprint box, verdict tag, metrics), in-game evidence `docs/art/reference/buildings-ingame.png`. Regenerate with `powershell -ExecutionPolicy Bypass -File tools/art-ref/buildings-sheet.ps1` (it also prints the metrics table).
+#### 3.9.1 Audit of the 26 existing buildings (2026-10-21, still valid)
+
+**Reference sheet:** Drive `feedback/2026-10-22_buildings_reference_sheet.png` (repo `docs/art/reference/buildings-sheet.png`) (all 26 static sprites + Spirit Bridge at 2×, footprint box, verdict tag, metrics), in-game evidence `docs/art/reference/buildings-ingame.png`. Regenerate with `powershell -ExecutionPolicy Bypass -File tools/art-ref/buildings-sheet.ps1` (it also prints the metrics table).
 
 **Findings (measured from the PNGs and in-game captures at 1920×1080):**
 1. **Technically clean.** All 26: 100 % palette colours, binary alpha, canvases per §2.2. The problem is not the format.
@@ -526,7 +532,7 @@ A locked island is covered by a veil of mist and shows an **unlock sign** (stone
 4. **1-px noise.** Our noise metric (share of interior pixels that differ from all 4 neighbours) is 13–16 % on the best pieces (Paper Mill, Loom, Mill, Storehouse, Forge, Altar) and 20–37 % on 13 others. Single-pixel detail turns to grit at zoom 2 and shimmers at the far zoom.
 5. **Weak footprint use.** Dragon Shrine fills 66 of 96 px width (reads as a thin pole), Brewery uses 84 of 128 px height (squat, small), Charcoal Pit is low with a weak outline (32 % dark edge pixels; others 55–93 %) and melts into the ground.
 6. **No contact shadow.** Every building looks pasted on the grass. The game adds a shared shadow (`fx_contact_shadow`, 2026-10-13 review P2-2); do not bake one.
-7. **Density.** At 32 px per cell, the closest zoom steps show each art pixel as a 3–4 px block. This is the owner's "too pixelated", and it is the open question.
+7. **Density (answered 2026-10-22: obj64).** At 32 px per cell the closest zoom steps show each art pixel as a 3–4 px block: the owner's "too pixelated". Standing objects move to 64 px per cell (below); the verdicts of this table say what each redraw keeps or changes.
 
 **Audit table** (n = 1-px noise %, c = colours; verdict REF = target look, CLEAN = keep the design, clean-up pass, REDRAW = new drawing):
 
@@ -561,20 +567,118 @@ A locked island is covered by a veil of mist and shows an **unlock sign** (stone
 
 Totals: **REF 8** (Altar, Heavenly Gate, Forge, Paper Mill, Storehouse, Loom, Mill, Meditation Pavilion), **CLEAN 10**, **REDRAW 8**. (Spirit Bridge, not one of the 26: CLEAN, n 23.)
 
-**Shared target (applies whatever the density answer):**
-1. **Projection test:** rectangular footprint, front (south) face and roof/top visible, no diamond footprints, no corner-on views. Check every piece beside `bld_paper_mill`, `bld_storehouse` and `bld_meditation_pavilion`.
-2. **Fill the footprint:** silhouette at least ~85 % of the footprint width; base flat on the bottom edge; roofs may use the overhang of §2.2.
-3. **Big shapes first:** 3–4 major shapes per building and one dominant colour (colour roles of §1.3), so each reads at a glance at zoom 2 and as a silhouette at the far zoom.
-4. **Clusters, not noise:** the smallest detail is a 2×2 cluster (single pixels only for highlights and glints); noise metric at or under ~16 %; dithering only as 2-tone bands, never checkerboard over large areas.
-5. **Shading:** light from the upper left, 3–4 tone ramps per material from the palette, selective outline with a closed outer silhouette.
-6. **Static frame = idle:** no baked ground shadow, steam or smoke in the static art (working loops only).
-7. Palette and alpha rules unchanged.
+#### 3.9.2 What moves to 64 and what stays at 32
 
-**Density-dependent request (finalise after `art_density`):**
-- **`keep` (32 px per cell):** same keys and canvases; the 8 REDRAW pieces first (Kiln and Workbench before the rest: they are in the starter area), then the 10 CLEAN pieces.
-- **`bld64` / `obj64` / `all64` (64 px per cell):** same keys, **canvases doubled** (1×1 32×48 → 64×96; 3×3 96×128 → 192×256; Burner 96×192 → 192×384; 5×5 160×192 → 320×384; Spirit Bridge 64×64 → 128×128; working strips likewise, e.g. `bld_kiln_working_192x384_4f.png`), imported at **PPU 64** so the world size stays the same. Rules at 64: the outer silhouette outline is 2 px (so it survives the far zoom); the smallest detail is still a 2×2 cluster of the new pixels; light, palette and alpha as before. **Pilot first:** `bld_paper_mill` (proves a good piece gains from the density), `bld_kiln` and `bld_workbench` (the two starter-area redraws), checked in game at every zoom step before the rest. Then the starter area (Altar, Storehouse, Gathering Stone, Wisp Lantern, Warding Seal), then by Island unlock order. The 19 new buildings of §3.7 are drawn at 64 from the start. For `obj64` / `all64` the same rule extends to nodes, fixtures, trees, props, NPCs and creatures (and for `all64` to ground, coast, items and icons); those lists are added here once chosen.
-- **`painted`:** not a redo of this list; it needs a new style bible (§1–2 rewritten). Nothing is requested until that is written.
-- **`later`:** only the 8 REDRAW pieces at 32 px per cell; the rest waits.
+| Moves to **64 px per cell** (PPU 64, `@64` files) | Stays at **32 px per cell** (PPU 32, unchanged) |
+|---|---|
+| Buildings (all 26 of §4.2, the 19 new ones of §3.7, Sky-Bridge Shrine, Spirit Bridge) and their working / glow loops; the Dragon strips (`dragon_sleeping`, `dragon_awake`, `dragon_stir`) | Ground tiles, blob sets, paths, plazas, macro patches, flat flowers and scatter |
+| Resource nodes (§4.3, §3.7, §3.8) and fixtures (Spirit Tree + sparkle overlay, Quarry Rock, Spring + flow loop) | Coast: cliff walls, side walls, edge lip, underside pieces, veil, Sky Path |
+| Trees and standing props (`deco_tree`, snowy pines and snow props of §3.8, any decor that stands up from the ground) | Sky and cloud sea |
+| Requester NPC idle strips (§3.7) | NPC **portraits** (64×64 UI art, unchanged) |
+| Creatures: enemies (fox, boar, azure wolf), disciples, the Beast Pen beast | Items, UI icons, text glyphs, UI chrome, fuel rack |
+| | FX incl. wisps (12×12), harvest chips, glows |
+
+#### 3.9.3 Canvas sizes at 64 (every size doubles; same footprint, same world size)
+
+The rules of §2.2 stay (base on the bottom edge, no art left/right/below the footprint except where stated, bottom-centre pivot); only the numbers double. **Overhang above the footprint is up to 64 px** (was 32).
+
+| Category | Footprint (cells) | Canvas at 32 (old) | **Canvas at 64 (new)** |
+|---|---|---|---|
+| 1×1 logistics buildings (Gathering Stone, Wisp Lantern, Warding Seal, Furnace Spirit, 1×1 buildings of §3.7) | 1×1 | 32×48 | **64×96** |
+| Standard buildings | 3×3 | 96×128 | **192×256** |
+| Burners (Forge, Kiln, Pill Furnace, Star Anvil, §3.7 burners) | 3×5 | 96×192 | **192×384** |
+| Landmarks: Altar, Dragon (`dragon_*` strips), Heavenly Gate, Sky-Bridge Shrine, Beast Pen, Tribulation Array | 5×5 | 160×192 | **320×384** |
+| Spirit Bridge | 2×1 | 64×64 | **128×128** |
+| Requester NPC idle strip (per frame) | 1×1 | 32×48 | **64×96** |
+| Nodes | 1×1 / 2×2 / 3×3 | 32×48 / 64×80 / 96×112 | **64×96 / 128×160 / 192×224** |
+| Fixture: Spirit Tree (canopy overhangs **32 px** left/right and **128 px** above) | 4×4 | 160×192 | **320×384** |
+| Fixtures: Quarry Rock, Spring | 2×2 | 64×80 | **128×160** |
+| Trees and standing props (per frame) | 1×1 / 2×1 | 32×48 / 64×64 | **64×96 / 128×128** |
+| Creatures (per frame) | — | 32×32 (boar 48×32) | **64×64 (boar 96×64)** |
+
+Any other standing-object size in §3.6–§3.8 or §4.2–§4.4 doubles the same way (width × 2, height × 2).
+
+#### 3.9.4 File names: the `@64` tag
+
+- Same key as today, plus **`@64`** as the last thing before `.png`: `bld_kiln@64.png`. Strips keep the `_<W>x<H>_<N>f` suffix with the **new** frame size, then the tag: `bld_kiln_working_192x384_4f@64.png`, `node_bush_64x96_2f@64.png`, `npc_lin_idle_64x96_4f@64.png`.
+- Same category folders as before (`incoming/buildings/`, `nodes/`, ...). Zip names may say 64: `Idle-Grounds-Buildings-64-001.zip`.
+- The tag is how the game tells 64 from 32: it imports `@64` files at PPU 64 and, when a key exists at both densities, uses the `@64` file. Do **not** overwrite or delete the old 32 file; it stays as the fallback.
+- **One density per key:** a static file and its loops (`_working`, `_glow`, `_pulse`, `_occupied`, `_flow`, `_sparkle`, break frames) are delivered together at the same density. A building that goes to 64 while its working loop is still 32 would change pixel size when it starts working.
+- **No upscales:** a 2× nearest-neighbour enlargement of the 32 file gains nothing and is rejected. Every `@64` file is a new drawing at 64 (for REF pieces: the same design, redrawn).
+
+#### 3.9.5 How to draw at 64 (style rules)
+
+Everything in §1 still applies (front 3/4 view, light from the upper left, colour roles, calm tone). What changes with the extra pixels:
+
+1. **Projection:** the shared target below (front 3/4, rectangular footprint, no corner views) is binding. Check every piece beside the REF pieces.
+2. **Outline: 2 px on the outer silhouette.** At the far zooms the game shows only every second pixel of 64 art, so a 1-px outline can vanish. Buildings, nodes, trees and props: 2-px selective outline (the darkest tone of the object's own material; ink P01 only at the ground contact and the deepest recesses). Creatures and NPCs: 2-px dark outline (P01/P02) outside, 1-px lines inside.
+3. **Clusters for anything that must read from afar.** Doors, windows, eyes, runes, tools and other "read at a glance" details are at least **2×2 px**, ideally on the even pixel grid (x and y even). Those land on whole screen pixels at every zoom step (measured, §3.9.7). **Single pixels** are for highlights, glints, inner line work and smoothing curves: crisp at the 15- and 30-cell zooms, softer at 20 and 60.
+4. **Same big shapes, finer finish.** Keep 3–4 major shapes and one dominant colour per piece, as the REF pieces do. Use the extra pixels for clean curves (no 1-px stair-steps on round shapes), material texture in small clusters (roof tile rows, wood grain, thatch bundles, cloth folds) and faces, **not** for more objects. Isolated single pixels inside the silhouette: at or under ~10 % (our noise metric).
+5. **Shading:** 4–5 tones per material (§1.3 ramps plus the extension below). Dithering only as stepped bands or 2×2 checker clusters; **no 1-px checkerboard** (it shimmers at the 20- and 60-cell zooms).
+6. **Faces (NPCs, creatures):** eyes at least 2×2 px, a 1-px catch-light allowed; mouth 2–3 px wide. NPCs face the viewer (3/4 front), creatures face right.
+7. **Contact shadow: not baked.** The game draws one shared soft shadow (`fx_contact_shadow`) under every standing object. The bottom 2 px rows are the object's own base (plinth, posts, feet, roots), never grass or a painted shadow.
+8. **Static frame = idle; loops do not redraw.** Steam, smoke, sparks and mouth glow only in the loops. Loop frame 0 = the static sprite pixel for pixel; frames 1–3 change only the moving parts (the 2026-10-21 loops that redrew the whole building were rejected for boiling). Frame counts and speeds as §2.1.
+9. **Alpha:** binary; glows, steam and smoke may use the 4 alpha steps of §2.1.
+
+**Palette at 64: extension P33–P40 (64 art only).** The 32 colours of §1.3 stay. Twice the pixels need a few in-between tones, so standing objects at 64 may also use these 8 (32-px art such as tiles, items and icons keeps the 32):
+
+| # | Name | Hex | Fills the gap |
+|---|---|---|---|
+| P33 | Ember | `#C2521C` | fire / kiln glow mid tone between P17 and P30 |
+| P34 | Ochre | `#B8862E` | gold and bronze shadow between P22 and P24 |
+| P35 | Skin light | `#F0C8A0` | faces and hands (NPCs, disciples) |
+| P36 | Skin shade | `#C48B68` | face and hand shadow |
+| P37 | Violet light | `#B9A2F0` | celestial / star-rock highlight above P32 |
+| P38 | Moss dark | `#2C4A22` | deepest foliage and moss shadow between P08 and P13 |
+| P39 | Roof blue | `#3E5A7C` | blue-grey glazed roof tiles between P03 and P27 |
+| P40 | Rice paper | `#F4E6C8` | warm paper, straw and plaster highlight (warm partner of P07) |
+
+**Shared target (from the audit, binding at 64):**
+1. **Projection test:** rectangular footprint, front (south) face and roof/top visible, no diamond footprints, no corner-on views. Check every piece beside `bld_paper_mill`, `bld_storehouse` and `bld_meditation_pavilion`.
+2. **Fill the footprint:** silhouette at least ~85 % of the footprint width; base flat on the bottom edge; roofs may use the overhang.
+3. **Big shapes first:** 3–4 major shapes per building and one dominant colour (colour roles of §1.3), so each reads at a glance at the 30-cell zoom and as a silhouette at the 60-cell zoom.
+4. **Static frame = idle** and **no baked ground shadow** (rules 7–8 above).
+
+#### 3.9.6 Request order: pilot first, the rest after the owner signs the pilot off
+
+**A. Pilot (P1, request now): 3 buildings + their working loops.** Category `buildings`, one zip (`Idle-Grounds-Buildings-64-001.zip`) with a short `NOTES.txt`.
+
+| File | Canvas | Frames | What to draw | Pri | Status |
+|---|---|---|---|---|---|
+| `bld_paper_mill@64.png` | 192×256 | 1 | **Paper Mill**, the REF piece redrawn at 64: same composition (thatched hut, water wheel on the left, press in the middle, white paper sheets drying on a rack on the right, bamboo behind), with finer thatch bundles, wood grain, a clean round wheel and calm water. Proves that a good design gains from the density. | P1 | requested |
+| `bld_paper_mill_working_192x256_4f@64.png` | 768×256 strip | 4 | press descends, a paper sheet appears, wheel turns | P1 | requested |
+| `bld_kiln@64.png` | 192×384 | 1 | **Kiln** (Burner), REDRAW: upright brick kiln in front 3/4, the fire mouth facing south (dark with a few embers in the idle frame), stepped terracotta body (P20–P22, P33) with slate trim, chimney at the back rising into the top 64 px, a small stack of bricks and clay jars inside the footprint. No corner view, no long diagonal dragon-kiln. | P1 | requested |
+| `bld_kiln_working_192x384_4f@64.png` | 768×384 strip | 4 | mouth fire flickers (P30 / P33 / P19 / P25), smoke from the chimney (4 alpha steps) | P1 | requested |
+| `bld_workbench@64.png` | 192×256 | 1 | **Workbench**, REDRAW: a thick wooden bench seen from the front-above under a red cloth awning (P18 with P17 folds) on four bamboo posts; saw, plane and a plank stack on the bench; rectangular footprint. No corner view. | P1 | requested |
+| `bld_workbench_working_192x256_4f@64.png` | 768×256 strip | 4 | saw moves, wood chips pop | P1 | requested |
+
+**Our check before anything else is drawn at 64:** each pilot piece in game next to 32-px buildings and on 32-px ground at every zoom step (15 / 20 / 30 / 60 cells and the 120-cell map): same world size and footprint, outline holds at 60, details read at 30, no density switch when working, sits well on the 32 ground. Then the owner signs the pilot off (Hub). Feedback, if any, goes into the Delivery log.
+
+**On hold until the pilot is signed off:** every other standing-object request in this document, including the open 32-px repairs of 2026-10-21 (NPC idle strips, the 4 floating-base buildings, the 19 working loops; see the Delivery log) and §3.8 snowy trees and props. Please do **not** deliver them at 32 any more; they will be requested at 64 in the order below, and the 2026-10-21 repair notes still apply to the 64 drawings. NPC **portraits** are UI art and stay 64×64: their repairs continue now. Work that stays at 32 continues as before (for example the §3.8 snow ground, coast, water, ice and underside; Sky Path; items; UI; FX).
+
+**After sign-off (each step is a separate batch; the 64 sizes and names follow §3.9.3–3.9.4, the audit verdicts above say what to change):**
+
+| Step | What | Order inside the step |
+|---|---|---|
+| B | **All buildings** with their loops | B1 Sky-Bridge Shrine + glow (§3.7 P1; the 32 version was validated 2026-10-21, keep its design); B2 starter area: Altar, Storehouse, Gathering Stone, Wisp Lantern, Warding Seal, Dragon strips; B3 the rest of the 26 in Island unlock order (REDRAW = new drawing, CLEAN = same design + the listed fix, REF = same design redrawn); B4 the 19 new buildings of §3.7 (15 validated designs kept; the 4 floating-base ones redrawn on flat ground) and the Spirit Bridge |
+| C | **Resource nodes and fixtures** | Center first (`node_bush`, Spirit Tree + sparkle, Quarry Rock), then by Island unlock order (incl. §3.7 and §3.8 nodes) |
+| D | **Trees and standing props** | `deco_tree`, then the §3.6 / §3.8 trees and props (snowy pines, snow props) |
+| E | **Requester NPCs** (idle strips `npc_<id>_idle_64x96_4f@64.png`; portraits stay UI art) | the 7 P1 NPCs of §3.7 first (keep the designs of Lin, Kang, Tian, Qingyun, Ouyang, Xuan; Jiang redrawn), then He, Lei, Yao, Mo; animate only the named part, feet fixed on the bottom row |
+| F | **Creatures** | fox, boar, azure wolf (idle / move / hit / die), disciples, Beast Pen beast |
+
+#### 3.9.7 Zoom steps and 64 art (measured in game, 2026-10-22)
+
+The camera rests only on crisp zoom steps (owner pick `vp_zoom`). Measured with a 64-px test piece (1-px checker and stripes) beside 32-px buildings at 1920×1080:
+
+| View width | Screen px per 32-art pixel | Screen px per **64-art pixel** | 64 art looks |
+|---|---|---|---|
+| 15 cells (closest) | 4 | **2** | exact |
+| 20 cells | 3 | **1.5** | 1-px detail alternates 1 and 2 screen px; **2×2 clusters exact (3 px)** |
+| 30 cells | 2 | **1** | exact |
+| 60 cells | 1 | **0.5** | every second pixel dropped: 1-px detail can vanish; **2×2 clusters exact (1 px)** |
+| 120 cells (map) | 0.5 | 0.25 | silhouette only (shimmer accepted, as for 32 art) |
+
+So 2×2 clusters and a 2-px outline are crisp at every step; single pixels are a close-zoom bonus. Evidence: Drive `feedback/2026-10-22_ppu64_zoom_steps_STANDIN.png` (repo `docs/art/reference/ppu64-zoom-steps.png`): the current Paper Mill enlarged 2× as a **test stand-in** with a 1-px checker (bottom left) and 1-px stripes (bottom right), beside the 32-px Workbench at each step. It is not delivered art and not the look we want.
 
 ---
 
@@ -1063,6 +1167,7 @@ Checklist before uploading each file:
 
 - [ ] File is **PNG RGBA** (or `.aseprite`), sRGB, 8 bits per channel, **transparent background**.
 - [ ] Canvas size **exactly** matches the table (and the filename's `WxH`).
+- [ ] **Standing objects** (buildings, nodes, fixtures, trees, standing props, NPCs, creatures): drawn at 64 px per cell on the doubled canvas of §3.9.3, filename ends in `@64` (`bld_kiln@64.png`, `bld_kiln_working_192x384_4f@64.png`), loops at the same density as the static file, 2-px outer outline, no 2× upscales.
 - [ ] Strips are **horizontal**, equal frame size, no gaps; frame count in the filename (`_4f`).
 - [ ] Filename is **lowercase with underscores**, uses the existing key, includes `WxH_Nf` for animated/multi-frame art.
 - [ ] Only the 32 palette colours (plus the 4 allowed alpha steps for glows/mist/clouds). No anti-aliasing against transparency; no blur; no semi-transparent edge pixels on world art.
@@ -1099,7 +1204,7 @@ Review process: files in `incoming` are imported into Unity, checked in-game, an
 | v1 — initial request | 2026-10-04 | First full art request: 32-colour xianxia palette, technical spec, floating-island tilesets, sky, Spirit Bridge, all 183 manifest keys, UI chrome and FX. All statuses `requested`. |
 | v4 — requesters, shrine, 4 new islands | 2026-10-12 | New §3.7 (ADR 0007): ascension removed; Sky-Bridge Shrine + Sky Paths, 11 requester NPCs (idle + portrait), request UI, four new biomes (Lotus Marsh, Thunder Crag, Azure Beast Ravine, Tribulation Peak) with full tilesets, nodes, Azure Wolf, 19 new buildings (+ working loops) and 12 items — 144 new files. Retired: perk_* (15), ui_vow_* (4), ui_ascend, island_unlock_stele_* (3). Ascension Gate art reused as the Heavenly Gate. |
 | v5 — snowy Fishing | 2026-10-21 | New §3.8 (owner pick `vp_fishing`): Fishing becomes a snowy northern Island on purpose. Snow ground fill, macro, decor, blob, curved and straight south walls with icicles, side walls, snow cornice lip and edge profile; cold open water with an ice shelf along the pond shore, floes and an ice-fishing hole; snowy trees, snow props, a warm spring in the snow, an icicle underside and a snowfall overlay. Fishing palette in §1.3 changed to snow + ice + water; the old Fishing ground/water rows of §3.1 are superseded. |
-| draft — building audit | 2026-10-21 | New §3.9 (owner pick `vp_props`, "all of them look too pixelated / low quality"): audit of all 26 buildings against one reference sheet (8 REF, 10 CLEAN, 8 REDRAW), shared target rules, and a density-dependent redo request. **Pending the owner answer `art_density`; not sent to the artist.** |
+| v6 — 64 px standing objects | 2026-10-22 | §3.9 finalised for owner pick `art_density` = obj64: buildings, nodes, fixtures, trees, standing props, NPCs and creatures are drawn at **64 px per cell** on doubled canvases (§3.9.3), tagged `@64` and imported at PPU 64 (same world size); ground, coast, sky, items, icons, UI and FX stay 32. New rules at 64: 2-px outer outline, 2×2 clusters for read-at-a-glance detail, no 1-px checker dither, loops never redraw the static frame, no baked contact shadow; palette extension P33–P40 for 64 art. Building audit of 2026-10-21 kept (8 REF, 10 CLEAN, 8 REDRAW). **Request A (pilot, P1):** Paper Mill, Kiln, Workbench + working loops at 64. Every other standing-object request (incl. the open 32-px repairs of NPC idles, 4 buildings and 19 loops) is **on hold** until the owner signs the pilot off; then B buildings, C nodes + fixtures, D trees + props, E NPCs, F creatures. Zoom-step table for 64 art measured in game (§3.9.7). |
 | v2 — irregular islands | 2026-10-04 | New §3.0: islands are hand-painted irregular shapes (never squares); the coast is a visual margin 8–30 cells (bold lobes, bays, islets) around the square 93×93 playable area. Ground tilesets become 47-tile blob sets per biome (`island_<biome>_ground_blob_32x32_47f.png`; the 19-tile strip stays as a minimum); cliff rim must cover diagonals, corners and end caps; underside decorations must combine under any coastline. |
 
 ### Delivery log
@@ -1162,3 +1267,4 @@ Intake: `node tools/art-intake/pull.js` (Drive `incoming/<category>/` -> `Assets
 | 2026-10-12 | Diagonal coast model in game (interim) | — | The game now supports **45° diagonal coast cells**, with temporary pieces built from your frames. The hooks are ready: `island_<biome>_ground_diag_32x32_4f` (frames NE, NW, SE, SW) and `island_<biome>_cliffwall_diag_32x96_4f` (0 rise = coast going up to the right, 1 fall; 2/3 transition pieces). Drawn versions will replace the sheared temporary walls, whose rock strata currently slant. `cliffwall_round` and `sidewall_diag` are **lower priority** now: the outline uses 45° cuts, not curves. |
 | 2026-10-12 | Curved coasts in game (interim) — **art request update** | — | Coasts are now **true curves**. Walls are laid along the curve from your straight frames, so please prioritise: <br>• `island_<biome>_cliffwall_round_32x96_4f` (already hooked): 4 mid frames that **tile seamlessly in any order**, evenly lit with **no left-to-right ramp**, horizontal strata, the top 6 px of grass reserved for the tuck under the ground, a ragged 16-px fade at the bottom, and no strong vertical features (they get stretched and compressed along curves). <br>• Optional: `island_<biome>_coast_edge_profile_32x8_2f`, a cross-section of the coast edge (rows run outward to inward; frame 0 is the north edge with the grass overhang, frame 1 the south rim), and `island_<biome>_sidewall_round_32x32_4f`, W/E face variants that tile vertically and still read when drawn narrower than 11 px. <br>The 45° `*_diag` pieces are **no longer needed**. |
 | 2026-10-21 | §3.7 set + coast repairs: Islands-038 (sidewall v3 ×7), -039 (Fishing macro v4), -040 (`cliffwall_round` ×7), -041…050 (Lotus / Thunder / Ravine / Tribulation tilesets, decor, overlays); Buildings-013 (Shrine + glow), -014…019 (19 static), -020…024 (19 working loops); Creatures-006…009 (11 NPC idles, Azure Wolf, pen beast); UI-021…024; Items-009; Nodes-007 (1); Fixtures-005; FX-005/006 | `incoming/*/…` (37 zips, 165 art files) | **All 37 zips inspected** (PNG RGBA, sizes, frame counts, 100 % palette, alpha checked by script; contact sheets reviewed). Buildings-018 correctly replaces the wrong-size `bld_lightning_rod` / `bld_thunder_forge` of -017. Pulled and integrated in the background copy (Integrate Incoming Art: 0 changes on re-run). The `SOURCE-STUDY-*.png` files in Islands-042 (9 MB) are not game art; we skip them, please leave them out of future zips. Evidence: Drive `feedback/2026-10-21_*.png`. <br>**ACCEPTED in Play:** <br>• **Islands-038 `island_<biome>_sidewall` + `_variants` ×7 (v3):** the 18 px face now shows in game as a lit rock side on the W/E coasts (we widened the game's side face from 11 to 18 px to use it). `feedback/2026-10-21_sidewall_v3_ACCEPTED_ingame.png`. Optional polish later: the face is 4 flat vertical colour bands with short horizontal dashes; a little rock texture would help. <br>• **Islands-039 `island_fishing_macro` v4:** P05 / P07 patches in the right cool family; softened 40 % toward the fill in game like the other biomes, no visible repetition at far zoom. `feedback/2026-10-21_fishing_macro_v4_ACCEPTED_ingame.png`. (Fishing becomes snowy in §3.8, which replaces this file later.) <br>**REJECTED in Play: Islands-040 `island_<biome>_cliffwall_round_32x96_4f` ×7.** In game the curved south walls turn into flat horizontal colour stripes (1–3 px bands across the whole frame), with no rock form, no top-left light, no roots and a straight ruler-flat bottom edge; it is a clear step back from the pinned straight wall frames, so those stay. Fishing has a saturated P27 band, Celestial is flat white/violet bands. `feedback/2026-10-21_cliffwall_round_REJECTED_ingame.png`, `…_ingame_close.png`, `…_frames.png`. **Repair:** paint each frame like `island_<biome>_cliffwall_32x96_8f` frames 0–2 (stratified rock blocks lit from the top-left, darker vertical faces, roots and moss, ragged broken bottom fading over 16 px in 4 alpha steps), but keep the strata **horizontal and continuous across the frame edges** so any order tiles, and keep big vertical features (cracks, waterfalls) out. Strata bands must be at least 4–6 px tall with texture inside them, not 1-px lines. <br>**REJECTED on file review (not usable yet; the game has no Shrine / NPC / new Island code, so in-game checks wait for ADR 0007 Phase 2):** <br>• **FX-005 `fx_sky_path_h/v/corner/end`:** each piece is a flat 3-colour cyan capsule outline at 66 % alpha: no jade slabs, no gold rail posts, no shadow on the clouds. The h/v pieces have **rounded end caps on every 64 px segment**, so a path of several segments pinches at each joint (not seamless). `feedback/2026-10-21_sky_path_REJECTED_frames.png`. **Repair:** match `fx_sky_path_raise` (FX-006, which looks right): opaque jade slabs (P09/P10/P11/P12) with cyan glowing seams, small gold posts, a thin shadow below; straight cuts at both ends of h/v so they tile; the ripple loop must not move the slabs. <br>• **Creatures-006/007 `npc_<id>_idle_32x48_4f` ×11:** the idle is the **whole sprite shifted up and down by 1 px** (same pixel count every frame; nothing moves: no abacus beads, fishing line, hammer glow, lotus); in frames 0 and 3 the feet leave the bottom edge (lowest row 46 / 45 instead of 47). No 1 px ink outline. **Jiang, Lei, Mo and Yao** read as noise (scattered single pixels, no face, no clear silhouette): `feedback/2026-10-21_npc_lei_mo_REJECTED_zoom.png`. **Repair:** keep the designs of Lin, Kang, Tian, Qingyun, Ouyang, Xuan and He; redraw Jiang (straw hat + grass cape + rod clearly readable), Lei, Mo and Yao as clean pixel art. For all 11: 1 px P01 ink outline, feet fixed on row 47 in every frame, and animate only the named part (2–6 px change per frame) as listed in §3.7. <br>• **UI-023 portraits:** Lin, Jiang, Kang and Tian are small busts in the bottom half (head top at row 30–38, 16–20 % of the canvas); Mo and Yao are noisy like their sprites. **Repair:** all 11 framed the same way: head top at rows 4–8, shoulders reaching the bottom edge, face about 24–28 px wide, clean outline. He, Lei, Ouyang, Qingyun and Xuan are kept. `feedback/2026-10-21_npc_portraits_REVIEW.png`. <br>• **Buildings-020…024 working loops ×19:** every frame is a **different redraw of the whole building** (4,000–9,700 px change per frame; the bridge, rocks and roofs change shape), so it would boil in game. Our accepted loops change 16–25 px per frame. `feedback/2026-10-21_bld_working_REJECTED_boiling.png`. **Repair:** frame 0 = the accepted static sprite pixel for pixel; frames 1–3 change only the moving parts (koi, steam, sparks, glow). <br>• **Static buildings `bld_beast_pen`, `bld_tribulation_array`, `bld_immortal_furnace`, `bld_thunder_forge`:** drawn as **floating mini-islands** (rock underside, waterfalls, clouds and banners hanging below the footprint); `beast_pen` and `tribulation_array` are also in isometric (diamond) view. On an Island they would sit on the grass as a second floating island. `feedback/2026-10-21_bld_floating_base_REJECTED.png`. **Repair:** 3/4 front view like the other buildings, base flat on the ground at the bottom edge of the canvas, no rock underside, no clouds. <br>• **New biome tilesets (Islands-041…048), `lotus`/`thunder`/`ravine`/`tribulation`:** <br>  – `*_ground_blob_32x32_47f` ×4: every frame is a **full opaque square with a border frame**; they ignore the §3.0 blob silhouettes (transparent cut-outs, rounded corners) of the Center set. `feedback/2026-10-21_newbiome_blob_REJECTED_vs_center.png`. **Repair:** same silhouettes as `island_center_ground_blob` (use `blob_mask_reference.json`), only the colours change. <br>  – `*_ground_fill_32x32_3f` ×4 and `island_lotus_water_32x32_4f`: tiled 4×3 they show a **strong 32 px grid** and are very busy (Lotus: 4 hues in large blotches; Ravine: diagonal stripes; Tribulation frame 1 has black vertical bars and **frame 2 is entirely P01 black**; water frame 0 shows a checkerboard). `feedback/2026-10-21_newbiome_fill_water_REJECTED_tiled.png`. **Repair:** Center v2.1 recipe: one base colour, ≤ 8 % sparse detail, nothing aligned to the tile edge; check 4×4 tiled at 2× before delivery. <br>  – `*_cliffwall_32x96_8f` ×4: a flat brick grid with straight 1 px drip lines, all 8 frames nearly identical, flat top band, no ragged bottom or fade; far below the accepted cliff walls. `feedback/2026-10-21_newbiome_cliffwall_REJECTED.png`. **Repair:** paint like `island_center_cliffwall_32x96_8f` (v2) in the biome palette, §3.6 frame order. <br>  – `*_sidewall_32x32_4f` + `*_sidewall_variants_32x32_8f` ×4: same flat brick style. **Repair:** as Islands-038 (18 px face, grass column at the island side, outer edge cut diagonally on the end frames). <br>  – `*_macro_96x96_4f` ×4: these are **raised objects** (rock mounds, bone pits, fenced isometric platforms) instead of flat ground patches; Lotus frames are cut off by the canvas edge. **Repair:** flat organic decals ±1 palette step from the fill, dithered edges, nothing raised, nothing touching the canvas edge. `feedback/2026-10-21_newbiome_macro_sidewall_REVIEW.png`. <br>**Validated (files OK), imported, waiting on game code (ADR 0007 Phase 2):** `bld_sky_shrine` + `_glow` (fine; 5 empty rows under the stairs, we trim in code), `ui_request_marker`, `ui_request`, `ui_request_done`, `ui_utility`, `ui_shrine`, `ui_area/action_<lotus|thunder|ravine|tribulation>` ×8, portraits of He, Lei, Ouyang, Qingyun, Xuan, 15 static buildings (bamboo nursery, spirit snare, deep shaft, blast forge, koi pond, spirit paddy, elixir still, essence well, fire vent, star well, lotus pond, reed press, lotus distillery, lightning rod, soul refinery), `fix_peachtree`, 9 nodes (`node_lotuspad` pops from full bloom back to a bud at the loop seam; fine if intended as surfacing), 12 items, `enemy_wolf_idle/move/hit/die`, `npc_pen_beast_idle`, `fx_sky_path_raise`, flowers / scatter / spark / glowvine / runes for the 4 new biomes. None of these is in the game yet, so none is accepted yet. | Islands-038, -039 **accepted**; Islands-040 **rejected**; 76 files **rejected** (7 round walls + 69 listed above); 74 files **validated, waiting on Phase 2** |
+| 2026-10-22 | **NEW P1 — 64 px pilot (§3.9, owner pick `art_density` = obj64)** | — | **Requested:** `bld_paper_mill@64.png` (192×256), `bld_kiln@64.png` (192×384), `bld_workbench@64.png` (192×256) and their `_working_<W>x<H>_4f@64.png` loops, one zip `incoming/buildings/Idle-Grounds-Buildings-64-001.zip`. Read §3.9.3–3.9.6 first (sizes, `@64` names, 2-px outline, 2×2 clusters, palette P33–P40, no upscales). The game already imports `@64` files at PPU 64 and draws them at the right size (tested with a stand-in). **On hold until the owner signs the pilot off:** all other standing-object work, including the 2026-10-21 repairs of the NPC idle strips, the 4 floating-base buildings and the 19 working loops (they will be drawn at 64; the repair notes still apply). Portrait repairs and all 32-px work (tiles, coast, items, UI, FX) continue. | requested |
