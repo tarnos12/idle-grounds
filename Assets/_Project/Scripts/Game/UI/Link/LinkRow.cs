@@ -32,6 +32,7 @@ namespace IdleGrounds.Game
         public int Index { get; private set; }
         public string Tip { get; private set; }
         public Color DotColour => dot.color;
+        public TextMeshProUGUI StateText => stateText;
         public Endpoint Source => source;
         public Endpoint Target => target;
         public Button RemoveButton => remove;
@@ -42,6 +43,9 @@ namespace IdleGrounds.Game
             remove.onClick.RemoveAllListeners();
             remove.onClick.AddListener(() => editor.RemoveLink(Index));
         }
+
+        /// <summary>Preferred width of the row on one line.</summary>
+        public float PreferredWidth() => LayoutUtility.GetPreferredWidth((RectTransform)transform);
 
         public void SetIndex(int i)
         {

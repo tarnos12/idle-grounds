@@ -65,6 +65,7 @@ namespace IdleGrounds.Game
         void LateUpdate()
         {
             if (runner == null || runner.Sim == null) return;
+            if (continueButton != null && continueButton.gameObject.activeInHierarchy) UiFit.FitButton(continueButton, 210f, 40f);      // the button grows with its label in wide faces
             var s = runner.State;
             if (s.dragon.dialog != null)
             {

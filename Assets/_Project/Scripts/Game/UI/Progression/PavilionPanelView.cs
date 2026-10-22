@@ -49,6 +49,7 @@ namespace IdleGrounds.Game
             {
                 anchor = BuildingPanelAnchor.Attach(panel, PanelWidth);
                 anchor.OnLeftScreen = Close;
+                SplitHeader();
                 // beside the building the panel is narrower than the old bottom dock: the reason line wraps under the Recruit button
                 if (reasonText != null && recruitButton != null && reasonText.transform.parent == recruitButton.transform.parent)
                 {
@@ -67,6 +68,28 @@ namespace IdleGrounds.Game
                 }
                 if (hintText != null) hintText.textWrappingMode = TMPro.TextWrappingModes.Normal;
             }
+        }
+
+        /// <summary>Title + close stay on the first line; "Disciples d/cap" and the food count move to a second line. On one line the six items
+        /// (about 800 units) overprinted each other in every Text font once the panel sat beside the building (UI QA fonts #3).</summary>
+        void SplitHeader()
+        {
+            if (titleText == null || disciplesText == null) return;
+            var head = titleText.transform.parent as RectTransform;
+            if (head == null || head.parent == null || head.Find("Stats") != null) return;
+            var stats = new GameObject("Stats", typeof(RectTransform)).GetComponent<RectTransform>();
+            stats.SetParent(head.parent, false);
+            stats.SetSiblingIndex(head.GetSiblingIndex() + 1);
+            var src = head.GetComponent<HorizontalLayoutGroup>();
+            var h = stats.gameObject.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = src != null ? src.spacing : 14f;
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = h.childControlHeight = true;
+            h.childForceExpandWidth = h.childForceExpandHeight = false;
+            var gap = head.Find("Gap");
+            if (gap != null) Destroy(gap.gameObject);
+            foreach (var n in new[] { "DiscipleIcon", "Disciples", "Gap2", "FoodIcon", "Food" }) { var c = head.Find(n); if (c != null) c.SetParent(stats, false); }
+            titleText.overflowMode = TMPro.TextOverflowModes.Ellipsis;
         }
 
         /// <summary>Panel width (canvas units) beside the pavilion (owner pick vp_panels).</summary>

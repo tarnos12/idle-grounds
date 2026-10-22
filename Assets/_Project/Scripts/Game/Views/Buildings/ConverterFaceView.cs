@@ -99,6 +99,7 @@ namespace IdleGrounds.Game
             lastRecipe = -2; LastFace = null; relayout = true; lastHadStatus = false; lastLod = -1;
         }
 
+        int lastFontVersion = -1;
         float TextW(TextMeshPro t, string s) => t.GetPreferredValues(s).x + ViewKit.U(2f);
 
         void RelayoutReal(BuildingView v, ConverterFace f)
@@ -308,6 +309,7 @@ namespace IdleGrounds.Game
 
         afterStatus:
             if (real && strip.LodVersion != lastLod) { lastLod = strip.LodVersion; relayout = true; }
+            if (real && lastFontVersion != UiFont.Version) { lastFontVersion = UiFont.Version; relayout = true; }      // Text font setting: the pill is measured in the face it is drawn in
             if (real && relayout) RelayoutReal(v, f);
 
             // progress: extrapolated every frame from the batch end time and the sampled batch length

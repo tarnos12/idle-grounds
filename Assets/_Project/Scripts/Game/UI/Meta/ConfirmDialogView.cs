@@ -26,6 +26,7 @@ namespace IdleGrounds.Game
         }
 
         public const float ButtonMinWidth = 200f, ButtonPad = 56f;
+        float baseBoxW;
 
         public void Ask(string message, string okText, Action yes) => Ask(null, message, okText, yes);
 
@@ -39,13 +40,35 @@ namespace IdleGrounds.Game
                 titleText.text = title ?? "";
             }
             if (messageText != null) messageText.text = message;
-            if (okLabel != null)
-            {
-                okLabel.text = okText;
-                var le = okButton != null ? okButton.GetComponent<LayoutElement>() : null;
-                if (le != null) le.preferredWidth = Mathf.Max(ButtonMinWidth, Mathf.Ceil(okLabel.GetPreferredValues(okText).x) + ButtonPad);
-            }
+            if (okLabel != null) { okLabel.text = okText; FitButtons(); }
             Open();
+        }
+
+        /// <summary>OK is at least 200 and widens to its label; a wide Text font (Press Start 2P) makes "Ascend to Immortality" wider than the 660 box, so the box grows with the button row.
+        /// Re-run while open: the label is measured in the font and size it ends up drawn in (a font switch or a canvas change re-snaps the size after the first measure).</summary>
+        void FitButtons()
+        {
+            if (okLabel == null || okButton == null) return;
+            float w = Mathf.Max(ButtonMinWidth, Mathf.Ceil(UiFit.WidestText(okLabel, okLabel.text)) + ButtonPad);
+            if (Mathf.Approximately(w, lastOkW)) return;
+            lastOkW = w;
+            var le = okButton.GetComponent<LayoutElement>();
+            if (le != null) le.preferredWidth = w;
+            var row = okButton.transform.parent as RectTransform;
+            if (row == null || Box == null) return;
+            if (baseBoxW <= 0f) baseBoxW = Box.sizeDelta.x;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(row);
+            float need = Mathf.Ceil(LayoutUtility.GetPreferredWidth(row)) + 2f * 27f;
+            Box.sizeDelta = new Vector2(Mathf.Max(baseBoxW, need), Box.sizeDelta.y);
+            MarkFitDirty();
+        }
+
+        float lastOkW = -1f;
+
+        protected override void LateUpdate()
+        {
+            if (IsOpen) FitButtons();
+            base.LateUpdate();
         }
 
         public void Confirm()
