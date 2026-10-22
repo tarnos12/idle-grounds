@@ -1,6 +1,6 @@
 # Idle Grounds: plan
 
-Updated 2026-10-22 08:22. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-22 17:04. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
 **26 of 46 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
 

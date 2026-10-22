@@ -154,6 +154,15 @@ namespace IdleGrounds.Editor
                     else Debug.Log(Tag + $"built {bb.type} at {p[0].Trim()} r{bb.row} c{bb.col}");
                     break;
                 }
+                case "working":   // every built TYPE on an island shows its working loop (working:TYPE@island; art reviews): a batch that never finishes
+                {
+                    int at = arg.IndexOf('@');
+                    var area = runner.State.Area(arg.Substring(at + 1).Trim());
+                    int n = 0;
+                    if (area != null) foreach (var b in area.buildings) if (b.built && b.type == arg.Substring(0, at).Trim()) { b.smeltDoneAt = runner.SimNow + 1e12; n++; }
+                    if (n == 0) Debug.LogError(Tag + "working: no built " + arg);
+                    break;
+                }
                 case "hoverNode":
                 {
                     var p = arg.Split(',');

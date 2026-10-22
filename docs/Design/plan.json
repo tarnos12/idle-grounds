@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-22 08:22",
+  "updated": "2026-10-22 17:04",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -266,7 +266,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "ART-SPEC 3.9 v6 (obj64) mirrored to Drive 2026-10-22: pilot A (Paper Mill, Kiln, Workbench @64 + loops) requested; PPU 64 intake + views ready on bg/ppu64. Waiting on the artist's pilot delivery, then in-game check + owner sign-off before steps B-F"
+          "blockedBy": "64 px pilot (Buildings-64-001) integrated + reviewed in game: Paper Mill + Kiln accepted (Kiln idle-mouth/smoke tweaks), Workbench needs a projection repair; waiting for owner sign-off (Hub question pilot64_signoff)"
         },
         {
           "title": "Snowy northern Fishing island",

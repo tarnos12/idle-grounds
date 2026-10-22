@@ -1,5 +1,63 @@
 [
   {
     "g": "Visual pass"
+  },
+  {
+    "id": "pilot64_signoff",
+    "q": "The 64 px pilot is in the game (Paper Mill, Kiln, Workbench). Do you sign it off?",
+    "ctx": "The artist delivered the three pilot buildings and their working loops at 64 px per cell. I checked every file and then the running game. Technically all six are right: exact sizes, only palette colours, clean edges, the first loop frame matches the still picture, and they are new drawings (not the old art enlarged). In game they are the same size as before and keep their shape at every zoom step, from the closest (pictures 2 and 3) to the far map view (picture 4); the working loops play. Paper Mill: as good as the old one with much finer detail; it becomes the model for the rest. Kiln: now drawn from the front as asked (the old one was seen from the corner); two small fixes: when idle its mouth still shows a full fire (it should be dark with a few embers), and the working smoke is only a tiny blip on the chimney. Workbench: far better than the old corner view, but still turned about 13 degrees (the right post stands lower than the left one and the right side shows), so next to straight-front buildings it looks slightly rotated (picture 1, right pair). Small fixes for the Paper Mill: some grass at the very bottom edge, and in the working loop only the wheel hub and the press move (the wheel rim, the water and the paper sheet stay still). While you decide, 64 and 32 buildings stand side by side; the difference shows most at the closest zoom. To pick a combination that is not listed (for example: redo the Workbench and Kiln), add a note.",
+    "imgs": [
+      {
+        "file": "question-images/pilot64-1.png",
+        "cap": "Paper Mill and Workbench: today (32 px) next to the pilot (64 px), same size as at the closest zoom"
+      },
+      {
+        "file": "question-images/pilot64-2.png",
+        "cap": "Kiln: today (32 px, corner view), pilot (64 px, front), and in game beside the 32 px Forge"
+      },
+      {
+        "file": "question-images/pilot64-3.png",
+        "cap": "In game, closest zoom, working: Paper Mill 64, Workbench 64, Storehouse 32"
+      },
+      {
+        "file": "question-images/pilot64-4.png",
+        "cap": "In game at 30 cells (working) and at the far 60-cell zoom, next to 32 px buildings"
+      }
+    ],
+    "o": [
+      [
+        "rollout",
+        "Approve and roll out 64 px to everything standing, in the planned order (Sky-Bridge Shrine, then the NPCs, then the other buildings, resource nodes, trees and props, creatures). The listed fixes (Workbench turned to the front, Kiln idle mouth and smoke, Paper Mill bottom edge and fuller working loop) go into the first batch",
+        true
+      ],
+      [
+        "tweaks_first",
+        "Approve the 64 px look, but the artist fixes the listed points on the three pilot buildings first and I check them in game again before anything else is drawn at 64"
+      ],
+      [
+        "redo_workbench",
+        "Redo the Workbench (straight front view like the Paper Mill); approve the Paper Mill and Kiln and roll out"
+      ],
+      [
+        "redo_kiln",
+        "Redo the Kiln (a different shape or look); approve the Paper Mill and Workbench and roll out"
+      ],
+      [
+        "redo_paper_mill",
+        "Redo the Paper Mill; approve the Kiln and Workbench and roll out"
+      ],
+      [
+        "redo_all",
+        "Redo all three pilot buildings and show me again before any roll-out"
+      ],
+      [
+        "buildings_only",
+        "Approve, but roll out 64 px to buildings only; resource nodes, trees, props, NPCs and creatures stay at 32 px"
+      ],
+      [
+        "keep32",
+        "Keep 32 px after all: the pilot is not worth it; the 8 corner-view buildings are redrawn at 32 px instead"
+      ]
+    ]
   }
 ]

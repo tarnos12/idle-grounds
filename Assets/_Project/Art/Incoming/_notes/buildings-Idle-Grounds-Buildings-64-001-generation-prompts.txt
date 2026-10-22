@@ -1,0 +1,12 @@
+Static sprites were generated as new native pixel-art drawings from the Drive reference sprites,
+then reduced to the exact target canvas and quantized without dithering to the approved P01-P40
+palette. The paper-mill prompt preserved its accepted thatched hut / left water wheel / center
+press / right drying rack / rear bamboo composition. The kiln prompt explicitly replaced the
+diagonal dragon-kiln silhouette with an upright terracotta kiln, front fire mouth, rear chimney,
+brick stack and jars. The workbench prompt explicitly replaced the corner/diamond view with a
+front rectangular bench under a folded red awning and four bamboo posts, retaining saw, plane and
+plank stack. Every prompt required transparent background, no baked shadow, low noise, large value
+groups, selective outline, and minimum 2x2 detail clusters.
+
+The working loops were authored deterministically from the finalized static PNGs so frame 0 remains
+exact and stationary pixels do not boil.

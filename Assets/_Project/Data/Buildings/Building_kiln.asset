@@ -93,17 +93,17 @@ MonoBehaviour:
       rateMs: 1000
       speed: 170
       carry: 1
-  icon: {fileID: 21300000, guid: b94e94003f41f8e469a3b50bdd66b7e4, type: 3}
+  icon: {fileID: 21300000, guid: 0a5f98edc7f9ade44964436bf3702657, type: 3}
   hasRealArt: 1
   frames: []
   variants:
   - key: working
-    sprite: {fileID: 5402510555216319553, guid: c99eac14fd309994299e5fa1efbfa2c0, type: 3}
+    sprite: {fileID: 4880126887977109652, guid: c8173d1f91dbb544e953a97c1cf59732, type: 3}
     frames:
-    - {fileID: 5402510555216319553, guid: c99eac14fd309994299e5fa1efbfa2c0, type: 3}
-    - {fileID: 7625310125599776834, guid: c99eac14fd309994299e5fa1efbfa2c0, type: 3}
-    - {fileID: 4271766739862258521, guid: c99eac14fd309994299e5fa1efbfa2c0, type: 3}
-    - {fileID: 3141969599912839733, guid: c99eac14fd309994299e5fa1efbfa2c0, type: 3}
+    - {fileID: 4880126887977109652, guid: c8173d1f91dbb544e953a97c1cf59732, type: 3}
+    - {fileID: 6352372205738672553, guid: c8173d1f91dbb544e953a97c1cf59732, type: 3}
+    - {fileID: -328214222280359637, guid: c8173d1f91dbb544e953a97c1cf59732, type: 3}
+    - {fileID: -3454099896558950583, guid: c8173d1f91dbb544e953a97c1cf59732, type: 3}
     realArt: 0
     overlay: []
   prefabOverride: {fileID: 0}
