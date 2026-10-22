@@ -656,6 +656,8 @@ Everything in §1 still applies (front 3/4 view, light from the upper left, colo
 
 **On hold until the pilot is signed off:** every other standing-object request in this document, including the open 32-px repairs of 2026-10-21 (NPC idle strips, the 4 floating-base buildings, the 19 working loops; see the Delivery log) and §3.8 snowy trees and props. Please do **not** deliver them at 32 any more; they will be requested at 64 in the order below, and the 2026-10-21 repair notes still apply to the 64 drawings. NPC **portraits** are UI art and stay 64×64: their repairs continue now. Work that stays at 32 continues as before (for example the §3.8 snow ground, coast, water, ice and underside; Sky Path; items; UI; FX).
 
+**Batch order after sign-off: B1 (Shrine), then E (Requester NPCs), then B2–B4, C, D, F** — the Shrine and its NPCs are the next gameplay phase, so they come first.
+
 **After sign-off (each step is a separate batch; the 64 sizes and names follow §3.9.3–3.9.4, the audit verdicts above say what to change):**
 
 | Step | What | Order inside the step |
