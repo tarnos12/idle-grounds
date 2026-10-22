@@ -100,15 +100,68 @@ namespace IdleGrounds.Editor
             m.SetFloat(ShaderUtilities.ID_WeightBold, font.boldStyle);
         }
 
-        static TMP_FontAsset Make(string ttfPath, string assetPath, string name, TMP_FontAsset fallback, bool raster = false)
+        /// <summary>One "Text font" face (owner pick font_read = "setting", 2026-10-22): OFL TTFs in Art/Fonts/&lt;dir&gt;, assets
+        /// in its Resources folder under the names <see cref="IdleGrounds.Game.TextFonts"/> loads.</summary>
+        sealed class FaceDef
+        {
+            public string dir, regular, bold;
+            public IdleGrounds.Game.FontFace face;
+            /// <summary>SDF sampling size: a whole number of atlas texels per font pixel (square corners, open counters).</summary>
+            public int samplingPt, padding;
+            /// <summary>Line height in em (0 = the font's own). Jersey, VT323 and Press Start 2P ship with lines of about 1 em,
+            /// so wrapped lines touch; these give a whole number of screen px at the body size (like Pixelify's 1.2 em).</summary>
+            public float lineEm;
+        }
+
+        /// <summary>
+        /// Jersey 10: font pixel 150 / 1400 em with half-pixel steps of 75: 56 pt = 3 texels per half pixel; raster 28 px.
+        /// VT323: font pixel 40 / 1000 em: 75 pt = 3 texels per pixel; raster 25 px (1 screen px per font pixel).
+        /// Press Start 2P: font pixel 125 / 1000 em: 32 pt = 4 texels per pixel; raster 16 px (2 px per pixel).
+        /// Atkinson Hyperlegible: smooth, SDF only (64 pt) + its real bold.
+        /// </summary>
+        static readonly FaceDef[] Faces =
+        {
+            new FaceDef { dir = "Assets/_Project/Art/Fonts/Jersey10", regular = "Jersey10-Regular.ttf", face = IdleGrounds.Game.TextFonts.Jersey, samplingPt = 56, padding = 6, lineEm = 33f / 28f },
+            new FaceDef { dir = "Assets/_Project/Art/Fonts/VT323", regular = "VT323-Regular.ttf", face = IdleGrounds.Game.TextFonts.Vt323, samplingPt = 75, padding = 6, lineEm = 30f / 25f },
+            new FaceDef { dir = "Assets/_Project/Art/Fonts/PressStart2P", regular = "PressStart2P-Regular.ttf", face = IdleGrounds.Game.TextFonts.PressStart, samplingPt = 32, padding = 6, lineEm = 24f / 16f },
+            new FaceDef { dir = "Assets/_Project/Art/Fonts/AtkinsonHyperlegible", regular = "AtkinsonHyperlegible-Regular.ttf", bold = "AtkinsonHyperlegible-Bold.ttf", face = IdleGrounds.Game.TextFonts.Atkinson, samplingPt = 64, padding = 8 },
+        };
+
+        /// <summary>
+        /// "Idle Grounds/UI/Build Text Font Choices": the SDF, raster and bold cuts of every non-Pixelify face of the Text font
+        /// setting (static atlases, LiberationSans fallback; Pixelify itself stays on Build Pixel Font).
+        /// </summary>
+        [MenuItem("Idle Grounds/UI/Build Text Font Choices")]
+        public static void BuildChoices()
+        {
+            var liberation = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(LiberationAsset);
+            int made = 0;
+            foreach (var d in Faces)
+            {
+                var f = d.face;
+                string res = d.dir + "/Resources/";
+                var sdf = Make(d.dir + "/" + d.regular, res + f.sdfResource + ".asset", f.sdfResource, liberation, samplingPt: d.samplingPt, padding: d.padding, lineEm: d.lineEm);
+                if (sdf == null) { Debug.LogError("[PixelFont] " + f.name + " build failed"); continue; }
+                made++;
+                if (f.rasterResource != null && Make(d.dir + "/" + d.regular, res + f.rasterResource + ".asset", f.rasterResource, sdf, rasterPx: Mathf.RoundToInt(f.bodyPx), lineEm: d.lineEm) != null) made++;
+                if (d.bold != null && f.boldResource != null && Make(d.dir + "/" + d.bold, res + f.boldResource + ".asset", f.boldResource, liberation, samplingPt: d.samplingPt, padding: d.padding) != null) made++;
+            }
+            AssetDatabase.SaveAssets();
+            Debug.Log("[PixelFont] RESULT OK: " + made + " text font assets built");
+        }
+
+        static TMP_FontAsset Make(string ttfPath, string assetPath, string name, TMP_FontAsset fallback, bool raster = false, int rasterPx = 0, int samplingPt = SamplingPt, int padding = Padding, float lineEm = 0f)
         {
             var ttf = AssetDatabase.LoadAssetAtPath<Font>(ttfPath);
             if (ttf == null) { Debug.LogError("[PixelFont] missing " + ttfPath); return null; }
+            if (rasterPx > 0) raster = true;
+            if (raster && rasterPx <= 0) rasterPx = (int)IdleGrounds.Game.UiFont.PixelSize;
             var fa = raster
-                ? TMP_FontAsset.CreateFontAsset(ttf, (int)IdleGrounds.Game.UiFont.PixelSize, 2, GlyphRenderMode.RASTER_HINTED, 512, 512, AtlasPopulationMode.Dynamic, true)
-                : TMP_FontAsset.CreateFontAsset(ttf, SamplingPt, Padding, GlyphRenderMode.SDFAA, AtlasSize, AtlasSize, AtlasPopulationMode.Dynamic, true);
+                ? TMP_FontAsset.CreateFontAsset(ttf, rasterPx, 2, GlyphRenderMode.RASTER_HINTED, 512, 512, AtlasPopulationMode.Dynamic, true)
+                : TMP_FontAsset.CreateFontAsset(ttf, samplingPt, padding, GlyphRenderMode.SDFAA, AtlasSize, AtlasSize, AtlasPopulationMode.Dynamic, true);
             if (fa == null) { Debug.LogError("[PixelFont] CreateFontAsset failed for " + ttfPath); return null; }
             fa.name = name;
+            if (lineEm > 0f) { var fi = fa.faceInfo; fi.lineHeight = lineEm * fi.pointSize; fa.faceInfo = fi; }
             fa.TryAddCharacters(Charset(), out string missing);
             if (!string.IsNullOrEmpty(missing)) Debug.Log("[PixelFont] " + name + " lacks " + missing.Length + " char(s) (LiberationSans fallback): " + missing);
             fa.atlasPopulationMode = AtlasPopulationMode.Static;       // never grows in Play: no repo churn

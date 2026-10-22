@@ -1,33 +1,50 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace IdleGrounds.Game
 {
     /// <summary>
-    /// One pixel font for every text (owner pick vp_look = font, 2026-10-21: "all UI needs to be consistent").
-    /// The TMP default font is Pixelify Sans (menu Idle Grounds/UI/Build Pixel Font). Texts serialized with the old
-    /// LiberationSans asset (scene, prefabs, pooled world text) are switched at runtime: once per loaded scene and for every
-    /// text that rebuilds later (TMP's text-changed event), so nothing in the scene has to be rewritten.
-    /// <para>Pixelify Sans tells letters apart by 1-pixel slits (C vs O, 5 vs 8, e, G), so it is only legible on whole font
-    /// pixels. Screen UI therefore uses a hinted raster cut at 22 px (2 UI px per font pixel, like the 2x UI art), point
-    /// filtered, on pixel-perfect canvases, with every uGUI size snapped (<see cref="SnappedSize"/>). World text and outlined
-    /// text use the SDF cut (sampled on the font grid) and keep their material styling. Glyphs Pixelify lacks (arrows,
-    /// ticks) fall back to LiberationSans.</para>
+    /// The text fonts of every TMP text (owner picks vp_look = font, 2026-10-21, and font_read = "setting", 2026-10-22:
+    /// Menu > Settings "Text font", default Pixelify Sans titles + Jersey 10 for text and numbers). The TMP default font is
+    /// Pixelify Sans (menu Idle Grounds/UI/Build Pixel Font); the other faces are built by Idle Grounds/UI/Build Text Font
+    /// Choices into Resources. Texts serialized with LiberationSans or any of our faces (scene, prefabs, pooled world text)
+    /// are switched at runtime: once per loaded scene, for every text that rebuilds later (TMP's text-changed event) and all
+    /// at once when the player picks another font (<see cref="SetChoice"/>, live, no restart), so nothing in the scene has
+    /// to be rewritten.
+    /// <para>Every text has a role (<see cref="RoleOf"/>): Title (panel titles and headings) or Body (everything else and
+    /// every number); the setting gives each role a <see cref="FontFace"/>. Pixel faces tell letters apart by 1-pixel slits,
+    /// so they are only legible on whole font pixels: screen UI uses a hinted raster cut at the face's body size (point
+    /// filtered, drawn 1:1 on pixel-perfect canvases) and snaps every uGUI size to the face's grid
+    /// (<see cref="FontFace.SnapScreenPx"/>). World text and outlined text use the SDF cut and keep their material styling.
+    /// Glyphs a face lacks (arrows, ticks) fall back to LiberationSans.</para>
     /// </summary>
     public static class UiFont
     {
-        const string OldFontPrefix = "LiberationSans", NewFontPrefix = "PixelifySans";
+        /// <summary>PlayerPrefs key of the "Text font" setting (a player preference: not in the game save).</summary>
+        public const string PrefKey = "ig_text_font";
 
-        /// <summary>Resources name of the bold cut (Art/Fonts/PixelifySans/Resources).</summary>
+        /// <summary>Resources names of Pixelify's bold and raster cuts (Art/Fonts/PixelifySans/Resources).</summary>
         public const string BoldResource = "PixelifySans Bold SDF", RasterResource = "PixelifySans Pixel22";
-        static TMP_FontAsset pixel, pixelBold, raster22;
+
+        sealed class Cuts { public TMP_FontAsset sdf, raster, bold; }
+
+        static TMP_FontAsset pixel;
         static bool resolved, hooked;
+        static readonly Dictionary<string, Cuts> cuts = new Dictionary<string, Cuts>();
+        static TextFontOption choice;
         static readonly Dictionary<(Material, TMP_FontAsset), Material> mats = new Dictionary<(Material, TMP_FontAsset), Material>();
         /// <summary>Texts switched inside TMP's own rebuild: their mesh is regenerated once more after the frame's updates.</summary>
         static readonly List<TMP_Text> pending = new List<TMP_Text>();
         static Pump pump;
+
+        /// <summary>Bumped when the font setting changes (layouts that measured text refit when it moves).</summary>
+        public static int Version { get; private set; }
+        /// <summary>Raised after the font setting changed and every text was switched.</summary>
+        public static event Action Changed;
 
         /// <summary>Rebuilds the meshes of texts switched during a TMP rebuild (a font change there is not always picked up).</summary>
         sealed class Pump : MonoBehaviour
@@ -51,7 +68,8 @@ namespace IdleGrounds.Game
                     if (t == null) continue;
                     // switched while hidden (bar labels on a phone, closed panels): rebuild once it is shown, or the old
                     // atlas UVs are drawn with the new font material (garbled glyphs)
-                    if (t.isActiveAndEnabled) t.ForceMeshUpdate(true, true); else waiting.Add(t);
+                    if (t.isActiveAndEnabled) { t.ForceMeshUpdate(true, true); if (t is TextMeshProUGUI) UnityEngine.UI.LayoutRebuilder.MarkLayoutForRebuild(t.rectTransform); }     // fitters follow the new size
+                    else if (!waiting.Contains(t)) waiting.Add(t);
                 }
             }
         }
@@ -76,9 +94,9 @@ namespace IdleGrounds.Game
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStatics() { lastScale = -1f; uiCanvas = null; pixel = null; pixelBold = null; raster22 = null; resolved = false; mats.Clear(); pending.Clear(); pump = null; }
+        static void ResetStatics() { lastScale = -1f; uiCanvas = null; pixel = null; resolved = false; cuts.Clear(); choice = null; mats.Clear(); pending.Clear(); pump = null; widthFactor = -1f; }
 
-        /// <summary>The pixel font (TMP default font asset when it is Pixelify Sans), else null (no swapping).</summary>
+        /// <summary>The pixel font (TMP default font asset when it is Pixelify Sans), else null (no swapping at all).</summary>
         public static TMP_FontAsset Pixel
         {
             get
@@ -87,13 +105,104 @@ namespace IdleGrounds.Game
                 {
                     resolved = true;
                     var d = TMP_Settings.defaultFontAsset;
-                    pixel = d != null && d.name.StartsWith(NewFontPrefix) ? d : null;
-                    pixelBold = pixel != null ? Resources.Load<TMP_FontAsset>(BoldResource) : null;
-                    raster22 = pixel != null ? Resources.Load<TMP_FontAsset>(RasterResource) : null;
+                    pixel = d != null && d.name.StartsWith("PixelifySans") ? d : null;
                 }
                 return pixel;
             }
         }
+
+        static Cuts CutsOf(FontFace f)
+        {
+            if (f == null) return null;
+            if (cuts.TryGetValue(f.id, out var c)) return c;
+            c = new Cuts
+            {
+                sdf = f.sdfResource == null ? Pixel : Resources.Load<TMP_FontAsset>(f.sdfResource),
+                raster = f.rasterResource == null ? null : Resources.Load<TMP_FontAsset>(f.rasterResource),
+                bold = f.boldResource == null ? null : Resources.Load<TMP_FontAsset>(f.boldResource),
+            };
+            if (c.sdf == null) c = null;            // not built: callers use Pixelify
+            cuts[f.id] = c;
+            return c;
+        }
+
+        /// <summary>True when the face's assets exist (Resources).</summary>
+        public static bool Available(FontFace f) => Pixel != null && CutsOf(f) != null;
+
+        /// <summary>The face's main (SDF) asset, or Pixelify when it is not built.</summary>
+        public static TMP_FontAsset SdfOf(FontFace f) { var c = CutsOf(f); return c != null ? c.sdf : Pixel; }
+
+        // ================================================================ the setting
+
+        /// <summary>The "Text font" option in use (PlayerPrefs <see cref="PrefKey"/>, default Pixelify titles + Jersey 10).</summary>
+        public static TextFontOption Choice
+        {
+            get
+            {
+                if (choice == null)
+                {
+                    choice = TextFonts.Find(PlayerPrefs.GetString(PrefKey, TextFonts.DefaultId)) ?? TextFonts.Find(TextFonts.DefaultId);
+                    widthFactor = -1f;
+                }
+                return choice;
+            }
+        }
+
+        /// <summary>Read the setting from PlayerPrefs again (tests; a pref changed outside the game).</summary>
+        public static void ReloadChoice() { choice = null; widthFactor = -1f; }
+
+        /// <summary>Pick a "Text font" option: saved in PlayerPrefs (this device, not the game save) and applied to every text now.</summary>
+        public static void SetChoice(string id)
+        {
+            var o = TextFonts.Find(id);
+            if (o == null) return;
+            PlayerPrefs.SetString(PrefKey, o.id);
+            PlayerPrefs.Save();
+            if (o == choice) return;
+            choice = o;
+            widthFactor = -1f;
+            Version++;
+            if (Application.isPlaying) SwapAll();
+            Changed?.Invoke();
+        }
+
+        /// <summary>The face a role is drawn in under the current setting (Pixelify when that face is not built).</summary>
+        public static FontFace FaceFor(TextRole role)
+        {
+            var o = Choice;
+            var f = role == TextRole.Title ? o.title : o.body;
+            return Available(f) ? f : TextFonts.Pixelify;
+        }
+
+        static float widthFactor = -1f;
+        /// <summary>
+        /// Width of body text in the chosen face relative to Pixelify Sans at 22 px (same text, both at their body sizes):
+        /// 1 for Pixelify, more for wider faces (Press Start 2P). Layouts that grow with the text (<see cref="UiFit.TextGrowth"/>) use it.
+        /// </summary>
+        public static float BodyWidthFactor
+        {
+            get
+            {
+                if (widthFactor > 0f) return widthFactor;
+                var f = FaceFor(TextRole.Body);
+                float a = AdvanceOf(Pixel, TextFonts.Sample, FontFace.BasePx), b = AdvanceOf(SdfOf(f), TextFonts.Sample, f.bodyPx);
+                widthFactor = a > 0f && b > 0f ? b / a : 1f;
+                return widthFactor;
+            }
+        }
+
+        /// <summary>Sum of the glyph advances of <paramref name="s"/> at <paramref name="px"/> (0 when unknown).</summary>
+        public static float AdvanceOf(TMP_FontAsset fa, string s, float px)
+        {
+            if (fa == null || fa.faceInfo.pointSize <= 0) return 0f;
+            float sum = 0f;
+            var table = fa.characterLookupTable;
+            if (table == null) return 0f;
+            foreach (char ch in s) if (table.TryGetValue(ch, out var c) && c.glyph != null) sum += c.glyph.metrics.horizontalAdvance;
+            return sum * px / fa.faceInfo.pointSize;
+        }
+
+        // ================================================================ switching
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Boot()
@@ -114,7 +223,7 @@ namespace IdleGrounds.Game
             SwapAll();
         }
 
-        /// <summary>Switch every text in the loaded scenes (active or not) to the pixel font.</summary>
+        /// <summary>Switch every text in the loaded scenes (active or not) to the chosen fonts and sizes.</summary>
         public static int SwapAll()
         {
             if (Pixel == null) return 0;
@@ -125,98 +234,144 @@ namespace IdleGrounds.Game
                 if (c.isRootCanvas && c.renderMode != RenderMode.WorldSpace && !c.pixelPerfect) c.pixelPerfect = true;
             foreach (var t in Object.FindObjectsByType<TMP_Text>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (Apply(t)) { n++; pending.Add(t); }     // rebuild the mesh after the frame (a font switched outside a rebuild is not always redrawn)
+                if (Apply(t)) { n++; if (!pending.Contains(t)) pending.Add(t); }     // rebuild the mesh after the frame (a font switched outside a rebuild is not always redrawn)
             }
             return n;
         }
 
         static void OnTextChanged(Object o)
         {
-            if (o is TMP_Text t && Apply(t)) pending.Add(t);
+            if (o is TMP_Text t && Apply(t) && !pending.Contains(t)) pending.Add(t);
         }
 
-        /// <summary>Font pixels per em of Pixelify Sans (one font pixel = 1/11 em, ~91 font units).</summary>
+        /// <summary>Pixelify font pixels per em (one font pixel = 1/11 em, ~91 font units).</summary>
         public const float GridPerEm = 11f;
-        /// <summary>The native size of the pixel-exact (raster) cut: 2 UI px per font pixel, like the 2x UI art.</summary>
+        /// <summary>Pixelify's raster size (2 UI px per font pixel, like the 2x UI art) and the authored body size of the UI.</summary>
         public const float PixelSize = 22f;
 
-        /// <summary>
-        /// uGUI text sizes land on whole font pixels ON SCREEN (canvas scale included): the authored size times the canvas
-        /// scale is rounded to a multiple of 11 screen px, at least 22 (2 px per font pixel, like the 2x UI art). Multiples of
-        /// 22 px draws the raster cut 1:1 (crisp blocks); larger sizes (33, 44 = 3, 4 px per font pixel) use the SDF
-        /// cut. Desktop 1080p (scale 1): 15-27 -> 22, 28-38 -> 33. A phone (scale ~2): 17 -> 33 px, so phone text keeps its
-        /// size. Fractional sizes (17 px = 1.5 px per font pixel) blur the 1-pixel slits shut: C read as O, 5 as 8.
-        /// </summary>
-        public static float SnappedScreenPx(float size, float scale)
-        {
-            if (size <= 0f) return size;
-            return Mathf.Max(PixelSize, Mathf.Round(size * Mathf.Max(0.01f, scale) / GridPerEm) * GridPerEm);
-        }
+        /// <summary>Screen size of an authored uGUI body text at canvas scale <paramref name="scale"/> in the chosen body face.</summary>
+        public static float SnappedScreenPx(float size, float scale) => FaceFor(TextRole.Body).SnapScreenPx(size, scale);
 
-        /// <summary>Canvas-unit size for <paramref name="size"/> at canvas scale 1 (see <see cref="SnappedScreenPx"/>).</summary>
+        /// <summary>Screen size for <paramref name="size"/> at scale <paramref name="scale"/> in <paramref name="text"/>'s face (its role).</summary>
+        public static float SnappedScreenPx(TMP_Text text, float size, float scale) => FaceOf(text).SnapScreenPx(size, scale);
+
+        /// <summary>Canvas-unit size for <paramref name="size"/> at canvas scale 1 (see <see cref="FontFace.SnapScreenPx"/>).</summary>
         public static float SnappedSize(float size) => SnappedScreenPx(size, 1f);
-
-        // only 1:1: the bitmap cut drawn at 2x on a phone canvas (scale ~2.07) sampled the wrong texels
-        static bool IsRasterPx(float px) => Mathf.Abs(px - PixelSize) < 0.01f;
 
         static float lastScale = -1f;
 
         /// <summary>
-        /// Put one text on the right Pixelify cut: uGUI text without a custom material uses the raster cut at a snapped
-        /// size; world text and styled (outlined) text use the SDF cut and keep their material styling (cloned onto the
-        /// Pixelify atlas). Bold texts get the real bold cut and drop the Bold flag (TMP's synthetic bold dilates glyphs and
-        /// fills the 1-pixel counters). True = changed.
+        /// Title or Body. A <see cref="UiTextRole"/> decides; else world text is Body, and a uGUI text is a Title when its
+        /// object is named "...Title..." at an authored size of 21+ (panel titles, Help section heads) or when it was authored
+        /// at 24+ (tooltip and recipe headings, the big tree "?"). Everything else, and every small label, is Body.
+        /// </summary>
+        public static TextRole RoleOf(TMP_Text t)
+        {
+            if (t == null) return TextRole.Body;
+            if (t.TryGetComponent<UiTextRole>(out var r) && r.role != TextRole.Auto) return r.role;
+            if (!(t is TextMeshProUGUI)) return TextRole.Body;
+            if (t.enableAutoSizing) return TextRole.Body;
+            float authored = t.TryGetComponent<PixelTextSize>(out var rec) && rec.recorded ? rec.authored : t.fontSize;
+            if (authored >= 24f) return TextRole.Title;
+            return authored >= 21f && t.gameObject.name.IndexOf("Title", StringComparison.OrdinalIgnoreCase) >= 0 ? TextRole.Title : TextRole.Body;
+        }
+
+        /// <summary>The face <paramref name="t"/> is drawn in: its pinned face (previews), else its role's face.</summary>
+        public static FontFace FaceOf(TMP_Text t)
+        {
+            if (t != null && t.TryGetComponent<UiTextRole>(out var r) && !string.IsNullOrEmpty(r.face))
+            {
+                var f = TextFonts.FindFace(r.face);
+                if (f != null && Available(f)) return f;
+            }
+            return FaceFor(RoleOf(t));
+        }
+
+        static bool IsBoldCut(TMP_FontAsset fa) => fa != null && fa.name.Contains("Bold");
+
+        /// <summary>
+        /// Put one text on the right face and cut: uGUI text without a custom material uses the raster cut at a snapped size;
+        /// world text and styled (outlined) text use the SDF cut and keep their material styling (cloned onto the face's
+        /// atlas). Bold texts get the face's real bold cut where it has one, and never TMP's synthetic bold on a pixel face
+        /// (it dilates the glyphs and fills the 1-pixel counters). True = changed.
         /// </summary>
         public static bool Apply(TMP_Text t)
         {
             var p = Pixel;
             if (p == null || t == null) return false;
             var from = t.font;
-            if (from == null) return false;
-            bool fromOld = from.name.StartsWith(OldFontPrefix), fromOurs = from.name.StartsWith(NewFontPrefix);
-            if (!fromOld && !fromOurs) return false;
-            bool changed = false;
-            bool bold = (t.fontStyle & FontStyles.Bold) != 0 || from == pixelBold;
-            var old = t.fontSharedMaterial;
-            bool styled = old != null && old != from.material;
-            bool ui = t is TextMeshProUGUI;
-            bool rasterPx = false;
-            // auto-sized texts (phone area pill, menu buttons) pick in-between sizes: they keep auto-size on the SDF cut
-            if (ui && !t.enableAutoSizing)
+            if (from == null || !TextFonts.IsOwn(from.name)) return false;
+            var cur = t.fontSharedMaterial;
+
+            if (!t.TryGetComponent<PixelTextSize>(out var rec)) { rec = t.gameObject.AddComponent<PixelTextSize>(); rec.hideFlags = HideFlags.HideInInspector; }
+            if (!rec.recorded)
             {
-                float cur = t.fontSize;
-                // the authored size travels with the object (clones of a snapped template keep the original size)
-                if (!t.TryGetComponent<PixelTextSize>(out var rec)) { rec = t.gameObject.AddComponent<PixelTextSize>(); rec.hideFlags = HideFlags.HideInInspector; rec.authored = cur; rec.set = -1f; }
-                if (!Mathf.Approximately(rec.set, cur)) rec.authored = cur;          // code set a new size since we snapped it
-                var cv = t.canvas != null ? t.canvas.rootCanvas : null;
-                float scale = PixelsPerUnit(cv);
-                float px = SnappedScreenPx(rec.authored, scale);
-                float target = px / scale;
-                // phones: canvas scale ~2 and not a whole number, so text is never 1:1 with the raster cut: SDF at 3-4 px per
-                // font pixel (still on whole font pixels, slits stay open)
-                rasterPx = IsRasterPx(px) && !MobileUi.IsMobile;
-                // a parent scale (quest panel 0.85 on phones, the hand pill throb) would resample the point-filtered raster cut: SDF there
-                if (cv != null) { float rel = t.transform.lossyScale.y / Mathf.Max(1e-5f, cv.transform.lossyScale.y); if (Mathf.Abs(rel - 1f) > 0.01f) rasterPx = false; }
-                if (!Mathf.Approximately(cur, target)) { t.fontSize = target; changed = true; }
+                rec.recorded = true;
+                rec.authored = t.fontSize; rec.set = -1f;
+                rec.bold = (t.fontStyle & FontStyles.Bold) != 0 || IsBoldCut(from);
+                rec.baseMat = cur != null && cur != from.material ? cur : null;
+                rec.setMat = cur;
+            }
+            else
+            {
+                if ((t.fontStyle & FontStyles.Bold) != 0) rec.bold = true;                                // code asked for bold since
+                if (cur != rec.setMat) rec.baseMat = cur != null && cur != from.material ? cur : null;    // code set a material since
+            }
+
+            bool changed = false;
+            bool styled = rec.baseMat != null;
+            bool ui = t is TextMeshProUGUI;
+            var face = FaceOf(t);
+            var cs = CutsOf(face) ?? CutsOf(TextFonts.Pixelify);
+            if (cs == null) return false;
+            bool rasterPx = false;
+            if (t.enableAutoSizing)
+            {
+                // auto-sized texts stay on the SDF cut; their range follows the face (same look as Pixelify at 22 = the face's body size)
+                if (!Mathf.Approximately(rec.autoSetMax, t.fontSizeMax)) { rec.autoMin = t.fontSizeMin; rec.autoMax = t.fontSizeMax; }
+                float k = face.bodyPx / FontFace.BasePx, mn = rec.autoMin * k, mx = rec.autoMax * k;
+                if (!Mathf.Approximately(t.fontSizeMin, mn) || !Mathf.Approximately(t.fontSizeMax, mx)) { t.fontSizeMin = mn; t.fontSizeMax = mx; changed = true; }
+                rec.autoSetMax = t.fontSizeMax;
+            }
+            else
+            {
+                float now = t.fontSize;
+                if (!Mathf.Approximately(rec.set, now)) rec.authored = now;          // code set a new size since we snapped it
+                float target;
+                if (ui)
+                {
+                    var cv = t.canvas != null ? t.canvas.rootCanvas : null;
+                    float scale = PixelsPerUnit(cv);
+                    float px = face.SnapScreenPx(rec.authored, scale);
+                    target = px / scale;
+                    // phones: canvas scale ~2 and not a whole number, so text is never 1:1 with the raster cut: SDF at 3-4 px per
+                    // font pixel (still on whole font pixels, slits stay open)
+                    rasterPx = face.IsRasterPx(px) && !MobileUi.IsMobile;
+                    // a parent scale (quest panel 0.85 on phones, the hand pill throb) would resample the point-filtered raster cut: SDF there
+                    if (cv != null) { float rel = t.transform.lossyScale.y / Mathf.Max(1e-5f, cv.transform.lossyScale.y); if (Mathf.Abs(rel - 1f) > 0.01f) rasterPx = false; }
+                }
+                else target = face.WorldSize(rec.authored, ViewKit.FontPerPx);
+                if (!Mathf.Approximately(now, target)) { t.fontSize = target; changed = true; }
                 rec.set = t.fontSize;
             }
-            bool raster = ui && !styled && raster22 != null && rasterPx;
-            // the bold cut of this variable font is off the pixel grid (counters of e, a, G close at 22 px): screen UI uses
-            // the regular raster cut for bold too (hierarchy comes from size and colour); SDF text keeps the bold cut
-            var to = raster ? raster22 : (bold && pixelBold != null ? pixelBold : p);
-            if ((t.fontStyle & FontStyles.Bold) != 0 && (raster || to == pixelBold)) { t.fontStyle &= ~FontStyles.Bold; changed = true; }
-            if (to == from) return changed;
+            bool raster = ui && !styled && cs.raster != null && rasterPx;
+            var to = raster ? cs.raster : (rec.bold && cs.bold != null ? cs.bold : cs.sdf);
+            // no synthetic bold on pixel faces: hierarchy comes from size, colour and the title face; real bold cuts carry it
+            if ((t.fontStyle & FontStyles.Bold) != 0 && (raster || to == cs.bold || face.pixel)) { t.fontStyle &= ~FontStyles.Bold; changed = true; }
+            var mat = raster || !styled ? to.material : MapMaterial(rec.baseMat, to);
+            if (to == from && cur == mat) { rec.setMat = cur; return changed; }
             t.font = to;
-            t.fontSharedMaterial = raster ? to.material : MapMaterial(old, from, to);
+            t.fontSharedMaterial = mat;
+            rec.setMat = mat;
             return true;
         }
 
-        static Material MapMaterial(Material old, TMP_FontAsset from, TMP_FontAsset to)
+        static Material MapMaterial(Material old, TMP_FontAsset to)
         {
-            if (old == null || old == from.material) return to.material;
+            if (old == null) return to.material;
             if (mats.TryGetValue((old, to), out var m) && m != null) return m;
             ShaderUtilities.GetShaderPropertyIDs();
-            m = new Material(old) { name = old.name.Replace(OldFontPrefix, NewFontPrefix) };
+            m = new Material(old) { name = old.name + " @" + to.name };
             m.SetTexture(ShaderUtilities.ID_MainTex, to.atlasTexture);
             m.SetFloat(ShaderUtilities.ID_TextureWidth, to.atlasWidth);
             m.SetFloat(ShaderUtilities.ID_TextureHeight, to.atlasHeight);
@@ -228,4 +383,3 @@ namespace IdleGrounds.Game
         }
     }
 }
-

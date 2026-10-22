@@ -15,6 +15,7 @@ namespace IdleGrounds.Editor
     ///   build | demolish | place:TYPE@island,row,col | ghost:TYPE@island,row,col | cursor:island,row,col | cursorW:x,y | hover:island,TYPE | hoverNode:island,row,col (nearest interactable node)
     ///   help | stats | statsFlow | statsLifetime | tree | confirm | confirmReset | toast:TEXT | toasts:A|B|C | toastKind:Warning|TEXT | ending | dragonDialog:TEXT
     ///   questCollapse | questExpand
+    ///   menu | settings (Menu on its Settings page) | font:OPTION_ID (Text font setting, applied live; kept in PlayerPrefs)
     ///   recipe:island,TYPE | link:island | bridge:island | pavilion:island   (first BUILT building of that type)
     ///   give:ITEM,N (hand) | clearHand
     /// </summary>
@@ -32,6 +33,7 @@ namespace IdleGrounds.Editor
         static void CloseAll()
         {
             if (MobileLayer.Instance != null) MobileLayer.Instance.ClosePause();
+            else if (GameMenuView.Instance != null) GameMenuView.Instance.Close();
             var meta = MetaUiController.Instance;
             var build = UnityEngine.Object.FindFirstObjectByType<BuildController>();
             if (meta != null)
@@ -95,6 +97,9 @@ namespace IdleGrounds.Editor
                 case "demolish": build.ToggleDemolish(); break;
                 case "help": meta.Help.Open(); break;
                 case "pause": MobileLayer.Instance.OpenPause(); break;
+                case "menu": { var gm = GameMenuView.Ensure(); if (gm != null && !gm.IsOpen) gm.Open(); break; }
+                case "settings": { var gm = GameMenuView.Ensure(); if (gm != null) gm.OpenSettings(); break; }
+                case "font": UiFont.SetChoice(arg.Trim()); break;     // Text font option id (TextFonts.Options): pixelify, pixelify_jersey, jersey10, vt323, pressstart2p, smooth
                 case "pauseClose": MobileLayer.Instance.ClosePause(); break;
                 case "stats": meta.Stats.Show(false, false); meta.Stats.Open(); break;
                 case "statsFlow": meta.Stats.Show(true, false); meta.Stats.Open(); break;

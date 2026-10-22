@@ -29,6 +29,8 @@ namespace IdleGrounds.Game
             public Entry(string i, string l) { item = i; qty = 0; label = l; }
         }
 
+        int lastFont = -1;
+
         void Awake() { if (template != null) template.gameObject.SetActive(false); }
 
         /// <summary>Lay out entries centred on this transform. prefix = optional leading text (e.g. "Feed:").</summary>
@@ -37,7 +39,7 @@ namespace IdleGrounds.Game
             if (Same(entries, px, c, prefix, maxWidthUnits)) return;     // value compare, no per-frame allocation
             last.Clear();
             for (int i = 0; i < entries.Count; i++) last.Add(entries[i]);
-            lastPx = px; lastColour = c; lastPrefix = prefix; lastMaxW = maxWidthUnits; hasLast = true;
+            lastPx = px; lastColour = c; lastPrefix = prefix; lastMaxW = maxWidthUnits; hasLast = true; lastFont = UiFont.Version;
             int n = entries.Count + (string.IsNullOrEmpty(prefix) ? 0 : 1);
             while (pool.Count < n)
             {
@@ -107,7 +109,7 @@ namespace IdleGrounds.Game
 
         bool Same(IList<Entry> entries, float px, Color c, string prefix, float maxW)
         {
-            if (!hasLast || entries.Count != last.Count || px != lastPx || c != lastColour || maxW != lastMaxW || prefix != lastPrefix) return false;
+            if (!hasLast || lastFont != UiFont.Version || entries.Count != last.Count || px != lastPx || c != lastColour || maxW != lastMaxW || prefix != lastPrefix) return false;
             for (int i = 0; i < entries.Count; i++)
             {
                 var a = entries[i]; var b = last[i];

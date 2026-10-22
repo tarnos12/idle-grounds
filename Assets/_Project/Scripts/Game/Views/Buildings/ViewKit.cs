@@ -40,7 +40,12 @@ namespace IdleGrounds.Game
         /// </summary>
         public const float MinTextPx = 11f;
 
-        public static void Font(TextMeshPro t, float px) { if (t != null) t.fontSize = Mathf.Max(MinTextPx, px) * FontPerPx; }
+        public static void Font(TextMeshPro t, float px)
+        {
+            if (t == null) return;
+            t.fontSize = Mathf.Max(MinTextPx, px) * FontPerPx;
+            UiFont.Apply(t);        // the chosen face and its world size now, so a measurement right after this is right (Text font setting)
+        }
 
         public static void Colour(TextMeshPro t, Color c) { if (t != null && t.color != c) t.color = c; }
 

@@ -18,14 +18,16 @@ namespace IdleGrounds.Game
 
         /// <summary>
         /// How much larger body text is relative to the 1080p layout: 1 at 1920x1080 and on phones, 1.5 at 1280x720
-        /// (22 screen px stays 22 px while the canvas shrinks). Use it to widen text columns, never to scale art.
+        /// (22 screen px stays 22 px while the canvas shrinks), times how much wider the chosen body face is than Pixelify
+        /// (Text font setting: Press Start 2P). Use it to widen text columns, never to scale art.
         /// </summary>
         public static float TextGrowth(Canvas anyCanvas)
         {
             var root = anyCanvas != null ? anyCanvas.rootCanvas : null;
             float ppu = UiFont.PixelsPerUnit(root);
-            if (MobileUi.IsMobile || ppu <= 0f) return 1f;
-            return Mathf.Max(1f, 1f / ppu);
+            float wide = Mathf.Max(1f, UiFont.BodyWidthFactor);
+            if (MobileUi.IsMobile || ppu <= 0f) return wide;
+            return Mathf.Max(1f, 1f / ppu) * wide;
         }
 
         /// <summary>
@@ -47,6 +49,28 @@ namespace IdleGrounds.Game
             return true;
         }
 
+        /// <summary>
+        /// A row (HorizontalLayoutGroup) where <paramref name="flex"/> takes the room left and wraps, and every item in
+        /// <paramref name="keep"/> keeps its full width (buttons, a short count): wide faces (Press Start 2P) and 720p no longer
+        /// run one label into the next. Call after the texts changed.
+        /// </summary>
+        public static void ShareRow(TMP_Text flex, params Component[] keep)
+        {
+            if (flex == null) return;
+            flex.textWrappingMode = TextWrappingModes.Normal;
+            var le = flex.GetComponent<LayoutElement>() ?? flex.gameObject.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1f; le.minWidth = 0f;
+            foreach (var k in keep)
+            {
+                if (k == null) continue;
+                var kl = k.GetComponent<LayoutElement>() ?? k.gameObject.AddComponent<LayoutElement>();
+                float w = k is TMP_Text t ? Mathf.Ceil(WidestText(t, t.text)) : (kl.preferredWidth > 0f ? kl.preferredWidth : ((RectTransform)k.transform).rect.width);
+                if (k is Button) { var lab = k.GetComponentInChildren<TMP_Text>(true); if (lab != null && lab.gameObject.activeInHierarchy) w = Mathf.Max(w, WidestText(lab, lab.text) + 24f); }
+                kl.minWidth = Mathf.Max(kl.minWidth, w);
+                if (kl.preferredWidth < kl.minWidth) kl.preferredWidth = kl.minWidth;
+            }
+        }
+
         /// <summary>Widest label among <paramref name="texts"/> at <paramref name="label"/>'s font and size (canvas units).</summary>
         public static float WidestText(TMP_Text label, params string[] texts)
         {
@@ -58,7 +82,7 @@ namespace IdleGrounds.Game
             if (!label.enableAutoSizing && ppu > 0f && label is TextMeshProUGUI)
             {
                 float authored = label.TryGetComponent<PixelTextSize>(out var rec) && rec.authored > 0f ? rec.authored : keep;
-                label.fontSize = UiFont.SnappedScreenPx(authored, ppu) / ppu;
+                label.fontSize = UiFont.SnappedScreenPx(label, authored, ppu) / ppu;
             }
             float w = 0f;
             foreach (var s in texts) w = Mathf.Max(w, label.GetPreferredValues(s, 9999f, 9999f).x);

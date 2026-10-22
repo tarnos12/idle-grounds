@@ -126,6 +126,8 @@ namespace IdleGrounds.Game
             panelKey = key;
             ViewKit.SetText(bufferText, "Buffer " + n + "/" + cap);
             if (bufferText != null) bufferText.color = n >= cap ? UiPalette.Danger : UiPalette.Text;
+            UiFit.ShareRow(statusText, bufferText);            // the status wraps beside the buffer count (720p, wide text fonts)
+            UiFit.ShareRow(titleText, unpairButton, closeButton);
 
             if (partner != null)
             {

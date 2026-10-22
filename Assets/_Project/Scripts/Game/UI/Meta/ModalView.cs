@@ -26,6 +26,7 @@ namespace IdleGrounds.Game
         float designHeight = -1f;
         Vector2 lastCanvas;
         float lastScale;
+        int fontVersion = -1;
         bool fitDirty = true;
         /// <summary>Uniform scale applied by the last fit (1 = none; the scrolling body normally makes it unnecessary).</summary>
         public float FitScale { get; private set; } = 1f;
@@ -72,7 +73,7 @@ namespace IdleGrounds.Game
             var cr = CanvasRect();
             if (cr == null) return;
             float sc = UiFont.PixelsPerUnit(cr.GetComponent<Canvas>());
-            if (fitDirty || cr.rect.size != lastCanvas || !Mathf.Approximately(sc, lastScale)) FitToScreen();
+            if (fitDirty || fontVersion != UiFont.Version || cr.rect.size != lastCanvas || !Mathf.Approximately(sc, lastScale)) FitToScreen();
         }
 
         RectTransform CanvasRect()
@@ -99,6 +100,7 @@ namespace IdleGrounds.Game
             fitDirty = false;
             lastCanvas = cr.rect.size;
             lastScale = UiFont.PixelsPerUnit(cr.GetComponent<Canvas>());
+            fontVersion = UiFont.Version;
             if (boxFitter == null) boxFitter = b.GetComponent<ContentSizeFitter>();
             bool fitted = boxFitter != null && boxFitter.enabled && boxFitter.verticalFit != ContentSizeFitter.FitMode.Unconstrained;
             if (!fitted && designHeight < 0f) designHeight = b.sizeDelta.y;

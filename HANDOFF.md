@@ -5,7 +5,7 @@ commit, git fetch first) live in `CLAUDE.md` — not repeated here.
 
 ## ▶ NEXT SESSION: start here
 
-**Now (2026-10-22):** font setting (Settings > Text font) in progress; PPU 64 pilot request (Paper Mill, Kiln, Workbench) going to the artist via ART-SPEC 3.9. ADR 0007 Phase 2 (Shrine) still needs owner go-ahead; 74 validated Phase 2 art files wait for it.
+**Now (2026-10-22):** Text font setting built on branch `bg/font` (Menu > Settings > Text font: 6 options, default Pixelify titles + Jersey 10, live, PlayerPrefs `ig_text_font`; orchestrator merges, then UI QA re-checks the batch B screens per font); PPU 64 pilot request (Paper Mill, Kiln, Workbench) going to the artist via ART-SPEC 3.9. ADR 0007 Phase 2 (Shrine) still needs owner go-ahead; 74 validated Phase 2 art files wait for it.
 
 **Art intake 2026-10-21 (branch bg/art38):** 37 Drive zips reviewed (ART-SPEC Delivery log row 2026-10-21). In Play: sidewall v3 x7 and Fishing macro v4 accepted (CoastCurves side face 11 -> 18 px; Fishing macro now softened like the other biomes); `cliffwall_round` x7 rejected (flat stripes), straight walls stay pinned. 69 more files rejected on file review (NPC idles, sky path pieces, 19 working loops, 4 floating-base buildings, new-island blob/fill/wall/side/macro, lotus water, 6 portraits) and moved to `docs/art/rejected/`; 74 validated files sit unwired in Art/Incoming until ADR 0007 Phase 2. Next: artist redo; ArtIntake should prune stale GameDatabase entries when art is removed.
 **Visual pass batch B (2026-10-21, merged):** building panels anchored on their building (BuildingPanelAnchor), Pixelify Sans for all text (UiFont runtime swap + static TMP asset, menu Idle Grounds/UI/Build Pixel Font), icon-only desktop bar + one shared Help/Settings menu (GameMenuView, Esc opens it), crisp zoom stops 15/20/30/60 + 120-cell map stop, calmer ground tints (DecorStyle). Next: orchestrator merges bg/visb, UI QA review, art for ui_sound/ui_motion/ui_menu/ui_help/ui_reset and the jade primary button.
@@ -152,6 +152,8 @@ the active scene after MCP editor work.
   with the same names/keys.
 
 ## Last session summary
+
+- 2026-10-22: Text font setting (bg/font, owner pick font_read = setting): Jersey 10, VT323, Press Start 2P, Atkinson Hyperlegible added (OFL, Art/Fonts/<Name>/, menu Idle Grounds/UI/Build Text Font Choices: SDF + raster cut per face, fixed line heights). UiFont: Title / Body roles (UiTextRole or name/size rule), per-face size snapping (FontFace.SnapScreenPx), live switch (SetChoice -> SwapAll, Version/Changed for refits). GameMenuView: Settings page (Back arrow in the title bar, Esc returns to the menu), menu labels no longer auto-size (cells fit the widest label). Layout fixes for wide faces: Stats Flow note height, Altar tree footer two real lines, bridge status/title wrap beside buttons (UiFit.ShareRow), world pills measure in the chosen face (ViewKit.Font applies UiFont). Tests: TextFontsTests (EditMode). Open: recipe picker caption still runs under the panel edge at 1280x720 (all fonts, pre-existing).
 
 - 2026-10-22: owner answered art_density (PPU 64 for standing objects, pilot Paper Mill/Kiln/Workbench) and font_read (Settings > Text font with all options + Press Start 2P, default Pixelify titles + Jersey 10); docs/Design/owner-picks-2026-10-22.json. Font setting + pilot request started.
 
