@@ -12,6 +12,19 @@ namespace IdleGrounds.Game
 
         public static float U(float px) => px / Cell;
 
+        /// <summary>
+        /// Local scale that draws delivered art at its native size in this world (1 unit = 1 cell). Art is imported at
+        /// PPU = its density (32 texels per cell, or 64 for the obj64 standing-object art, ART-SPEC §3.9), so its bounds
+        /// are already in cells: scale 1. Any other PPU (legacy / placeholder) is treated as 32-per-cell art.
+        /// </summary>
+        public static float NativeScale(Sprite s)
+        {
+            if (s == null) return 1f;
+            float ppu = s.pixelsPerUnit;
+            if (Mathf.Approximately(ppu, Data.ArtKeys.BaseDensity) || Mathf.Approximately(ppu, Data.ArtKeys.HighDensity)) return 1f;
+            return ppu / Cell;
+        }
+
         /// <summary>Assign a sprite and scale the renderer so its larger side is <paramref name="px"/> world px.</summary>
         public static void Fit(SpriteRenderer sr, Sprite s, float px)
         {

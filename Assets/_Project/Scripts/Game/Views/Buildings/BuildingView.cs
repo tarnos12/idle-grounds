@@ -117,7 +117,7 @@ namespace IdleGrounds.Game
                 baseFrames = bf != null && bf.Length > 0 ? bf : null;
                 activeFrames = null;
                 foreach (var vn in ActiveVariants) { activeFrames = sync.Sprites.BuildingVariant(b.type, vn); if (activeFrames != null) break; }
-                float k = artSprite.pixelsPerUnit / ViewKit.Cell;      // native pixels: PPU 32 = 1 unit per cell
+                float k = ViewKit.NativeScale(artSprite);      // native size: PPU 32 or 64 (obj64, ART-SPEC §3.9) = bounds in cells
                 art.transform.localScale = new Vector3(k, k, 1f);
                 art.transform.localPosition = new Vector3(W * 0.5f, -H, 0f);   // bottom-centre pivot on the footprint's bottom edge
                 ArtSize = new Vector2(artSprite.bounds.size.x * k, artSprite.bounds.size.y * k);

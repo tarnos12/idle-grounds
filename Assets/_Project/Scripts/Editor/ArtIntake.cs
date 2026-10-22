@@ -27,10 +27,15 @@ namespace IdleGrounds.Editor
         static readonly Regex StripRx = new Regex(@"_(\d+)x(\d+)_(\d+)f$", RegexOptions.Compiled);
         static readonly Regex SizeOnlyRx = new Regex(@"_(\d+)x(\d+)$", RegexOptions.Compiled);
 
-        /// <summary>"fox_idle_32x32_4f" -> key "fox_idle", frames 4, frame size 32x32. Static art -> frames 1.</summary>
-        public static string ParseName(string baseName, out int frames, out int w, out int h)
+        /// <summary>"fox_idle_32x32_4f" -> key "fox_idle", frames 4, frame size 32x32. Static art -> frames 1.
+        /// A trailing density tag is dropped first ("bld_kiln_working_192x384_4f@64" -> "bld_kiln_working", ART-SPEC §3.9).</summary>
+        public static string ParseName(string baseName, out int frames, out int w, out int h) => ParseName(baseName, out frames, out w, out h, out _);
+
+        /// <summary><see cref="ParseName(string, out int, out int, out int)"/> plus the art density (texels per cell = import PPU: 32, or 64 for "@64" files).</summary>
+        public static string ParseName(string baseName, out int frames, out int w, out int h, out int density)
         {
             frames = 1; w = h = 0;
+            baseName = ArtKeys.SplitDensity(baseName, out density);
             var m = StripRx.Match(baseName);
             if (m.Success) { w = int.Parse(m.Groups[1].Value); h = int.Parse(m.Groups[2].Value); frames = int.Parse(m.Groups[3].Value); return baseName.Substring(0, m.Index); }
             m = SizeOnlyRx.Match(baseName);
@@ -86,11 +91,11 @@ namespace IdleGrounds.Editor
             var ti = (TextureImporter)assetImporter;
             string cat = CategoryOf(assetPath);
             string bn = Path.GetFileNameWithoutExtension(assetPath);
-            ParseName(bn, out int frames, out int fw, out int fh);
+            ParseName(bn, out int frames, out int fw, out int fh, out int density);
             bool bottom = BottomPivot(cat, bn);
 
             ti.textureType = TextureImporterType.Sprite;
-            ti.spritePixelsPerUnit = 32;
+            ti.spritePixelsPerUnit = density;     // 32, or 64 for "@64" standing-object art (obj64): world size stays the same
             ti.filterMode = FilterMode.Point;
             ti.textureCompression = TextureImporterCompression.Uncompressed;
             ti.mipmapEnabled = false;
@@ -153,10 +158,15 @@ namespace IdleGrounds.Editor
         /// <summary>key -> sprite (frame 0 for strips) for every delivered file. Keys are the stripped names ("node_bush", "enemy_fox_idle", "dragon_sleeping"); "_1x1" nodes are also registered under the bare key.</summary>
         public static Dictionary<string, Sprite> LoadIncomingSprites() => LoadIncoming(out _);
 
-        public static Dictionary<string, Sprite> LoadIncoming(out Dictionary<string, Sprite[]> frameMap)
+        /// <summary>key -> sprite / frames. When a key is delivered at both densities ("bld_kiln.png" and "bld_kiln@64.png"),
+        /// the 64 file wins (ART-SPEC §3.9); the 32 file stays in Art/Incoming as the fallback (delete the @64 file to go back).</summary>
+        public static Dictionary<string, Sprite> LoadIncoming(out Dictionary<string, Sprite[]> frameMap) => LoadIncoming(out frameMap, out _);
+
+        public static Dictionary<string, Sprite> LoadIncoming(out Dictionary<string, Sprite[]> frameMap, out Dictionary<string, int> densityMap)
         {
             var map = new Dictionary<string, Sprite>();
             frameMap = new Dictionary<string, Sprite[]>();
+            densityMap = new Dictionary<string, int>();
             if (!Directory.Exists(IncomingDir)) return map;
             foreach (var file in Directory.GetFiles(IncomingDir, "*.png", SearchOption.AllDirectories))
             {
@@ -166,15 +176,18 @@ namespace IdleGrounds.Editor
                 foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path)) if (o is Sprite sp) sprites.Add(sp);
                 if (sprites.Count == 0) continue;
                 sprites.Sort((a, b) => FrameIndex(a.name).CompareTo(FrameIndex(b.name)));
-                string key = ParseName(Path.GetFileNameWithoutExtension(path), out _, out _, out _);
-                Register(map, frameMap, key, sprites);
-                if (key.EndsWith("_1x1")) Register(map, frameMap, key.Substring(0, key.Length - 4), sprites);
+                string key = ParseName(Path.GetFileNameWithoutExtension(path), out _, out _, out _, out int density);
+                Register(map, frameMap, densityMap, key, sprites, density);
+                if (key.EndsWith("_1x1")) Register(map, frameMap, densityMap, key.Substring(0, key.Length - 4), sprites, density);
             }
             return map;
         }
 
-        static void Register(Dictionary<string, Sprite> map, Dictionary<string, Sprite[]> fm, string key, List<Sprite> s)
-        { map[key] = s[0]; fm[key] = s.Count > 1 ? s.ToArray() : null; }
+        static void Register(Dictionary<string, Sprite> map, Dictionary<string, Sprite[]> fm, Dictionary<string, int> dm, string key, List<Sprite> s, int density)
+        {
+            if (dm.TryGetValue(key, out int had) && had > density) return;     // the higher-density delivery of a key wins
+            map[key] = s[0]; fm[key] = s.Count > 1 ? s.ToArray() : null; dm[key] = density;
+        }
 
         static int FrameIndex(string spriteName)
         {
@@ -199,8 +212,17 @@ namespace IdleGrounds.Editor
             AssetDatabase.Refresh();
             var db = AssetDatabase.LoadAssetAtPath<GameDatabase>(DataRoot + "GameDatabase.asset");
             if (db == null) { Debug.LogError("ArtIntake: GameDatabase.asset missing - run Idle Grounds/Data/Import From JSON first."); return; }
-            var map = LoadIncoming(out var frameMap);
+            var map = LoadIncoming(out var frameMap, out var densityMap);
             int wired = 0, replaced = 0, warnings = 0;
+            // obj64 (ART-SPEC §3.9): a building's static art and its loops must share one density, or the body visibly
+            // changes pixel size when it starts working. Warn (never an error): the @64 loop is simply still to come.
+            foreach (var kv in densityMap)
+            {
+                if (!kv.Key.StartsWith("bld_")) continue;
+                foreach (var v in new[] { "_working", "_glow", "_pulse", "_occupied" })
+                    if (densityMap.TryGetValue(kv.Key + v, out int vd) && vd != kv.Value)
+                        Debug.LogWarning($"ArtIntake: '{kv.Key}' is {kv.Value} px per cell but '{kv.Key + v}' is {vd}: deliver the loop at the same density (ART-SPEC §3.9).");
+            }
             var used = new HashSet<string>();
 
             // 1) placeholder replacement (islands / sky / bridges), by identical file name
@@ -387,7 +409,8 @@ namespace IdleGrounds.Editor
             }
 
             AssetDatabase.SaveAssets();
-            Debug.Log($"ArtIntake: {wired} assignment(s) changed, {replaced} placeholder file(s) replaced, {warnings} unwired key(s) of {map.Count} delivered.");
+            int hi = 0; foreach (var d in densityMap.Values) if (d == ArtKeys.HighDensity) hi++;
+            Debug.Log($"ArtIntake: {wired} assignment(s) changed, {replaced} placeholder file(s) replaced, {warnings} unwired key(s) of {map.Count} delivered ({hi} at 64 px per cell).");
         }
 
         static bool SameFrames(Sprite[] a, Sprite[] b)

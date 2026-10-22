@@ -1,0 +1,11 @@
+{
+  "mode": "play", "width": 1920, "height": 1080, "warmupFrames": 60, "ui": false, "save": "",
+  "shots": [
+    { "name": "z0_15cells_k4", "island": "center", "x": -13, "y": 7, "size": 4.21875, "frames": 8,
+      "act": ["welcomeClose", "built:paper_mill@center,38,30", "built:workbench@center,38,35", "built:storehouse@center,38,40"] },
+    { "name": "z1_20cells_k3", "island": "center", "x": -13, "y": 7, "zoom": 1.143, "frames": 8 },
+    { "name": "z2_30cells_k2", "island": "center", "x": -13, "y": 7, "zoom": 1.714, "frames": 8 },
+    { "name": "z3_60cells_k1", "island": "center", "x": -13, "y": 7, "zoom": 3.43, "frames": 8 },
+    { "name": "z4_120cells_map", "island": "center", "x": -13, "y": 7, "zoom": 6.86, "frames": 8 }
+  ]
+}

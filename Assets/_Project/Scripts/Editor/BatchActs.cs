@@ -140,6 +140,15 @@ namespace IdleGrounds.Editor
                     if (gb == null) Debug.LogError(Tag + "ghost refused: " + arg);
                     break;
                 }
+                case "built":   // finished building placed straight through the sim near a cell (built:TYPE@island,row,col; art reviews)
+                {
+                    int at = arg.IndexOf('@');
+                    var p = arg.Substring(at + 1).Split(',');
+                    var bb = runner.Sim.Buildings.PlaceBuilt(p[0].Trim(), arg.Substring(0, at), int.Parse(p[1]), int.Parse(p[2]));
+                    if (bb == null) Debug.LogError(Tag + "built refused (no free spot): " + arg);
+                    else Debug.Log(Tag + $"built {bb.type} at {p[0].Trim()} r{bb.row} c{bb.col}");
+                    break;
+                }
                 case "hoverNode":
                 {
                     var p = arg.Split(',');

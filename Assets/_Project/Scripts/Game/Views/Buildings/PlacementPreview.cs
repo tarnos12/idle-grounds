@@ -82,7 +82,7 @@ namespace IdleGrounds.Game
             fill.transform.localScale = new Vector3(w, h, 1f);
             fill.color = ok ? OkFill : new Color(BadFill.r, BadFill.g, BadFill.b, 0.06f);   // blocked cells get their own tint (SetFeedback)
             shownW = w; shownH = h;
-            artTop = art != null ? Mathf.Max(0f, art.bounds.size.y * (art.pixelsPerUnit / ViewKit.Cell) - h) : 0f;
+            artTop = art != null ? Mathf.Max(0f, art.bounds.size.y * ViewKit.NativeScale(art) - h) : 0f;
             frame.transform.localPosition = Vector3.zero;
             frame.Set(w, h, ViewKit.U(1f), ok ? PixelSprites.C(PixelSprites.P11) : PixelSprites.C(PixelSprites.P18), !ok);
             ViewKit.Fit(icon, iconSprite, w <= 1 && h <= 1 ? 20f : 24f);
@@ -130,7 +130,7 @@ namespace IdleGrounds.Game
             ViewKit.Show(icon, art == null);
             if (art == null) return;
             artSr.sprite = art;
-            float k = art.pixelsPerUnit / ViewKit.Cell;
+            float k = ViewKit.NativeScale(art);
             artSr.transform.localScale = new Vector3(k, k, 1f);
             artSr.transform.localPosition = new Vector3(w * 0.5f, -h, 0f);
             artSr.color = ok ? new Color(1f, 1f, 1f, 0.6f) : new Color(1f, 0.6f, 0.6f, 0.6f);

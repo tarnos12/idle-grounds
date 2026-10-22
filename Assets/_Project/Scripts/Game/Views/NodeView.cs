@@ -43,7 +43,7 @@ namespace IdleGrounds.Game
 
         const float ArtFps = 6f;
         const float OverlayFps = 8f;    // ART-SPEC: overlay loops play at 8 fps
-        const float ArtPpu = 32f;
+        const float ArtPpu = 32f;       // world px per cell; delivered art bounds are already in cells at PPU 32 or 64 (obj64)
         Sprite[] artFrames;     // real art with >1 frames
         Sprite[] overlayFrames; // real-art overlay strip (Spirit Tree sparkle), drawn just above the sprite
         SpriteRenderer overlay; // lazily created child of the sprite renderer (same pivot / scale / flip)
