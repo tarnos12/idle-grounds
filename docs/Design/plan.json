@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-21 20:53",
+  "updated": "2026-10-22 06:13",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -262,11 +262,11 @@
         },
         {
           "title": "Building art redo: reference sheet for all 26 buildings",
-          "detail": "Owner: all buildings look too pixelated / low quality. Art director makes one reference sheet, checks all 26 and writes the redo request (and asks the owner if the pixel density rule itself should change).",
-          "status": "waiting",
+          "detail": "Owner 2026-10-22: PPU 64 for everything standing on the ground; ground/coast stay 32. Pilot: Paper Mill, Kiln, Workbench checked in game first, then the rest.",
+          "status": "in-progress",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Owner question art_density (Hub): pixel density decides the redo. Done: reference sheet + audit (8 REF, 10 CLEAN, 8 REDRAW), redo draft in ART-SPEC 3.9, not sent to the artist"
+          "now": "Art director finalising ART-SPEC 3.9 pilot request + code support for PPU 64 objects"
         },
         {
           "title": "Snowy northern Fishing island",
@@ -292,11 +292,11 @@
         },
         {
           "title": "Pixel font readability: 5 reads as S, 3 as 8, B as 8",
-          "detail": "UI QA #1/#2: Pixelify Sans at 22 px makes digits and some capitals ambiguous. Hub question with side-by-side font samples.",
-          "status": "waiting",
+          "detail": "Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth).",
+          "status": "in-progress",
           "size": "S",
           "owner": "Claude",
-          "blockedBy": "Owner question font_read in the Hub (Pixelify titles + Jersey 10 body recommended); images in question-images/font-read-*.png"
+          "now": "UI/UX agent building the font setting"
         }
       ]
     },

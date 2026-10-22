@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-22",
+  "verbatim": "Answers\nart_density: 64 px per cell for everything standing on the ground: buildings, resource nodes, trees, props, NPCs and creatures; ground and coast tiles stay 32. Start with a 3-building pilot (Paper Mill, Kiln, Workbench) that you check in game first\nfont_read: All of them as a player choice in Menu > Settings (\"Text font\": Pixelify only, Pixelify titles + Jersey 10, Jersey 10 only, VT323, Smooth); the game starts on Pixelify titles + Jersey 10  | note: Press start P2 looks good",
+  "answers": {
+    "art_density": "obj64",
+    "font_read": "setting"
+  },
+  "notes": {
+    "font_read": "Press start P2 looks good"
+  },
+  "interpretation": {
+    "art_density": "PPU 64 for all standing objects (buildings, nodes, trees, props, NPCs, creatures); ground + coast tiles stay 32. Pilot first: Paper Mill, Kiln, Workbench, checked in game before the rest.",
+    "font_read": "Menu > Settings 'Text font' with every option, default Pixelify titles + Jersey 10. Note: Press Start 2P looks good, so it is added as one more choice in the setting."
+  }
+}

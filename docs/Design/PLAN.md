@@ -1,13 +1,15 @@
 # Idle Grounds: plan
 
-Updated 2026-10-21 19:55. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-22 06:13. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**23 of 43 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
+**25 of 46 tasks done**, 5 in progress, 3 to do, 3 blocked, 10 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
+- **M3** Building art redo: reference sheet for all 26 buildings: Art director finalising ART-SPEC 3.9 pilot request + code support for PPU 64 objects
+- **M3** Pixel font readability: 5 reads as S, 3 as 8, B as 8: UI/UX agent building the font setting
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
@@ -15,7 +17,7 @@ Updated 2026-10-21 19:55. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 8 / 16 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 10 / 19 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -87,8 +89,11 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Visual pass batch B: changes that need your answers | Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island. | Claude |
 | Waiting | Visual pass batch C: new art (77 files) | Ground fills, macro patches, veil mist v2, shadows, rack/bridge, icons, item drops; 45 files can start now, 32 wait on your answers. | Artist |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
-| Waiting | Building art redo: reference sheet for all 26 buildings | Owner: all buildings look too pixelated / low quality. Art director makes one reference sheet, checks all 26 and writes the redo request (and asks the owner if the pixel density rule itself should change). | Claude |
+| In progress | Building art redo: reference sheet for all 26 buildings **(NOW)** | Owner 2026-10-22: PPU 64 for everything standing on the ground; ground/coast stay 32. Pilot: Paper Mill, Kiln, Workbench checked in game first, then the rest. | Claude |
 | Waiting | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
+| Done | UI QA: batch B review | UI QA pass of visual pass batch B (anchored panels, Pixelify Sans, icon bar + menu, crisp zoom). Findings in docs/reviews/2026-10-21-ui-qa-batch-b.md. | Claude |
+| Done | UI QA fixes after batch B | From docs/reviews/2026-10-21-ui-qa-batch-b.md: Stats doesn't fit phone safe area (#3), Stats Flow overlap at 720p (#4), Altar tree crowding (#5), world pill / NEW badge text under 12 px (#7), phone panels shrink below the text floor (#10), narrow quest panel at 720p (#11), off-screen anchored panels (#8). | Claude |
+| In progress | Pixel font readability: 5 reads as S, 3 as 8, B as 8 **(NOW)** | Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth). | Claude |
 
 ## M4: Art coverage. Later
 
