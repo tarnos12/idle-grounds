@@ -339,6 +339,9 @@ namespace IdleGrounds.Game
             {
                 var r = NewRect(name, settingsPage);
                 var f = r.gameObject.AddComponent<VerticalLayoutGroup>(); f.childControlWidth = true; f.childControlHeight = true; f.childForceExpandWidth = true; f.childForceExpandHeight = false;
+                f.padding = new RectOffset(16, 16, 0, 0);
+                // the lines take the width of the option grid and wrap inside it (a wide face made the note the widest item, so it ran to the frame)
+                var wle = r.gameObject.AddComponent<LayoutElement>(); wle.minWidth = 0f; wle.preferredWidth = 0f; wle.flexibleWidth = 1f;
                 var t = NewText(r, text, 22f, color);
                 UiTextRole.Set(t, role);
                 return t;

@@ -331,6 +331,29 @@ namespace IdleGrounds.Game
                 Describe(area.BuildingById(l.from), row.Source);
                 Describe(area.BuildingById(l.to), row.Target);
             }
+            FitRowWidth(n);
+        }
+
+        /// <summary>A wide Text font (Press Start 2P) needs more than one row: widen the cells (the anchor caps them to the free space; what still does not fit is cut with an ellipsis, never printed over a neighbour).</summary>
+        void FitRowWidth(int n)
+        {
+            var gl = grid != null ? grid.GetComponent<GridLayoutGroup>() : null;
+            if (gl == null || anchor == null) return;
+            // the state-word column fits the widest word in the current face (Press Start 2P cut "waiting" to "waiti...")
+            float wordW = 100f;
+            if (rows.Count > 0 && rows[0].StateText != null)
+                foreach (var w in new[] { "sending", "waiting", "blocked", "idle" }) wordW = Mathf.Max(wordW, Mathf.Ceil(rows[0].StateText.GetPreferredValues(w, 9999f, 9999f).x) + 8f);
+            foreach (var r in rows)
+            {
+                var wle = r.StateText != null ? r.StateText.GetComponent<LayoutElement>() : null;
+                if (wle != null && !Mathf.Approximately(wle.preferredWidth, wordW)) { wle.minWidth = wle.preferredWidth = wordW; }
+            }
+            float need = 0f;
+            for (int i = 0; i < n && i < rows.Count; i++) need = Mathf.Max(need, Mathf.Ceil(rows[i].PreferredWidth()));
+            need = Mathf.Max(PanelWidth - 40f, need);
+            if (Mathf.Approximately(gl.cellSize.x, need)) return;
+            gl.cellSize = new Vector2(need, gl.cellSize.y);
+            anchor.SetWidth(need + 40f);
         }
 
         /// <summary>The status dot in words: green sending, amber waiting, red blocked, grey idle.</summary>

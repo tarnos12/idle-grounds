@@ -39,9 +39,12 @@ namespace IdleGrounds.Game
         public void SetPivot(Pivot p) { if (pivot != p) { pivot = p; dirty = true; } }
 
         /// <summary>Show the tag. Any sprite may be null. Cheap when nothing changed.</summary>
+        int lastFontVersion = -1;
+
         public void Set(string text, Color colour, Sprite shapeSprite = null, Sprite iconSprite = null, Sprite trailSprite = null)
         {
             text ??= "";
+            if (lastFontVersion != UiFont.Version) { lastFontVersion = UiFont.Version; dirty = true; }      // Text font setting: measure again in the new face
             if (!dirty && text == lastText && colour == lastColour && shapeSprite == lastShape && iconSprite == lastIcon && trailSprite == lastTrail) return;
             bool layout = dirty || text != lastText || shapeSprite != lastShape || iconSprite != lastIcon || trailSprite != lastTrail;
             dirty = false;

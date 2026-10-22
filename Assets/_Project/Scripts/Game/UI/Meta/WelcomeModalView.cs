@@ -47,6 +47,13 @@ namespace IdleGrounds.Game
 
         public override void Close() => Continue();
 
+        protected override void LateUpdate()
+        {
+            // the button grows with its label (Press Start 2P cut "Continue >" to "ontinue")
+            if (IsOpen && continueButton != null && UiFit.FitButton(continueButton, 0f, 40f)) MarkFitDirty();
+            base.LateUpdate();
+        }
+
         public override bool Escape()
         {
             if (!IsOpen) return false;

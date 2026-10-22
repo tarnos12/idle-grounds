@@ -96,7 +96,7 @@ namespace IdleGrounds.Game
             if (reach != null && (kind == Kind.GatheringStone || kind == Kind.FurnaceSpirit)) ViewKit.Show(reach, on);
         }
 
-        int lastA = int.MinValue, lastB = int.MinValue; float lastTw;
+        int lastA = int.MinValue, lastB = int.MinValue; float lastTw; int lastFontVersion = -1;
         public override bool IsActive(BuildingView v) => kind == Kind.GatheringStone && v.Building.links != null && v.Building.links.Count > 0 && BuildingSystem.GatherTotal(v.Building) < v.Def.gather.cap;
 
 
@@ -120,6 +120,7 @@ namespace IdleGrounds.Game
                     a = b.links != null ? b.links.Count : 0;
                     break;
             }
+            if (lastFontVersion != UiFont.Version) { lastFontVersion = UiFont.Version; lastA = lastB = int.MinValue; }      // Text font setting: measure the badge again
             if (a != lastA || cap2 != lastB)       // the badge string is only rebuilt when its numbers change
             {
                 lastA = a; lastB = cap2;

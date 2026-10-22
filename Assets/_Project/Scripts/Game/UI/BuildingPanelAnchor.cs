@@ -59,6 +59,9 @@ namespace IdleGrounds.Game
             return a;
         }
 
+        /// <summary>The panel width wanted in canvas units (still capped to the free space); views whose content grows with the Text font call this.</summary>
+        public void SetWidth(float w) { width = w; }
+
         /// <summary>Called when the building leaves the screen (null = hide the panel). The views pass their Close.</summary>
         public System.Action OnLeftScreen;
         /// <summary>True = keep the panel while its building is off screen (the player is working with it elsewhere).</summary>

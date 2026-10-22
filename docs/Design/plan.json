@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-22 07:02",
+  "updated": "2026-10-22 08:22",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -293,10 +293,9 @@
         {
           "title": "Pixel font readability: 5 reads as S, 3 as 8, B as 8",
           "detail": "Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth).",
-          "status": "in-progress",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "now": "Text font setting merged (Menu > Settings); UI QA per font next"
+          "owner": "Claude"
         }
       ]
     },

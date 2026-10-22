@@ -63,6 +63,7 @@ namespace IdleGrounds.Game
             }
             nameText.text = def.name;
             newBadge.SetActive(isNew && !Locked);
+            if (art && newLabel != null && badgeFontVersion != UiFont.Version) FitBadge();
             lockedText.gameObject.SetActive(Locked);
             lockedText.text = lockedReason ?? "";
             costRow.gameObject.SetActive(!Locked);
@@ -115,12 +116,7 @@ namespace IdleGrounds.Game
                     newLabel.fontStyle = FontStyles.Normal;
                     newLabel.enableAutoSizing = false;
                     newLabel.fontSize = UiFont.PixelSize;
-                    newLabel.text = "New";
-                    newLabel.textWrappingMode = TextWrappingModes.NoWrap;
-                    newLabel.overflowMode = TextOverflowModes.Overflow;
-                    UiFont.Apply(newLabel);
-                    var pref = newLabel.GetPreferredValues("New", 9999f, 9999f);
-                    brt.sizeDelta = new Vector2(Mathf.Ceil(pref.x + 20f), Mathf.Max(26f, Mathf.Ceil(pref.y + 4f)));
+                    FitBadge();
                     // centred on the card's top edge, so it never covers the name; the strip leaves room above the cards
                     brt.pivot = new Vector2(1f, 0.5f);
                     brt.anchoredPosition = new Vector2(-8f, 0f);
@@ -128,6 +124,24 @@ namespace IdleGrounds.Game
                         strip.padding = new RectOffset(strip.padding.left, strip.padding.right, 16, strip.padding.bottom);
                 }
             }
+        }
+
+        int badgeFontVersion = -1;
+
+        /// <summary>Measures the "New" word in the current Text font (the font setting can change at any time) and sizes the pill around it.</summary>
+        void FitBadge()
+        {
+            if (newLabel == null) return;
+            var brt = (RectTransform)newBadge.transform;
+            badgeFontVersion = UiFont.Version;
+            newLabel.text = "New";
+            newLabel.textWrappingMode = TextWrappingModes.NoWrap;
+            newLabel.overflowMode = TextOverflowModes.Overflow;
+            UiFont.Apply(newLabel);
+            var pref = newLabel.GetPreferredValues("New", 9999f, 9999f);
+            // tall line boxes (Jersey 10, Pixelify at 28 px) made a 50 px badge that hid the top half of the card name: cap the height
+            brt.sizeDelta = new Vector2(Mathf.Ceil(pref.x + 20f), Mathf.Clamp(Mathf.Ceil(pref.y + 4f), 26f, 32f));
+            newLabel.alignment = TextAlignmentOptions.Center;
         }
 
         /// <summary>Swaps the card background by state (target / locked-or-unaffordable dim / affordable / new+unaffordable normal). False = no art, placeholder styling applies.</summary>

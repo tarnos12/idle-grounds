@@ -79,6 +79,7 @@ namespace IdleGrounds.Game
             }
             popup.gameObject.SetActive(true);
             detail.gameObject.SetActive(false);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(popup);       // the popup is as wide as its cells now: the caption wraps to that width
             UpdateCaption(-1);
             LayoutRebuilder.ForceRebuildLayoutImmediate(popup);
             if (anchor != null) anchor.Bind(area, b.id); else Position();
@@ -110,7 +111,27 @@ namespace IdleGrounds.Game
             if (def == null || def.recipes.Count == 0) { caption.text = ""; return; }
             int i = hover >= 0 && hover < def.recipes.Count ? hover : Mathf.Clamp(b.recipe, 0, def.recipes.Count - 1);
             caption.text = Summary(def, i, b);
+            FitCaption();
         }
+
+        /// <summary>The caption wraps to the popup width (3 cells): in the wider faces it takes two or three lines, so its holder grows with it
+        /// (a fixed 52 px holder let "(current)" run under the popup frame, UI QA fonts #1).</summary>
+        void FitCaption()
+        {
+            var holder = caption.transform.parent as RectTransform;
+            var le = holder != null ? holder.GetComponent<LayoutElement>() : null;
+            if (le == null) return;
+            float w = holder.rect.width;
+            if (w < 40f && grid != null) w = ((RectTransform)grid).rect.width;
+            if (w < 40f) return;
+            caption.textWrappingMode = TMPro.TextWrappingModes.Normal;
+            float h = Mathf.Ceil(caption.GetPreferredValues(caption.text, w, 9999f).y) + 6f;
+            if (baseCaptionH <= 0f) baseCaptionH = le.minHeight;
+            float want = Mathf.Max(baseCaptionH, h);
+            if (!Mathf.Approximately(le.minHeight, want)) { le.minHeight = want; le.preferredHeight = want; }
+        }
+
+        float baseCaptionH;
 
         /// <summary>Same-output siblings: the first input of this recipe that some sibling lacks.</summary>
         Sprite BadgeFor(List<RecipeDef> recs, int i)
