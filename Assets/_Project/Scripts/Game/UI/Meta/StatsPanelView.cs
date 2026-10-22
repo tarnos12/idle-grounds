@@ -149,7 +149,7 @@ namespace IdleGrounds.Game
             var cv = box != null ? box.GetComponentInParent<Canvas>(true) : null;
             if (cv == null) return;
             float ppu = UiFont.PixelsPerUnit(cv.rootCanvas);
-            float key = ppu + (flowRoot != null && flowRoot.activeInHierarchy ? 1000f : 0f);     // hidden texts cannot be measured: refit per tab
+            float key = ppu + (flowRoot != null && flowRoot.activeInHierarchy ? 1000f : 0f) + UiFont.Version * 10000f;     // and per Text font setting     // hidden texts cannot be measured: refit per tab
             if (Mathf.Approximately(key, columnsAt)) return;
             columnsAt = key;
             float g = UiFit.TextGrowth(cv);
@@ -160,6 +160,7 @@ namespace IdleGrounds.Game
                 UiFit.FitButton(scopeButton, Mathf.Max(150f, UiFit.WidestText(scopeLabel, "This run", "Lifetime") + 32f));
             if (sortButton != null && sortLabel != null)
                 UiFit.FitButton(sortButton, Mathf.Max(210f, UiFit.WidestText(sortLabel, "Sort: net / min", "Sort: net total", "Sort: name") + 32f));
+            FitNote(box);
             var header = flowRoot != null ? flowRoot.transform.Find("ColumnHeader") : null;
             for (int i = 0; i < Cols.Length; i++)
             {
@@ -170,6 +171,19 @@ namespace IdleGrounds.Game
                 if (flowRowTemplate != null) SetWidth(flowRowTemplate.transform.Find(Cols[i]), w);
                 foreach (var r in flowRows) if (r != null) SetWidth(r.transform.Find(Cols[i]), w);
             }
+        }
+
+        /// <summary>The flow note wraps (wide faces, 720p): its row takes the wrapped height, so it never runs into the column heads.</summary>
+        void FitNote(RectTransform box)
+        {
+            var note = flowRoot != null ? flowRoot.transform.Find("Hint") : null;
+            var nt = note != null ? note.GetComponent<TextMeshProUGUI>() : null;
+            if (nt == null || !nt.gameObject.activeInHierarchy) return;
+            UiFont.Apply(nt);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(box);
+            float w = ((RectTransform)flowRoot.transform).rect.width;
+            var le = nt.GetComponent<LayoutElement>() ?? nt.gameObject.AddComponent<LayoutElement>();
+            if (w > 1f) le.minHeight = le.preferredHeight = Mathf.Ceil(nt.GetPreferredValues(nt.text, w, 9999f).y);
         }
 
         static void SetWidth(Transform t, float w)

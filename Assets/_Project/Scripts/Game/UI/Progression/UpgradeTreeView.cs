@@ -134,8 +134,8 @@ namespace IdleGrounds.Game
             UiFit.FitButton(cancelJobButton, 210f);
             if (jobText == null || body == null) return;
             UiFont.Apply(jobText);
-            float line = jobText.GetPreferredValues("Ag", 9999f, 9999f).y;
-            float footH = Mathf.Max(60f, Mathf.Ceil(line * 2f + 10f));
+            float two = jobText.GetPreferredValues("Ag\nAg", 9999f, 9999f).y;       // two lines at the face's own leading (Text font setting)
+            float footH = Mathf.Max(60f, Mathf.Ceil(two + 10f));
             if (jobText.transform.parent is RectTransform foot && foot != box)
             {
                 foot.sizeDelta = new Vector2(foot.sizeDelta.x, footH);

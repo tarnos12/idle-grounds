@@ -1,6 +1,6 @@
 # Idle Grounds: plan
 
-Updated 2026-10-22 06:31. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-22 07:02. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
 **25 of 46 tasks done**, 4 in progress, 3 to do, 3 blocked, 11 waiting.
 
@@ -8,7 +8,7 @@ Updated 2026-10-22 06:31. Source of truth: docs/Design/plan.json, edited with to
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M3** Pixel font readability: 5 reads as S, 3 as 8, B as 8: UI/UX agent building the font setting
+- **M3** Pixel font readability: 5 reads as S, 3 as 8, B as 8: Text font setting merged (Menu > Settings); UI QA per font next
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |

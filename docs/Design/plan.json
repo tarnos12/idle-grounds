@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-22 06:31",
+  "updated": "2026-10-22 07:02",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -296,7 +296,7 @@
           "status": "in-progress",
           "size": "S",
           "owner": "Claude",
-          "now": "UI/UX agent building the font setting"
+          "now": "Text font setting merged (Menu > Settings); UI QA per font next"
         }
       ]
     },
