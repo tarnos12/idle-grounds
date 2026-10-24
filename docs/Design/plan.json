@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-22 17:04",
+  "updated": "2026-10-24 21:17",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -262,11 +262,11 @@
         },
         {
           "title": "Building art redo: reference sheet for all 26 buildings",
-          "detail": "Owner 2026-10-22: PPU 64 for everything standing on the ground; ground/coast stay 32. Pilot: Paper Mill, Kiln, Workbench checked in game first, then the rest.",
-          "status": "waiting",
+          "detail": "Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures.",
+          "status": "in-progress",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "64 px pilot (Buildings-64-001) integrated + reviewed in game: Paper Mill + Kiln accepted (Kiln idle-mouth/smoke tweaks), Workbench needs a projection repair; waiting for owner sign-off (Hub question pilot64_signoff)"
+          "now": "Art director writing the first 64 px rollout batch into ART-SPEC 3.9.6"
         },
         {
           "title": "Snowy northern Fishing island",
