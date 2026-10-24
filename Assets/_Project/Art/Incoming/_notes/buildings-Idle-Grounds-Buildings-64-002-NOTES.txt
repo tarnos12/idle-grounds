@@ -1,0 +1,8 @@
+Idle Grounds — Buildings 64 Batch 002
+
+Spec: ART-SPEC.md v6.1 rollout Batch 1.
+Frame layout: four horizontal frames; frame 0 is byte-identical in pixels to the matching static PNG.
+Palette: P01–P40 only. Static alpha is binary. Smoke and qi glow use four-step alpha only.
+Pivot: bottom-center; each static base touches its final canvas row.
+Source references: Buildings-64-001 and validated Buildings-013 sky shrine.
+Status: delivered for integration review; not marked accepted or integrated.
