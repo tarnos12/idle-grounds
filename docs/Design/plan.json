@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-24 22:17",
+  "updated": "2026-10-24 22:21",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -263,10 +263,10 @@
         {
           "title": "Building art redo: reference sheet for all 26 buildings",
           "detail": "Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "now": "Batch 1 (64-002) reviewed 2026-10-25: 3 statics accepted, Shrine validated, 4 loops in batch 1R (requested); next: review 64-003, then request batch 2 (NPC idles)"
+          "blockedBy": "Artist: batch 1R (4 loops, Buildings-64-003) + batch 2 (7 NPC idles, Creatures-64-001) requested 2026-10-25"
         },
         {
           "title": "Snowy northern Fishing island",
