@@ -5,7 +5,7 @@ commit, git fetch first) live in `CLAUDE.md` — not repeated here.
 
 ## ▶ NEXT SESSION: start here
 
-**Now (2026-10-24):** 64 px rollout approved; first batch (pilot fixes + Sky-Bridge Shrine @64) being requested in ART-SPEC 3.9.6. ADR 0007 Phase 2 (Shrine gameplay) still needs owner go-ahead.
+**Now (2026-10-24):** 64 px rollout approved; batch 1 (pilot fixes + Sky-Bridge Shrine @64, zip Idle-Grounds-Buildings-64-002) requested in ART-SPEC 3.9.6 and mirrored to Drive; waiting on the artist, then the in-game art reviewer checks it; batch 2 (7 P1 NPC idles @64) is requested after batch 1 is accepted. ADR 0007 Phase 2 (Shrine gameplay) still needs owner go-ahead.
 **Now (2026-10-22):** Text font setting built on branch `bg/font` (Menu > Settings > Text font: 6 options, default Pixelify titles + Jersey 10, live, PlayerPrefs `ig_text_font`; orchestrator merges, then UI QA re-checks the batch B screens per font); PPU 64 pilot request (Paper Mill, Kiln, Workbench) going to the artist via ART-SPEC 3.9. ADR 0007 Phase 2 (Shrine) still needs owner go-ahead; 74 validated Phase 2 art files wait for it.
 
 **Art intake 2026-10-21 (branch bg/art38):** 37 Drive zips reviewed (ART-SPEC Delivery log row 2026-10-21). In Play: sidewall v3 x7 and Fishing macro v4 accepted (CoastCurves side face 11 -> 18 px; Fishing macro now softened like the other biomes); `cliffwall_round` x7 rejected (flat stripes), straight walls stay pinned. 69 more files rejected on file review (NPC idles, sky path pieces, 19 working loops, 4 floating-base buildings, new-island blob/fill/wall/side/macro, lotus water, 6 portraits) and moved to `docs/art/rejected/`; 74 validated files sit unwired in Art/Incoming until ADR 0007 Phase 2. Next: artist redo; ArtIntake should prune stale GameDatabase entries when art is removed.
@@ -154,6 +154,7 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-24: art director: ART-SPEC 3.9.6 rewritten for the owner sign-off (hold lifted). Batch 1 requested (8 files, one zip Idle-Grounds-Buildings-64-002.zip): Workbench straight front + loop, Kiln dark idle mouth + 3-4 puff smoke plume, Paper Mill stone/wood base + full wheel/water/sheet loop, bld_sky_shrine@64 (320x384, base on bottom row) + glow 320x384 4f. Batch 2 (7 P1 NPC idle strips @64) next; then B2-B4, C, D, F. Delivery log + Changelog rows added; Drive ART-SPEC.md mirrored (byte-equal).
 - 2026-10-24: owner signed off the 64 px pilot (pilot64_signoff = rollout; docs/Design/owner-picks-2026-10-24.json). First batch = pilot fixes + B1 Shrine; then NPCs, buildings, nodes, trees/props, creatures.
 
 - 2026-10-22: in-game art reviewer (bg/pilot64): 64 px pilot (Buildings-64-001) pulled + integrated (Integrate Incoming Art: 6 changes, re-run 0; PPU 64 metas). File checks: exact canvases, 100 % P01-P40, alpha 0/255, frame 0 = static, not upscales; noise 11.5 / 5.8 / 9.0 %. In game (new editor-only shot act `working:TYPE@island` forces a working loop): same world size, outline holds at 60 cells, loops play. Verdicts in the ART-SPEC Delivery log (mirrored to Drive) + evidence Drive `feedback/2026-10-22_pilot64_review.png` (repo `docs/art/reference/pilot64-review.png`). Hub question `pilot64_signoff` with `question-images/pilot64-1..4.png`. Plan task "Building art redo" waiting on the owner.
