@@ -1,6 +1,6 @@
 # Idle Grounds: plan
 
-Updated 2026-10-24 21:17. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-24 22:17. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
 **26 of 46 tasks done**, 4 in progress, 3 to do, 3 blocked, 10 waiting.
 
@@ -8,7 +8,7 @@ Updated 2026-10-24 21:17. Source of truth: docs/Design/plan.json, edited with to
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M3** Building art redo: reference sheet for all 26 buildings: Art director writing the first 64 px rollout batch into ART-SPEC 3.9.6
+- **M3** Building art redo: reference sheet for all 26 buildings: Batch 1 (64-002) reviewed 2026-10-25: 3 statics accepted, Shrine validated, 4 loops in batch 1R (requested); next: review 64-003, then request batch 2 (NPC idles)
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
