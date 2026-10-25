@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-25 08:07",
+  "updated": "2026-10-25 14:15",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -139,7 +139,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Artist: 64 px batch 2R (6 NPC idle strips, Creatures-64-002: keep frame 0, redraw frames 1-3) and batch 1R2 (4 building loops, Buildings-64-004) requested 2026-10-25; Lin NPC idle @64 accepted as a file. Still open from the 2026-10-21 review (art38): sky path, new-island tilesets, floating-base buildings, 6 portraits. 74 validated files + Shrine @64 + Lin wait on ADR 0007 Phase 2 code for the in-game check"
+          "blockedBy": "Batch 2R (Creatures-64-002) reviewed 2026-10-25: 6 NPC idles rejected (parts only re-lit, do not move), Shrine glow 64-004 rejected; waiting on batch 2R2 (Creatures-64-003) + 1R3 from the artist"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
@@ -263,10 +263,10 @@
         {
           "title": "Building art redo: reference sheet for all 26 buildings",
           "detail": "Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "now": "64 px batch 1R (64-003) reviewed: Workbench loop interim (repair), Kiln/Paper Mill loops + Shrine glow rejected; batch 1R2 (64-004) requested; batch 2 NPC idles (Creatures-64-001) arrived, review next"
+          "blockedBy": "Batch 1R2 (Buildings-64-004) reviewed 2026-10-25: 4 loops not accepted (Workbench + Kiln loops new interims); waiting on batch 1R3 (Buildings-64-005) from the artist; owner may choose code animation instead"
         },
         {
           "title": "Snowy northern Fishing island",
