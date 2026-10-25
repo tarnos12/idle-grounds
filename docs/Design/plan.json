@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-25 07:49",
+  "updated": "2026-10-25 08:07",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -139,7 +139,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Reviewed 2026-10-21 (art38): 76 files rejected with repair notes in the ART-SPEC Delivery log (NPC idles, sky path, working loops, 4 floating-base buildings, new-island tilesets); 74 validated files wait on ADR 0007 Phase 2 code for the in-game check"
+          "blockedBy": "Artist: 64 px batch 2R (6 NPC idle strips, Creatures-64-002: keep frame 0, redraw frames 1-3) and batch 1R2 (4 building loops, Buildings-64-004) requested 2026-10-25; Lin NPC idle @64 accepted as a file. Still open from the 2026-10-21 review (art38): sky path, new-island tilesets, floating-base buildings, 6 portraits. 74 validated files + Shrine @64 + Lin wait on ADR 0007 Phase 2 code for the in-game check"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",

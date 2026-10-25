@@ -609,6 +609,22 @@
       "source": "Idle-Grounds-Creatures-009.zip"
     },
     {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-001-GENERATION-PROMPTS.txt",
+      "name": "GENERATION-PROMPTS.txt",
+      "size": 278,
+      "sha1": "5c5b43c7eaf85d95eae6c5cb8f54610963a154a9",
+      "date": "2026-10-25T07:55:12.370Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-001-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 404,
+      "sha1": "0f407f2b3027f8cdf1e5c6db6c767632d4a93bfa",
+      "date": "2026-10-25T07:55:12.371Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
+    },
+    {
       "path": "_notes/fixtures-Idle-Grounds-Fixtures-001-fixture_preview.png",
       "name": "fixture_preview.png",
       "size": 15980,
@@ -3057,12 +3073,28 @@
       "source": "Idle-Grounds-Creatures-006.zip"
     },
     {
+      "path": "creatures/npc_jiang_idle_64x96_4f@64.png",
+      "name": "npc_jiang_idle_64x96_4f@64.png",
+      "size": 5236,
+      "sha1": "3e5d0536b3baf0c64879f78fbc6795308e3f4a57",
+      "date": "2026-10-25T07:55:12.371Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
+    },
+    {
       "path": "creatures/npc_kang_idle_32x48_4f.png",
       "name": "npc_kang_idle_32x48_4f.png",
       "size": 1733,
       "sha1": "b90961592ea7ae7279e3484b50c11b8de722fef4",
       "date": "2026-10-21T18:04:00.927Z",
       "source": "Idle-Grounds-Creatures-006.zip"
+    },
+    {
+      "path": "creatures/npc_kang_idle_64x96_4f@64.png",
+      "name": "npc_kang_idle_64x96_4f@64.png",
+      "size": 4209,
+      "sha1": "4ccc3f80d25fe9866456e270d43e58b03c86e9ea",
+      "date": "2026-10-25T07:55:12.372Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
     },
     {
       "path": "creatures/npc_lei_idle_32x48_4f.png",
@@ -3081,6 +3113,14 @@
       "source": "Idle-Grounds-Creatures-006.zip"
     },
     {
+      "path": "creatures/npc_lin_idle_64x96_4f@64.png",
+      "name": "npc_lin_idle_64x96_4f@64.png",
+      "size": 5486,
+      "sha1": "097255deb0f81ec489cb4c58168b642eccbbfa36",
+      "date": "2026-10-25T07:55:12.372Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
+    },
+    {
       "path": "creatures/npc_mo_idle_32x48_4f.png",
       "name": "npc_mo_idle_32x48_4f.png",
       "size": 2215,
@@ -3095,6 +3135,14 @@
       "sha1": "18f16bf7d5290717e29139b8b919b28c6cf895c3",
       "date": "2026-10-21T18:04:00.942Z",
       "source": "Idle-Grounds-Creatures-006.zip"
+    },
+    {
+      "path": "creatures/npc_ouyang_idle_64x96_4f@64.png",
+      "name": "npc_ouyang_idle_64x96_4f@64.png",
+      "size": 4776,
+      "sha1": "1d4beba885f374eceb5f4c81233b93d8cd1f66de",
+      "date": "2026-10-25T07:55:12.373Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
     },
     {
       "path": "creatures/npc_pen_beast_idle_32x32_4f.png",
@@ -3113,6 +3161,14 @@
       "source": "Idle-Grounds-Creatures-006.zip"
     },
     {
+      "path": "creatures/npc_qingyun_idle_64x96_4f@64.png",
+      "name": "npc_qingyun_idle_64x96_4f@64.png",
+      "size": 5850,
+      "sha1": "217e9c4b8577dab3703c7e7f97d8ab0422d3dfd2",
+      "date": "2026-10-25T07:55:12.374Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
+    },
+    {
       "path": "creatures/npc_tian_idle_32x48_4f.png",
       "name": "npc_tian_idle_32x48_4f.png",
       "size": 1681,
@@ -3121,12 +3177,28 @@
       "source": "Idle-Grounds-Creatures-006.zip"
     },
     {
+      "path": "creatures/npc_tian_idle_64x96_4f@64.png",
+      "name": "npc_tian_idle_64x96_4f@64.png",
+      "size": 6830,
+      "sha1": "4c771b959aa22e7dd3a70971de61ad16a27f81a0",
+      "date": "2026-10-25T07:55:12.374Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
+    },
+    {
       "path": "creatures/npc_xuan_idle_32x48_4f.png",
       "name": "npc_xuan_idle_32x48_4f.png",
       "size": 1959,
       "sha1": "24f9407ea5cdf96ca8fe5cb89f1b61bfee6517bf",
       "date": "2026-10-21T18:04:00.943Z",
       "source": "Idle-Grounds-Creatures-006.zip"
+    },
+    {
+      "path": "creatures/npc_xuan_idle_64x96_4f@64.png",
+      "name": "npc_xuan_idle_64x96_4f@64.png",
+      "size": 6804,
+      "sha1": "fcbf7260089616fbdd24767d922f242b814d9de8",
+      "date": "2026-10-25T07:55:12.375Z",
+      "source": "Idle-Grounds-Creatures-64-001.zip"
     },
     {
       "path": "creatures/npc_yao_idle_32x48_4f.png",
