@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-25 14:15",
+  "updated": "2026-10-25 19:00",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -139,7 +139,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Batch 2R (Creatures-64-002) reviewed 2026-10-25: 6 NPC idles rejected (parts only re-lit, do not move), Shrine glow 64-004 rejected; waiting on batch 2R2 (Creatures-64-003) + 1R3 from the artist"
+          "blockedBy": "Owner Hub question anim_route. Creatures-64-003: Ouyang idle accepted as a file (with Lin); Kang, Jiang, Tian, Qingyun, Xuan rejected; Shrine glow 64-005 rejected; in-game NPC/Shrine check also waits on ADR 0007 Phase 2"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
@@ -266,7 +266,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Batch 1R2 (Buildings-64-004) reviewed 2026-10-25: 4 loops not accepted (Workbench + Kiln loops new interims); waiting on batch 1R3 (Buildings-64-005) from the artist; owner may choose code animation instead"
+          "blockedBy": "Owner Hub question anim_route (code animation vs more hand-drawn rounds). Redo round 3 (Buildings-64-005): Workbench loop accepted in game, Kiln loop new interim, Paper Mill + Shrine glow rejected; no batch 1R4 until the owner answers"
         },
         {
           "title": "Snowy northern Fishing island",
