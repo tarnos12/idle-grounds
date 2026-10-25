@@ -7,12 +7,16 @@
   },
   {
     "id": "anim_route",
-    "q": "ChatGPT keeps failing the animations. How should building and NPC animations be made?",
-    "ctx": "The 64 px stills (pictures) pass every time, but the animations have failed 3 rounds for the 4 buildings (Kiln, Paper Mill, Workbench, Shrine glow) and 2 rounds for 6 of the 7 NPCs: instead of moving a part, ChatGPT repaints it as a flat shape or a checker pattern. In code, from the accepted stills, the game can do: glow pulses (Shrine gate, lanterns, hammer head), fire flicker and rising smoke (Kiln), water scroll, a paper sheet appearing, and small sways/nods. Moving a solid part (saw, wheel, an arm, armillary rings) needs that part as a separate layer: either ChatGPT draws the part on its own (much easier for it than animating) or we cut it out. Batches 1R3 and 2R2 are already requested on Drive; the answer decides whether they continue. The sheet shows every frame of this round (red = rejected).",
+    "q": "ChatGPT keeps failing most animations (4 rounds). How should the remaining building and NPC animations be made?",
+    "ctx": "The 64 px stills (pictures) pass every time, but the animations failed 3 rounds for the 4 buildings (Kiln, Paper Mill, Workbench, Shrine glow) and 2 rounds for 6 of the 7 NPCs: instead of moving a part, ChatGPT repaints it as a flat shape or a checker pattern. In code, from the accepted stills, the game can do: glow pulses (Shrine gate, lanterns, hammer head), fire flicker and rising smoke (Kiln), water scroll, a paper sheet appearing, and small sways/nods. Moving a solid part (saw, wheel, an arm, armillary rings) needs that part as a separate layer: either ChatGPT draws the part on its own (much easier for it than animating) or we cut it out. Batches 1R3 and 2R2 are already requested on Drive; the answer decides whether they continue. Round 4 (2026-10-25 evening): the Workbench loop and Ouyang's idle finally passed; the Kiln is a better stand-in but its smoke is still too faint; the Paper Mill, Shrine glow and 5 NPCs (Kang, Jiang, Tian, Qingyun, Xuan) failed again. No further redo round is requested until you answer. Sheets: round 3 and round 4 (green = accepted, orange = stand-in, red = rejected).",
     "imgs": [
       {
         "file": "question-images/anim-route-1.jpg",
         "cap": "Round 3 review: frames, changed pixels (magenta) and in-game crops for all 10 files"
+      },
+      {
+        "file": "question-images/anim-route-2.jpg",
+        "cap": "Round 4 review: Workbench + Ouyang accepted, Kiln stand-in, 7 rejected"
       }
     ],
     "o": [

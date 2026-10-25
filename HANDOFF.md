@@ -159,6 +159,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-25: merged bg/redo3; anim_route question updated with round-4 sheet.
+
 - 2026-10-25: in-game art reviewer (bg/redo3): Buildings-64-005 + Creatures-64-003 pulled separately (pull.js --src) + integrated (Integrate Incoming Art after the rejects were taken out: 0 assignments changed, 0 files changed on two runs; 77 unwired keys = 76 + Ouyang idle). Per frame f1/f2/f3 changed px, % in 2x2, % low-neighbour: Workbench 461/423/391, 88/85/85, 5.9/7.3/7.4 (saw tooth row only); Kiln 767/1,032/1,017, 99, smoke px at alpha>=128 127/239/328; Paper Mill 2,470/2,687/2,540, 89/90/88, 5.7/5.2/6.1; Shrine 361/437/542, 58/58/51, 29/30/32, 44/97/114 px outside the named areas; Kang 655/717/655 (head block 39-77 % redrawn after best shift), Jiang 164/162/164, Tian 379/348/339 (29-33 % redrawn), Qingyun 254/331/245 (sleeve moves), Ouyang 43/43/43 (91-95 % 2x2, accepted as a file), Xuan 56/56/56 (rings do not turn). In game: temporary editor-only npcTemp placement (not committed) + working:TYPE@center, 15/30/60 cells. Workbench accepted in game; Kiln = interim; the rest rejected - awaiting owner decision anim_route.
 - 2026-10-25: merged bg/redo2 (all 10 redo files not accepted; Workbench + Kiln 64-004 loops are interims). Hub question anim_route: hand-drawn frames vs code animation from the accepted stills.
 
