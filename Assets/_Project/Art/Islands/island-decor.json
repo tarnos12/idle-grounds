@@ -1,6 +1,6 @@
 {
-  "_comment": "Per-Island decor art keys (Art/Incoming keys) used by the editor builders (IslandDecor.cs). IslandCoastBuilder.BuildBoundary: 'trees' replaces deco_tree on the playable-edge ring, 'props' replaces the green bush there. A key that is not in Art/Incoming falls back to the default art. ART-SPEC 3.8 (snowy Fishing).",
+  "_comment": "Per-Island decor art keys (Art/Incoming keys) used by the editor builders (IslandDecor.cs). IslandCoastBuilder.BuildBoundary: 'trees' replaces deco_tree on the playable-edge ring, 'props' replaces the green bush there; 'lip' is the Island's own W/E/N edge lip used as drawn (IslandDressingBuilder.EdgeLipTiles, else the shared lip recoloured); 'floes' are ice floes stamped on the pond water (IslandDressingBuilder.EnsurePond). A key that is not in Art/Incoming falls back to the default art. ART-SPEC 3.8 (snowy Fishing).",
   "islands": [
-    { "island": "fishing", "trees": "deco_pine_snow", "props": "deco_snow_props" }
+    { "island": "fishing", "trees": "deco_pine_snow", "props": "deco_snow_props", "lip": "island_fishing_edge_lip", "floes": "island_fishing_ice_floe" }
   ]
 }

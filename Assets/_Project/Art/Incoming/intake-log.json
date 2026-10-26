@@ -913,6 +913,22 @@
       "source": "Idle-Grounds-Fixtures-006.zip"
     },
     {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-007-NOTES.md",
+      "name": "NOTES.md",
+      "size": 525,
+      "sha1": "8acb411f298fa35232e32c7bcb83d90b33f4b9a8",
+      "date": "2026-10-26T21:28:17.854Z",
+      "source": "Idle-Grounds-Fixtures-007.zip"
+    },
+    {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-007-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 530,
+      "sha1": "e063f98ca7a09166322c338dba0ada1246c1a5c0",
+      "date": "2026-10-26T21:28:17.855Z",
+      "source": "Idle-Grounds-Fixtures-007.zip"
+    },
+    {
       "path": "_notes/fx-Idle-Grounds-FX-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 495,
@@ -1823,6 +1839,54 @@
       "sha1": "240778f9f3b00cb98620ca997f09190bad3ed177",
       "date": "2026-10-26T19:37:02.219Z",
       "source": "Idle-Grounds-Islands-054.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-055-NOTES.md",
+      "name": "NOTES.md",
+      "size": 524,
+      "sha1": "eaf728998389bfcf3778e70269b2ebe6792de564",
+      "date": "2026-10-26T21:28:16.742Z",
+      "source": "Idle-Grounds-Islands-055.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-055-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 543,
+      "sha1": "f39ace5135ac20d00cc351793de886aba4939db7",
+      "date": "2026-10-26T21:28:16.742Z",
+      "source": "Idle-Grounds-Islands-055.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-056-NOTES.md",
+      "name": "NOTES.md",
+      "size": 432,
+      "sha1": "6f8d04688ccd6730ef9df3f08bdc26d97fd3cd5f",
+      "date": "2026-10-26T21:28:18.966Z",
+      "source": "Idle-Grounds-Islands-056.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-056-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 775,
+      "sha1": "9f8f70bf21ccf90b65e7fb1d50a7b31e5f5cd994",
+      "date": "2026-10-26T21:28:18.967Z",
+      "source": "Idle-Grounds-Islands-056.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-057-NOTES.md",
+      "name": "NOTES.md",
+      "size": 565,
+      "sha1": "ac6b4f1f03aafab104ba8e3e9891f3900d618f5f",
+      "date": "2026-10-26T21:28:20.047Z",
+      "source": "Idle-Grounds-Islands-057.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-057-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 879,
+      "sha1": "2e00ee201ae53962a32bbd1f887d6ce815e9a35d",
+      "date": "2026-10-26T21:28:20.048Z",
+      "source": "Idle-Grounds-Islands-057.zip"
     },
     {
       "path": "_notes/items-Idle-Grounds-Items-001-README.md",
@@ -3603,18 +3667,18 @@
     {
       "path": "fixtures/deco_pine_snow_32x48_3f.png",
       "name": "deco_pine_snow_32x48_3f.png",
-      "size": 2084,
-      "sha1": "047e1a0150f5c1e460f9ebf62904bace1fcab184",
-      "date": "2026-10-26T19:37:02.900Z",
-      "source": "Idle-Grounds-Fixtures-006.zip"
+      "size": 2150,
+      "sha1": "9710d9a74160bc733f9bc63d4df8871762521f3d",
+      "date": "2026-10-26T21:28:17.852Z",
+      "source": "Idle-Grounds-Fixtures-007.zip"
     },
     {
       "path": "fixtures/deco_snow_props_32x48_8f.png",
       "name": "deco_snow_props_32x48_8f.png",
-      "size": 1297,
-      "sha1": "91c59f8093c2ddf8bf5da7573a16daa91f6435f4",
-      "date": "2026-10-26T19:37:02.901Z",
-      "source": "Idle-Grounds-Fixtures-006.zip"
+      "size": 2057,
+      "sha1": "cd7f20575b432d8073528dd92566d8c39b6795d5",
+      "date": "2026-10-26T21:28:17.853Z",
+      "source": "Idle-Grounds-Fixtures-007.zip"
     },
     {
       "path": "fixtures/deco_tree_32x48_3f.png",
@@ -4339,10 +4403,10 @@
     {
       "path": "islands/island_fishing_cliffwall_32x96_8f.png",
       "name": "island_fishing_cliffwall_32x96_8f.png",
-      "size": 15925,
-      "sha1": "151b781e3399da522d5ea1b5ce756be2961a23fc",
-      "date": "2026-10-11T21:43:54.328Z",
-      "source": "Idle-Grounds-Islands-030.zip"
+      "size": 11926,
+      "sha1": "a0464f1fdbc7a51e11a00c85751a65c6e825875d",
+      "date": "2026-10-26T21:28:20.043Z",
+      "source": "Idle-Grounds-Islands-057.zip"
     },
     {
       "path": "islands/island_fishing_cliffwall_round_32x96_4f.png",
@@ -4355,26 +4419,34 @@
     {
       "path": "islands/island_fishing_coast_edge_profile_32x8_2f.png",
       "name": "island_fishing_coast_edge_profile_32x8_2f.png",
-      "size": 478,
-      "sha1": "a6a8a553d8aeb88f7ba8d14928ede201adc696ae",
-      "date": "2026-10-26T18:24:14.739Z",
-      "source": "Idle-Grounds-Islands-052.zip"
+      "size": 293,
+      "sha1": "1b81578f5147e76d3ece09d3ba4f6780ce8d7828",
+      "date": "2026-10-26T21:28:18.961Z",
+      "source": "Idle-Grounds-Islands-056.zip"
+    },
+    {
+      "path": "islands/island_fishing_edge_lip_32x32_4f.png",
+      "name": "island_fishing_edge_lip_32x32_4f.png",
+      "size": 685,
+      "sha1": "9c43ac77f6652674add975766f375895d194879e",
+      "date": "2026-10-26T21:28:18.962Z",
+      "source": "Idle-Grounds-Islands-056.zip"
     },
     {
       "path": "islands/island_fishing_flowers_32x32_4f.png",
       "name": "island_fishing_flowers_32x32_4f.png",
-      "size": 476,
-      "sha1": "fff30b990c7c7b6d9835c3b8aa42ab124cb55cc1",
-      "date": "2026-10-26T19:37:02.215Z",
-      "source": "Idle-Grounds-Islands-054.zip"
+      "size": 449,
+      "sha1": "55e257f2a8cc994dd1fdad110351c84f20fd21cd",
+      "date": "2026-10-26T21:28:16.739Z",
+      "source": "Idle-Grounds-Islands-055.zip"
     },
     {
       "path": "islands/island_fishing_ground_blob_32x32_47f.png",
       "name": "island_fishing_ground_blob_32x32_47f.png",
-      "size": 1982,
-      "sha1": "c5eebcd424c17e282625b7fd2fab84a569222aa6",
-      "date": "2026-10-07T21:43:24.623Z",
-      "source": "Idle-Grounds-Islands-019.zip"
+      "size": 1956,
+      "sha1": "397fb3beae0d6a63f0b75ebd0759c682d6eaf320",
+      "date": "2026-10-26T21:28:20.045Z",
+      "source": "Idle-Grounds-Islands-057.zip"
     },
     {
       "path": "islands/island_fishing_ground_fill_32x32_3f.png",
@@ -4393,28 +4465,36 @@
       "source": "Idle-Grounds-Islands-054.zip"
     },
     {
+      "path": "islands/island_fishing_ice_floe_32x32_4f.png",
+      "name": "island_fishing_ice_floe_32x32_4f.png",
+      "size": 578,
+      "sha1": "48042216440346631c5bef94588e1ec190b7a2c7",
+      "date": "2026-10-26T21:28:18.964Z",
+      "source": "Idle-Grounds-Islands-056.zip"
+    },
+    {
       "path": "islands/island_fishing_macro_96x96_4f.png",
       "name": "island_fishing_macro_96x96_4f.png",
-      "size": 2070,
-      "sha1": "85ee0124e17f31bf456a862fe7077a8759b0cb8d",
-      "date": "2026-10-26T19:37:02.217Z",
-      "source": "Idle-Grounds-Islands-054.zip"
+      "size": 2599,
+      "sha1": "4259207091d9cbb412cce4251d04df33c2b9b3ac",
+      "date": "2026-10-26T21:28:16.740Z",
+      "source": "Idle-Grounds-Islands-055.zip"
     },
     {
       "path": "islands/island_fishing_scatter_32x32_4f.png",
       "name": "island_fishing_scatter_32x32_4f.png",
-      "size": 3005,
-      "sha1": "1a659805fd07a80e078aaf9c3251831f09d8c1b7",
-      "date": "2026-10-09T14:47:59.075Z",
-      "source": "Idle-Grounds-Islands-023.zip"
+      "size": 600,
+      "sha1": "3ebd9c1e788e6a7be8e3ebf2b20807ce9831af25",
+      "date": "2026-10-26T21:28:18.965Z",
+      "source": "Idle-Grounds-Islands-056.zip"
     },
     {
       "path": "islands/island_fishing_sidewall_32x32_4f.png",
       "name": "island_fishing_sidewall_32x32_4f.png",
-      "size": 792,
-      "sha1": "280ed2d2f7682fa43df93a61ad2906e1ad604e81",
-      "date": "2026-10-21T18:04:22.709Z",
-      "source": "Idle-Grounds-Islands-038.zip"
+      "size": 832,
+      "sha1": "f2876a9d9188c9c488a0b4e151cba59bad6c4e25",
+      "date": "2026-10-26T21:28:20.045Z",
+      "source": "Idle-Grounds-Islands-057.zip"
     },
     {
       "path": "islands/island_fishing_sidewall_round_32x32_4f.png",
@@ -4427,10 +4507,10 @@
     {
       "path": "islands/island_fishing_sidewall_variants_32x32_8f.png",
       "name": "island_fishing_sidewall_variants_32x32_8f.png",
-      "size": 1195,
-      "sha1": "b988ddce2d540e6c46a3aed3e54845efab1d1c54",
-      "date": "2026-10-21T18:04:22.710Z",
-      "source": "Idle-Grounds-Islands-038.zip"
+      "size": 1206,
+      "sha1": "06c6c55cd2b46e5a5f42d20ff08fedfbd15e4a9e",
+      "date": "2026-10-26T21:28:20.046Z",
+      "source": "Idle-Grounds-Islands-057.zip"
     },
     {
       "path": "islands/island_fishing_water_32x32_4f.png",

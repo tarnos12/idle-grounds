@@ -690,9 +690,22 @@ namespace IdleGrounds.Editor
         /// ART-SPEC §3.6 <c>island_edge_lip_32x32_4f</c> (neutral green: W, E, N, outer NW corner) recoloured to the biome's
         /// delivered fill: the lip's darkest tone (the 1 px rim) -> the fill's shade tone darkened, the others by
         /// brightness rank onto the fill's shade / base / light tones. Center's fill shares the lip palette (identity).
+        /// An Island with its own delivered lip (island-decor.json <c>lip</c>, e.g. the §3.8 Fishing snow cornice, same
+        /// frames as the shared lip) uses that file as drawn.
         /// </summary>
         static Tile[] EdgeLipTiles(string biome)
         {
+            string own = IslandDecor.IncomingFile(IslandDecor.For(biome)?.lip, "islands");
+            int ow = 0, oh = 0;
+            var ownPx = own != null ? ReadPng(own, out ow, out oh) : null;
+            if (ownPx != null && oh == 32 && ow >= 128)
+            {
+                string op = $"{ArtDir}/dress_edge_lip_{biome}_32x32_4f.png";
+                WriteIfChanged(op, ow, oh, ownPx);
+                Import(op, 4, 32);
+                var of = IslandArtBuilder.Frames(op);
+                return of.Length >= 4 ? Tiles("EdgeLip_" + biome, of) : null;
+            }
             var px = ReadPng(IslandArtBuilder.EdgeLipPath, out int w, out int h);
             var fill = ReadPng($"{Inc}island_{biome}_ground_fill_32x32_3f.png", out _, out _);
             if (px == null || fill == null) return null;
@@ -1035,6 +1048,36 @@ namespace IdleGrounds.Editor
                 int variant = (int)(Hash(run, 7, seed + 11) * 4f) & 3;
                 return ice[(ih - 1 - row) * iw + variant * 32 + (ui & 31)];
             }
+            // ART-SPEC §3.8 loose ice floes (island-decor.json "floes", 4 shapes of 32 x 32): a few stamped on the open water
+            // just past the ice shelf, at seeded positions (every opaque floe pixel lies 2+ px beyond the shelf, at most
+            // ~40 px from it), at least 48 px apart and clear of the koi / lotus stamps; static in all 4 water frames.
+            var floeStamps = new List<(int x, int y, int v)>();
+            int flw = 0, flh = 0;
+            var floe = ice != null ? ReadPng(IslandDecor.IncomingFile(IslandDecor.For("fishing")?.floes, "islands") ?? "", out flw, out flh) : null;
+            if (floe != null && (flh != 32 || flw < 128)) floe = null;
+            if (floe != null)
+            {
+                var frng = new System.Random(seed + 21);
+                for (int tries = 0; tries < 2000 && floeStamps.Count < 7; tries++)
+                {
+                    int sx = frng.Next(0, PondW - 32), sy = frng.Next(0, PondH - 32), v = frng.Next(4);
+                    bool ok = true; float near = 1e6f;
+                    for (int ly = 0; ly < 32 && ok; ly++)
+                        for (int lx = 0; lx < 32; lx++)
+                        {
+                            if (floe[ly * flw + v * 32 + lx].a == 0) continue;
+                            int qx = sx + lx, qy = sy + ly;
+                            if (D(qx, qy) >= 1f) { ok = false; break; }
+                            float t2 = dist[qy * PondW + qx] - 1f - ih;
+                            if (t2 < 2f) { ok = false; break; }
+                            near = Mathf.Min(near, t2);
+                        }
+                    if (!ok || near > 40f) continue;
+                    foreach (var q in floeStamps) if ((q.x - sx) * (q.x - sx) + (q.y - sy) * (q.y - sy) < 48 * 48) { ok = false; break; }
+                    foreach (var q in stamps) if ((q.x - sx) * (q.x - sx) + (q.y - sy) * (q.y - sy) < 36 * 36) { ok = false; break; }
+                    if (ok) floeStamps.Add((sx, sy, v));
+                }
+            }
             for (int f = 0; f < frames; f++)
                 for (int y = 0; y < PondH; y++)
                     for (int x = 0; x < PondW; x++)
@@ -1069,6 +1112,13 @@ namespace IdleGrounds.Editor
                                     ? (y + 3 >= PondH || dist[(y + 3) * PondW + x] - 1f < ih)      // the 3 px of water under the shelf's north edge
                                     : D(x, y + 5) >= 1f;
                                 if (northShade) c = new Color32((byte)(c.r * 0.7f), (byte)(c.g * 0.76f), (byte)(c.b * 0.86f), 255);   // north bank shade
+                                foreach (var fs in floeStamps)
+                                {
+                                    int lx = x - fs.x, ly = y - fs.y;
+                                    if (lx < 0 || ly < 0 || lx > 31 || ly > 31) continue;
+                                    var fc = floe[ly * flw + fs.v * 32 + lx];
+                                    if (fc.a > 0) c = fc;
+                                }
                             }
                         }
                         else if (ice == null && d < 1f + 1.2f * p1) c = rim;
