@@ -1,1 +1,43 @@
-[]
+[
+  {
+    "g": "Art pipeline"
+  },
+  {
+    "id": "layers_finish",
+    "q": "ChatGPT failed the moving-part layers 3 times (Paper Mill wheel/press, Kang raised arm, Xuan base). How should we finish them?",
+    "ctx": "Batch L1R2 (2026-10-26) was the third round. Passed and kept: the Paper Mill front layer, Xuan ring + front, Kang rest arm. Failed a third time (6 files): the wheel (shape, spokes and hub now exact and it turns cleanly in game, but the 8 paddles are missing), the press block (no outline of its own), the Paper Mill base (checkerboard and hatched fill behind the wheel and press), Kang base (flat slab behind the arm), Kang raised arm (a bare skin arm instead of his sleeved arm bent), Xuan base (loose brown bits beside the sphere when the ring turns). No further ChatGPT round is requested until you answer; the game keeps the stills with the code stand-ins (press bob, Kang nod, Xuan ring glints). The wheel and press are small fixes (8 paddles, an outline); the bases and Kang raised arm are painting work.",
+    "imgs": [
+      {
+        "file": "question-images/layers-l1r2-review.png",
+        "cap": "Round 3 review: files enlarged, in-game frames (red = rejected, green = kept)"
+      },
+      {
+        "file": "question-images/layers-l1r2-wheel-strip.png",
+        "cap": "Paper Mill in game, 8 steps of the turning wheel (no paddles, brown disc behind it)"
+      }
+    ],
+    "o": [
+      [
+        "inhouse_all",
+        "We finish all 6 ourselves from the kept parts (add paddles, outline the press, paint the bases, draw the raised arm from the rest arm)",
+        true
+      ],
+      [
+        "chatgpt_round",
+        "One more ChatGPT round (L1R3) for the 6 files"
+      ],
+      [
+        "mix",
+        "We do the small fixes (wheel paddles, press outline, Xuan base clean-up); ChatGPT redoes the Paper Mill base and Kang base + raised arm"
+      ],
+      [
+        "standins",
+        "Keep the code stand-ins and drop these layers for now (no turning wheel, brow wipe or turning ring)"
+      ],
+      [
+        "inhouse_future",
+        "All of the first option, and from now on we make moving-part layers in-house for later batches too (ChatGPT draws stills only)"
+      ]
+    ]
+  }
+]

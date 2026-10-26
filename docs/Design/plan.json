@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 17:35",
+  "updated": "2026-10-26 18:35",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -139,7 +139,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Batch L1R reviewed 2026-10-26: 9 of 10 layer files rejected again (Kang rest arm validated); batch L1R2 requested (ART-SPEC 3.9.8, zips Layers-64-005/-006; one new wheel drawing with fixed ellipse + spoke points): Kang arm + raised arm + base, Xuan rings + base; then 32-px repairs (diagonal / rounded coast; Sky Path corner FX-008 validated), snowy Fishing, portraits, new biome tilesets; in-game NPC/Shrine check waits on ADR 0007 Phase 2"
+          "blockedBy": "Batch L1R2 reviewed 2026-10-26: Kang base + raised arm and Xuan base rejected a 3rd time, awaiting owner decision (Hub question layers_finish; Xuan ring + front and Kang rest arm validated, held); artist continues with 32-px repairs (diagonal / rounded coast), snowy Fishing, portraits, new biome tilesets; in-game NPC/Shrine check waits on ADR 0007 Phase 2"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
@@ -273,7 +273,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Batch L1R reviewed 2026-10-26: 9 of 10 layer files rejected again (Kang rest arm validated); batch L1R2 requested (ART-SPEC 3.9.8, zips Layers-64-005/-006; one new wheel drawing with fixed ellipse + spoke points): Paper Mill wheel + press layers + base; kiln/shrine/paper-mill motion in code; waiting on the artist"
+          "blockedBy": "Batch L1R2 reviewed 2026-10-26: Paper Mill wheel (no paddles), press (no outline) and base (checker/hatched fill) rejected a 3rd time, awaiting owner decision (Hub question layers_finish); front layer validated + held; kiln/shrine/paper-mill motion in code with stand-ins"
         },
         {
           "title": "Snowy northern Fishing island",
@@ -321,6 +321,13 @@
         {
           "title": "Art review: batch L1R layers + Sky Path corner FX-008",
           "detail": "In-game art reviewer: Layers-64-003 (Paper Mill one complete wheel, press, front, base), Layers-64-004 (Kang arm poses + base, Xuan rings + front + base), FX-008 (sky path corner). Stack test, layer-only-part and flat-fill checks, NOTES pivots into code-anim.json, in-game frame strips, accept/reject per file.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: batch L1R2 layers",
+          "detail": "In-game art reviewer: Layers-64-005 (Paper Mill new wheel on the fixed ellipse, press, front, base), Layers-64-006 (Kang base + raised arm, Xuan rings + base + front). Stack test (wheel waived), part-only, holes/flat-fill checks, numbers vs 3.9.8, in-game frame strips, accept/reject per file; a third failure goes to the owner. Result 2026-10-26: Paper Mill front, Xuan ring + front validated (held); wheel, press, Paper Mill base, Kang base, Kang raised arm, Xuan base rejected 3x, awaiting owner decision (Hub question layers_finish).",
           "status": "done",
           "size": "M",
           "owner": "Claude"
