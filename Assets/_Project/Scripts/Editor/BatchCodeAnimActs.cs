@@ -16,6 +16,13 @@ namespace IdleGrounds.Editor
     ///   animPreviewClear          remove every preview object
     ///   stripPreview:KEY,W,H,FRAME@island,row,col   frame FRAME (W x H px) of Art/Incoming/*/KEY.png at PPU 32, bottom-left on the cell's
     ///                             bottom-left corner (temporary layout of FX pieces without a gameplay view, e.g. Sky Path tiles)
+    ///   wheelStandIn:TYPE@island,cx,cy,rx,ry[,px,py,pw,ph[,topY]]   review-only stand-in for an ellipseSpin wheel layer that is not
+    ///                             delivered yet (in memory, never saved as art): every built TYPE on the island gets its wheel cut
+    ///                             out of the still by the ellipse (centre cx,cy, radii rx,ry; still texels): wood / gold / ink texels
+    ///                             -> layer_wheel; water, stone and leaf texels, the rect px,py,pw,ph (a post in front) and rows
+    ///                             above topY (roof) -> layer_front (behind the post and the water the wheel gets P20 as its hidden
+    ///                             part); base = the still with the wheel texels painted P02; every other
+    ///                             layer of the key is given empty. Then the building's CodeAnimator is re-baked with them.
     /// </summary>
     public static partial class Batch
     {
@@ -26,6 +33,7 @@ namespace IdleGrounds.Editor
             switch (name)
             {
                 case "animTime": CodeAnimClock.Override = F(arg); return true;
+                case "wheelStandIn": WheelStandIn(arg); return true;
                 case "animPreviewClear":
                     foreach (var go in animPreviews) if (go != null) UnityEngine.Object.DestroyImmediate(go);
                     animPreviews.Clear();
@@ -79,6 +87,68 @@ namespace IdleGrounds.Editor
                     return true;
                 }
             }
+            return false;
+        }
+
+        static void WheelStandIn(string arg)
+        {
+            int at = arg.IndexOf('@');
+            string type = arg.Substring(0, at).Trim();
+            var p = arg.Substring(at + 1).Split(',');
+            string island = p[0].Trim();
+            float cx = F(p[1]), cy = F(p[2]), rx = F(p[3]), ry = F(p[4]);
+            var post = p.Length >= 9 ? new RectInt(int.Parse(p[5].Trim()), int.Parse(p[6].Trim()), int.Parse(p[7].Trim()), int.Parse(p[8].Trim())) : new RectInt(0, 0, 0, 0);
+            int topY = p.Length >= 10 ? int.Parse(p[9].Trim()) : 0;
+            Color32 p02 = new Color32(0x1B, 0x1F, 0x2B, 255), p20 = new Color32(0x3D, 0x26, 0x16, 255);
+            int done = 0;
+            foreach (var bv in UnityEngine.Object.FindObjectsByType<BuildingView>(FindObjectsSortMode.None))
+            {
+                if (bv.Building == null || bv.Building.type != type || bv.Area != island) continue;
+                var ca = bv.CodeAnim; var art = bv.ArtRenderer;
+                if (ca == null || art == null || ca.Still == null) { Debug.LogError(Tag + "wheelStandIn: " + type + " has no code animation"); continue; }
+                var still = ca.Still;
+                var img = PixelImage.FromSprite(still);
+                if (img == null) { Debug.LogError(Tag + "wheelStandIn: still not readable"); continue; }
+                var wheel = new PixelImage(img.w, img.h); var front = new PixelImage(img.w, img.h); var bas = new PixelImage(img);
+                int nw = 0, nf = 0;
+                for (int y = 0; y < img.h; y++)
+                    for (int x = 0; x < img.w; x++)
+                    {
+                        float ex = (x - cx) / rx, ey = (y - cy) / ry;
+                        if (ex * ex + ey * ey > 1f) continue;
+                        var c = img.Get(x, y);
+                        if (c.a < 128) continue;
+                        bool inPost = post.Contains(new Vector2Int(x, y));
+                        if (y < topY || inPost || StandInStatic(c))
+                        {
+                            front.Set(x, y, c); nf++;
+                            // the wheel goes on behind the post and the falling water: dark wood (P20) stands in for the hidden part
+                            if (y >= topY && (inPost || IsWater(c))) { wheel.Set(x, y, p20); bas.Set(x, y, p02); }
+                        }
+                        else { wheel.Set(x, y, c); bas.Set(x, y, p02); nw++; }
+                    }
+                var pivotTL = new Vector2(still.pivot.x, img.h - still.pivot.y);
+                Sprite S(PixelImage i, string nm) => i.ToSprite(type + "_standin_" + nm, still.pixelsPerUnit, pivotTL);
+                Sprite sw = S(wheel, "wheel"), sf = S(front, "front"), sb = S(bas, "base"), se = S(new PixelImage(img.w, img.h), "empty");
+                var entry = CodeAnimLibrary.Find(IdleGrounds.Game.Data.ArtKeys.Building(type));
+                bool ok = ca.ConfigureUncached(entry, art, still, s => s == "layer_wheel" ? sw : s == "base" ? sb : s == "layer_front" ? sf : s.StartsWith("layer_") ? se : null);
+                Debug.Log(Tag + $"wheelStandIn {type}@{island}: wheel={nw}px front={nf}px configured={ok} missing=[{string.Join(", ", ca.MissingLayers)}] overlays={ca.SlotCount} baseFrames={ca.BaseFrameCount}");
+                done++;
+            }
+            if (done == 0) Debug.LogError(Tag + "wheelStandIn: no built " + type + " on " + island);
+        }
+
+        static bool IsWater(Color32 c) { Color.RGBToHSV(c, out float h, out float s, out _); h *= 360f; return (h >= 180f && h <= 215f && s > 0.15f) || s < 0.1f; }
+
+        /// <summary>Stand-in classification: water (cyan / blue / white), stone (greys) and leaves stay still in front of the wheel.</summary>
+        static bool StandInStatic(Color32 c)
+        {
+            Color.RGBToHSV(c, out float h, out float s, out float v);
+            h *= 360f;
+            if (s < 0.2f && v > 0.25f) return true;                 // foam white, pale stone
+            if (h >= 210f && h <= 250f && v > 0.22f) return true;     // stone greys P03-P06 (ink P01 / P02 stays with the wheel)
+            if (h >= 180f && h <= 215f && s > 0.15f) return true;    // water
+            if (h >= 75f && h <= 170f && s > 0.25f) return true;     // leaves
             return false;
         }
 

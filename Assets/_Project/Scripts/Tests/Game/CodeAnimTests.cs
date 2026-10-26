@@ -67,6 +67,15 @@ namespace IdleGrounds.Game.Tests
             }
             Assert.IsTrue(CodeAnimLibrary.Find("bld_kiln").replaceDeliveredLoop);
             Assert.IsTrue(CodeAnimLibrary.Find("bld_paper_mill").replaceDeliveredLoop);
+            // the Paper Mill wheel is one complete side-view layer that turns in its ellipse (no hand-drawn poses)
+            CodeAnimEffect wheel = null;
+            foreach (var x in CodeAnimLibrary.Find("bld_paper_mill").effects) if (x.name == "wheel") wheel = x;
+            Assert.IsNotNull(wheel);
+            Assert.IsTrue(wheel.IsEllipseSpin, "wheel: ellipseSpin");
+            Assert.IsNull(wheel.poses, "wheel: no pose layers");
+            Assert.That(wheel.ellipse, Is.Not.Null.And.Length.EqualTo(2));
+            Assert.That(wheel.pivot[0], Is.InRange(0, 192)); Assert.That(wheel.pivot[1], Is.InRange(0, 256));
+            Assert.GreaterOrEqual(wheel.count, 16); Assert.AreNotEqual(0f, wheel.spin);
         }
 
         [Test]
@@ -302,6 +311,143 @@ namespace IdleGrounds.Game.Tests
             Assert.AreSame(bas, sr2.sprite, "the base (still minus moving parts) is drawn under the layer");
             Assert.AreEqual(1, ca2.SlotCount);
             Assert.IsTrue(ca2.SlotRenderer(0).enabled);
+        }
+
+        // ------------------------------------------------------------ ellipse spin (side-view wheel)
+
+        static readonly Color32 Rim = new Color32(168, 112, 58, 255), Spoke = new Color32(242, 201, 76, 255), Hub = new Color32(61, 38, 22, 255);
+        static readonly Vector2 WheelPivot = new Vector2(40, 60);
+        static readonly float[] WheelEllipse = { 20f, 45f };
+
+        /// <summary>An 8-spoke wheel drawn in circle space (radius 45: rim 41-45, hub 5) and squashed to the 20 x 45 ellipse.</summary>
+        static PixelImage SideWheel()
+        {
+            var img = Img(80, 120);
+            for (int y = 0; y < img.h; y++)
+                for (int x = 0; x < img.w; x++)
+                {
+                    float cx = (x - WheelPivot.x) * 45f / 20f, cy = y - WheelPivot.y;
+                    float r = Mathf.Sqrt(cx * cx + cy * cy);
+                    if (r > 45.5f) continue;
+                    if (r >= 41f) { img.Set(x, y, Rim); continue; }
+                    if (r <= 5f) { img.Set(x, y, Hub); continue; }
+                    float ang = Mathf.Atan2(cy, cx) * Mathf.Rad2Deg;
+                    float off = Mathf.Abs(Mathf.DeltaAngle(ang, Mathf.Round(ang / 45f) * 45f)) * Mathf.Deg2Rad * r;
+                    if (off <= 2.5f) img.Set(x, y, Spoke);
+                }
+            return img;
+        }
+
+        static int Diff(PixelImage a, PixelImage b)
+        {
+            int n = 0;
+            for (int i = 0; i < a.px.Length; i++) { var p = a.px[i]; var q = b.px[i]; if ((p.a >= 128) != (q.a >= 128) || (p.a >= 128 && (p.r != q.r || p.g != q.g || p.b != q.b))) n++; }
+            return n;
+        }
+
+        static int Opaque(PixelImage a) { int n = 0; foreach (var c in a.px) if (c.a >= 128) n++; return n; }
+
+        [Test]
+        public void EllipseSpin_Rest_Frame_Is_The_Layer_And_A_Turn_There_And_Back_Round_Trips()
+        {
+            var src = SideWheel();
+            Assert.Greater(Opaque(src), 800);
+            Assert.AreEqual(0, Diff(src, CodeAnimBake.EllipseTurn(src, WheelPivot, WheelEllipse, 0f, true)), "0 deg = the layer, pixel for pixel");
+            Assert.AreEqual(0, Diff(src, CodeAnimBake.EllipseTurn(src, WheelPivot, WheelEllipse, 360f, true)), "a whole turn = the layer");
+            foreach (float deg in new[] { 11.25f, 30f, 67.5f })
+            {
+                var back = CodeAnimBake.EllipseTurn(CodeAnimBake.EllipseTurn(src, WheelPivot, WheelEllipse, deg, false), WheelPivot, WheelEllipse, -deg, false);
+                int d = Diff(src, back);
+                Assert.LessOrEqual(d, Opaque(src) * 15 / 100, deg + " deg there and back (two nearest-neighbour lookups): " + d + " px differ");
+            }
+            // an 8-spoke wheel turned by one spoke spacing (45 deg in circle space) looks like the rest pose: the squash is undone
+            // before the turn (a plain 2D turn of the ellipse tips it sideways and differs in far more texels)
+            var turned = CodeAnimBake.EllipseTurn(src, WheelPivot, WheelEllipse, 45f, true);
+            int same = Diff(src, turned), flat = Diff(src, CodeAnimBake.Transform(src, WheelPivot, 45f, 1f));
+            UnityEngine.Debug.Log($"[EllipseSpinTest] opaque={Opaque(src)} 45deg ellipse={same} flat={flat}");
+            Assert.LessOrEqual(same, Opaque(src) * 20 / 100, "45 deg ellipse turn of 8 spokes ~ rest: " + same + " px differ");
+            Assert.Greater(flat, same * 5, "a flat 2D turn is far off (" + flat + " px vs " + same + ")");
+        }
+
+        [Test]
+        public void EllipseSpin_Frames_Stay_Inside_The_Ellipse_Mask_And_Have_No_Pinholes()
+        {
+            var src = SideWheel();
+            float radius = CodeAnimBake.EllipseRadius(src, WheelPivot, WheelEllipse);
+            Assert.That(radius, Is.InRange(45f, 46.5f));
+            var frames = CodeAnimBake.EllipseSpinFrames(src, WheelPivot, WheelEllipse, 16, true, out var crop);
+            Assert.AreEqual(16, frames.Length);
+            // tolerance: nearest-neighbour snapping of up to 0.75 texel on the squashed axis = 0.75 * 45/20 circle units
+            float tol = 0.75f * 45f / 20f;
+            for (int k = 0; k < frames.Length; k++)
+            {
+                var f = frames[k];
+                Assert.AreEqual(crop.width, f.w); Assert.AreEqual(crop.height, f.h);
+                int holes = 0;
+                for (int y = 0; y < f.h; y++)
+                    for (int x = 0; x < f.w; x++)
+                    {
+                        int sx = crop.x + x, sy = crop.y + y;
+                        if (f.Get(x, y).a >= 128)
+                            Assert.IsTrue(CodeAnimBake.InEllipse(WheelPivot, WheelEllipse, radius + tol, sx, sy), $"frame {k}: texel ({sx},{sy}) outside the wheel's ellipse");
+                        else if (CodeAnimBake.InEllipse(WheelPivot, WheelEllipse, radius, sx, sy)
+                                 && f.Get(x - 1, y).a >= 128 && f.Get(x + 1, y).a >= 128 && f.Get(x, y - 1).a >= 128 && f.Get(x, y + 1).a >= 128) holes++;
+                    }
+                Assert.AreEqual(0, holes, "frame " + k + ": 1-px holes are filled");
+                Assert.That(Opaque(f), Is.InRange(Opaque(src) * 85 / 100, Opaque(src) * 115 / 100), "frame " + k + " keeps the wheel's size");
+            }
+            Assert.AreEqual(0, Diff(CodeAnimBake.Crop(src, crop), frames[0]), "frame 0 = the rest layer");
+        }
+
+        [Test]
+        public void EllipseSpin_Bake_Is_Deterministic_And_Affine_Spec_Matches_Radii()
+        {
+            var src = SideWheel();
+            var a = CodeAnimBake.EllipseSpinFrames(src, WheelPivot, WheelEllipse, 12, true, out var ca);
+            var b = CodeAnimBake.EllipseSpinFrames(src, WheelPivot, WheelEllipse, 12, true, out var cb);
+            Assert.AreEqual(ca, cb);
+            for (int k = 0; k < a.Length; k++) Assert.AreEqual(0, Diff(a[k], b[k]), "frame " + k);
+            // [rx, ry] is shorthand for the affine [rx/R, 0, 0, ry/R]
+            var c = CodeAnimBake.EllipseSpinFrames(src, WheelPivot, new[] { 20f / 45f, 0f, 0f, 1f }, 12, true, out var cc);
+            Assert.AreEqual(ca, cc);
+            for (int k = 0; k < a.Length; k++) Assert.AreEqual(0, Diff(a[k], c[k]), "affine frame " + k);
+            Assert.IsFalse(CodeAnimBake.EllipseMatrix(new[] { 0f, 0f, 0f, 0f }, out _), "degenerate spec");
+        }
+
+        [Test]
+        public void EllipseSpin_Layer_Cycles_Its_Frames_On_The_Texel_Grid_And_Rests_When_Calm()
+        {
+            var wheelImg = new PixelImage(64, 96);
+            var w = SideWheel();
+            for (int y = 0; y < 96; y++) for (int x = 0; x < 64; x++) wheelImg.Set(x, y, w.Get(x + 8, y + 12));   // pivot (32, 48) on the 64x96 canvas
+            var wt = new Texture2D(64, 96, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point }; trash.Add(wt);   // readable (no GPU readback in batch mode)
+            var flip = new Color32[64 * 96];
+            for (int y = 0; y < 96; y++) System.Array.Copy(wheelImg.px, y * 64, flip, (95 - y) * 64, 64);
+            wt.SetPixels32(flip); wt.Apply();
+            var layer = Sprite.Create(wt, new Rect(0, 0, 64, 96), new Vector2(0.5f, 0f), 64f, 0, SpriteMeshType.FullRect); trash.Add(layer);
+            var bas = Still(64, 96, 64f);
+            const string json = "{\"type\":\"layer\",\"name\":\"wheel\",\"sprite\":\"wheel\",\"mode\":\"ellipseSpin\",\"pivot\":[32,48],\"ellipse\":[20,45],\"spin\":-90,\"count\":16}";
+            var ca = Animator(json, out var sr, out _, 64f, s => s == "layer_wheel" ? layer : s == "base" ? bas : null);
+            Assert.AreEqual(0, ca.MissingLayers.Count);
+            Assert.AreEqual(1, ca.SlotCount);
+            var r = ca.SlotRenderer(0);
+
+            Juice.SetReduceMotion(false);
+            var seen = new List<Sprite>();
+            for (float t = 0.01f; t < 4f; t += 1f / 24f)       // 90 deg/s, 16 frames of 22.5 deg: 4 frames per second
+            {
+                ca.Tick(t);
+                Assert.IsTrue(r.enabled);
+                var p = r.transform.localPosition * 64f;
+                Assert.AreEqual(Mathf.Round(p.x), p.x, 1e-3f); Assert.AreEqual(Mathf.Round(p.y), p.y, 1e-3f);
+                if (!seen.Contains(r.sprite)) seen.Add(r.sprite);
+            }
+            Assert.AreEqual(16, seen.Count, "a full turn in 4 s shows all 16 frames");
+            ca.Tick(0.3f); var s1 = r.sprite; ca.Tick(0.3f + 0.25f); var s2 = r.sprite;
+            Assert.AreNotSame(s1, s2, "a quarter second later the wheel has turned one frame");
+
+            Juice.SetReduceMotion(true);
+            for (float t = 0f; t < 3f; t += 0.37f) { ca.Tick(t); StringAssert.EndsWith("_spin0", r.sprite.name, "calm motion holds the rest frame"); }
         }
     }
 }

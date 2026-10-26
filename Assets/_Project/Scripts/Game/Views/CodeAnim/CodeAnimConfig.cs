@@ -16,7 +16,7 @@ namespace IdleGrounds.Game
     /// <item>overlays (pooled SpriteRenderers on the art): <c>glow</c> (masked still pixels, tinted pulse colorA→colorB, 4 alpha steps),
     /// <c>flicker</c> (mask, generated flame tongues or star glints with stepped alpha/shape jitter), <c>smoke</c> (pooled puffs: rise,
     /// drift, grow, fade through 4 alpha steps), <c>toggle</c> (a sprite on for some steps: paper sheet), <c>layer</c> (an artist layer
-    /// <c>&lt;key&gt;_layer_&lt;part&gt;@64.png</c>: rotate / slide / squash / pose swap).</item>
+    /// <c>&lt;key&gt;_layer_&lt;part&gt;@64.png</c>: rotate / slide / squash / pose swap / ellipse spin = a side-view wheel turning in its own ellipse).</item>
     /// </list>
     /// </summary>
     [Serializable]
@@ -137,6 +137,14 @@ namespace IdleGrounds.Game
         public float[] angles;
         public float[] scales;
         public float spin;
+        /// <summary>Layer, <c>mode: "ellipseSpin"</c> (a wheel seen from the side): the ellipse the part's rim makes in the still,
+        /// either <c>[radiusX, radiusY]</c> in texels (axis-aligned; the shorter one is the squashed axis, ratio = short/long) or a
+        /// full 2×2 affine <c>[m00, m01, m10, m11]</c> (row-major, y down) that maps the round wheel (circle space) to the screen.
+        /// Each baked frame un-squashes the layer about <see cref="pivot"/>, turns it by 360°·k/<see cref="count"/> and squashes it
+        /// back (nearest-neighbour, on the texel grid); <see cref="spin"/> = degrees per second (negative = clockwise on screen).</summary>
+        public float[] ellipse;
+        /// <summary>Ellipse spin: keep the 1-px holes a turn leaves inside the wheel (default: filled from their neighbours).</summary>
+        public bool keepHoles;
         /// <summary>Layer: per-step pose names ("" = rest layer, "raised" → &lt;key&gt;_layer_&lt;part&gt;_raised).</summary>
         public string[] poses;
         /// <summary>Sorting offset above the art.</summary>
@@ -149,6 +157,8 @@ namespace IdleGrounds.Game
 
         public bool IsBaked => kind == CodeAnimKind.Sway || kind == CodeAnimKind.Shift || kind == CodeAnimKind.Scroll || kind == CodeAnimKind.Line;
         public bool HasRect => rect != null && rect.Length >= 4;
+        /// <summary>A layer that turns in the plane of an ellipse (a wheel seen from the side), see <see cref="ellipse"/>.</summary>
+        public bool IsEllipseSpin => kind == CodeAnimKind.Layer && mode == "ellipseSpin";
 
         internal void Normalize()
         {
@@ -159,6 +169,11 @@ namespace IdleGrounds.Game
             if (alphaSteps == null || alphaSteps.Length == 0) alphaSteps = new[] { 0.75f, 0.75f, 0.5f, 0.25f };
             if (string.IsNullOrEmpty(sprite)) sprite = kind == CodeAnimKind.Smoke ? "puff" : kind == CodeAnimKind.Toggle ? "sheet" : "mask";
             if (count <= 0) count = kind == CodeAnimKind.Smoke ? 4 : kind == CodeAnimKind.Flicker ? 4 : 1;
+            if (IsEllipseSpin)
+            {
+                if (count <= 1) count = 16;
+                if (spin == 0f) spin = -45f;
+            }
             if (string.IsNullOrEmpty(calm)) calm = kind == CodeAnimKind.Smoke ? "hide" : "rest";
             colA = ParseColor(colorA, Color.white);
             colB = ParseColor(colorB, colA);

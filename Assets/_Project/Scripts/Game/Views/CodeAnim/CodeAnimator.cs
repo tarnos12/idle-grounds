@@ -19,7 +19,7 @@ namespace IdleGrounds.Game
     /// Code animation of one still (owner pick anim_route 2026-10-26; data in <see cref="CodeAnimLibrary"/>). Sits on the
     /// GameObject of the SpriteRenderer that draws the still (building art, a future NPC view). Bakes once per art key
     /// (shared between instances): pixel-exact deform frames (sway / shift / scroll / line) and overlay sprites (glow mask,
-    /// flame tongues, puffs, glints, sheet, artist layers turned / slid / squashed with nearest-neighbour). Per frame it only
+    /// flame tongues, puffs, glints, sheet, artist layers turned / slid / squashed / spun in their ellipse with nearest-neighbour). Per frame it only
     /// picks sprites, alphas and texel-snapped positions from preallocated arrays: no GC allocation.
     /// Calm motion (<see cref="Juice.ReduceMotion"/>): the rest frame, steady glows / flames, no smoke, toggles held.
     /// </summary>
@@ -43,6 +43,7 @@ namespace IdleGrounds.Game
             public Sprite[] baseFrames;       // null = no baked effects (rest stays)
             public FxBake[] fx;
             public Sprite front;              // artist front layer (drawn above the moving layers), or null
+            public Sprite[] frontFrames;      // the front layer with the baked effects (water in front of a wheel keeps flowing), or null
             public string[] missing;          // artist files the config waits for
             public float ppu;
             public Vector2 pivotTL;           // still pivot, texels, top-left origin
@@ -161,7 +162,11 @@ namespace IdleGrounds.Game
             {
                 ref var s = ref slots[i];
                 var fx = s.fx;
-                if (fx == null) { Show(ref s, frontSprite, Color.white, Vector3.zero); continue; }   // artist front layer: static, above the moving parts
+                if (fx == null)   // artist front layer, above the moving parts: static, or stepped with the baked effects (water over a wheel)
+                {
+                    Show(ref s, baked.frontFrames != null ? baked.frontFrames[step % baked.frontFrames.Length] : frontSprite, Color.white, Vector3.zero);
+                    continue;
+                }
                 var e = fx.e;
                 switch (e.kind)
                 {
@@ -412,6 +417,22 @@ namespace IdleGrounds.Game
                     foreach (var e in entry.effects) if (e != null && e.IsBaked && Active(e, layersLive)) CodeAnimBake.ApplyBaked(e, f, s);
                     b.baseFrames[s] = f.ToSprite(entry.key + "_code_" + s, ppu, pivotTL);
                 }
+                // the front layer holds still pixels in front of a moving part (falling water over the wheel): same baked effects
+                var frontImg = b.front != null ? PixelImage.FromSprite(b.front) : null;
+                if (frontImg != null && frontImg.w == img.w && frontImg.h == img.h)
+                {
+                    // effects run on base + front together (one water column, one scroll seam), then the front keeps its own texels
+                    var comp = new PixelImage(baseImg);
+                    for (int i = 0; i < comp.px.Length; i++) if (frontImg.px[i].a >= 128) comp.px[i] = frontImg.px[i];
+                    b.frontFrames = new Sprite[entry.steps];
+                    for (int s = 0; s < entry.steps; s++)
+                    {
+                        var f = new PixelImage(comp);
+                        foreach (var e in entry.effects) if (e != null && e.IsBaked && Active(e, layersLive)) CodeAnimBake.ApplyBaked(e, f, s);
+                        for (int i = 0; i < f.px.Length; i++) if (frontImg.px[i].a < 128) f.px[i] = default;
+                        b.frontFrames[s] = f.ToSprite(entry.key + "_front_" + s, ppu, pivotTL);
+                    }
+                }
             }
 
             // overlays
@@ -479,7 +500,16 @@ namespace IdleGrounds.Game
                         var rest = layerImgs[CodeAnimLibrary.LayerSuffix(part)];
                         var pv = e.pivot != null && e.pivot.Length >= 2 ? new Vector2(e.pivot[0], e.pivot[1]) : new Vector2(rest.w / 2, rest.h / 2);
                         var frames = new List<Sprite>();
-                        if (e.spin != 0f)
+                        var anchor = Vector3.zero;
+                        if (e.IsEllipseSpin)
+                        {
+                            // side-view wheel: un-squash → turn → squash, frames cropped to the wheel (top-left pivot on its texel)
+                            var imgs = CodeAnimBake.EllipseSpinFrames(rest, pv, e.ellipse, Mathf.Max(4, e.count), !e.keepHoles, out var crop);
+                            for (int k = 0; k < imgs.Length; k++) frames.Add(imgs[k].ToSprite(entry.key + "_" + part + "_spin" + k, ppu, Vector2.zero));
+                            anchor = Loc(crop.x, crop.y);
+                            fx.spinFrames = true;
+                        }
+                        else if (e.spin != 0f)
                         {
                             int n = Mathf.Max(4, e.count > 1 ? e.count : 24);
                             for (int k = 0; k < n; k++) frames.Add(CodeAnimBake.Transform(rest, pv, 360f * k / n, 1f).ToSprite(entry.key + "_" + part + k, ppu, pivotTL));
@@ -498,7 +528,7 @@ namespace IdleGrounds.Game
                             }
                         }
                         fx.sprites = frames.ToArray();
-                        fx.anchors = new[] { Vector3.zero };
+                        fx.anchors = new[] { anchor };
                         fx.layerSlide = e.offsets != null && e.offsets.Length >= 2 ? e.offsets : null;
                         break;
                     }
