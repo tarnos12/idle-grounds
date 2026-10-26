@@ -537,6 +537,30 @@
       "source": "Idle-Grounds-Layers-64-003.zip"
     },
     {
+      "path": "_notes/buildings-Idle-Grounds-Layers-64-005-GENERATION-PROMPTS.txt",
+      "name": "GENERATION-PROMPTS.txt",
+      "size": 260,
+      "sha1": "472b457f8e6954a1fcd50975672a49b8d9730d14",
+      "date": "2026-10-26T18:26:34.444Z",
+      "source": "Idle-Grounds-Layers-64-005.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Layers-64-005-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 381,
+      "sha1": "81a4f9fb9e406d56827184c559039980eea9af3b",
+      "date": "2026-10-26T18:26:34.444Z",
+      "source": "Idle-Grounds-Layers-64-005.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Layers-64-005-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 393,
+      "sha1": "28939e44349afa5babd7c3803b718f62cdd0d308",
+      "date": "2026-10-26T18:26:34.445Z",
+      "source": "Idle-Grounds-Layers-64-005.zip"
+    },
+    {
       "path": "_notes/creatures-Idle-Grounds-Creatures-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 472,
@@ -759,6 +783,30 @@
       "sha1": "71bfbb9931c2c342a7b83f938cd318ba56455aea",
       "date": "2026-10-26T17:23:02.302Z",
       "source": "Idle-Grounds-Layers-64-004.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Layers-64-006-GENERATION-PROMPTS.txt",
+      "name": "GENERATION-PROMPTS.txt",
+      "size": 260,
+      "sha1": "472b457f8e6954a1fcd50975672a49b8d9730d14",
+      "date": "2026-10-26T18:26:35.063Z",
+      "source": "Idle-Grounds-Layers-64-006.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Layers-64-006-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 375,
+      "sha1": "3162b97eb73394468ed1ba69732fb5a374ea5d32",
+      "date": "2026-10-26T18:26:35.063Z",
+      "source": "Idle-Grounds-Layers-64-006.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Layers-64-006-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 461,
+      "sha1": "046e4d8ec0be9d61bcf74bb83f12924ba64f83bc",
+      "date": "2026-10-26T18:26:35.081Z",
+      "source": "Idle-Grounds-Layers-64-006.zip"
     },
     {
       "path": "_notes/fixtures-Idle-Grounds-Fixtures-001-fixture_preview.png",
@@ -2811,34 +2859,34 @@
     {
       "path": "buildings/bld_paper_mill_base@64.png",
       "name": "bld_paper_mill_base@64.png",
-      "size": 23138,
-      "sha1": "ab2d582a645591909992b031ebfa69a7782f03d7",
-      "date": "2026-10-26T17:23:01.438Z",
-      "source": "Idle-Grounds-Layers-64-003.zip"
+      "size": 21677,
+      "sha1": "058757747fcda407ddfbac81dbf9758a258393b0",
+      "date": "2026-10-26T18:26:34.441Z",
+      "source": "Idle-Grounds-Layers-64-005.zip"
     },
     {
       "path": "buildings/bld_paper_mill_layer_front@64.png",
       "name": "bld_paper_mill_layer_front@64.png",
-      "size": 3390,
-      "sha1": "058bc91a6e026ba37c11a9266a2bd481f63ad673",
-      "date": "2026-10-26T17:23:01.504Z",
-      "source": "Idle-Grounds-Layers-64-003.zip"
+      "size": 4224,
+      "sha1": "bec8e9bf89a3e1c5e41d4881c08c6657bafa636b",
+      "date": "2026-10-26T18:26:34.442Z",
+      "source": "Idle-Grounds-Layers-64-005.zip"
     },
     {
       "path": "buildings/bld_paper_mill_layer_press@64.png",
       "name": "bld_paper_mill_layer_press@64.png",
-      "size": 1088,
-      "sha1": "1d671cbc8148b129bbfe2dd366335aac64280300",
-      "date": "2026-10-26T17:23:01.504Z",
-      "source": "Idle-Grounds-Layers-64-003.zip"
+      "size": 618,
+      "sha1": "0f5f915c72ffefb2b2723d7b6211bbf48ca08515",
+      "date": "2026-10-26T18:26:34.442Z",
+      "source": "Idle-Grounds-Layers-64-005.zip"
     },
     {
       "path": "buildings/bld_paper_mill_layer_wheel@64.png",
       "name": "bld_paper_mill_layer_wheel@64.png",
-      "size": 3360,
-      "sha1": "fbe406b72a36b9cdef8d936c785610d99443842b",
-      "date": "2026-10-26T17:23:01.505Z",
-      "source": "Idle-Grounds-Layers-64-003.zip"
+      "size": 1644,
+      "sha1": "16bf55015ba22e7064a9f866f8d38ba8f5744aba",
+      "date": "2026-10-26T18:26:34.443Z",
+      "source": "Idle-Grounds-Layers-64-005.zip"
     },
     {
       "path": "buildings/bld_paper_mill_working_192x256_4f@64.png",
@@ -3315,10 +3363,10 @@
     {
       "path": "creatures/npc_kang_base@64.png",
       "name": "npc_kang_base@64.png",
-      "size": 2686,
-      "sha1": "1659edc691d60bf7d9e9277995eb6c02a05e74ea",
-      "date": "2026-10-26T17:23:02.299Z",
-      "source": "Idle-Grounds-Layers-64-004.zip"
+      "size": 3023,
+      "sha1": "1d0b2a53784e57ee27471d8d1b926f31d2d66596",
+      "date": "2026-10-26T18:26:35.064Z",
+      "source": "Idle-Grounds-Layers-64-006.zip"
     },
     {
       "path": "creatures/npc_kang_idle_32x48_4f.png",
@@ -3339,10 +3387,10 @@
     {
       "path": "creatures/npc_kang_layer_arm_raised@64.png",
       "name": "npc_kang_layer_arm_raised@64.png",
-      "size": 340,
-      "sha1": "c973a609e6bc45861f9a09084ac5c3058bd6acd6",
-      "date": "2026-10-26T17:23:02.300Z",
-      "source": "Idle-Grounds-Layers-64-004.zip"
+      "size": 533,
+      "sha1": "6c89c809851ea00209fc0993573ed5a15c86b4a5",
+      "date": "2026-10-26T18:26:35.064Z",
+      "source": "Idle-Grounds-Layers-64-006.zip"
     },
     {
       "path": "creatures/npc_kang_layer_arm@64.png",
@@ -3443,10 +3491,10 @@
     {
       "path": "creatures/npc_xuan_base@64.png",
       "name": "npc_xuan_base@64.png",
-      "size": 5212,
-      "sha1": "9fbc58d06bd61f94ad01645b0cf091eefa827d60",
-      "date": "2026-10-26T17:23:02.300Z",
-      "source": "Idle-Grounds-Layers-64-004.zip"
+      "size": 4965,
+      "sha1": "f92d9eb92028f5f09bde558527a94077f2f80dcd",
+      "date": "2026-10-26T18:26:35.066Z",
+      "source": "Idle-Grounds-Layers-64-006.zip"
     },
     {
       "path": "creatures/npc_xuan_idle_32x48_4f.png",
@@ -3475,10 +3523,10 @@
     {
       "path": "creatures/npc_xuan_layer_rings@64.png",
       "name": "npc_xuan_layer_rings@64.png",
-      "size": 571,
-      "sha1": "e651d505ed4f06f3160ac706ed5411cbd6f7214f",
-      "date": "2026-10-26T17:23:02.301Z",
-      "source": "Idle-Grounds-Layers-64-004.zip"
+      "size": 318,
+      "sha1": "90d2a24c8bcf6178c1b8d20b2293f721db919c69",
+      "date": "2026-10-26T18:26:35.081Z",
+      "source": "Idle-Grounds-Layers-64-006.zip"
     },
     {
       "path": "creatures/npc_yao_idle_32x48_4f.png",
