@@ -201,7 +201,7 @@ namespace IdleGrounds.Editor
                 case "link": build.OpenLinkEditor(arg.Trim(), FirstBuilt(arg.Trim(), "wisp_lantern")); break;
                 case "bridge": build.OpenBridgePanel(arg.Trim(), FirstBuilt(arg.Trim(), "spirit_bridge")); break;
                 case "pavilion": build.OpenPavilion(arg.Trim(), FirstBuilt(arg.Trim(), "meditation_pavilion")); break;
-                default: Debug.LogError(Tag + "unknown act '" + a + "'"); break;
+                default: if (!CodeAnimAct(name, arg)) Debug.LogError(Tag + "unknown act '" + a + "'"); break;   // animTime / animPreview: BatchCodeAnimActs.cs
             }
         }
     }

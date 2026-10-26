@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 14:37",
+  "updated": "2026-10-26 15:14",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -303,7 +303,7 @@
           "status": "in-progress",
           "size": "L",
           "owner": "Claude",
-          "now": "Feature builder building the animation components in a background copy"
+          "now": "built on bg/codeanim (Kiln, Paper Mill in game; Shrine + NPC configs ready for Phase 2); orchestrator merges, then batch L1 layers drop in"
         },
         {
           "title": "Art spec: stills + moving-part layers only",
