@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-26 16:13. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-26 16:40. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**29 of 49 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
+**30 of 50 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
 
 ## Being worked on now
 
@@ -15,7 +15,7 @@ Updated 2026-10-26 16:13. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 14 / 22 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 15 / 23 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -86,6 +86,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Visual pass batch A3: world art in code (veil, ground, cliffs, paths, rack/bridge) | VP-11, 12, 14, 16, 17: veil seams + coast leak, interim rack and bridge backings, seeded ground variety, cliff/underside/lip noise, rounded paths/plaza/islets. | Claude |
 | Done | Visual pass batch B: changes that need your answers | Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island. | Claude |
 | Waiting | Visual pass batch C: new art (77 files) | Ground fills, macro patches, veil mist v2, shadows, rack/bridge, icons, item drops; 45 files can start now, 32 wait on your answers. | Artist |
+| Done | Review round cliff walls Islands-051 (7 biomes) | Repaired island_<biome>_cliffwall_round_32x96_4f x7 (replace the Islands-040 v1 rejected 2026-10-21): inspect, un-pin in the coast builder, rebuild island sheets, check every curved south coast in Play, accept or reject per file. | Claude |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
 | Waiting | Building art redo: reference sheet for all 26 buildings | Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures. | Claude |
 | Waiting | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
