@@ -13,7 +13,10 @@ namespace IdleGrounds.Editor
     {
         public const string Path = IslandArtBuilder.IslandDir + "/island-decor.json";
 
-        [System.Serializable] public class Entry { public string island; public string trees; public string props; }
+        /// <summary>trees / props: edge-ring decor (IslandCoastBuilder.BuildBoundary); lip: the Island's own W / E / N edge lip
+        /// (frames as island_edge_lip, used as drawn instead of the recoloured shared lip; IslandDressingBuilder.EdgeLipTiles);
+        /// floes: loose ice floes stamped on the pond water (IslandDressingBuilder.EnsurePond).</summary>
+        [System.Serializable] public class Entry { public string island; public string trees; public string props; public string lip; public string floes; }
         [System.Serializable] class FileData { public Entry[] islands; }
 
         static Entry[] Load()
@@ -38,7 +41,21 @@ namespace IdleGrounds.Editor
                 if (e == null) continue;
                 if (!string.IsNullOrEmpty(e.trees)) yield return e.trees;
                 if (!string.IsNullOrEmpty(e.props)) yield return e.props;
+                if (!string.IsNullOrEmpty(e.lip)) yield return e.lip;
+                if (!string.IsNullOrEmpty(e.floes)) yield return e.floes;
             }
+        }
+
+        /// <summary>The delivered file of an Art/Incoming key (<c>&lt;key&gt;_&lt;W&gt;x&lt;H&gt;[_&lt;n&gt;f].png</c>) in a category folder, or null.</summary>
+        public static string IncomingFile(string key, string category)
+        {
+            if (string.IsNullOrEmpty(key)) return null;
+            string dir = "Assets/_Project/Art/Incoming/" + category;
+            if (!Directory.Exists(dir)) return null;
+            var rx = new System.Text.RegularExpressions.Regex("^" + System.Text.RegularExpressions.Regex.Escape(key) + @"_\d+x\d+(_\d+f)?\.png$");
+            foreach (var f in Directory.GetFiles(dir, key + "_*.png"))
+                if (rx.IsMatch(System.IO.Path.GetFileName(f))) return f.Replace('\\', '/');
+            return null;
         }
     }
 }

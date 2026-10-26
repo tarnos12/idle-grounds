@@ -185,7 +185,7 @@
           "status": "blocked",
           "size": "S",
           "owner": "Claude",
-          "blockedBy": "Snow macro (Islands-054) rejected 2026-10-26 (rings / line arcs); redo requested in ART-SPEC v6.14, old macro kept"
+          "blockedBy": "Snow macro rejected again 2026-10-26 (Islands-055: frame 0 dark hole with white rim, patches a full step dark); redo of frames 0+2 requested in ART-SPEC v6.15 (Islands-058), old macro kept"
         },
         {
           "title": "Rebuild the sky with the kept background islands",
@@ -281,7 +281,7 @@
           "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Waiting for the artist: snow macro, snowy pines, snow props and flowers frames 1-2 redo (ART-SPEC v6.14); fill, water, ice edge, round wall accepted; then P2"
+          "blockedBy": "Waiting for the artist: Islands-058 (snow macro frames 0+2, ice floes, snow side faces; ART-SPEC v6.15); P1 otherwise accepted, P2 profile + scatter accepted; then 64x64 snow props + warm spring"
         },
         {
           "title": "UI QA: batch B review",
@@ -356,8 +356,16 @@
         {
           "title": "Fix: fish and algae nodes surface on snow around the Fishing pond",
           "detail": "Seen in the snowy Fishing review 2026-10-26: water nodes spawn on the shore/snow, not only in the water.",
-          "status": "todo",
+          "status": "waiting",
           "size": "S",
+          "owner": "Claude",
+          "blockedBy": "Not a placement bug: fish/algae spawn in zone 'centre' (43x43 cells, rows/cols 25-67, also the Algae Farm waterOnly area) while the drawn pond is 14x10 cells; needs a decision: bigger pond/lake vs a smaller 'pond' spawn zone (+ Algae Farm rule)"
+        },
+        {
+          "title": "Review snowy Fishing P2 + P1 redo (Islands-055/056/057, Fixtures-007)",
+          "detail": "Inspect 14 files (macro/flowers/pines/props redo; snow cornice profile, new edge_lip + ice_floe, scatter, straight wall, blob, side walls), wire edge_lip and ice_floe, rebuild sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC + Drive mirror + feedback.",
+          "status": "done",
+          "size": "M",
           "owner": "Claude"
         }
       ]
