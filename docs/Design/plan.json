@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 14:31",
+  "updated": "2026-10-26 14:37",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -139,7 +139,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Owner Hub question anim_route. Creatures-64-003: Ouyang idle accepted as a file (with Lin); Kang, Jiang, Tian, Qingyun, Xuan rejected; Shrine glow 64-005 rejected; in-game NPC/Shrine check also waits on ADR 0007 Phase 2"
+          "blockedBy": "Batch L1 requested 2026-10-26 (ART-SPEC 3.9.8): Kang arm + raised arm + base, Xuan rings + base (Idle-Grounds-Layers-64-002.zip); then 32-px repairs (Sky Path, round walls, diagonal coast), snowy Fishing, portraits, new biome tilesets; in-game NPC/Shrine check waits on ADR 0007 Phase 2"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
@@ -266,7 +266,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Owner Hub question anim_route (code animation vs more hand-drawn rounds). Redo round 3 (Buildings-64-005): Workbench loop accepted in game, Kiln loop new interim, Paper Mill + Shrine glow rejected; no batch 1R4 until the owner answers"
+          "blockedBy": "Batch L1 requested 2026-10-26 (ART-SPEC 3.9.8): Paper Mill wheel + press layers + base (Idle-Grounds-Layers-64-001.zip); kiln/shrine/paper-mill motion in code; waiting on the artist"
         },
         {
           "title": "Snowy northern Fishing island",
@@ -308,10 +308,9 @@
         {
           "title": "Art spec: stills + moving-part layers only",
           "detail": "Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames.",
-          "status": "in-progress",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "now": "Art director rewriting the spec and the layer request"
+          "owner": "Claude"
         }
       ]
     },
