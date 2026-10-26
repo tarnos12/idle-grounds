@@ -978,15 +978,76 @@ namespace IdleGrounds.Editor
                 }
             }
             bool Plain(Color32 c) => c.b > c.r && c.b >= c.g;
+            // ART-SPEC §3.8 snowy Fishing: the delivered ice shelf (island_fishing_ice_edge_32x16_4f, rows bank -> water) is
+            // laid along the shore curve: row = pixel distance from the shore, column = arc length along the shore, one of
+            // the 4 variants per 32-px run (static: the variants tile in any order, they are not animation frames). It
+            // replaces the dark waterline and the wet shore; the water just inside the shelf's north edge is shaded (3/4 view).
+            var ice = ReadPng(Inc + "island_fishing_ice_edge_32x16_4f.png", out int iw, out int ih);
+            if (ice != null && (ih != 16 || iw < 128)) ice = null;
+            float[] dist = null, arc = null;
+            int arcRuns = 1;
+            if (ice != null)
+            {
+                // distance (px) of every water pixel from the nearest land pixel (8-neighbour chamfer, two passes)
+                dist = new float[PondW * PondH];
+                for (int y = 0; y < PondH; y++) for (int x = 0; x < PondW; x++) dist[y * PondW + x] = D(x, y) < 1f ? 1e6f : 0f;
+                const float dg = 1.41421356f;
+                for (int y = 0; y < PondH; y++)
+                    for (int x = 0; x < PondW; x++)
+                    {
+                        int i = y * PondW + x; float v = dist[i];
+                        if (v == 0f) continue;
+                        if (x > 0) v = Mathf.Min(v, dist[i - 1] + 1f);
+                        if (y > 0) v = Mathf.Min(v, dist[i - PondW] + 1f);
+                        if (x > 0 && y > 0) v = Mathf.Min(v, dist[i - PondW - 1] + dg);
+                        if (x < PondW - 1 && y > 0) v = Mathf.Min(v, dist[i - PondW + 1] + dg);
+                        if (x == 0 || y == 0 || x == PondW - 1) v = Mathf.Min(v, 1f);
+                        dist[i] = v;
+                    }
+                for (int y = PondH - 1; y >= 0; y--)
+                    for (int x = PondW - 1; x >= 0; x--)
+                    {
+                        int i = y * PondW + x; float v = dist[i];
+                        if (v == 0f) continue;
+                        if (x < PondW - 1) v = Mathf.Min(v, dist[i + 1] + 1f);
+                        if (y < PondH - 1) v = Mathf.Min(v, dist[i + PondW] + 1f);
+                        if (x < PondW - 1 && y < PondH - 1) v = Mathf.Min(v, dist[i + PondW + 1] + dg);
+                        if (x > 0 && y < PondH - 1) v = Mathf.Min(v, dist[i + PondW - 1] + dg);
+                        if (y == PondH - 1) v = Mathf.Min(v, 1f);
+                        dist[i] = v;
+                    }
+                // arc length of the shore (noise-free outline) per angle, scaled so a whole number of 32-px runs closes the loop
+                const int A = 2048;
+                arc = new float[A + 1];
+                Vector2 Pt(float a) { float r = Rad(a); return new Vector2(Mathf.Cos(a) * r * hx, Mathf.Sin(a) * r * hy); }
+                var prev = Pt(-Mathf.PI);
+                for (int s = 1; s <= A; s++) { var p = Pt(-Mathf.PI + 2f * Mathf.PI * s / A); arc[s] = arc[s - 1] + Vector2.Distance(prev, p); prev = p; }
+                arcRuns = Mathf.Max(1, Mathf.RoundToInt(arc[A] / 32f));
+                float k = arcRuns * 32f / arc[A];
+                for (int s = 0; s <= A; s++) arc[s] *= k;
+            }
+            Color32 IceAt(int x, int y, int row)
+            {
+                float dx = (x + 0.5f - PondW * 0.5f) / hx, dy = (y + 0.5f - PondH * 0.5f) / hy;
+                float a = Mathf.Atan2(dy, dx);
+                float u = arc[Mathf.Clamp(Mathf.RoundToInt((a + Mathf.PI) / (2f * Mathf.PI) * 2048f), 0, 2048)];
+                int ui = Mathf.FloorToInt(u), run = (ui / 32) % arcRuns;
+                int variant = (int)(Hash(run, 7, seed + 11) * 4f) & 3;
+                return ice[(ih - 1 - row) * iw + variant * 32 + (ui & 31)];
+            }
             for (int f = 0; f < frames; f++)
                 for (int y = 0; y < PondH; y++)
                     for (int x = 0; x < PondW; x++)
                     {
                         float d = D(x, y);
                         Color32 c = new Color32(0, 0, 0, 0);
-                        if (d < 1f)
+                        float t = ice != null ? dist[y * PondW + x] - 1f : 0f;        // 0 = the first water pixel at the shore
+                        if (ice != null && d < 1f && t < ih)
+                            c = IceAt(x, y, Mathf.Clamp(Mathf.FloorToInt(t), 0, ih - 1));
+                        else if (ice != null && d >= 1f) { }                                  // land: no rim, no wet shore on snow
+                        else if (d < 1f)
                         {
-                            if (d > 1f - 1.2f * p1) c = rim;                                       // 1 px dark waterline
+                            if (ice == null && d > 1f - 1.2f * p1) c = rim;                    // 1 px dark waterline
                             else
                             {
                                 // the water motif is sampled with a different offset in each irregular (noise-warped,
@@ -1004,11 +1065,14 @@ namespace IdleGrounds.Editor
                                         var sc = water[ly * ww + f * 32 + (st.flip ? 31 - lx : lx)];
                                         if (sc.a > 0 && !Plain(sc)) c = sc;
                                     }
-                                if (D(x, y + 5) >= 1f) c = new Color32((byte)(c.r * 0.7f), (byte)(c.g * 0.76f), (byte)(c.b * 0.86f), 255);   // north bank shade
+                                bool northShade = ice != null
+                                    ? (y + 3 >= PondH || dist[(y + 3) * PondW + x] - 1f < ih)      // the 3 px of water under the shelf's north edge
+                                    : D(x, y + 5) >= 1f;
+                                if (northShade) c = new Color32((byte)(c.r * 0.7f), (byte)(c.g * 0.76f), (byte)(c.b * 0.86f), 255);   // north bank shade
                             }
                         }
-                        else if (d < 1f + 1.2f * p1) c = rim;
-                        else if (d < 1f + 3.2f * p1 && y < PondH / 2) c = shore;                    // wet south shore
+                        else if (ice == null && d < 1f + 1.2f * p1) c = rim;
+                        else if (ice == null && d < 1f + 3.2f * p1 && y < PondH / 2) c = shore;      // wet south shore
                         px[y * PondW * frames + f * PondW + x] = c;
                     }
             WriteIfChanged(path, PondW * frames, PondH, px);

@@ -397,6 +397,8 @@ namespace IdleGrounds.Editor
                 "sky_island_distant", "island_underside_rock_3q", "island_underside_roots_3q", "island_underside_stalactite_3q",
                 "island_underside_vines_3q", "island_underside_lavadrip_3q" })
                 used.Add(k);
+            used.Add("island_fishing_ice_edge");          // ice shelf along the pond shore (IslandDressingBuilder.EnsurePond; ART-SPEC §3.8)
+            foreach (var k in IslandDecor.AllKeys()) used.Add(k);     // per-Island decor (island-decor.json; IslandCoastBuilder.BuildBoundary)
             if (IslandsBuilder.UseSkyDepthTexture) used.Add("sky_depth");
 
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)

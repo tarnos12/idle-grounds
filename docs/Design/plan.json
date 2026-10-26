@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 18:35",
+  "updated": "2026-10-26 19:54",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -185,7 +185,7 @@
           "status": "blocked",
           "size": "S",
           "owner": "Claude",
-          "blockedBy": "Integrated; nearly invisible in game; repair requested from the artist"
+          "blockedBy": "Snow macro (Islands-054) rejected 2026-10-26 (rings / line arcs); redo requested in ART-SPEC v6.14, old macro kept"
         },
         {
           "title": "Rebuild the sky with the kept background islands",
@@ -278,10 +278,10 @@
         {
           "title": "Snowy northern Fishing island",
           "detail": "Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered.",
-          "status": "waiting",
+          "status": "blocked",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Art request ART-SPEC 3.8 on Drive since 2026-10-21, waiting on the artist. On delivery, code hooks: ice edge along the pond curve, ice floes, per-biome snow lip, snow trees/props on Fishing, fix_spring_snow, snowfall overlay"
+          "blockedBy": "Waiting for the artist: snow macro, snowy pines, snow props and flowers frames 1-2 redo (ART-SPEC v6.14); fill, water, ice edge, round wall accepted; then P2"
         },
         {
           "title": "UI QA: batch B review",
@@ -342,6 +342,13 @@
         {
           "title": "Review coast edge profiles + round side walls Islands-052 (7 biomes)",
           "detail": "island_<biome>_coast_edge_profile_32x8_2f + island_<biome>_sidewall_round_32x32_4f x7 (optional pieces of the 2026-10-12 curved-coast request): inspect, wire into CoastCurves (new keys), rebuild island sheets, check every Island in Play at the zoom steps, accept or reject per file.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Review snowy Fishing P1 (Islands-054, Fixtures-006) + Farm/Grove/Mine edge profiles (Islands-053)",
+          "detail": "Inspect 11 files, wire the ice edge along the pond shore (EnsurePond) and per-Island decor keys (island-decor.json -> edge ring), rebuild Island sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC v6.14 + Drive mirror + feedback.",
           "status": "done",
           "size": "M",
           "owner": "Claude"
