@@ -376,6 +376,14 @@
           "owner": "Claude"
         },
         {
+          "title": "Review new biome tilesets Lotus Marsh Islands-059 + Thunder Crag Islands-060",
+          "detail": "Redo of the 2026-10-21 rejection (Islands-041..048): inspect blob/fill/water/cliff wall/side walls/macro/flowers with numbers vs the accepted Center set, preview assembled on a throwaway island in the bg copy at the zoom steps, validate (waiting on ADR 0007 Phase 6) or reject with repair text; ART-SPEC + Drive mirror + feedback; sheets docs/art/reference/biome-lotus-059.jpg, biome-thunder-060.jpg.",
+          "status": "in-progress",
+          "size": "M",
+          "owner": "Claude",
+          "now": "Writing verdicts into ART-SPEC and the Drive mirror"
+        },
+        {
           "title": "Art redo: snow props 64x64 + spring steam (Fixtures-009), Mo portrait (UI-026)",
           "detail": "Requested in ART-SPEC v6.16 after the 2026-10-26 review: deco_snow_props_64x64_4f (snow caps vanish on the P06 ground, slab under props) and the steam of fix_spring_snow_flow (lies on the water); npc_mo_portrait (face too small, twin of Lei). Wiring is ready (island-decor.json bigProps/swaps).",
           "status": "done",
