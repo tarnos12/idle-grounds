@@ -945,6 +945,22 @@
       "source": "Idle-Grounds-Fixtures-008.zip"
     },
     {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-009-NOTES.md",
+      "name": "NOTES.md",
+      "size": 512,
+      "sha1": "2ecd17fab121b4a0f097f3cd68348eda72a4628f",
+      "date": "2026-10-26T22:56:09.053Z",
+      "source": "Idle-Grounds-Fixtures-009.zip"
+    },
+    {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-009-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 536,
+      "sha1": "9ce6c9df32cb4f607ded8d49eec763654d8dc29e",
+      "date": "2026-10-26T22:56:09.054Z",
+      "source": "Idle-Grounds-Fixtures-009.zip"
+    },
+    {
       "path": "_notes/fx-Idle-Grounds-FX-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 495,
@@ -1905,6 +1921,22 @@
       "source": "Idle-Grounds-Islands-057.zip"
     },
     {
+      "path": "_notes/islands-Idle-Grounds-Islands-058-NOTES.md",
+      "name": "NOTES.md",
+      "size": 368,
+      "sha1": "fa4bdeecf24b92aa54986b88c3e94219a3fb80b3",
+      "date": "2026-10-26T22:56:08.244Z",
+      "source": "Idle-Grounds-Islands-058.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-058-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 773,
+      "sha1": "ef791828a5650023e52261a71b460256180f821d",
+      "date": "2026-10-26T22:56:08.244Z",
+      "source": "Idle-Grounds-Islands-058.zip"
+    },
+    {
       "path": "_notes/items-Idle-Grounds-Items-001-README.md",
       "name": "README.md",
       "size": 846,
@@ -2535,6 +2567,22 @@
       "sha1": "090c3934b647441fa2a8e8b20d5048a635207b99",
       "date": "2026-10-26T22:05:16.918Z",
       "source": "Idle-Grounds-UI-025.zip"
+    },
+    {
+      "path": "_notes/ui-Idle-Grounds-UI-026-NOTES.md",
+      "name": "NOTES.md",
+      "size": 453,
+      "sha1": "494181e58bf62caec99b898372d0de18f053cc29",
+      "date": "2026-10-26T22:56:09.882Z",
+      "source": "Idle-Grounds-UI-026.zip"
+    },
+    {
+      "path": "_notes/ui-Idle-Grounds-UI-026-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 419,
+      "sha1": "a9b91eb6f21c4ee83488436c920acb67c032d5e6",
+      "date": "2026-10-26T22:56:09.883Z",
+      "source": "Idle-Grounds-UI-026.zip"
     },
     {
       "path": "buildings/bld_algae_farm_working_96x128_4f.png",
@@ -3715,10 +3763,10 @@
     {
       "path": "fixtures/deco_snow_props_64x64_4f.png",
       "name": "deco_snow_props_64x64_4f.png",
-      "size": 2484,
-      "sha1": "6b47015e8cdca8a3f070854e488d104f8edecd03",
-      "date": "2026-10-26T22:05:17.548Z",
-      "source": "Idle-Grounds-Fixtures-008.zip"
+      "size": 2539,
+      "sha1": "b9020b6effb9ca8a3e3040293b54c58cdb0d7260",
+      "date": "2026-10-26T22:56:09.051Z",
+      "source": "Idle-Grounds-Fixtures-009.zip"
     },
     {
       "path": "fixtures/deco_tree_32x48_3f.png",
@@ -3771,10 +3819,10 @@
     {
       "path": "fixtures/fix_spring_snow_flow_64x80_4f.png",
       "name": "fix_spring_snow_flow_64x80_4f.png",
-      "size": 7179,
-      "sha1": "f1097e2d0f9121b76fc45a37280fd0b0f885081e",
-      "date": "2026-10-26T22:05:17.550Z",
-      "source": "Idle-Grounds-Fixtures-008.zip"
+      "size": 7866,
+      "sha1": "c851fca2f5459b0a87f238a41b3af8c43198ccdf",
+      "date": "2026-10-26T22:56:09.052Z",
+      "source": "Idle-Grounds-Fixtures-009.zip"
     },
     {
       "path": "fixtures/fix_spring_snow.png",
@@ -4523,18 +4571,18 @@
     {
       "path": "islands/island_fishing_ice_floe_32x32_4f.png",
       "name": "island_fishing_ice_floe_32x32_4f.png",
-      "size": 578,
-      "sha1": "48042216440346631c5bef94588e1ec190b7a2c7",
-      "date": "2026-10-26T21:28:18.964Z",
-      "source": "Idle-Grounds-Islands-056.zip"
+      "size": 683,
+      "sha1": "c732dd3ec5149539cc7b04b58e1db2d7f6bd5589",
+      "date": "2026-10-26T22:56:08.240Z",
+      "source": "Idle-Grounds-Islands-058.zip"
     },
     {
       "path": "islands/island_fishing_macro_96x96_4f.png",
       "name": "island_fishing_macro_96x96_4f.png",
-      "size": 2599,
-      "sha1": "4259207091d9cbb412cce4251d04df33c2b9b3ac",
-      "date": "2026-10-26T21:28:16.740Z",
-      "source": "Idle-Grounds-Islands-055.zip"
+      "size": 2563,
+      "sha1": "6a32e5e2b555a06112a9029d13eb06e6a7902985",
+      "date": "2026-10-26T22:56:08.242Z",
+      "source": "Idle-Grounds-Islands-058.zip"
     },
     {
       "path": "islands/island_fishing_scatter_32x32_4f.png",
@@ -4547,10 +4595,10 @@
     {
       "path": "islands/island_fishing_sidewall_32x32_4f.png",
       "name": "island_fishing_sidewall_32x32_4f.png",
-      "size": 832,
-      "sha1": "f2876a9d9188c9c488a0b4e151cba59bad6c4e25",
-      "date": "2026-10-26T21:28:20.045Z",
-      "source": "Idle-Grounds-Islands-057.zip"
+      "size": 869,
+      "sha1": "9ec0b20d49659e3b2f6bf7b2fd9c0ea0a1973a92",
+      "date": "2026-10-26T22:56:08.242Z",
+      "source": "Idle-Grounds-Islands-058.zip"
     },
     {
       "path": "islands/island_fishing_sidewall_round_32x32_4f.png",
@@ -4563,10 +4611,10 @@
     {
       "path": "islands/island_fishing_sidewall_variants_32x32_8f.png",
       "name": "island_fishing_sidewall_variants_32x32_8f.png",
-      "size": 1206,
-      "sha1": "06c6c55cd2b46e5a5f42d20ff08fedfbd15e4a9e",
-      "date": "2026-10-26T21:28:20.046Z",
-      "source": "Idle-Grounds-Islands-057.zip"
+      "size": 1329,
+      "sha1": "f7e22fc4500a3b8b47b8dfe1da0900e938ea7824",
+      "date": "2026-10-26T22:56:08.243Z",
+      "source": "Idle-Grounds-Islands-058.zip"
     },
     {
       "path": "islands/island_fishing_water_32x32_4f.png",
@@ -6211,10 +6259,10 @@
     {
       "path": "ui/npc_mo_portrait_64x64.png",
       "name": "npc_mo_portrait_64x64.png",
-      "size": 5083,
-      "sha1": "dfb25dbd5328a1bc10320119198626f5a2ec2e2e",
-      "date": "2026-10-26T22:05:16.916Z",
-      "source": "Idle-Grounds-UI-025.zip"
+      "size": 5508,
+      "sha1": "82bc7d6cad07869f9fb3c97c2a89ac96554ebc03",
+      "date": "2026-10-26T22:56:09.883Z",
+      "source": "Idle-Grounds-UI-026.zip"
     },
     {
       "path": "ui/npc_ouyang_portrait_64x64.png",
