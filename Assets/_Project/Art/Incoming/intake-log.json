@@ -929,6 +929,22 @@
       "source": "Idle-Grounds-Fixtures-007.zip"
     },
     {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-008-NOTES.md",
+      "name": "NOTES.md",
+      "size": 498,
+      "sha1": "ab1c264d9e9cad9a8e60bcfcb7b42b5bdb64419f",
+      "date": "2026-10-26T22:05:17.551Z",
+      "source": "Idle-Grounds-Fixtures-008.zip"
+    },
+    {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-008-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 629,
+      "sha1": "8d09553d0ea7f2dfb358b5a1cbe8949d2f11a34c",
+      "date": "2026-10-26T22:05:17.551Z",
+      "source": "Idle-Grounds-Fixtures-008.zip"
+    },
+    {
       "path": "_notes/fx-Idle-Grounds-FX-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 495,
@@ -2505,6 +2521,22 @@
       "source": "Idle-Grounds-UI-024.zip"
     },
     {
+      "path": "_notes/ui-Idle-Grounds-UI-025-NOTES.md",
+      "name": "NOTES.md",
+      "size": 385,
+      "sha1": "b89f09b468a698f26f1d73452f57384da4d31eb0",
+      "date": "2026-10-26T22:05:16.914Z",
+      "source": "Idle-Grounds-UI-025.zip"
+    },
+    {
+      "path": "_notes/ui-Idle-Grounds-UI-025-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 888,
+      "sha1": "090c3934b647441fa2a8e8b20d5048a635207b99",
+      "date": "2026-10-26T22:05:16.918Z",
+      "source": "Idle-Grounds-UI-025.zip"
+    },
+    {
       "path": "buildings/bld_algae_farm_working_96x128_4f.png",
       "name": "bld_algae_farm_working_96x128_4f.png",
       "size": 12646,
@@ -3681,6 +3713,14 @@
       "source": "Idle-Grounds-Fixtures-007.zip"
     },
     {
+      "path": "fixtures/deco_snow_props_64x64_4f.png",
+      "name": "deco_snow_props_64x64_4f.png",
+      "size": 2484,
+      "sha1": "6b47015e8cdca8a3f070854e488d104f8edecd03",
+      "date": "2026-10-26T22:05:17.548Z",
+      "source": "Idle-Grounds-Fixtures-008.zip"
+    },
+    {
       "path": "fixtures/deco_tree_32x48_3f.png",
       "name": "deco_tree_32x48_3f.png",
       "size": 2914,
@@ -3727,6 +3767,22 @@
       "sha1": "a0aed38fab4d9d526149d23dc2dc3314ad9a567c",
       "date": "2026-10-07T17:58:46.968Z",
       "source": "Idle-Grounds-Fixtures-004.zip"
+    },
+    {
+      "path": "fixtures/fix_spring_snow_flow_64x80_4f.png",
+      "name": "fix_spring_snow_flow_64x80_4f.png",
+      "size": 7179,
+      "sha1": "f1097e2d0f9121b76fc45a37280fd0b0f885081e",
+      "date": "2026-10-26T22:05:17.550Z",
+      "source": "Idle-Grounds-Fixtures-008.zip"
+    },
+    {
+      "path": "fixtures/fix_spring_snow.png",
+      "name": "fix_spring_snow.png",
+      "size": 4566,
+      "sha1": "cf029c3a99d648f36d6087ba7063313f8e348199",
+      "date": "2026-10-26T22:05:17.549Z",
+      "source": "Idle-Grounds-Fixtures-008.zip"
     },
     {
       "path": "fixtures/fix_spring.png",
@@ -6123,18 +6179,18 @@
     {
       "path": "ui/npc_jiang_portrait_64x64.png",
       "name": "npc_jiang_portrait_64x64.png",
-      "size": 1133,
-      "sha1": "e24518d6f0025aa918b55162422a0f6eb85be74c",
-      "date": "2026-10-21T18:04:45.276Z",
-      "source": "Idle-Grounds-UI-023.zip"
+      "size": 3866,
+      "sha1": "5352106a753353159b344620de431a83d8b5e8a9",
+      "date": "2026-10-26T22:05:16.915Z",
+      "source": "Idle-Grounds-UI-025.zip"
     },
     {
       "path": "ui/npc_kang_portrait_64x64.png",
       "name": "npc_kang_portrait_64x64.png",
-      "size": 1644,
-      "sha1": "70eb6531935aebdeb177f94ae605cc24c9da1e1c",
-      "date": "2026-10-21T18:04:45.277Z",
-      "source": "Idle-Grounds-UI-023.zip"
+      "size": 3861,
+      "sha1": "5459e309fe4c955aa6f4c22f71a30beec9e0ea15",
+      "date": "2026-10-26T22:05:16.915Z",
+      "source": "Idle-Grounds-UI-025.zip"
     },
     {
       "path": "ui/npc_lei_portrait_64x64.png",
@@ -6147,18 +6203,18 @@
     {
       "path": "ui/npc_lin_portrait_64x64.png",
       "name": "npc_lin_portrait_64x64.png",
-      "size": 1611,
-      "sha1": "3bb2cdedcbd12decb32a26cca056b2d2e5b9a2f0",
-      "date": "2026-10-21T18:04:45.278Z",
-      "source": "Idle-Grounds-UI-023.zip"
+      "size": 3696,
+      "sha1": "217e420c200914ea4193a5eda6c1d94fa7d9f67a",
+      "date": "2026-10-26T22:05:16.916Z",
+      "source": "Idle-Grounds-UI-025.zip"
     },
     {
       "path": "ui/npc_mo_portrait_64x64.png",
       "name": "npc_mo_portrait_64x64.png",
-      "size": 2937,
-      "sha1": "e3044ca3fd9ca9ee24e9875ba021a13f51956777",
-      "date": "2026-10-21T18:04:45.278Z",
-      "source": "Idle-Grounds-UI-023.zip"
+      "size": 5083,
+      "sha1": "dfb25dbd5328a1bc10320119198626f5a2ec2e2e",
+      "date": "2026-10-26T22:05:16.916Z",
+      "source": "Idle-Grounds-UI-025.zip"
     },
     {
       "path": "ui/npc_ouyang_portrait_64x64.png",
@@ -6179,10 +6235,10 @@
     {
       "path": "ui/npc_tian_portrait_64x64.png",
       "name": "npc_tian_portrait_64x64.png",
-      "size": 1668,
-      "sha1": "375de1b2786d6e8c37f4f56e5fb4fa50d6678cd0",
-      "date": "2026-10-21T18:04:45.279Z",
-      "source": "Idle-Grounds-UI-023.zip"
+      "size": 4240,
+      "sha1": "dc739fbcff9efc0880b59f2219ea1a08979a1455",
+      "date": "2026-10-26T22:05:16.917Z",
+      "source": "Idle-Grounds-UI-025.zip"
     },
     {
       "path": "ui/npc_xuan_portrait_64x64.png",
@@ -6195,10 +6251,10 @@
     {
       "path": "ui/npc_yao_portrait_64x64.png",
       "name": "npc_yao_portrait_64x64.png",
-      "size": 2955,
-      "sha1": "f2cf3bf99744901748f0e0a50b3b3f3daf09a013",
-      "date": "2026-10-21T18:04:45.280Z",
-      "source": "Idle-Grounds-UI-023.zip"
+      "size": 4500,
+      "sha1": "46d7792098e338d50f7f95593255e6d5acbee779",
+      "date": "2026-10-26T22:05:16.917Z",
+      "source": "Idle-Grounds-UI-025.zip"
     },
     {
       "path": "ui/perk_apgain.png",

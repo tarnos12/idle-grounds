@@ -1268,16 +1268,18 @@ namespace IdleGrounds.Editor
             Sprite bush = incomingFrames.TryGetValue("node_bush", out var bf) && bf.Length > 0 ? bf[0] : (incoming.TryGetValue("node_bush", out var b0) ? b0 : null);
             Sprite[] trees = incomingFrames.TryGetValue("deco_tree", out var tf) && tf.Length > 0 ? tf : null;
             // per-Island decor (island-decor.json, ART-SPEC §3.8): e.g. snowy pines + snow props on Fishing
-            Sprite[] shrubs = null;
+            Sprite[] shrubs = null, bigProps = null;
             var decor = IslandDecor.For(isl.islandKey);
             if (decor != null)
             {
                 if (!string.IsNullOrEmpty(decor.trees) && incomingFrames.TryGetValue(decor.trees, out var dt) && dt != null && dt.Length > 0) trees = dt;
                 if (!string.IsNullOrEmpty(decor.props) && incomingFrames.TryGetValue(decor.props, out var dp) && dp != null && dp.Length > 0) shrubs = dp;
+                if (!string.IsNullOrEmpty(decor.bigProps) && incomingFrames.TryGetValue(decor.bigProps, out var db) && db != null && db.Length > 0) bigProps = db;
             }
             var root = new GameObject("Boundary").transform;
             root.SetParent(isl.transform, false);
             var rng = new System.Random(KeySeed(isl.islandKey) ^ 0x1234567);
+            var rngBig = new System.Random(KeySeed(isl.islandKey) ^ 0x2468ace);     // own stream: big props swap in without moving the rest of the ring
             float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
             if (props.Length >= 6)
             {
@@ -1298,7 +1300,7 @@ namespace IdleGrounds.Editor
                         Sprite pick = props[Mathf.Min(type, 2) * 2 + rng.Next(2)];
                         // delivered art stays at native PPU-32 scale (1x); only the placeholder frames are jittered
                         if (type == 0 && stone != null) { pick = stone; sc = 1f; }
-                        else if (type == 1 && shrubs != null) { pick = shrubs[rng.Next(shrubs.Length)]; sc = 1f; }
+                        else if (type == 1 && shrubs != null) { pick = shrubs[rng.Next(shrubs.Length)]; sc = 1f; if (bigProps != null && rngBig.NextDouble() < 0.3) pick = bigProps[rngBig.Next(bigProps.Length)]; }
                         else if (type == 1 && bush != null) { pick = bush; sc = 1f; }
                         else if (type == 3) { pick = trees[rng.Next(trees.Length)]; sc = 1f; }
                         // obj64 (ART-SPEC §3.9): PPU-64 art's bounds are already in cells (scale 1), like PPU-32 art

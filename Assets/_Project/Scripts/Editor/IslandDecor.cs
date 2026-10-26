@@ -15,8 +15,11 @@ namespace IdleGrounds.Editor
 
         /// <summary>trees / props: edge-ring decor (IslandCoastBuilder.BuildBoundary); lip: the Island's own W / E / N edge lip
         /// (frames as island_edge_lip, used as drawn instead of the recoloured shared lip; IslandDressingBuilder.EdgeLipTiles);
-        /// floes: loose ice floes stamped on the pond water (IslandDressingBuilder.EnsurePond).</summary>
-        [System.Serializable] public class Entry { public string island; public string trees; public string props; public string lip; public string floes; }
+        /// floes: loose ice floes stamped on the pond water (IslandDressingBuilder.EnsurePond); bigProps: 2-cell-wide props mixed into
+        /// the edge ring (IslandCoastBuilder.BuildBoundary); swaps: this Island's own art for a shared node / fixture key
+        /// (ArtIntake.Integrate, e.g. fix_spring -> fix_spring_snow; the "_flow" loop of the swapped key comes with it).</summary>
+        [System.Serializable] public class Entry { public string island; public string trees; public string props; public string bigProps; public string lip; public string floes; public KeySwap[] swaps; }
+        [System.Serializable] public class KeySwap { public string key; public string with; }
         [System.Serializable] class FileData { public Entry[] islands; }
 
         static Entry[] Load()
@@ -33,6 +36,15 @@ namespace IdleGrounds.Editor
             return null;
         }
 
+        /// <summary>The Island's own key for a shared art key (island-decor.json "swaps"), or null.</summary>
+        public static string Swap(string island, string key)
+        {
+            var e = For(island);
+            if (e?.swaps == null) return null;
+            foreach (var w in e.swaps) if (w != null && w.key == key && !string.IsNullOrEmpty(w.with)) return w.with;
+            return null;
+        }
+
         /// <summary>Every decor key named in the file (ArtIntake counts them as consumed).</summary>
         public static IEnumerable<string> AllKeys()
         {
@@ -43,6 +55,8 @@ namespace IdleGrounds.Editor
                 if (!string.IsNullOrEmpty(e.props)) yield return e.props;
                 if (!string.IsNullOrEmpty(e.lip)) yield return e.lip;
                 if (!string.IsNullOrEmpty(e.floes)) yield return e.floes;
+                if (!string.IsNullOrEmpty(e.bigProps)) yield return e.bigProps;
+                if (e.swaps != null) foreach (var w in e.swaps) if (w != null && !string.IsNullOrEmpty(w.with)) { yield return w.with; yield return w.with + "_flow"; }
             }
         }
 
