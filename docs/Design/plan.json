@@ -338,6 +338,13 @@
           "status": "done",
           "size": "S",
           "owner": "Claude"
+        },
+        {
+          "title": "Review coast edge profiles + round side walls Islands-052 (7 biomes)",
+          "detail": "island_<biome>_coast_edge_profile_32x8_2f + island_<biome>_sidewall_round_32x32_4f x7 (optional pieces of the 2026-10-12 curved-coast request): inspect, wire into CoastCurves (new keys), rebuild island sheets, check every Island in Play at the zoom steps, accept or reject per file.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
         }
       ]
     },
