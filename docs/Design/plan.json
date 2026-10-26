@@ -352,6 +352,13 @@
           "status": "done",
           "size": "M",
           "owner": "Claude"
+        },
+        {
+          "title": "Fix: fish and algae nodes surface on snow around the Fishing pond",
+          "detail": "Seen in the snowy Fishing review 2026-10-26: water nodes spawn on the shore/snow, not only in the water.",
+          "status": "todo",
+          "size": "S",
+          "owner": "Claude"
         }
       ]
     },

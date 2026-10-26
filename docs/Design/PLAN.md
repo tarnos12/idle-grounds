@@ -2,7 +2,7 @@
 
 Updated 2026-10-26 19:54. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**34 of 54 tasks done**, 3 in progress, 3 to do, 4 blocked, 10 waiting.
+**34 of 55 tasks done**, 3 in progress, 4 to do, 4 blocked, 10 waiting.
 
 ## Being worked on now
 
@@ -15,7 +15,7 @@ Updated 2026-10-26 19:54. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 19 / 27 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 19 / 28 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -100,6 +100,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Art spec: stills + moving-part layers only | Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames. | Claude |
 | Done | Review coast edge profiles + round side walls Islands-052 (7 biomes) | island_<biome>_coast_edge_profile_32x8_2f + island_<biome>_sidewall_round_32x32_4f x7 (optional pieces of the 2026-10-12 curved-coast request): inspect, wire into CoastCurves (new keys), rebuild island sheets, check every Island in Play at the zoom steps, accept or reject per file. | Claude |
 | Done | Review snowy Fishing P1 (Islands-054, Fixtures-006) + Farm/Grove/Mine edge profiles (Islands-053) | Inspect 11 files, wire the ice edge along the pond shore (EnsurePond) and per-Island decor keys (island-decor.json -> edge ring), rebuild Island sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC v6.14 + Drive mirror + feedback. | Claude |
+| To do | Fix: fish and algae nodes surface on snow around the Fishing pond | Seen in the snowy Fishing review 2026-10-26: water nodes spawn on the shore/snow, not only in the water. | Claude |
 
 ## M4: Art coverage. Later
 
