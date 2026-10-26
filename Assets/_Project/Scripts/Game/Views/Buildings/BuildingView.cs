@@ -47,6 +47,9 @@ namespace IdleGrounds.Game
         public float ArtTop { get; private set; }
         SpriteRenderer art;
         Sprite[] baseFrames, activeFrames;
+        /// <summary>Code animation of the still (code-anim.json, owner pick anim_route): replaces any delivered working loop.</summary>
+        CodeAnimator codeAnim;
+        public CodeAnimator CodeAnim => codeAnim;
         static readonly string[] ActiveVariants = { "working", "glow", "pulse", "occupied" };
         const float IdleFps = 6f, ActiveFps = 8f;
         internal int seenFrame;
@@ -102,6 +105,7 @@ namespace IdleGrounds.Game
 
             var artSprite = sync.Sprites.BuildingArt(b.type);
             RealArt = artSprite != null;
+            if (codeAnim != null) { codeAnim.Clear(); codeAnim = null; }
             if (RealArt)
             {
                 if (art == null)
@@ -121,6 +125,7 @@ namespace IdleGrounds.Game
                 art.transform.localScale = new Vector3(k, k, 1f);
                 art.transform.localPosition = new Vector3(W * 0.5f, -H, 0f);   // bottom-centre pivot on the footprint's bottom edge
                 ArtSize = new Vector2(artSprite.bounds.size.x * k, artSprite.bounds.size.y * k);
+                BindCodeAnim(sync, b.type, artSprite);
                 ArtTop = Mathf.Max(0f, ArtSize.y - H);
                 // VP-13: 1-texel rim on the texel grid, 1 texel outside the art
                 float pad = ViewKit.U(1f);
@@ -176,11 +181,29 @@ namespace IdleGrounds.Game
             baseFrames = frames; art.sprite = frames[0];
         }
 
-        /// <summary>Plays the body strip at 6 fps, or the working/glow/pulse/occupied variant at 8 fps while a face reports the building active; static art otherwise.</summary>
+        void BindCodeAnim(BuildingViewSync sync, string type, Sprite still)
+        {
+            var entry = CodeAnimLibrary.Find(Data.ArtKeys.Building(type));
+            if (entry == null || !entry.HasEffects) return;
+            var ca = CodeAnimator.For(art);
+            ca.SelfTick = false;
+            // artist layers (ART-SPEC §3.9.8) arrive as building variants: bld_<type>_layer_<part>, bld_<type>_base
+            if (ca.Configure(entry, art, still, suffix => { var fr = sync.Sprites.BuildingVariant(type, suffix); return fr != null && fr.Length > 0 ? fr[0] : null; }))
+                codeAnim = ca;
+        }
+
+        /// <summary>Plays the body strip at 6 fps, or the working/glow/pulse/occupied variant at 8 fps while a face reports the building active; static art otherwise.
+        /// A code animation (code-anim.json) takes over while active and replaces the delivered variant.</summary>
         void AnimateArt()
         {
             bool act = false;
-            if (activeFrames != null) foreach (var f in faces) if (f.IsActive(this)) { act = true; break; }
+            if (activeFrames != null || codeAnim != null) foreach (var f in faces) if (f.IsActive(this)) { act = true; break; }
+            if (codeAnim != null)
+            {
+                codeAnim.Playing = act;
+                codeAnim.Tick(CodeAnimClock.Now);
+                if (act) return;
+            }
             var set = act ? activeFrames : baseFrames;
             if (set == null || set.Length == 0) return;
             var s = set.Length > 1 ? set[(int)(Time.unscaledTime * (act ? ActiveFps : IdleFps)) % set.Length] : set[0];
