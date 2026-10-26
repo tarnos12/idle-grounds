@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 22:24",
+  "updated": "2026-10-26 23:06",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -278,10 +278,10 @@
         {
           "title": "Snowy northern Fishing island",
           "detail": "Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered.",
-          "status": "blocked",
+          "status": "waiting",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "Waiting for the artist: Islands-058 (snow macro frames 0+2, ice floes, snow side faces; ART-SPEC v6.15); P1 otherwise accepted, P2 profile + scatter accepted; then 64x64 snow props + warm spring"
+          "blockedBy": "P1+P2 complete (round 3 accepted 2026-10-27, ART-SPEC v6.17); waiting for the artist's P3 (ice-fishing hole, icicle underside, snowfall overlay)"
         },
         {
           "title": "UI QA: batch B review",
@@ -378,10 +378,16 @@
         {
           "title": "Art redo: snow props 64x64 + spring steam (Fixtures-009), Mo portrait (UI-026)",
           "detail": "Requested in ART-SPEC v6.16 after the 2026-10-26 review: deco_snow_props_64x64_4f (snow caps vanish on the P06 ground, slab under props) and the steam of fix_spring_snow_flow (lies on the water); npc_mo_portrait (face too small, twin of Lei). Wiring is ready (island-decor.json bigProps/swaps).",
-          "status": "waiting",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "blockedBy": "Artist delivery on Drive (Fixtures-009, UI-026)"
+          "owner": "Claude"
+        },
+        {
+          "title": "Review snowy Fishing round 3 (Islands-058, Fixtures-009) + Mo portrait UI-026",
+          "detail": "Inspect 7 files (macro frames 0+2, ice floes, snow side faces, 64x64 snow props, spring steam loop, Mo portrait); pull each zip alone, integrate, rebuild Island sheets, Play before/after on Fishing, Mo side by side with the 10 portraits; accept/reject per file; ART-SPEC + Drive mirror + feedback; sheet docs/art/reference/snow-fishing-r3.jpg.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
         }
       ]
     },
