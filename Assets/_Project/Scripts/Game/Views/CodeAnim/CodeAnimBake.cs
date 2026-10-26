@@ -343,5 +343,154 @@ namespace IdleGrounds.Game
                 }
             return o;
         }
+
+        // ---- ellipse spin (a wheel seen from the side: its round face shows as an ellipse in the still)
+
+        /// <summary>Circle space → screen matrix (row-major m00, m01, m10, m11 in x/y/z/w; y down) of an ellipse spec:
+        /// <c>[radiusX, radiusY]</c> (axis-aligned, normalised so the long axis keeps its length) or <c>[m00, m01, m10, m11]</c>.
+        /// False (identity) when the spec is missing or degenerate.</summary>
+        public static bool EllipseMatrix(float[] spec, out Vector4 m)
+        {
+            m = new Vector4(1f, 0f, 0f, 1f);
+            if (spec == null) return false;
+            if (spec.Length >= 4) m = new Vector4(spec[0], spec[1], spec[2], spec[3]);
+            else if (spec.Length >= 2 && spec[0] > 0f && spec[1] > 0f)
+            {
+                float r = Mathf.Max(spec[0], spec[1]);
+                m = new Vector4(spec[0] / r, 0f, 0f, spec[1] / r);
+            }
+            else return false;
+            if (Mathf.Abs(m.x * m.w - m.y * m.z) > 1e-4f) return true;
+            m = new Vector4(1f, 0f, 0f, 1f);
+            return false;
+        }
+
+        static Vector4 Inverse(Vector4 m)
+        {
+            float det = m.x * m.w - m.y * m.z;
+            return new Vector4(m.w / det, -m.y / det, -m.z / det, m.x / det);
+        }
+
+        static Vector4 Mul(Vector4 a, Vector4 b) => new Vector4(a.x * b.x + a.y * b.z, a.x * b.y + a.y * b.w, a.z * b.x + a.w * b.z, a.z * b.y + a.w * b.w);
+
+        /// <summary>Distance of texel (x, y) from the pivot in circle space (the un-squashed wheel) under the inverse matrix.</summary>
+        static float CircleR(Vector4 inv, Vector2 pivot, float x, float y)
+        {
+            float dx = x - pivot.x, dy = y - pivot.y;
+            float cx = inv.x * dx + inv.y * dy, cy = inv.z * dx + inv.w * dy;
+            return Mathf.Sqrt(cx * cx + cy * cy);
+        }
+
+        /// <summary>Radius (circle space) of the wheel: the farthest opaque texel of the layer from the pivot, + half a texel.
+        /// The ellipse mask of a frame = every texel within this radius.</summary>
+        public static float EllipseRadius(PixelImage src, Vector2 pivot, float[] spec)
+        {
+            EllipseMatrix(spec, out var m);
+            var inv = Inverse(m);
+            float r = 0f;
+            for (int y = 0; y < src.h; y++)
+                for (int x = 0; x < src.w; x++)
+                    if (src.px[y * src.w + x].a >= 128) r = Mathf.Max(r, CircleR(inv, pivot, x, y));
+            return r + 0.5f;
+        }
+
+        /// <summary>True when texel (x, y) lies inside the wheel's ellipse mask of the given circle-space radius.</summary>
+        public static bool InEllipse(Vector2 pivot, float[] spec, float radius, float x, float y)
+        {
+            EllipseMatrix(spec, out var m);
+            return CircleR(Inverse(m), pivot, x, y) <= radius;
+        }
+
+        /// <summary>
+        /// Turn a side-view wheel layer by <paramref name="degrees"/> (counter-clockwise on screen) in the plane of its ellipse:
+        /// un-squash to a circle about the pivot, rotate, squash back, as one nearest-neighbour lookup per destination texel
+        /// (texels stay on the grid, no smoothing). 0° (and whole turns) return the source pixel for pixel. With
+        /// <paramref name="clean"/>, transparent texels inside the ellipse mask that have at least 3 opaque 4-neighbours (the
+        /// 1-px holes nearest-neighbour leaves in thin rims and spokes) take the commonest neighbour colour.
+        /// </summary>
+        public static PixelImage EllipseTurn(PixelImage src, Vector2 pivot, float[] spec, float degrees, bool clean, float radius = -1f)
+        {
+            float turns = degrees / 360f;
+            if (Mathf.Abs(turns - Mathf.Round(turns)) < 1e-6f) return new PixelImage(src);
+            EllipseMatrix(spec, out var m);
+            var inv = Inverse(m);
+            float a = degrees * Mathf.Deg2Rad, cs = Mathf.Cos(a), sn = Mathf.Sin(a);
+            // destination → source: M · Rs(-θ) · M⁻¹ (top-left y-down coordinates: screen CCW by θ is [[c, s], [-s, c]])
+            var t = Mul(m, Mul(new Vector4(cs, -sn, sn, cs), inv));
+            var o = new PixelImage(src.w, src.h);
+            for (int y = 0; y < o.h; y++)
+                for (int x = 0; x < o.w; x++)
+                {
+                    float dx = x - pivot.x, dy = y - pivot.y;
+                    float qx = t.x * dx + t.y * dy, qy = t.z * dx + t.w * dy;
+                    var c = src.Get(Mathf.FloorToInt(qx + pivot.x + 0.5f), Mathf.FloorToInt(qy + pivot.y + 0.5f));
+                    if (c.a >= 128) o.Set(x, y, c);
+                }
+            if (!clean) return o;
+            if (radius < 0f) radius = EllipseRadius(src, pivot, spec);
+            var raw = new PixelImage(o);
+            for (int y = 0; y < o.h; y++)
+                for (int x = 0; x < o.w; x++)
+                {
+                    if (raw.px[y * o.w + x].a >= 128 || CircleR(inv, pivot, x, y) > radius) continue;
+                    var l = raw.Get(x - 1, y); var r = raw.Get(x + 1, y); var u = raw.Get(x, y - 1); var d = raw.Get(x, y + 1);
+                    int n = (l.a >= 128 ? 1 : 0) + (r.a >= 128 ? 1 : 0) + (u.a >= 128 ? 1 : 0) + (d.a >= 128 ? 1 : 0);
+                    if (n < 3) continue;
+                    o.px[y * o.w + x] = Commonest(l, r, u, d);
+                }
+            return o;
+        }
+
+        static bool Same(Color32 a, Color32 b) => a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+
+        /// <summary>The opaque colour that occurs most often among four neighbours (ties: the first in l, r, u, d order).</summary>
+        static Color32 Commonest(Color32 l, Color32 r, Color32 u, Color32 d)
+        {
+            Color32 best = Clear; int bestN = 0;
+            var c4 = new[] { l, r, u, d };
+            for (int i = 0; i < 4; i++)
+            {
+                if (c4[i].a < 128) continue;
+                int n = 0;
+                for (int j = 0; j < 4; j++) if (c4[j].a >= 128 && Same(c4[i], c4[j])) n++;
+                if (n > bestN) { best = c4[i]; bestN = n; }
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// Bake the frames of an ellipse spin: frame k = <see cref="EllipseTurn"/> by 360°·k/<paramref name="frames"/> (frame 0 =
+        /// the rest layer), all cropped to one rect (<paramref name="crop"/>, still texels, top-left origin) that holds every
+        /// opaque texel of every frame. Deterministic; bake time only.
+        /// </summary>
+        public static PixelImage[] EllipseSpinFrames(PixelImage src, Vector2 pivot, float[] spec, int frames, bool clean, out RectInt crop)
+        {
+            frames = Mathf.Max(1, frames);
+            float radius = EllipseRadius(src, pivot, spec);
+            var full = new PixelImage[frames];
+            int x0 = int.MaxValue, y0 = int.MaxValue, x1 = -1, y1 = -1;
+            for (int k = 0; k < frames; k++)
+            {
+                full[k] = EllipseTurn(src, pivot, spec, 360f * k / frames, clean, radius);
+                var f = full[k];
+                for (int y = 0; y < f.h; y++)
+                    for (int x = 0; x < f.w; x++)
+                        if (f.px[y * f.w + x].a >= 128) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+            }
+            crop = x1 < 0 ? new RectInt(0, 0, 1, 1) : new RectInt(x0, y0, x1 - x0 + 1, y1 - y0 + 1);
+            var o = new PixelImage[frames];
+            for (int k = 0; k < frames; k++) o[k] = Crop(full[k], crop);
+            return o;
+        }
+
+        /// <summary>Copy of a rect of an image (top-left origin).</summary>
+        public static PixelImage Crop(PixelImage src, RectInt r)
+        {
+            var o = new PixelImage(r.width, r.height);
+            for (int y = 0; y < r.height; y++)
+                for (int x = 0; x < r.width; x++)
+                    o.px[y * r.width + x] = src.Get(r.x + x, r.y + y);
+            return o;
+        }
     }
 }

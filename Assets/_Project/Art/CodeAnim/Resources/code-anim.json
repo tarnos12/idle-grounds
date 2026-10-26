@@ -23,7 +23,7 @@
     },
     {
       "key": "bld_paper_mill",
-      "note": "Still bld_paper_mill@64 (64-002, restored). Falling water + vat ripple + paper sheet in code; the press bobs in code until the press layer arrives; the wheel waits for the 4 wheel pose layers of batch L1R (L1 rejected 2026-10-26).",
+      "note": "Still bld_paper_mill@64 (64-002, restored). Falling water + vat ripple + paper sheet in code; the press bobs in code until the press layer arrives; the wheel turns in code in its ellipse (ellipseSpin) once the one complete wheel layer of batch L1R arrives (L1 rejected 2026-10-26).",
       "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
       "effects": [
         { "type": "scroll", "name": "falling water", "rect": [34, 138, 32, 118], "axis": "y", "speed": 3,
@@ -33,7 +33,8 @@
         { "type": "shift", "name": "press bob", "note": "code stand-in until bld_paper_mill_layer_press@64", "onlyWithoutLayers": true,
           "rect": [80, 138, 33, 24], "axis": "y", "offsets": [0, 0, 1, 2, 3, 2, 1, 0] },
         { "type": "toggle", "name": "paper sheet", "sprite": "sheet", "rect": [151, 218, 8, 10], "colorA": "#F4E6C8", "colorB": "#B7BCCD", "onSteps": [4, 5, 6, 7] },
-        { "type": "layer", "name": "wheel", "sprite": "wheel", "note": "the wheel is seen from the side in the still (an ellipse ~55x107), so a 2D turn cannot work (L1 review 2026-10-26): 4 phase poses (rest, spokes + paddles advanced 11.25 / 22.5 / 33.75 deg) cycle", "poses": ["", "b", "c", "d"] },
+        { "type": "layer", "name": "wheel", "sprite": "wheel", "mode": "ellipseSpin", "note": "one complete side-view wheel layer (ART-SPEC 3.9.8 L1R); the still shows the wheel face as an ellipse (rim ~56 x 100, x8-64 y122-222), so each of 32 baked frames un-squashes it to a circle about the hub, turns it 11.25 deg and squashes it back; clockwise (the water pushes the right side down), 67.5 deg/s = one frame per 1/6 s. Pivot + ellipse measured on the still (stand-in check 2026-10-26); refine from NOTES.txt when the real layer arrives",
+          "pivot": [36, 172], "ellipse": [28, 50], "spin": -67.5, "count": 32 },
         { "type": "layer", "name": "press", "sprite": "press", "note": "slides 3 px down and back ([dx, dy] per step)", "offsets": [0, 0, 0, 0, 0, 1, 0, 2, 0, 3, 0, 2, 0, 1, 0, 0] }
       ]
     },
