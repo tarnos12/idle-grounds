@@ -1,0 +1,6 @@
+Idle Grounds FX-008 — Sky Path corner-only repair
+Canvas 128x32: four static 32x32 orientations in order NE, NW, SW, SE.
+North/south openings are exactly x6..26; east/west openings are exactly y9..28.
+Every opening boundary is copied pixel-for-pixel from the validated FX-007 h/v cuts.
+All frames retain the top-left lighting, upright rail posts and rounded outer turn.
+FX-007 h, v and end are intentionally not duplicated; they remain validated.

@@ -1,0 +1,8 @@
+Idle Grounds L1R — Paper Mill layers (v6.9)
+Canvas: 192x256 RGBA, PPU 64, binary alpha.
+Draw order: base, wheel, press, front.
+Wheel pivot: (36,172). Ellipse radii: 28x50 px; tilt 0 degrees; clockwise, water pushes the right side down.
+Wheel layer contains rim, hub, 8 equal spokes and paddles only. The fixed side-face/axle, support post, bearing, water, trough and stones are base/front.
+Press pivot: (101,139), top-centre; translate down 2-3 px and back. Screw and beam remain in base.
+Front water may be animated by code; it contains no wheel pixels.
+Rest reconstruction: base + wheel + press + front = accepted still, 0 differing pixels.

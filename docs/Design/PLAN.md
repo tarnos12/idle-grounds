@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-26 16:40. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-26 17:35. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**30 of 50 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
+**31 of 51 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
 
 ## Being worked on now
 
@@ -15,7 +15,7 @@ Updated 2026-10-26 16:40. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 15 / 23 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 16 / 24 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -95,6 +95,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Pixel font readability: 5 reads as S, 3 as 8, B as 8 | Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth). | Claude |
 | Done | Code animation: glows, flicker, smoke, water, sways | Owner pick anim_route = code_simple_all (2026-10-26): building and NPC motion made in code from accepted stills (Kiln fire + smoke, Shrine gate glow + lanterns, Paper Mill water + sheet, hammer glow, NPC sways/nods); moving parts (saw, wheel, arm, rings) from separate art layers. | Claude |
 | Done | Art review: batch L1 layers + Sky Path FX-007 | In-game art reviewer: Layers-64-001 (Paper Mill wheel/press/front/base), Layers-64-002 (Kang arm poses, Xuan rings/front), FX-007 (32-px sky path repair). Composite == still, pivots into code-anim.json, in-game check, accept/reject per file. | Claude |
+| Done | Art review: batch L1R layers + Sky Path corner FX-008 | In-game art reviewer: Layers-64-003 (Paper Mill one complete wheel, press, front, base), Layers-64-004 (Kang arm poses + base, Xuan rings + front + base), FX-008 (sky path corner). Stack test, layer-only-part and flat-fill checks, NOTES pivots into code-anim.json, in-game frame strips, accept/reject per file. | Claude |
 | Done | Art spec: stills + moving-part layers only | Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames. | Claude |
 
 ## M4: Art coverage. Later
