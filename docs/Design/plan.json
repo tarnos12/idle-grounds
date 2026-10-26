@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 23:06",
+  "updated": "2026-10-26 23:18",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -374,6 +374,21 @@
           "status": "done",
           "size": "S",
           "owner": "Claude"
+        },
+        {
+          "title": "Review new biome tilesets Lotus Marsh Islands-059 + Thunder Crag Islands-060",
+          "detail": "Redo of the 2026-10-21 rejection (Islands-041..048): inspect blob/fill/water/cliff wall/side walls/macro/flowers with numbers vs the accepted Center set, preview assembled on a throwaway island in the bg copy at the zoom steps, validate (waiting on ADR 0007 Phase 6) or reject with repair text; ART-SPEC + Drive mirror + feedback; sheets docs/art/reference/biome-lotus-059.jpg, biome-thunder-060.jpg. Result 2026-10-27: Lotus blob, cliff wall, flowers, water and Thunder blob, cliff wall, flowers validated (wait on ADR 0007 Phase 6); both fills, both macros and all 4 side-wall files rejected (redo requested in ART-SPEC v6.18).",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art redo: Lotus Marsh + Thunder Crag fills, macros, side walls (Islands-059/060 rejections)",
+          "detail": "Artist redo requested in ART-SPEC v6.18 (§3.7 rows): island_<lotus|thunder>_ground_fill (no mark repeated on an even spacing), _macro (irregular multi-colour outlines), _sidewall + _sidewall_variants (18 px Islands-038 format). Then the in-game art reviewer checks them on a preview Island.",
+          "status": "waiting",
+          "size": "S",
+          "owner": "Claude",
+          "blockedBy": "Waiting on the artist (ChatGPT) to deliver the redo to Drive."
         },
         {
           "title": "Art redo: snow props 64x64 + spring steam (Fixtures-009), Mo portrait (UI-026)",

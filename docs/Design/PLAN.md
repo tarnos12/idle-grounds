@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-26 21:18. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-26 23:18. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**35 of 56 tasks done**, 3 in progress, 3 to do, 4 blocked, 11 waiting.
+**39 of 61 tasks done**, 3 in progress, 3 to do, 3 blocked, 13 waiting.
 
 ## Being worked on now
 
@@ -15,7 +15,7 @@ Updated 2026-10-26 21:18. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 20 / 29 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 24 / 34 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -89,7 +89,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Review round cliff walls Islands-051 (7 biomes) | Repaired island_<biome>_cliffwall_round_32x96_4f x7 (replace the Islands-040 v1 rejected 2026-10-21): inspect, un-pin in the coast builder, rebuild island sheets, check every curved south coast in Play, accept or reject per file. | Claude |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
 | Waiting | Building art redo: reference sheet for all 26 buildings | Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures. | Claude |
-| Blocked | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
+| Waiting | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
 | Done | UI QA: batch B review | UI QA pass of visual pass batch B (anchored panels, Pixelify Sans, icon bar + menu, crisp zoom). Findings in docs/reviews/2026-10-21-ui-qa-batch-b.md. | Claude |
 | Done | UI QA fixes after batch B | From docs/reviews/2026-10-21-ui-qa-batch-b.md: Stats doesn't fit phone safe area (#3), Stats Flow overlap at 720p (#4), Altar tree crowding (#5), world pill / NEW badge text under 12 px (#7), phone panels shrink below the text floor (#10), narrow quest panel at 720p (#11), off-screen anchored panels (#8). | Claude |
 | Done | Pixel font readability: 5 reads as S, 3 as 8, B as 8 | Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth). | Claude |
@@ -102,6 +102,11 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Review snowy Fishing P1 (Islands-054, Fixtures-006) + Farm/Grove/Mine edge profiles (Islands-053) | Inspect 11 files, wire the ice edge along the pond shore (EnsurePond) and per-Island decor keys (island-decor.json -> edge ring), rebuild Island sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC v6.14 + Drive mirror + feedback. | Claude |
 | Waiting | Fix: fish and algae nodes surface on snow around the Fishing pond | Seen in the snowy Fishing review 2026-10-26: water nodes spawn on the shore/snow, not only in the water. | Claude |
 | Done | Review snowy Fishing P2 + P1 redo (Islands-055/056/057, Fixtures-007) | Inspect 14 files (macro/flowers/pines/props redo; snow cornice profile, new edge_lip + ice_floe, scatter, straight wall, blob, side walls), wire edge_lip and ice_floe, rebuild sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC + Drive mirror + feedback. | Claude |
+| Done | Review portrait repairs UI-025 + snowy Fishing props/warm spring Fixtures-008 | 6 repaired NPC portraits (Jiang, Kang, Lin, Mo, Tian, Yao) validated as files against the 5 kept ones; deco_snow_props_64x64_4f, fix_spring_snow + flow loop wired for Fishing and checked in Play. | Claude |
+| Done | Review new biome tilesets Lotus Marsh Islands-059 + Thunder Crag Islands-060 | Redo of the 2026-10-21 rejection (Islands-041..048): inspect blob/fill/water/cliff wall/side walls/macro/flowers with numbers vs the accepted Center set, preview assembled on a throwaway island in the bg copy at the zoom steps, validate (waiting on ADR 0007 Phase 6) or reject with repair text; ART-SPEC + Drive mirror + feedback; sheets docs/art/reference/biome-lotus-059.jpg, biome-thunder-060.jpg. Result 2026-10-27: Lotus blob, cliff wall, flowers, water and Thunder blob, cliff wall, flowers validated (wait on ADR 0007 Phase 6); both fills, both macros and all 4 side-wall files rejected (redo requested in ART-SPEC v6.18). | Claude |
+| Waiting | Art redo: Lotus Marsh + Thunder Crag fills, macros, side walls (Islands-059/060 rejections) | Artist redo requested in ART-SPEC v6.18 (§3.7 rows): island_<lotus/thunder>_ground_fill (no mark repeated on an even spacing), _macro (irregular multi-colour outlines), _sidewall + _sidewall_variants (18 px Islands-038 format). Then the in-game art reviewer checks them on a preview Island. | Claude |
+| Done | Art redo: snow props 64x64 + spring steam (Fixtures-009), Mo portrait (UI-026) | Requested in ART-SPEC v6.16 after the 2026-10-26 review: deco_snow_props_64x64_4f (snow caps vanish on the P06 ground, slab under props) and the steam of fix_spring_snow_flow (lies on the water); npc_mo_portrait (face too small, twin of Lei). Wiring is ready (island-decor.json bigProps/swaps). | Claude |
+| Done | Review snowy Fishing round 3 (Islands-058, Fixtures-009) + Mo portrait UI-026 | Inspect 7 files (macro frames 0+2, ice floes, snow side faces, 64x64 snow props, spring steam loop, Mo portrait); pull each zip alone, integrate, rebuild Island sheets, Play before/after on Fishing, Mo side by side with the 10 portraits; accept/reject per file; ART-SPEC + Drive mirror + feedback; sheet docs/art/reference/snow-fishing-r3.jpg. | Claude |
 
 ## M4: Art coverage. Later
 
