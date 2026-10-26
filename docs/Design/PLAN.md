@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-26 18:35. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-26 19:54. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**33 of 53 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
+**34 of 54 tasks done**, 3 in progress, 3 to do, 4 blocked, 10 waiting.
 
 ## Being worked on now
 
@@ -15,7 +15,7 @@ Updated 2026-10-26 18:35. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 18 / 26 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 19 / 27 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -89,7 +89,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Review round cliff walls Islands-051 (7 biomes) | Repaired island_<biome>_cliffwall_round_32x96_4f x7 (replace the Islands-040 v1 rejected 2026-10-21): inspect, un-pin in the coast builder, rebuild island sheets, check every curved south coast in Play, accept or reject per file. | Claude |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
 | Waiting | Building art redo: reference sheet for all 26 buildings | Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures. | Claude |
-| Waiting | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
+| Blocked | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
 | Done | UI QA: batch B review | UI QA pass of visual pass batch B (anchored panels, Pixelify Sans, icon bar + menu, crisp zoom). Findings in docs/reviews/2026-10-21-ui-qa-batch-b.md. | Claude |
 | Done | UI QA fixes after batch B | From docs/reviews/2026-10-21-ui-qa-batch-b.md: Stats doesn't fit phone safe area (#3), Stats Flow overlap at 720p (#4), Altar tree crowding (#5), world pill / NEW badge text under 12 px (#7), phone panels shrink below the text floor (#10), narrow quest panel at 720p (#11), off-screen anchored panels (#8). | Claude |
 | Done | Pixel font readability: 5 reads as S, 3 as 8, B as 8 | Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth). | Claude |
@@ -99,6 +99,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Art review: batch L1R2 layers | In-game art reviewer: Layers-64-005 (Paper Mill new wheel on the fixed ellipse, press, front, base), Layers-64-006 (Kang base + raised arm, Xuan rings + base + front). Stack test (wheel waived), part-only, holes/flat-fill checks, numbers vs 3.9.8, in-game frame strips, accept/reject per file; a third failure goes to the owner. Result 2026-10-26: Paper Mill front, Xuan ring + front validated (held); wheel, press, Paper Mill base, Kang base, Kang raised arm, Xuan base rejected 3x, awaiting owner decision (Hub question layers_finish). | Claude |
 | Done | Art spec: stills + moving-part layers only | Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames. | Claude |
 | Done | Review coast edge profiles + round side walls Islands-052 (7 biomes) | island_<biome>_coast_edge_profile_32x8_2f + island_<biome>_sidewall_round_32x32_4f x7 (optional pieces of the 2026-10-12 curved-coast request): inspect, wire into CoastCurves (new keys), rebuild island sheets, check every Island in Play at the zoom steps, accept or reject per file. | Claude |
+| Done | Review snowy Fishing P1 (Islands-054, Fixtures-006) + Farm/Grove/Mine edge profiles (Islands-053) | Inspect 11 files, wire the ice edge along the pond shore (EnsurePond) and per-Island decor keys (island-decor.json -> edge ring), rebuild Island sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC v6.14 + Drive mirror + feedback. | Claude |
 
 ## M4: Art coverage. Later
 
