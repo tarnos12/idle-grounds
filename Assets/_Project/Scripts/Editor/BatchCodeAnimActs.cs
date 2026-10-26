@@ -14,6 +14,8 @@ namespace IdleGrounds.Editor
     ///                             the still is Art/Incoming/*/KEY@64.png, else frame 0 of docs/art/rejected/KEY_idle_64x96_4f@64_v1_REJECTED.png
     ///                             (the accepted NPC frame-0 drawings); bottom-centre on the cell's bottom edge
     ///   animPreviewClear          remove every preview object
+    ///   stripPreview:KEY,W,H,FRAME@island,row,col   frame FRAME (W x H px) of Art/Incoming/*/KEY.png at PPU 32, bottom-left on the cell's
+    ///                             bottom-left corner (temporary layout of FX pieces without a gameplay view, e.g. Sky Path tiles)
     /// </summary>
     public static partial class Batch
     {
@@ -28,6 +30,31 @@ namespace IdleGrounds.Editor
                     foreach (var go in animPreviews) if (go != null) UnityEngine.Object.DestroyImmediate(go);
                     animPreviews.Clear();
                     return true;
+                case "stripPreview":
+                {
+                    int at = arg.IndexOf('@');
+                    var k = arg.Substring(0, at).Split(',');
+                    var p = arg.Substring(at + 1).Split(',');
+                    string file = null;
+                    foreach (var dir in Directory.GetDirectories("Assets/_Project/Art/Incoming"))
+                        if (File.Exists(dir + "/" + k[0].Trim() + ".png")) file = dir + "/" + k[0].Trim() + ".png";
+                    if (file == null) { Debug.LogError(Tag + "stripPreview: no file for " + k[0]); return true; }
+                    var t = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    t.LoadImage(File.ReadAllBytes(file));
+                    t.filterMode = FilterMode.Point;
+                    int w = int.Parse(k[1]), h = int.Parse(k[2]), fr = int.Parse(k[3]);
+                    var sp = Sprite.Create(t, new Rect(fr * w, t.height - h, w, h), Vector2.zero, 32f, 0, SpriteMeshType.FullRect);
+                    var c = CellWorld(p[0].Trim(), F(p[1]), F(p[2]));
+                    var go = new GameObject("StripPreview_" + k[0]);
+                    go.transform.position = new Vector3(c.x - 0.5f, c.y - 0.5f, 0f);
+                    var sr = go.AddComponent<SpriteRenderer>();
+                    sr.sprite = sp;
+                    var art = UnityEngine.Object.FindFirstObjectByType<BuildingView>()?.ArtRenderer;
+                    if (art != null) { sr.sortingLayerID = art.sortingLayerID; sr.sortingOrder = art.sortingOrder + 20; sr.sharedMaterial = art.sharedMaterial; }
+                    else sr.sortingOrder = 500;
+                    animPreviews.Add(go);
+                    return true;
+                }
                 case "animPreview":
                 {
                     int at = arg.IndexOf('@');

@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 15:17",
+  "updated": "2026-10-26 16:13",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -139,7 +139,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Artist",
-          "blockedBy": "Batch L1 requested 2026-10-26 (ART-SPEC 3.9.8): Kang arm + raised arm + base, Xuan rings + base (Idle-Grounds-Layers-64-002.zip); then 32-px repairs (Sky Path, round walls, diagonal coast), snowy Fishing, portraits, new biome tilesets; in-game NPC/Shrine check waits on ADR 0007 Phase 2"
+          "blockedBy": "Batch L1 rejected 2026-10-26 (layers were cut-outs of the still); batch L1R requested (ART-SPEC 3.9.8, zips Layers-64-003/-004; Paper Mill wheel now 4 pose layers): Kang arm + raised arm + base, Xuan rings + base (Idle-Grounds-Layers-64-002.zip); then 32-px repairs (Sky Path corner only, FX-008; round walls, diagonal coast), snowy Fishing, portraits, new biome tilesets; in-game NPC/Shrine check waits on ADR 0007 Phase 2"
         },
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
@@ -266,7 +266,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "Batch L1 requested 2026-10-26 (ART-SPEC 3.9.8): Paper Mill wheel + press layers + base (Idle-Grounds-Layers-64-001.zip); kiln/shrine/paper-mill motion in code; waiting on the artist"
+          "blockedBy": "Batch L1 rejected 2026-10-26 (layers were cut-outs of the still); batch L1R requested (ART-SPEC 3.9.8, zips Layers-64-003/-004; Paper Mill wheel now 4 pose layers): Paper Mill wheel + press layers + base (Idle-Grounds-Layers-64-001.zip); kiln/shrine/paper-mill motion in code; waiting on the artist"
         },
         {
           "title": "Snowy northern Fishing island",
@@ -302,6 +302,13 @@
           "detail": "Owner pick anim_route = code_simple_all (2026-10-26): building and NPC motion made in code from accepted stills (Kiln fire + smoke, Shrine gate glow + lanterns, Paper Mill water + sheet, hammer glow, NPC sways/nods); moving parts (saw, wheel, arm, rings) from separate art layers.",
           "status": "done",
           "size": "L",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: batch L1 layers + Sky Path FX-007",
+          "detail": "In-game art reviewer: Layers-64-001 (Paper Mill wheel/press/front/base), Layers-64-002 (Kang arm poses, Xuan rings/front), FX-007 (32-px sky path repair). Composite == still, pivots into code-anim.json, in-game check, accept/reject per file.",
+          "status": "done",
+          "size": "M",
           "owner": "Claude"
         },
         {

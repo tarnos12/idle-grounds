@@ -23,7 +23,7 @@
     },
     {
       "key": "bld_paper_mill",
-      "note": "Still bld_paper_mill@64 (64-002, restored). Falling water + vat ripple + paper sheet in code; the press bobs in code until the press layer arrives; the wheel waits for bld_paper_mill_layer_wheel@64 (batch L1).",
+      "note": "Still bld_paper_mill@64 (64-002, restored). Falling water + vat ripple + paper sheet in code; the press bobs in code until the press layer arrives; the wheel waits for the 4 wheel pose layers of batch L1R (L1 rejected 2026-10-26).",
       "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
       "effects": [
         { "type": "scroll", "name": "falling water", "rect": [34, 138, 32, 118], "axis": "y", "speed": 3,
@@ -33,7 +33,7 @@
         { "type": "shift", "name": "press bob", "note": "code stand-in until bld_paper_mill_layer_press@64", "onlyWithoutLayers": true,
           "rect": [80, 138, 33, 24], "axis": "y", "offsets": [0, 0, 1, 2, 3, 2, 1, 0] },
         { "type": "toggle", "name": "paper sheet", "sprite": "sheet", "rect": [151, 218, 8, 10], "colorA": "#F4E6C8", "colorB": "#B7BCCD", "onSteps": [4, 5, 6, 7] },
-        { "type": "layer", "name": "wheel", "sprite": "wheel", "note": "turns 360 deg slowly about the hub (exact pivot from NOTES.txt)", "pivot": [37, 178], "spin": 40, "count": 24 },
+        { "type": "layer", "name": "wheel", "sprite": "wheel", "note": "the wheel is seen from the side in the still (an ellipse ~55x107), so a 2D turn cannot work (L1 review 2026-10-26): 4 phase poses (rest, spokes + paddles advanced 11.25 / 22.5 / 33.75 deg) cycle", "poses": ["", "b", "c", "d"] },
         { "type": "layer", "name": "press", "sprite": "press", "note": "slides 3 px down and back ([dx, dy] per step)", "offsets": [0, 0, 0, 0, 0, 1, 0, 2, 0, 3, 0, 2, 0, 1, 0, 0] }
       ]
     },
@@ -63,7 +63,7 @@
     { "key": "npc_ouyang", "note": "Accepted idle strip (Creatures-64-003) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     {
       "key": "npc_kang",
-      "note": "Still = frame 0 of Creatures-64-001. Head-lamp flicker in code; a 1-2 px nod stands in until npc_kang_layer_arm / _arm_raised (batch L1) bring the brow wipe.",
+      "note": "Still = frame 0 of Creatures-64-001. Head-lamp flicker in code; a 1-2 px nod stands in until npc_kang_layer_arm / _arm_raised (batch L1R) bring the brow wipe.",
       "still": [64, 96], "fps": 4, "steps": 4, "play": "always",
       "effects": [
         { "type": "shift", "name": "nod", "onlyWithoutLayers": true, "rect": [24, 14, 19, 26], "axis": "y", "offsets": [0, 1, 2, 1] },
@@ -105,7 +105,7 @@
     },
     {
       "key": "npc_xuan",
-      "note": "Still = frame 0 of Creatures-64-001. Star glint in code; ring glints stand in until npc_xuan_layer_rings@64 (batch L1), then the ring narrows and widens about its vertical axis.",
+      "note": "Still = frame 0 of Creatures-64-001. Star glint in code; ring glints stand in until npc_xuan_layer_rings@64 (batch L1R), then the ring narrows and widens about its vertical axis.",
       "still": [64, 96], "fps": 4, "steps": 4, "play": "always",
       "effects": [
         { "type": "flicker", "name": "star glint", "sprite": "star", "size": [5, 5], "points": [55, 26], "colorA": "#FFFFFF", "alpha": [0.25, 1], "additive": true, "sort": 1 },
