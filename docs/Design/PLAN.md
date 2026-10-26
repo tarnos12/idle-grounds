@@ -1,14 +1,15 @@
 # Idle Grounds: plan
 
-Updated 2026-10-24 22:17. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-26 14:31. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**26 of 46 tasks done**, 4 in progress, 3 to do, 3 blocked, 10 waiting.
+**26 of 48 tasks done**, 5 in progress, 3 to do, 3 blocked, 11 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M3** Building art redo: reference sheet for all 26 buildings: Batch 1 (64-002) reviewed 2026-10-25: 3 statics accepted, Shrine validated, 4 loops in batch 1R (requested); next: review 64-003, then request batch 2 (NPC idles)
+- **M3** Code animation: glows, flicker, smoke, water, sways: Feature builder building the animation components in a background copy
+- **M3** Art spec: stills + moving-part layers only: Art director rewriting the spec and the layer request
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
@@ -16,7 +17,7 @@ Updated 2026-10-24 22:17. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 11 / 19 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 11 / 21 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -88,11 +89,13 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Visual pass batch B: changes that need your answers | Owner answered 2026-10-21 (owner-picks-2026-10-21-visual.json): panels anchored on the building, guidance text-only, Pixelify Sans + icons for ALL UI (consistent), icon-only bar with tooltips and Reset in a menu, zoom: 4 crisp steps + far map step at 120 cells, calmer darker ground on every island. | Claude |
 | Waiting | Visual pass batch C: new art (77 files) | Ground fills, macro patches, veil mist v2, shadows, rack/bridge, icons, item drops; 45 files can start now, 32 wait on your answers. | Artist |
 | To do | Follow-ups from batch A | Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27). | Claude |
-| In progress | Building art redo: reference sheet for all 26 buildings **(NOW)** | Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures. | Claude |
+| Waiting | Building art redo: reference sheet for all 26 buildings | Owner signed off the 64 px pilot 2026-10-24 (rollout). First batch: pilot fixes (Workbench front view + loop, Kiln idle mouth + smoke, Paper Mill base + fuller loop) and B1 Sky-Bridge Shrine; then NPCs, other buildings, nodes, trees/props, creatures. | Claude |
 | Waiting | Snowy northern Fishing island | Owner pick vp_fishing: snow props and ice at the pond edge, on purpose. Needs an art request (art director) and integration once delivered. | Claude |
 | Done | UI QA: batch B review | UI QA pass of visual pass batch B (anchored panels, Pixelify Sans, icon bar + menu, crisp zoom). Findings in docs/reviews/2026-10-21-ui-qa-batch-b.md. | Claude |
 | Done | UI QA fixes after batch B | From docs/reviews/2026-10-21-ui-qa-batch-b.md: Stats doesn't fit phone safe area (#3), Stats Flow overlap at 720p (#4), Altar tree crowding (#5), world pill / NEW badge text under 12 px (#7), phone panels shrink below the text floor (#10), narrow quest panel at 720p (#11), off-screen anchored panels (#8). | Claude |
 | Done | Pixel font readability: 5 reads as S, 3 as 8, B as 8 | Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth). | Claude |
+| In progress | Code animation: glows, flicker, smoke, water, sways **(NOW)** | Owner pick anim_route = code_simple_all (2026-10-26): building and NPC motion made in code from accepted stills (Kiln fire + smoke, Shrine gate glow + lanterns, Paper Mill water + sheet, hammer glow, NPC sways/nods); moving parts (saw, wheel, arm, rings) from separate art layers. | Claude |
+| In progress | Art spec: stills + moving-part layers only **(NOW)** | Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames. | Claude |
 
 ## M4: Art coverage. Later
 

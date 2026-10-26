@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-25 19:00",
+  "updated": "2026-10-26 14:31",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -296,6 +296,22 @@
           "status": "done",
           "size": "S",
           "owner": "Claude"
+        },
+        {
+          "title": "Code animation: glows, flicker, smoke, water, sways",
+          "detail": "Owner pick anim_route = code_simple_all (2026-10-26): building and NPC motion made in code from accepted stills (Kiln fire + smoke, Shrine gate glow + lanterns, Paper Mill water + sheet, hammer glow, NPC sways/nods); moving parts (saw, wheel, arm, rings) from separate art layers.",
+          "status": "in-progress",
+          "size": "L",
+          "owner": "Claude",
+          "now": "Feature builder building the animation components in a background copy"
+        },
+        {
+          "title": "Art spec: stills + moving-part layers only",
+          "detail": "Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames.",
+          "status": "in-progress",
+          "size": "S",
+          "owner": "Claude",
+          "now": "Art director rewriting the spec and the layer request"
         }
       ]
     },
