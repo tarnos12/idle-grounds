@@ -111,7 +111,7 @@
       "effects": [
         { "type": "flicker", "name": "star glint", "sprite": "star", "size": [5, 5], "points": [55, 26], "colorA": "#FFFFFF", "alpha": [0.25, 1], "additive": true, "sort": 1 },
         { "type": "flicker", "name": "ring glints", "onlyWithoutLayers": true, "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [44, 31, 52, 29, 54, 39, 46, 42], "onSteps": [4], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 },
-        { "type": "layer", "name": "rings", "sprite": "rings", "pivot": [48, 36], "scales": [1, 0.66, 0.33, 0.66] }
+        { "type": "layer", "name": "rings", "sprite": "rings", "pivot": [49, 35], "scales": [1, 0.66, 0.33, 0.66] }
       ]
     }
   ]

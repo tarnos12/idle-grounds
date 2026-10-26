@@ -1,0 +1,5 @@
+Idle Grounds L1R — Kang and Xuan layers (v6.9)
+Canvas: 64x96 RGBA, PPU 64, binary alpha.
+Kang: draw base then one arm pose. Shoulder pivot (24,35). Raised wrist rests below headband; lamp box x30-37,y19-27 is untouched.
+Xuan: draw base, rings, then front. Ring pivot (49,35). Front contains only the fingers that cross the ring.
+Rest reconstruction: Kang base + rest arm = accepted still; Xuan base + rings + front = accepted still; 0 differing pixels.
