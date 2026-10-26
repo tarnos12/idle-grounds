@@ -167,6 +167,7 @@ namespace IdleGrounds.Editor
             var map = new Dictionary<string, Sprite>();
             frameMap = new Dictionary<string, Sprite[]>();
             densityMap = new Dictionary<string, int>();
+            var sized = new Dictionary<string, List<(int, int, List<Sprite>)>>();
             if (!Directory.Exists(IncomingDir)) return map;
             foreach (var file in Directory.GetFiles(IncomingDir, "*.png", SearchOption.AllDirectories))
             {
@@ -176,12 +177,36 @@ namespace IdleGrounds.Editor
                 foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path)) if (o is Sprite sp) sprites.Add(sp);
                 if (sprites.Count == 0) continue;
                 sprites.Sort((a, b) => FrameIndex(a.name).CompareTo(FrameIndex(b.name)));
-                string key = ParseName(Path.GetFileNameWithoutExtension(path), out _, out _, out _, out int density);
+                string key = ParseName(Path.GetFileNameWithoutExtension(path), out _, out int fw, out int fh, out int density);
+                if (fw > 0) (sized.TryGetValue(key + "|" + density, out var l) ? l : sized[key + "|" + density] = new List<(int, int, List<Sprite>)>()).Add((fw, fh, sprites));
                 Register(map, frameMap, densityMap, key, sprites, density);
                 if (key.EndsWith("_1x1")) Register(map, frameMap, densityMap, key.Substring(0, key.Length - 4), sprites, density);
             }
+            // two files with one key at one density but different frame sizes (deco_snow_props_32x48_8f + deco_snow_props_64x64_4f,
+            // ART-SPEC §3.8): the bare key keeps the smallest canvas, and every such file is also reachable as "<key>_<W>x<H>"
+            foreach (var kv in sized)
+            {
+                if (kv.Value.Count < 2) continue;
+                string key = kv.Key.Substring(0, kv.Key.LastIndexOf('|')); int density = int.Parse(kv.Key.Substring(kv.Key.LastIndexOf('|') + 1));
+                if (densityMap.TryGetValue(key, out int dk) && dk != density) continue;     // a higher-density delivery owns the key
+                kv.Value.Sort((x, y) => (x.Item1 * x.Item2).CompareTo(y.Item1 * y.Item2));
+                densityMap.Remove(key);
+                Register(map, frameMap, densityMap, key, kv.Value[0].Item3, density);
+                foreach (var e in kv.Value)
+                {
+                    string alias = key + "_" + e.Item1 + "x" + e.Item2;
+                    Register(map, frameMap, densityMap, alias, e.Item3, density);
+                    SizedAliases.Add(alias);
+                }
+            }
             return map;
         }
+
+        /// <summary>Sized keys ("deco_snow_props_64x64") made by <see cref="LoadIncoming(out Dictionary{string, Sprite[]}, out Dictionary{string, int})"/>
+        /// when one key is delivered in two frame sizes; the integrator counts them as wired when their bare key or they themselves are used.</summary>
+        public static readonly HashSet<string> SizedAliases = new HashSet<string>();
+
+        static string SizedAliasBase(string alias) { var m = SizeOnlyRx.Match(alias); return m.Success ? alias.Substring(0, m.Index) : alias; }
 
         static void Register(Dictionary<string, Sprite> map, Dictionary<string, Sprite[]> fm, Dictionary<string, int> dm, string key, List<Sprite> s, int density)
         {
@@ -289,6 +314,9 @@ namespace IdleGrounds.Editor
                     string lookup = e.key;
                     if (e.key == "enemy" && r.def.enemies.enabled) lookup = EnemyKey(r.def.enemies.name);
                     else if (e.key == "enemy_bait" && r.def.enemies.baitSpawn.enabled) lookup = EnemyKey(r.def.enemies.baitSpawn.name);
+                    // per-Island look of a shared key (island-decor.json "swaps", e.g. fix_spring -> fix_spring_snow on Fishing, ART-SPEC §3.8)
+                    string swap = IslandDecor.Swap(r.def.key, lookup);
+                    if (swap != null && Find(map, swap) != null) { used.Add(Resolved(map, lookup)); used.Add(Resolved(map, lookup) + "_flow"); lookup = swap; }
                     var s = Find(map, lookup);
                     if (s == null) continue;
                     string rk = Resolved(map, lookup);
@@ -405,6 +433,7 @@ namespace IdleGrounds.Editor
             foreach (var key in map.Keys)
             {
                 if (used.Contains(key) || used.Contains(key + "_idle")) continue;
+                if (SizedAliases.Contains(key) && used.Contains(SizedAliasBase(key))) continue;   // the bare key is wired (it shows the smallest canvas)
                 if (key.EndsWith("_1x1") && used.Contains(key.Substring(0, key.Length - 4))) continue;
                 if (map.ContainsKey(key + "_1x1") && used.Contains(key)) continue;
                 if (key.StartsWith("perk_") || key.StartsWith("ui_vow_")) continue;   // retired with ascension (ADR 0007): kept, not consumed

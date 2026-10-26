@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 21:18",
+  "updated": "2026-10-26 22:24",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -367,6 +367,21 @@
           "status": "done",
           "size": "M",
           "owner": "Claude"
+        },
+        {
+          "title": "Review portrait repairs UI-025 + snowy Fishing props/warm spring Fixtures-008",
+          "detail": "6 repaired NPC portraits (Jiang, Kang, Lin, Mo, Tian, Yao) validated as files against the 5 kept ones; deco_snow_props_64x64_4f, fix_spring_snow + flow loop wired for Fishing and checked in Play.",
+          "status": "done",
+          "size": "S",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art redo: snow props 64x64 + spring steam (Fixtures-009), Mo portrait (UI-026)",
+          "detail": "Requested in ART-SPEC v6.16 after the 2026-10-26 review: deco_snow_props_64x64_4f (snow caps vanish on the P06 ground, slab under props) and the steam of fix_spring_snow_flow (lies on the water); npc_mo_portrait (face too small, twin of Lei). Wiring is ready (island-decor.json bigProps/swaps).",
+          "status": "waiting",
+          "size": "S",
+          "owner": "Claude",
+          "blockedBy": "Artist delivery on Drive (Fixtures-009, UI-026)"
         }
       ]
     },
