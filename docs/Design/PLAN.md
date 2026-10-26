@@ -1,14 +1,13 @@
 # Idle Grounds: plan
 
-Updated 2026-10-26 15:14. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-26 15:17. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**27 of 48 tasks done**, 4 in progress, 3 to do, 3 blocked, 11 waiting.
+**28 of 48 tasks done**, 3 in progress, 3 to do, 3 blocked, 11 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M3** Code animation: glows, flicker, smoke, water, sways: built on bg/codeanim (Kiln, Paper Mill in game; Shrine + NPC configs ready for Phase 2); orchestrator merges, then batch L1 layers drop in
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
@@ -16,7 +15,7 @@ Updated 2026-10-26 15:14. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 12 / 21 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 13 / 21 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -93,7 +92,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | UI QA: batch B review | UI QA pass of visual pass batch B (anchored panels, Pixelify Sans, icon bar + menu, crisp zoom). Findings in docs/reviews/2026-10-21-ui-qa-batch-b.md. | Claude |
 | Done | UI QA fixes after batch B | From docs/reviews/2026-10-21-ui-qa-batch-b.md: Stats doesn't fit phone safe area (#3), Stats Flow overlap at 720p (#4), Altar tree crowding (#5), world pill / NEW badge text under 12 px (#7), phone panels shrink below the text floor (#10), narrow quest panel at 720p (#11), off-screen anchored panels (#8). | Claude |
 | Done | Pixel font readability: 5 reads as S, 3 as 8, B as 8 | Owner 2026-10-22: Menu > Settings 'Text font' (Pixelify only, Pixelify titles + Jersey 10 [default], Jersey 10 only, VT323, Press Start 2P, Smooth). | Claude |
-| In progress | Code animation: glows, flicker, smoke, water, sways **(NOW)** | Owner pick anim_route = code_simple_all (2026-10-26): building and NPC motion made in code from accepted stills (Kiln fire + smoke, Shrine gate glow + lanterns, Paper Mill water + sheet, hammer glow, NPC sways/nods); moving parts (saw, wheel, arm, rings) from separate art layers. | Claude |
+| Done | Code animation: glows, flicker, smoke, water, sways | Owner pick anim_route = code_simple_all (2026-10-26): building and NPC motion made in code from accepted stills (Kiln fire + smoke, Shrine gate glow + lanterns, Paper Mill water + sheet, hammer glow, NPC sways/nods); moving parts (saw, wheel, arm, rings) from separate art layers. | Claude |
 | Done | Art spec: stills + moving-part layers only | Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames. | Claude |
 
 ## M4: Art coverage. Later
