@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-26 17:35",
+  "updated": "2026-10-26 18:55",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -256,6 +256,13 @@
         {
           "title": "Review round cliff walls Islands-051 (7 biomes)",
           "detail": "Repaired island_<biome>_cliffwall_round_32x96_4f x7 (replace the Islands-040 v1 rejected 2026-10-21): inspect, un-pin in the coast builder, rebuild island sheets, check every curved south coast in Play, accept or reject per file.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Review coast edge profiles + round side walls Islands-052 (7 biomes)",
+          "detail": "island_<biome>_coast_edge_profile_32x8_2f + island_<biome>_sidewall_round_32x32_4f x7 (optional pieces of the 2026-10-12 curved-coast request): inspect, wire into CoastCurves (new keys), rebuild island sheets, check every Island in Play at the zoom steps, accept or reject per file.",
           "status": "done",
           "size": "M",
           "owner": "Claude"

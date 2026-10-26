@@ -35,6 +35,8 @@ namespace IdleGrounds.Editor
     /// (Art/Islands/Coast) + one tile asset with sub-assets (Tiles/Coast) per biome.
     /// Art hooks: <c>island_&lt;biome&gt;_cliffwall_round_32x96_4f</c> (4 tileable wall frames drawn for curves) replaces the
     /// repaired straight mids when delivered.
+    /// <c>island_&lt;biome&gt;_coast_edge_profile_32x8_2f</c> (Islands-052) replaces the recoloured lip (frame 0 on N / W / E, frame 1
+    /// as the south rim over the wall top) and <c>island_&lt;biome&gt;_sidewall_round_32x32_4f</c> draws side faces of 11 px or less.
     /// </summary>
     public static class CoastCurves
     {
@@ -44,6 +46,8 @@ namespace IdleGrounds.Editor
         const float SquareMargin = 2f;          // the field stays land up to 2 cells around the play square (rounded)
         const int SideWidth = 18;               // delivered W / E face width (px; Islands-038 widened 11 -> 18)
         const int SideGrassCol = 17;            // grass column of the W face (E: 31 - this)
+        const int NarrowWidth = 11;             // Islands-052 sidewall_round face width (px)
+        const int ProfileOverhang = 4;          // Islands-052 coast_edge_profile rows that lie outside the coast line
         const string Inc = "Assets/_Project/Art/Incoming/islands/";
         const string DressDir = IslandArtBuilder.IslandDir + "/Dressing";
         public const string ArtDir = IslandArtBuilder.IslandDir + "/Coast";
@@ -846,6 +850,13 @@ namespace IdleGrounds.Editor
             string biome = isl.islandKey;
             var lip = ReadPng($"{DressDir}/dress_edge_lip_{biome}_32x32_4f.png", out int lw, out int lh);
             if (lip != null && (lh != 32 || lw < 96)) lip = null;
+            // Islands-052: the delivered coast edge profile (8 rows, outward -> inward; frame 0 = N overhang, used on the
+            // N / W / E coast, frame 1 = the south rim laid over the wall top) replaces the recoloured lip when present
+            var prof = ReadPng($"{Inc}island_{biome}_coast_edge_profile_32x8_2f.png", out int pfw, out int pfh);
+            if (prof != null && (pfh != 8 || pfw < 64)) prof = null;
+            // Islands-052: narrow W / E faces (11 px, W-A E-A W-B E-B) used where the face is drawn 11 px or narrower
+            var sideN = ReadPng($"{Inc}island_{biome}_sidewall_round_32x32_4f.png", out int nw, out int nh);
+            if (sideN != null && (nh != 32 || nw < 128)) sideN = null;
             var side = ReadPng($"{Inc}island_{biome}_sidewall_variants_32x32_8f.png", out int sw, out int sh);
             int[] wf = { 0, 1, 2 }, ef = { 3, 4, 5 };
             if (side == null || sh != 32 || sw < 256)
@@ -880,13 +891,25 @@ namespace IdleGrounds.Editor
                         var gp = new Vector2(gx + 0.5f, gy + 0.5f);
                         bool land = map.PixelLand(gx, gy);
                         // ---- lip
-                        if (lip != null && map.Nearest(gp, 1, out var A, out var n, out var dist) && dist < 9f)
+                        if ((lip != null || prof != null) && map.Nearest(gp, 1, out var A, out var n, out var dist) && dist < 9f)
                         {
                             float m = Mathf.Max(Mathf.Abs(n.x), Mathf.Abs(n.y));
                             int k = Mathf.FloorToInt(-Vector2.Dot(gp - A, n) / m);
                             k = land ? Mathf.Max(k, 0) : Mathf.Min(k, -1);
                             int r = 2 + k;                 // lip rows 0-1 (solid) overhang 2 px, its ragged rows 2-3 lie over the rim
-                            if (r >= 0 && r < 8)
+                            if (prof != null) r = ProfileOverhang + k;     // profile: ragged rows 0-3 hang over the sky / wall top, solid rows 4-7 cover the ground rim
+                            if (r >= 0 && r < 8 && prof != null)
+                            {
+                                var sn = map.SmoothNormal(gp);
+                                if (sn != Vector2.zero)
+                                {
+                                    // profile row r (top-down = outward -> inward) at the position along the coast
+                                    int along = Mathf.Abs(sn.y) >= Mathf.Abs(sn.x) ? Mod(gx) : Mod(gy);
+                                    var col = prof[(7 - r) * pfw + (sn.y >= -0.5f ? 0 : 32) + along];
+                                    if (col.a > 0) { if (lp == null) lp = new Color32[P * P]; lp[y * P + x] = col; }
+                                }
+                            }
+                            else if (r >= 0 && r < 8 && lip != null)
                             {
                                 var sn = map.SmoothNormal(gp);
                                 if (sn.y >= -0.5f && sn != Vector2.zero)
@@ -918,11 +941,23 @@ namespace IdleGrounds.Editor
                             int wpx = Mathf.RoundToInt(SideWidth * f);
                             int h = dd - 1;
                             if (h >= wpx) continue;
-                            int s = wpx <= 1 ? 0 : Mathf.RoundToInt(h * (SideWidth - 1f) / (wpx - 1));
-                            var frs = east ? ef : wf;
-                            int vk = (int)(Hash(FloorDiv(gy), east ? 1 : 0, vseed) % (uint)frs.Length);
-                            int col = east ? 31 - SideGrassCol + s : SideGrassCol - s;
-                            var cc = side[Mod(gy) * sw + frs[vk] * 32 + col];
+                            Color32 cc;
+                            if (sideN != null && wpx <= NarrowWidth)
+                            {
+                                // narrow face: the 11-px frames (grass column 17 on W, 14 on E), compressed to wpx
+                                int s = wpx <= 1 ? 0 : Mathf.RoundToInt(h * (NarrowWidth - 1f) / (wpx - 1));
+                                int vk = (int)(Hash(FloorDiv(gy), east ? 1 : 0, vseed) % 2u);
+                                int col = east ? 31 - SideGrassCol + s : SideGrassCol - s;
+                                cc = sideN[Mod(gy) * nw + (vk * 2 + (east ? 1 : 0)) * 32 + col];
+                            }
+                            else
+                            {
+                                int s = wpx <= 1 ? 0 : Mathf.RoundToInt(h * (SideWidth - 1f) / (wpx - 1));
+                                var frs = east ? ef : wf;
+                                int vk = (int)(Hash(FloorDiv(gy), east ? 1 : 0, vseed) % (uint)frs.Length);
+                                int col = east ? 31 - SideGrassCol + s : SideGrassCol - s;
+                                cc = side[Mod(gy) * sw + frs[vk] * 32 + col];
+                            }
                             if (cc.a == 0) continue;
                             if (east) cc = new Color32((byte)(cc.r * SideEastShade.r), (byte)(cc.g * SideEastShade.g), (byte)(cc.b * SideEastShade.b), cc.a);
                             if (sp == null) sp = new Color32[P * P];

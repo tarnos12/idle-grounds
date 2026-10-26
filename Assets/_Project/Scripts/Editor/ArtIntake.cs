@@ -390,6 +390,8 @@ namespace IdleGrounds.Editor
                 used.Add("island_" + biome + "_sidewall");     // W/E 3/4 side faces (IslandDressingBuilder.EnsureSideWall: fallback)
                 used.Add("island_" + biome + "_sidewall_variants");     // ... preferred: 3 straight variants per side + ends
                 used.Add("island_" + biome + "_cliffwall_round");      // curved-coast wall frames (CoastCurves.WallFrames; Islands-040 v1 rejected)
+                used.Add("island_" + biome + "_coast_edge_profile");   // curved-coast lip / south rim (CoastCurves.BuildEdges; Islands-052)
+                used.Add("island_" + biome + "_sidewall_round");       // narrow W / E faces <= 11 px (CoastCurves.BuildEdges; Islands-052)
             }
             foreach (var k in new[] { "island_edge_lip", "sky_cloudsea_far", "sky_cloudsea_mid", "sky_cloudsea_near", "sky_cloudpuff_3q",
                 "sky_island_distant", "island_underside_rock_3q", "island_underside_roots_3q", "island_underside_stalactite_3q",
