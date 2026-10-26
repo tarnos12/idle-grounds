@@ -39,5 +39,37 @@
         "All of the first option, and from now on we make moving-part layers in-house for later batches too (ChatGPT draws stills only)"
       ]
     ]
+  },
+  {
+    "g": "Gameplay"
+  },
+  {
+    "id": "fish_zone",
+    "q": "Fish and algae appear on the snow around the Fishing pond. How should that work?",
+    "ctx": "The fish and algae spawn anywhere in the Fishing island's central zone (43×43 cells), but the drawn pond is only 14×10 cells, so most fish and algae sit on snow. The Algae Farm's 'water only' rule also treats that whole zone as water. Fixing it changes where you fish and how many fish/algae there are at once (spawn targets would be rebalanced so the pace stays the same).",
+    "imgs": [],
+    "o": [
+      [
+        "pond_zone",
+        "Fish and algae only in the drawn pond (and the Algae Farm only on the pond); rebalance spawn counts so the pace stays the same",
+        true
+      ],
+      [
+        "big_lake",
+        "Make the frozen lake much bigger so it covers the whole central zone (fewer buildable cells on Fishing)"
+      ],
+      [
+        "ice_holes",
+        "Keep them spread out, but on snow they appear as ice-fishing holes (new small art piece) — fits the snowy island"
+      ],
+      [
+        "pond_plus_holes",
+        "Fish in the pond AND at ice-fishing holes on the snow nearby; algae only in the pond"
+      ],
+      [
+        "leave",
+        "Leave it as it is for now"
+      ]
+    ]
   }
 ]

@@ -163,6 +163,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-26: merged bg/snow2; Hub question fish_zone (fish/algae spawn zone vs drawn pond).
+
 - 2026-10-26: merged bg/snow (snowy Fishing P1 partly accepted; Farm/Grove/Mine coast edges accepted). New todo: fish/algae nodes spawn on snow.
 
 - 2026-10-26: in-game art reviewer (bg/snow): Islands-053 (Farm/Grove/Mine edge profiles: 3 accepted), Islands-054 (snowy Fishing P1: fill, water, ice edge, round wall accepted; flowers interim; macro rejected), Fixtures-006 (deco_pine_snow, deco_snow_props rejected). Ice edge wired along the pond curve (EnsurePond), island-decor.json + IslandDecor.cs for per-Island edge-ring decor, ArtIntake marks the keys used. Integrate 0 changes on re-run; Rim + Underside + Veil rebuilt; prefabs regenerated. ART-SPEC v6.14 + Drive mirror + feedback; plan: review task done, Snowy Fishing + Fishing ground patches blocked on the artist. Gate: simtests 168/168, compile OK, EditMode filter 30/30.
