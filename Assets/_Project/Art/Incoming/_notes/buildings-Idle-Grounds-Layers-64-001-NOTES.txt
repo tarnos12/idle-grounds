@@ -1,0 +1,5 @@
+bld_paper_mill_layer_wheel@64.png — pivot (37,178), slow 360-degree turn; draw after base.
+bld_paper_mill_layer_press@64.png — pivot (100,116), slide 2-3 px down/back; draw after wheel.
+bld_paper_mill_layer_front@64.png — static trough/water occluder; draw last.
+bld_paper_mill_base@64.png — accepted still with moving parts removed and hidden areas underpainted.
+Draw order: base -> wheel -> press -> front. Rest composition matches the accepted still exactly.

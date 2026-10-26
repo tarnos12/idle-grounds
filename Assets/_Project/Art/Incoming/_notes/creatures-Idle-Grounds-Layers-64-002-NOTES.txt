@@ -1,0 +1,8 @@
+npc_kang_layer_arm@64.png — shoulder pivot (24,35), accepted rest pose; draw after base.
+npc_kang_layer_arm_raised@64.png — same pivot; free arm raised to forehead below headband.
+npc_kang_base@64.png — frame 0 minus free arm, chest/apron/side underpainted.
+npc_xuan_layer_rings@64.png — sphere pivot (52,35), narrow/widen around vertical axis; draw after base.
+npc_xuan_base@64.png — frame 0 minus moving rings; fixed orb/star/hand/sleeve remain on base as occluders.
+npc_xuan_layer_front@64.png — original fixed orb/hand pixels that occlude completed rear ring geometry; draw last.
+Draw order: Kang base -> selected arm pose. Xuan base -> rings -> front occluder.
+Rest compositions match their accepted frame-0 references exactly.

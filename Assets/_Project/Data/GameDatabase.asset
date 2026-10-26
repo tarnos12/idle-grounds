@@ -789,6 +789,33 @@ MonoBehaviour:
     - {fileID: -7691652784512415397, guid: df83791060f594148a84f8ac01b1d06d, type: 3}
     realArt: 1
     overlay: []
+  - key: fx_sky_path_end
+    sprite: {fileID: -4747537370164388994, guid: 980baa3f8f937d042a223278a97b1ddc, type: 3}
+    frames:
+    - {fileID: -4747537370164388994, guid: 980baa3f8f937d042a223278a97b1ddc, type: 3}
+    - {fileID: 3623270214511435129, guid: 980baa3f8f937d042a223278a97b1ddc, type: 3}
+    - {fileID: 2971013812004534145, guid: 980baa3f8f937d042a223278a97b1ddc, type: 3}
+    - {fileID: -522897355137804183, guid: 980baa3f8f937d042a223278a97b1ddc, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_sky_path_h
+    sprite: {fileID: -4387314865895442158, guid: 967733d2f6043c6459a0efad92bb4ab0, type: 3}
+    frames:
+    - {fileID: -4387314865895442158, guid: 967733d2f6043c6459a0efad92bb4ab0, type: 3}
+    - {fileID: -2400775730284525422, guid: 967733d2f6043c6459a0efad92bb4ab0, type: 3}
+    - {fileID: 5698152006094877808, guid: 967733d2f6043c6459a0efad92bb4ab0, type: 3}
+    - {fileID: 1983086741331025420, guid: 967733d2f6043c6459a0efad92bb4ab0, type: 3}
+    realArt: 1
+    overlay: []
+  - key: fx_sky_path_v
+    sprite: {fileID: 3559158391240725586, guid: b278c221e794db7409baeafd599bcdd1, type: 3}
+    frames:
+    - {fileID: 3559158391240725586, guid: b278c221e794db7409baeafd599bcdd1, type: 3}
+    - {fileID: 9174772465352953989, guid: b278c221e794db7409baeafd599bcdd1, type: 3}
+    - {fileID: -4435113841134537604, guid: b278c221e794db7409baeafd599bcdd1, type: 3}
+    - {fileID: 8688121326756285408, guid: b278c221e794db7409baeafd599bcdd1, type: 3}
+    realArt: 1
+    overlay: []
   enemyAnims:
   - key: enemy_fox_hit
     sprite: {fileID: 7469885723045225228, guid: 07b4045cda90aec4ca1e0fe488591685, type: 3}
