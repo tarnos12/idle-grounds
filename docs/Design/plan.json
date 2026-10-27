@@ -461,6 +461,13 @@
           "status": "done",
           "size": "M",
           "owner": "Claude"
+        },
+        {
+          "title": "Check: flower decor drawn over buildings",
+          "detail": "Seen in the 64 px B3 review 2026-10-27: flower decorations near buildings placed by the review act draw over the building art (one inside the Jade Carver stall). Check normal placement and fix sorting/clearing if real.",
+          "status": "todo",
+          "size": "S",
+          "owner": "Claude"
         }
       ]
     },
