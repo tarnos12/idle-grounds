@@ -556,6 +556,14 @@
           "blockedBy": "C1-C11 delivered and reviewed (v6.32-v6.35): 19 accepted in game, 6 validated (Phase 3+ / peach tree unused), 7 to resend after 2nd small repairs: Nodes-64-018 (bamboostalk x2), -019 (reedbed x2), -020 (boneheap, soulvine), -021 (moonshrub)"
         },
         {
+          "title": "64 px step D: trees + standing props",
+          "detail": "ART-SPEC v6.36 section 3.9.8 \"Step D\": 4 @64 variant strips (frame = variant, picked by position): D1 deco_tree_64x96_3f@64 (P1, every Island), D2 deco_pine_snow_64x96_3f@64, D3 deco_snow_props_64x96_8f@64, D4 deco_snow_props_128x128_4f@64 (Fishing). Category fixtures, zips Idle-Grounds-Trees-64-001/-002 + Idle-Grounds-Props-64-001/-002. Stills only, no layers; sway, lantern flicker, snow glints in code (decor code-anim hook still to build).",
+          "status": "waiting",
+          "size": "M",
+          "owner": "Artist",
+          "blockedBy": "requested 2026-10-27"
+        },
+        {
           "title": "Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070",
           "detail": "In-game art reviewer: per-file checks, integrate, Play review at the zoom steps, code motion for fixtures (Spirit Tree sparkles), accept/reject, ART-SPEC + Drive mirror.",
           "status": "done",
