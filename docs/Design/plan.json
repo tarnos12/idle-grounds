@@ -546,6 +546,14 @@
           "size": "S",
           "owner": "Artist",
           "blockedBy": "Artist: final pixel-only cleanup of the 3rd file as Idle-Grounds-Islands-070.zip (ART-SPEC v6.29, orchestrator decision; last round)"
+        },
+        {
+          "title": "64 px step C: resource nodes + fixtures",
+          "detail": "ART-SPEC v6.31 section 3.9.8 \"Step C\": 31 @64 files in sets C1-C11 by Island unlock order (C1 Center first: node_bush_64x96_2f@64, fix_spirittree@64 320x384, fix_quarry@64 128x160), zips Idle-Grounds-Nodes-64-001..011 + Idle-Grounds-Fixtures-64-001..003. Chop/break nodes keep 2 state frames (intact, trimmed/cracked); everything else one still; sparkle, bob, ripple, glow, steam in code; no layers.",
+          "status": "waiting",
+          "size": "M",
+          "owner": "Artist",
+          "blockedBy": "requested 2026-10-27"
         }
       ]
     },
