@@ -113,10 +113,10 @@ MonoBehaviour:
   groundColor: {r: 0.2, g: 0.42, b: 0.3, a: 1}
   sprites:
   - key: node_herbbush
-    sprite: {fileID: -2363265209252697221, guid: c3c8654db5436ba4496ef95257195029, type: 3}
+    sprite: {fileID: -1979522690306265913, guid: 1751692d6365ade4c89a343873bed5b5, type: 3}
     frames:
-    - {fileID: -2363265209252697221, guid: c3c8654db5436ba4496ef95257195029, type: 3}
-    - {fileID: -8774226947901877620, guid: c3c8654db5436ba4496ef95257195029, type: 3}
+    - {fileID: -1979522690306265913, guid: 1751692d6365ade4c89a343873bed5b5, type: 3}
+    - {fileID: 3818567016373496104, guid: 1751692d6365ade4c89a343873bed5b5, type: 3}
     realArt: 1
     overlay: []
   - key: node_bamboostalk

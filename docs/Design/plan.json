@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 07:11",
+  "updated": "2026-10-27 08:07",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -553,7 +553,7 @@
           "status": "waiting",
           "size": "M",
           "owner": "Artist",
-          "blockedBy": "C1-C11 all delivered and reviewed (v6.32/v6.33): 15 accepted in game, 6 validated (Phase 3+ / peach tree unused), 10 to resend: Nodes-64-012 (bush), Fixtures-64-004 (spring), Nodes-64-013 (herbbush, bamboostalk x2), -014 (reedbed x2), -015 (boneheap, soulvine redraw), -016 (moonshrub)"
+          "blockedBy": "C1-C11 delivered and reviewed (v6.32-v6.35): 19 accepted in game, 6 validated (Phase 3+ / peach tree unused), 7 to resend after 2nd small repairs: Nodes-64-018 (bamboostalk x2), -019 (reedbed x2), -020 (boneheap, soulvine), -021 (moonshrub)"
         },
         {
           "title": "Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070",
@@ -574,6 +574,13 @@
           "detail": "In-game art reviewer: per-file checks (canvas, palette, alpha, outline, noise, one shape, frame-1 diff, upscale), integrate Grove/Volcano/Celestial nodes and Play at the zoom steps intact and after a hit; Phase 3+ nodes and the peach tree validated as files + preview; accept/validate/reject, ART-SPEC + Drive mirror.",
           "status": "done",
           "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: step C repairs Nodes-64-013..017 (herbbush, bamboo, reedbed, boneheap, soulvine, moonshrub, bush 3rd send)",
+          "detail": "In-game art reviewer: diff each against its rejected file (frame 0 identical, only the named regions change; soulvine judged fresh), integrate the Grove/Celestial/Center nodes that pass and Play intact/after hit at the zoom steps; reed/bone/soul validated on previews; accept/validate/reject, ART-SPEC + Drive mirror; bush 3rd failure = awaiting the orchestrator.",
+          "status": "done",
+          "size": "S",
           "owner": "Claude"
         },
         {
