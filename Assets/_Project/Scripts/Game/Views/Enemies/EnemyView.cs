@@ -49,18 +49,40 @@ namespace IdleGrounds.Game
             }
         }
 
-        Sprite[] idle, move, hit;
+        Sprite[] idle, move, hit, die;
         Vector2 lastPos;
         float moveUntil;
+        float dieStart = -1f;
         const float IdleFps = 6f, MoveFps = 10f, HitFps = 12f, FeetDropPx = 6f;
+        /// <summary>Die strip rate (ART-SPEC §3.9.8 step F: played once, ~0.5 s for 4 frames).</summary>
+        public const float DieFps = 8f;
+
+        /// <summary>True while the view holds on after the enemy's death to play its die strip.</summary>
+        public bool Dying => dieStart >= 0f;
+        /// <summary>The view has a delivered die strip to play when its enemy is killed.</summary>
+        public bool HasDieArt => die != null && die.Length > 0 && RealArt;
+
+        /// <summary>Die-strip frame at <paramref name="elapsed"/> seconds after death, or -1 once the strip
+        /// has played (each frame shown 1/fps s; the last frame is held for one frame time too).</summary>
+        public static int DieFrameAt(float elapsed, int frames, float fps = DieFps)
+        {
+            if (frames <= 0 || elapsed < 0f) return frames <= 0 ? -1 : 0;
+            int fi = Mathf.FloorToInt(elapsed * fps);
+            return fi < frames ? fi : -1;
+        }
+
+        /// <summary>Seconds a dying view is held before release (frames / fps).</summary>
+        public static float DieHoldSeconds(int frames, float fps = DieFps) => frames <= 0 ? 0f : frames / fps;
 
         bool RealArt => idle != null;
 
-        public void Bind(string area, Enemy e, Sprite sprite, Sprite[] idleFrames = null, Sprite[] moveFrames = null, Sprite[] hitFrames = null)
+        public void Bind(string area, Enemy e, Sprite sprite, Sprite[] idleFrames = null, Sprite[] moveFrames = null, Sprite[] hitFrames = null, Sprite[] dieFrames = null)
         {
             Area = area; Enemy = e;
             name = $"Enemy_{area}_{e.id}{(e.kind == "boss" ? "_boss" : "")}";
-            idle = idleFrames; move = moveFrames; hit = hitFrames;
+            idle = idleFrames; move = moveFrames; hit = hitFrames; die = dieFrames;
+            dieStart = -1f;
+            if (pips != null) pips.gameObject.SetActive(true);
             lastPos = new Vector2((float)e.x, (float)e.y); moveUntil = 0f;
             spriteRenderer.flipX = false;
             if (RealArt)
@@ -119,6 +141,26 @@ namespace IdleGrounds.Game
             }
 
             if (e.hp != lastHp || e.maxHp != lastMax) { lastHp = e.hp; lastMax = e.maxHp; LayoutHp(); }
+        }
+
+        /// <summary>The enemy was killed: keep the view where it stood and play the die strip once
+        /// (HP pips / bar hidden). <see cref="TickDie"/> returns false when the view can be released.</summary>
+        public void BeginDie(float time)
+        {
+            dieStart = time;
+            if (pips != null) pips.gameObject.SetActive(false);
+            ViewKit.Show(barTrack, false); ViewKit.Show(barFill, false);
+            squash.localScale = Vector3.one; squash.localPosition = Vector3.zero;
+            if (HasDieArt) spriteRenderer.sprite = die[0];
+        }
+
+        public bool TickDie(float time)
+        {
+            if (!HasDieArt) return false;
+            int fi = DieFrameAt(time - dieStart, die.Length);
+            if (fi < 0) return false;
+            if (spriteRenderer.sprite != die[fi]) spriteRenderer.sprite = die[fi];
+            return true;
         }
 
         void LayoutHp()

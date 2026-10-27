@@ -189,6 +189,36 @@ namespace IdleGrounds.Editor
                     Debug.Log(Tag + $"hitNodes {arg.Trim()}: {k}");
                     break;
                 }
+                case "enemy":   // review only: a creature at a cell (enemy:island,row,col[,walkCols][,boar]); walkCols 0 = stands still,
+                {               // +n / -n = walks n cells right / left (mirrored); shot focus "built" = the creature
+                    var p = arg.Split(',');
+                    string isl = p[0].Trim();
+                    var ar = runner.State.Area(isl);
+                    var ecfg = runner.Config.Region(isl)?.enemies;
+                    if (ar == null || ecfg == null) { Debug.LogError(Tag + "enemy: no enemies on " + isl); break; }
+                    bool boar = p.Length > 4 && p[4].Trim() == "boar";
+                    float row = F(p[1]), col = F(p[2]), walk = p.Length > 3 ? F(p[3]) : 0f;
+                    double cell = runner.Space.Cell, x = (col + 0.5) * cell, y = (row + 0.5) * cell;
+                    int hp = boar && ecfg.baitSpawn != null && ecfg.baitSpawn.hp > 0 ? ecfg.baitSpawn.hp : ecfg.hp;
+                    var en = new IdleGrounds.Sim.Enemy { id = ar.nextEnemyId++, x = x, y = y, hp = hp, maxHp = hp, tx = x + walk * cell, ty = y,
+                        kind = boar ? "boss" : null, spd = walk == 0f ? 1e-6 : 0 };
+                    ar.enemies.Add(en);
+                    lastBuiltCentre = CellWorld(isl, row, col);
+                    Debug.Log(Tag + $"enemy #{en.id} {(boar ? "boar" : "fox")} at {isl} r{row} c{col} walk {walk}");
+                    break;
+                }
+                case "enemyHit":   // review only: every creature on an island flinches now (enemyHit:island): the hit strip plays
+                {
+                    var ar = runner.State.Area(arg.Trim());
+                    if (ar != null) foreach (var en in ar.enemies) en.hitAt = runner.SimNow;
+                    break;
+                }
+                case "enemyKill":   // review only: every creature on an island is killed through the sim (enemyKill:island): the die strip plays
+                {
+                    var ar = runner.State.Area(arg.Trim());
+                    if (ar != null) foreach (var en in ar.enemies.ToArray()) runner.Sim.Combat.DamageEnemy(arg.Trim(), en, en.hp);
+                    break;
+                }
                 case "unlockIsland":   // review only: mark an Island unlocked in the running game (unlockIsland:island), so its
                 {                      // nodes animate like in play (a locked Island freezes; surfaced fish only bob / ripple when unlocked)
                     runner.State.world.SetUnlocked(arg.Trim(), true);
