@@ -745,6 +745,22 @@
       "source": "Idle-Grounds-Creatures-64-003.zip"
     },
     {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-004-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 938,
+      "sha1": "14dcdc206e882917bce6e9609f244437877d046f",
+      "date": "2026-10-27T00:28:07.771Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-004-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 1169,
+      "sha1": "c45884b7015f5cb4f5c71343d8a210444c1cf67a",
+      "date": "2026-10-27T00:28:07.771Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
       "path": "_notes/creatures-Idle-Grounds-Layers-64-002-GENERATION-PROMPTS.txt",
       "name": "GENERATION-PROMPTS.txt",
       "size": 202,
@@ -2015,6 +2031,22 @@
       "sha1": "783402a11e3127059c123e27dd7590e47e3e8ae3",
       "date": "2026-10-27T00:00:54.808Z",
       "source": "Idle-Grounds-Islands-063.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-064-NOTES.md",
+      "name": "NOTES.md",
+      "size": 477,
+      "sha1": "4a13e853350e2fddf762190a9d6ce86fe22e32b7",
+      "date": "2026-10-27T00:28:08.427Z",
+      "source": "Idle-Grounds-Islands-064.zip"
+    },
+    {
+      "path": "_notes/islands-Idle-Grounds-Islands-064-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 1236,
+      "sha1": "3b2603e07587e5d10ff158123902c7e1471da638",
+      "date": "2026-10-27T00:28:08.428Z",
+      "source": "Idle-Grounds-Islands-064.zip"
     },
     {
       "path": "_notes/items-Idle-Grounds-Items-001-README.md",
@@ -3625,12 +3657,44 @@
       "source": "Idle-Grounds-Creatures-005.zip"
     },
     {
+      "path": "creatures/npc_he_base@64.png",
+      "name": "npc_he_base@64.png",
+      "size": 6139,
+      "sha1": "e431c7ab1b8a95a6ca8bc17af1660b758f0de7ce",
+      "date": "2026-10-27T00:28:07.766Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
       "path": "creatures/npc_he_idle_32x48_4f.png",
       "name": "npc_he_idle_32x48_4f.png",
       "size": 3310,
       "sha1": "c9a96a41c29c334946b190306cd4296678f26ac9",
       "date": "2026-10-21T18:04:01.470Z",
       "source": "Idle-Grounds-Creatures-007.zip"
+    },
+    {
+      "path": "creatures/npc_he_layer_lotus_open@64.png",
+      "name": "npc_he_layer_lotus_open@64.png",
+      "size": 977,
+      "sha1": "1ad0bb6bce7784584c6c54de934d523fb2a72140",
+      "date": "2026-10-27T00:28:07.767Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
+      "path": "creatures/npc_he_layer_lotus@64.png",
+      "name": "npc_he_layer_lotus@64.png",
+      "size": 1178,
+      "sha1": "ea7ad0ec336685b800aafb0eb95edb04a826eec2",
+      "date": "2026-10-27T00:28:07.767Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
+      "path": "creatures/npc_he@64.png",
+      "name": "npc_he@64.png",
+      "size": 6566,
+      "sha1": "b22770fd044f3052937525883b8c63d207510a02",
+      "date": "2026-10-27T00:28:07.765Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
     },
     {
       "path": "creatures/npc_jiang_idle_32x48_4f.png",
@@ -3697,6 +3761,14 @@
       "source": "Idle-Grounds-Creatures-007.zip"
     },
     {
+      "path": "creatures/npc_lei@64.png",
+      "name": "npc_lei@64.png",
+      "size": 5847,
+      "sha1": "36f0029b7e66c6708a218376c96cfa8cec875248",
+      "date": "2026-10-27T00:28:07.768Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
       "path": "creatures/npc_lin_idle_32x48_4f.png",
       "name": "npc_lin_idle_32x48_4f.png",
       "size": 1968,
@@ -3719,6 +3791,14 @@
       "sha1": "fbf2132755294ce6653245784d18fa5297e9f03f",
       "date": "2026-10-21T18:04:01.471Z",
       "source": "Idle-Grounds-Creatures-007.zip"
+    },
+    {
+      "path": "creatures/npc_mo@64.png",
+      "name": "npc_mo@64.png",
+      "size": 5139,
+      "sha1": "3a77c14a9a6c804ceb1e497b28f87841fea701e7",
+      "date": "2026-10-27T00:28:07.768Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
     },
     {
       "path": "creatures/npc_ouyang_idle_32x48_4f.png",
@@ -3817,12 +3897,36 @@
       "source": "Idle-Grounds-Layers-64-006.zip"
     },
     {
+      "path": "creatures/npc_yao_base@64.png",
+      "name": "npc_yao_base@64.png",
+      "size": 4797,
+      "sha1": "87e93e3a5ae912310c63b20aa9b6ea2dce48e5d4",
+      "date": "2026-10-27T00:28:07.769Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
       "path": "creatures/npc_yao_idle_32x48_4f.png",
       "name": "npc_yao_idle_32x48_4f.png",
       "size": 2518,
       "sha1": "bbe7a7442774865564732677dede46d8e4d00438",
       "date": "2026-10-21T18:04:01.472Z",
       "source": "Idle-Grounds-Creatures-007.zip"
+    },
+    {
+      "path": "creatures/npc_yao_layer_pup_tail@64.png",
+      "name": "npc_yao_layer_pup_tail@64.png",
+      "size": 478,
+      "sha1": "7fe6739b75167d5e611af2c63014e840ceff972f",
+      "date": "2026-10-27T00:28:07.770Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
+    },
+    {
+      "path": "creatures/npc_yao@64.png",
+      "name": "npc_yao@64.png",
+      "size": 4936,
+      "sha1": "a5c3378461f71e37bc9941a8f56bd6798f24e430",
+      "date": "2026-10-27T00:28:07.769Z",
+      "source": "Idle-Grounds-Creatures-64-004.zip"
     },
     {
       "path": "fixtures/deco_pine_snow_32x48_3f.png",
@@ -5115,10 +5219,10 @@
     {
       "path": "islands/island_tribulation_cliffwall_32x96_8f.png",
       "name": "island_tribulation_cliffwall_32x96_8f.png",
-      "size": 1484,
-      "sha1": "eaa5838edca9459a580ee4af2800be8fb7895f47",
-      "date": "2026-10-21T18:04:27.700Z",
-      "source": "Idle-Grounds-Islands-048.zip"
+      "size": 11441,
+      "sha1": "6ff5a4b7e5afa9f32b63b6fc00936466a736865a",
+      "date": "2026-10-27T00:28:08.424Z",
+      "source": "Idle-Grounds-Islands-064.zip"
     },
     {
       "path": "islands/island_tribulation_flowers_32x32_4f.png",
@@ -5131,26 +5235,26 @@
     {
       "path": "islands/island_tribulation_ground_blob_32x32_47f.png",
       "name": "island_tribulation_ground_blob_32x32_47f.png",
-      "size": 2763,
-      "sha1": "070428be32175a1cdecaf2f653c6c8fa3c667371",
-      "date": "2026-10-21T18:04:27.701Z",
-      "source": "Idle-Grounds-Islands-048.zip"
+      "size": 8037,
+      "sha1": "e4cdbf9c231d929f07e64f5f32eaf8d2058a97bd",
+      "date": "2026-10-27T00:28:08.424Z",
+      "source": "Idle-Grounds-Islands-064.zip"
     },
     {
       "path": "islands/island_tribulation_ground_fill_32x32_3f.png",
       "name": "island_tribulation_ground_fill_32x32_3f.png",
-      "size": 2009,
-      "sha1": "b1d7c6a29b3ca19206f52387de0addb43107c4d2",
-      "date": "2026-10-21T18:04:27.169Z",
-      "source": "Idle-Grounds-Islands-047.zip"
+      "size": 295,
+      "sha1": "23938ed23fe60f597e39b2180b08a5ec319e1cfc",
+      "date": "2026-10-27T00:28:08.425Z",
+      "source": "Idle-Grounds-Islands-064.zip"
     },
     {
       "path": "islands/island_tribulation_macro_96x96_4f.png",
       "name": "island_tribulation_macro_96x96_4f.png",
-      "size": 24702,
-      "sha1": "444fe66dcb55e07df7241623fd71bf36481ed6fc",
-      "date": "2026-10-21T18:04:27.169Z",
-      "source": "Idle-Grounds-Islands-047.zip"
+      "size": 2629,
+      "sha1": "4f2ba2e48822d72edd67b60b8ae61aef40becb25",
+      "date": "2026-10-27T00:28:08.425Z",
+      "source": "Idle-Grounds-Islands-064.zip"
     },
     {
       "path": "islands/island_tribulation_runes_32x32_4f.png",
@@ -5171,18 +5275,18 @@
     {
       "path": "islands/island_tribulation_sidewall_32x32_4f.png",
       "name": "island_tribulation_sidewall_32x32_4f.png",
-      "size": 532,
-      "sha1": "e09d24a1767735574584125c0d4e970cdb64be92",
-      "date": "2026-10-21T18:04:27.701Z",
-      "source": "Idle-Grounds-Islands-048.zip"
+      "size": 880,
+      "sha1": "d0c7e15be84d11e1c80b57e38fa41702499df038",
+      "date": "2026-10-27T00:28:08.426Z",
+      "source": "Idle-Grounds-Islands-064.zip"
     },
     {
       "path": "islands/island_tribulation_sidewall_variants_32x32_8f.png",
       "name": "island_tribulation_sidewall_variants_32x32_8f.png",
-      "size": 654,
-      "sha1": "4b7dd384f17ab3305aed1d38184107a960877f91",
-      "date": "2026-10-21T18:04:27.702Z",
-      "source": "Idle-Grounds-Islands-048.zip"
+      "size": 1403,
+      "sha1": "5475e77bce2321a9a03821ddfa660b3a5e7930a7",
+      "date": "2026-10-27T00:28:08.427Z",
+      "source": "Idle-Grounds-Islands-064.zip"
     },
     {
       "path": "islands/island_underside_fill_32x32_3f.png",

@@ -113,6 +113,49 @@
         { "type": "flicker", "name": "ring glints", "onlyWithoutLayers": true, "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [44, 31, 52, 29, 54, 39, 46, 42], "onSteps": [4], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 },
         { "type": "layer", "name": "rings", "sprite": "rings", "pivot": [49, 35], "scales": [1, 0.66, 0.33, 0.66] }
       ]
+    },
+    {
+      "key": "npc_he",
+      "note": "Still npc_he@64 (Creatures-64-004). The lotus opens and closes by the pose swap of npc_he_layer_lotus / _lotus_open (ART-SPEC 3.9.8); until both layers and the base pass, the lotus head and its leaf sway 1 px in code and the petals glow softly.",
+      "still": [64, 96], "fps": 4, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "sway", "name": "lotus sway", "onlyWithoutLayers": true, "rect": [41, 8, 19, 36], "pivot": [43, 44], "axis": "x",
+          "masks": [ { "hue": [70, 170], "sat": [0.2, 1], "val": [0.2, 1] }, { "hue": [0, 45], "sat": [0, 0.5], "val": [0.75, 1] }, { "sat": [0, 0.12], "val": [0.85, 1] }, { "val": [0, 0.2] } ],
+          "offsets": [0, 1, 0, -1] },
+        { "type": "glow", "name": "petal glow", "rect": [42, 8, 18, 16], "masks": [ { "hue": [0, 45], "sat": [0, 0.5], "val": [0.75, 1] } ],
+          "colorA": "#F4E6C8", "colorB": "#FFF0A0", "alpha": [0, 0.5], "period": 2.4, "additive": true },
+        { "type": "layer", "name": "lotus", "sprite": "lotus", "note": "pose swap rest / open (lotus opens and closes); pivot (39,61) from NOTES.txt", "pivot": [39, 61], "poses": ["", "open", "open", ""] }
+      ]
+    },
+    {
+      "key": "npc_lei",
+      "note": "Still npc_lei@64 (Creatures-64-004). The crystal on the staff pulses cyan and small sparks crackle round it (one per step). No layers (NOTES.txt).",
+      "still": [64, 96], "fps": 4, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "glow", "name": "staff crystal", "rect": [42, 21, 6, 11], "masks": [ { "hue": [170, 290], "sat": [0.15, 1], "val": [0.55, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0.25, 0.75], "period": 1.2, "additive": true },
+        { "type": "flicker", "name": "sparks", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [41, 22, 49, 25, 44, 19, 48, 31], "onSteps": [4], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "npc_yao",
+      "note": "Still npc_yao@64 (Creatures-64-004). The pup's tail wags +/-12 deg about the root (11,71) from npc_yao_layer_pup_tail (ART-SPEC 3.9.8); until the layer and the base pass, the tail tip sways 2 px in code.",
+      "still": [64, 96], "fps": 4, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "sway", "name": "tail sway", "onlyWithoutLayers": true, "rect": [2, 72, 7, 18], "pivot": [8, 72], "axis": "x", "offsets": [0, 2, 0, -2] },
+        { "type": "layer", "name": "pup_tail", "sprite": "pup_tail", "note": "wag: turns about the tail root (pivot from NOTES.txt)", "pivot": [11, 71], "angles": [0, 12, 0, -12] }
+      ]
+    },
+    {
+      "key": "npc_mo",
+      "note": "Still npc_mo@64 (Creatures-64-004). Gold glints run over the scars and robe trim (one per step), the jade gourd glows softly, the left sleeve flutters 1 px. No layers (NOTES.txt).",
+      "still": [64, 96], "fps": 4, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "sway", "name": "sleeve flutter", "rect": [3, 60, 11, 26], "pivot": [13, 60], "axis": "x", "offsets": [0, 1, 0, -1] },
+        { "type": "glow", "name": "gourd", "rect": [26, 44, 11, 24], "masks": [ { "hue": [70, 170], "sat": [0.2, 1], "val": [0.25, 1] } ],
+          "colorA": "#5FCF9C", "colorB": "#A8ECC0", "alpha": [0, 0.5], "period": 2.4, "additive": true },
+        { "type": "flicker", "name": "scar glints", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [40, 30, 37, 50, 25, 59, 44, 59], "onSteps": [4], "colorA": "#FFF0A0", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
     }
   ]
 }
