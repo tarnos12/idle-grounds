@@ -41,6 +41,40 @@
     ]
   },
   {
+    "id": "tiles_finish",
+    "q": "ChatGPT has failed 7 new-island tiles three times. How should we finish them?",
+    "ctx": "For Lotus Marsh and Thunder Crag (islands not in the game yet, ADR 0007 Phase 6), ChatGPT keeps sending the same recoloured template: ground patches as flat one-colour discs, side cliffs with a moss bar every 32 px or a thin dark line, and a Thunder ground fill with rows of cyan dots. Everything else for these islands passed (ground shapes, cliffs, flowers, Lotus fill and water). Azure Beast Ravine has the same three problems on its 2nd try. The accepted islands (Center, Grove, Mine, Farm…) already have good patches, side cliffs and fills that could be recoloured to each new island's palette.",
+    "imgs": [
+      {
+        "file": "question-images/tiles-finish-1.jpg",
+        "cap": "Thunder Crag round 3 preview: flat disc patches, dark-line side cliffs, dotted fill"
+      }
+    ],
+    "o": [
+      [
+        "inhouse_recolour",
+        "We make them in-house: recolour the accepted patches, side cliffs and fills from the closest existing island to each new island's palette (Lotus from Grove, Thunder from Mine, Ravine from Farm/Grove), then judge them with the same checks",
+        true
+      ],
+      [
+        "chatgpt_new_brief",
+        "One more ChatGPT round with a new brief that starts from an accepted island's file instead of its template"
+      ],
+      [
+        "mix",
+        "Recolour in-house for the side cliffs and fills; ChatGPT redraws only the ground patches"
+      ],
+      [
+        "later",
+        "Leave them until those islands are being built (Phase 6)"
+      ],
+      [
+        "all",
+        "In-house now for all three new islands, AND for Tribulation Peak's patches/side cliffs/fill from the start"
+      ]
+    ]
+  },
+  {
     "g": "Gameplay"
   },
   {

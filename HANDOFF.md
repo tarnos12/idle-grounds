@@ -168,6 +168,8 @@ the active scene after MCP editor work.
 
 ## Last session summary
 
+- 2026-10-27: merged bg/biomes2; Hub question tiles_finish (route for the 7 tiles rejected 3x).
+
 - 2026-10-27: in-game art reviewer (bg/biomes2): Islands-061 (Lotus redo), -062 (Thunder redo), -063 (Azure Beast Ravine) reviewed as files + on a preview Island: 3 blobs, Lotus fill, Ravine cliff wall validated (Phase 6); Lotus/Thunder macros + side walls and Thunder fill rejected 3x (awaiting orchestrator); Ravine fill, macro, side walls rejected (redo requested); ART-SPEC v6.19. Tests: simtests 168/168, EditMode filter 30/30, compile 0 errors, Integrate 0 changes x2.
 - 2026-10-27: in-game art reviewer (bg/biomes): Islands-059 (Lotus Marsh) + Islands-060 (Thunder Crag) reviewed as files + on a preview Island: blobs, cliff walls, flowers, Lotus water validated (Phase 6); fills, macros, side walls rejected (redo requested); ART-SPEC v6.18. Tests: simtests 168/168, EditMode filter 30/30, compile 0 errors, Integrate 0 changes x2.
 - 2026-10-27: in-game art reviewer (bg/snow3): Islands-058 + Fixtures-009 accepted in Play (macro, floes, side faces, 64x64 snow props, spring steam), Mo portrait UI-026 validated as a file; snowy Fishing P1+P2 complete; ART-SPEC v6.17.
