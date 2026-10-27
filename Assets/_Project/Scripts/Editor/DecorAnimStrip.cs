@@ -71,11 +71,12 @@ namespace IdleGrounds.Editor
                         }
                 }
             }
-            var big = new Texture2D(W * Scale, H * Scale, TextureFormat.RGBA32, false);
-            var px = new Color32[W * Scale * H * Scale];
-            for (int y = 0; y < H * Scale; y++)
-                for (int x = 0; x < W * Scale; x++)
-                    px[(H * Scale - 1 - y) * W * Scale + x] = sheet.px[(y / Scale) * W + x / Scale];
+            int sc = Mathf.Max(1, Mathf.Min(Scale, Mathf.Min(8192 / W, 8192 / H)));     // Texture2D max 8192 px (the 128x128 4-variant strip is 2112 px wide)
+            var big = new Texture2D(W * sc, H * sc, TextureFormat.RGBA32, false);
+            var px = new Color32[W * sc * H * sc];
+            for (int y = 0; y < H * sc; y++)
+                for (int x = 0; x < W * sc; x++)
+                    px[(H * sc - 1 - y) * W * sc + x] = sheet.px[(y / sc) * W + x / sc];
             big.SetPixels32(px); big.Apply();
             File.WriteAllBytes(path, big.EncodeToPNG());
             Object.DestroyImmediate(big);
