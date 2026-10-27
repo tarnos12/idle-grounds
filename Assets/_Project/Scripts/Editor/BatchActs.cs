@@ -189,6 +189,12 @@ namespace IdleGrounds.Editor
                     Debug.Log(Tag + $"hitNodes {arg.Trim()}: {k}");
                     break;
                 }
+                case "unlockIsland":   // review only: mark an Island unlocked in the running game (unlockIsland:island), so its
+                {                      // nodes animate like in play (a locked Island freezes; surfaced fish only bob / ripple when unlocked)
+                    runner.State.world.SetUnlocked(arg.Trim(), true);
+                    Debug.Log(Tag + "unlockIsland " + arg.Trim());
+                    break;
+                }
                 case "surfaceNodes":   // every surfacing node (fish, algae) on an island stays surfaced (surfaceNodes:island; art reviews)
                 {
                     var ar = runner.State.Area(arg.Trim());

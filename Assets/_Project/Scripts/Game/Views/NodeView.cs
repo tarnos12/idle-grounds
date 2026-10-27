@@ -52,6 +52,10 @@ namespace IdleGrounds.Game
         CodeAnimator codeAnim;  // code motion of a single still (code-anim.json, ART-SPEC §3.9.8 step C), e.g. the Spirit Tree sparkles
         /// <summary>The code animation driving this node's still, or null.</summary>
         public CodeAnimator CodeAnim => codeAnim;
+        bool stateStrip;        // 2-frame chop / break strip: frame 0 intact, frame 1 after the first hit
+
+        /// <summary>Chop / break nodes show 2 state frames (intact, trimmed / cracked; ART-SPEC §3.9.8 step C).</summary>
+        public static bool IsStateNode(NodeInteraction i) => i == NodeInteraction.Chop || i == NodeInteraction.Break || i == NodeInteraction.Quarry;
 
         public void Bind(string area, Node node, Sprite sprite, AreaSpace space, SpriteEntry art = null)
         {
@@ -65,15 +69,21 @@ namespace IdleGrounds.Game
             maxHits = Mathf.Max(1, node.hitsLeft);
             if (realArt) sprite = art.sprite;
             // step C (ART-SPEC §3.9.8): a single @64 still with a code-anim.json entry gets its motion from code; the old
-            // 32-px overlay loop (fix_spirittree_sparkle) is then not drawn. Strips (chop / break states, deco variants) keep frames.
-            var animEntry = realArt && !decoArt && artFrames == null ? CodeAnimLibrary.Find(art.key) : null;
-            if (codeAnim != null) { codeAnim.Clear(); codeAnim = null; }
+            // 32-px overlay loop (fix_spirittree_sparkle) is then not drawn. 2-frame chop / break strips (intact + hit) get
+            // overlay-only motion (vein glow, glints): NodeView keeps choosing the frame, the animator never touches it.
+            // The entry must match the still's size, so a 32-px fallback keeps its hand-drawn loop (the Fishing spring).
+            stateStrip = realArt && !decoArt && artFrames != null && artFrames.Length == 2 && IsStateNode(node.interaction);
+            var animEntry = realArt && !decoArt && (artFrames == null || stateStrip) ? CodeAnimLibrary.FindForStill(art.key, sprite) : null;
+            if (codeAnim != null) { codeAnim.Clear(); codeAnim.GroundLift = 0f; codeAnim = null; }
             if (animEntry != null && animEntry.HasEffects)
             {
                 spriteRenderer.sprite = sprite;
                 var ca = CodeAnimator.For(spriteRenderer);
                 ca.SelfTick = false;
-                if (ca.Configure(animEntry, spriteRenderer, sprite, _ => null)) { codeAnim = ca; ca.Playing = true; }
+                ca.GroundLift = 0f;
+                bool ok = stateStrip ? ca.ConfigureOverlay(animEntry, spriteRenderer, artFrames) : ca.Configure(animEntry, spriteRenderer, sprite, _ => null);
+                // surfacing nodes (play "surfaced"): ripples only while the fish / algae is up (Refresh); everything else plays
+                if (ok) { codeAnim = ca; ca.Playing = !animEntry.PlaysWhileSurfaced; }
             }
             overlayFrames = realArt && !decoArt && codeAnim == null && art.overlay != null && art.overlay.Length > 0 ? art.overlay : null;
             if (overlayFrames != null && overlay == null)
@@ -261,12 +271,21 @@ namespace IdleGrounds.Game
             bool surfaced = unlocked && n.interaction == NodeInteraction.Surface && n.surfaceUntil > now;
             if (surfaced)
                 bob = Mathf.Abs(Mathf.Sin((float)(now % 1_000_000d / 300d))) * 5f / cell;
+            if (codeAnim != null)
+            {
+                // a code-animated still bobs in whole art texels, and its water overlays (ripple rings, splash) stay on the water
+                float k = spriteRenderer.transform.localScale.y, ppu = spriteRenderer.sprite != null ? spriteRenderer.sprite.pixelsPerUnit : 64f;
+                float lift = k > 0f ? Mathf.Round(bob / k * ppu) / ppu : 0f;
+                bob = lift * k;
+                codeAnim.GroundLift = lift;
+                if (n.interaction == NodeInteraction.Surface && codeAnim.Entry != null && codeAnim.Entry.PlaysWhileSurfaced) codeAnim.Playing = surfaced;
+            }
             spriteRenderer.transform.localPosition = spriteLocal + new Vector3(0f, bob, 0f);
 
             if (artFrames != null)
             {
                 int fi = 0;
-                if (artFrames.Length == 2 && (n.interaction == NodeInteraction.Chop || n.interaction == NodeInteraction.Break || n.interaction == NodeInteraction.Quarry))
+                if (artFrames.Length == 2 && IsStateNode(n.interaction))
                     fi = (n.hitsLeft < maxHits || n.clicks > 0) ? 1 : 0;      // intact -> cracked / trimmed
                 else if (n.interaction != NodeInteraction.Surface || surfaced)
                     fi = (int)(Time.unscaledTime * ArtFps) % artFrames.Length;

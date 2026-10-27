@@ -17,7 +17,12 @@ namespace IdleGrounds.Game
     /// <c>flicker</c> (mask, generated flame tongues or star glints with stepped alpha/shape jitter), <c>smoke</c> (pooled puffs: rise,
     /// drift, grow, fade through 4 alpha steps), <c>toggle</c> (a sprite on for some steps: paper sheet), <c>layer</c> (an artist layer
     /// <c>&lt;key&gt;_layer_&lt;part&gt;@64.png</c>: rotate / slide / squash / pose swap / ellipse spin = a side-view wheel turning in its own ellipse).</item>
+    /// <item>water overlays that stay on the water while the still bobs (<see cref="CodeAnimator.GroundLift"/>): <c>ripple</c> (rings that
+    /// grow from a waterline centre, back half behind the still and front half in front, 4 sizes and 4 alpha steps) and <c>splash</c>
+    /// (droplets that hop out sideways from a point in a short arc, then rest until the next cycle).</item>
     /// </list>
+    /// <see cref="CodeAnimEntry.overlayOnly"/> entries (2-frame chop / break nodes, ART-SPEC §3.9.8 step C) only draw overlays: the owner
+    /// sets the base sprite (intact / hit frame) and mask overlays are cut from whichever state frame is shown.
     /// </summary>
     [Serializable]
     public class CodeAnimFile
@@ -38,15 +43,21 @@ namespace IdleGrounds.Game
         /// <summary>Step rate of the cycle (frames per second) and cycle length in steps.</summary>
         public float fps;
         public int steps;
-        /// <summary>"working" (buildings: only while the building works) or "always" (NPC idles).</summary>
+        /// <summary>"working" (buildings: only while the building works), "always" (NPC idles, fixtures, nodes) or "surfaced"
+        /// (surfacing nodes: only while the fish / algae is up; the owner sets <see cref="CodeAnimator.Playing"/>).</summary>
         public string play;
         /// <summary>Buildings: the code animation replaces any delivered working loop (Kiln interim, Paper Mill pilot loop).</summary>
         public bool replaceDeliveredLoop;
         /// <summary>The accepted hand-drawn loop / idle strip stays (Workbench saw, Lin, Ouyang): no code effects.</summary>
         public bool keepDeliveredLoop;
+        /// <summary>Overlay-only (2-frame chop / break nodes): the animator never sets the base sprite, so the hit frame the owner
+        /// shows survives every tick; baked effects (sway / shift / scroll / line) and layers are not used.</summary>
+        public bool overlayOnly;
         public CodeAnimEffect[] effects;
 
         public bool PlaysAlways => play == "always";
+        /// <summary>Surfacing nodes: plays only while surfaced (the owner sets <see cref="CodeAnimator.Playing"/>).</summary>
+        public bool PlaysWhileSurfaced => play == "surfaced";
         public bool HasEffects => effects != null && effects.Length > 0 && !keepDeliveredLoop;
         public int StillW => still != null && still.Length >= 2 ? still[0] : 0;
         public int StillH => still != null && still.Length >= 2 ? still[1] : 0;
@@ -85,7 +96,7 @@ namespace IdleGrounds.Game
         }
     }
 
-    public enum CodeAnimKind { Unknown, Sway, Shift, Scroll, Line, Glow, Flicker, Smoke, Toggle, Layer }
+    public enum CodeAnimKind { Unknown, Sway, Shift, Scroll, Line, Glow, Flicker, Smoke, Toggle, Layer, Ripple, Splash }
 
     [Serializable]
     public class CodeAnimEffect
@@ -113,22 +124,24 @@ namespace IdleGrounds.Game
         public float[] alpha;
         /// <summary>Calm motion: "hide", "rest" (default: hold the middle value) or a number = held alpha.</summary>
         public string calm;
-        /// <summary>Pulse period / smoke puff life in seconds; phase in cycles.</summary>
+        /// <summary>Pulse period / smoke puff life / ripple ring life / splash cycle in seconds; phase in cycles.</summary>
         public float period;
+        /// <summary>Splash: seconds a droplet is in the air at the start of each cycle (default 40 % of <see cref="period"/>).</summary>
+        public float life;
         public float phase;
         /// <summary>Additive blend (glows); falls back to alpha blend when the shader is missing.</summary>
         public bool additive;
         /// <summary>Overlay sprite source: "mask" (masked still pixels, shaded white, tinted), "maskColor" (masked still pixels
         /// in their own colours), "flame", "star", "puff", "sheet". For <c>layer</c>: the part name ("wheel" → &lt;key&gt;_layer_wheel).</summary>
         public string sprite;
-        /// <summary>Generated sprite size [w, h] (smoke: first puff), smoke: last puff size.</summary>
+        /// <summary>Generated sprite size [w, h] (smoke: first puff; ripple: first ring; splash: one droplet), smoke / ripple: last size.</summary>
         public int[] size;
         public int[] growTo;
-        /// <summary>Smoke: puffs in flight; flicker: shape variants.</summary>
+        /// <summary>Smoke: puffs in flight; flicker: shape variants; ripple: rings in flight; splash: droplets per burst.</summary>
         public int count;
-        /// <summary>Smoke: total rise / sideways drift in texels over a puff's life.</summary>
+        /// <summary>Smoke: total rise / sideways drift in texels over a puff's life; splash: arc height / sideways reach of a droplet.</summary>
         public int rise, drift;
-        /// <summary>Smoke: alpha per life quarter (4 values).</summary>
+        /// <summary>Smoke / ripple / splash: alpha per life quarter (4 values).</summary>
         public float[] alphaSteps;
         /// <summary>Toggle: steps of the cycle the sprite is shown; flicker "cycle" mode shows one point per step.</summary>
         public int[] onSteps;
@@ -157,6 +170,11 @@ namespace IdleGrounds.Game
 
         public bool IsBaked => kind == CodeAnimKind.Sway || kind == CodeAnimKind.Shift || kind == CodeAnimKind.Scroll || kind == CodeAnimKind.Line;
         public bool HasRect => rect != null && rect.Length >= 4;
+        /// <summary>Water overlays: they stay on the water line while the still bobs (<see cref="CodeAnimator.GroundLift"/>).</summary>
+        public bool OnGround => kind == CodeAnimKind.Ripple || kind == CodeAnimKind.Splash;
+        /// <summary>Overlays cut from the still's own pixels (they follow the shown state frame in overlay-only mode).</summary>
+        public bool CutFromStill => kind == CodeAnimKind.Glow || (kind == CodeAnimKind.Flicker && (sprite == "mask" || sprite == "maskColor"))
+            || (kind == CodeAnimKind.Toggle && sprite != "sheet");
         /// <summary>A layer that turns in the plane of an ellipse (a wheel seen from the side), see <see cref="ellipse"/>.</summary>
         public bool IsEllipseSpin => kind == CodeAnimKind.Layer && mode == "ellipseSpin";
 
@@ -164,17 +182,18 @@ namespace IdleGrounds.Game
         {
             kind = ParseKind(type);
             if (string.IsNullOrEmpty(axis)) axis = kind == CodeAnimKind.Sway ? "x" : "y";
-            if (period <= 0f) period = kind == CodeAnimKind.Smoke ? 2.4f : 1.2f;
+            if (period <= 0f) period = kind == CodeAnimKind.Smoke ? 2.4f : kind == CodeAnimKind.Ripple ? 1.8f : kind == CodeAnimKind.Splash ? 1.6f : 1.2f;
+            if (life <= 0f) life = 0.4f * period;
             if (alpha == null || alpha.Length < 2) alpha = kind == CodeAnimKind.Glow ? new[] { 0.25f, 0.75f } : new[] { 0.75f, 1f };
             if (alphaSteps == null || alphaSteps.Length == 0) alphaSteps = new[] { 0.75f, 0.75f, 0.5f, 0.25f };
             if (string.IsNullOrEmpty(sprite)) sprite = kind == CodeAnimKind.Smoke ? "puff" : kind == CodeAnimKind.Toggle ? "sheet" : "mask";
-            if (count <= 0) count = kind == CodeAnimKind.Smoke ? 4 : kind == CodeAnimKind.Flicker ? 4 : 1;
+            if (count <= 0) count = kind == CodeAnimKind.Smoke ? 4 : kind == CodeAnimKind.Flicker ? 4 : kind == CodeAnimKind.Ripple ? 2 : kind == CodeAnimKind.Splash ? 4 : 1;
             if (IsEllipseSpin)
             {
                 if (count <= 1) count = 16;
                 if (spin == 0f) spin = -45f;
             }
-            if (string.IsNullOrEmpty(calm)) calm = kind == CodeAnimKind.Smoke ? "hide" : "rest";
+            if (string.IsNullOrEmpty(calm)) calm = kind == CodeAnimKind.Smoke || OnGround ? "hide" : "rest";
             colA = ParseColor(colorA, Color.white);
             colB = ParseColor(colorB, colA);
         }
@@ -203,6 +222,8 @@ namespace IdleGrounds.Game
                 case "smoke": case "steam": return CodeAnimKind.Smoke;
                 case "toggle": return CodeAnimKind.Toggle;
                 case "layer": return CodeAnimKind.Layer;
+                case "ripple": return CodeAnimKind.Ripple;
+                case "splash": return CodeAnimKind.Splash;
                 default: return CodeAnimKind.Unknown;
             }
         }
@@ -261,6 +282,33 @@ namespace IdleGrounds.Game
             if (byKey != null) return;
             var ta = Resources.Load<TextAsset>(ResourceName);
             Use(ta != null ? Parse(ta.text) : null);
+        }
+
+        /// <summary>
+        /// Entry for a node / fixture still: first the key named by the sprite ("fix_spring_snow@64" → fix_spring_snow,
+        /// "node_ore_1x1_64x96_2f@64_0" → node_ore_1x1; an Island swap keeps the shared art key), then <paramref name="artKey"/>.
+        /// Only an entry whose <c>still</c> size equals the sprite's rect counts, so a 32-px fallback (and its hand-drawn loop)
+        /// never picks up the config written for its @64 still. Null when none.
+        /// </summary>
+        public static CodeAnimEntry FindForStill(string artKey, Sprite still)
+        {
+            if (still == null) return null;
+            int w = Mathf.RoundToInt(still.rect.width), h = Mathf.RoundToInt(still.rect.height);
+            var e = Find(KeyFromSpriteName(still.name));
+            if (e != null && e.StillW == w && e.StillH == h) return e;
+            e = Find(artKey);
+            return e != null && e.StillW == w && e.StillH == h ? e : null;
+        }
+
+        /// <summary>Art key of a sprite name: drops the density tag and frame index ("@64", "@64_1") and the strip size tag
+        /// ("_128x160_2f"): "node_ironvein_128x160_2f@64_0" → "node_ironvein".</summary>
+        public static string KeyFromSpriteName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return name;
+            int at = name.IndexOf('@');
+            string k = at >= 0 ? name.Substring(0, at) : name;
+            var m = System.Text.RegularExpressions.Regex.Match(k, @"^(.*)_\d+x\d+_\d+f(_\d+)?$");
+            return m.Success ? m.Groups[1].Value : k;
         }
 
         /// <summary>Entry for an art key ("bld_kiln", "npc_kang"), or null.</summary>

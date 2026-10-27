@@ -625,6 +625,75 @@
       "effects": [
         { "type": "sway", "name": "plant sway", "rect": [0, 36, 128, 100], "pivot": [64, 150], "axis": "x", "offsets": [0, 1, 0, -1] }
       ]
+    },
+    {
+      "key": "node_ore_1x1",
+      "note": "Strip node_ore_1x1_64x96_2f@64 (Nodes-64-002, step C; art key node_ore). Overlay-only: NodeView shows the intact / cracked frame, the code adds a rare silver glint sweep over 3 mid-grey rock facets (a white glint does not read on the white highlights; away from the crack x25-32, y57-78).",
+      "still": [64, 96], "fps": 4, "steps": 4, "play": "always", "overlayOnly": true,
+      "effects": [
+        { "type": "flicker", "name": "glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "points": [39, 62, 19, 66, 35, 83], "onSteps": [10], "colorA": "#E8ECF3", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "node_ore_2x2",
+      "note": "Strip node_ore_2x2_128x160_2f@64 (Nodes-64-002, step C). Overlay-only: rare silver glint sweep over 4 mid-grey boulder facets (away from the crack x57-67, y66-118).",
+      "still": [128, 160], "fps": 4, "steps": 4, "play": "always", "overlayOnly": true,
+      "effects": [
+        { "type": "flicker", "name": "glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "points": [27, 80, 97, 91, 40, 99, 86, 104], "onSteps": [12], "colorA": "#E8ECF3", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "node_ironvein",
+      "note": "Strip node_ironvein_128x160_2f@64 (Nodes-64-002, step C). Overlay-only: the rusty-orange / gold veins pulse softly (cut per frame, so the cracked frame glows along its own veins) and a silver glint runs over 4 mid-grey rock facets beside the silver flecks (away from the crack x60-72).",
+      "still": [128, 160], "fps": 4, "steps": 4, "play": "always", "overlayOnly": true,
+      "effects": [
+        { "type": "glow", "name": "vein glow", "rect": [20, 60, 100, 92], "masks": [ { "hue": [10, 55], "sat": [0.35, 1], "val": [0.7, 1] } ],
+          "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0, 0.5], "period": 2.8, "additive": true },
+        { "type": "flicker", "name": "glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "points": [45, 73, 88, 81, 32, 85, 96, 101], "onSteps": [12], "colorA": "#E8ECF3", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "node_jadevein",
+      "note": "Strip node_jadevein_128x160_2f@64 (Nodes-64-002, step C). Overlay-only: jade glints run over 4 grey rock facets beside the veins (away from the crack x58-69, y61-117) and the bright jade breathes very faintly.",
+      "still": [128, 160], "fps": 4, "steps": 4, "play": "always", "overlayOnly": true,
+      "effects": [
+        { "type": "glow", "name": "jade breath", "rect": [18, 64, 100, 92], "masks": [ { "hue": [135, 160], "sat": [0.25, 1], "val": [0.75, 1] } ],
+          "colorA": "#2F9A7A", "colorB": "#A8ECC0", "alpha": [0, 0.25], "period": 3.2, "additive": true },
+        { "type": "flicker", "name": "glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "points": [85, 75, 35, 91, 104, 105, 42, 108], "onSteps": [10], "colorA": "#A8ECC0", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "node_fish",
+      "note": "Still node_fish@64 (Nodes-64-003, step C). While surfaced (NodeView bobs the koi): two ripple rings grow out from the splash ring at the waterline (back half behind the koi, front half in front) and a few droplets hop out sideways once per cycle; both stay on the water while the koi bobs.",
+      "still": [64, 96], "fps": 8, "steps": 4, "play": "surfaced",
+      "effects": [
+        { "type": "ripple", "name": "rings", "points": [31, 88], "size": [60, 16], "growTo": [84, 26], "count": 2, "period": 1.6,
+          "alphaSteps": [0.75, 0.5, 0.5, 0.25], "colorA": "#C4F6FF" },
+        { "type": "splash", "name": "splash", "points": [31, 84], "size": [2, 2], "count": 4, "period": 1.6, "life": 0.5, "rise": 10, "drift": 18,
+          "alphaSteps": [1, 1, 0.75, 0.5], "colorA": "#5ED4E8", "sort": 1 }
+      ]
+    },
+    {
+      "key": "node_algae",
+      "note": "Still node_algae@64 (Nodes-64-003, step C). While surfaced (NodeView bobs the mat): two slow ripple rings around the mat at the waterline; no splash (a calm mat).",
+      "still": [64, 96], "fps": 8, "steps": 4, "play": "surfaced",
+      "effects": [
+        { "type": "ripple", "name": "rings", "points": [32, 78], "size": [66, 36], "growTo": [86, 46], "count": 2, "period": 2.4,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "colorA": "#C4F6FF" }
+      ]
+    },
+    {
+      "key": "fix_spring_snow",
+      "note": "Still fix_spring_snow@64 (Fixtures-64-002 rejected for the 432-px hole; the resend Fixtures-64-004 activates this entry: the Fishing art key stays fix_spring, NodeView finds this entry by the sprite name). Basin water bands drift sideways, the spout trickle runs down, steam puffs rise from the warm water above the rim. Until the accepted still is in, the 32-px spring keeps its hand-drawn flow loop (this entry needs a 128x160 still).",
+      "still": [128, 160], "fps": 4, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "scroll", "name": "basin water", "rect": [18, 56, 92, 41], "axis": "x", "speed": 1, "masks": [ { "hue": [185, 215], "sat": [0.4, 1], "val": [0.3, 1] } ] },
+        { "type": "scroll", "name": "spout trickle", "rect": [52, 24, 7, 18], "axis": "y", "speed": 1, "masks": [ { "hue": [185, 215], "sat": [0.4, 1], "val": [0.3, 1] } ] },
+        { "type": "steam", "name": "steam left", "points": [42, 58], "size": [5, 4], "growTo": [14, 10], "rise": 28, "drift": -3, "count": 3, "period": 2.6,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "calm": "hide" },
+        { "type": "steam", "name": "steam right", "points": [90, 62], "size": [5, 4], "growTo": [14, 10], "rise": 24, "drift": 3, "count": 3, "period": 3.0,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "calm": "hide" }
+      ]
     }
   ]
 }

@@ -44,7 +44,10 @@ namespace IdleGrounds.Game.Tests
                 Assert.Greater(e.StillW, 0, e.key); Assert.Greater(e.StillH, 0, e.key);
                 if (e.keepDeliveredLoop) { Assert.IsFalse(e.HasEffects, e.key + ": accepted loop keeps no code effects"); continue; }
                 Assert.IsTrue(e.HasEffects, e.key);
-                Assert.AreEqual(e.key.StartsWith("npc_") || e.key.StartsWith("fix_") || e.key.StartsWith("node_"), e.PlaysAlways, e.key + ": NPCs, fixtures and nodes idle always, buildings only while working");
+                if (e.PlaysWhileSurfaced) Assert.IsTrue(e.key.StartsWith("node_"), e.key + ": only surfacing nodes play while surfaced");
+                else Assert.AreEqual(e.key.StartsWith("npc_") || e.key.StartsWith("fix_") || e.key.StartsWith("node_"), e.PlaysAlways, e.key + ": NPCs, fixtures and nodes idle always, buildings only while working");
+                if (e.overlayOnly)
+                    foreach (var x in e.effects) Assert.IsFalse(x.IsBaked || x.kind == CodeAnimKind.Layer, e.key + "/" + x.name + ": overlay-only entries draw overlays only");
                 foreach (var x in e.effects)
                 {
                     string id = e.key + "/" + x.name;
@@ -62,6 +65,7 @@ namespace IdleGrounds.Game.Tests
                     }
                     if (x.kind == CodeAnimKind.Glow || x.kind == CodeAnimKind.Flicker) Assert.That(x.alpha[0], Is.InRange(0f, 1f), id);
                     if (x.kind == CodeAnimKind.Smoke) Assert.AreEqual("hide", x.calm, id + ": no smoke in calm motion");
+                    if (x.OnGround) { Assert.AreEqual("hide", x.calm, id + ": no ripples in calm motion"); Assert.That(x.points, Is.Not.Null.And.Length.EqualTo(2), id + ": one waterline centre"); }
                     if (x.kind == CodeAnimKind.Layer && x.offsets != null) Assert.AreEqual(0, x.offsets.Length % 2, id + ": slide = [dx, dy] pairs");
                 }
             }
@@ -412,6 +416,340 @@ namespace IdleGrounds.Game.Tests
             Assert.AreEqual(ca, cc);
             for (int k = 0; k < a.Length; k++) Assert.AreEqual(0, Diff(a[k], c[k]), "affine frame " + k);
             Assert.IsFalse(CodeAnimBake.EllipseMatrix(new[] { 0f, 0f, 0f, 0f }, out _), "degenerate spec");
+        }
+
+        // ------------------------------------------------------------ step C nodes: overlay-only states, ripples, the spring
+
+        static readonly string ProjectRoot = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, ".."));
+
+        /// <summary>A PNG file as a top-left PixelImage (CPU decode: works in batch mode without a graphics device).</summary>
+        PixelImage Png(string relPath)
+        {
+            string p = System.IO.Path.Combine(ProjectRoot, relPath);
+            if (!System.IO.File.Exists(p)) return null;
+            var t = new Texture2D(2, 2, TextureFormat.RGBA32, false); trash.Add(t);
+            Assert.IsTrue(t.LoadImage(System.IO.File.ReadAllBytes(p)), relPath);
+            var raw = t.GetPixels32();
+            var img = new PixelImage(t.width, t.height);
+            for (int y = 0; y < t.height; y++) System.Array.Copy(raw, (t.height - 1 - y) * t.width, img.px, y * t.width, t.width);
+            return img;
+        }
+
+        /// <summary>Readable sprites of a w×h image (frames side by side), bottom-centre pivot like the integrated strips.</summary>
+        Sprite[] Frames(PixelImage img, int fw, float ppu, string name)
+        {
+            var t = new Texture2D(img.w, img.h, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point }; trash.Add(t);
+            var flip = new Color32[img.w * img.h];
+            for (int y = 0; y < img.h; y++) System.Array.Copy(img.px, y * img.w, flip, (img.h - 1 - y) * img.w, img.w);
+            t.SetPixels32(flip); t.Apply();
+            var a = new Sprite[img.w / fw];
+            for (int i = 0; i < a.Length; i++)
+            {
+                a[i] = Sprite.Create(t, new Rect(i * fw, 0, fw, img.h), new Vector2(0.5f, 0f), ppu, 0, SpriteMeshType.FullRect);
+                a[i].name = a.Length > 1 ? name + "_" + i : name; trash.Add(a[i]);
+            }
+            return a;
+        }
+
+        /// <summary>Two 64x96 state frames: frame 1 = frame 0 with a dark 2-px "crack" through the blue band rows.</summary>
+        Sprite[] StateFrames()
+        {
+            var img = new PixelImage(128, 96);
+            for (int y = 0; y < 96; y++) for (int x = 0; x < 64; x++)
+                {
+                    Color32 c = x > 8 && x < 56 && y < 86 ? (y % 7 == 0 ? Blue : (x % 5 == 0 ? White : Red)) : new Color32(0, 0, 0, 0);
+                    img.Set(x, y, c);
+                    if (c.a == 255 && (x == 30 || x == 31) && y > 20 && y < 60) c = new Color32(13, 15, 20, 255);
+                    img.Set(64 + x, y, c);
+                }
+            return Frames(img, 64, 64f, "node_test_64x96_2f@64");
+        }
+
+        const string StateFx =
+            "{\"type\":\"glow\",\"name\":\"g\",\"rect\":[10,10,44,70],\"masks\":[{\"hue\":[190,215],\"sat\":[0.4,1],\"val\":[0.3,1]}],\"colorA\":\"#5ED4E8\",\"colorB\":\"#F2C94C\",\"alpha\":[0,0.5],\"period\":1.1,\"additive\":true}," +
+            "{\"type\":\"flicker\",\"name\":\"gl\",\"sprite\":\"glint\",\"size\":[5,5],\"mode\":\"cycle\",\"points\":[20,30,40,50],\"onSteps\":[4],\"colorA\":\"#E8ECF3\",\"alpha\":[0.75,0.75],\"calm\":\"hide\"}," +
+            "{\"type\":\"sway\",\"name\":\"ignored\",\"rect\":[10,10,40,40],\"pivot\":[30,49],\"offsets\":[0,2,0,-2]}";
+
+        [Test]
+        public void OverlayOnly_Keeps_The_Hit_Frame_And_Its_Cuts_Follow_The_State()
+        {
+            Juice.SetReduceMotion(false);
+            var f = CodeAnimLibrary.Parse("{\"entries\":[{\"key\":\"node_test\",\"still\":[64,96],\"fps\":4,\"steps\":4,\"play\":\"always\",\"overlayOnly\":true,\"effects\":[" + StateFx + "]}]}");
+            var frames = StateFrames();
+            var go = new GameObject("codeanim-state"); trash.Add(go);
+            var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = frames[0];
+            var ca = CodeAnimator.For(sr);
+            Assert.IsTrue(ca.ConfigureOverlayUncached(f.entries[0], sr, frames));
+            Assert.IsTrue(ca.OverlayOnly);
+            Assert.AreEqual(0, ca.BaseFrameCount, "no baked frames in overlay-only mode (the sway is ignored)");
+            Assert.AreEqual(1 + 2, ca.SlotCount, "glow + 2 glint points");
+            SpriteRenderer glow = null;
+            ca.Tick(0.4f);
+            for (int i = 0; i < ca.SlotCount; i++) if (ca.SlotRenderer(i).sprite != null && ca.SlotRenderer(i).sprite.name.Contains("_g_s")) glow = ca.SlotRenderer(i);
+            Assert.IsNotNull(glow, "glow slot");
+
+            // intact: the owner's frame 0 stays, the glow is the cut of frame 0
+            for (float t = 0f; t < 3f; t += 0.11f) { ca.Tick(t); Assert.AreSame(frames[0], sr.sprite, "intact frame kept at t=" + t); }
+            ca.Tick(0.4f); StringAssert.EndsWith("_g_s0", glow.sprite.name);
+            // first hit: the owner shows frame 1; no tick puts frame 0 back, and the glow follows the crack (cut of frame 1)
+            sr.sprite = frames[1];
+            bool glintSeen = false;
+            for (float t = 3f; t < 9f; t += 0.07f)
+            {
+                ca.Tick(t);
+                Assert.AreSame(frames[1], sr.sprite, "hit frame survives the tick at t=" + t);
+                for (int i = 0; i < ca.SlotCount; i++)
+                {
+                    var r = ca.SlotRenderer(i);
+                    if (!r.enabled) continue;
+                    var p = r.transform.localPosition * 64f;
+                    Assert.AreEqual(Mathf.Round(p.x), p.x, 1e-3f); Assert.AreEqual(Mathf.Round(p.y), p.y, 1e-3f);
+                    if (r.sprite.name.Contains("_gl")) glintSeen = true;
+                }
+                if (glow.enabled) StringAssert.EndsWith("_g_s1", glow.sprite.name, "glow cut of the hit frame");
+            }
+            Assert.IsTrue(glintSeen, "glints run on the hit frame too");
+            // the crack pixels are not part of the hit frame's glow cut (they are dark rock now): glow rect starts at (10, 10)
+            // (the cut sprites are not readable without a graphics device: check the same cut on the CPU images)
+            var gfx = f.entries[0].effects[0];
+            var i0 = PixelImage.FromSprite(frames[0]); var i1 = PixelImage.FromSprite(frames[1]);
+            var gr = CodeAnimBake.Rect(gfx, i0);
+            var cut0 = CodeAnimBake.Cut(gfx, i0, gr, false); var cut1 = CodeAnimBake.Cut(gfx, i1, gr, false);
+            Assert.AreEqual(255, cut1.Get(20 - 10, 21 - 10).a, "blue band pixel glows");
+            Assert.AreEqual(0, cut1.Get(30 - 10, 21 - 10).a, "cracked pixel does not glow in the hit frame");
+            Assert.AreEqual(255, cut0.Get(30 - 10, 21 - 10).a, "the same pixel glows on the intact frame");
+            sr.sprite = frames[0]; ca.Tick(0.4f);
+            StringAssert.EndsWith("_g_s0", glow.sprite.name, "back to the intact cut when the owner shows frame 0 again");
+            Assert.AreEqual(glow.sprite.rect.size, new Vector2(gr.width, gr.height));
+
+            // not playing / calm / Clear never write the sprite either
+            sr.sprite = frames[1];
+            ca.Playing = false; ca.Tick(10f); Assert.AreSame(frames[1], sr.sprite);
+            Juice.SetReduceMotion(true);
+            for (float t = 0f; t < 2f; t += 0.2f) { ca.Tick(t); Assert.AreSame(frames[1], sr.sprite, "calm"); }
+            for (int i = 0; i < ca.SlotCount; i++) if (ca.SlotRenderer(i).enabled) Assert.IsFalse(ca.SlotRenderer(i).sprite.name.Contains("_gl"), "no glints when calm");
+            ca.Clear(); Assert.AreSame(frames[1], sr.sprite, "Clear keeps the owner's frame");
+        }
+
+        [Test]
+        public void OverlayOnly_Entry_Through_Configure_Never_Writes_The_Sprite()
+        {
+            Juice.SetReduceMotion(false);
+            var f = CodeAnimLibrary.Parse("{\"entries\":[{\"key\":\"node_test\",\"still\":[64,96],\"play\":\"always\",\"overlayOnly\":true,\"effects\":[" + StateFx + "]}]}");
+            var frames = StateFrames();
+            var go = new GameObject("codeanim-state2"); trash.Add(go);
+            var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = frames[0];
+            var ca = CodeAnimator.For(sr);
+            Assert.IsTrue(ca.Configure(f.entries[0], sr, frames[0], null), "Configure routes an overlayOnly entry to the overlay mode");
+            Assert.IsTrue(ca.OverlayOnly);
+            sr.sprite = frames[1];
+            for (float t = 0f; t < 4f; t += 0.13f) { ca.Tick(t); Assert.AreSame(frames[1], sr.sprite); }
+            ca.Clear();
+        }
+
+        [Test]
+        public void Sprite_Names_Give_The_Key_And_Only_A_Matching_Still_Finds_Its_Entry()
+        {
+            Assert.AreEqual("node_ironvein", CodeAnimLibrary.KeyFromSpriteName("node_ironvein_128x160_2f@64_0"));
+            Assert.AreEqual("node_ore_1x1", CodeAnimLibrary.KeyFromSpriteName("node_ore_1x1_64x96_2f@64_1"));
+            Assert.AreEqual("fix_spring_snow", CodeAnimLibrary.KeyFromSpriteName("fix_spring_snow@64"));
+            Assert.AreEqual("fix_spring_snow", CodeAnimLibrary.KeyFromSpriteName("fix_spring_snow"));
+            Assert.AreEqual("node_ironvein", CodeAnimLibrary.KeyFromSpriteName("node_ironvein_64x80_2f_1"));
+
+            Sprite Named(int w, int h, string n) { var s = Still(w, h, 64f); s.name = n; return s; }
+            // the Fishing spring: art key fix_spring (Island swap), 32-px still keeps its flow loop, the @64 still gets the code
+            Assert.IsNull(CodeAnimLibrary.FindForStill("fix_spring", Named(64, 80, "fix_spring_snow")), "32-px spring: no code animation");
+            Assert.AreEqual("fix_spring_snow", CodeAnimLibrary.FindForStill("fix_spring", Named(128, 160, "fix_spring_snow@64"))?.key);
+            Assert.AreEqual("node_ore_1x1", CodeAnimLibrary.FindForStill("node_ore", Named(64, 96, "node_ore_1x1_64x96_2f@64_0"))?.key);
+            Assert.AreEqual("node_ore_2x2", CodeAnimLibrary.FindForStill("node_ore_2x2", Named(128, 160, "node_ore_2x2_128x160_2f@64_0"))?.key);
+            Assert.IsNull(CodeAnimLibrary.FindForStill("node_ironvein", Named(64, 80, "node_ironvein_64x80_2f_0")), "32-px vein: no code animation");
+            Assert.AreEqual("node_crop", CodeAnimLibrary.FindForStill("node_crop", Named(192, 224, "node_crop@64"))?.key, "art-key lookup still works");
+        }
+
+        const string WaterFx =
+            "{\"type\":\"ripple\",\"name\":\"rings\",\"points\":[31,88],\"size\":[40,10],\"growTo\":[64,20],\"count\":2,\"period\":1.6,\"alphaSteps\":[0.75,0.5,0.5,0.25],\"colorA\":\"#C4F6FF\"}," +
+            "{\"type\":\"splash\",\"name\":\"splash\",\"points\":[31,84],\"size\":[2,2],\"count\":4,\"period\":1.6,\"life\":0.5,\"rise\":10,\"drift\":18,\"colorA\":\"#E8ECF3\",\"sort\":1}";
+
+        [Test]
+        public void Ripple_Rings_Grow_On_The_Grid_Stay_On_The_Water_And_Rest_When_Calm()
+        {
+            Juice.SetReduceMotion(false);
+            var f = CodeAnimLibrary.Parse("{\"entries\":[{\"key\":\"node_test\",\"still\":[64,96],\"fps\":8,\"play\":\"surfaced\",\"effects\":[" + WaterFx + "]}]}");
+            var e = f.entries[0];
+            Assert.IsTrue(e.PlaysWhileSurfaced); Assert.IsFalse(e.PlaysAlways);
+            Assert.AreEqual(CodeAnimKind.Ripple, e.effects[0].kind); Assert.AreEqual(CodeAnimKind.Splash, e.effects[1].kind);
+            Assert.IsTrue(e.effects[0].OnGround); Assert.Less(e.effects[0].CalmAlpha, 0f, "ripples hide when calm");
+            var go = new GameObject("codeanim-ripple"); trash.Add(go);
+            var sr = go.AddComponent<SpriteRenderer>(); var still = Still(64, 96, 64f); sr.sprite = still; sr.sortingOrder = 5;
+            var ca = CodeAnimator.For(sr);
+            Assert.IsTrue(ca.ConfigureUncached(e, sr, still, null));
+            Assert.AreEqual(2 * 2 + 4, ca.SlotCount, "2 rings x (back + front) + 4 droplets");
+
+            // not surfaced: nothing on the water
+            ca.Playing = false;
+            for (float t = 0f; t < 2f; t += 0.1f) { ca.Tick(t); for (int i = 0; i < ca.SlotCount; i++) Assert.IsFalse(ca.SlotRenderer(i).enabled); }
+
+            ca.Playing = true;
+            var widths = new HashSet<float>();
+            int drops = 0, dropsUp = 0;
+            for (float t = 0.01f; t < 6.4f; t += 0.05f)
+            {
+                ca.Tick(t);
+                for (int i = 0; i < ca.SlotCount; i++)
+                {
+                    var r = ca.SlotRenderer(i);
+                    if (!r.enabled) continue;
+                    var p = r.transform.localPosition * 64f;
+                    Assert.AreEqual(Mathf.Round(p.x), p.x, 1e-3f, r.sprite.name); Assert.AreEqual(Mathf.Round(p.y), p.y, 1e-3f, r.sprite.name);
+                    Assert.AreEqual(Mathf.Round(r.sprite.pivot.x), r.sprite.pivot.x, 1e-3f); Assert.AreEqual(Mathf.Round(r.sprite.pivot.y), r.sprite.pivot.y, 1e-3f);
+                    float a = r.color.a;
+                    Assert.That(a, Is.EqualTo(64f / 255f).Within(1e-4f).Or.EqualTo(128f / 255f).Within(1e-4f).Or.EqualTo(191f / 255f).Within(1e-4f).Or.EqualTo(1f).Within(1e-4f), r.sprite.name + " alpha " + a);
+                    if (r.sprite.name.Contains("_ring"))
+                    {
+                        widths.Add(r.sprite.rect.width);
+                        bool back = r.sprite.name.EndsWith("b");
+                        if (back) Assert.Less(r.sortingOrder, sr.sortingOrder, "back half behind the still"); else Assert.Greater(r.sortingOrder, sr.sortingOrder, "front half in front");
+                        Assert.AreEqual(new Vector3((31 - 32) / 64f, (96 - 88) / 64f, 0f), r.transform.localPosition, "ring centred on the waterline texel");
+                    }
+                    else { drops++; if (p.y > (96 - 84) + 0.5f) dropsUp++; }
+                }
+            }
+            Assert.AreEqual(4, widths.Count, "rings grow through 4 sizes");
+            Assert.Greater(drops, 0); Assert.Greater(dropsUp, 0, "droplets hop above the water");
+
+            // the still bobs: water overlays stay put (GroundLift moves them down by the lift, in whole texels)
+            ca.Tick(0.3f);
+            var at = new Vector3[ca.SlotCount]; var on = new bool[ca.SlotCount];
+            for (int i = 0; i < ca.SlotCount; i++) { at[i] = ca.SlotRenderer(i).transform.localPosition; on[i] = ca.SlotRenderer(i).enabled; }
+            ca.GroundLift = 3f / 64f; ca.Tick(0.3f);
+            int moved = 0;
+            for (int i = 0; i < ca.SlotCount; i++)
+                if (on[i]) { Assert.AreEqual(at[i] - new Vector3(0f, 3f / 64f, 0f), ca.SlotRenderer(i).transform.localPosition, "lift 3 texels -> overlay 3 texels down"); moved++; }
+            Assert.Greater(moved, 0);
+            ca.GroundLift = 0.0371f; ca.Tick(0.3f);
+            for (int i = 0; i < ca.SlotCount; i++)
+                if (ca.SlotRenderer(i).enabled) { var p = ca.SlotRenderer(i).transform.localPosition * 64f; Assert.AreEqual(Mathf.Round(p.y), p.y, 1e-3f, "lift snaps to the texel grid"); }
+            ca.GroundLift = 0f;
+
+            Juice.SetReduceMotion(true);
+            for (float t = 0f; t < 3f; t += 0.1f) { ca.Tick(t); for (int i = 0; i < ca.SlotCount; i++) Assert.IsFalse(ca.SlotRenderer(i).enabled, "calm: no ripples, no splash"); }
+        }
+
+        [Test]
+        public void Ring_And_Drop_Sprites_Are_Thin_Connected_Outlines()
+        {
+            foreach (var (w, h) in new[] { (60, 16), (84, 26), (41, 11) })
+            {
+                var back = CodeAnimBake.Ring(w, h, false); var front = CodeAnimBake.Ring(w, h, true);
+                int nb = 0, nf = 0;
+                for (int y = 0; y < h; y++) for (int x = 0; x < w; x++)
+                    {
+                        bool b = back.Get(x, y).a == 255, fr = front.Get(x, y).a == 255;
+                        Assert.IsFalse(b && fr, "halves do not overlap");
+                        if (b) { nb++; Assert.Less(y, h / 2); }
+                        if (fr) { nf++; Assert.GreaterOrEqual(y, h / 2); }
+                    }
+                Assert.GreaterOrEqual(nb, w); Assert.GreaterOrEqual(nf, w);
+                Assert.AreEqual(0, front.Get(w / 2, h - 3).a, "hollow: no fill inside the ring");
+                Assert.AreEqual(255, front.Get(w / 2, h - 1).a, "front rim on the bottom row");
+                Assert.AreEqual(255, back.Get(w / 2, 0).a, "back rim on the top row");
+            }
+            var d = CodeAnimBake.Drop(3, 3);
+            Assert.AreEqual(0, d.Get(0, 0).a); Assert.AreEqual(255, d.Get(1, 0).a); Assert.AreEqual(255, d.Get(0, 2).a);
+            var g = CodeAnimBake.Glint(5);
+            Assert.AreEqual(255, g.Get(2, 2).r); Assert.AreEqual(0, g.Get(0, 0).a);
+        }
+
+        [Test]
+        public void StepC_Glints_Sit_On_Unchanged_Rock_And_Glows_Have_Pixels_In_Both_Frames()
+        {
+            var files = new Dictionary<string, string>
+            {
+                { "node_ore_1x1", "node_ore_1x1_64x96_2f@64.png" }, { "node_ore_2x2", "node_ore_2x2_128x160_2f@64.png" },
+                { "node_ironvein", "node_ironvein_128x160_2f@64.png" }, { "node_jadevein", "node_jadevein_128x160_2f@64.png" },
+            };
+            foreach (var kv in files)
+            {
+                var e = CodeAnimLibrary.Find(kv.Key);
+                Assert.IsNotNull(e, kv.Key); Assert.IsTrue(e.overlayOnly, kv.Key + " overlay-only"); Assert.IsTrue(e.PlaysAlways, kv.Key);
+                var strip = Png("Assets/_Project/Art/Incoming/nodes/" + kv.Value);
+                if (strip == null) Assert.Inconclusive("art missing: " + kv.Value);
+                Assert.AreEqual(e.StillW * 2, strip.w, kv.Key + ": 2-frame strip of the still size"); Assert.AreEqual(e.StillH, strip.h);
+                Color32 At(int frame, int x, int y) => strip.Get(frame * e.StillW + x, y);
+                foreach (var x in e.effects)
+                {
+                    if (x.kind == CodeAnimKind.Flicker && x.points != null)
+                        for (int i = 0; i < x.points.Length; i += 2)
+                        {
+                            int cx = x.points[i], cy = x.points[i + 1] - x.size[1] / 2 - 1;   // glint centre (anchor = bottom-centre of a 5x5 glint)
+                            for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++)
+                                {
+                                    var a = At(0, cx + dx, cy + dy); var b = At(1, cx + dx, cy + dy);
+                                    Assert.AreEqual(255, a.a, $"{kv.Key} glint {i / 2} on the rock (intact)");
+                                    Assert.AreEqual(a, b, $"{kv.Key} glint {i / 2} off the crack (same pixels in both frames)");
+                                }
+                        }
+                    if (x.kind == CodeAnimKind.Glow)
+                        for (int fr = 0; fr < 2; fr++)
+                        {
+                            int n = 0;
+                            for (int y = x.rect[1]; y < x.rect[1] + x.rect[3]; y++) for (int xx = x.rect[0]; xx < x.rect[0] + x.rect[2]; xx++) if (x.InMask(At(fr, xx, y))) n++;
+                            Assert.Greater(n, 40, $"{kv.Key}/{x.name}: glow pixels in frame {fr}");
+                        }
+                }
+            }
+        }
+
+        [Test]
+        public void StepC_Fish_Algae_And_Spring_Entries_Animate_Their_At64_Stills()
+        {
+            Juice.SetReduceMotion(false);
+            foreach (var key in new[] { "node_fish", "node_algae" })
+            {
+                var e = CodeAnimLibrary.Find(key);
+                Assert.IsNotNull(e, key); Assert.IsTrue(e.PlaysWhileSurfaced, key + " ripples only while surfaced");
+                bool ripple = false; foreach (var x in e.effects) if (x.kind == CodeAnimKind.Ripple) ripple = true;
+                Assert.IsTrue(ripple, key + " has ripple rings");
+                var img = Png("Assets/_Project/Art/Incoming/nodes/" + key + "@64.png");
+                if (img == null) Assert.Inconclusive("art missing: " + key);
+                var still = Frames(img, img.w, 64f, key + "@64")[0];
+                Assert.AreSame(e, CodeAnimLibrary.FindForStill(key, still));
+                var go = new GameObject("codeanim-" + key); trash.Add(go);
+                var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = still;
+                var ca = CodeAnimator.For(sr);
+                Assert.IsTrue(ca.ConfigureUncached(e, sr, still, null));
+                ca.Playing = true; int shown = 0;
+                for (float t = 0f; t < 3f; t += 0.1f) { ca.Tick(t); Assert.AreSame(still, sr.sprite); for (int i = 0; i < ca.SlotCount; i++) if (ca.SlotRenderer(i).enabled) shown++; }
+                Assert.Greater(shown, 20, key + ": rings on the water");
+            }
+
+            // the snowy spring: the 32-px still keeps its flow loop; the @64 entry animates a 128x160 still. The accepted
+            // still is pending (Fixtures-64-004), so the rejected v1 (same canvas, same water) stands in for the bake check.
+            var sp = CodeAnimLibrary.Find("fix_spring_snow");
+            Assert.IsNotNull(sp); Assert.IsTrue(sp.PlaysAlways);
+            Assert.AreEqual(128, sp.StillW); Assert.AreEqual(160, sp.StillH);
+            var v32 = Png("Assets/_Project/Art/Incoming/fixtures/fix_spring_snow.png");
+            if (v32 != null) Assert.IsNull(CodeAnimLibrary.FindForStill("fix_spring", Frames(v32, v32.w, 32f, "fix_spring_snow")[0]), "32-px spring keeps its loop");
+            var rej = Png("docs/art/rejected/fix_spring_snow@64_v1_REJECTED.png");
+            if (rej == null) Assert.Inconclusive("rejected spring file missing");
+            var s64 = Frames(rej, rej.w, 64f, "fix_spring_snow@64")[0];
+            Assert.AreSame(sp, CodeAnimLibrary.FindForStill("fix_spring", s64));
+            var go2 = new GameObject("codeanim-spring"); trash.Add(go2);
+            var sr2 = go2.AddComponent<SpriteRenderer>(); sr2.sprite = s64;
+            var ca2 = CodeAnimator.For(sr2);
+            Assert.IsTrue(ca2.ConfigureUncached(sp, sr2, s64, null));
+            Assert.AreEqual(sp.steps, ca2.BaseFrameCount, "water scroll baked into the frames");
+            // the same bake on the CPU (baked frames are not readable without a graphics device)
+            var f0 = new PixelImage(rej); var f1 = new PixelImage(rej);
+            foreach (var x in sp.effects) if (x.IsBaked) { CodeAnimBake.ApplyBaked(x, f0, 0); CodeAnimBake.ApplyBaked(x, f1, 1); }
+            int diff = 0, outside = 0;
+            for (int y = 0; y < 160; y++) for (int x = 0; x < 128; x++)
+                    if (!f0.Get(x, y).Equals(f1.Get(x, y))) { diff++; if (y < 24 || y >= 97) outside++; }
+            Assert.Greater(diff, 50, "basin water moves"); Assert.AreEqual(0, outside, "only the basin and the spout move");
+            int puffs = 0;
+            ca2.Playing = true;
+            for (float t = 0f; t < 4f; t += 0.1f) { ca2.Tick(t); for (int i = 0; i < ca2.SlotCount; i++) if (ca2.SlotRenderer(i).enabled && ca2.SlotRenderer(i).sprite.name.Contains("_puff")) puffs++; }
+            Assert.Greater(puffs, 10, "steam rises");
         }
 
         [Test]
