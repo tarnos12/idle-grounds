@@ -1137,6 +1137,62 @@
       "source": "Idle-Grounds-Creatures-64-009.zip"
     },
     {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-010-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 223,
+      "sha1": "0be841155d1ca6c76be8a6499fb42eaf334fe0a7",
+      "date": "2026-10-27T12:34:40.309Z",
+      "source": "Idle-Grounds-Creatures-64-010.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-010-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 718,
+      "sha1": "11db59a7623955e741d6377f2bfb792c49f80823",
+      "date": "2026-10-27T12:34:40.310Z",
+      "source": "Idle-Grounds-Creatures-64-010.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-011-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 254,
+      "sha1": "ebde9a5646ae48665cccba931e1a7bf9a1fd4721",
+      "date": "2026-10-27T12:38:07.826Z",
+      "source": "Idle-Grounds-Creatures-64-011.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-011-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 718,
+      "sha1": "80b8d581e93f67bb56c6c9ca0cdfe1f8b159576f",
+      "date": "2026-10-27T12:38:07.826Z",
+      "source": "Idle-Grounds-Creatures-64-011.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-014-GENERATION-PROMPTS.txt",
+      "name": "GENERATION-PROMPTS.txt",
+      "size": 420,
+      "sha1": "19f62b9fc730a1ca7e208277b44f5558834473d2",
+      "date": "2026-10-27T12:34:39.564Z",
+      "source": "Idle-Grounds-Creatures-64-014.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-014-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 886,
+      "sha1": "72c91cb7a04c880c0f97f052202aedd5e0b59a92",
+      "date": "2026-10-27T12:34:39.565Z",
+      "source": "Idle-Grounds-Creatures-64-014.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-014-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 713,
+      "sha1": "54ec3073548798f49b1a81e58f98d309e36445cc",
+      "date": "2026-10-27T12:34:39.566Z",
+      "source": "Idle-Grounds-Creatures-64-014.zip"
+    },
+    {
       "path": "_notes/creatures-Idle-Grounds-Layers-64-002-GENERATION-PROMPTS.txt",
       "name": "GENERATION-PROMPTS.txt",
       "size": 202,
@@ -5241,12 +5297,28 @@
       "source": "Idle-Grounds-Creatures-005.zip"
     },
     {
+      "path": "creatures/enemy_boar_die_96x64_4f@64.png",
+      "name": "enemy_boar_die_96x64_4f@64.png",
+      "size": 3449,
+      "sha1": "b8f410a235e0c47891a211336c6e83be3b4211cb",
+      "date": "2026-10-27T12:34:40.306Z",
+      "source": "Idle-Grounds-Creatures-64-010.zip"
+    },
+    {
       "path": "creatures/enemy_boar_hit_48x32_2f.png",
       "name": "enemy_boar_hit_48x32_2f.png",
       "size": 2172,
       "sha1": "43c076740f306a9c9e7225f74c90a4a2232f64ca",
       "date": "2026-10-07T21:43:17.425Z",
       "source": "Idle-Grounds-Creatures-004.zip"
+    },
+    {
+      "path": "creatures/enemy_boar_hit_96x64_2f@64.png",
+      "name": "enemy_boar_hit_96x64_2f@64.png",
+      "size": 1806,
+      "sha1": "eb652f2f4ad6b1f22cc12457651d8dedf0562b4b",
+      "date": "2026-10-27T12:34:40.307Z",
+      "source": "Idle-Grounds-Creatures-64-010.zip"
     },
     {
       "path": "creatures/enemy_boar_idle_48x32_4f.png",
@@ -5257,12 +5329,28 @@
       "source": "Idle-Grounds-Creatures-004.zip"
     },
     {
+      "path": "creatures/enemy_boar_idle_96x64_4f@64.png",
+      "name": "enemy_boar_idle_96x64_4f@64.png",
+      "size": 1841,
+      "sha1": "f22ba5292fb6bd7c37f8c88c805d5bf42c780a30",
+      "date": "2026-10-27T12:34:40.308Z",
+      "source": "Idle-Grounds-Creatures-64-010.zip"
+    },
+    {
       "path": "creatures/enemy_boar_move_48x32_4f.png",
       "name": "enemy_boar_move_48x32_4f.png",
       "size": 3356,
       "sha1": "423a64ad522462300bcfdf287a93e6656ca1c2cc",
       "date": "2026-10-07T21:43:17.426Z",
       "source": "Idle-Grounds-Creatures-004.zip"
+    },
+    {
+      "path": "creatures/enemy_boar_move_96x64_4f@64.png",
+      "name": "enemy_boar_move_96x64_4f@64.png",
+      "size": 3559,
+      "sha1": "1dfc1c13d42b2978c6cfd4976e579fac2ee7d248",
+      "date": "2026-10-27T12:34:40.308Z",
+      "source": "Idle-Grounds-Creatures-64-010.zip"
     },
     {
       "path": "creatures/enemy_fox_die_32x32_4f.png",
@@ -5275,10 +5363,10 @@
     {
       "path": "creatures/enemy_fox_die_64x64_4f@64.png",
       "name": "enemy_fox_die_64x64_4f@64.png",
-      "size": 1985,
-      "sha1": "55c7774ed11de470b5846a094390302d32cf0b47",
-      "date": "2026-10-27T12:02:28.206Z",
-      "source": "Idle-Grounds-Creatures-64-009.zip"
+      "size": 4140,
+      "sha1": "6d068ca0c21c93d1433e8684597e5a9a17d2c3be",
+      "date": "2026-10-27T12:34:39.562Z",
+      "source": "Idle-Grounds-Creatures-64-014.zip"
     },
     {
       "path": "creatures/enemy_fox_hit_32x32_2f.png",
@@ -5291,10 +5379,10 @@
     {
       "path": "creatures/enemy_fox_hit_64x64_2f@64.png",
       "name": "enemy_fox_hit_64x64_2f@64.png",
-      "size": 1206,
-      "sha1": "29477263c1d16444bc601d1b40af5661f984f684",
-      "date": "2026-10-27T12:02:28.207Z",
-      "source": "Idle-Grounds-Creatures-64-009.zip"
+      "size": 2331,
+      "sha1": "026a8458964c85e2532227d872e5cdde8bd7280c",
+      "date": "2026-10-27T12:34:39.563Z",
+      "source": "Idle-Grounds-Creatures-64-014.zip"
     },
     {
       "path": "creatures/enemy_fox_idle_32x32_4f.png",
@@ -5307,10 +5395,10 @@
     {
       "path": "creatures/enemy_fox_idle_64x64_4f@64.png",
       "name": "enemy_fox_idle_64x64_4f@64.png",
-      "size": 1299,
-      "sha1": "f9179b00e27db60976f50423bd451a0d869497a5",
-      "date": "2026-10-27T12:02:28.208Z",
-      "source": "Idle-Grounds-Creatures-64-009.zip"
+      "size": 2335,
+      "sha1": "a8d913e3e079820e107d929db4560118e6f79966",
+      "date": "2026-10-27T12:34:39.563Z",
+      "source": "Idle-Grounds-Creatures-64-014.zip"
     },
     {
       "path": "creatures/enemy_fox_move_32x32_4f.png",
@@ -5323,10 +5411,10 @@
     {
       "path": "creatures/enemy_fox_move_64x64_4f@64.png",
       "name": "enemy_fox_move_64x64_4f@64.png",
-      "size": 2349,
-      "sha1": "b4e73c62d30ac85983fc35cf3da43aa2cc010795",
-      "date": "2026-10-27T12:02:28.209Z",
-      "source": "Idle-Grounds-Creatures-64-009.zip"
+      "size": 3789,
+      "sha1": "59ee99f9ff642ca038f3d2d8e06dc28318ea8d37",
+      "date": "2026-10-27T12:34:39.564Z",
+      "source": "Idle-Grounds-Creatures-64-014.zip"
     },
     {
       "path": "creatures/enemy_wolf_die_48x32_4f.png",
@@ -5337,12 +5425,28 @@
       "source": "Idle-Grounds-Creatures-009.zip"
     },
     {
+      "path": "creatures/enemy_wolf_die_96x64_4f@64.png",
+      "name": "enemy_wolf_die_96x64_4f@64.png",
+      "size": 3378,
+      "sha1": "448abe0cc8c47fc367d5fe7087dd48ccebf943cd",
+      "date": "2026-10-27T12:38:07.822Z",
+      "source": "Idle-Grounds-Creatures-64-011.zip"
+    },
+    {
       "path": "creatures/enemy_wolf_hit_48x32_2f.png",
       "name": "enemy_wolf_hit_48x32_2f.png",
       "size": 1578,
       "sha1": "7546f311a864a88f3ab5a8a9db7e42285b9b85f6",
       "date": "2026-10-21T18:04:01.993Z",
       "source": "Idle-Grounds-Creatures-008.zip"
+    },
+    {
+      "path": "creatures/enemy_wolf_hit_96x64_2f@64.png",
+      "name": "enemy_wolf_hit_96x64_2f@64.png",
+      "size": 2010,
+      "sha1": "015bc4f452516a901417568f02bc8e8f420945dd",
+      "date": "2026-10-27T12:38:07.824Z",
+      "source": "Idle-Grounds-Creatures-64-011.zip"
     },
     {
       "path": "creatures/enemy_wolf_idle_48x32_4f.png",
@@ -5353,12 +5457,28 @@
       "source": "Idle-Grounds-Creatures-008.zip"
     },
     {
+      "path": "creatures/enemy_wolf_idle_96x64_4f@64.png",
+      "name": "enemy_wolf_idle_96x64_4f@64.png",
+      "size": 2177,
+      "sha1": "dd447ba09b2556fc2689c1772e25718f33dc90f0",
+      "date": "2026-10-27T12:38:07.824Z",
+      "source": "Idle-Grounds-Creatures-64-011.zip"
+    },
+    {
       "path": "creatures/enemy_wolf_move_48x32_4f.png",
       "name": "enemy_wolf_move_48x32_4f.png",
       "size": 3750,
       "sha1": "e8c2162b55d00a3ce764e70bcff2779631b9a3a3",
       "date": "2026-10-21T18:04:01.994Z",
       "source": "Idle-Grounds-Creatures-008.zip"
+    },
+    {
+      "path": "creatures/enemy_wolf_move_96x64_4f@64.png",
+      "name": "enemy_wolf_move_96x64_4f@64.png",
+      "size": 3931,
+      "sha1": "f6bfa5358d8bf6512139982a907a0056b2e0ab3c",
+      "date": "2026-10-27T12:38:07.825Z",
+      "source": "Idle-Grounds-Creatures-64-011.zip"
     },
     {
       "path": "creatures/npc_disciple_meditate_32x32_4f.png",
