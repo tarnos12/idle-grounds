@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-27 06:28. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-27 06:56. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**58 of 84 tasks done**, 3 in progress, 4 to do, 4 blocked, 14 waiting.
+**59 of 85 tasks done**, 3 in progress, 4 to do, 4 blocked, 14 waiting.
 
 ## Being worked on now
 
@@ -10,7 +10,6 @@ Updated 2026-10-27 06:28. Source of truth: docs/Design/plan.json, edited with to
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
 - **M3** Art redo: dragon_stir@64, icicle underside, snowfall loop (Creatures-64-007 / Islands-066 / FX-009 rejections): Islands-070 accepted in game 2026-10-27 (v6.32)
 - **M3** Art redo: icicle underside (Islands-066 / -068 rejections; dragon_stir + snowfall passed in v6.26): Islands-070 accepted in game 2026-10-27 (v6.32)
-- **M3** 64 px step C: resource nodes + fixtures: C1-C4 reviewed 2026-10-27 (v6.32): 11 accepted, node_bush@64 + fix_spring_snow@64 to resend (Nodes-64-012, Fixtures-64-004); C5 (Nodes-64-005) on Drive, unreviewed; C6-C11 to deliver
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
@@ -18,7 +17,7 @@ Updated 2026-10-27 06:28. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 43 / 57 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 44 / 58 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -130,8 +129,9 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Generators show a working state (animations never play) | Found 2026-10-27: no building face reports a generator (Algae Farm, Herb Garden, …) as working, so their code animations never run in normal play. Fixed 2026-10-27 (bg/fixes): BuildingSystem.GenProducing (sim, live: built generator, own pile < gen.cap, output pile < outputPileMax) drives GeneratorFaceView.IsActive, so Algae Farm / Herb Garden code animations play while growing and stop when stalled; sim + PlayMode tests. | Claude |
 | Done | Art review: Buildings-64-015 (B4 set 2) + extras repairs (Creatures-64-008, Islands-068, FX-010) | Blast Forge, Koi Pond, Spirit Paddy @64 stills (B4, Phase 3 buildings: files + preview); dragon_stir@64 3rd send (diff); icicle underside redo (Fishing Play before/after); snowfall as one scrolled still (SnowfallOverlay scroll mode). ART-SPEC + Drive mirror. Result: Blast Forge, Koi Pond, Spirit Paddy @64 validated (Phase 3; code-anim entries added); dragon_stir@64 validated (4,376 px, head+neck only); fx_snowfall_256x256_1f accepted (scrolled in code, SnowfallOverlay single-still mode); icicle underside rejected 2nd time (redo). ART-SPEC v6.26. | Claude |
 | Done | Art redo: icicle underside (Islands-066 / -068 rejections; dragon_stir + snowfall passed in v6.26) **(NOW)** | ART-SPEC v6.24 section 3.9.8 Extras review: dragon_stir_320x384_3f@64 frame 1 = sleeping frame 0 with only head and neck moved (max ~4,500 px changed, 0 px in rows y>=240, tail, frames 0 and 2); island_underside_icicles_128x128 redrawn like the _3q rocks with hanging icicle spikes and no snow plate; fx_snowfall loop closed (or one 256x256 still scrolled in code). 2026-10-27 v6.26: dragon_stir@64 validated, snowfall accepted as a scrolled still; island_underside_icicles rejected a 2nd time (flat light blocks, dark icicles, no mist) - redo per ART-SPEC §3.9.8 Buildings-64-015 + extras repairs review. | Artist |
-| Waiting | 64 px step C: resource nodes + fixtures **(NOW)** | ART-SPEC v6.31 section 3.9.8 "Step C": 31 @64 files in sets C1-C11 by Island unlock order (C1 Center first: node_bush_64x96_2f@64, fix_spirittree@64 320x384, fix_quarry@64 128x160), zips Idle-Grounds-Nodes-64-001..011 + Idle-Grounds-Fixtures-64-001..003. Chop/break nodes keep 2 state frames (intact, trimmed/cracked); everything else one still; sparkle, bob, ripple, glow, steam in code; no layers. | Artist |
+| Waiting | 64 px step C: resource nodes + fixtures | ART-SPEC v6.31 section 3.9.8 "Step C": 31 @64 files in sets C1-C11 by Island unlock order (C1 Center first: node_bush_64x96_2f@64, fix_spirittree@64 320x384, fix_quarry@64 128x160), zips Idle-Grounds-Nodes-64-001..011 + Idle-Grounds-Fixtures-64-001..003. Chop/break nodes keep 2 state frames (intact, trimmed/cracked); everything else one still; sparkle, bob, ripple, glow, steam in code; no layers. | Artist |
 | Done | Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070 | In-game art reviewer: per-file checks, integrate, Play review at the zoom steps, code motion for fixtures (Spirit Tree sparkles), accept/reject, ART-SPEC + Drive mirror. | Claude |
+| Done | Art review: 64 px step C sets C5-C11 (Nodes-64-005..011, Fixtures-64-003) | In-game art reviewer: per-file checks (canvas, palette, alpha, outline, noise, one shape, frame-1 diff, upscale), integrate Grove/Volcano/Celestial nodes and Play at the zoom steps intact and after a hit; Phase 3+ nodes and the peach tree validated as files + preview; accept/validate/reject, ART-SPEC + Drive mirror. | Claude |
 | To do | Code: step C node motions (overlay-only CodeAnimator for 2-frame nodes, ripple rings for surfacing nodes) | CodeAnimator.Tick sets the still every frame, so 2-frame chop/break nodes (ironvein, jadevein, later herbbush, firevein, thundertree, soulvine) cannot get glint/pulse overlays without undoing the hit frame: add an overlay-only mode (do not touch Target.sprite when the entry has no baked effects, or bake per frame) + code-anim entries. Fish/algae/lotus need ripple rings + splash (new ring effect or FxService ripple). Spring water flow + steam when fix_spring_snow@64 passes. | Claude |
 
 ## M4: Art coverage. Later
