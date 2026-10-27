@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 00:55",
+  "updated": "2026-10-27 01:12",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -398,6 +398,13 @@
           "owner": "Claude"
         },
         {
+          "title": "Review Azure Beast Ravine redo Islands-065 (fill, macro, side walls, blob)",
+          "detail": "Reviewed 2026-10-27 on a preview Island: blob (frame 46 = new fill v0), fill and both side-wall files validated (wait on ADR 0007 Phase 6); macro rejected 3x (X / four-lobe flat stamps) - awaiting owner decision tiles_finish, no 4th round.",
+          "status": "done",
+          "size": "S",
+          "owner": "Claude"
+        },
+        {
           "title": "Review P2 NPC stills + layers Creatures-64-004 and Tribulation Peak tileset Islands-064",
           "detail": "Deliveries 2026-10-27 01:03-01:17: npc_he/lei/mo/yao@64 stills, npc_he_base + layer_lotus + layer_lotus_open, npc_yao_base + layer_pup_tail; island_tribulation cliffwall, ground_blob, ground_fill, macro, sidewall, sidewall_variants (+ flowers resent). Numbers vs the accepted P1 NPC stills and biome sets, stack test, code-anim.json entries for He/Yao/Lei/Mo with preview strips, throwaway preview Island; ART-SPEC + Delivery log + Drive mirror.",
           "status": "done",
@@ -423,10 +430,9 @@
         {
           "title": "Art redo: Azure Beast Ravine fill, macro, side walls (Islands-063 rejections)",
           "detail": "Requested in ART-SPEC v6.19 (§3.7 rows): island_ravine_ground_fill (random low-contrast marks, no glint, not the Lotus layout), _macro (dithered multi-colour organic patches, not discs), _sidewall + _sidewall_variants (no per-tile moss cap, strata). Then the in-game art reviewer checks them on a preview Island.",
-          "status": "waiting",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "blockedBy": "Waiting on the artist (ChatGPT) to deliver the redo to Drive."
+          "owner": "Claude"
         },
         {
           "title": "Art redo: snow props 64x64 + spring steam (Fixtures-009), Mo portrait (UI-026)",
