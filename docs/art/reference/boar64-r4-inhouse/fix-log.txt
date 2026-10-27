@@ -1,0 +1,10 @@
+idle f1 recolour where the v2 drawing did not change (vs frame 0, else vs frame 0): 11 px
+idle f2 recolour where the v2 drawing did not change (vs frame 0, else vs frame 1): 23 px
+idle f3 recolour where the v2 drawing did not change (vs frame 0, else vs frame 2): 23 px
+move f1 recolour where the v2 drawing did not change (vs frame 0, else vs frame 0): 56 px
+move f2 recolour where the v2 drawing did not change (vs frame 0, else vs frame 1): 104 px
+move f3 recolour where the v2 drawing did not change (vs frame 0, else vs frame 2): 81 px
+hit f0 legs band from y=52
+hit f0 stripes P06→P07 above the band: 471 px
+hit f1 recolour from idle f0 (x+3, y+0 for x<=56, y+3 for x>=63): 473 px
+die f2 clear 1-px-tall teeth: 27 px

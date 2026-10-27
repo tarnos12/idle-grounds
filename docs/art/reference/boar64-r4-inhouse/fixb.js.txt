@@ -1,0 +1,24 @@
+'use strict';
+// in-house candidate B: node fixb.js <kind> <prevdir(v_prev_REJECTED)> <prevSuffix> <newdir> <outdir> [log]
+const A=require('./an.js'),{encode}=require('./png.js'),path=require('path'),fs=require('fs');
+const [kind,pd,psuf,nd,od]=process.argv.slice(2);fs.mkdirSync(od,{recursive:true});
+const HEX='0D0F14 1B1F2B 2E3345 4A5068 7A809A B7BCCD E8ECF3 0F3B34 1F6B57 2F9A7A 5FCF9C A8ECC0 4F7A2F 86B34A C3D67A 4A1417 8C1D22 C8322B EE6A4A 3D2616 6E4524 A8703A D9A45C F2C94C FFF0A0 14405A 2B86B3 5ED4E8 C4F6FF FF8A1F 3A2A63 7D5FC4 C2521C B8862E F0C8A0 C48B68 B9A2F0 2C4A22 3E5A7C F4E6C8'.split(' ');
+const W=96,H=64;const nm=(d,k,s)=>path.join(d,`enemy_${kind}_${k}_96x64_${k==='hit'?2:4}f@64${s}.png`);
+const save=(file,frs)=>{const w=W*frs.length;const buf=Buffer.alloc(w*H*4);frs.forEach((F,f)=>F.g.forEach((v,i)=>{if(!v)return;const x=i%W,y=(i/W)|0;const h=HEX[+v.slice(1)-1];const o=(y*w+f*W+x)*4;buf[o]=parseInt(h.slice(0,2),16);buf[o+1]=parseInt(h.slice(2,4),16);buf[o+2]=parseInt(h.slice(4,6),16);buf[o+3]=255;}));encode(file,w,H,buf);};
+const ld=(d,k,s)=>A.frames(nm(d,k,s),W).fr;const log=[];const cp=F=>({w:W,h:H,g:F.g.slice()});
+const diffs=(a,b,lab)=>{const L=[];a.g.forEach((v,i)=>{if(v!==b.g[i])L.push(`(${i%W},${(i/W)|0}) ${v||'-'}→${b.g[i]||'-'}`);});log.push(lab+': '+L.length+' px');return L;};
+const out={};
+for(const k of ['idle','move']){const p=ld(pd,k,psuf),n=ld(nd,k,'');
+  if(kind==='boar'){const G=[n[0]];for(let f=1;f<n.length;f++){const g=cp(n[f]);g.g=g.g.map((v,i)=>{if(!v)return v;if(p[f].g[i]===p[0].g[i])return n[0].g[i];if(p[f].g[i]===p[f-1].g[i])return G[f-1].g[i];return v;});diffs(n[f],g,`${k} f${f} recolour where the v2 drawing did not change (vs frame 0, else vs frame ${f-1})`);G.push(g);}out[k]=G;}
+  else out[k]=n;}
+// hit f0: interior stripes -> flat. band row = first row whose interior is >=80% P06
+const n0=ld(nd,'hit','');const hf=cp(n0[0]);const D=A.dist(hf);let band=H;
+for(let y=0;y<H;y++){let t=0,s=0;for(let x=0;x<W;x++){const i=y*W+x;if(hf.g[i]&&D[i]>2){t++;if(hf.g[i]==='P06')s++;}}if(t>=6&&s/t>=0.8){band=y;break;}}
+hf.g=hf.g.map((v,i)=>(v==='P06'&&((i/W)|0)<band&&D[i]>2)?'P07':v);log.push('hit f0 legs band from y='+band);diffs(n0[0],hf,'hit f0 stripes P06→P07 above the band');
+let h1=n0[1];
+if(kind==='boar'){const I=out.idle[0];h1=cp(n0[1]);h1.g=h1.g.map((v,i)=>{if(!v)return v;const x=i%W,y=(i/W)|0;const dy=x>=63?3:x>=57?-99:0;if(dy===-99)return v;const s=A.at(I,x+3,y+dy);return s||v;});diffs(n0[1],h1,'hit f1 recolour from idle f0 (x+3, y+0 for x<=56, y+3 for x>=63)');}
+out.hit=[hf,h1];
+const d=ld(nd,'die','');const clean=(F,lab)=>{const G=cp(F);G.g=G.g.map((v,i)=>{if(!v)return v;const x=i%W,y=(i/W)|0;return (!A.at(F,x,y-1)&&!A.at(F,x,y+1))?null:v;});diffs(F,G,lab);return G;};
+out.die=[h1,d[1],clean(d[2],'die f2 clear 1-px-tall teeth'),kind==='wolf'?clean(d[3],'die f3 clear 1-px line'):d[3]];
+for(const k of ['idle','move','hit','die'])save(nm(od,k,''),out[k]);
+fs.writeFileSync(path.join(od,'fix-log.txt'),log.join('\n'));console.log(log.join('\n'));
