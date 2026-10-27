@@ -385,6 +385,29 @@
         {
           "title": "Art redo: Lotus Marsh + Thunder Crag fills, macros, side walls (Islands-059/060 rejections)",
           "detail": "Artist redo requested in ART-SPEC v6.18 (§3.7 rows): island_<lotus|thunder>_ground_fill (no mark repeated on an even spacing), _macro (irregular multi-colour outlines), _sidewall + _sidewall_variants (18 px Islands-038 format). Then the in-game art reviewer checks them on a preview Island.",
+          "status": "blocked",
+          "size": "S",
+          "owner": "Claude",
+          "blockedBy": "Islands-061/062 (3rd versions) reviewed 2026-10-27: Lotus fill validated; Lotus/Thunder macro + side walls and the Thunder fill rejected a 3rd time (ART-SPEC v6.19). No 4th round is requested: the orchestrator decides the route (e.g. owner question, a different brief, or drawing these 7 files in-house)."
+        },
+        {
+          "title": "Review biome tileset redo Islands-061 (Lotus) + Islands-062 (Thunder) + Islands-063 (Azure Beast Ravine)",
+          "detail": "Redo deliveries 2026-10-27 00:41-00:47: Lotus + Thunder ground_blob (resent), ground_fill, macro, sidewall, sidewall_variants; Ravine cliffwall, ground_blob, ground_fill, macro, sidewall, sidewall_variants (redo of the 2026-10-21 rejection). Inspect with numbers vs the accepted Center set, preview Island in the bg copy at 1x-4x, validate (waits on ADR 0007 Phase 6) or reject with repair text; ART-SPEC + Drive mirror + feedback; sheets docs/art/reference/biome-lotus-061.jpg, biome-thunder-062.jpg, biome-ravine-063.jpg. Result 2026-10-27 (ART-SPEC v6.19): validated (wait on ADR 0007 Phase 6) = Lotus/Thunder/Ravine blobs, Lotus fill, Ravine cliff wall (+ Ravine flowers byte-identical to Islands-045); rejected 3x, awaiting orchestrator = Lotus/Thunder macro, sidewall, sidewall_variants and Thunder fill (docs/art/rejected *_v3_REJECTED.png); rejected with repair text = Ravine fill, macro, sidewall, sidewall_variants (*_v2_REJECTED.png).",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Route for Lotus/Thunder macro, side walls and Thunder fill (rejected 3x, Islands-061/062)",
+          "detail": "7 files rejected a 3rd time on 2026-10-27 (ART-SPEC v6.19 §3.7 rows: island_<lotus|thunder>_macro_96x96_4f, _sidewall_32x32_4f, _sidewall_variants_32x32_8f, island_thunder_ground_fill_32x32_3f). The art loop stops here; the orchestrator picks the next route (owner question in the Hub, new brief, or in-house edit). Files in docs/art/rejected/*_v3_REJECTED.png; evidence docs/art/reference/biome-lotus-061.jpg, biome-thunder-062.jpg.",
+          "status": "waiting",
+          "size": "S",
+          "owner": "Claude",
+          "blockedBy": "Waiting on the orchestrator decision (3rd rejection rule)."
+        },
+        {
+          "title": "Art redo: Azure Beast Ravine fill, macro, side walls (Islands-063 rejections)",
+          "detail": "Requested in ART-SPEC v6.19 (§3.7 rows): island_ravine_ground_fill (random low-contrast marks, no glint, not the Lotus layout), _macro (dithered multi-colour organic patches, not discs), _sidewall + _sidewall_variants (no per-tile moss cap, strata). Then the in-game art reviewer checks them on a preview Island.",
           "status": "waiting",
           "size": "S",
           "owner": "Claude",
