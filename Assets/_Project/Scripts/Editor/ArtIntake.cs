@@ -24,7 +24,6 @@ namespace IdleGrounds.Editor
             { "Assets/_Project/Art/Islands/", "Assets/_Project/Art/Sky/", "Assets/_Project/Art/Bridges/" };
 
         // ---------------------------------------------------------------- naming
-        static readonly Regex StripRx = new Regex(@"_(\d+)x(\d+)_(\d+)f$", RegexOptions.Compiled);
         static readonly Regex SizeOnlyRx = new Regex(@"_(\d+)x(\d+)$", RegexOptions.Compiled);
 
         /// <summary>"fox_idle_32x32_4f" -> key "fox_idle", frames 4, frame size 32x32. Static art -> frames 1.
@@ -32,16 +31,8 @@ namespace IdleGrounds.Editor
         public static string ParseName(string baseName, out int frames, out int w, out int h) => ParseName(baseName, out frames, out w, out h, out _);
 
         /// <summary><see cref="ParseName(string, out int, out int, out int)"/> plus the art density (texels per cell = import PPU: 32, or 64 for "@64" files).</summary>
-        public static string ParseName(string baseName, out int frames, out int w, out int h, out int density)
-        {
-            frames = 1; w = h = 0;
-            baseName = ArtKeys.SplitDensity(baseName, out density);
-            var m = StripRx.Match(baseName);
-            if (m.Success) { w = int.Parse(m.Groups[1].Value); h = int.Parse(m.Groups[2].Value); frames = int.Parse(m.Groups[3].Value); return baseName.Substring(0, m.Index); }
-            m = SizeOnlyRx.Match(baseName);
-            if (m.Success) { w = int.Parse(m.Groups[1].Value); h = int.Parse(m.Groups[2].Value); return baseName.Substring(0, m.Index); }
-            return baseName;
-        }
+        public static string ParseName(string baseName, out int frames, out int w, out int h, out int density) =>
+            ArtKeys.ParseFileName(baseName, out frames, out w, out h, out density);
 
         static string CategoryOf(string path)
         {
@@ -167,7 +158,7 @@ namespace IdleGrounds.Editor
             var map = new Dictionary<string, Sprite>();
             frameMap = new Dictionary<string, Sprite[]>();
             densityMap = new Dictionary<string, int>();
-            var sized = new Dictionary<string, List<(int, int, List<Sprite>)>>();
+            var sized = new Dictionary<string, List<(int, int, int, List<Sprite>)>>();
             if (!Directory.Exists(IncomingDir)) return map;
             foreach (var file in Directory.GetFiles(IncomingDir, "*.png", SearchOption.AllDirectories))
             {
@@ -178,32 +169,34 @@ namespace IdleGrounds.Editor
                 if (sprites.Count == 0) continue;
                 sprites.Sort((a, b) => FrameIndex(a.name).CompareTo(FrameIndex(b.name)));
                 string key = ParseName(Path.GetFileNameWithoutExtension(path), out _, out int fw, out int fh, out int density);
-                if (fw > 0) (sized.TryGetValue(key + "|" + density, out var l) ? l : sized[key + "|" + density] = new List<(int, int, List<Sprite>)>()).Add((fw, fh, sprites));
+                if (fw > 0) (sized.TryGetValue(key, out var l) ? l : sized[key] = new List<(int, int, int, List<Sprite>)>()).Add((fw, fh, density, sprites));
                 Register(map, frameMap, densityMap, key, sprites, density);
                 if (key.EndsWith("_1x1")) Register(map, frameMap, densityMap, key.Substring(0, key.Length - 4), sprites, density);
             }
-            // two files with one key at one density but different frame sizes (deco_snow_props_32x48_8f + deco_snow_props_64x64_4f,
-            // ART-SPEC §3.8): the bare key keeps the smallest canvas, and every such file is also reachable as "<key>_<W>x<H>"
+            // one key delivered in two or more world sizes (deco_snow_props: 1x1 props 32x48 + 2x1 props 64x64 at 32, and
+            // 64x96_8f@64 + 128x128_4f@64 in step D; ART-SPEC §3.8 / §3.9.8): the bare key shows the highest density's smallest
+            // canvas; "<key>_<W>x<H>" in 32-px texels names a world size (its highest-density file; island-decor.json names these,
+            // so an @64 delivery replaces the 32-px fallback by itself) and "<key>_<w>x<h>" also names each file's own canvas
             foreach (var kv in sized)
             {
-                if (kv.Value.Count < 2) continue;
-                string key = kv.Key.Substring(0, kv.Key.LastIndexOf('|')); int density = int.Parse(kv.Key.Substring(kv.Key.LastIndexOf('|') + 1));
-                if (densityMap.TryGetValue(key, out int dk) && dk != density) continue;     // a higher-density delivery owns the key
-                kv.Value.Sort((x, y) => (x.Item1 * x.Item2).CompareTo(y.Item1 * y.Item2));
-                densityMap.Remove(key);
-                Register(map, frameMap, densityMap, key, kv.Value[0].Item3, density);
-                foreach (var e in kv.Value)
-                {
-                    string alias = key + "_" + e.Item1 + "x" + e.Item2;
-                    Register(map, frameMap, densityMap, alias, e.Item3, density);
-                    SizedAliases.Add(alias);
-                }
+                var files = new List<(int w, int h, int density)>();
+                foreach (var f in kv.Value) files.Add((f.Item1, f.Item2, f.Item3));
+                var aliases = ArtKeys.SizeAliases(kv.Key, files, out int bare);
+                if (aliases.Count == 0) continue;
+                if (bare >= 0) Force(map, frameMap, densityMap, kv.Key, kv.Value[bare]);
+                foreach (var a in aliases) { Force(map, frameMap, densityMap, a.Key, kv.Value[a.Value]); SizedAliases.Add(a.Key); }
             }
             return map;
         }
 
+        static void Force(Dictionary<string, Sprite> map, Dictionary<string, Sprite[]> fm, Dictionary<string, int> dm, string k, (int, int, int density, List<Sprite> sprites) f)
+        {
+            map[k] = f.sprites[0]; fm[k] = f.sprites.Count > 1 ? f.sprites.ToArray() : null; dm[k] = f.density;
+        }
+
         /// <summary>Sized keys ("deco_snow_props_64x64") made by <see cref="LoadIncoming(out Dictionary{string, Sprite[]}, out Dictionary{string, int})"/>
-        /// when one key is delivered in two frame sizes; the integrator counts them as wired when their bare key or they themselves are used.</summary>
+        /// when one key is delivered in two or more world sizes (<see cref="ArtKeys.SizeAliases"/>); the integrator counts them as wired when
+        /// their bare key, they themselves or another size alias of the key are used.</summary>
         public static readonly HashSet<string> SizedAliases = new HashSet<string>();
 
         static string SizedAliasBase(string alias) { var m = SizeOnlyRx.Match(alias); return m.Success ? alias.Substring(0, m.Index) : alias; }
@@ -434,10 +427,13 @@ namespace IdleGrounds.Editor
             if (IslandsBuilder.UseSkyDepthTexture) used.Add("sky_depth");
 
             // 3) leftovers: kept in Art/Incoming, no consumer yet -> warning (never an error)
+            var usedSizeBases = new HashSet<string>();
+            foreach (var k in used) if (SizedAliases.Contains(k)) usedSizeBases.Add(SizedAliasBase(k));
             foreach (var key in map.Keys)
             {
                 if (used.Contains(key) || used.Contains(key + "_idle")) continue;
                 if (SizedAliases.Contains(key) && used.Contains(SizedAliasBase(key))) continue;   // the bare key is wired (it shows the smallest canvas)
+                if (usedSizeBases.Contains(SizedAliasBase(key))) continue;    // a size alias of this key is wired (island-decor.json props / bigProps)
                 if (key.EndsWith("_1x1") && used.Contains(key.Substring(0, key.Length - 4))) continue;
                 if (map.ContainsKey(key + "_1x1") && used.Contains(key)) continue;
                 if (key.StartsWith("perk_") || key.StartsWith("ui_vow_")) continue;   // retired with ascension (ADR 0007): kept, not consumed

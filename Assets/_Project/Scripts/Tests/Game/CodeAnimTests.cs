@@ -45,7 +45,7 @@ namespace IdleGrounds.Game.Tests
                 if (e.keepDeliveredLoop) { Assert.IsFalse(e.HasEffects, e.key + ": accepted loop keeps no code effects"); continue; }
                 Assert.IsTrue(e.HasEffects, e.key);
                 if (e.PlaysWhileSurfaced) Assert.IsTrue(e.key.StartsWith("node_"), e.key + ": only surfacing nodes play while surfaced");
-                else Assert.AreEqual(e.key.StartsWith("npc_") || e.key.StartsWith("fix_") || e.key.StartsWith("node_"), e.PlaysAlways, e.key + ": NPCs, fixtures and nodes idle always, buildings only while working");
+                else Assert.AreEqual(e.key.StartsWith("npc_") || e.key.StartsWith("fix_") || e.key.StartsWith("node_") || e.key.StartsWith("deco_"), e.PlaysAlways, e.key + ": NPCs, fixtures, nodes and decor idle always, buildings only while working");
                 if (e.overlayOnly)
                     foreach (var x in e.effects) Assert.IsFalse(x.IsBaked || x.kind == CodeAnimKind.Layer, e.key + "/" + x.name + ": overlay-only entries draw overlays only");
                 foreach (var x in e.effects)
@@ -786,6 +786,161 @@ namespace IdleGrounds.Game.Tests
 
             Juice.SetReduceMotion(true);
             for (float t = 0f; t < 3f; t += 0.37f) { ca.Tick(t); StringAssert.EndsWith("_spin0", r.sprite.name, "calm motion holds the rest frame"); }
+        }
+
+        // ------------------------------------------------------------ step D decor: variants, sizes, mirror (ART-SPEC §3.9.8)
+
+        [Test]
+        public void Decor_Sprite_Names_Give_Key_Size_And_Variant()
+        {
+            void Is(string name, string key, string sized, int frame)
+            {
+                CodeAnimLibrary.ParseSpriteName(name, out var k, out var s, out var f);
+                Assert.AreEqual(key, k, name); Assert.AreEqual(sized, s, name); Assert.AreEqual(frame, f, name);
+            }
+            Is("deco_snow_props_128x128_4f@64_2", "deco_snow_props", "deco_snow_props_128x128", 2);
+            Is("deco_snow_props_64x96_8f@64_0", "deco_snow_props", "deco_snow_props_64x96", 0);
+            Is("deco_tree_32x48_3f_1", "deco_tree", "deco_tree_32x48", 1);
+            Is("deco_tree_64x96_3f@64", "deco_tree", "deco_tree_64x96", -1);
+            Is("fix_spring_snow@64", "fix_spring_snow", null, -1);
+            Is("node_ore_1x1_64x96_2f@64_1", "node_ore_1x1", "node_ore_1x1_64x96", 1);
+            Is("deco_tree_code_0", "deco_tree_code_0", null, -1);
+        }
+
+        [Test]
+        public void Decor_StepD_Entries_Wait_For_Their_At64_Frames()
+        {
+            Sprite Named(int w, int h, string n) { var s = Still(w, h, 64f); s.name = n; return s; }
+            // the 64 entries: only a frame of the @64 size finds them; a variant entry ("#0") wins over its key
+            Assert.AreEqual("deco_tree", CodeAnimLibrary.FindForStill("deco_tree", Named(64, 96, "deco_tree_64x96_3f@64_2"))?.key);
+            Assert.AreEqual("deco_pine_snow", CodeAnimLibrary.FindForStill("deco_pine_snow", Named(64, 96, "deco_pine_snow_64x96_3f@64_1"))?.key);
+            Assert.AreEqual("deco_snow_props_64x96#0", CodeAnimLibrary.FindForStill("deco_snow_props", Named(64, 96, "deco_snow_props_64x96_8f@64_0"))?.key, "the stone lantern");
+            Assert.AreEqual("deco_snow_props_64x96", CodeAnimLibrary.FindForStill("deco_snow_props", Named(64, 96, "deco_snow_props_64x96_8f@64_3"))?.key);
+            Assert.AreEqual("deco_snow_props_128x128", CodeAnimLibrary.FindForStill("deco_snow_props", Named(128, 128, "deco_snow_props_128x128_4f@64_1"))?.key);
+            // the 32-px decor of today keeps still: nothing changes until step D lands
+            Assert.IsNull(CodeAnimLibrary.FindForStill("deco_snow_props", Named(32, 48, "deco_snow_props_32x48_8f_0")));
+            Assert.IsNull(CodeAnimLibrary.FindForStill("deco_snow_props", Named(64, 64, "deco_snow_props_64x64_4f_0")));
+            foreach (var file in new[] { "deco_tree_32x48_3f", "deco_pine_snow_32x48_3f", "deco_snow_props_32x48_8f", "deco_snow_props_64x64_4f" })
+            {
+                var img = Png("Assets/_Project/Art/Incoming/fixtures/" + file + ".png");
+                if (img == null) continue;
+                int fw = file.Contains("64x64") ? 64 : 32;
+                foreach (var f in Frames(img, fw, 32f, file))
+                    Assert.IsNull(CodeAnimLibrary.FindForStill(file.Substring(0, file.IndexOf("_" + fw + "x")), f), f.name + ": no code motion on the 32-px decor");
+            }
+            foreach (var key in new[] { "deco_tree", "deco_pine_snow", "deco_snow_props_64x96", "deco_snow_props_64x96#0", "deco_snow_props_128x128" })
+            {
+                var e = CodeAnimLibrary.Find(key);
+                Assert.IsNotNull(e, key); Assert.IsTrue(e.PlaysAlways, key);
+                foreach (var x in e.effects)
+                    if (x.kind == CodeAnimKind.Flicker && x.sprite == "glint") Assert.AreEqual("hide", x.calm, key + ": no glints in calm motion");
+            }
+        }
+
+        /// <summary>The temporary 32-px test entry of the brief: proves the decor hook on today's deco_tree (not shipped).</summary>
+        const string Decor32Entry =
+            "{\"entries\":[{\"key\":\"deco_tree\",\"still\":[32,48],\"fps\":2,\"steps\":4,\"play\":\"always\",\"effects\":[" +
+            "{\"type\":\"sway\",\"name\":\"crown sway\",\"rect\":[0,0,32,36],\"pivot\":[16,36],\"axis\":\"x\",\"offsets\":[0,1,0,-1]}," +
+            "{\"type\":\"glint\",\"name\":\"glints\",\"sprite\":\"glint\",\"size\":[3,3],\"count\":3,\"rect\":[0,0,32,36],\"masks\":[{\"val\":[0.45,1]}],\"calm\":\"hide\",\"sort\":1}]}]}";
+
+        [Test]
+        public void Decor_Test_Entry_Sways_Every_32px_Variant_And_Mirrors_With_The_Tree()
+        {
+            var img = Png("Assets/_Project/Art/Incoming/fixtures/deco_tree_32x48_3f.png");
+            if (img == null) Assert.Inconclusive("art missing: deco_tree_32x48_3f");
+            CodeAnimLibrary.Use(CodeAnimLibrary.Parse(Decor32Entry));
+            var frames = Frames(img, 32, 32f, "deco_tree_32x48_3f");
+            Assert.AreEqual(3, frames.Length);
+            Juice.SetReduceMotion(false);
+            var e = CodeAnimLibrary.Find("deco_tree");
+            for (int v = 0; v < frames.Length; v++)
+            {
+                Assert.AreSame(e, CodeAnimLibrary.FindForStill("deco_tree", frames[v]), "variant " + v);
+                // CPU bake of the same frames: the crown moves, the trunk foot and roots (rows >= 36) never do
+                var src = new PixelImage(32, 48);
+                for (int y = 0; y < 48; y++) for (int x = 0; x < 32; x++) src.Set(x, y, img.Get(v * 32 + x, y));
+                var f1 = new PixelImage(src); var f3 = new PixelImage(src);
+                foreach (var x in e.effects) if (x.IsBaked) { CodeAnimBake.ApplyBaked(x, f1, 1); CodeAnimBake.ApplyBaked(x, f3, 3); }
+                int moved = 0, below = 0;
+                for (int y = 0; y < 48; y++) for (int x = 0; x < 32; x++)
+                        if (!f1.Get(x, y).Equals(src.Get(x, y)) || !f3.Get(x, y).Equals(src.Get(x, y))) { moved++; if (y >= 36) below++; }
+                Assert.Greater(moved, 10, "variant " + v + ": the crown sways");
+                Assert.AreEqual(0, below, "variant " + v + ": trunk foot and roots stay put");
+
+                // the animator on a plain and on a mirrored tree: same frames, overlays at mirrored x and flipped
+                var go = new GameObject("deco-" + v); trash.Add(go);
+                var a = go.AddComponent<SpriteRenderer>(); a.sprite = frames[v];
+                var go2 = new GameObject("deco-mirror-" + v); trash.Add(go2);
+                var b = go2.AddComponent<SpriteRenderer>(); b.sprite = frames[v]; b.flipX = true;
+                var ca = CodeAnimator.For(a); var cb = CodeAnimator.For(b);
+                Assert.IsTrue(ca.Configure(e, a, frames[v], null)); Assert.IsTrue(cb.Configure(e, b, frames[v], null));     // shared bake per variant
+                Assert.AreEqual(4, ca.BaseFrameCount, "4 baked sway frames per variant");
+                Assert.AreEqual(3, ca.SlotCount, "3 glints picked from the variant's own light pixels");
+                int shown = 0;
+                for (float t = 0.05f; t < 8f; t += 0.25f)
+                {
+                    ca.Tick(t); cb.Tick(t);
+                    Assert.AreSame(a.sprite, b.sprite, "the mirrored tree shows the same baked frame (its renderer flips it)");
+                    Assert.IsTrue(b.flipX);
+                    for (int i = 0; i < ca.SlotCount; i++)
+                    {
+                        var ra = ca.SlotRenderer(i); var rb = cb.SlotRenderer(i);
+                        Assert.AreEqual(ra.enabled, rb.enabled);
+                        if (!ra.enabled) continue;
+                        shown++;
+                        Assert.IsFalse(ra.flipX); Assert.IsTrue(rb.flipX, "overlay flips with the tree");
+                        Assert.AreEqual(-ra.transform.localPosition.x, rb.transform.localPosition.x, 1e-5f, "overlay at the mirrored x");
+                        Assert.AreEqual(ra.transform.localPosition.y, rb.transform.localPosition.y, 1e-5f);
+                        var p = ra.transform.localPosition * 32f;
+                        Assert.AreEqual(Mathf.Round(p.x), p.x, 1e-3f); Assert.AreEqual(Mathf.Round(p.y), p.y, 1e-3f);
+                    }
+                }
+                Assert.Greater(shown, 5, "variant " + v + ": glints show");
+                // calm motion holds the rest frame (the still) and no glints
+                Juice.SetReduceMotion(true);
+                for (float t = 0f; t < 4f; t += 0.3f)
+                {
+                    ca.Tick(t);
+                    Assert.AreSame(ca.BaseFrame(0), a.sprite);
+                    for (int i = 0; i < ca.SlotCount; i++) Assert.IsFalse(ca.SlotRenderer(i).enabled, "no glints when calm");
+                }
+                Juice.SetReduceMotion(false);
+            }
+        }
+
+        [Test]
+        public void Glints_Without_Points_Pick_Texels_Of_The_Mask()
+        {
+            var t = new Texture2D(64, 96, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point }; trash.Add(t);
+            var px = new Color32[64 * 96];
+            for (int i = 0; i < px.Length; i++) px[i] = new Color32(40, 90, 50, 255);
+            // 4 snow texels (top-left origin) -> Unity rows are bottom-up
+            var snow = new[] { new Vector2Int(10, 5), new Vector2Int(40, 20), new Vector2Int(20, 50), new Vector2Int(50, 70) };
+            foreach (var s in snow) px[(95 - s.y) * 64 + s.x] = new Color32(232, 236, 243, 255);
+            t.SetPixels32(px); t.Apply();
+            var still = Sprite.Create(t, new Rect(0, 0, 64, 96), new Vector2(0.5f, 0f), 64f, 0, SpriteMeshType.FullRect); trash.Add(still);
+            var f = CodeAnimLibrary.Parse("{\"entries\":[{\"key\":\"deco_x\",\"still\":[64,96],\"play\":\"always\",\"effects\":[" +
+                "{\"type\":\"glint\",\"name\":\"g\",\"sprite\":\"glint\",\"size\":[5,5],\"count\":2,\"masks\":[{\"sat\":[0,0.08],\"val\":[0.9,1]}]}]}]}");
+            var go = new GameObject("glint-auto"); trash.Add(go);
+            var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = still;
+            var ca = CodeAnimator.For(sr);
+            Assert.IsTrue(ca.ConfigureUncached(f.entries[0], sr, still, null));
+            Assert.AreEqual(2, ca.SlotCount, "count glints");
+            Juice.SetReduceMotion(false);
+            var seen = new HashSet<Vector2Int>();
+            for (float tt = 0f; tt < 6f; tt += 0.1f)
+            {
+                ca.Tick(tt);
+                for (int i = 0; i < ca.SlotCount; i++)
+                {
+                    var r = ca.SlotRenderer(i);
+                    if (!r.enabled) continue;
+                    var lp = r.transform.localPosition * 64f;     // bottom-centre of the glint, pivot of the still = (32, 96)
+                    seen.Add(new Vector2Int(Mathf.RoundToInt(lp.x) + 32, 96 - Mathf.RoundToInt(lp.y) - 3));
+                }
+            }
+            Assert.AreEqual(2, seen.Count);
+            foreach (var s in seen) Assert.Contains(s, snow, "glint centred on a snow texel");
         }
     }
 }

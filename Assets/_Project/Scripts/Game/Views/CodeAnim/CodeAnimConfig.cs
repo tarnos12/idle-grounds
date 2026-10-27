@@ -267,12 +267,17 @@ namespace IdleGrounds.Game
             return f;
         }
 
+        /// <summary>Bumped whenever the loaded config changes (Use / Reload): long-lived views (decor) re-bind their animation
+        /// when it moves (tests, the shot act decorAnimTest). Reading it never loads the file.</summary>
+        public static int Version { get; private set; }
+
         /// <summary>Replace the loaded config (tests).</summary>
         public static void Use(CodeAnimFile f)
         {
             file = f ?? new CodeAnimFile { entries = new CodeAnimEntry[0] };
             byKey = new Dictionary<string, CodeAnimEntry>();
             foreach (var e in file.entries) if (e != null && !string.IsNullOrEmpty(e.key)) byKey[e.key] = e;
+            Version++;
         }
 
         public static void Reload() { byKey = null; file = null; Ensure(); }
@@ -294,10 +299,50 @@ namespace IdleGrounds.Game
         {
             if (still == null) return null;
             int w = Mathf.RoundToInt(still.rect.width), h = Mathf.RoundToInt(still.rect.height);
-            var e = Find(KeyFromSpriteName(still.name));
-            if (e != null && e.StillW == w && e.StillH == h) return e;
-            e = Find(artKey);
-            return e != null && e.StillW == w && e.StillH == h ? e : null;
+            ParseSpriteName(still.name, out string key, out string sizedKey, out int frame);
+            // decor strips (ART-SPEC §3.9.8 step D): every frame is a variant, so "<key>#<frame>" gives one variant its own
+            // entry (the stone lantern = frame 0 of deco_snow_props_64x96); "<key>_<W>x<H>" tells two frame sizes of one key
+            // apart (deco_snow_props_64x96 = the 1x1 props, deco_snow_props_128x128 = the 2x1 props)
+            CodeAnimEntry e;
+            if (frame >= 0)
+            {
+                if (sizedKey != null && (e = Match(sizedKey + "#" + frame)) != null) return e;
+                if ((e = Match(key + "#" + frame)) != null) return e;
+            }
+            if (sizedKey != null && (e = Match(sizedKey)) != null) return e;
+            if ((e = Match(key)) != null) return e;
+            if (frame >= 0 && (e = Match(artKey + "#" + frame)) != null) return e;
+            return Match(artKey);
+
+            CodeAnimEntry Match(string k) { var x = Find(k); return x != null && x.StillW == w && x.StillH == h ? x : null; }
+        }
+
+        static readonly System.Text.RegularExpressions.Regex StripName = new System.Text.RegularExpressions.Regex(@"^(.*)_(\d+x\d+)_\d+f$");
+        static readonly System.Text.RegularExpressions.Regex StripFrame = new System.Text.RegularExpressions.Regex(@"^(.*_\d+x\d+_\d+f)_(\d+)$");
+
+        /// <summary>Sprite name → art key, size key and frame index: "deco_snow_props_128x128_4f@64_2" → "deco_snow_props",
+        /// "deco_snow_props_128x128", 2; "deco_tree_32x48_3f_1" → "deco_tree", "deco_tree_32x48", 1; "fix_spring_snow@64" →
+        /// "fix_spring_snow", null, -1 (a single still has no frame index).</summary>
+        public static void ParseSpriteName(string name, out string key, out string sizedKey, out int frame)
+        {
+            key = name; sizedKey = null; frame = -1;
+            if (string.IsNullOrEmpty(name)) return;
+            int at = name.IndexOf('@');
+            string k = name;
+            if (at >= 0)
+            {
+                k = name.Substring(0, at);
+                int u = name.IndexOf('_', at);
+                if (u >= 0 && int.TryParse(name.Substring(u + 1), out int fi)) frame = fi;
+            }
+            else
+            {
+                var fm = StripFrame.Match(k);
+                if (fm.Success) { k = fm.Groups[1].Value; frame = int.Parse(fm.Groups[2].Value); }
+            }
+            var m = StripName.Match(k);
+            if (m.Success) { key = m.Groups[1].Value; sizedKey = key + "_" + m.Groups[2].Value; }
+            else key = k;
         }
 
         /// <summary>Art key of a sprite name: drops the density tag and frame index ("@64", "@64_1") and the strip size tag

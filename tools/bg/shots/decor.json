@@ -1,0 +1,14 @@
+{
+  "mode": "play", "width": 1600, "height": 900, "warmupFrames": 60, "ui": false, "save": "",
+  "shots": [
+    { "name": "fishing_whole", "island": "fishing", "fit": true, "veils": "off" },
+    { "name": "fishing_edge_close", "island": "fishing", "x": -38, "y": -40, "size": 9, "veils": "off" },
+    { "name": "center_rings_still", "island": "center", "x": -14, "y": -28, "size": 9, "act": ["animTime:0.25"] },
+    { "name": "center_rings_sway_t0", "island": "center", "x": -14, "y": -28, "size": 9, "frames": 4, "act": ["decorAnimTest", "animTime:0.25"] },
+    { "name": "center_rings_sway_t1", "island": "center", "x": -14, "y": -28, "size": 9, "frames": 4, "act": ["animTime:0.75"] },
+    { "name": "center_rings_sway_t2", "island": "center", "x": -14, "y": -28, "size": 9, "frames": 4, "act": ["animTime:1.25"] },
+    { "name": "center_rings_sway_t3", "island": "center", "x": -14, "y": -28, "size": 9, "frames": 4, "act": ["animTime:1.75"] },
+    { "name": "center_edge_sway_t0", "island": "center", "x": -20, "y": -46, "size": 3, "frames": 4, "act": ["animTime:0.25"] },
+    { "name": "center_edge_sway_t1", "island": "center", "x": -20, "y": -46, "size": 3, "frames": 4, "act": ["animTime:0.75"] }
+  ]
+}

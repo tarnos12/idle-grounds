@@ -52,6 +52,25 @@ namespace IdleGrounds.Game
         CodeAnimator codeAnim;  // code motion of a single still (code-anim.json, ART-SPEC §3.9.8 step C), e.g. the Spirit Tree sparkles
         /// <summary>The code animation driving this node's still, or null.</summary>
         public CodeAnimator CodeAnim => codeAnim;
+        float animPhase;        // decor: clock offset of the code motion (DecorMotion.Phase)
+        string decoAnimKey;     // decor: art key + picked variant frame, re-bound when code-anim.json changes (CodeAnimLibrary.Version)
+        Sprite decoStill;
+        int animVersion;
+
+        /// <summary>Decor only: the code-anim config changed (a test entry, a reload) — bake the picked variant again.</summary>
+        void RebindDecorAnim()
+        {
+            if (codeAnim != null) { codeAnim.Clear(); codeAnim = null; }
+            spriteRenderer.sprite = decoStill;
+            var e = CodeAnimLibrary.FindForStill(decoAnimKey, decoStill);
+            if (e != null && e.HasEffects)
+            {
+                var ca = CodeAnimator.For(spriteRenderer);
+                ca.SelfTick = false; ca.GroundLift = 0f;
+                if (ca.Configure(e, spriteRenderer, decoStill, _ => null)) { codeAnim = ca; ca.Playing = true; }
+            }
+            animVersion = CodeAnimLibrary.Version;
+        }
         bool stateStrip;        // 2-frame chop / break strip: frame 0 intact, frame 1 after the first hit
 
         /// <summary>Chop / break nodes show 2 state frames (intact, trimmed / cracked; ART-SPEC §3.9.8 step C).</summary>
@@ -73,7 +92,18 @@ namespace IdleGrounds.Game
             // overlay-only motion (vein glow, glints): NodeView keeps choosing the frame, the animator never touches it.
             // The entry must match the still's size, so a 32-px fallback keeps its hand-drawn loop (the Fishing spring).
             stateStrip = realArt && !decoArt && artFrames != null && artFrames.Length == 2 && IsStateNode(node.interaction);
-            var animEntry = realArt && !decoArt && (artFrames == null || stateStrip) ? CodeAnimLibrary.FindForStill(art.key, sprite) : null;
+            bool flipX = false;
+            if (decoArt)
+            {
+                var vf = art.frames != null && art.frames.Length > 0 ? art.frames : new[] { art.sprite };
+                uint h0 = unchecked((uint)(node.id * 73856093) ^ (uint)(node.col * 19349663) ^ (uint)(node.row * 83492791));
+                h0 ^= h0 >> 13; h0 *= 0x5bd1e995u; h0 ^= h0 >> 15;
+                sprite = vf[(int)(h0 % (uint)vf.Length)];
+                flipX = ((h0 >> 8) & 1u) != 0;
+            }
+            // decor (step D): the picked variant frame is the still, so its entry (crown sway, glints) is baked per variant and
+            // follows the random mirror; the entry must match the frame size, so the 32-px deco_tree stays still
+            var animEntry = realArt && (decoArt || artFrames == null || stateStrip) ? CodeAnimLibrary.FindForStill(art.key, sprite) : null;
             if (codeAnim != null) { codeAnim.Clear(); codeAnim.GroundLift = 0f; codeAnim = null; }
             if (animEntry != null && animEntry.HasEffects)
             {
@@ -85,6 +115,7 @@ namespace IdleGrounds.Game
                 // surfacing nodes (play "surfaced"): ripples only while the fish / algae is up (Refresh); everything else plays
                 if (ok) { codeAnim = ca; ca.Playing = !animEntry.PlaysWhileSurfaced; }
             }
+            decoAnimKey = decoArt ? art.key : null; decoStill = decoArt ? sprite : null; animVersion = CodeAnimLibrary.Version;
             overlayFrames = realArt && !decoArt && codeAnim == null && art.overlay != null && art.overlay.Length > 0 ? art.overlay : null;
             if (overlayFrames != null && overlay == null)
             {
@@ -100,17 +131,9 @@ namespace IdleGrounds.Game
                 overlay.gameObject.SetActive(overlayFrames != null);
                 if (overlayFrames != null) overlay.sprite = overlayFrames[0];
             }
-            bool flipX = false;
-            if (decoArt)
-            {
-                var vf = art.frames != null && art.frames.Length > 0 ? art.frames : new[] { art.sprite };
-                uint h0 = unchecked((uint)(node.id * 73856093) ^ (uint)(node.col * 19349663) ^ (uint)(node.row * 83492791));
-                h0 ^= h0 >> 13; h0 *= 0x5bd1e995u; h0 ^= h0 >> 15;
-                sprite = vf[(int)(h0 % (uint)vf.Length)];
-                flipX = ((h0 >> 8) & 1u) != 0;
-            }
             // anchor: bottom-centre of the node square, 2 px up
             basePos = space.PxToWorld(area, (node.col + node.size / 2.0) * cell, (node.row + node.size) * cell - 2);
+            animPhase = node.deco ? DecorMotion.Phase(basePos) : 0f;     // decor sways as a wind wave across the Island, not in unison
             float px = node.deco ? 30f * (float)(node.decoScale > 0 ? node.decoScale : 1.8) : SpriteSizePx(node.size);
             float k;
             float bottom;
@@ -291,7 +314,8 @@ namespace IdleGrounds.Game
                     fi = (int)(Time.unscaledTime * ArtFps) % artFrames.Length;
                 if (spriteRenderer.sprite != artFrames[fi]) spriteRenderer.sprite = artFrames[fi];
             }
-            if (codeAnim != null) codeAnim.Tick(CodeAnimClock.Now);
+            if (decoAnimKey != null && animVersion != CodeAnimLibrary.Version) RebindDecorAnim();
+            if (codeAnim != null) codeAnim.Tick(CodeAnimClock.Now + animPhase);
             if (overlayFrames != null)
             {
                 int oi = (int)(Time.unscaledTime * OverlayFps) % overlayFrames.Length;

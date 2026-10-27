@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 08:07",
+  "updated": "2026-10-27 08:41",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -594,6 +594,13 @@
         {
           "title": "Code: step C node motions (overlay-only CodeAnimator for 2-frame nodes, ripple rings for surfacing nodes)",
           "detail": "CodeAnimator.Tick sets the still every frame, so 2-frame chop/break nodes (ironvein, jadevein, later herbbush, firevein, thundertree, soulvine) cannot get glint/pulse overlays without undoing the hit frame: add an overlay-only mode (do not touch Target.sprite when the entry has no baked effects, or bake per frame) + code-anim entries. Fish/algae/lotus need ripple rings + splash (new ring effect or FxService ripple). Spring water flow + steam when fix_spring_snow@64 passes.",
+          "status": "done",
+          "size": "S",
+          "owner": "Claude"
+        },
+        {
+          "title": "Code: decor motion + per-island decor swap",
+          "detail": "Step D integrator notes (ART-SPEC 3.9.8): code-anim hook for decor (edge-ring DecorMotion + NodeView decor rings; variant frames baked per frame, mirror-correct overlays, wind-wave phase, zero GC, calm = still); entries deco_tree / deco_pine_snow / deco_snow_props_64x96 (+#0 lantern) / deco_snow_props_128x128 that only match the @64 frame sizes; glints auto-picked from snow texels; size aliases in 32-px world units so island-decor.json props/bigProps (deco_snow_props_32x48 / _64x64) take the @64 strips when they land. Decor rings exist on Center only (Sim + SaveCodec), so no green trees on Fishing: no per-Island swap needed there (Sim test guards it).",
           "status": "done",
           "size": "S",
           "owner": "Claude"

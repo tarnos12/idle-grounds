@@ -76,6 +76,9 @@ namespace IdleGrounds.Game
             return c.x >= 0 && c.x < Cells && c.y >= 0 && c.y < Cells;
         }
 
+        // edge-ring decor motion (ART-SPEC §3.9.8 step D): added at play start, never saved into the scene
+        void Start() { if (Application.isPlaying) DecorMotion.Attach(transform); }
+
         public void SetUnlocked(bool value)
         {
             unlocked = value;

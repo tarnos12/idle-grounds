@@ -91,5 +91,74 @@ namespace IdleGrounds.PlayMode.Tests
             Object.Destroy(go); Object.Destroy(f0); Object.Destroy(f1); Object.Destroy(t);
             Assert.AreEqual(0, ticks, "overlay-only / water Tick must not allocate");
         }
+
+        /// <summary>Step D decor (ART-SPEC §3.9.8): the edge-ring DecorMotion picks the shipping deco_pine_snow entry up for a
+        /// 64x96 variant strip (stand-in pixels: crown, trunk, snow texels), bakes per variant, keeps mirrored pines correct, and
+        /// ticks every piece without allocating.</summary>
+        [UnityTest]
+        public IEnumerator DecorMotion_Animates_At64_Variants_Mirrored_Without_Allocating()
+        {
+            var t = new Texture2D(192, 96, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point };
+            var px = new Color32[192 * 96];
+            for (int v = 0; v < 3; v++)
+                for (int y = 0; y < 96; y++)
+                    for (int x = 0; x < 64; x++)
+                    {
+                        Color32 c = default;
+                        if (y < 70 && x >= 8 + v * 2 && x < 56 - v * 2) c = (y % 9 == 3 && x % 7 == 2) ? new Color32(232, 236, 243, 255) : new Color32(40, 110, 60, 255);
+                        else if (y >= 70 && x >= 28 && x < 36) c = new Color32(120, 80, 40, 255);
+                        px[(95 - y) * 192 + v * 64 + x] = c;
+                    }
+            t.SetPixels32(px); t.Apply();
+            var frames = new Sprite[3];
+            for (int v = 0; v < 3; v++)
+            {
+                frames[v] = Sprite.Create(t, new Rect(v * 64, 0, 64, 96), new Vector2(0.5f, 0f), 64f, 0, SpriteMeshType.FullRect);
+                frames[v].name = "deco_pine_snow_64x96_3f@64_" + v;
+            }
+            var island = new GameObject("decor-island");
+            var root = new GameObject("Boundary"); root.transform.SetParent(island.transform, false);
+            for (int i = 0; i < 6; i++)
+            {
+                var go = new GameObject("Tree"); go.transform.SetParent(root.transform, false);
+                go.transform.localPosition = new Vector3(i * 3f, 0f, 0f);
+                var sr = go.AddComponent<SpriteRenderer>(); sr.sprite = frames[i % 3]; sr.flipX = i >= 3;
+            }
+            var stone = new GameObject("Rock"); stone.transform.SetParent(root.transform, false);
+            stone.AddComponent<SpriteRenderer>().sprite = Sprite.Create(t, new Rect(0, 0, 32, 48), new Vector2(0.5f, 0f), 32f);   // no entry: stays plain
+            var m = DecorMotion.Attach(island.transform);
+            Assert.IsNotNull(m);
+            Assert.AreEqual(6, m.Scan(), "every 64x96 pine animates, the rock does not");
+            Assert.IsNull(stone.GetComponent<CodeAnimator>());
+            Assert.AreEqual(4, m.Animator(0).BaseFrameCount, "sway baked per variant");
+            Assert.AreSame(m.Animator(0).BaseFrame(1), m.Animator(3).BaseFrame(1), "one bake per variant, shared by the mirrored pine");
+            yield return null;
+
+            // the mirrored pine (i = 3) shows its glints at the mirrored x, flipped; same clock for the comparison
+            var a = m.Animator(0); var b = m.Animator(3);
+            int shown = 0;
+            for (float tt = 0.1f; tt < 30f; tt += 0.25f)
+            {
+                a.Tick(tt); b.Tick(tt);
+                for (int i = 0; i < a.SlotCount; i++)
+                {
+                    var ra = a.SlotRenderer(i); var rb = b.SlotRenderer(i);
+                    Assert.AreEqual(ra.enabled, rb.enabled);
+                    if (!ra.enabled) continue;
+                    shown++;
+                    Assert.IsTrue(rb.flipX);
+                    Assert.AreEqual(-ra.transform.localPosition.x, rb.transform.localPosition.x, 1e-5f);
+                }
+            }
+            Assert.Greater(shown, 0, "snow glints show");
+
+            float t0 = 0.9f;
+            long ticks = Allocs(() => { for (int i = 0; i < 3000; i++) m.TickAll(t0 + i * 0.0173f); });
+            TestContext.Out.WriteLine($"DecorMotion.TickAll x3000 ({m.Count} pines): {ticks} GC allocations");
+            Object.Destroy(island);
+            foreach (var f in frames) Object.Destroy(f);
+            Object.Destroy(t);
+            Assert.AreEqual(0, ticks, "decor motion must not allocate");
+        }
     }
 }
