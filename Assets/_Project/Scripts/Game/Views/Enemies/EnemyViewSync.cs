@@ -20,10 +20,13 @@ namespace IdleGrounds.Game
 
         readonly Dictionary<long, EnemyView> views = new Dictionary<long, EnemyView>();
         readonly List<long> releaseList = new List<long>();
+        // views of killed enemies holding on to play their die strip once (EnemyView.DieFps), then released
+        readonly List<EnemyView> dying = new List<EnemyView>();
         ObjectPool<EnemyView> pool;
         int frame;
 
         public int ViewCount => views.Count;
+        public int DyingCount => dying.Count;
         public IEnumerable<EnemyView> Views => views.Values;
         public int Kills { get; private set; }
 
@@ -89,7 +92,8 @@ namespace IdleGrounds.Game
                         if (v == null) { v = pool.Get(); views[k] = v; }
                         string kind = runner.Database.EnemyKindOf(area.key, e.kind == "boss");
                         v.Bind(area.key, e, SpriteFor(area.key, e), runner.Database.EnemyAnim(kind, "idle"),
-                            runner.Database.EnemyAnim(kind, "move"), runner.Database.EnemyAnim(kind, "hit"));
+                            runner.Database.EnemyAnim(kind, "move"), runner.Database.EnemyAnim(kind, "hit"),
+                            runner.Database.EnemyAnim(kind, "die"));
                     }
                     v.seenFrame = frame;
                     v.Refresh(runner.Space, now);
@@ -97,7 +101,16 @@ namespace IdleGrounds.Game
             }
             releaseList.Clear();
             foreach (var kv in views) if (kv.Value.seenFrame != frame) releaseList.Add(kv.Key);
-            foreach (var k in releaseList) { pool.Release(views[k]); views.Remove(k); }
+            float time = Time.time;
+            foreach (var k in releaseList)
+            {
+                var v = views[k]; views.Remove(k);
+                // killed (not just gone with a locked area): hold the view for its die strip
+                if (v.HasDieArt && v.Enemy != null && v.Enemy.hp <= 0 && runner.IsUnlocked(v.Area)) { v.BeginDie(time); dying.Add(v); }
+                else pool.Release(v);
+            }
+            for (int i = dying.Count - 1; i >= 0; i--)
+                if (!dying[i].TickDie(time)) { pool.Release(dying[i]); dying.RemoveAt(i); }
         }
     }
 }

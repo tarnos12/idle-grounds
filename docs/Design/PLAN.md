@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-27 11:02. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-27 12:14. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**64 of 90 tasks done**, 3 in progress, 3 to do, 4 blocked, 15 waiting.
+**65 of 92 tasks done**, 3 in progress, 3 to do, 4 blocked, 16 waiting.
 
 ## Being worked on now
 
@@ -17,7 +17,7 @@ Updated 2026-10-27 11:02. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 49 / 63 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 50 / 65 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -131,6 +131,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Art redo: icicle underside (Islands-066 / -068 rejections; dragon_stir + snowfall passed in v6.26) **(NOW)** | ART-SPEC v6.24 section 3.9.8 Extras review: dragon_stir_320x384_3f@64 frame 1 = sleeping frame 0 with only head and neck moved (max ~4,500 px changed, 0 px in rows y>=240, tail, frames 0 and 2); island_underside_icicles_128x128 redrawn like the _3q rocks with hanging icicle spikes and no snow plate; fx_snowfall loop closed (or one 256x256 still scrolled in code). 2026-10-27 v6.26: dragon_stir@64 validated, snowfall accepted as a scrolled still; island_underside_icicles rejected a 2nd time (flat light blocks, dark icicles, no mist) - redo per ART-SPEC §3.9.8 Buildings-64-015 + extras repairs review. | Artist |
 | Waiting | 64 px step C: resource nodes + fixtures | ART-SPEC v6.31 section 3.9.8 "Step C": 31 @64 files in sets C1-C11 by Island unlock order (C1 Center first: node_bush_64x96_2f@64, fix_spirittree@64 320x384, fix_quarry@64 128x160), zips Idle-Grounds-Nodes-64-001..011 + Idle-Grounds-Fixtures-64-001..003. Chop/break nodes keep 2 state frames (intact, trimmed/cracked); everything else one still; sparkle, bob, ripple, glow, steam in code; no layers. | Artist |
 | Waiting | 64 px step D: trees + standing props | ART-SPEC v6.36 section 3.9.8 "Step D": 4 @64 variant strips (frame = variant, picked by position): D1 deco_tree_64x96_3f@64 (P1, every Island), D2 deco_pine_snow_64x96_3f@64, D3 deco_snow_props_64x96_8f@64, D4 deco_snow_props_128x128_4f@64 (Fishing). Category fixtures, zips Idle-Grounds-Trees-64-001/-002 + Idle-Grounds-Props-64-001/-002. Stills only, no layers; sway, lantern flicker, snow glints in code (decor code-anim hook still to build). | Artist |
+| Waiting | 64 px step F: creatures | ART-SPEC v6.39 section 3.9.8 "Step F": 14 @64 files in sets F1-F5, category creatures, zips Idle-Grounds-Creatures-64-009..013. F1 fox and F2 boar (Center, the only enemies in game; idle/move/hit/die strips 64x64 and 96x64, frame-based, P1), F3 Azure Wolf strips (preview-only, ADR 0007 Phase 6), F4 npc_pen_beast@64 and F5 npc_disciple@64 stills (preview-only, motion in code). Per-frame checks: changed px idle 3-12 % / move 15-40 %, >=90 % in full 2x2 blocks, <=5 % isolated, holes 0, one shape per frame, idle feet rows identical to frame 0. | Artist |
 | Done | Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070 | In-game art reviewer: per-file checks, integrate, Play review at the zoom steps, code motion for fixtures (Spirit Tree sparkles), accept/reject, ART-SPEC + Drive mirror. | Claude |
 | Done | Art review: step C repairs Nodes-64-012 (bush) + Fixtures-64-004 (snow spring) | In-game art reviewer: diff against the rejected v1, integrate, Play at closest/15/30 cells; snow spring @64 accepted and integrated (32-px flow loop no longer wired, code anim plays); bush frame 1 rejected again (3-px spike + flat cut), 2nd small repair requested. | Claude |
 | Done | Art review: 64 px step C sets C5-C11 (Nodes-64-005..011, Fixtures-64-003) | In-game art reviewer: per-file checks (canvas, palette, alpha, outline, noise, one shape, frame-1 diff, upscale), integrate Grove/Volcano/Celestial nodes and Play at the zoom steps intact and after a hit; Phase 3+ nodes and the peach tree validated as files + preview; accept/validate/reject, ART-SPEC + Drive mirror. | Claude |
@@ -138,6 +139,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Code: step C node motions (overlay-only CodeAnimator for 2-frame nodes, ripple rings for surfacing nodes) | CodeAnimator.Tick sets the still every frame, so 2-frame chop/break nodes (ironvein, jadevein, later herbbush, firevein, thundertree, soulvine) cannot get glint/pulse overlays without undoing the hit frame: add an overlay-only mode (do not touch Target.sprite when the entry has no baked effects, or bake per frame) + code-anim entries. Fish/algae/lotus need ripple rings + splash (new ring effect or FxService ripple). Spring water flow + steam when fix_spring_snow@64 passes. | Claude |
 | Done | Code: decor motion + per-island decor swap | Step D integrator notes (ART-SPEC 3.9.8): code-anim hook for decor (edge-ring DecorMotion + NodeView decor rings; variant frames baked per frame, mirror-correct overlays, wind-wave phase, zero GC, calm = still); entries deco_tree / deco_pine_snow / deco_snow_props_64x96 (+#0 lantern) / deco_snow_props_128x128 that only match the @64 frame sizes; glints auto-picked from snow texels; size aliases in 32-px world units so island-decor.json props/bigProps (deco_snow_props_32x48 / _64x64) take the @64 strips when they land. Decor rings exist on Center only (Sim + SaveCodec), so no green trees on Fishing: no per-Island swap needed there (Sim test guards it). | Claude |
 | Done | Art review: step C repairs 3 Nodes-64-018..021 (bamboo, reedbed, boneheap, soulvine, moonshrub) | In-game art reviewer: diff each against its _v2_REJECTED (frame 0 identical, only named rows change; soulvine vs v2), integrate Grove/Celestial nodes that pass and Play intact/after hit; Lotus/Ravine validated on previews; 3rd failure of bamboo/reeds/boneheap/moonshrub = rejected 3x, awaiting orchestrator (in-house pixel fix proposed). | Claude |
+| Done | Art review: step D repairs Trees-64-003/-004 (deco_tree, deco_pine_snow) + soul vine Nodes-64-022 | In-game art reviewer: pull each zip alone, diff against the rejected files, integrate accepted trees, rebuild the edge ring, Play on Center and Fishing; soul vine on a Ravine preview. Props-64-003/-004 are a separate review. | Claude |
 
 ## M4: Art coverage. Later
 
