@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-27 03:41. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-27 04:07. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**52 of 77 tasks done**, 3 in progress, 3 to do, 4 blocked, 15 waiting.
+**53 of 78 tasks done**, 3 in progress, 3 to do, 4 blocked, 15 waiting.
 
 ## Being worked on now
 
@@ -15,7 +15,7 @@ Updated 2026-10-27 03:41. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 37 / 50 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 38 / 51 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -101,6 +101,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Art review: 64 px B3 stills Buildings-64-008 to -011 (12 buildings) | In-game art reviewer: Brewery, Cauldron, Jade Carver (-008), Pill Furnace, Star Anvil, Talisman Atelier (-009), Heavenly Gate art (bld_ascension_gate), Charcoal Pit, Dragon Shrine (-010), Forge, Furnace Spirit, Meditation Pavilion (-011). Numbers per file (upscale diff, noise vs 32, outline, width, front 3/4, base), Play next to 64/32 buildings at 15/20/30/60/120 cells, code-anim.json entries (glow, flicker, smoke) replacing the 32-px loops, accept/reject per file. | Claude |
 | Done | Art review: 64 px Buildings-64-012 to -014 (Algae Farm, Herb Garden, B4 set 1, 4 B3 repairs) | In-game art reviewer: Algae Farm + Herb Garden REDRAWs (-012), Bamboo Nursery, Deep Shaft, Spirit Snare (B4 set 1, -013; requester rewards, ADR 0007 Phase 3), Cauldron / Pill Furnace / Jade Carver repairs + Forge redraw (-014). Numbers per file, Play next to 64/32 buildings at the zoom steps, code-anim.json entries, accept/reject per file; flower-decor-over-buildings check in normal placement. Result: 5 accepted (Algae Farm, Herb Garden, Cauldron, Jade Carver, Pill Furnace), 2 validated (Bamboo Nursery, Deep Shaft), 2 rejected (Forge 2nd time: corner view; Spirit Snare: 1-px net). ART-SPEC v6.25. | Claude |
 | Done | Art review: 64 px Buildings-64-016 to -018 (B4 sets 3-4, Forge + Spirit Snare repairs) | In-game art reviewer: Elixir Still, Essence Well, Fire Vent (-016), Forge front redraw + Spirit Snare redraw (-017), Lotus Pond, Reed Press, Star Well (-018). Numbers per file, Forge in Play next to the 64-px burners at the zoom steps (idle + working, code-anim re-measured), the B4 stills as files + review preview (requester rewards / Island buildings, ADR 0007 Phase 3+), code-anim.json entries, accept/validate/reject per file. Result: 4 validated (Essence Well, Fire Vent, Reed Press, Spirit Snare redraw), 4 rejected as small repairs (Forge 3rd time: loose 2-px strip under the plinth, front view now right; Elixir Still lit firebox; Lotus Pond 2 stray fragments; Star Well 81-px edge sliver). ART-SPEC v6.27. | Claude |
+| Done | Art review: 64 px Buildings-64-019 / -020 (B4 sets 5-6) + icicle underside 3rd version | In-game art reviewer: Lightning Rod, Lotus Distillery, Thunder Forge (-019), Beast Pen, Soul Refinery, Tribulation Array (-020; their 32-px versions were rejected 2026-10-21 as floating mini-islands / diamond view, must be front 3/4 on flat ground), island_underside_icicles_128x128 3rd version (Islands-069; fails again = rejected 3x, awaiting orchestrator). Numbers per file, review previews in Play with code animation, Fishing underside before/after, code-anim.json entries, accept/validate/reject per file. Result: 4 validated (Lightning Rod, Beast Pen, Soul Refinery, Tribulation Array; Beast Pen + Tribulation Array now front 3/4 on flat ground), 2 rejected as small repairs (Lotus Distillery lit firebox, Thunder Forge loose 2-px strip under the plinth), icicle underside rejected 3x - awaiting orchestrator. ART-SPEC v6.28. | Claude |
 | Done | Art spec: stills + moving-part layers only | Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames. | Claude |
 | Done | Review coast edge profiles + round side walls Islands-052 (7 biomes) | island_<biome>_coast_edge_profile_32x8_2f + island_<biome>_sidewall_round_32x32_4f x7 (optional pieces of the 2026-10-12 curved-coast request): inspect, wire into CoastCurves (new keys), rebuild island sheets, check every Island in Play at the zoom steps, accept or reject per file. | Claude |
 | Done | Review snowy Fishing P1 (Islands-054, Fixtures-006) + Farm/Grove/Mine edge profiles (Islands-053) | Inspect 11 files, wire the ice edge along the pond shore (EnsurePond) and per-Island decor keys (island-decor.json -> edge ring), rebuild Island sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC v6.14 + Drive mirror + feedback. | Claude |

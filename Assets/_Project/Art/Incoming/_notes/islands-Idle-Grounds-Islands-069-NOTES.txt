@@ -1,0 +1,5 @@
+Idle Grounds — Islands-069 — island underside icicles repair v3
+ART-SPEC v6.26; same runtime key, 128x128 RGBA, P01-P32 only.
+Rebuilt against island_underside_rock_3q_256x192: natural large rock facets, upper-left light, sparse snow caps, eight tapered hanging icicles, no patch grid and no green.
+Bottom rows 124–127 use the required 4-step mist alpha (192/128/64; 207 half-alpha pixels).
+This package supersedes Islands-068 for review. It is delivered, not yet accepted or integrated.

@@ -388,6 +388,83 @@
           "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0, 0.375], "period": 3.0, "phase": 0.5, "additive": true }
       ]
     },
+    {
+      "key": "bld_lightning_rod",
+      "note": "Still bld_lightning_rod@64 (Buildings-64-019, validated 2026-10-27; Thunder Crag generator, waits on ADR 0007 Phase 3+). The storm crystal on top pulses cyan and white strike sparks jump around it while it works (the strike flicker of ART-SPEC 3.7).",
+      "still": [64, 96], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "storm crystal", "rect": [22, 4, 22, 24], "masks": [ { "hue": [170, 300], "sat": [0.2, 1], "val": [0.55, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0.25, 0.75], "period": 1.2, "additive": true },
+        { "type": "flicker", "name": "strike sparks", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [32, 3, 23, 12, 41, 11, 32, 22], "onSteps": [2, 5], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_lotus_distillery",
+      "note": "Measured on bld_lotus_distillery@64 of Buildings-64-019 (rejected 2026-10-27 only for the lit firebox; the repair touches the firebox x86-104, y150-166 only, so these points stay valid). While it works: embers and small flames in the firebox under the lotus boiler, the cyan vapour in the glass column and the condenser glows, steam puffs from the neck. Lotus Marsh; the building waits on ADR 0007 Phase 3+.",
+      "still": [192, 256], "fps": 8, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "firebox embers", "rect": [86, 150, 18, 16], "masks": [ { "hue": [0, 55], "sat": [0.45, 1], "val": [0.55, 1] } ],
+          "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0.25, 0.75], "period": 0.7, "additive": true },
+        { "type": "flicker", "name": "firebox flames", "sprite": "flame", "size": [5, 10], "count": 3, "points": [91, 164, 96, 164, 101, 164], "alpha": [0.75, 1], "calm": "1", "sort": 1 },
+        { "type": "glow", "name": "vapour glass", "note": "the cyan vapour in the glass column (x84-110, y44-72) and the condenser tube (x148-162, y90-122)", "rect": [84, 44, 80, 80], "masks": [ { "hue": [165, 205], "sat": [0.2, 1], "val": [0.55, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0, 0.5], "period": 2.0, "additive": true },
+        { "type": "smoke", "name": "neck steam", "points": [96, 8], "size": [5, 4], "growTo": [14, 10], "rise": 18, "drift": 4, "count": 3, "period": 2.2,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 }
+      ]
+    },
+    {
+      "key": "bld_thunder_forge",
+      "note": "Still bld_thunder_forge@64 (Buildings-64-019, validated 2026-10-27; Thunder Crag burner, waits on ADR 0007 Phase 3+). While it burns: the violet embers in the dark mouth glow, lightning sparks crackle over the anvil, the anvil crystal and the chimney crystal pulse and the two hanging crystal lanterns flicker violet.",
+      "still": [192, 384], "fps": 8, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "mouth embers", "note": "violet ember clusters on the mouth floor (x100-160, y284-310)", "rect": [100, 284, 60, 26], "masks": [ { "hue": [245, 300], "sat": [0.25, 1], "val": [0.4, 1] } ],
+          "colorA": "#7D5FC4", "colorB": "#B9A2F0", "alpha": [0.25, 0.75], "period": 0.9, "additive": true },
+        { "type": "flicker", "name": "anvil lightning", "sprite": "star", "size": [5, 5], "mode": "cycle", "points": [80, 322, 104, 319, 128, 322, 116, 330], "onSteps": [2, 5], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 },
+        { "type": "glow", "name": "anvil crystal", "rect": [100, 325, 22, 24], "masks": [ { "hue": [245, 300], "sat": [0.2, 1], "val": [0.6, 1] } ],
+          "colorA": "#B9A2F0", "colorB": "#FFFFFF", "alpha": [0.25, 0.5], "period": 1.2, "phase": 0.3, "additive": true },
+        { "type": "glow", "name": "chimney crystal", "rect": [140, 6, 36, 48], "masks": [ { "hue": [245, 300], "sat": [0.2, 1], "val": [0.6, 1] } ],
+          "colorA": "#7D5FC4", "colorB": "#B9A2F0", "alpha": [0, 0.5], "period": 1.6, "phase": 0.5, "additive": true },
+        { "type": "flicker", "name": "crystal lanterns", "sprite": "mask", "rect": [12, 102, 114, 124], "masks": [ { "hue": [245, 300], "sat": [0.2, 1], "val": [0.6, 1] } ],
+          "colorA": "#B9A2F0", "alpha": [0.25, 0.5], "additive": true }
+      ]
+    },
+    {
+      "key": "bld_soul_refinery",
+      "note": "Still bld_soul_refinery@64 (Buildings-64-020, validated 2026-10-27; Azure Beast Ravine converter, waits on ADR 0007 Phase 3+). While it works the soul light in the cauldron swirls brighter, cyan motes rise from it, the three hanging soul lamps flicker and the jade seal on the altar front pulses.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "soul light", "rect": [76, 88, 46, 36], "masks": [ { "hue": [165, 205], "sat": [0.2, 1], "val": [0.45, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0.25, 0.75], "period": 2.0, "additive": true },
+        { "type": "flicker", "name": "soul motes", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [90, 96, 104, 90, 96, 80, 101, 70], "onSteps": [3], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 },
+        { "type": "flicker", "name": "soul lamps", "sprite": "mask", "rect": [12, 42, 168, 52], "masks": [ { "hue": [170, 205], "sat": [0.2, 1], "val": [0.6, 1] } ],
+          "colorA": "#C4F6FF", "alpha": [0.25, 0.5], "additive": true },
+        { "type": "glow", "name": "jade seal", "rect": [84, 178, 24, 22], "masks": [ { "hue": [130, 180], "sat": [0.3, 1], "val": [0.4, 1] } ],
+          "colorA": "#2F9A7A", "colorB": "#5FCF9C", "alpha": [0, 0.5], "period": 2.4, "phase": 0.5, "additive": true }
+      ]
+    },
+    {
+      "key": "bld_beast_pen",
+      "note": "Still bld_beast_pen@64 (Buildings-64-020, validated 2026-10-27; Azure Beast Ravine reward 5x5, waits on ADR 0007 Phase 3+). Water runs from the bamboo spout into the trough and the trough water shimmers; the gate swings once a gate layer exists (layers_finish); tamed beasts are separate sprites.",
+      "still": [320, 384], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "scroll", "name": "spout water", "rect": [46, 132, 8, 28], "axis": "y", "speed": 3,
+          "masks": [ { "hue": [180, 212], "sat": [0.15, 1], "val": [0.4, 1] }, { "sat": [0, 0.08], "val": [0.9, 1] } ] },
+        { "type": "glow", "name": "trough shimmer", "rect": [36, 140, 54, 22], "masks": [ { "hue": [180, 212], "sat": [0.3, 1], "val": [0.5, 1] } ],
+          "colorA": "#2B86B3", "colorB": "#5ED4E8", "alpha": [0, 0.375], "period": 2.4, "additive": true }
+      ]
+    },
+    {
+      "key": "bld_tribulation_array",
+      "note": "Still bld_tribulation_array@64 (Buildings-64-020, validated 2026-10-27; Tribulation Peak converter 5x5, waits on ADR 0007 Phase 3+). While it works the cyan runes of the circle and the altar crystal pulse, the four pillar crystals glow violet and lightning sparks jump between the pillar tips.",
+      "still": [320, 384], "fps": 8, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "rune circle", "rect": [88, 118, 150, 152], "masks": [ { "hue": [170, 205], "sat": [0.3, 1], "val": [0.5, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0.125, 0.5], "period": 2.4, "additive": true },
+        { "type": "glow", "name": "pillar crystals", "rect": [28, 4, 264, 218], "masks": [ { "hue": [245, 300], "sat": [0.2, 1], "val": [0.6, 1] } ],
+          "colorA": "#7D5FC4", "colorB": "#B9A2F0", "alpha": [0, 0.5], "period": 1.6, "phase": 0.5, "additive": true },
+        { "type": "flicker", "name": "lightning sparks", "sprite": "star", "size": [5, 5], "mode": "cycle", "points": [70, 8, 252, 8, 45, 174, 275, 174], "onSteps": [2, 5], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
     { "key": "npc_lin", "note": "Accepted idle strip (Creatures-64-001) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     { "key": "npc_ouyang", "note": "Accepted idle strip (Creatures-64-003) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     {
