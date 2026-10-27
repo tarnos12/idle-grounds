@@ -115,10 +115,10 @@ MonoBehaviour:
   groundColor: {r: 0.3, g: 0.28, b: 0.5, a: 1}
   sprites:
   - key: node_starrock
-    sprite: {fileID: -1849223395374317921, guid: 4f585cfb1d4a4924bb1bf257833dffb7, type: 3}
+    sprite: {fileID: -8707541652171759772, guid: 4ffbb08f2a4c9264ea914d8e58b0cba8, type: 3}
     frames:
-    - {fileID: -1849223395374317921, guid: 4f585cfb1d4a4924bb1bf257833dffb7, type: 3}
-    - {fileID: 5190205482657274793, guid: 4f585cfb1d4a4924bb1bf257833dffb7, type: 3}
+    - {fileID: -8707541652171759772, guid: 4ffbb08f2a4c9264ea914d8e58b0cba8, type: 3}
+    - {fileID: 5919397791478760428, guid: 4ffbb08f2a4c9264ea914d8e58b0cba8, type: 3}
     realArt: 1
     overlay: []
   - key: node_moonshrub
@@ -129,9 +129,9 @@ MonoBehaviour:
     realArt: 1
     overlay: []
   - key: node_starrock_2x2
-    sprite: {fileID: -1403571950549855511, guid: 52544b04af8132745889847861cadf38, type: 3}
+    sprite: {fileID: 8205828649167488587, guid: 114bfbf13c794bd419d59826181f93b4, type: 3}
     frames:
-    - {fileID: -1403571950549855511, guid: 52544b04af8132745889847861cadf38, type: 3}
-    - {fileID: 8647554924351043528, guid: 52544b04af8132745889847861cadf38, type: 3}
+    - {fileID: 8205828649167488587, guid: 114bfbf13c794bd419d59826181f93b4, type: 3}
+    - {fileID: 3864072468836596011, guid: 114bfbf13c794bd419d59826181f93b4, type: 3}
     realArt: 1
     overlay: []

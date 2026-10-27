@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 06:28",
+  "updated": "2026-10-27 06:56",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -553,12 +553,18 @@
           "status": "waiting",
           "size": "M",
           "owner": "Artist",
-          "blockedBy": "requested 2026-10-27",
-          "now": "C1-C4 reviewed 2026-10-27 (v6.32): 11 accepted, node_bush@64 + fix_spring_snow@64 to resend (Nodes-64-012, Fixtures-64-004); C5 (Nodes-64-005) on Drive, unreviewed; C6-C11 to deliver"
+          "blockedBy": "C1-C11 all delivered and reviewed (v6.32/v6.33): 15 accepted in game, 6 validated (Phase 3+ / peach tree unused), 10 to resend: Nodes-64-012 (bush), Fixtures-64-004 (spring), Nodes-64-013 (herbbush, bamboostalk x2), -014 (reedbed x2), -015 (boneheap, soulvine redraw), -016 (moonshrub)"
         },
         {
           "title": "Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070",
           "detail": "In-game art reviewer: per-file checks, integrate, Play review at the zoom steps, code motion for fixtures (Spirit Tree sparkles), accept/reject, ART-SPEC + Drive mirror.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: 64 px step C sets C5-C11 (Nodes-64-005..011, Fixtures-64-003)",
+          "detail": "In-game art reviewer: per-file checks (canvas, palette, alpha, outline, noise, one shape, frame-1 diff, upscale), integrate Grove/Volcano/Celestial nodes and Play at the zoom steps intact and after a hit; Phase 3+ nodes and the peach tree validated as files + preview; accept/validate/reject, ART-SPEC + Drive mirror.",
           "status": "done",
           "size": "M",
           "owner": "Claude"
