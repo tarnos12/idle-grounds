@@ -663,6 +663,15 @@
       ]
     },
     {
+      "key": "node_herbbush",
+      "note": "Strip node_herbbush_64x96_2f@64 (Nodes-64-013, step C). Overlay-only: the pale spirit-herb tips (P15 / P25 / P40, 260 px) breathe a soft pale-jade glow; cut per frame, so the picked frame (herbs painted over as leaves, 0 herb px) shows no glow.",
+      "still": [64, 96], "fps": 4, "steps": 4, "play": "always", "overlayOnly": true,
+      "effects": [
+        { "type": "glow", "name": "herb glow", "rect": [2, 44, 60, 46], "masks": [ { "hue": [38, 75], "sat": [0.15, 0.6], "val": [0.8, 1] } ],
+          "colorA": "#C3D67A", "colorB": "#FFF0A0", "alpha": [0, 0.3], "period": 3.0, "additive": true }
+      ]
+    },
+    {
       "key": "node_fish",
       "note": "Still node_fish@64 (Nodes-64-003, step C). While surfaced (NodeView bobs the koi): two ripple rings grow out from the splash ring at the waterline (back half behind the koi, front half in front) and a few droplets hop out sideways once per cycle; both stay on the water while the koi bobs.",
       "still": [64, 96], "fps": 8, "steps": 4, "play": "surfaced",
