@@ -1,0 +1,18 @@
+Idle Grounds — Buildings-64-023 — B4 constrained repairs only
+ART-SPEC v6.28; exact @64 canvases, PPU 64, P01-P40, binary alpha, no baked shadow.
+
+bld_lotus_distillery@64.png:
+- Source: Buildings-64-019.
+- Exactly 93 pixels changed, all inside x88-100, y156-163.
+- Lit idle firebox replaced with a dark P01/P02 opening and three 2x2 P30/P33 ember clusters (12 ember pixels total).
+- The cyan vapour, glass column, condenser and every pixel outside the firebox are unchanged.
+
+bld_thunder_forge@64.png:
+- Source: Buildings-64-019.
+- Exactly 86 formerly transparent pixels changed, all inside x14-177, y378-381.
+- The real P03/P04 stone course now reaches the bottom strip with P01/P02 joints and end outlines; no detached line or grass gap remains.
+- Zero pixels changed above y377.
+
+Validated and Drive-ready; delivered for review, not accepted or integrated.
+The rejected Islands-069 icicle underside was not redrawn because v6.28 puts it on orchestrator hold.
+The already delivered Buildings-64-022 Spirit Bridge was not duplicated.
