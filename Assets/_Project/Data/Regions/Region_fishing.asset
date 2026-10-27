@@ -138,11 +138,7 @@ MonoBehaviour:
     realArt: 1
     overlay: []
   - key: fix_spring
-    sprite: {fileID: 21300000, guid: d73fbd2fd5e6c7f4395b0e45b4e10a42, type: 3}
-    frames:
-    - {fileID: 1592462010839534125, guid: c23185e8341e7a0498990b135f1c4382, type: 3}
-    - {fileID: 5245745745906188782, guid: c23185e8341e7a0498990b135f1c4382, type: 3}
-    - {fileID: 101813310341076224, guid: c23185e8341e7a0498990b135f1c4382, type: 3}
-    - {fileID: 336594535898514761, guid: c23185e8341e7a0498990b135f1c4382, type: 3}
+    sprite: {fileID: 21300000, guid: 7db4170a6c6ed0b42a4340e4c48fd48c, type: 3}
+    frames: []
     realArt: 1
     overlay: []

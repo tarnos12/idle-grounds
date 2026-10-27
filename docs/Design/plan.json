@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 06:56",
+  "updated": "2026-10-27 07:11",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -560,6 +560,13 @@
           "detail": "In-game art reviewer: per-file checks, integrate, Play review at the zoom steps, code motion for fixtures (Spirit Tree sparkles), accept/reject, ART-SPEC + Drive mirror.",
           "status": "done",
           "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: step C repairs Nodes-64-012 (bush) + Fixtures-64-004 (snow spring)",
+          "detail": "In-game art reviewer: diff against the rejected v1, integrate, Play at closest/15/30 cells; snow spring @64 accepted and integrated (32-px flow loop no longer wired, code anim plays); bush frame 1 rejected again (3-px spike + flat cut), 2nd small repair requested.",
+          "status": "done",
+          "size": "S",
           "owner": "Claude"
         },
         {

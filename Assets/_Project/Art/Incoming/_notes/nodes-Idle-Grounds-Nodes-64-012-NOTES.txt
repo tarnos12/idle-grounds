@@ -1,0 +1,5 @@
+Idle Grounds — ART-SPEC v6.32 small repair
+
+Frame 0 retained pixel-for-pixel. Frame 1 begins as that exact frame; only upper leaf clusters at y < 64 were removed. Rows y64-95 are byte-identical and no pixel exists outside frame 0.
+
+Exact P01-P40, binary alpha, required canvas and connectivity validated. Delivered pending review; not accepted or integrated.

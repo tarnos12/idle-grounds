@@ -1409,6 +1409,30 @@
       "source": "Idle-Grounds-Fixtures-64-003.zip"
     },
     {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-64-004-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 369,
+      "sha1": "bc22ca8c30e69ab2b91632abb9ba2ec5dda39c56",
+      "date": "2026-10-27T07:02:47.711Z",
+      "source": "Idle-Grounds-Fixtures-64-004.zip"
+    },
+    {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-64-004-REPAIR-NOTES.md",
+      "name": "REPAIR-NOTES.md",
+      "size": 182,
+      "sha1": "ad38e2034a2323915f68f7c75a6f6efc63ed2c48",
+      "date": "2026-10-27T07:02:47.712Z",
+      "source": "Idle-Grounds-Fixtures-64-004.zip"
+    },
+    {
+      "path": "_notes/fixtures-Idle-Grounds-Fixtures-64-004-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 409,
+      "sha1": "be550c7aa2ade127b8deaa3ecf6e066e143fd4b6",
+      "date": "2026-10-27T07:02:47.712Z",
+      "source": "Idle-Grounds-Fixtures-64-004.zip"
+    },
+    {
       "path": "_notes/fx-Idle-Grounds-FX-001-generation-prompt.txt",
       "name": "generation-prompt.txt",
       "size": 495,
@@ -3183,6 +3207,30 @@
       "sha1": "d0d8aa990a54b160ce442de84dfcb7b4240c0923",
       "date": "2026-10-27T06:41:12.628Z",
       "source": "Idle-Grounds-Nodes-64-011.zip"
+    },
+    {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-64-012-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 361,
+      "sha1": "89c2d0c7ac9d590832d7705ec76f651292627cf2",
+      "date": "2026-10-27T07:02:47.154Z",
+      "source": "Idle-Grounds-Nodes-64-012.zip"
+    },
+    {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-64-012-REPAIR-NOTES.md",
+      "name": "REPAIR-NOTES.md",
+      "size": 182,
+      "sha1": "ad38e2034a2323915f68f7c75a6f6efc63ed2c48",
+      "date": "2026-10-27T07:02:47.154Z",
+      "source": "Idle-Grounds-Nodes-64-012.zip"
+    },
+    {
+      "path": "_notes/nodes-Idle-Grounds-Nodes-64-012-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 412,
+      "sha1": "c9626e174bde6de4a5aa7fc8e07a5852c33d1545",
+      "date": "2026-10-27T07:02:47.155Z",
+      "source": "Idle-Grounds-Nodes-64-012.zip"
     },
     {
       "path": "_notes/sky-Idle-Grounds-Sky-001-generation-prompt.txt",
@@ -5283,10 +5331,10 @@
     {
       "path": "fixtures/fix_spring_snow@64.png",
       "name": "fix_spring_snow@64.png",
-      "size": 7244,
-      "sha1": "391163e93a66e4be079977b795edbed1620a4fbf",
-      "date": "2026-10-27T06:08:52.662Z",
-      "source": "Idle-Grounds-Fixtures-64-002.zip"
+      "size": 7299,
+      "sha1": "3220903fd25d29520bbd0f39f9846b734f5a6115",
+      "date": "2026-10-27T07:02:47.710Z",
+      "source": "Idle-Grounds-Fixtures-64-004.zip"
     },
     {
       "path": "fixtures/fix_spring.png",
@@ -7419,10 +7467,10 @@
     {
       "path": "nodes/node_bush_64x96_2f@64.png",
       "name": "node_bush_64x96_2f@64.png",
-      "size": 8017,
-      "sha1": "25ccfa4cc726096eb9b62773a9b1557d5033dc53",
-      "date": "2026-10-27T06:08:49.352Z",
-      "source": "Idle-Grounds-Nodes-64-001.zip"
+      "size": 5177,
+      "sha1": "a3c5d3e7ac706fa661d1fb5b52cb6973ae70ef93",
+      "date": "2026-10-27T07:02:47.153Z",
+      "source": "Idle-Grounds-Nodes-64-012.zip"
     },
     {
       "path": "nodes/node_cotton.png",
