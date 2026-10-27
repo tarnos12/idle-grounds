@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 15:56",
+  "updated": "2026-10-27 17:42",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -568,7 +568,7 @@
           "status": "waiting",
           "size": "M",
           "owner": "Artist",
-          "blockedBy": "Round 4 reviewed (v6.46): pen beast + disciple validated (preview-only); boar v3 rejected 3x - awaiting the orchestrator (in-house fix + candidate in docs/art/reference/boar64-r4-inhouse); wolf hit/die + move f3 colours -> repair Creatures-64-022; fox v3 still held"
+          "blockedBy": "Round 5 reviewed (v6.47): wolf idle + move pass; hit + die rejected 3x - awaiting the orchestrator (33-px in-house fix in docs/art/reference/wolf64-r5-inhouse); boar v3 and fox v3 also held; pen beast + disciple validated (preview-only)"
         },
         {
           "title": "Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070",

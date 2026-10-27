@@ -1,0 +1,21 @@
+Idle Grounds — Creatures-64-022
+Source: ART-SPEC v6.46, review round 4 (2026-10-27)
+
+Contents
+- enemy_wolf_idle_96x64_4f@64.png: unchanged from Creatures-64-021.
+- enemy_wolf_move_96x64_4f@64.png: frames 0–2 unchanged; frame 3 has two P04→P05 corrections, bringing P05 to 58 versus frame 0's 68 (-14.7%).
+- enemy_wolf_hit_96x64_2f@64.png: flash stripes removed while preserving alpha and outline; P06 remains only in the lower belly/leg shade band. The far ear is folded back and the recoil chest join is smoothed.
+- enemy_wolf_die_96x64_4f@64.png: frame 0 equals the repaired hit recoil; frame 1 retains 95.0% of frame 0's opaque mass with a closed dark outline; frame 2's sawtooth rear cut is cleaned while retaining 2x2+ motes and the core; frame 3's rejected dark line beside the core is removed.
+
+Technical
+- Native frame size: 96x64; strips remain 4f / 4f / 2f / 4f.
+- PNG RGBA; binary alpha only; exact ART-SPEC P01–P40 palette only.
+- No antialiasing, resampling, baked background, shadow, text, or watermark.
+
+Status
+Delivered for review only. This package is not accepted or integrated until the orchestrator records that decision.
+
+Known limitations / holds
+- This package repairs only the Azure Wolf requested in v6.46.
+- The boar and fox remain on explicit orchestrator hold and are not resent.
+
