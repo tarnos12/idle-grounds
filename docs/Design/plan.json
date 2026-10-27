@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 01:21",
+  "updated": "2026-10-27 02:11",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -273,7 +273,7 @@
           "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "blockedBy": "64 px rollout: B2 stills + Dragon and B3 set 1 stills accepted 2026-10-27; all moving-part layers (Paper Mill, Kang, Xuan, He, Yao, Infusion crystal, Loom shuttle, Mill beam) await the owner (Hub question layers_finish); next artist work: dragon_stir resend, B3 stills (Brewery, Cauldron, Jade Carver)"
+          "blockedBy": "64 px rollout: B2 + B3 sets 1-5 stills reviewed 2026-10-27 (8 of 12 B3 sets 2-5 accepted); all moving-part layers await the owner (Hub question layers_finish); next artist work: Buildings-64-012 (Cauldron, Pill Furnace, Jade Carver repairs + Forge redraw), dragon_stir resend, then Algae Farm and Herb Garden stills"
         },
         {
           "title": "Snowy northern Fishing island",
@@ -335,6 +335,13 @@
         {
           "title": "Art review: 64 px B2 starter buildings + Dragon strips + B3 set 1",
           "detail": "In-game art reviewer: Buildings-64-006 (Altar, Storehouse, Gathering Stone, Wisp Lantern, Warding Seal stills), Buildings-64-007 (Infusion Array, Loom, Mill stills + base + layer), Creatures-64-005 (dragon sleeping/stir/awake @64). Numbers per file, Play next to 32 px buildings at 15/20/30/60/120 cells, layer motion in code-anim.json, accept/reject per file.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: 64 px B3 stills Buildings-64-008 to -011 (12 buildings)",
+          "detail": "In-game art reviewer: Brewery, Cauldron, Jade Carver (-008), Pill Furnace, Star Anvil, Talisman Atelier (-009), Heavenly Gate art (bld_ascension_gate), Charcoal Pit, Dragon Shrine (-010), Forge, Furnace Spirit, Meditation Pavilion (-011). Numbers per file (upscale diff, noise vs 32, outline, width, front 3/4, base), Play next to 64/32 buildings at 15/20/30/60/120 cells, code-anim.json entries (glow, flicker, smoke) replacing the 32-px loops, accept/reject per file.",
           "status": "done",
           "size": "M",
           "owner": "Claude"
