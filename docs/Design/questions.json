@@ -43,7 +43,7 @@
   {
     "id": "tiles_finish",
     "q": "ChatGPT has failed 7 new-island tiles three times. How should we finish them?",
-    "ctx": "For Lotus Marsh and Thunder Crag (islands not in the game yet, ADR 0007 Phase 6), ChatGPT keeps sending the same recoloured template: ground patches as flat one-colour discs, side cliffs with a moss bar every 32 px or a thin dark line, and a Thunder ground fill with rows of cyan dots. Everything else for these islands passed (ground shapes, cliffs, flowers, Lotus fill and water). Azure Beast Ravine has the same three problems on its 2nd try. The accepted islands (Center, Grove, Mine, Farm…) already have good patches, side cliffs and fills that could be recoloured to each new island's palette.",
+    "ctx": "For Lotus Marsh and Thunder Crag (islands not in the game yet, ADR 0007 Phase 6), ChatGPT keeps sending the same recoloured template: ground patches as flat one-colour discs, side cliffs with a moss bar every 32 px or a thin dark line, and a Thunder ground fill with rows of cyan dots. Everything else for these islands passed (ground shapes, cliffs, flowers, Lotus fill and water). Azure Beast Ravine has the same three problems on its 2nd try. The accepted islands (Center, Grove, Mine, Farm…) already have good patches, side cliffs and fills that could be recoloured to each new island's palette. Update 2026-10-27: Tribulation Peak's first set has the same three problems (template fill with a dotted lattice, flat disc patches, side cliffs with a mint bar every 32 px); its pale grey ground also makes it look like the snowy Fishing island from afar.",
     "imgs": [
       {
         "file": "question-images/tiles-finish-1.jpg",
@@ -53,7 +53,7 @@
     "o": [
       [
         "inhouse_recolour",
-        "We make them in-house: recolour the accepted patches, side cliffs and fills from the closest existing island to each new island's palette (Lotus from Grove, Thunder from Mine, Ravine from Farm/Grove), then judge them with the same checks",
+        "We make them in-house: recolour the accepted patches, side cliffs and fills from the closest existing island to each new island's palette (Lotus from Grove, Thunder from Mine, Ravine from Farm/Grove, Tribulation from Volcano/Celestial), then judge them with the same checks",
         true
       ],
       [
