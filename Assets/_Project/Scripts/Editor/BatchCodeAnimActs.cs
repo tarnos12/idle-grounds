@@ -14,7 +14,7 @@ namespace IdleGrounds.Editor
     ///                             the still is Art/Incoming/*/KEY@64.png, else frame 0 of docs/art/rejected/KEY_idle_64x96_4f@64_v1_REJECTED.png
     ///                             (the accepted NPC frame-0 drawings); bottom-centre on the cell's bottom edge
     ///   animPreviewClear          remove every preview object
-    ///   stripPreview:KEY,W,H,FRAME@island,row,col   frame FRAME (W x H px) of Art/Incoming/*/KEY.png at PPU 32, bottom-left on the cell's
+    ///   stripPreview:KEY,W,H,FRAME@island,row,col   frame FRAME (W x H px) of Art/Incoming/*/KEY.png at PPU 32 (PPU 64 for a KEY ending in @64), bottom-left on the cell's
     ///                             bottom-left corner (temporary layout of FX pieces without a gameplay view, e.g. Sky Path tiles)
     ///   wheelStandIn:TYPE@island,cx,cy,rx,ry[,px,py,pw,ph[,topY]]   review-only stand-in for an ellipseSpin wheel layer that is not
     ///                             delivered yet (in memory, never saved as art): every built TYPE on the island gets its wheel cut
@@ -40,7 +40,7 @@ namespace IdleGrounds.Editor
                     return true;
                 case "stripPreview":
                 {
-                    int at = arg.IndexOf('@');
+                    int at = arg.LastIndexOf('@');      // the key may carry @64
                     var k = arg.Substring(0, at).Split(',');
                     var p = arg.Substring(at + 1).Split(',');
                     string file = null;
@@ -51,7 +51,8 @@ namespace IdleGrounds.Editor
                     t.LoadImage(File.ReadAllBytes(file));
                     t.filterMode = FilterMode.Point;
                     int w = int.Parse(k[1]), h = int.Parse(k[2]), fr = int.Parse(k[3]);
-                    var sp = Sprite.Create(t, new Rect(fr * w, t.height - h, w, h), Vector2.zero, 32f, 0, SpriteMeshType.FullRect);
+                    float ppu = k[0].Trim().EndsWith("@64") ? 64f : 32f;      // @64 strips (e.g. dragon_stir_320x384_3f@64) keep their world size
+                    var sp = Sprite.Create(t, new Rect(fr * w, t.height - h, w, h), Vector2.zero, ppu, 0, SpriteMeshType.FullRect);
                     var c = CellWorld(p[0].Trim(), F(p[1]), F(p[2]));
                     var go = new GameObject("StripPreview_" + k[0]);
                     go.transform.position = new Vector3(c.x - 0.5f, c.y - 0.5f, 0f);

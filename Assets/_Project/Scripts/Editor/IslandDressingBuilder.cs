@@ -1243,14 +1243,15 @@ namespace IdleGrounds.Editor
             }
         }
 
-        /// <summary>ART-SPEC §3.8 snowfall (island-decor.json "snowfall" = an fx key, 4 frames of 256 x 256) over the Island's landmass + margin.</summary>
+        /// <summary>ART-SPEC §3.8 snowfall (island-decor.json "snowfall" = an fx key) over the Island's landmass + margin: a 4-frame loop of
+        /// 256 x 256 plays its frames; a single wrap-safe still (fx_snowfall_256x256_1f, FX-010) is scrolled down-right in code (SnowfallOverlay).</summary>
         static void BuildSnowfall(Transform root, string biome)
         {
             var e = IslandDecor.For(biome);
             string file = IslandDecor.IncomingFile(e?.snowfall, "fx");
             if (file == null) return;
             var fr = IslandArtBuilder.Frames(file);
-            if (fr.Length < 4) return;
+            if (fr.Length != 1 && fr.Length < 4) return;
             var go = new GameObject("Snowfall");
             go.transform.SetParent(root, false);
             var sn = go.AddComponent<SnowfallOverlay>();
