@@ -1,0 +1,6 @@
+Idle Grounds — Buildings-64-021 — v6.27 constrained repairs only
+bld_forge@64: filled the 171-px gap above the loose bottom strip so the stone plinth reaches y=383; 0 px changed above y=375.
+bld_elixir_still@64: replaced the 161-px idle firebox flame with P01/P02 and three small ember clusters; 0 px changed outside the firebox.
+bld_lotus_pond@64: removed exactly 1,844 detached right-edge pixels; pond art unchanged.
+bld_star_well@64: removed exactly 81 detached right-edge sliver pixels; well and floating stars unchanged.
+Exact @64 canvases, P01-P40, binary alpha. Delivered for review; not accepted or integrated.
