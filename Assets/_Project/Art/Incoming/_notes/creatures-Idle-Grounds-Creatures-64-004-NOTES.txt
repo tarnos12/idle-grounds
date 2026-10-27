@@ -1,0 +1,10 @@
+Idle Grounds — Creatures-64-004 — P2 requester NPC stills
+All canvases are 64x96, bottom-centre pivot (32,95), front-facing 3/4, P01-P40, binary alpha.
+These are new image-generation-guided native redraws from the approved 32px sprites and portraits; they are not nearest-neighbour 2x files.
+npc_he_base@64.png: base draw order 0; Lotus Maiden He without the moving lotus.
+npc_he_layer_lotus@64.png: pivot (39,61); draw order 1 over npc_he_base; rest pose; pose-swap with lotus_open.
+npc_he_layer_lotus_open@64.png: pivot (39,61); draw order 1; open-flower pose; swaps with lotus.
+npc_yao_base@64.png: base draw order 0; Beast-Tamer Yao and pup body without the moving tail.
+npc_yao_layer_pup_tail@64.png: pivot (11,71); draw order 1; swings +/-12 degrees; complete rest tail.
+Lei lightning sparks and Mo scar/robe glints are animated in code; no solid moving-part layers are needed.
+Delivered for review; not accepted or integrated.
