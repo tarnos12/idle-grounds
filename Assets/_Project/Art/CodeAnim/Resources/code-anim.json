@@ -703,6 +703,53 @@
         { "type": "steam", "name": "steam right", "points": [90, 62], "size": [5, 4], "growTo": [14, 10], "rise": 24, "drift": 3, "count": 3, "period": 3.0,
           "alphaSteps": [0.5, 0.5, 0.25, 0.25], "calm": "hide" }
       ]
+    },
+    {
+      "key": "deco_tree",
+      "note": "Step D (ART-SPEC 3.9.8): deco_tree_64x96_3f@64 (Trees-64-001), every Island: edge ring (DecorMotion) and the Center decor rings (NodeView). Frames are variants (broadleaf, jade broadleaf, windswept pine), each baked on its own; mirrored trees stay correct. The crown above the trunk sways 1 px at the top (rows below y72 stay: trunk foot and roots); every tree runs on its own clock offset (DecorMotion.Phase), so the sway passes across the Island as a wind wave. Needs a 64x96 frame: the 32-px deco_tree (32x48) stays still. Refine rect / pivot from NOTES.txt on delivery.",
+      "still": [64, 96], "fps": 2, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "sway", "name": "crown sway", "rect": [0, 0, 64, 72], "pivot": [32, 72], "axis": "x", "offsets": [0, 1, 0, -1] }
+      ]
+    },
+    {
+      "key": "deco_pine_snow",
+      "note": "Step D: deco_pine_snow_64x96_3f@64 (Trees-64-002), Fishing edge ring (island-decor.json trees). The D1 silhouettes with snow: the same crown sway, and a rare glint runs over 3 snow-highlight texels (P07) picked per variant from the frame itself (no fixed points), the glints ride on the sway. Needs a 64x96 frame: the 32-px snowy pines stay still.",
+      "still": [64, 96], "fps": 2, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "sway", "name": "crown sway", "rect": [0, 0, 64, 72], "pivot": [32, 72], "axis": "x", "offsets": [0, 1, 0, -1] },
+        { "type": "glint", "name": "snow glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "count": 3, "rect": [0, 0, 64, 72],
+          "masks": [ { "sat": [0, 0.08], "val": [0.9, 1] } ], "axis": "x", "offsets": [0, 1, 0, -1], "onSteps": [12], "colorA": "#FFFFFF", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "deco_snow_props_64x96",
+      "note": "Step D: deco_snow_props_64x96_8f@64 (Props-64-001), the 1x1 snow props on the Fishing edge ring (island-decor.json props = deco_snow_props_32x48, which resolves to this file once delivered). Frames are 8 variants; a rare glint on 2 snow-highlight texels picked per variant. Frame 0 (the stone lantern) has its own entry below.",
+      "still": [64, 96], "fps": 2, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "glint", "name": "snow glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "count": 2,
+          "masks": [ { "sat": [0, 0.08], "val": [0.9, 1] } ], "onSteps": [16], "colorA": "#FFFFFF", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "deco_snow_props_64x96#0",
+      "note": "Step D: frame 0 of deco_snow_props_64x96_8f@64, the snow-capped stone lantern (window P18 / P34 paper, drawn unlit or softly lit): the warm window texels flicker softly in code (additive, never above alpha 128) and the snow glints as on the other props. Calm motion: a steady soft glow.",
+      "still": [64, 96], "fps": 6, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "flicker", "name": "lantern flicker", "sprite": "mask", "masks": [ { "hue": [0, 55], "sat": [0.4, 1], "val": [0.6, 1] } ],
+          "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "calm": "0.25", "additive": true },
+        { "type": "glint", "name": "snow glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "count": 2,
+          "masks": [ { "sat": [0, 0.08], "val": [0.9, 1] } ], "onSteps": [48], "colorA": "#FFFFFF", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "deco_snow_props_128x128",
+      "note": "Step D: deco_snow_props_128x128_4f@64 (Props-64-002), the 2x1 snow props (rack, boat, woodpile, sampan) mixed into the Fishing edge ring (island-decor.json bigProps = deco_snow_props_64x64, which resolves to this file once delivered). A rare glint on 3 snow-highlight texels picked per variant. The fish on the rack (frame 0) can get a 1-px sway from NOTES.txt on delivery ('deco_snow_props_128x128#0').",
+      "still": [128, 128], "fps": 2, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "glint", "name": "snow glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "count": 3,
+          "masks": [ { "sat": [0, 0.08], "val": [0.9, 1] } ], "onSteps": [16], "colorA": "#FFFFFF", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
+      ]
     }
   ]
 }

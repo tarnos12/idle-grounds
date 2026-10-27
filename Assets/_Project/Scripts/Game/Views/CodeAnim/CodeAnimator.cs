@@ -194,6 +194,7 @@ namespace IdleGrounds.Game
                 return;
             }
             wasOn = true;
+            SyncMirror();
             bool calm = Juice.ReduceMotion;
             int steps = Entry.steps;
             int step = calm ? 0 : CodeAnimMath.Step(t, Entry.fps, steps);
@@ -360,12 +361,24 @@ namespace IdleGrounds.Game
             s.sr.enabled = false; s.shown = false;
         }
 
-        static void Show(ref Slot s, Sprite sp, Color c, Vector3 pos)
+        void Show(ref Slot s, Sprite sp, Color c, Vector3 pos)
         {
             if (!s.shown) { s.sr.enabled = true; s.shown = true; }
             if (s.sprite != sp) { s.sr.sprite = sp; s.sprite = sp; }
             if (s.color != c) { s.sr.color = c; s.color = c; }
-            if (s.pos != pos) { s.sr.transform.localPosition = pos; s.pos = pos; }
+            if (s.pos != pos) { s.sr.transform.localPosition = mirror ? new Vector3(-pos.x, pos.y, pos.z) : pos; s.pos = pos; }
+        }
+
+        /// <summary>The target is drawn mirrored (decor picks a random flipX, ART-SPEC §3.9.8 step D): baked frames mirror with
+        /// it; overlays are children, so they flip too and sit at the mirrored x (the target's pivot is the mirror line).</summary>
+        bool mirror;
+
+        void SyncMirror()
+        {
+            bool m = Target.flipX;
+            if (m == mirror) return;
+            mirror = m;
+            for (int i = 0; i < slotCount; i++) { slots[i].sr.flipX = m; slots[i].pos = new Vector3(float.NaN, 0f, 0f); }
         }
 
         /// <summary>Local position of texel corner (x, y) (top-left origin) under the still's pivot: always on the texel grid.</summary>
@@ -403,7 +416,8 @@ namespace IdleGrounds.Game
             }
             frontSprite = baked.front;
             for (int i = si; i < pool.Count; i++) pool[i].enabled = false;
-            for (int i = 0; i < si; i++) { slots[i].sr.enabled = false; slots[i].shown = false; slots[i].sr.sprite = null; }
+            for (int i = 0; i < si; i++) { slots[i].sr.enabled = false; slots[i].shown = false; slots[i].sr.sprite = null; slots[i].sr.flipX = false; }
+            mirror = false;
         }
 
         Sprite frontSprite;
@@ -712,8 +726,28 @@ namespace IdleGrounds.Game
                 layerImgs[suffix] = pi;
             }
             Vector3 Loc(int x, int y) => CodeAnimMath.TexelToLocal(x, y, pivotTL, ppu);
+            // glints without fixed points (decor variants, ART-SPEC §3.9.8 step D): `count` texels picked from the still's
+            // masked pixels (snow caps), spread top to bottom, so every variant frame gets glints on its own snow
+            Vector3[] AutoPoints(CodeAnimEffect e)
+            {
+                var r = CodeAnimBake.Rect(e, img);
+                var hits = new List<Vector2Int>();
+                for (int y = r.yMin; y < r.yMax; y++)
+                    for (int x = r.xMin; x < r.xMax; x++)
+                        if (e.InMask(img.Get(x, y))) hits.Add(new Vector2Int(x, y));
+                int n = Mathf.Min(Mathf.Max(1, e.count), hits.Count);
+                int gh = e.size != null && e.size.Length >= 2 ? e.size[1] : 5;
+                var a = new Vector3[n];
+                for (int i = 0; i < n; i++)
+                {
+                    var p = hits[(2 * i + 1) * hits.Count / (2 * n)];
+                    a[i] = Loc(p.x, p.y + gh / 2 + 1);       // the glint (bottom-centre pivot) centred on the picked texel
+                }
+                return a;
+            }
             Vector3[] Points(CodeAnimEffect e)
             {
+                if ((e.points == null || e.points.Length < 2) && e.masks != null && e.masks.Length > 0) return AutoPoints(e);
                 if (e.points == null || e.points.Length < 2) return new[] { Loc(img.w / 2, img.h / 2) };
                 var a = new Vector3[e.points.Length / 2];
                 for (int i = 0; i < a.Length; i++) a[i] = Loc(e.points[i * 2], e.points[i * 2 + 1]);

@@ -52,6 +52,18 @@ namespace IdleGrounds.Sim.Tests
                     Assert.GreaterOrEqual(System.Math.Sqrt(System.Math.Pow(bushes[i].row - bushes[j].row, 2) + System.Math.Pow(bushes[i].col - bushes[j].col, 2)), 6);
         }
 
+        /// <summary>The zone decor rings (PlaceDecoRing, sprite "🌲") exist on Center only, so NodeView never draws the green
+        /// deco_tree on snowy Fishing (ART-SPEC §3.9.8 step D, integrator note 3). If another Island ever gets rings, the view
+        /// needs the island-decor.json tree swap too (the edge ring already has it).</summary>
+        [Test]
+        public void DecoRings_Exist_On_Center_Only()
+        {
+            var sim = SimTestUtil.NewSim(out _);
+            Assert.Greater(sim.State.Area("center").nodes.Count(n => n.deco && n.kind == "deco"), 50);
+            foreach (var a in sim.State.areas)
+                if (a.key != "center") Assert.AreEqual(0, a.nodes.Count(n => n.kind == "deco"), a.key + " has no decor rings");
+        }
+
         [Test]
         public void InitArea_IsIdempotent_AndTrimsOvershoot()
         {

@@ -14,6 +14,8 @@ namespace IdleGrounds.Editor
     ///                             the still is Art/Incoming/*/KEY@64.png, else frame 0 of docs/art/rejected/KEY_idle_64x96_4f@64_v1_REJECTED.png
     ///                             (the accepted NPC frame-0 drawings); bottom-centre on the cell's bottom edge
     ///   animPreviewClear          remove every preview object
+    ///   decorAnimTest             add the temporary 32-px deco_tree crown-sway entry (DecorAnimStrip.Test32Entry, not shipped) to the
+    ///                             loaded code-anim config for this Play session: decor rings and edge-ring trees sway (step D hook check)
     ///   stripPreview:KEY,W,H,FRAME@island,row,col   frame FRAME (W x H px) of Art/Incoming/*/KEY.png at PPU 32 (PPU 64 for a KEY ending in @64), bottom-left on the cell's
     ///                             bottom-left corner (temporary layout of FX pieces without a gameplay view, e.g. Sky Path tiles)
     ///   wheelStandIn:TYPE@island,cx,cy,rx,ry[,px,py,pw,ph[,topY]]   review-only stand-in for an ellipseSpin wheel layer that is not
@@ -33,6 +35,22 @@ namespace IdleGrounds.Editor
             switch (name)
             {
                 case "animTime": CodeAnimClock.Override = F(arg); return true;
+                case "decorAnimTest":
+                {
+                    // review only (in memory, this Play session): the temporary 32-px deco_tree sway entry of DecorAnimStrip joins
+                    // the loaded config; the NodeView decor rings and the edge-ring DecorMotion re-bind on the version change
+                    var all = new List<CodeAnimEntry>(CodeAnimLibrary.File.entries);
+                    all.AddRange(CodeAnimLibrary.Parse(DecorAnimStrip.Test32Entry).entries);
+                    CodeAnimLibrary.Use(new CodeAnimFile { version = CodeAnimLibrary.File.version, entries = all.ToArray() });
+                    foreach (var dm in UnityEngine.Object.FindObjectsByType<DecorMotion>(FindObjectsSortMode.None))
+                    {
+                        int n = dm.Scan();
+                        var isl = dm.GetComponentInParent<Island>();
+                        Vector3 first = n > 0 && isl != null ? dm.Animator(0).transform.position - (Vector3)isl.Centre : Vector3.zero;
+                        Debug.Log(Tag + $"decorAnimTest: {(isl != null ? isl.islandKey : dm.name)} edge ring: {n} animated decor sprite(s)" + (n > 0 ? $", first at {first.x:0.#},{first.y:0.#} from the centre" : ""));
+                    }
+                    return true;
+                }
                 case "wheelStandIn": WheelStandIn(arg); return true;
                 case "animPreviewClear":
                     foreach (var go in animPreviews) if (go != null) UnityEngine.Object.DestroyImmediate(go);
