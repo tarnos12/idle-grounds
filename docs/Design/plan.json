@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 03:14",
+  "updated": "2026-10-27 03:41",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -349,6 +349,13 @@
         {
           "title": "Art review: 64 px Buildings-64-012 to -014 (Algae Farm, Herb Garden, B4 set 1, 4 B3 repairs)",
           "detail": "In-game art reviewer: Algae Farm + Herb Garden REDRAWs (-012), Bamboo Nursery, Deep Shaft, Spirit Snare (B4 set 1, -013; requester rewards, ADR 0007 Phase 3), Cauldron / Pill Furnace / Jade Carver repairs + Forge redraw (-014). Numbers per file, Play next to 64/32 buildings at the zoom steps, code-anim.json entries, accept/reject per file; flower-decor-over-buildings check in normal placement. Result: 5 accepted (Algae Farm, Herb Garden, Cauldron, Jade Carver, Pill Furnace), 2 validated (Bamboo Nursery, Deep Shaft), 2 rejected (Forge 2nd time: corner view; Spirit Snare: 1-px net). ART-SPEC v6.25.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: 64 px Buildings-64-016 to -018 (B4 sets 3-4, Forge + Spirit Snare repairs)",
+          "detail": "In-game art reviewer: Elixir Still, Essence Well, Fire Vent (-016), Forge front redraw + Spirit Snare redraw (-017), Lotus Pond, Reed Press, Star Well (-018). Numbers per file, Forge in Play next to the 64-px burners at the zoom steps (idle + working, code-anim re-measured), the B4 stills as files + review preview (requester rewards / Island buildings, ADR 0007 Phase 3+), code-anim.json entries, accept/validate/reject per file. Result: 4 validated (Essence Well, Fire Vent, Reed Press, Spirit Snare redraw), 4 rejected as small repairs (Forge 3rd time: loose 2-px strip under the plinth, front view now right; Elixir Still lit firebox; Lotus Pond 2 stray fragments; Star Well 81-px edge sliver). ART-SPEC v6.27.",
           "status": "done",
           "size": "M",
           "owner": "Claude"

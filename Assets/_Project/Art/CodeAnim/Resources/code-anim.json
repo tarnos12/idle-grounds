@@ -270,15 +270,15 @@
     },
     {
       "key": "bld_forge",
-      "note": "Measured on bld_forge@64 of Buildings-64-014 (rejected 2026-10-27: corner view). Mouth embers + flames, chimney smoke and the hanging lantern while it burns; replaces the 32-px working loop once a 192x384 Forge still is accepted. Re-measure the points on the redraw before accepting it.",
+      "note": "Measured on bld_forge@64 of Buildings-64-017 (front view; rejected 2026-10-27 only for the loose 2-px strip on y382-383 under the plinth, the repair touches the bottom rows only, so these points stay valid). Mouth embers + flames on the ember bed, chimney smoke from the cap and the hanging red lantern while it burns; replaces the 32-px working loop once the repaired still is accepted.",
       "still": [192, 384], "fps": 8, "steps": 4, "play": "working", "replaceDeliveredLoop": true,
       "effects": [
-        { "type": "glow", "name": "embers", "rect": [138, 284, 44, 26], "masks": [ { "hue": [0, 55], "sat": [0.45, 1], "val": [0.55, 1] } ],
+        { "type": "glow", "name": "embers", "note": "ember clusters on the mouth floor (x114-154, y283-300)", "rect": [112, 280, 46, 22], "masks": [ { "hue": [0, 55], "sat": [0.45, 1], "val": [0.55, 1] } ],
           "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0.25, 0.75], "period": 0.7, "additive": true },
-        { "type": "flicker", "name": "flames", "sprite": "flame", "size": [6, 14], "count": 3, "points": [150, 302, 157, 302, 164, 302], "alpha": [0.75, 1], "calm": "1", "sort": 1 },
-        { "type": "smoke", "name": "chimney smoke", "points": [142, 20], "size": [8, 6], "growTo": [20, 14], "rise": 30, "drift": 6, "count": 4, "period": 2.4,
+        { "type": "flicker", "name": "flames", "note": "4 flame tongues on the ember bed (bottom-centre points)", "sprite": "flame", "size": [7, 16], "count": 4, "points": [120, 300, 130, 300, 140, 300, 150, 300], "alpha": [0.75, 1], "calm": "1", "sort": 1 },
+        { "type": "smoke", "name": "chimney smoke", "note": "puffs start on the chimney cap (x128-170, top y2)", "points": [149, 4], "size": [8, 6], "growTo": [20, 14], "rise": 30, "drift": 6, "count": 4, "period": 2.4,
           "alphaSteps": [0.75, 0.75, 0.5, 0.25], "sort": 2 },
-        { "type": "flicker", "name": "lantern", "sprite": "mask", "rect": [30, 222, 26, 44], "masks": [ { "hue": [20, 50], "sat": [0.6, 1], "val": [0.85, 1] } ],
+        { "type": "flicker", "name": "lantern", "sprite": "mask", "rect": [12, 166, 28, 52], "masks": [ { "hue": [0, 50], "sat": [0.6, 1], "val": [0.85, 1] } ],
           "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "additive": true }
       ]
     },
@@ -303,6 +303,46 @@
           "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "additive": true },
         { "type": "smoke", "name": "ore dust", "points": [100, 196], "size": [4, 3], "growTo": [10, 8], "rise": 12, "drift": 3, "count": 3, "period": 2.2,
           "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 }
+      ]
+    },
+    {
+      "key": "bld_essence_well",
+      "note": "Still bld_essence_well@64 (Buildings-64-016, validated 2026-10-27; the building waits on ADR 0007 Phase 3+). The cyan qi in the well opening shimmers and motes rise from it while it works.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "qi water", "rect": [66, 164, 64, 32], "masks": [ { "hue": [165, 205], "sat": [0.3, 1], "val": [0.45, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0, 0.5], "period": 2.0, "additive": true },
+        { "type": "flicker", "name": "rising motes", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [84, 170, 108, 166, 96, 150, 90, 136, 104, 124], "onSteps": [3], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_fire_vent",
+      "note": "Still bld_fire_vent@64 (Buildings-64-016, validated 2026-10-27; the building waits on ADR 0007 Phase 3+). The lava pool pulses, bubbles pop on it and the firestone crystals glint while it works.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "lava pulse", "rect": [52, 140, 96, 80], "masks": [ { "hue": [0, 55], "sat": [0.45, 1], "val": [0.55, 1] } ],
+          "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0.125, 0.5], "period": 1.6, "additive": true },
+        { "type": "flicker", "name": "lava bubbles", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [86, 182, 112, 190, 98, 202, 122, 176], "onSteps": [4], "colorA": "#FFF0A0", "alpha": [1, 1], "calm": "hide", "sort": 1 },
+        { "type": "flicker", "name": "crystal glints", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [103, 88, 30, 136, 159, 170, 119, 113], "onSteps": [6], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_reed_press",
+      "note": "Still bld_reed_press@64 (Buildings-64-018, validated 2026-10-27; the building waits on ADR 0007 Phase 3+). The hanging lantern flickers while it works; the screw layer stays planned (layers_finish).",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "flicker", "name": "lantern", "sprite": "mask", "rect": [32, 96, 22, 24], "masks": [ { "hue": [30, 60], "sat": [0.4, 1], "val": [0.8, 1] } ],
+          "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "additive": true }
+      ]
+    },
+    {
+      "key": "bld_spirit_snare",
+      "note": "Still bld_spirit_snare@64 (Buildings-64-017, validated 2026-10-27; the building waits on ADR 0007 Phase 3). The four talismans on the net flash cyan in turn while it works (the net flash of ART-SPEC 3.7).",
+      "still": [64, 96], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "talisman flash", "rect": [16, 26, 46, 30], "masks": [ { "sat": [0, 0.3], "val": [0.85, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0, 0.5], "period": 1.6, "additive": true },
+        { "type": "flicker", "name": "net sparks", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [22, 30, 45, 32, 33, 43, 56, 46], "onSteps": [4], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
       ]
     },
     {
