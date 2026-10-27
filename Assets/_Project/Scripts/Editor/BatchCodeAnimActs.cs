@@ -10,6 +10,7 @@ namespace IdleGrounds.Editor
     /// <summary>
     /// Shot acts for the code animation layer (art reviews; editor only, nothing is saved to the scene or the game state):
     ///   animTime:SECONDS          pin <see cref="CodeAnimClock"/> (deterministic frames; negative = live time again)
+    ///   calm:1|0                  calm motion on / off for this Play session (in memory; PlayerPrefs are not written)
     ///   animPreview:KEY@island,row,col   temporary still + CodeAnimator for a key without a gameplay view (Shrine, NPCs):
     ///                             the still is Art/Incoming/*/KEY@64.png, else frame 0 of docs/art/rejected/KEY_idle_64x96_4f@64_v1_REJECTED.png
     ///                             (the accepted NPC frame-0 drawings); bottom-centre on the cell's bottom edge
@@ -35,6 +36,16 @@ namespace IdleGrounds.Editor
             switch (name)
             {
                 case "animTime": CodeAnimClock.Override = F(arg); return true;
+                case "calm":
+                {
+                    // review only: calm motion on (calm:1) / off (calm:0) for this Play session, in memory; PlayerPrefs are not
+                    // written, so the owner's Motion setting stays as it is
+                    var jt = typeof(Juice);
+                    var bf = System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic;
+                    jt.GetField("loaded", bf).SetValue(null, true);
+                    jt.GetField("reduce", bf).SetValue(null, arg.Trim() != "0");
+                    return true;
+                }
                 case "decorAnimTest":
                 {
                     // review only (in memory, this Play session): the temporary 32-px deco_tree sway entry of DecorAnimStrip joins

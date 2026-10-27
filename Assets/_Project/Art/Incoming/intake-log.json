@@ -1497,6 +1497,22 @@
       "source": "Idle-Grounds-Props-64-002.zip"
     },
     {
+      "path": "_notes/fixtures-Idle-Grounds-Props-64-003-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 64,
+      "sha1": "e0a87d3dd6dcafdcab5febed2d564361774fd99c",
+      "date": "2026-10-27T12:20:31.772Z",
+      "source": "Idle-Grounds-Props-64-003.zip"
+    },
+    {
+      "path": "_notes/fixtures-Idle-Grounds-Props-64-003-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 426,
+      "sha1": "2712a4aba4fec14fe2d252dc0eb1322afb6271ec",
+      "date": "2026-10-27T12:20:31.772Z",
+      "source": "Idle-Grounds-Props-64-003.zip"
+    },
+    {
       "path": "_notes/fixtures-Idle-Grounds-Trees-64-001-GENERATION-PROMPT.txt",
       "name": "GENERATION-PROMPT.txt",
       "size": 286,
@@ -5667,10 +5683,10 @@
     {
       "path": "fixtures/deco_snow_props_64x96_8f@64.png",
       "name": "deco_snow_props_64x96_8f@64.png",
-      "size": 13669,
-      "sha1": "2db3eb54fe4c820e7dc6fce27aebff5e3f250e9c",
-      "date": "2026-10-27T10:46:00.534Z",
-      "source": "Idle-Grounds-Props-64-001.zip"
+      "size": 13371,
+      "sha1": "39a4df87d18a04d9a9c366f864feeefc28570bd5",
+      "date": "2026-10-27T12:20:31.770Z",
+      "source": "Idle-Grounds-Props-64-003.zip"
     },
     {
       "path": "fixtures/deco_tree_32x48_3f.png",

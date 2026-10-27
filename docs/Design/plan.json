@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 12:14",
+  "updated": "2026-10-27 12:30",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -561,7 +561,7 @@
           "status": "waiting",
           "size": "M",
           "owner": "Artist",
-          "blockedBy": "All 4 step D strips rejected 2026-10-27 (v6.37): waiting on the artist's repairs Trees-64-003/-004, Props-64-003/-004"
+          "blockedBy": "D1-D3 accepted + integrated; D4 deco_snow_props_128x128@64 rejected 2x (stamped checker shading), waiting for Props-64-005"
         },
         {
           "title": "64 px step F: creatures",
