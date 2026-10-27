@@ -1,0 +1,22 @@
+'use strict';
+// in-house wolf r5 fix: node fixw.js <delivered dir> <out dir>
+const {decode,encode}=require('./png.js');
+const [,,D,O]=process.argv;
+const hit=decode(D+'/enemy_wolf_hit_96x64_2f@64.png'),die=decode(D+'/enemy_wolf_die_96x64_4f@64.png');
+const get=(im,f,x,y)=>{const i=(y*im.w+f*96+x)*4;return [im.rgba[i],im.rgba[i+1],im.rgba[i+2],im.rgba[i+3]];};
+const set=(im,f,x,y,c)=>{const i=(y*im.w+f*96+x)*4;for(let k=0;k<4;k++)im.rgba[i+k]=c[k];};
+const log=[];
+function fixHit(im,f){ // hit f1 / die f0
+  // (1) rows 47-48, x>=61: repeat row 49 (joins the chest to the legs, no ledge)
+  let n=0;for(const y of [47,48])for(let x=61;x<96;x++){const c=get(im,f,x,49);const o=get(im,f,x,y);if(c.some((v,k)=>v!==o[k])){set(im,f,x,y,c);n++;}}
+  // (2) the 1-px hole at (75,22) -> neighbour dark P02 of (75,21)
+  const c=get(im,f,75,21);set(im,f,75,22,c);
+  log.push('hit/die0 frame '+f+': '+n+' px rows 47-48 := row 49; +1 px hole (75,22) := (75,21)');
+}
+fixHit(hit,1);fixHit(die,0);
+// (3) die f2: clear rear teeth: px with x<51 and y 38..47 in the big shape
+let n=0;for(let y=38;y<=47;y++)for(let x=40;x<51;x++){const c=get(die,2,x,y);if(c[3]){set(die,2,x,y,[0,0,0,0]);n++;}}
+log.push('die frame 2: '+n+' px cleared (x<51, y 38-47)');
+const fs=require('fs');fs.mkdirSync(O,{recursive:true});
+encode(O+'/enemy_wolf_hit_96x64_2f@64.png',hit.w,hit.h,hit.rgba);encode(O+'/enemy_wolf_die_96x64_4f@64.png',die.w,die.h,die.rgba);
+fs.writeFileSync(O+'/fix-log.txt',log.join('\n')+'\n');console.log(log.join('\n'));

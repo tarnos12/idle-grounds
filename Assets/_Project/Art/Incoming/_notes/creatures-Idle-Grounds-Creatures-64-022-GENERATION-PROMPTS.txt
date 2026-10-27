@@ -1,0 +1,17 @@
+Built-in image generation was used as a visual edit pass for the two changed action strips, followed by deterministic native-pixel reconstruction and validation against ART-SPEC v6.46.
+
+HIT STRIP PROMPT
+Use case: precise-object-edit
+Asset type: 64-pixel-per-cell game sprite strip
+Primary request: Repair the exact two-frame Azure Wolf hit strip. Keep two 96x64 frames, no gaps. Frame 0 preserves alpha and the closed 2-pixel outline; its interior is flat P07 except P06 only as the lower leg/belly shade band from y=52. Remove diagonal stripes. Frame 1 keeps the raised head and 3-pixel left recoil, folds both ears back, and smoothly joins the chest without a horizontal step near y=47.
+Constraints: native crisp pixel art; transparent background; binary alpha; exact source palette; no antialiasing, blur, gradients, text, or watermark; preserve everything outside the named repairs.
+
+DIE STRIP PROMPT
+Use case: precise-object-edit
+Asset type: 64-pixel-per-cell game sprite strip
+Primary request: Repair the exact four-frame Azure Wolf death strip. Keep four 96x64 frames, no gaps. Frame 0 matches the repaired hit recoil. Frame 1 remains within +/-15% of frame 0's opaque count with a closed 2-pixel outline while sinking. Frame 2 dissolves the rear into clean 2x2-or-larger azure motes without a sawtooth cut. Frame 3 removes the six-pixel one-pixel dark line beside the 4x4 core.
+Constraints: native crisp pixel art; transparent background; binary alpha; exact source palette; at most 12 connected pieces with the core; no antialiasing, blur, gradients, text, or watermark.
+
+FINALIZATION
+The generated visual pass was not used verbatim because exact palette, frame geometry, native pixels and alpha were mandatory. Final PNGs were reconstructed from Creatures-64-021 with only the v6.46 repair regions changed, then validated pixel by pixel.
+
