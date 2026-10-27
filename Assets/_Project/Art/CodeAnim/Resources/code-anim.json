@@ -465,6 +465,41 @@
         { "type": "flicker", "name": "lightning sparks", "sprite": "star", "size": [5, 5], "mode": "cycle", "points": [70, 8, 252, 8, 45, 174, 275, 174], "onSteps": [2, 5], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
       ]
     },
+    {
+      "key": "bld_elixir_still",
+      "note": "Still bld_elixir_still@64 (Buildings-64-021 repair, validated 2026-10-27: dark firebox with 3 ember specks; Fishing / Farm converter, waits on ADR 0007 Phase 3+). While it works: embers glow and small flames burn in the firebox under the copper still, steam puffs from the top neck.",
+      "still": [192, 256], "fps": 8, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "firebox embers", "note": "dark opening x96-110, y188-213; ember specks on y212-213", "rect": [94, 196, 18, 18], "masks": [ { "hue": [0, 55], "sat": [0.45, 1], "val": [0.55, 1] } ],
+          "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0.25, 0.75], "period": 0.7, "additive": true },
+        { "type": "flicker", "name": "firebox flames", "sprite": "flame", "size": [5, 10], "count": 3, "points": [97, 211, 103, 211, 109, 211], "alpha": [0.75, 1], "calm": "1", "sort": 1 },
+        { "type": "smoke", "name": "neck steam", "points": [109, 26], "size": [5, 4], "growTo": [14, 10], "rise": 18, "drift": 4, "count": 3, "period": 2.2,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 }
+      ]
+    },
+    {
+      "key": "bld_lotus_pond",
+      "note": "Still bld_lotus_pond@64 (Buildings-64-021 repair, validated 2026-10-27: the 1,844 stray px are gone; Lotus Marsh generator, waits on ADR 0007 Phase 3+). While it grows the pond water shimmers and the two paper lanterns flicker softly. Generators play in the review preview until they exist in the game.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "water shimmer", "rect": [40, 92, 112, 120], "masks": [ { "hue": [180, 212], "sat": [0.3, 1], "val": [0.35, 1] } ],
+          "colorA": "#2B86B3", "colorB": "#5ED4E8", "alpha": [0, 0.375], "period": 2.4, "additive": true },
+        { "type": "flicker", "name": "paper lanterns", "sprite": "mask", "rect": [6, 34, 180, 34], "masks": [ { "hue": [35, 62], "sat": [0.3, 1], "val": [0.8, 1] } ],
+          "colorA": "#FFF0A0", "alpha": [0.125, 0.375], "additive": true }
+      ]
+    },
+    {
+      "key": "bld_star_well",
+      "note": "Still bld_star_well@64 (Buildings-64-021 repair, validated 2026-10-27: the 81-px edge sliver is gone; Celestial Peak generator, waits on ADR 0007 Phase 3+). While it works the violet starlit surface glows, small stars twinkle on it and the two floating star fragments above it bob.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "starlit surface", "rect": [58, 66, 82, 46], "masks": [ { "hue": [240, 300], "sat": [0.2, 1], "val": [0.3, 1] } ],
+          "colorA": "#7D5FC4", "colorB": "#B9A2F0", "alpha": [0.125, 0.5], "period": 2.4, "additive": true },
+        { "type": "flicker", "name": "surface stars", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [76, 78, 96, 98, 120, 84, 104, 72], "onSteps": [2, 5], "colorA": "#FFF0A0", "alpha": [1, 1], "calm": "hide", "sort": 1 },
+        { "type": "shift", "name": "floating star", "rect": [84, 4, 20, 24], "axis": "y", "offsets": [0, 0, -1, -2, -2, -2, -1, 0] },
+        { "type": "shift", "name": "small star", "rect": [70, 30, 8, 11], "axis": "y", "offsets": [0, -1, -1, -1, 0, 0, 0, 0] }
+      ]
+    },
     { "key": "npc_lin", "note": "Accepted idle strip (Creatures-64-001) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     { "key": "npc_ouyang", "note": "Accepted idle strip (Creatures-64-003) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     {

@@ -368,6 +368,20 @@
           "owner": "Claude"
         },
         {
+          "title": "Art review: 64 px Buildings-64-021 (4 repairs) + -022 (Spirit Bridge unpaired) + icicle cleanup request",
+          "detail": "In-game art reviewer: Forge, Elixir Still, Lotus Pond, Star Well repairs (pixel diff vs each _REJECTED.png, only the named pixels may differ); Forge replaces the 32-px Forge in game (Play next to Star Anvil / Pill Furnace at the zoom steps, working code motion); bld_spirit_bridge_unpaired@64 numbers + in Play on a coast. Also one narrow pixel-only cleanup request for island_underside_icicles_128x128 (Islands-070). ART-SPEC + Drive mirror. Result: Forge @64 accepted in game and integrated (171 px filled in rows 378-381 only); Elixir Still, Lotus Pond, Star Well validated (only the named pixels changed; code-anim entries added); Spirit Bridge unpaired @64 validated (Play as a real bridge by the west cliff, temporary swap); icicle cleanup requested as Islands-070. ART-SPEC v6.29.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Spirit Bridge @64: sending / receiving states in code, then swap the unpaired still",
+          "detail": "bld_spirit_bridge_unpaired@64 (128x128, Buildings-64-022) is validated (ART-SPEC v6.29). BridgeFaceView still shows the 32-px sending/receiving strips when paired, so the @64 still goes in only together with code states on it: pool tint cyan (sending, motes rising) / gold-green (receiving, motes falling) via a code-anim entry, then replace Art/Bridges/bld_spirit_bridge_unpaired.png (or wire the @64 file) and check paired + unpaired bridges in Play.",
+          "status": "next",
+          "size": "S",
+          "owner": "Claude"
+        },
+        {
           "title": "Art spec: stills + moving-part layers only",
           "detail": "Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames.",
           "status": "done",
@@ -524,7 +538,7 @@
           "status": "waiting",
           "size": "S",
           "owner": "Artist",
-          "blockedBy": "Artist: redo island_underside_icicles_128x128 (ART-SPEC v6.26 repair text)"
+          "blockedBy": "Artist: final pixel-only cleanup of the 3rd file as Idle-Grounds-Islands-070.zip (ART-SPEC v6.29, orchestrator decision; last round)"
         }
       ]
     },
