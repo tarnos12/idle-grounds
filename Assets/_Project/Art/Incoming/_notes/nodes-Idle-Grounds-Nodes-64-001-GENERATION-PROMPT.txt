@@ -1,0 +1,13 @@
+Built-in ImageGen prompt — node_bush_64x96_2f@64.png
+
+Use case: stylized-concept
+Asset type: production pixel-art sprite sheet for Idle Grounds
+Primary request: redraw the provided accepted bush as native high-quality 64-pixel art, keeping its exact subject, silhouette language, and two gameplay states.
+Input image: node_bush_32x48_2f.png is the accepted 32×48 two-frame sprite and is used only as a design reference.
+Composition: one horizontal two-frame strip only; two equal 64×96 logical frames, intact shrub on the left and trimmed shrub on the right. Each frame has transparent background and a single grounded connected sprite touching the bottom row. Intact shrub fills about 85% of frame width. Trimmed frame uses the same trunk and lower stems, with upper leafy mass cut back to visible bare twigs.
+Style: crisp hand-drawn pixel art, no antialiasing, no soft gradients, native 64-pixel detail, chunky 2×2 pixel clusters, 2-pixel dark outline.
+Palette: Idle Grounds P01–P40.
+Details: jade leaf clusters with a few pale 2×2 blossoms; short woody base.
+Avoid: detached leaves, dust, text, watermark, border, shadow, scenery, or a 2× upscale of the reference.
+
+Post-processing: split states, crop generated transparency, nearest-neighbour size normalization, binary-alpha threshold, nearest-colour mapping to P01–P40 without dithering, bottom alignment, and connectivity validation.

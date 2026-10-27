@@ -1,0 +1,18 @@
+Idle Grounds — Islands-070 final icicle underside pixel cleanup
+
+Source: Idle-Grounds-Islands-069.zip / island_underside_icicles_128x128.png
+Source asset SHA-256: bfaca1339a2e87c772d4e3d49910e7dd2e06c42ac048e5941e8e3c1155fca340
+Spec: ART-SPEC.md v6.31; exact cleanup instructions from v6.29.
+
+Changes only
+- Deleted exactly 200 detached half-alpha mist-bar pixels in x34–93, rows 124–127.
+- Recoloured exactly 51 opaque dark centre-line stick pixels under 9 detected icicle tips to P28 (#5ED4E8); the bottom pixel of each repaired run is P29 (#C4F6FF).
+- Rock faces, top edge, taper, snow caps, all side outlines, and every other pixel are byte-for-pixel unchanged.
+
+Technical
+- 128×128 RGBA; top-centre pivot.
+- P01–P32 only; allowed alpha subset {0,255} after the mist bar was deleted (the specification explicitly allowed deletion).
+- Diff validation: 251 pixels changed total, 0 outside the exact mist-bar and detected stick coordinates.
+
+Known limitations
+- This is the final authorized round. Delivered pending review; not accepted or integrated.

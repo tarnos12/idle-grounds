@@ -1,0 +1,27 @@
+Idle Grounds — Step C1 Center nodes @64
+
+Package: Idle-Grounds-Nodes-64-001.zip
+Spec: ART-SPEC.md v6.31, modified 2026-10-27T05:07:21.705Z
+
+Contents
+- node_bush_64x96_2f@64.png — 128×96 RGBA horizontal strip, two 64×96 frames: intact then trimmed.
+- GENERATION-PROMPT.txt — built-in ImageGen prompt and normalization summary.
+- MANIFEST.json — dimensions, references, and package contents.
+- validation.json — machine-readable technical checks.
+- SHA256SUMS.txt — SHA-256 checksums for every other file in this archive.
+
+Gameplay/import
+- Sprite Mode: Multiple; slice 64×96, horizontal, no gap or padding.
+- PPU 64; Point filtering; Compression None; no mipmaps; Clamp; sRGB.
+- Bottom-center pivot for both frames.
+- Frame 0 is intact. Frame 1 is trimmed with the lower stems and baseline preserved.
+
+Validation summary
+- Exact 128×96 canvas and two equal 64×96 frames.
+- RGBA with alpha values only 0 and 255.
+- Every visible pixel maps to P01–P40; no dithering.
+- Both frames touch the bottom row and form one connected shape.
+- New generated redraw, not a 2× enlargement of node_bush_32x48_2f.png.
+
+Known limitations
+- This is normalized image-generation output rather than hand-placed pixel art. The trimmed state required an 11-pixel P01 connector pass to keep all twigs/leaves in one 4-connected gameplay shape.

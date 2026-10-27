@@ -1,0 +1,29 @@
+Idle Grounds — Step C1 Center fixtures @64
+
+Package: Idle-Grounds-Fixtures-64-001.zip
+Spec: ART-SPEC.md v6.31, modified 2026-10-27T05:07:21.705Z
+
+Contents
+- fix_spirittree@64.png — 320×384 RGBA Spirit Tree fixture.
+- fix_quarry@64.png — 128×160 RGBA Quarry Rock fixture.
+- GENERATION-PROMPT.txt — built-in ImageGen prompts and normalization summary.
+- MANIFEST.json — dimensions, references, and package contents.
+- validation.json — machine-readable technical checks.
+- SHA256SUMS.txt — SHA-256 checksums for every other file in this archive.
+
+Gameplay/import
+- Sprite Mode: Single; PPU 64; Point filtering; Compression None; no mipmaps; Clamp; sRGB.
+- Bottom-center pivot.
+- Spirit Tree roots and Quarry Rock foot touch the bottom row.
+- Spirit Tree sparkle anchors for code animation, canvas coordinates: (110,55), (210,55), (260,120), (60,155), (160,90), (200,210). All six lie on opaque canopy pixels.
+
+Validation summary
+- Exact 320×384 and 128×160 canvases.
+- RGBA with alpha values only 0 and 255.
+- Every visible pixel maps to P01–P40; no dithering.
+- Each fixture touches the bottom row and is one 4-connected shape.
+- New generated redraws, not 2× enlargements of the accepted references.
+- No detached sparkles, motes, glow, shadow, or scenery.
+
+Known limitations
+- These are normalized image-generation outputs rather than hand-placed pixel art. Review at the closest in-game zoom should confirm the prayer charms and pickaxe remain readable against the Center ground.

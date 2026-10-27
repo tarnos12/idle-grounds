@@ -596,6 +596,35 @@
           "colorA": "#5FCF9C", "colorB": "#A8ECC0", "alpha": [0, 0.5], "period": 2.4, "additive": true },
         { "type": "flicker", "name": "scar glints", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [40, 30, 37, 50, 25, 59, 44, 59], "onSteps": [4], "colorA": "#FFF0A0", "alpha": [1, 1], "calm": "hide", "sort": 1 }
       ]
+    },
+    {
+      "key": "fix_spirittree",
+      "note": "Still fix_spirittree@64 (Fixtures-64-001, step C). Gold sparkles light up one by one on the 6 canopy anchors of NOTES.txt and the lit leaf tips shimmer softly; replaces the 32-px overlay loop fix_spirittree_sparkle (NodeView drives it, ART-SPEC 3.9.8 step C).",
+      "still": [320, 384], "fps": 4, "steps": 6, "play": "always",
+      "effects": [
+        { "type": "glow", "name": "canopy shimmer", "rect": [0, 0, 320, 250], "masks": [ { "hue": [55, 80], "sat": [0.3, 0.6], "val": [0.75, 0.9] } ],
+          "colorA": "#C3D67A", "colorB": "#FFF0A0", "alpha": [0, 0.25], "period": 3, "additive": true },
+        { "type": "flicker", "name": "sparkles", "sprite": "star", "size": [7, 7], "mode": "cycle", "points": [110, 55, 210, 55, 260, 120, 60, 155, 160, 90, 200, 210], "onSteps": [6], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "node_crop",
+      "note": "Still node_crop@64 (Nodes-64-004, step C). The rice stalks and golden heads sway 1 px at the tips (the bund stays) and the paddy water shimmers (NodeView drives it).",
+      "still": [192, 224], "fps": 3, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "sway", "name": "stalk sway", "rect": [20, 97, 152, 104], "pivot": [96, 201], "axis": "x",
+          "masks": [ { "hue": [75, 175], "sat": [0.25, 1], "val": [0.15, 1] }, { "hue": [20, 62], "sat": [0.4, 1], "val": [0.9, 1] } ], "offsets": [0, 1, 0, -1] },
+        { "type": "glow", "name": "water shimmer", "rect": [20, 110, 152, 94], "masks": [ { "hue": [188, 215], "sat": [0.4, 1], "val": [0.3, 0.95] } ],
+          "colorA": "#2B86B3", "colorB": "#5ED4E8", "alpha": [0, 0.25], "period": 3, "additive": true }
+      ]
+    },
+    {
+      "key": "node_cotton",
+      "note": "Still node_cotton@64 (Nodes-64-004, step C). The plants sway 1 px at the top; the soil base stays (NodeView drives it).",
+      "still": [128, 160], "fps": 2, "steps": 4, "play": "always",
+      "effects": [
+        { "type": "sway", "name": "plant sway", "rect": [0, 36, 128, 100], "pivot": [64, 150], "axis": "x", "offsets": [0, 1, 0, -1] }
+      ]
     }
   ]
 }

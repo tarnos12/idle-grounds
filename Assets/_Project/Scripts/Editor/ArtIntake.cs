@@ -322,10 +322,14 @@ namespace IdleGrounds.Editor
                     string rk = Resolved(map, lookup);
                     frameMap.TryGetValue(rk, out var fr);
                     // "<key>_flow": a full-sprite animation loop that replaces the static art's frames (fix_spring_flow)
-                    if (frameMap.TryGetValue(rk + "_flow", out var flow) && flow != null) { fr = flow; used.Add(rk + "_flow"); }
+                    // One density per key (ART-SPEC §3.9.4, step C): a 32-px loop is not laid over / swapped into an @64 still. It
+                    // retires (counted as used) - the motion comes from code-anim.json (NodeView drives the CodeAnimator).
+                    int stillD = densityMap.TryGetValue(rk, out int sd) ? sd : 32;
+                    bool SameDensity(string loopKey) => !densityMap.TryGetValue(loopKey, out int ld) || ld == stillD;
+                    if (frameMap.TryGetValue(rk + "_flow", out var flow) && flow != null) { if (SameDensity(rk + "_flow")) fr = flow; used.Add(rk + "_flow"); }
                     // "<key>_sparkle": an animated overlay drawn above the sprite (fix_spirittree_sparkle)
                     Sprite[] ov = null;
-                    if (map.TryGetValue(rk + "_sparkle", out var ov0)) { ov = frameMap.TryGetValue(rk + "_sparkle", out var ovf) && ovf != null ? ovf : new[] { ov0 }; used.Add(rk + "_sparkle"); }
+                    if (map.TryGetValue(rk + "_sparkle", out var ov0)) { if (SameDensity(rk + "_sparkle")) ov = frameMap.TryGetValue(rk + "_sparkle", out var ovf) && ovf != null ? ovf : new[] { ov0 }; used.Add(rk + "_sparkle"); }
                     if (e.sprite != s || !SameFrames(e.frames, fr) || !SameFrames(e.overlay, ov) || !e.realArt)
                     { e.sprite = s; e.frames = fr; e.overlay = ov; e.realArt = true; dirty = true; wired++; }
                     used.Add(rk);
