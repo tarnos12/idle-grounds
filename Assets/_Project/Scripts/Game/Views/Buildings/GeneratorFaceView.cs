@@ -14,12 +14,17 @@ namespace IdleGrounds.Game
 
         public override bool ReplacesDefault => false;
         public int Near { get; private set; }
+        /// <summary>Last frame's <see cref="IdleGrounds.Sim.BuildingSystem.GenProducing(IdleGrounds.Sim.AreaState, IdleGrounds.Sim.Building, out int)"/>: the generator is growing (pile and output pile not full).</summary>
+        public bool Producing { get; private set; }
+
+        /// <summary>Working state (plays the code animation / working variant) while the generator produces. Refresh runs before the art animates each frame.</summary>
+        public override bool IsActive(BuildingView v) => Producing && v.Building.built;
         PlatedText tag;
         bool real;
 
         public override void Layout(BuildingView v)
         {
-            lastNear = -1; lastCap = -1;
+            lastNear = -1; lastCap = -1; Producing = false;
             count.transform.localPosition = v.L(0.5f, 0.86f) + new Vector3(ViewKit.U(7f), 0f, 0f);
             ViewKit.Font(count, 10f);
             itemIcon.transform.localPosition = v.L(0.5f, 0.86f) - new Vector3(ViewKit.U(14f), 0f, 0f);
@@ -41,15 +46,12 @@ namespace IdleGrounds.Game
         {
             var g = v.Def.gen;
             if (!g.enabled) return;
-            var area = v.Sync.Sim.State.Area(v.Area);
-            var (bx, by) = v.Sync.Sim.World.BuildingCenterPx(v.Building);
-            double R = 4 * v.Sync.Space.Cell;
-            int near = 0;
-            foreach (var gi in area.ground)
-                if (gi.item == g.item && (gi.x - bx) * (gi.x - bx) + (gi.y - by) * (gi.y - by) <= R * R) near++;
+            // one ground pass per frame: own pile count + the sim's live "is producing" query (§8.6 / §9.5 stalls)
+            var sim = v.Sync.Sim;
+            Producing = sim.Buildings.GenProducing(sim.State.Area(v.Area), v.Building, out int near);
             Near = near;
             if (near != lastNear || g.cap != lastCap) { lastNear = near; lastCap = g.cap; ViewKit.Text(count, near + "/" + g.cap); }
-            bool full = near >= g.cap || v.Building.pileFull;
+            bool full = !Producing;
             ViewKit.Colour(count, full ? UiPalette.Danger : UiPalette.Gold);
             if (real) tag.Set(count.text, full ? WorldLabel.BadColour : WorldLabel.GoldColour, full ? PixelSprites.Box : null, v.Sync.Sprites.Item(g.item));
         }

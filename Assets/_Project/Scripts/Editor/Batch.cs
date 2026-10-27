@@ -156,6 +156,8 @@ namespace IdleGrounds.Editor
             public string[] act = new string[0];
             /// <summary>Frames to let the scene run after placing/acting before the capture (0 = 4).</summary>
             public int frames;
+            /// <summary>"built" = centre on the footprint of the last building the <c>built</c> act placed (x, y offset it; island ignored).</summary>
+            public string focus = "";
         }
 
         const string KActive = "IG.Batch.Shots.Active", KSpec = "IG.Batch.Shots.Spec", KOut = "IG.Batch.Shots.Out",
@@ -375,6 +377,9 @@ namespace IdleGrounds.Editor
             return null;
         }
 
+        /// <summary>World centre of the last building the <c>built</c> act placed (shot focus "built").</summary>
+        static Vector2? lastBuiltCentre;
+
         static bool Place(ShotSpec spec, Shot s)
         {
             var cam = GameCamera();
@@ -394,6 +399,7 @@ namespace IdleGrounds.Editor
                 }
                 else c = isl.Centre + new Vector2(s.x, s.y);
             }
+            if (s.focus == "built" && lastBuiltCentre.HasValue) c = lastBuiltCentre.Value + new Vector2(s.x, s.y);
             var p = cam.transform.position;
             cam.orthographic = true;
             cam.aspect = aspect;

@@ -247,7 +247,7 @@
     },
     {
       "key": "bld_algae_farm",
-      "note": "Still bld_algae_farm@64 (Buildings-64-012). The algae bands in the four tanks shimmer and bubbles pop on the water while it works; replaces the 32-px working loop. Generators have no working state in the game yet (no face reports active), so this plays only in the review preview until one exists.",
+      "note": "Still bld_algae_farm@64 (Buildings-64-012). The algae bands in the four tanks shimmer and bubbles pop on the water while it works; replaces the 32-px working loop. Plays while the generator grows (GeneratorFaceView.IsActive = BuildingSystem.GenProducing: own pile under cap, output pile not full).",
       "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
       "effects": [
         { "type": "glow", "name": "algae bands", "rect": [48, 66, 128, 124], "masks": [ { "hue": [60, 100], "sat": [0.3, 1], "val": [0.45, 1] } ],
@@ -257,7 +257,7 @@
     },
     {
       "key": "bld_herb_garden",
-      "note": "Still bld_herb_garden@64 (Buildings-64-012). The three herb rows glow in turn (white, violet, gold); replaces the 32-px working loop. Generators have no working state in the game yet (no face reports active), so this plays only in the review preview until one exists.",
+      "note": "Still bld_herb_garden@64 (Buildings-64-012). The three herb rows glow in turn (white, violet, gold); replaces the 32-px working loop. Plays while the generator grows (GeneratorFaceView.IsActive = BuildingSystem.GenProducing: own pile under cap, output pile not full).",
       "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
       "effects": [
         { "type": "glow", "name": "white herbs", "rect": [28, 72, 140, 40], "masks": [ { "sat": [0, 0.3], "val": [0.85, 1] } ],

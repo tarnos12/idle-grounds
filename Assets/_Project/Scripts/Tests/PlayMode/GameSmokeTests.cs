@@ -290,5 +290,97 @@ namespace IdleGrounds.PlayMode.Tests
             Assert.Greater(Sim.SkyWisps.Count, 0, "a sky wisp launched");
             Assert.IsTrue(viewSeen, "sky wisp view appeared");
         }
+
+        // ------------------------------------------------------------------ 7. generator working state
+
+        [UnityTest, Timeout(60000)]
+        public IEnumerator Generator_ReportsWorking_WhileProducing_CodeAnimPlays()
+        {
+            S.quest.idx = Sim.Config.quests.Count;
+            S.dragon.stage = 4;
+            var (r, c) = FindSpot(Center, "herb_garden");
+            var hg = Sim.Buildings.PlaceBuilt(Center, "herb_garden", r, c, starter: false);
+            Assert.IsNotNull(hg);
+            yield return null; yield return null;
+            var bvs = Object.FindFirstObjectByType<BuildingViewSync>();
+            var v = bvs.Find(Center, hg.id);
+            Assert.IsNotNull(v, "herb garden view");
+            var face = v.GetComponentInChildren<GeneratorFaceView>(true);
+            Assert.IsNotNull(face, "generator prefab variant has a GeneratorFaceView");
+            v.Refresh();                                   // culling-independent: refresh it directly
+            Assert.IsTrue(face.IsActive(v), "a fresh generator reports working");
+            if (v.CodeAnim != null) Assert.IsTrue(v.CodeAnim.Playing, "code animation plays while working");
+            else Debug.Log("[test] herb_garden has no code animation bound (no @64 art?) - face check only");
+
+            // stall: fill its output pile (§9.5)
+            var (x, y) = Sim.World.BuildingCenterPx(hg);
+            Sim.Ground.DropGround(Center, "spirit_herb", Sim.Config.balance.outputPileMax, x, y, GroundTag.Crafted);
+            v.Refresh();
+            Assert.IsFalse(face.IsActive(v), "output pile full: not working");
+            if (v.CodeAnim != null) Assert.IsFalse(v.CodeAnim.Playing, "code animation stops when stalled");
+            S.Area(Center).ground.RemoveAll(g => g.item == "spirit_herb");
+            v.Refresh();
+            Assert.IsTrue(face.IsActive(v), "pile picked up: working again");
+        }
+
+        // ------------------------------------------------------------------ 8. decor under buildings
+
+        /// <summary>A Center Island flower tile with a free spot for <paramref name="type"/> whose footprint covers it.</summary>
+        static bool FlowerSpot(UnityEngine.Tilemaps.Tilemap fl, Island isl, string type, out Vector3Int tileCell, out int row, out int col)
+        {
+            var def = Sim.Config.Building(type);
+            foreach (var p in fl.cellBounds.allPositionsWithin)
+            {
+                if (fl.GetTile(p) == null) continue;
+                var ic = isl.WorldToCell(fl.GetCellCenterWorld(p));     // (col, row)
+                for (int dr = 0; dr < def.sizeH; dr++)
+                    for (int dc = 0; dc < def.sizeW; dc++)
+                    {
+                        int r0 = ic.y - dr, c0 = ic.x - dc;
+                        if (Sim.PlaceReason(Center, type, r0, c0) == null) { tileCell = p; row = r0; col = c0; return true; }
+                    }
+            }
+            tileCell = default; row = col = 0;
+            return false;
+        }
+
+        [UnityTest, Timeout(90000)]
+        public IEnumerator Decor_HiddenUnderBuildings_RestoredOnDemolish_AndAtLoad()
+        {
+            S.quest.idx = Sim.Config.quests.Count;
+            S.dragon.stage = 4;
+            var isl = GameRunner.Instance.IslandObject(Center);
+            var flT = isl.transform.Find(DecorCover.DressingRoot + "/Flowers");
+            Assert.IsNotNull(flT, "Center Island has a Flowers dressing tilemap");
+            var fl = flT.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+            const string type = "jade_carver";
+            Assert.IsTrue(FlowerSpot(fl, isl, type, out var cell, out int row, out int col), "a flower tile with room for a " + type);
+            var tile = fl.GetTile(cell);
+
+            // ghost placed on it: hidden; demolished: back
+            var g = Sim.PlaceGhost(Center, type, row, col);
+            Assert.IsNotNull(g, "ghost");
+            yield return null; yield return null;
+            Assert.IsNull(fl.GetTile(cell), "flower hidden under the ghost");
+            Assert.IsTrue(Sim.Demolish(Center, g.id), "demolish ghost");
+            yield return null; yield return null;
+            Assert.AreSame(tile, fl.GetTile(cell), "flower restored after demolish");
+
+            // a finished building present at load hides it too
+            var b = Sim.Buildings.PlaceBuilt(Center, type, row, col, starter: false);
+            Assert.IsNotNull(b);
+            Assert.AreEqual(row, b.row); Assert.AreEqual(col, b.col);
+            Assert.IsTrue(SaveService.Instance.Save(), "save: " + SaveService.Instance.LastError);
+            yield return LoadGame();
+            Assert.IsFalse(GameRunner.Instance.FreshRun, "reload should read the save");
+            isl = GameRunner.Instance.IslandObject(Center);
+            fl = isl.transform.Find(DecorCover.DressingRoot + "/Flowers").GetComponent<UnityEngine.Tilemaps.Tilemap>();
+            Assert.IsNull(fl.GetTile(cell), "flower hidden under a building loaded from the save");
+            var bvs = Object.FindFirstObjectByType<BuildingViewSync>();
+            Assert.Greater(bvs.Decor.HiddenTiles, 0);
+            // resource nodes are separate objects and paths a separate tilemap: the cover touches neither
+            var path = isl.transform.Find(DecorCover.DressingRoot + "/Path")?.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+            if (path != null) { int n = 0; foreach (var p in path.cellBounds.allPositionsWithin) if (path.GetTile(p) != null) n++; Assert.Greater(n, 0, "path tiles intact"); }
+        }
     }
 }

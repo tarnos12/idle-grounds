@@ -40,7 +40,14 @@ namespace IdleGrounds.Game
             if (root == null) root = transform;
         }
 
-        void Start() => Sprites = new SpriteCache(runner.Database, null);
+        void Start()
+        {
+            Sprites = new SpriteCache(runner.Database, null);
+            Decor = new DecorCover(runner.IslandObject);
+        }
+
+        /// <summary>Hides the Islands' flower / scatter decor under every bound building's footprint (bind = cover, release = restore).</summary>
+        public DecorCover Decor { get; private set; }
 
         static long Key(int areaIdx, int id) => ((long)areaIdx << 32) | (uint)id;
 
@@ -90,6 +97,7 @@ namespace IdleGrounds.Game
                         if (v != null && v.sourcePrefab != prefab) { Pool(v.sourcePrefab).Release(v); v = null; }
                         if (v == null) { v = Pool(prefab).Get(); views[k] = v; }
                         v.Bind(this, area.key, b, runner.Config.Building(b.type));
+                        Decor?.Cover(k, area.key, b.col, b.row, v.W, v.H);
                     }
                     v.seenFrame = frame;
                     // cull: only views within the camera rect + 4 cells refresh (ui.js:597 paint margin)
@@ -100,7 +108,7 @@ namespace IdleGrounds.Game
             }
             releaseList.Clear();
             foreach (var kv in views) if (kv.Value.seenFrame != frame) releaseList.Add(kv.Key);
-            foreach (var k in releaseList) { var v = views[k]; v.SetHighlight(false, false, false, false); Pool(v.sourcePrefab).Release(v); views.Remove(k); }
+            foreach (var k in releaseList) { var v = views[k]; v.SetHighlight(false, false, false, false); Pool(v.sourcePrefab).Release(v); views.Remove(k); Decor?.Uncover(k); }
         }
     }
 }

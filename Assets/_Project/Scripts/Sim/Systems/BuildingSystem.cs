@@ -698,9 +698,7 @@ namespace IdleGrounds.Sim
                 b.nextGen = tm.next;
                 var (bx, by) = _ctx.World.BuildingCenterPx(b);
                 int R = 4 * CELL;
-                int near = 0;
-                foreach (var gi in area.ground)
-                    if (gi.item == g.item && Math.Sqrt((gi.x - bx) * (gi.x - bx) + (gi.y - by) * (gi.y - by)) <= R) near++;
+                int near = GenNear(area, b, g.item);
                 if (near >= g.cap) { b.pileFull = true; b.pileAt = 0; continue; }
                 if (Conv.OutputPileFull(area, b, g.item, now)) continue;
                 for (int ev = 0; ev < tm.n && near < g.cap; ev++, near++)
@@ -711,6 +709,53 @@ namespace IdleGrounds.Sim
                 }
             }
             return changed;
+        }
+
+        /// <summary>Items <paramref name="item"/> lying within 4 cells of generator <paramref name="b"/>'s centre: the pile §8.6 caps at gen.cap. Non-allocating.</summary>
+        public int GenNear(AreaState area, Building b, string item)
+        {
+            var (bx, by) = _ctx.World.BuildingCenterPx(b);
+            int R = 4 * _ctx.Cell;
+            int near = 0;
+            var ground = area.ground;
+            for (int i = 0; i < ground.Count; i++)
+            {
+                var gi = ground[i];
+                if (gi.item == item && Math.Sqrt((gi.x - bx) * (gi.x - bx) + (gi.y - by) * (gi.y - by)) <= R) near++;
+            }
+            return near;
+        }
+
+        /// <summary>
+        /// True while generator building <paramref name="b"/> is producing (the view's "working" state):
+        /// built, a generator, its own pile (<see cref="GenNear"/>) under gen.cap and its §9.5 output pile
+        /// (<see cref="ConverterSystem.OutputPileCount"/>) under balance.outputPileMax — the two stalls
+        /// <see cref="TickGenBuildings"/> applies, counted live (not the throttled <see cref="Building.pileFull"/>).
+        /// False for every other building. Non-allocating.
+        /// </summary>
+        public bool GenProducing(string areaKey, Building b) => GenProducing(S.Area(areaKey), b, out _);
+
+        /// <summary><see cref="GenProducing(string, Building)"/> that also returns the own-pile count (one pass over the ground, for the view's "n/cap" tag).</summary>
+        public bool GenProducing(AreaState area, Building b, out int near)
+        {
+            near = 0;
+            var g = b != null && b.built ? Cfg.Building(b.type)?.gen : null;
+            if (g == null || !g.enabled || area == null) return false;
+            var (bx, by) = _ctx.World.BuildingCenterPx(b);
+            var (w, h) = Cfg.BuildingSize(b.type);
+            int CELL = _ctx.Cell, R = 4 * CELL, m = Cfg.balance.outputPileCells * CELL;
+            double x0 = b.col * CELL - m, x1 = (b.col + w) * CELL + m;
+            double y0 = b.row * CELL - m, y1 = (b.row + h) * CELL + m;
+            int pile = 0;
+            var ground = area.ground;
+            for (int i = 0; i < ground.Count; i++)
+            {
+                var gi = ground[i];
+                if (gi.item != g.item) continue;
+                if (Math.Sqrt((gi.x - bx) * (gi.x - bx) + (gi.y - by) * (gi.y - by)) <= R) near++;
+                if (gi.x >= x0 && gi.x <= x1 && gi.y >= y0 && gi.y <= y1) pile++;
+            }
+            return near < g.cap && pile < Cfg.balance.outputPileMax;
         }
 
         /// <summary>
