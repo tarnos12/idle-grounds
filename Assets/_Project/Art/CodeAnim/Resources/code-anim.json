@@ -115,6 +115,136 @@
           "angles": [0, 8, 15, 8, 0, -8, -15, -8] }
       ]
     },
+    {
+      "key": "bld_brewery",
+      "note": "Still bld_brewery@64 (Buildings-64-008). Brew steam rises from the big jar and a glint runs over the jar cloths while brewing; replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "smoke", "name": "brew steam", "points": [97, 172], "size": [4, 3], "growTo": [10, 8], "rise": 16, "drift": 2, "count": 3, "period": 2.0,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 },
+        { "type": "flicker", "name": "jar glints", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [97, 176, 48, 166, 140, 186], "onSteps": [6], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_cauldron",
+      "note": "Still bld_cauldron@64 (Buildings-64-008; resend pending: detached mark only). Qi vapour rises from the ding mouth and the yin-yang medallion pulses while it works; replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "smoke", "name": "qi vapour", "points": [96, 70], "size": [6, 4], "growTo": [18, 12], "rise": 30, "drift": 2, "count": 4, "period": 2.4,
+          "alphaSteps": [0.75, 0.5, 0.25, 0.25], "sort": 2 },
+        { "type": "glow", "name": "medallion", "rect": [80, 108, 32, 30], "masks": [ { "sat": [0, 0.3], "val": [0.6, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0, 0.5], "period": 2.4, "additive": true }
+      ]
+    },
+    {
+      "key": "bld_jade_carver",
+      "note": "Still bld_jade_carver@64 (Buildings-64-008; resend pending: the block in jade greens). Grinding sparks at the wheel and a jade glow on the block (masks the jade greens of the resent block); the wheel layer is planned (layers_finish). Replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 8, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "flicker", "name": "grinding sparks", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [90, 166, 93, 160, 88, 172], "onSteps": [4], "colorA": "#C4F6FF", "alpha": [1, 1], "calm": "hide", "sort": 1 },
+        { "type": "glow", "name": "jade block", "rect": [98, 155, 44, 40], "masks": [ { "hue": [120, 190], "sat": [0.25, 1], "val": [0.35, 1] } ],
+          "colorA": "#5FCF9C", "colorB": "#A8ECC0", "alpha": [0, 0.5], "period": 1.8, "additive": true }
+      ]
+    },
+    {
+      "key": "bld_pill_furnace",
+      "note": "Still bld_pill_furnace@64 (Buildings-64-009; resend pending: idle mouth dark with embers). Mouth fire + embers, plinth lantern flicker and steam from the finial while it burns; replaces the 32-px working loop.",
+      "still": [192, 384], "fps": 8, "steps": 4, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "embers", "rect": [80, 240, 36, 62], "masks": [ { "hue": [0, 55], "sat": [0.45, 1], "val": [0.55, 1] } ],
+          "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0.25, 0.75], "period": 0.7, "additive": true },
+        { "type": "flicker", "name": "flames", "sprite": "flame", "size": [6, 16], "count": 4, "points": [88, 298, 94, 298, 100, 298, 106, 298],
+          "alpha": [0.75, 1], "calm": "1", "sort": 1 },
+        { "type": "flicker", "name": "plinth lanterns", "sprite": "mask", "rect": [0, 250, 192, 90], "masks": [ { "hue": [18, 40], "sat": [0.7, 1], "val": [0.9, 1] } ],
+          "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "additive": true },
+        { "type": "smoke", "name": "finial steam", "points": [97, 14], "size": [5, 4], "growTo": [14, 10], "rise": 18, "drift": 4, "count": 3, "period": 2.2,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 }
+      ]
+    },
+    {
+      "key": "bld_star_anvil",
+      "note": "Still bld_star_anvil@64 (Buildings-64-009). The violet anvil runes pulse, the hearth fire flickers and star sparks pop over the anvil face; the hammer layer is planned (layers_finish). Replaces the 32-px working loop.",
+      "still": [192, 384], "fps": 8, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "violet runes", "rect": [40, 200, 112, 110], "masks": [ { "hue": [245, 300], "sat": [0.25, 1], "val": [0.45, 1] } ],
+          "colorA": "#7D5FC4", "colorB": "#B9A2F0", "alpha": [0.25, 0.75], "period": 1.6, "additive": true },
+        { "type": "glow", "name": "hearth", "rect": [122, 172, 28, 26], "masks": [ { "hue": [0, 50], "sat": [0.45, 1], "val": [0.55, 1] } ],
+          "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0.25, 0.75], "period": 0.7, "additive": true },
+        { "type": "flicker", "name": "hearth flames", "sprite": "flame", "size": [5, 10], "count": 3, "points": [131, 194, 137, 194], "alpha": [0.75, 1], "calm": "1", "sort": 1 },
+        { "type": "flicker", "name": "star sparks", "sprite": "star", "size": [5, 5], "mode": "cycle", "points": [70, 210, 96, 204, 122, 210, 84, 200], "onSteps": [4], "colorA": "#B9A2F0", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_talisman_atelier",
+      "note": "Still bld_talisman_atelier@64 (Buildings-64-009). The drying talismans glow gold and the two paper lanterns flicker warm while it works; the brush layer is planned (layers_finish). Replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "talismans", "rect": [55, 115, 85, 40], "masks": [ { "hue": [35, 65], "sat": [0.4, 1], "val": [0.8, 1] } ],
+          "colorA": "#F2C94C", "colorB": "#FFF0A0", "alpha": [0.25, 0.75], "period": 2.0, "additive": true },
+        { "type": "flicker", "name": "lantern left", "sprite": "mask", "rect": [6, 100, 18, 36], "masks": [ { "sat": [0, 0.45], "val": [0.85, 1] } ],
+          "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "additive": true },
+        { "type": "flicker", "name": "lantern right", "sprite": "mask", "rect": [168, 100, 18, 36], "masks": [ { "sat": [0, 0.45], "val": [0.85, 1] } ],
+          "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "additive": true }
+      ]
+    },
+    {
+      "key": "bld_ascension_gate",
+      "note": "Still bld_ascension_gate@64 (Buildings-64-010), the Heavenly Gate art (ArtKeys: heavenly_gate -> ascension_gate). The portal swirl pulses cyan to gold, the yin-yang crest glows and qi glints run through the portal; replaces the 32-px pulse loop.",
+      "still": [320, 384], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "portal swirl", "rect": [104, 134, 102, 148],
+          "masks": [ { "hue": [140, 205], "sat": [0.2, 1], "val": [0.4, 1] }, { "hue": [40, 65], "sat": [0.3, 1], "val": [0.7, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#F2C94C", "alpha": [0.25, 0.75], "period": 3.0, "additive": true },
+        { "type": "glow", "name": "crest", "rect": [130, 30, 52, 50], "masks": [ { "sat": [0, 0.35], "val": [0.7, 1] } ],
+          "colorA": "#FFF0A0", "colorB": "#FFFFFF", "alpha": [0, 0.5], "period": 3.0, "phase": 0.5, "additive": true },
+        { "type": "flicker", "name": "qi glints", "sprite": "star", "size": [5, 5], "mode": "cycle", "points": [140, 170, 172, 200, 132, 236, 168, 252], "onSteps": [4], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_charcoal_pit",
+      "note": "Still bld_charcoal_pit@64 (Buildings-64-010). Embers glow and small flames lick in the mouth, smoke leaves the chimney while it burns; replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 8, "steps": 4, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "embers", "rect": [50, 195, 40, 35], "masks": [ { "hue": [0, 45], "sat": [0.45, 1], "val": [0.5, 1] } ],
+          "colorA": "#C2521C", "colorB": "#FF8A1F", "alpha": [0.25, 0.75], "period": 0.7, "additive": true },
+        { "type": "flicker", "name": "flames", "sprite": "flame", "size": [5, 10], "count": 3, "points": [63, 226, 71, 226], "alpha": [0.75, 1], "calm": "1", "sort": 1 },
+        { "type": "smoke", "name": "chimney smoke", "points": [96, 6], "size": [8, 6], "growTo": [20, 14], "rise": 30, "drift": 6, "count": 4, "period": 2.4,
+          "alphaSteps": [0.75, 0.75, 0.5, 0.25], "sort": 2 }
+      ]
+    },
+    {
+      "key": "bld_dragon_shrine",
+      "note": "Still bld_dragon_shrine@64 (Buildings-64-010). The dragon pearl glows, incense smoke curls from the censer and the stone lanterns flicker while the shrine is active; replaces the 32-px glow loop.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "pearl", "rect": [118, 78, 26, 26], "masks": [ { "hue": [30, 65], "sat": [0.2, 1], "val": [0.6, 1] } ],
+          "colorA": "#F2C94C", "colorB": "#FFF0A0", "alpha": [0.25, 0.75], "period": 2.0, "additive": true },
+        { "type": "smoke", "name": "incense", "points": [96, 186], "size": [3, 3], "growTo": [8, 7], "rise": 22, "drift": 3, "count": 3, "period": 2.6,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 },
+        { "type": "flicker", "name": "lantern light", "sprite": "mask", "rect": [18, 175, 156, 45], "masks": [ { "hue": [18, 40], "sat": [0.6, 1], "val": [0.85, 1] } ],
+          "colorA": "#FF8A1F", "alpha": [0.25, 0.5], "additive": true }
+      ]
+    },
+    {
+      "key": "bld_furnace_spirit",
+      "note": "Still bld_furnace_spirit@64 (Buildings-64-011). The spirit flame pulses warm and sparks pop above it while it feeds a burner; replaces the 32-px flame loop.",
+      "still": [64, 96], "fps": 8, "steps": 4, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "flame", "rect": [10, 0, 44, 42], "masks": [ { "hue": [15, 60], "sat": [0.3, 1], "val": [0.8, 1] } ],
+          "colorA": "#FF8A1F", "colorB": "#FFF0A0", "alpha": [0.25, 0.5], "period": 0.8, "additive": true },
+        { "type": "flicker", "name": "sparks", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [20, 8, 44, 4, 30, 2], "onSteps": [4], "colorA": "#FFF0A0", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_meditation_pavilion",
+      "note": "Still bld_meditation_pavilion@64 (Buildings-64-011). Incense smoke from the burner on the low table and glints on the bells while a disciple meditates; replaces the 32-px occupied loop.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "smoke", "name": "incense", "points": [96, 166], "size": [3, 3], "growTo": [8, 7], "rise": 20, "drift": 3, "count": 3, "period": 2.6,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 },
+        { "type": "flicker", "name": "bell glints", "sprite": "star", "size": [3, 3], "mode": "cycle", "points": [11, 122, 50, 142, 141, 140, 181, 122], "onSteps": [6], "colorA": "#FFFFFF", "alpha": [1, 1], "calm": "hide", "sort": 1 }
+      ]
+    },
     { "key": "npc_lin", "note": "Accepted idle strip (Creatures-64-001) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     { "key": "npc_ouyang", "note": "Accepted idle strip (Creatures-64-003) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     {

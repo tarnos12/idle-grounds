@@ -1,8 +1,8 @@
 # Idle Grounds: plan
 
-Updated 2026-10-27 01:21. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-27 02:11. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**44 of 68 tasks done**, 3 in progress, 3 to do, 4 blocked, 14 waiting.
+**45 of 69 tasks done**, 3 in progress, 3 to do, 4 blocked, 14 waiting.
 
 ## Being worked on now
 
@@ -15,7 +15,7 @@ Updated 2026-10-27 01:21. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 29 / 41 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 30 / 42 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -98,6 +98,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Art review: batch L1R layers + Sky Path corner FX-008 | In-game art reviewer: Layers-64-003 (Paper Mill one complete wheel, press, front, base), Layers-64-004 (Kang arm poses + base, Xuan rings + front + base), FX-008 (sky path corner). Stack test, layer-only-part and flat-fill checks, NOTES pivots into code-anim.json, in-game frame strips, accept/reject per file. | Claude |
 | Done | Art review: batch L1R2 layers | In-game art reviewer: Layers-64-005 (Paper Mill new wheel on the fixed ellipse, press, front, base), Layers-64-006 (Kang base + raised arm, Xuan rings + base + front). Stack test (wheel waived), part-only, holes/flat-fill checks, numbers vs 3.9.8, in-game frame strips, accept/reject per file; a third failure goes to the owner. Result 2026-10-26: Paper Mill front, Xuan ring + front validated (held); wheel, press, Paper Mill base, Kang base, Kang raised arm, Xuan base rejected 3x, awaiting owner decision (Hub question layers_finish). | Claude |
 | Done | Art review: 64 px B2 starter buildings + Dragon strips + B3 set 1 | In-game art reviewer: Buildings-64-006 (Altar, Storehouse, Gathering Stone, Wisp Lantern, Warding Seal stills), Buildings-64-007 (Infusion Array, Loom, Mill stills + base + layer), Creatures-64-005 (dragon sleeping/stir/awake @64). Numbers per file, Play next to 32 px buildings at 15/20/30/60/120 cells, layer motion in code-anim.json, accept/reject per file. | Claude |
+| Done | Art review: 64 px B3 stills Buildings-64-008 to -011 (12 buildings) | In-game art reviewer: Brewery, Cauldron, Jade Carver (-008), Pill Furnace, Star Anvil, Talisman Atelier (-009), Heavenly Gate art (bld_ascension_gate), Charcoal Pit, Dragon Shrine (-010), Forge, Furnace Spirit, Meditation Pavilion (-011). Numbers per file (upscale diff, noise vs 32, outline, width, front 3/4, base), Play next to 64/32 buildings at 15/20/30/60/120 cells, code-anim.json entries (glow, flicker, smoke) replacing the 32-px loops, accept/reject per file. | Claude |
 | Done | Art spec: stills + moving-part layers only | Rewrite ART-SPEC 3.9 so ChatGPT draws stills and separate layers for moving parts; no more hand-drawn loop frames. | Claude |
 | Done | Review coast edge profiles + round side walls Islands-052 (7 biomes) | island_<biome>_coast_edge_profile_32x8_2f + island_<biome>_sidewall_round_32x32_4f x7 (optional pieces of the 2026-10-12 curved-coast request): inspect, wire into CoastCurves (new keys), rebuild island sheets, check every Island in Play at the zoom steps, accept or reject per file. | Claude |
 | Done | Review snowy Fishing P1 (Islands-054, Fixtures-006) + Farm/Grove/Mine edge profiles (Islands-053) | Inspect 11 files, wire the ice edge along the pond shore (EnsurePond) and per-Island decor keys (island-decor.json -> edge ring), rebuild Island sheets/prefabs, check in Play before/after, accept or reject per file; ART-SPEC v6.14 + Drive mirror + feedback. | Claude |
