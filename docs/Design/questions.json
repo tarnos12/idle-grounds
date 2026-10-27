@@ -79,6 +79,40 @@
     ]
   },
   {
+    "id": "nodes_finish",
+    "q": "Five resource-node 'after the first hit' frames failed three times. Apply our small pixel fixes?",
+    "ctx": "Bamboo (1×1 and 2×2), reed beds (1×1 and 2×2) and the bone heap: ChatGPT's whole-node pictures are good, but the frame shown after the first hit keeps a flaw (a pale flag on the bamboo cut, a stalk that isn't removed, comb-like single-pixel spikes on the reeds, a straight unoutlined edge on the bone heap). The reviewer prepared exact in-house fixes that only touch those pixels (20–45 px for the small ones, a few hundred for the 2×2 bamboo and reed bed) and leave the first frame untouched; the last rows of the sheet show them. Until decided, the game keeps the 32 px bamboo (Spirit Grove); the reeds and bone heap are for islands not built yet.",
+    "imgs": [
+      {
+        "file": "question-images/nodes-finish-1.jpg",
+        "cap": "Review sheet: delivered frames vs our fix candidates (last 5 rows)"
+      }
+    ],
+    "o": [
+      [
+        "apply_fixes",
+        "Apply our pixel fixes to all five and use them (checked with the same rules)",
+        true
+      ],
+      [
+        "chatgpt_again",
+        "One more ChatGPT round for these five"
+      ],
+      [
+        "fixes_small_only",
+        "Apply our fixes only to the small ones (bamboo 1×1, reed bed 1×1, bone heap); ChatGPT redoes the 2×2 bamboo and reed bed"
+      ],
+      [
+        "keep_32",
+        "Keep the 32 px versions of these nodes for now"
+      ],
+      [
+        "all",
+        "Apply our fixes now, and from now on let us fix any node/prop that fails three times without asking"
+      ]
+    ]
+  },
+  {
     "g": "Gameplay"
   },
   {

@@ -122,10 +122,10 @@ MonoBehaviour:
     realArt: 1
     overlay: []
   - key: node_moonshrub
-    sprite: {fileID: -2338828035556364840, guid: 45ecccd3ea8b80746b4a41472ae510a1, type: 3}
+    sprite: {fileID: -3134133292569744056, guid: fe98339cfe1af5d47b615cdc22095c58, type: 3}
     frames:
-    - {fileID: -2338828035556364840, guid: 45ecccd3ea8b80746b4a41472ae510a1, type: 3}
-    - {fileID: 3191789535737185804, guid: 45ecccd3ea8b80746b4a41472ae510a1, type: 3}
+    - {fileID: -3134133292569744056, guid: fe98339cfe1af5d47b615cdc22095c58, type: 3}
+    - {fileID: -7193143775912719309, guid: fe98339cfe1af5d47b615cdc22095c58, type: 3}
     realArt: 1
     overlay: []
   - key: node_starrock_2x2

@@ -604,6 +604,13 @@
           "status": "done",
           "size": "S",
           "owner": "Claude"
+        },
+        {
+          "title": "Art review: step C repairs 3 Nodes-64-018..021 (bamboo, reedbed, boneheap, soulvine, moonshrub)",
+          "detail": "In-game art reviewer: diff each against its _v2_REJECTED (frame 0 identical, only named rows change; soulvine vs v2), integrate Grove/Celestial nodes that pass and Play intact/after hit; Lotus/Ravine validated on previews; 3rd failure of bamboo/reeds/boneheap/moonshrub = rejected 3x, awaiting orchestrator (in-house pixel fix proposed).",
+          "status": "done",
+          "size": "S",
+          "owner": "Claude"
         }
       ]
     },
