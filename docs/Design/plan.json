@@ -572,7 +572,7 @@
         {
           "title": "Code: step C node motions (overlay-only CodeAnimator for 2-frame nodes, ripple rings for surfacing nodes)",
           "detail": "CodeAnimator.Tick sets the still every frame, so 2-frame chop/break nodes (ironvein, jadevein, later herbbush, firevein, thundertree, soulvine) cannot get glint/pulse overlays without undoing the hit frame: add an overlay-only mode (do not touch Target.sprite when the entry has no baked effects, or bake per frame) + code-anim entries. Fish/algae/lotus need ripple rings + splash (new ring effect or FxService ripple). Spring water flow + steam when fix_spring_snow@64 passes.",
-          "status": "todo",
+          "status": "done",
           "size": "S",
           "owner": "Claude"
         }

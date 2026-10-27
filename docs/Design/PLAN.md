@@ -2,7 +2,7 @@
 
 Updated 2026-10-27 06:56. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**59 of 85 tasks done**, 3 in progress, 4 to do, 4 blocked, 14 waiting.
+**60 of 85 tasks done**, 3 in progress, 3 to do, 4 blocked, 14 waiting.
 
 ## Being worked on now
 
@@ -17,7 +17,7 @@ Updated 2026-10-27 06:56. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 44 / 58 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 45 / 58 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -132,7 +132,7 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Waiting | 64 px step C: resource nodes + fixtures | ART-SPEC v6.31 section 3.9.8 "Step C": 31 @64 files in sets C1-C11 by Island unlock order (C1 Center first: node_bush_64x96_2f@64, fix_spirittree@64 320x384, fix_quarry@64 128x160), zips Idle-Grounds-Nodes-64-001..011 + Idle-Grounds-Fixtures-64-001..003. Chop/break nodes keep 2 state frames (intact, trimmed/cracked); everything else one still; sparkle, bob, ripple, glow, steam in code; no layers. | Artist |
 | Done | Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070 | In-game art reviewer: per-file checks, integrate, Play review at the zoom steps, code motion for fixtures (Spirit Tree sparkles), accept/reject, ART-SPEC + Drive mirror. | Claude |
 | Done | Art review: 64 px step C sets C5-C11 (Nodes-64-005..011, Fixtures-64-003) | In-game art reviewer: per-file checks (canvas, palette, alpha, outline, noise, one shape, frame-1 diff, upscale), integrate Grove/Volcano/Celestial nodes and Play at the zoom steps intact and after a hit; Phase 3+ nodes and the peach tree validated as files + preview; accept/validate/reject, ART-SPEC + Drive mirror. | Claude |
-| To do | Code: step C node motions (overlay-only CodeAnimator for 2-frame nodes, ripple rings for surfacing nodes) | CodeAnimator.Tick sets the still every frame, so 2-frame chop/break nodes (ironvein, jadevein, later herbbush, firevein, thundertree, soulvine) cannot get glint/pulse overlays without undoing the hit frame: add an overlay-only mode (do not touch Target.sprite when the entry has no baked effects, or bake per frame) + code-anim entries. Fish/algae/lotus need ripple rings + splash (new ring effect or FxService ripple). Spring water flow + steam when fix_spring_snow@64 passes. | Claude |
+| Done | Code: step C node motions (overlay-only CodeAnimator for 2-frame nodes, ripple rings for surfacing nodes) | CodeAnimator.Tick sets the still every frame, so 2-frame chop/break nodes (ironvein, jadevein, later herbbush, firevein, thundertree, soulvine) cannot get glint/pulse overlays without undoing the hit frame: add an overlay-only mode (do not touch Target.sprite when the entry has no baked effects, or bake per frame) + code-anim entries. Fish/algae/lotus need ripple rings + splash (new ring effect or FxService ripple). Spring water flow + steam when fix_spring_snow@64 passes. | Claude |
 
 ## M4: Art coverage. Later
 

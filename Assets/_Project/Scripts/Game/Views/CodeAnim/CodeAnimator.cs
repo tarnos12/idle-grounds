@@ -21,7 +21,9 @@ namespace IdleGrounds.Game
     /// (shared between instances): pixel-exact deform frames (sway / shift / scroll / line) and overlay sprites (glow mask,
     /// flame tongues, puffs, glints, sheet, artist layers turned / slid / squashed / spun in their ellipse with nearest-neighbour). Per frame it only
     /// picks sprites, alphas and texel-snapped positions from preallocated arrays: no GC allocation.
-    /// Calm motion (<see cref="Juice.ReduceMotion"/>): the rest frame, steady glows / flames, no smoke, toggles held.
+    /// Calm motion (<see cref="Juice.ReduceMotion"/>): the rest frame, steady glows / flames, no smoke, toggles held, no ripples.
+    /// Overlay-only mode (<see cref="ConfigureOverlay"/>, 2-frame chop / break nodes): the base sprite is the owner's (intact or
+    /// hit frame) and is never written; overlays cut from the still follow whichever state frame the owner shows.
     /// </summary>
     public sealed class CodeAnimator : MonoBehaviour
     {
@@ -35,6 +37,7 @@ namespace IdleGrounds.Game
             public int[] layerSlide;          // layer: per-step [dx, dy] texels
             public bool spinFrames;           // layer frames are a 360° spin, picked by time
             public bool sway;                 // flicker flames: tips step 1 texel sideways at random
+            public bool stateful;             // overlay-only: sprites[i] = the cut of state frame i (glow, mask flicker, mask toggle)
         }
 
         sealed class Baked
@@ -48,6 +51,8 @@ namespace IdleGrounds.Game
             public float ppu;
             public Vector2 pivotTL;           // still pivot, texels, top-left origin
             public int h;
+            public bool overlayOnly;          // never write the target's sprite
+            public Sprite[] states;           // overlay-only: the owner's state frames (0 = intact, 1 = hit)
         }
 
         struct Slot
@@ -77,6 +82,11 @@ namespace IdleGrounds.Game
         public bool Configured => baked != null;
         /// <summary>When false, the owner (BuildingView) calls <see cref="Tick"/> itself.</summary>
         public bool SelfTick = true;
+        /// <summary>How far (local units of the target, up) the owner lifted the still this frame (a surfacing fish bobbing):
+        /// water overlays (ripple, splash) move down by it so they stay on the water line. Snapped to the still's texel grid.</summary>
+        public float GroundLift { get; set; }
+        /// <summary>True when the animator only draws overlays and never sets the target's sprite (2-frame state nodes).</summary>
+        public bool OverlayOnly => baked != null && baked.overlayOnly;
 
         Baked baked;
         Slot[] slots = new Slot[0];
@@ -105,6 +115,7 @@ namespace IdleGrounds.Game
         /// </summary>
         public bool Configure(CodeAnimEntry entry, SpriteRenderer target, Sprite still, Func<string, Sprite> resolve)
         {
+            if (entry != null && entry.overlayOnly) return ConfigureOverlay(entry, target, still != null ? new[] { still } : null);
             Clear();
             if (entry == null || !entry.HasEffects || target == null || still == null) return false;
             var b = Bake(entry, still, resolve);
@@ -116,10 +127,43 @@ namespace IdleGrounds.Game
             return true;
         }
 
+        /// <summary>
+        /// Overlay-only set-up (2-frame chop / break nodes, ART-SPEC §3.9.8 step C): <paramref name="states"/> are the owner's
+        /// frames (0 = intact, 1 = trimmed / cracked), all the size of the entry's still. Only overlays run (glow, glints,
+        /// flicker, smoke, ripple, ...); the base sprite stays whatever the owner sets, so the hit frame survives every tick.
+        /// Overlays cut from the still are cut from each state frame and follow the one shown. Baked effects and layers are
+        /// ignored. False when the frames cannot be read or do not match the config.
+        /// </summary>
+        public bool ConfigureOverlay(CodeAnimEntry entry, SpriteRenderer target, Sprite[] states)
+        {
+            Clear();
+            if (entry == null || !entry.HasEffects || target == null || states == null || states.Length == 0 || states[0] == null) return false;
+            var b = BakeOverlay(entry, states, true);
+            if (b == null) return false;
+            Entry = entry; Target = target; baked = b;
+            BuildSlots();
+            wasOn = false; lastBase = null;
+            Tick(CodeAnimClock.Now);
+            return true;
+        }
+
+        /// <summary><see cref="ConfigureOverlay"/> without the shared bake cache (tests, art tools).</summary>
+        public bool ConfigureOverlayUncached(CodeAnimEntry entry, SpriteRenderer target, Sprite[] states)
+        {
+            Clear();
+            if (entry == null || target == null || states == null || states.Length == 0) return false;
+            var b = BakeOverlay(entry, states, false);
+            if (b == null) return false;
+            Entry = entry; Target = target; baked = b;
+            BuildSlots();
+            wasOn = false; lastBase = null;
+            return true;
+        }
+
         /// <summary>Stop and hide every overlay (pooled renderers stay as children).</summary>
         public void Clear()
         {
-            if (baked != null && Target != null && wasOn && Target.sprite != baked.still) Target.sprite = baked.still;
+            if (baked != null && !baked.overlayOnly && Target != null && wasOn && Target.sprite != baked.still) Target.sprite = baked.still;
             for (int i = 0; i < pool.Count; i++) if (pool[i] != null) pool[i].enabled = false;
             baked = null; Entry = null; slotCount = 0; wasOn = false; Playing = false;
         }
@@ -143,7 +187,7 @@ namespace IdleGrounds.Game
                 if (wasOn)
                 {
                     for (int i = 0; i < slotCount; i++) Hide(ref slots[i]);
-                    if (Target.sprite != baked.still) Target.sprite = baked.still;
+                    if (!baked.overlayOnly && Target.sprite != baked.still) Target.sprite = baked.still;
                     lastBase = null;
                 }
                 wasOn = false;
@@ -155,8 +199,19 @@ namespace IdleGrounds.Game
             int step = calm ? 0 : CodeAnimMath.Step(t, Entry.fps, steps);
             int count = calm ? 0 : CodeAnimMath.StepCount(t, Entry.fps);
 
-            var bs = baked.baseFrames != null ? baked.baseFrames[step % baked.baseFrames.Length] : baked.rest;
-            if (bs != lastBase || Target.sprite != bs) { Target.sprite = bs; lastBase = bs; }
+            int state = 0;
+            if (baked.overlayOnly)
+            {
+                // the owner's frame decides which cut the still overlays use (intact / hit); the sprite itself is never written
+                var cur = Target.sprite;
+                for (int k = 0; k < baked.states.Length; k++) if (ReferenceEquals(cur, baked.states[k])) { state = k; break; }
+            }
+            else
+            {
+                var bs = baked.baseFrames != null ? baked.baseFrames[step % baked.baseFrames.Length] : baked.rest;
+                if (bs != lastBase || Target.sprite != bs) { Target.sprite = bs; lastBase = bs; }
+            }
+            var ground = new Vector3(0f, -CodeAnimMath.Snap(GroundLift, baked.ppu), 0f);
 
             for (int i = 0; i < slotCount; i++)
             {
@@ -173,30 +228,33 @@ namespace IdleGrounds.Game
                     case CodeAnimKind.Glow:
                     {
                         float v;
-                        if (calm) { float ca = e.CalmAlpha; if (ca < 0f) { Hide(ref s); break; } v = 0.5f; Show(ref s, fx.sprites[0], Tint(e, v, ca), fx.anchors[0] + Follow(e, step)); break; }
+                        var gs = fx.sprites[fx.stateful ? state % fx.sprites.Length : 0];
+                        if (calm) { float ca = e.CalmAlpha; if (ca < 0f) { Hide(ref s); break; } v = 0.5f; Show(ref s, gs, Tint(e, v, ca), fx.anchors[0] + Follow(e, step)); break; }
                         v = CodeAnimMath.Pulse(t, e.period, e.phase);
-                        Show(ref s, fx.sprites[0], Tint(e, v, CodeAnimMath.QuantizeAlpha(Mathf.Lerp(e.alpha[0], e.alpha[1], v))), fx.anchors[0] + Follow(e, step));
+                        Show(ref s, gs, Tint(e, v, CodeAnimMath.QuantizeAlpha(Mathf.Lerp(e.alpha[0], e.alpha[1], v))), fx.anchors[0] + Follow(e, step));
                         break;
                     }
                     case CodeAnimKind.Flicker:
                     {
                         int n = fx.anchors.Length;
+                        var fs0 = fx.sprites[fx.stateful ? state % fx.sprites.Length : 0];
                         if (calm)
                         {
                             float ca = e.CalmAlpha;
                             if (ca < 0f || (e.mode == "cycle" && s.point != 0)) { Hide(ref s); break; }
-                            Show(ref s, fx.sprites[0], WithAlpha(e.colA, ca), fx.anchors[s.point] + Follow(e, step));
+                            Show(ref s, fs0, WithAlpha(e.colA, ca), fx.anchors[s.point] + Follow(e, step));
                             break;
                         }
                         if (e.mode == "cycle")
                         {
                             int every = Mathf.Max(n, e.onSteps != null && e.onSteps.Length > 0 ? e.onSteps[0] : n);
                             if (count % every != s.point) { Hide(ref s); break; }
-                            Show(ref s, fx.sprites[0], WithAlpha(e.colA, CodeAnimMath.QuantizeAlpha(e.alpha[1])), fx.anchors[s.point] + Follow(e, step));
+                            Show(ref s, fs0, WithAlpha(e.colA, CodeAnimMath.QuantizeAlpha(e.alpha[1])), fx.anchors[s.point] + Follow(e, step));
                             break;
                         }
                         float h = CodeAnimMath.Hash01(count, s.point, fx.index);
-                        int vi = fx.sprites.Length > 1 ? (int)(CodeAnimMath.Hash01(count, s.point, fx.index + 97) * fx.sprites.Length) % fx.sprites.Length : 0;
+                        int vi = fx.stateful ? state % fx.sprites.Length
+                            : fx.sprites.Length > 1 ? (int)(CodeAnimMath.Hash01(count, s.point, fx.index + 97) * fx.sprites.Length) % fx.sprites.Length : 0;
                         var at = fx.anchors[s.point] + Follow(e, step);
                         if (fx.sway) at.x += ((int)(CodeAnimMath.Hash01(count, s.point, fx.index + 13) * 3f) - 1) / baked.ppu;
                         Show(ref s, fx.sprites[vi], WithAlpha(e.colA, CodeAnimMath.QuantizeAlpha(Mathf.Lerp(e.alpha[0], e.alpha[1], h))), at);
@@ -226,7 +284,37 @@ namespace IdleGrounds.Game
                         bool show;
                         if (calm) show = e.CalmAlpha >= 0f;
                         else { show = false; if (e.onSteps != null) for (int k = 0; k < e.onSteps.Length; k++) if (e.onSteps[k] == step) { show = true; break; } }
-                        if (show) Show(ref s, fx.sprites[0], Color.white, fx.anchors[0] + Follow(e, step)); else Hide(ref s);
+                        if (show) Show(ref s, fx.sprites[fx.stateful ? state % fx.sprites.Length : 0], Color.white, fx.anchors[0] + Follow(e, step)); else Hide(ref s);
+                        break;
+                    }
+                    case CodeAnimKind.Ripple:
+                    {
+                        // ring r: slots 2r (back half, behind the still) and 2r+1 (front half); rings in flight are staggered
+                        if (calm) { Hide(ref s); break; }
+                        int ring = s.point >> 1;
+                        float cyc = t / Mathf.Max(0.2f, e.period) + ring / (float)e.count;
+                        float u = cyc - Mathf.Floor(cyc);
+                        int stage = Mathf.Min(3, (int)(u * 4f));
+                        float a = CodeAnimMath.QuantizeAlpha(e.alphaSteps[Mathf.Min(stage, e.alphaSteps.Length - 1)]);
+                        if (a <= 0f) { Hide(ref s); break; }
+                        Show(ref s, fx.sprites[stage * 2 + (s.point & 1)], WithAlpha(e.colA, a), fx.anchors[0] + ground);
+                        break;
+                    }
+                    case CodeAnimKind.Splash:
+                    {
+                        // one burst per cycle: droplets hop out to both sides in a short arc, then rest until the next cycle
+                        if (calm) { Hide(ref s); break; }
+                        float cyc = t / Mathf.Max(0.2f, e.period);
+                        int gen = Mathf.FloorToInt(cyc);
+                        float a01 = (cyc - gen) * e.period / Mathf.Max(0.05f, e.life);
+                        if (a01 >= 1f) { Hide(ref s); break; }
+                        int side = (s.point & 1) == 0 ? -1 : 1;
+                        float reach = 0.35f + 0.65f * CodeAnimMath.Hash01(gen, s.point, fx.index);
+                        float height = 0.55f + 0.45f * CodeAnimMath.Hash01(gen, s.point, fx.index + 7);
+                        int x = fx.emitter.x + Mathf.RoundToInt(side * e.drift * reach * a01);
+                        int y = fx.emitter.y - Mathf.RoundToInt(e.rise * height * 4f * a01 * (1f - a01));
+                        int stage = Mathf.Min(3, (int)(a01 * 4f));
+                        Show(ref s, fx.sprites[0], WithAlpha(e.colA, CodeAnimMath.QuantizeAlpha(e.alphaSteps[Mathf.Min(stage, e.alphaSteps.Length - 1)])), Local(x, y) + ground);
                         break;
                     }
                     case CodeAnimKind.Layer:
@@ -300,7 +388,9 @@ namespace IdleGrounds.Game
                     var sr = Renderer(si);
                     sr.sharedMaterial = fx.e.additive && Additive() != null ? additive : lit;
                     sr.sortingLayerID = Target.sortingLayerID;
-                    sr.sortingOrder = Target.sortingOrder + 1 + fx.e.sort;
+                    // the back half of a ripple ring lies behind the still (the water behind the fish), the front half in front
+                    bool back = fx.e.kind == CodeAnimKind.Ripple && (p & 1) == 0;
+                    sr.sortingOrder = back ? Target.sortingOrder - 1 : Target.sortingOrder + 1 + fx.e.sort;
                     slots[si] = new Slot { sr = sr, fx = fx, point = p, pos = new Vector3(float.NaN, 0f, 0f) };
                     si++;
                 }
@@ -324,6 +414,8 @@ namespace IdleGrounds.Game
             {
                 case CodeAnimKind.Smoke: return fx.e.count;
                 case CodeAnimKind.Flicker: return fx.anchors.Length;
+                case CodeAnimKind.Ripple: return fx.e.count * 2;
+                case CodeAnimKind.Splash: return fx.e.count;
                 default: return 1;
             }
         }
@@ -369,9 +461,35 @@ namespace IdleGrounds.Game
             return b;
         }
 
-        /// <summary>Bake from pixels already in memory (tests use readable textures; the runtime path reads the still first).</summary>
-        static Baked BakeImage(CodeAnimEntry entry, Sprite still, PixelImage img, Func<string, Sprite> resolve)
+        /// <summary>Overlay-only bake (2-frame state nodes): every state frame is read; cached per key + first frame.</summary>
+        static Baked BakeOverlay(CodeAnimEntry entry, Sprite[] states, bool cached)
         {
+            string ck = entry.key + "#ov#" + states[0].GetInstanceID() + "#" + states.Length;
+            if (cached && cache.TryGetValue(ck, out var hit)) return hit;
+            var imgs = new PixelImage[states.Length];
+            for (int i = 0; i < states.Length; i++)
+            {
+                imgs[i] = states[i] != null ? PixelImage.FromSprite(states[i]) : null;
+                if (imgs[i] == null) return null;    // no graphics device: no animation (tests, -nographics)
+                if ((entry.StillW > 0 && (imgs[i].w != entry.StillW || imgs[i].h != entry.StillH)) || imgs[i].w != imgs[0].w || imgs[i].h != imgs[0].h)
+                {
+                    Debug.LogWarning($"[CodeAnim] {entry.key}: state frame {i} is {imgs[i].w}x{imgs[i].h}, config expects {entry.StillW}x{entry.StillH}; animation off");
+                    if (cached) cache[ck] = null;
+                    return null;
+                }
+            }
+            var b = BakeImage(entry, states[0], imgs[0], null, imgs);
+            b.overlayOnly = true;
+            b.states = (Sprite[])states.Clone();
+            if (cached) cache[ck] = b;
+            return b;
+        }
+
+        /// <summary>Bake from pixels already in memory (tests use readable textures; the runtime path reads the still first).
+        /// <paramref name="stateImgs"/> (overlay-only): the state frames; no baked frames or layers, still cuts per state.</summary>
+        static Baked BakeImage(CodeAnimEntry entry, Sprite still, PixelImage img, Func<string, Sprite> resolve, PixelImage[] stateImgs = null)
+        {
+            bool overlayOnly = stateImgs != null;
             float ppu = still.pixelsPerUnit;
             var pivotTL = new Vector2(still.pivot.x, img.h - still.pivot.y);
             var b = new Baked { still = still, rest = still, ppu = ppu, pivotTL = pivotTL, h = img.h };
@@ -382,7 +500,7 @@ namespace IdleGrounds.Game
             bool anyLayer = false;
             foreach (var e in entry.effects)
             {
-                if (e == null || e.kind != CodeAnimKind.Layer) continue;
+                if (overlayOnly || e == null || e.kind != CodeAnimKind.Layer) continue;
                 anyLayer = true;
                 string part = string.IsNullOrEmpty(e.sprite) || e.sprite == "mask" ? e.name : e.sprite;
                 Need(CodeAnimLibrary.LayerSuffix(part));
@@ -407,7 +525,7 @@ namespace IdleGrounds.Game
 
             // baked deform frames
             bool anyBaked = false;
-            foreach (var e in entry.effects) if (e != null && e.IsBaked && Active(e, layersLive)) anyBaked = true;
+            foreach (var e in entry.effects) if (!overlayOnly && e != null && e.IsBaked && Active(e, layersLive)) anyBaked = true;
             if (anyBaked)
             {
                 b.baseFrames = new Sprite[entry.steps];
@@ -442,7 +560,7 @@ namespace IdleGrounds.Game
             {
                 idx++;
                 if (e == null || e.IsBaked || e.kind == CodeAnimKind.Unknown || !Active(e, layersLive)) continue;
-                if (e.kind == CodeAnimKind.Layer && !layersLive) continue;
+                if (e.kind == CodeAnimKind.Layer && (!layersLive || overlayOnly)) continue;
                 var fx = new FxBake { e = e, index = idx * 31 };
                 switch (e.kind)
                 {
@@ -450,8 +568,19 @@ namespace IdleGrounds.Game
                     case CodeAnimKind.Flicker when e.sprite == "mask" || e.sprite == "maskColor":
                     {
                         var r = CodeAnimBake.Rect(e, img);
-                        var cut = CodeAnimBake.Cut(e, img, r, e.sprite == "maskColor");
-                        fx.sprites = new[] { cut.ToSprite(entry.key + "_" + e.name, ppu, Vector2.zero) };
+                        if (overlayOnly)
+                        {
+                            // one cut per state frame: the glow of a cracked vein follows the crack
+                            fx.sprites = new Sprite[stateImgs.Length];
+                            for (int k = 0; k < stateImgs.Length; k++)
+                                fx.sprites[k] = CodeAnimBake.Cut(e, stateImgs[k], r, e.sprite == "maskColor").ToSprite(entry.key + "_" + e.name + "_s" + k, ppu, Vector2.zero);
+                            fx.stateful = true;
+                        }
+                        else
+                        {
+                            var cut = CodeAnimBake.Cut(e, img, r, e.sprite == "maskColor");
+                            fx.sprites = new[] { cut.ToSprite(entry.key + "_" + e.name, ppu, Vector2.zero) };
+                        }
                         fx.anchors = new[] { Loc(r.x, r.y) };
                         break;
                     }
@@ -462,7 +591,7 @@ namespace IdleGrounds.Game
                         fx.sprites = new Sprite[n];
                         for (int v = 0; v < n; v++)
                         {
-                            var pi = e.sprite == "flame" ? CodeAnimBake.Flame(w, Mathf.Max(3, h - (v * 3) % Mathf.Max(1, h / 2)), v) : CodeAnimBake.Star(w);
+                            var pi = e.sprite == "flame" ? CodeAnimBake.Flame(w, Mathf.Max(3, h - (v * 3) % Mathf.Max(1, h / 2)), v) : e.sprite == "glint" ? CodeAnimBake.Glint(w) : CodeAnimBake.Star(w);
                             fx.sprites[v] = pi.ToSprite(entry.key + "_" + e.name + v, ppu, new Vector2(pi.w / 2, pi.h));
                         }
                         fx.anchors = Points(e);
@@ -481,6 +610,40 @@ namespace IdleGrounds.Game
                             fx.sprites[k] = pi.ToSprite(entry.key + "_puff" + k, ppu, new Vector2(pi.w / 2, pi.h));
                         }
                         fx.emitter = e.points != null && e.points.Length >= 2 ? new Vector2Int(e.points[0], e.points[1]) : new Vector2Int(img.w / 2, 0);
+                        fx.anchors = new[] { Vector3.zero };
+                        break;
+                    }
+                    case CodeAnimKind.Toggle when overlayOnly && e.sprite != "sheet":
+                    {
+                        var r = CodeAnimBake.Rect(e, img);
+                        fx.sprites = new Sprite[stateImgs.Length];
+                        for (int k = 0; k < stateImgs.Length; k++) fx.sprites[k] = CodeAnimBake.Cut(e, stateImgs[k], r, true).ToSprite(entry.key + "_" + e.name + "_s" + k, ppu, Vector2.zero);
+                        fx.stateful = true;
+                        fx.anchors = new[] { Loc(r.x, r.y) };
+                        break;
+                    }
+                    case CodeAnimKind.Ripple:
+                    {
+                        // 4 ring sizes (size -> growTo), each split in a back and a front half; pivot = ring centre texel corner
+                        int w0 = e.size != null && e.size.Length >= 2 ? e.size[0] : 16, h0 = e.size != null && e.size.Length >= 2 ? e.size[1] : 4;
+                        int w1 = e.growTo != null && e.growTo.Length >= 2 ? e.growTo[0] : w0 * 2, h1 = e.growTo != null && e.growTo.Length >= 2 ? e.growTo[1] : h0 * 2;
+                        fx.sprites = new Sprite[8];
+                        for (int k = 0; k < 4; k++)
+                        {
+                            int rw = Mathf.RoundToInt(Mathf.Lerp(w0, w1, k / 3f)), rh = Mathf.RoundToInt(Mathf.Lerp(h0, h1, k / 3f));
+                            var pv = new Vector2(rw / 2, rh / 2);
+                            fx.sprites[k * 2] = CodeAnimBake.Ring(rw, rh, false).ToSprite(entry.key + "_" + e.name + "_ring" + k + "b", ppu, pv);
+                            fx.sprites[k * 2 + 1] = CodeAnimBake.Ring(rw, rh, true).ToSprite(entry.key + "_" + e.name + "_ring" + k + "f", ppu, pv);
+                        }
+                        fx.anchors = new[] { e.points != null && e.points.Length >= 2 ? Loc(e.points[0], e.points[1]) : Loc(img.w / 2, img.h - 1) };
+                        break;
+                    }
+                    case CodeAnimKind.Splash:
+                    {
+                        int dw = e.size != null && e.size.Length >= 2 ? e.size[0] : 2, dh = e.size != null && e.size.Length >= 2 ? e.size[1] : 2;
+                        var pi = CodeAnimBake.Drop(dw, dh);
+                        fx.sprites = new[] { pi.ToSprite(entry.key + "_" + e.name + "_drop", ppu, new Vector2(dw / 2, dh)) };
+                        fx.emitter = e.points != null && e.points.Length >= 2 ? new Vector2Int(e.points[0], e.points[1]) : new Vector2Int(img.w / 2, img.h - 1);
                         fx.anchors = new[] { Vector3.zero };
                         break;
                     }

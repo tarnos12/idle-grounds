@@ -309,6 +309,54 @@ namespace IdleGrounds.Game
             return o;
         }
 
+        /// <summary>4-point glint in white tones (the tint gives the colour: silver, jade): white core, light-grey arms.
+        /// Odd size; 3 = a plus sign.</summary>
+        public static PixelImage Glint(int n)
+        {
+            n = Mathf.Max(3, n | 1);
+            var o = new PixelImage(n, n); int c = n / 2;
+            var arm = new Color32(200, 200, 200, 255); var core = new Color32(255, 255, 255, 255);
+            for (int i = 0; i < n; i++) { o.Set(c, i, arm); o.Set(i, c, arm); }
+            o.Set(c, c, core);
+            if (n >= 5) { o.Set(c - 1, c, core); o.Set(c + 1, c, core); o.Set(c, c - 1, core); o.Set(c, c + 1, core); }
+            return o;
+        }
+
+        /// <summary>One half of a 1-px water ring: the outline of a w×h ellipse (white; the tint gives the colour), the back
+        /// (upper) rows or the front (lower) rows, cut at h/2 so the two halves meet on one row. 4-connected, no fill.</summary>
+        public static PixelImage Ring(int w, int h, bool front)
+        {
+            w = Mathf.Max(3, w); h = Mathf.Max(3, h);
+            var o = new PixelImage(w, h);
+            float rx = w * 0.5f, ry = h * 0.5f;
+            bool Inside(int x, int y)
+            {
+                if (x < 0 || y < 0 || x >= w || y >= h) return false;
+                float dx = (x + 0.5f - rx) / rx, dy = (y + 0.5f - ry) / ry;
+                return dx * dx + dy * dy <= 1f;
+            }
+            var white = new Color32(255, 255, 255, 255);
+            int cut = h / 2;
+            for (int y = 0; y < h; y++)
+            {
+                if (front ? y < cut : y >= cut) continue;
+                for (int x = 0; x < w; x++)
+                    if (Inside(x, y) && (!Inside(x - 1, y) || !Inside(x + 1, y) || !Inside(x, y - 1) || !Inside(x, y + 1))) o.Set(x, y, white);
+            }
+            return o;
+        }
+
+        /// <summary>Water droplet: a w×h white block with the top corners cut when it is at least 3 wide (tint gives the colour).</summary>
+        public static PixelImage Drop(int w, int h)
+        {
+            w = Mathf.Max(1, w); h = Mathf.Max(1, h);
+            var o = new PixelImage(w, h);
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                    if (!(w >= 3 && y == 0 && (x == 0 || x == w - 1))) o.Set(x, y, new Color32(255, 255, 255, 255));
+            return o;
+        }
+
         /// <summary>Sheet of paper: fill (default P40) with a 1-px outline (default P05).</summary>
         public static PixelImage Sheet(int w, int h, Color fill, Color edge)
         {
