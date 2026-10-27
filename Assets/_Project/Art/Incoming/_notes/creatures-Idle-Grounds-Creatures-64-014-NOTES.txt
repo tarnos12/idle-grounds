@@ -1,0 +1,4 @@
+F1 Center Fox Spirit v6.40 redraw. All four strips were rebuilt from native-64 image-generation concepts and normalized directly at 64; no 32-to-64 doubling was used.
+The redraw keeps 1px interior/edge detail, mixes native 1px pixels with 2x2 fur tufts, lowers and separates all three tails from the head, preserves a forward snout and upright ears, closes internal holes, and retains the requested right-facing silhouette.
+Idle feet are identical in the bottom six rows. Move uses contact/passing/opposite-contact/passing generated poses with whole-2x2 inter-frame edits. Hit 0 is a flat P07/P06 flash with the idle alpha and retained P01/P02 outline; hit 1 recoils left. Die 0 is byte/pixel identical to hit 1; frames 2-3 are capped to body plus at most 12 pieces, each at least 2x2.
+Delivery means uploaded and verified only. Acceptance and integration require the project reviewer.
