@@ -80,8 +80,8 @@
   },
   {
     "id": "nodes_finish",
-    "q": "Six resource nodes failed three or more times. Apply our small pixel fixes?",
-    "ctx": "Bamboo (1×1 and 2×2), reed beds (1×1 and 2×2) and the bone heap: ChatGPT's whole-node pictures are good, but the frame shown after the first hit keeps a flaw (a pale flag on the bamboo cut, a stalk that isn't removed, comb-like single-pixel spikes on the reeds, a straight unoutlined edge on the bone heap). The reviewer prepared exact in-house fixes that only touch those pixels (20–45 px for the small ones, a few hundred for the 2×2 bamboo and reed bed) and leave the first frame untouched; the last rows of the sheet show them. Until decided, the game keeps the 32 px bamboo (Spirit Grove); the reeds and bone heap are for islands not built yet. Update: the soul vine (Azure Beast Ravine, not built yet) has now failed 4 times — it still lacks the requested leaf pairs; an in-house fix would add ~120 px of leaves, or it can stay at 32 px until that island is built.",
+    "q": "Six resource nodes and the 64 px fox failed three or more times. Apply our small pixel fixes?",
+    "ctx": "Bamboo (1×1 and 2×2), reed beds (1×1 and 2×2) and the bone heap: ChatGPT's whole-node pictures are good, but the frame shown after the first hit keeps a flaw (a pale flag on the bamboo cut, a stalk that isn't removed, comb-like single-pixel spikes on the reeds, a straight unoutlined edge on the bone heap). The reviewer prepared exact in-house fixes that only touch those pixels (20–45 px for the small ones, a few hundred for the 2×2 bamboo and reed bed) and leave the first frame untouched; the last rows of the sheet show them. Until decided, the game keeps the 32 px bamboo (Spirit Grove); the reeds and bone heap are for islands not built yet. Update: the soul vine (Azure Beast Ravine, not built yet) has now failed 4 times — it still lacks the requested leaf pairs; an in-house fix would add ~120 px of leaves, or it can stay at 32 px until that island is built. Update: the 64 px Fox Spirit (in the game on Center) also failed its 3rd round, but only on details: the eye is a thin chevron, one walk frame's colours drift, and two 1-px stray lines. A 98-pixel in-house fix makes every check pass; until decided, the 32 px fox stays in the game.",
     "imgs": [
       {
         "file": "question-images/nodes-finish-1.jpg",
@@ -91,7 +91,7 @@
     "o": [
       [
         "apply_fixes",
-        "Apply our pixel fixes to all five and use them (checked with the same rules)",
+        "Apply our pixel fixes to all of them (the six nodes and the fox) and use them",
         true
       ],
       [
