@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 08:41",
+  "updated": "2026-10-27 11:07",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -587,6 +587,13 @@
         {
           "title": "Art review: step C repairs Nodes-64-013..017 (herbbush, bamboo, reedbed, boneheap, soulvine, moonshrub, bush 3rd send)",
           "detail": "In-game art reviewer: diff each against its rejected file (frame 0 identical, only the named regions change; soulvine judged fresh), integrate the Grove/Celestial/Center nodes that pass and Play intact/after hit at the zoom steps; reed/bone/soul validated on previews; accept/validate/reject, ART-SPEC + Drive mirror; bush 3rd failure = awaiting the orchestrator.",
+          "status": "done",
+          "size": "S",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: step C repairs 3 Nodes-64-018..021 (bamboo, reedbed, boneheap, soulvine, moonshrub)",
+          "detail": "In-game art reviewer: diff each against its _v2_REJECTED (frame 0 identical, only named rows change; soulvine vs v2), integrate Grove/Celestial nodes that pass and Play intact/after hit; Lotus/Ravine validated on previews; 3rd failure of bamboo/reeds/boneheap/moonshrub = rejected 3x, awaiting orchestrator (in-house pixel fix proposed).",
           "status": "done",
           "size": "S",
           "owner": "Claude"
