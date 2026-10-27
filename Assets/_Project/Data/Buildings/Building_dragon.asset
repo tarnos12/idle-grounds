@@ -65,13 +65,13 @@ MonoBehaviour:
       rateMs: 1000
       speed: 170
       carry: 1
-  icon: {fileID: 6168315964129227473, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
+  icon: {fileID: -4858476851487048102, guid: 38f5d577520e6bc4eb7ff53094f0b79a, type: 3}
   hasRealArt: 1
   frames:
-  - {fileID: 6168315964129227473, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
-  - {fileID: -5132903327860737518, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
-  - {fileID: 9174511186781902755, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
-  - {fileID: -4468560326479900658, guid: 9ee7d5f6ba031c9428a6784053328f3f, type: 3}
+  - {fileID: -4858476851487048102, guid: 38f5d577520e6bc4eb7ff53094f0b79a, type: 3}
+  - {fileID: -9024376259418385094, guid: 38f5d577520e6bc4eb7ff53094f0b79a, type: 3}
+  - {fileID: -7145035058663171357, guid: 38f5d577520e6bc4eb7ff53094f0b79a, type: 3}
+  - {fileID: 5858905774247421704, guid: 38f5d577520e6bc4eb7ff53094f0b79a, type: 3}
   variants:
   - key: shrine
     sprite: {fileID: 21300000, guid: 3d2a66ee2bbc1d84284fae4aed08017b, type: 3}
