@@ -1,0 +1,41 @@
+'use strict';
+// usage: node an.js <png> <frameW> [--ref idleFrame0png] [--json]
+const {decode}=require('./png.js');
+const HEX='0D0F14 1B1F2B 2E3345 4A5068 7A809A B7BCCD E8ECF3 0F3B34 1F6B57 2F9A7A 5FCF9C A8ECC0 4F7A2F 86B34A C3D67A 4A1417 8C1D22 C8322B EE6A4A 3D2616 6E4524 A8703A D9A45C F2C94C FFF0A0 14405A 2B86B3 5ED4E8 C4F6FF FF8A1F 3A2A63 7D5FC4 C2521C B8862E F0C8A0 C48B68 B9A2F0 2C4A22 3E5A7C F4E6C8'.split(' ');
+const PAL=new Map(HEX.map((h,i)=>[h,'P'+String(i+1).padStart(2,'0')]));
+function frames(file,fw){const im=decode(file);const n=im.w/fw;const fr=[];let off=0,alphaBad=0;
+  for(let f=0;f<n;f++){const g=[];for(let y=0;y<im.h;y++)for(let x=0;x<fw;x++){const i=(y*im.w+f*fw+x)*4;const a=im.rgba[i+3];
+    if(a!==0&&a!==255)alphaBad++; if(a===0){g.push(null);continue;}
+    const h=[0,1,2].map(k=>im.rgba[i+k].toString(16).padStart(2,'0')).join('').toUpperCase();const p=PAL.get(h);if(!p)off++;g.push(p||('#'+h));}
+    fr.push({w:fw,h:im.h,g});}
+  return {im,fr,off,alphaBad};}
+const at=(F,x,y)=>(x<0||y<0||x>=F.w||y>=F.h)?null:F.g[y*F.w+x];
+function comps(F,pred,conn8){const seen=new Uint8Array(F.w*F.h),out=[];for(let i=0;i<F.w*F.h;i++){if(seen[i]||!pred(i))continue;const st=[i];seen[i]=1;const px=[];let border=false;
+  while(st.length){const j=st.pop();px.push(j);const x=j%F.w,y=(j/F.w)|0;if(x===0||y===0||x===F.w-1||y===F.h-1)border=true;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;if(!conn8&&dx&&dy)continue;const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=F.w||ny>=F.h)continue;const k=ny*F.w+nx;if(!seen[k]&&pred(k)){seen[k]=1;st.push(k);}}}
+  let x0=1e9,y0=1e9,x1=-1,y1=-1;for(const j of px){const x=j%F.w,y=(j/F.w)|0;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+  out.push({n:px.length,border,bw:x1-x0+1,bh:y1-y0+1,x0,y0});}return out;}
+function dist(F){// 4-dist to transparent/outside
+  const D=new Int32Array(F.w*F.h).fill(1e6);const q=[];for(let i=0;i<F.w*F.h;i++){if(F.g[i]===null){D[i]=0;q.push(i);}}
+  for(let i=0;i<F.w*F.h;i++){const x=i%F.w,y=(i/F.w)|0;if(F.g[i]!==null&&(x===0||y===0||x===F.w-1||y===F.h-1)&&D[i]>1){D[i]=1;}}
+  // BFS
+  let h=0;while(h<q.length){const j=q[h++];const x=j%F.w,y=(j/F.w)|0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=F.w||ny>=F.h)continue;const k=ny*F.w+nx;if(D[k]>D[j]+1){D[k]=D[j]+1;q.push(k);}}}
+  return D;}
+function stats(F){const op=F.g.filter(v=>v!==null).length;const cnt={};F.g.forEach(v=>{if(v)cnt[v]=(cnt[v]||0)+1;});
+  const sh=comps(F,i=>F.g[i]!==null,true);const holes=comps(F,i=>F.g[i]===null,false).filter(c=>!c.border).reduce((s,c)=>s+c.n,0);
+  let x0=1e9,y0=1e9,x1=-1,y1=-1,sx=0;F.g.forEach((v,i)=>{if(!v)return;const x=i%F.w,y=(i/F.w)|0;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);sx+=x;});
+  const D=dist(F);let r1=0,r1d=0,r2=0,r2d=0,int=0,intd=0;F.g.forEach((v,i)=>{if(!v)return;const d=D[i];const dk=v==='P01'||v==='P02';if(d===1){r1++;if(dk)r1d++;}else if(d===2){r2++;if(dk)r2d++;}else{int++;if(dk)intd++;}});
+  // 2x2 uniformity among aligned blocks fully opaque
+  let bl=0,un=0;for(let y=0;y+1<F.h;y+=2)for(let x=0;x+1<F.w;x+=2){const a=[at(F,x,y),at(F,x+1,y),at(F,x,y+1),at(F,x+1,y+1)];if(a.some(v=>v===null))continue;bl++;if(a.every(v=>v===a[0]))un++;}
+  // 1-px stalks: runs >=3 of px with both horizontal neighbours empty (vertical stalk) or both vertical empty (horizontal stalk)
+  const stalks=[];for(let x=0;x<F.w;x++){let run=[];for(let y=0;y<=F.h;y++){const ok=y<F.h&&at(F,x,y)&&!at(F,x-1,y)&&!at(F,x+1,y);if(ok)run.push(y);else{if(run.length>=3)stalks.push(`v x=${x} y=${run[0]}-${run[run.length-1]}`);run=[];}}}
+  for(let y=0;y<F.h;y++){let run=[];for(let x=0;x<=F.w;x++){const ok=x<F.w&&at(F,x,y)&&!at(F,x,y-1)&&!at(F,x,y+1);if(ok)run.push(x);else{if(run.length>=3)stalks.push(`h y=${y} x=${run[0]}-${run[run.length-1]}`);run=[];}}}
+  const feet=F.g.slice((F.h-1)*F.w).some(v=>v);
+  return {op,cnt,shapes:sh.length,shapeSizes:sh.map(c=>c.n+'('+c.bw+'x'+c.bh+')'),holes,box:(x1-x0+1)+'x'+(y1-y0+1),top:y0,bot:y1,cx:sx/op,ring1:r1d/r1,ring2:r2d/r2,intDark:intd/int,uni:un/bl,stalks,feet,dark:((cnt.P01||0)+(cnt.P02||0))/op};}
+function change(A,B,base){let ch=0,blk=0,iso=0;const C=new Uint8Array(A.w*A.h);for(let i=0;i<C.length;i++)if(A.g[i]!==B.g[i]){C[i]=1;ch++;}
+  for(let i=0;i<C.length;i++){if(!C[i])continue;const x=i%A.w,y=(i/A.w)|0;let full=false;const bx=x&~1,by=y&~1;if(bx+1<A.w&&by+1<A.h&&C[by*A.w+bx]&&C[by*A.w+bx+1]&&C[(by+1)*A.w+bx]&&C[(by+1)*A.w+bx+1])full=true;if(full)blk++;
+    let nb=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const nx=x+dx,ny=y+dy;if(nx>=0&&ny>=0&&nx<A.w&&ny<A.h&&C[ny*A.w+nx])nb++;}if(nb<=1)iso++;}
+  return {ch,pct:100*ch/base,blk:ch?100*blk/ch:100,iso:ch?100*iso/ch:0};}
+function shiftMatch(R,F){let best=null;for(let dy=-6;dy<=6;dy++)for(let dx=-8;dx<=8;dx++){let same=0,sil=0,ro=0;for(let y=0;y<R.h;y++)for(let x=0;x<R.w;x++){const r=R.g[y*R.w+x];if(!r)continue;ro++;const f=at(F,x+dx,y+dy);if(f)sil++;if(f===r)same++;}const s={dx,dy,same:100*same/ro,sil:100*sil/ro};if(!best||s.same>best.same)best=s;}return best;}
+const eq=(A,B)=>A.g.filter((v,i)=>v!==B.g[i]).length;
+module.exports={frames,stats,change,shiftMatch,eq,at,comps,dist};
