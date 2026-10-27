@@ -7,7 +7,7 @@
 #   save (path to an idle-grounds-save.json to boot from), timeoutSeconds (300),
 #   shots: [{ name, island ("center", "farm", ...; empty = absolute), fit (whole Island), x, y (offset / position, cells), size (ortho half-height, cells),
 #            zoom (1..6 game zoom: goes through the real CameraController, so zoom limits + pan clamp apply), startView, veils ("on"|"off"),
-#            frames (stepped frames before the shot, default 4; 1 frame = 20 ms of game time), act: ["welcomeClose", "build", "place:kiln@center,66,48", ...] }]
+#            focus ("built" = centre on the last `built` act building, x/y offset), frames (stepped frames before the shot, default 4; 1 frame = 20 ms of game time), act: ["welcomeClose", "build", "place:kiln@center,66,48", ...] }]
 #   act commands: see Assets/_Project/Scripts/Editor/BatchActs.cs. Play mode steps the player loop itself (EditorApplication.Step), so Update/HUD run.
 #   spec.hideVeils hides every locked Island veil. Visual tour: bash tools/bg/tour.sh <outDir>.
 # PNGs go to --out (default <bg>/Logs/bg/shots/<time>/); the path list is printed at the end.

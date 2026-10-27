@@ -18,6 +18,7 @@ namespace IdleGrounds.Editor
     ///   menu | settings (Menu on its Settings page) | font:OPTION_ID (Text font setting, applied live; kept in PlayerPrefs)
     ///   recipe:island,TYPE | link:island | bridge:island | pavilion:island   (first BUILT building of that type)
     ///   give:ITEM,N (hand) | clearHand
+    ///   flowerSpot:TYPE@island (log free spots whose footprint covers a flower decor tile) | demolishAt:island,row,col | drop:ITEM,N@island,row,col
     /// </summary>
     public static partial class Batch
     {
@@ -151,7 +152,12 @@ namespace IdleGrounds.Editor
                     var p = arg.Substring(at + 1).Split(',');
                     var bb = runner.Sim.Buildings.PlaceBuilt(p[0].Trim(), arg.Substring(0, at), int.Parse(p[1]), int.Parse(p[2]));
                     if (bb == null) Debug.LogError(Tag + "built refused (no free spot): " + arg);
-                    else Debug.Log(Tag + $"built {bb.type} at {p[0].Trim()} r{bb.row} c{bb.col}");
+                    else
+                    {
+                        Debug.Log(Tag + $"built {bb.type} at {p[0].Trim()} r{bb.row} c{bb.col}");
+                        var bd = runner.Config.Building(bb.type);
+                        lastBuiltCentre = CellWorld(p[0].Trim(), bb.row + bd.sizeH * 0.5f, bb.col + bd.sizeW * 0.5f);   // shot "focus": "built"
+                    }
                     break;
                 }
                 case "working":   // every built TYPE on an island shows its working loop (working:TYPE@island; art reviews): a batch that never finishes
@@ -201,6 +207,53 @@ namespace IdleGrounds.Editor
                 case "link": build.OpenLinkEditor(arg.Trim(), FirstBuilt(arg.Trim(), "wisp_lantern")); break;
                 case "bridge": build.OpenBridgePanel(arg.Trim(), FirstBuilt(arg.Trim(), "spirit_bridge")); break;
                 case "pavilion": build.OpenPavilion(arg.Trim(), FirstBuilt(arg.Trim(), "meditation_pavilion")); break;
+                case "flowerSpot":   // log free spots for TYPE whose footprint covers a Flowers decor tile (flowerSpot:TYPE@island; decor-cover reviews)
+                {
+                    int at = arg.IndexOf('@');
+                    string type = arg.Substring(0, at).Trim(), isl = arg.Substring(at + 1).Trim();
+                    var island = runner.IslandObject(isl);
+                    var fl = island != null ? island.transform.Find(DecorCover.DressingRoot + "/Flowers")?.GetComponent<UnityEngine.Tilemaps.Tilemap>() : null;
+                    var def = runner.Config.Building(type);
+                    if (fl == null || def == null) { Debug.LogError(Tag + "flowerSpot: no Flowers map / type " + arg); break; }
+                    int found = 0;
+                    var st = runner.State;
+                    int qIdx = st.quest.idx, dStage = st.dragon.stage;
+                    st.quest.idx = runner.Config.quests.Count; st.dragon.stage = 4;     // judge the spot with everything revealed (fresh runs have it locked)
+                    foreach (var p in fl.cellBounds.allPositionsWithin)
+                    {
+                        if (fl.GetTile(p) == null || found >= 12) continue;
+                        var ic = island.WorldToCell(fl.GetCellCenterWorld(p));
+                        int r0 = ic.y - def.sizeH / 2, c0 = ic.x - def.sizeW / 2;
+                        if (runner.Sim.PlaceReason(isl, type, r0, c0) != null) continue;
+                        found++;
+                        Debug.Log(Tag + $"flowerSpot {type}@{isl}: flower at r{ic.y} c{ic.x} -> place r{r0} c{c0}; shot x {c0 + def.sizeW * 0.5f - Island.Cells * 0.5f:0.#} y {Island.Cells * 0.5f - (r0 + def.sizeH * 0.5f):0.#}");
+                    }
+                    st.quest.idx = qIdx; st.dragon.stage = dStage;
+                    if (found == 0) Debug.LogError(Tag + "flowerSpot: none for " + arg);
+                    break;
+                }
+                case "drop":   // ground items straight through the sim at a cell centre (drop:ITEM,N@island,row,col), e.g. to fill a generator's output pile
+                {
+                    int at = arg.IndexOf('@');
+                    var ip = arg.Substring(0, at).Split(',');
+                    var p = arg.Substring(at + 1).Split(',');
+                    int cell = runner.Sim.Ctx.Cell;
+                    runner.Sim.Ground.DropGround(p[0].Trim(), ip[0].Trim(), int.Parse(ip[1]), (F(p[2]) + 0.5f) * cell, (F(p[1]) + 0.5f) * cell, IdleGrounds.Sim.GroundTag.Crafted);
+                    break;
+                }
+                case "demolishAt":   // demolish the building covering a cell straight through the sim (demolishAt:island,row,col)
+                {
+                    var p = arg.Split(',');
+                    string isl = p[0].Trim(); int r = int.Parse(p[1]), c = int.Parse(p[2]);
+                    int id = -1;
+                    foreach (var b in runner.State.Area(isl).buildings)
+                    {
+                        var d = runner.Config.Building(b.type);
+                        if (d != null && r >= b.row && r < b.row + d.sizeH && c >= b.col && c < b.col + d.sizeW) { id = b.id; break; }
+                    }
+                    if (id < 0 || !runner.Sim.Demolish(isl, id)) Debug.LogError(Tag + "demolishAt: nothing demolished at " + arg);
+                    break;
+                }
                 default: if (!CodeAnimAct(name, arg)) Debug.LogError(Tag + "unknown act '" + a + "'"); break;   // animTime / animPreview: BatchCodeAnimActs.cs
             }
         }

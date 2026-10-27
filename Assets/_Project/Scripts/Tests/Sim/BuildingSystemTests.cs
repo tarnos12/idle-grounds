@@ -338,6 +338,49 @@ namespace IdleGrounds.Sim.Tests
         }
 
         [Test]
+        public void GenProducing_TrueWhileGrowing_FalseWhenPileFull()
+        {
+            var sim = M3Util.Volcano(out var clock);
+            var a = sim.State.Area("volcano");
+            var hg = sim.Buildings.PlaceBuilt("volcano", "herb_garden", 5, 40, starter: false);
+            Assert.IsTrue(sim.Buildings.GenProducing("volcano", hg), "a fresh generator grows");
+            for (int i = 0; i < 400; i++) { clock.Advance(50); sim.Tick(); }
+            Assert.AreEqual(12, SimTestUtil.CountGround(a, "spirit_herb"));
+            Assert.IsFalse(sim.Buildings.GenProducing("volcano", hg), "output pile full (§9.5): stalled");
+            Assert.IsFalse(sim.Buildings.GenProducing(a, hg, out int near));
+            Assert.AreEqual(12, near, "own-pile count comes back with the query");
+            a.ground.RemoveAll(g => g.item == "spirit_herb");      // the player picks the pile up
+            Assert.IsTrue(sim.Buildings.GenProducing("volcano", hg), "live: growing again at once (not the throttled pileFull)");
+
+            // not a generator / not built: never producing
+            var kiln = sim.Buildings.PlaceBuilt("volcano", "kiln", 5, 60, starter: false);
+            Assert.IsFalse(sim.Buildings.GenProducing("volcano", kiln));
+            Building ghost = null;
+            for (int r = 5; r < 90 && ghost == null; r += 3) for (int c = 5; c < 90 && ghost == null; c += 3) if (sim.PlaceReason("volcano", "herb_garden", r, c) == null) ghost = sim.PlaceGhost("volcano", "herb_garden", r, c);
+            Assert.IsNotNull(ghost);
+            Assert.IsFalse(sim.Buildings.GenProducing("volcano", ghost), "a ghost does not grow");
+            Assert.IsFalse(sim.Buildings.GenProducing("volcano", null));
+        }
+
+        [Test]
+        public void GenProducing_FalseAtOwnCap()
+        {
+            var cfg = SimTestUtil.LoadConfig();
+            cfg.Building("herb_garden").gen.cap = 2;
+            var sim = SimTestUtil.NewSim(out _, cfg: cfg, init: false);
+            sim.State.world.SetUnlocked("volcano", true);
+            sim.NoGroundPhysics = true;
+            var hg = sim.Buildings.PlaceBuilt("volcano", "herb_garden", 5, 40, starter: false);
+            var (x, y) = sim.World.BuildingCenterPx(hg);
+            sim.Ground.DropGround("volcano", "spirit_herb", 1, x, y, GroundTag.Crafted);
+            Assert.IsTrue(sim.Buildings.GenProducing("volcano", hg), "1 < cap 2");
+            sim.Ground.DropGround("volcano", "spirit_herb", 1, x, y, GroundTag.Crafted);
+            Assert.IsFalse(sim.Buildings.GenProducing("volcano", hg), "own pile at gen.cap (§8.6): stalled");
+            Assert.IsFalse(sim.Buildings.GenProducing(sim.State.Area("volcano"), hg, out int near));
+            Assert.AreEqual(2, near);
+        }
+
+        [Test]
         public void FurnaceSpirit_StokesBestFuelFirst()
         {
             var sim = M3Util.Volcano(out var clock);
