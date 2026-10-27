@@ -375,6 +375,13 @@
           "owner": "Claude"
         },
         {
+          "title": "Art review: 64 px Buildings-64-023 (Lotus Distillery firebox + Thunder Forge plinth repairs)",
+          "detail": "In-game art reviewer: pixel diff of each repair vs its _REJECTED.png (only the named pixels may differ), file checks, review previews in Play on Center (closest + 15/20/30/60/120 cells, working code animation, every step changes). Result: both validated - Lotus Distillery 93 px in x88-100 y156-163 (dark firebox + 12 ember px), Thunder Forge 86 px in rows 378-381 (0 above y378); B4 complete, the buildings wait on ADR 0007 Phase 3+. ART-SPEC v6.30 + Drive mirror.",
+          "status": "done",
+          "size": "S",
+          "owner": "Claude"
+        },
+        {
           "title": "Spirit Bridge @64: sending / receiving states in code, then swap the unpaired still",
           "detail": "bld_spirit_bridge_unpaired@64 (128x128, Buildings-64-022) is validated (ART-SPEC v6.29). BridgeFaceView still shows the 32-px sending/receiving strips when paired, so the @64 still goes in only together with code states on it: pool tint cyan (sending, motes rising) / gold-green (receiving, motes falling) via a code-anim entry, then replace Art/Bridges/bld_spirit_bridge_unpaired.png (or wire the @64 file) and check paired + unpaired bridges in Play.",
           "status": "next",
