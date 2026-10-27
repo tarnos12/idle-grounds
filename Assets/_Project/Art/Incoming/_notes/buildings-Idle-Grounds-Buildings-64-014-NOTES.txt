@@ -1,0 +1,7 @@
+Idle Grounds — Buildings-64-014 — v6.23 B3 review repairs
+The v6.23 brief named Buildings-64-012, but -012 and -013 already existed when this delayed revision became visible; -014 is the next collision-free sequence number.
+Cauldron: exactly the detached 29-pixel x187–189/y95–106 sliver removed; every other pixel unchanged.
+Jade Carver: only the block x100–138/y143–192 recoloured from grey to P08/P09/P11/P12 jade; stall, wheel, roof and base unchanged.
+Pill Furnace: only the mouth x82–112/y240–300 changed to P01/P02 with four 2x2 ember clusters; outside pixels unchanged.
+Forge: full redraw from the authoritative 32-px design, front 3/4 rectangular projection, teal roof, stone chimney and red banner, bellows and anvil, dark idle mouth.
+ART-SPEC v6.23; PPU 64, P01-P40, binary alpha, bottom-centre pivot, no baked shadow. Delivered for review; not accepted or integrated.
