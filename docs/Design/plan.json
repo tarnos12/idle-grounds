@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 12:43",
+  "updated": "2026-10-27 13:03",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -558,10 +558,9 @@
         {
           "title": "64 px step D: trees + standing props",
           "detail": "ART-SPEC v6.36 section 3.9.8 \"Step D\": 4 @64 variant strips (frame = variant, picked by position): D1 deco_tree_64x96_3f@64 (P1, every Island), D2 deco_pine_snow_64x96_3f@64, D3 deco_snow_props_64x96_8f@64, D4 deco_snow_props_128x128_4f@64 (Fishing). Category fixtures, zips Idle-Grounds-Trees-64-001/-002 + Idle-Grounds-Props-64-001/-002. Stills only, no layers; sway, lantern flicker, snow glints in code (decor code-anim hook still to build).",
-          "status": "waiting",
+          "status": "done",
           "size": "M",
-          "owner": "Artist",
-          "blockedBy": "D1-D3 accepted + integrated; D4 deco_snow_props_128x128@64 rejected 2x (stamped checker shading), waiting for Props-64-005"
+          "owner": "Artist"
         },
         {
           "title": "64 px step F: creatures",
@@ -569,7 +568,7 @@
           "status": "waiting",
           "size": "M",
           "owner": "Artist",
-          "blockedBy": "Round 2 reviewed (v6.43): fox v2 -014 rejected (repair -> -015), boar -010 + wolf -011 rejected (doubled 32 px, redraw -> -016/-017); waiting on the artist's resends and F4 -012 / F5 -013"
+          "blockedBy": "F4 pen beast + F5 disciple rejected small repair (v6.44: no grass wisp / no mat) -> Creatures-64-018 / -019; fox -015, boar -016, wolf -017 pending from v6.43"
         },
         {
           "title": "Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070",
