@@ -564,6 +564,14 @@
           "blockedBy": "All 4 step D strips rejected 2026-10-27 (v6.37): waiting on the artist's repairs Trees-64-003/-004, Props-64-003/-004"
         },
         {
+          "title": "64 px step F: creatures",
+          "detail": "ART-SPEC v6.39 section 3.9.8 \"Step F\": 14 @64 files in sets F1-F5, category creatures, zips Idle-Grounds-Creatures-64-009..013. F1 fox and F2 boar (Center, the only enemies in game; idle/move/hit/die strips 64x64 and 96x64, frame-based, P1), F3 Azure Wolf strips (preview-only, ADR 0007 Phase 6), F4 npc_pen_beast@64 and F5 npc_disciple@64 stills (preview-only, motion in code). Per-frame checks: changed px idle 3-12 % / move 15-40 %, >=90 % in full 2x2 blocks, <=5 % isolated, holes 0, one shape per frame, idle feet rows identical to frame 0.",
+          "status": "waiting",
+          "size": "M",
+          "owner": "Artist",
+          "blockedBy": "requested 2026-10-27"
+        },
+        {
           "title": "Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070",
           "detail": "In-game art reviewer: per-file checks, integrate, Play review at the zoom steps, code motion for fixtures (Spirit Tree sparkles), accept/reject, ART-SPEC + Drive mirror.",
           "status": "done",
