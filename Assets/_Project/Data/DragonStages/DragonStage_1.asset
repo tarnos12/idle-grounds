@@ -19,10 +19,10 @@ MonoBehaviour:
     - item: clay
       qty: 60
     text: "The dragon yawns a plume of steam\u2026 and teaches you the Algae Farm."
-  icon: {fileID: 1077955523449404062, guid: 8ee863e28cfc16c46bc851c70310d2eb, type: 3}
+  icon: {fileID: 3307788002520670540, guid: 877649535a65de7409c657d5e62cff0f, type: 3}
   frames:
-  - {fileID: 1077955523449404062, guid: 8ee863e28cfc16c46bc851c70310d2eb, type: 3}
-  - {fileID: -6823979017624440877, guid: 8ee863e28cfc16c46bc851c70310d2eb, type: 3}
-  - {fileID: 2035501399140549627, guid: 8ee863e28cfc16c46bc851c70310d2eb, type: 3}
-  - {fileID: -6347728332373687073, guid: 8ee863e28cfc16c46bc851c70310d2eb, type: 3}
+  - {fileID: 3307788002520670540, guid: 877649535a65de7409c657d5e62cff0f, type: 3}
+  - {fileID: 8010468168731842709, guid: 877649535a65de7409c657d5e62cff0f, type: 3}
+  - {fileID: 8586391625463165219, guid: 877649535a65de7409c657d5e62cff0f, type: 3}
+  - {fileID: 2837334354400229313, guid: 877649535a65de7409c657d5e62cff0f, type: 3}
   hasRealArt: 1

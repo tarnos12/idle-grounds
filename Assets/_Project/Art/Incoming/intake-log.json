@@ -7735,6 +7735,190 @@
       "sha1": "3d925a58eb3f3af0532f84e92dbaebaf7848eade",
       "date": "2026-10-09T14:48:10.928Z",
       "source": "Idle-Grounds-UI-018.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-64-006-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 883,
+      "sha1": "b5046c11bf2681967ff5ead5a926cb4316a7e6cc",
+      "date": "2026-10-27T01:03:53.874Z",
+      "source": "Idle-Grounds-Buildings-64-006.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-64-006-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 808,
+      "sha1": "8729e0cf21f4589201ffac6a1d9cd574d21a1c1e",
+      "date": "2026-10-27T01:03:53.874Z",
+      "source": "Idle-Grounds-Buildings-64-006.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-64-007-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 748,
+      "sha1": "f1a6828470bd5f24382d504a476041bef16d7cf6",
+      "date": "2026-10-27T01:03:54.609Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "_notes/buildings-Idle-Grounds-Buildings-64-007-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 1213,
+      "sha1": "adb992540f25d87d3d5a11d35806177007b05d13",
+      "date": "2026-10-27T01:03:54.610Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-005-NOTES.txt",
+      "name": "NOTES.txt",
+      "size": 596,
+      "sha1": "4ed48a8e26ff921e3a08691c6af91f9c5d00918d",
+      "date": "2026-10-27T01:03:55.291Z",
+      "source": "Idle-Grounds-Creatures-64-005.zip"
+    },
+    {
+      "path": "_notes/creatures-Idle-Grounds-Creatures-64-005-SHA256SUMS.txt",
+      "name": "SHA256SUMS.txt",
+      "size": 642,
+      "sha1": "88267d1b44dd8b1cd06edfe78edff7d8f308d473",
+      "date": "2026-10-27T01:03:55.291Z",
+      "source": "Idle-Grounds-Creatures-64-005.zip"
+    },
+    {
+      "path": "buildings/bld_center@64.png",
+      "name": "bld_center@64.png",
+      "size": 64687,
+      "sha1": "be989c2bdd48e39eb41dd7da9e3863777b3cf0b0",
+      "date": "2026-10-27T01:03:53.870Z",
+      "source": "Idle-Grounds-Buildings-64-006.zip"
+    },
+    {
+      "path": "buildings/bld_gathering_stone@64.png",
+      "name": "bld_gathering_stone@64.png",
+      "size": 5137,
+      "sha1": "2e0b4f7038c388153c2881afd12555119802182a",
+      "date": "2026-10-27T01:03:53.871Z",
+      "source": "Idle-Grounds-Buildings-64-006.zip"
+    },
+    {
+      "path": "buildings/bld_infusion_array_base@64.png",
+      "name": "bld_infusion_array_base@64.png",
+      "size": 18831,
+      "sha1": "a1360c4a3ccf52ef78bb39ac3074f5017b36c3aa",
+      "date": "2026-10-27T01:03:54.605Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_infusion_array_layer_crystal@64.png",
+      "name": "bld_infusion_array_layer_crystal@64.png",
+      "size": 3359,
+      "sha1": "2c19b1678d7c24c29baa98c6eb633e787024f16f",
+      "date": "2026-10-27T01:03:54.605Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_infusion_array@64.png",
+      "name": "bld_infusion_array@64.png",
+      "size": 21422,
+      "sha1": "85e80d51c487149ea76f14f37cefafd47afc7db7",
+      "date": "2026-10-27T01:03:54.604Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_loom_base@64.png",
+      "name": "bld_loom_base@64.png",
+      "size": 21882,
+      "sha1": "4a321c42c3cf607a409c6b2cc36cabe1137e8a7f",
+      "date": "2026-10-27T01:03:54.606Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_loom_layer_shuttle@64.png",
+      "name": "bld_loom_layer_shuttle@64.png",
+      "size": 1365,
+      "sha1": "2882976eb5109d8a1ba103148bbf90f49110cba9",
+      "date": "2026-10-27T01:03:54.607Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_loom@64.png",
+      "name": "bld_loom@64.png",
+      "size": 22464,
+      "sha1": "88806f0e3204fbb2b55abe446246e8515a8608d0",
+      "date": "2026-10-27T01:03:54.606Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_mill_base@64.png",
+      "name": "bld_mill_base@64.png",
+      "size": 20379,
+      "sha1": "abd0f0952bb5cb0d50bfece4755f7ad3d2daaa5c",
+      "date": "2026-10-27T01:03:54.608Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_mill_layer_beam@64.png",
+      "name": "bld_mill_layer_beam@64.png",
+      "size": 2567,
+      "sha1": "dc34841dc34d7952b714d3d6a4f1122fe6e752df",
+      "date": "2026-10-27T01:03:54.608Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_mill@64.png",
+      "name": "bld_mill@64.png",
+      "size": 21458,
+      "sha1": "55cfdb87541508e97940931f72aafa2385bdfc69",
+      "date": "2026-10-27T01:03:54.607Z",
+      "source": "Idle-Grounds-Buildings-64-007.zip"
+    },
+    {
+      "path": "buildings/bld_storehouse@64.png",
+      "name": "bld_storehouse@64.png",
+      "size": 28951,
+      "sha1": "c325ed72c383132ffe223fd6f6c9019d63f6d81e",
+      "date": "2026-10-27T01:03:53.872Z",
+      "source": "Idle-Grounds-Buildings-64-006.zip"
+    },
+    {
+      "path": "buildings/bld_warding_seal@64.png",
+      "name": "bld_warding_seal@64.png",
+      "size": 3976,
+      "sha1": "b185d35771ed24ba80d7105c9e6a63af2496d642",
+      "date": "2026-10-27T01:03:53.872Z",
+      "source": "Idle-Grounds-Buildings-64-006.zip"
+    },
+    {
+      "path": "buildings/bld_wisp_lantern@64.png",
+      "name": "bld_wisp_lantern@64.png",
+      "size": 3301,
+      "sha1": "666e3fef56c6e023f9ebcfc7c8ca5728e7b4ac34",
+      "date": "2026-10-27T01:03:53.873Z",
+      "source": "Idle-Grounds-Buildings-64-006.zip"
+    },
+    {
+      "path": "creatures/dragon_awake_320x384_4f@64.png",
+      "name": "dragon_awake_320x384_4f@64.png",
+      "size": 132393,
+      "sha1": "fd7466f4fdd5ea5d21a305fc6f3a841d19b20722",
+      "date": "2026-10-27T01:03:55.288Z",
+      "source": "Idle-Grounds-Creatures-64-005.zip"
+    },
+    {
+      "path": "creatures/dragon_sleeping_320x384_4f@64.png",
+      "name": "dragon_sleeping_320x384_4f@64.png",
+      "size": 107332,
+      "sha1": "a7648834ed42592da918ed9767cd23d547a264a6",
+      "date": "2026-10-27T01:03:55.289Z",
+      "source": "Idle-Grounds-Creatures-64-005.zip"
+    },
+    {
+      "path": "creatures/dragon_stir_320x384_3f@64.png",
+      "name": "dragon_stir_320x384_3f@64.png",
+      "size": 148960,
+      "sha1": "a938273e49301c423256bb0aae1cdaae7e2c8ebb",
+      "date": "2026-10-27T01:03:55.290Z",
+      "source": "Idle-Grounds-Creatures-64-005.zip"
     }
   ]
 }

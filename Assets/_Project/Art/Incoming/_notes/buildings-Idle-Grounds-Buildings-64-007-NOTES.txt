@@ -1,0 +1,7 @@
+Idle Grounds — Buildings-64-007 — B3 set 1: Infusion Array, Loom, Mill
+Native redraws at 64 px per cell; exact 192x256 canvases; P01-P40; binary alpha; bottom-centre pivot; no baked shadow.
+bld_infusion_array_layer_crystal@64.png: pivot (96,83), bobs 3 px up/down; draw after base; cyan glow/runes animated in code.
+bld_loom_layer_shuttle@64.png: pivot (79,160), slides 8 px left/right; draw after base; thread shimmer animated in code.
+bld_mill_layer_beam@64.png: pivot (104,153), swings ±15 degrees; draw after base; dust/grain motion animated in code.
+For each key, base + rest-pose layer = still pixel for pixel. No front layer is needed: each moving part sits fully in front of its base.
+Delivered for review; not accepted or integrated.

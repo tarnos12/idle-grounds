@@ -60,6 +60,61 @@
         { "type": "flicker", "name": "lantern flames", "sprite": "flame", "size": [4, 6], "count": 3, "points": [93, 311, 224, 311], "alpha": [0.75, 1], "calm": "1", "sort": 1 }
       ]
     },
+    {
+      "key": "bld_gathering_stone",
+      "note": "Still bld_gathering_stone@64 (Buildings-64-006). The jade swirl rune pulses while the stone pulls; replaces the 32-px pulse loop (one density per key, ART-SPEC 3.9.4).",
+      "still": [64, 96], "fps": 6, "steps": 4, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "jade rune", "rect": [8, 25, 48, 66], "masks": [ { "hue": [140, 190], "sat": [0.3, 1], "val": [0.45, 1] } ],
+          "colorA": "#5FCF9C", "colorB": "#A8ECC0", "alpha": [0.25, 0.75], "period": 1.6, "additive": true }
+      ]
+    },
+    {
+      "key": "bld_wisp_lantern",
+      "note": "Still bld_wisp_lantern@64 (Buildings-64-006). Lantern core glows and the red paper flickers warm; replaces the 32-px glow loop.",
+      "still": [64, 96], "fps": 6, "steps": 4, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "lantern core", "rect": [10, 27, 25, 46], "masks": [ { "hue": [20, 62], "sat": [0.3, 1], "val": [0.8, 1] } ],
+          "colorA": "#FF8A1F", "colorB": "#FFF0A0", "alpha": [0.25, 0.75], "period": 0.9, "additive": true },
+        { "type": "flicker", "name": "paper light", "sprite": "mask", "rect": [10, 27, 25, 46], "masks": [ { "hue": [350, 10], "sat": [0.6, 1], "val": [0.7, 1] } ],
+          "colorA": "#FF8A1F", "alpha": [0, 0.375], "additive": true }
+      ]
+    },
+    {
+      "key": "bld_infusion_array",
+      "note": "Still bld_infusion_array@64 (Buildings-64-007). Rune ring and crystal / pillar lamps pulse cyan in code; the crystal layer bobs 3 px (NOTES pivot (96,83)) once an accepted crystal layer + base are in Art/Incoming. Replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "rune ring", "rect": [0, 140, 192, 116], "masks": [ { "hue": [165, 205], "sat": [0.2, 1], "val": [0.55, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0.25, 0.75], "period": 2.4, "additive": true },
+        { "type": "glow", "name": "crystal and lamps", "rect": [0, 50, 192, 90], "masks": [ { "hue": [165, 205], "sat": [0.2, 1], "val": [0.55, 1] } ],
+          "colorA": "#5ED4E8", "colorB": "#FFFFFF", "alpha": [0, 0.5], "period": 2.4, "phase": 0.5, "additive": true },
+        { "type": "layer", "name": "crystal", "sprite": "crystal", "pivot": [96, 83], "note": "bobs 3 px up and back ([dx, dy] per step)",
+          "offsets": [0, 0, 0, -1, 0, -2, 0, -3, 0, -3, 0, -2, 0, -1, 0, 0] }
+      ]
+    },
+    {
+      "key": "bld_loom",
+      "note": "Still bld_loom@64 (Buildings-64-007). Warp threads shimmer in code; the shuttle layer slides 8 px left and right (NOTES pivot (79,160)) once an accepted shuttle layer + base are in Art/Incoming. Replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 8, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "glow", "name": "thread shimmer", "rect": [70, 105, 52, 56], "masks": [ { "sat": [0, 0.15], "val": [0.75, 1] } ],
+          "colorA": "#FFFFFF", "colorB": "#C4F6FF", "alpha": [0, 0.375], "period": 1.2, "additive": true },
+        { "type": "layer", "name": "shuttle", "sprite": "shuttle", "pivot": [79, 160], "note": "slides 8 px right, back, 8 px left ([dx, dy] per step)",
+          "offsets": [0, 0, 4, 0, 8, 0, 4, 0, 0, 0, -4, 0, -8, 0, -4, 0] }
+      ]
+    },
+    {
+      "key": "bld_mill",
+      "note": "Still bld_mill@64 (Buildings-64-007). Flour dust puffs at the millstone in code; the beam layer swings +-15 deg about the hub (NOTES pivot (104,153)) once an accepted beam layer + base are in Art/Incoming. Replaces the 32-px working loop.",
+      "still": [192, 256], "fps": 6, "steps": 8, "play": "working", "replaceDeliveredLoop": true,
+      "effects": [
+        { "type": "smoke", "name": "flour dust", "points": [62, 178, 140, 178], "size": [4, 3], "growTo": [10, 8], "rise": 10, "drift": 3, "count": 3, "period": 1.8,
+          "alphaSteps": [0.5, 0.5, 0.25, 0.25], "sort": 2 },
+        { "type": "layer", "name": "beam", "sprite": "beam", "pivot": [104, 153], "note": "swings +-15 deg about the hub (degrees per step)",
+          "angles": [0, 8, 15, 8, 0, -8, -15, -8] }
+      ]
+    },
     { "key": "npc_lin", "note": "Accepted idle strip (Creatures-64-001) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     { "key": "npc_ouyang", "note": "Accepted idle strip (Creatures-64-003) stays.", "still": [64, 96], "keepDeliveredLoop": true, "effects": [] },
     {

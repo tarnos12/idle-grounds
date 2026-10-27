@@ -1,0 +1,7 @@
+Idle Grounds — Creatures-64-005 — B2 Dragon landmark strips
+True 64 px-per-cell redraws on 320x384 frames; PPU 64; P01-P40; binary alpha; bottom-centre pivot; no baked shadow.
+dragon_sleeping: 4-frame quiet breathing loop; eyes closed and head tucked.
+dragon_stir: 3 frames sleep -> head raised/eyes opening -> sleep; no breath FX baked in.
+dragon_awake: 4-frame alert breathing loop; eyes open with restrained gold scale accents.
+All frames preserve the approved coiled dragon on a mossy circular rock nest and face right in front 3/4 view.
+Delivered for review; not accepted or integrated.
