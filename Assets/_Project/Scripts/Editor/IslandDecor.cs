@@ -17,8 +17,11 @@ namespace IdleGrounds.Editor
         /// (frames as island_edge_lip, used as drawn instead of the recoloured shared lip; IslandDressingBuilder.EdgeLipTiles);
         /// floes: loose ice floes stamped on the pond water (IslandDressingBuilder.EnsurePond); bigProps: 2-cell-wide props mixed into
         /// the edge ring (IslandCoastBuilder.BuildBoundary); swaps: this Island's own art for a shared node / fixture key
-        /// (ArtIntake.Integrate, e.g. fix_spring -> fix_spring_snow; the "_flow" loop of the swapped key comes with it).</summary>
-        [System.Serializable] public class Entry { public string island; public string trees; public string props; public string bigProps; public string lip; public string floes; public KeySwap[] swaps; }
+        /// (ArtIntake.Integrate, e.g. fix_spring -> fix_spring_snow; the "_flow" loop of the swapped key comes with it);
+        /// iceHoles: 2-frame ice-fishing hole sprites laid on the pond ice shelf (IslandDressingBuilder, FrameFlicker); underside: the
+        /// Island's own hanging piece instead of vines / roots (IslandCoastBuilder.BuildUnderside); snowfall: fx key of the overlay
+        /// (SnowfallOverlay, hidden under Motion: calm).</summary>
+        [System.Serializable] public class Entry { public string island; public string trees; public string props; public string bigProps; public string lip; public string floes; public string iceHoles; public string underside; public string snowfall; public KeySwap[] swaps; }
         [System.Serializable] public class KeySwap { public string key; public string with; }
         [System.Serializable] class FileData { public Entry[] islands; }
 
@@ -56,6 +59,9 @@ namespace IdleGrounds.Editor
                 if (!string.IsNullOrEmpty(e.lip)) yield return e.lip;
                 if (!string.IsNullOrEmpty(e.floes)) yield return e.floes;
                 if (!string.IsNullOrEmpty(e.bigProps)) yield return e.bigProps;
+                if (!string.IsNullOrEmpty(e.iceHoles)) yield return e.iceHoles;
+                if (!string.IsNullOrEmpty(e.underside)) yield return e.underside;
+                if (!string.IsNullOrEmpty(e.snowfall)) yield return e.snowfall;
                 if (e.swaps != null) foreach (var w in e.swaps) if (w != null && !string.IsNullOrEmpty(w.with)) { yield return w.with; yield return w.with + "_flow"; }
             }
         }

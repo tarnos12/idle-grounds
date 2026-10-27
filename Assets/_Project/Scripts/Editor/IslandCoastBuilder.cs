@@ -799,6 +799,10 @@ namespace IdleGrounds.Editor
             var spike = Pick1("island_underside_stalactite_3q_96x160.png", IslandArtBuilder.UndersideStalactite);
             var roots = IslandDressingBuilder.MaskedUndersideRoots() ?? IslandArtBuilder.Single(IslandArtBuilder.UndersideRoots);
             var vines = Pick1("island_underside_vines_3q_128x128.png", IncomingIslands + "island_underside_vines_128x128.png");
+            // the Island's own hanging piece (island-decor.json "underside", e.g. the icicle rock of snowy Fishing, ART-SPEC §3.8) replaces vines + roots
+            var ownFile = IslandDecor.IncomingFile(IslandDecor.For(isl.islandKey)?.underside, "islands");
+            var own = ownFile != null ? IslandArtBuilder.Single(ownFile) : null;
+            if (own != null) { vines = own; roots = own; }
             var lava = IslandArtBuilder.Frames(IncomingIslands + "island_underside_lavadrip_3q_128x160_4f.png");
             if (lava.Length == 0) lava = IslandArtBuilder.Frames(IncomingIslands + "island_underside_lavadrip_128x160_4f.png");
             var puffs = IslandArtBuilder.Frames(CloudPuffs);

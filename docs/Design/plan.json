@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 02:11",
+  "updated": "2026-10-27 02:28",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -281,7 +281,7 @@
           "status": "waiting",
           "size": "M",
           "owner": "Claude",
-          "blockedBy": "P1+P2 complete (round 3 accepted 2026-10-27, ART-SPEC v6.17); waiting for the artist's P3 (ice-fishing hole, icicle underside, snowfall overlay)"
+          "blockedBy": "P3 reviewed 2026-10-27 (v6.24): ice-fishing hole accepted and wired (3 holes on the pond shelf); icicle underside and snowfall rejected (artist redo, hooks in the game); waiting for the artist"
         },
         {
           "title": "UI QA: batch B review",
@@ -428,10 +428,24 @@
         {
           "title": "Art redo: Lei + Yao stills (remove floating marks) and Tribulation cliff wall (Creatures-64-004 / Islands-064 rejections)",
           "detail": "Requested in ART-SPEC v6.20: npc_lei@64 and npc_yao@64 resent with only the detached marks transparent (0 other px differ); island_tribulation_cliffwall_32x96_8f redrawn as stepped jade terraces (no vertical stripes). He/Yao layers wait on layers_finish; Tribulation fill, macro, side walls wait on tiles_finish.",
+          "status": "done",
+          "size": "S",
+          "owner": "Artist"
+        },
+        {
+          "title": "Art redo: dragon_stir@64, icicle underside, snowfall loop (Creatures-64-007 / Islands-066 / FX-009 rejections)",
+          "detail": "ART-SPEC v6.24 section 3.9.8 Extras review: dragon_stir_320x384_3f@64 frame 1 = sleeping frame 0 with only head and neck moved (max ~4,500 px changed, 0 px in rows y>=240, tail, frames 0 and 2); island_underside_icicles_128x128 redrawn like the _3q rocks with hanging icicle spikes and no snow plate; fx_snowfall loop closed (or one 256x256 still scrolled in code).",
           "status": "waiting",
           "size": "S",
           "owner": "Artist",
-          "blockedBy": "Artist delivery (ART-SPEC v6.20)"
+          "blockedBy": "Artist delivery (ART-SPEC v6.24)"
+        },
+        {
+          "title": "In-game review: extras (Islands-066/-067, FX-009, Creatures-64-006/-007)",
+          "detail": "Lei, Yao, Tribulation cliff validated; ice hole accepted and wired (FrameFlicker); underside, snowfall, dragon_stir rejected; hooks iceHoles/underside/snowfall + SnowfallOverlay in the game. Sheet docs/art/reference/extras-066-067.jpg.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
         },
         {
           "title": "Route for Lotus/Thunder macro, side walls and Thunder fill (rejected 3x, Islands-061/062)",

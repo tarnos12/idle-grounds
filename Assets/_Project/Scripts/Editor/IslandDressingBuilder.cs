@@ -1212,6 +1212,53 @@ namespace IdleGrounds.Editor
             return tm;
         }
 
+        /// <summary>
+        /// ART-SPEC §3.8 ice-fishing holes (island-decor.json "iceHoles", 2 frames of 32 x 32): a few laid on the pond's ice shelf
+        /// (the 16 px band just inside the shore, d = 0.93 of the pond ellipse, the same shape function as <see cref="EnsurePond"/>),
+        /// at fixed angles so a rebuild never moves them; frame 1 (a fish tail) flicks rarely (<see cref="FrameFlicker"/>).
+        /// Decor only: fish spawning and the nodes are not touched.
+        /// </summary>
+        static void BuildIceHoles(Transform root, Vector2 pondCentre)
+        {
+            var e = IslandDecor.For("fishing");
+            string file = IslandDecor.IncomingFile(e?.iceHoles, "islands");
+            if (file == null) return;
+            var fr = IslandArtBuilder.Frames(file);
+            if (fr.Length < 2 || fr[0] == null || fr[1] == null) return;
+            float hx = (PondW * 0.5f - 8f) / 1.26f, hy = (PondH * 0.5f - 8f) / 1.26f;
+            float[] deg = { -78f, -152f, 28f };
+            var holes = new GameObject("IceHoles").transform;
+            holes.SetParent(root, false);
+            for (int i = 0; i < deg.Length; i++)
+            {
+                float a = deg[i] * Mathf.Deg2Rad;
+                float rad = 1f + 0.12f * Mathf.Sin(2 * a + 1.3f) + 0.07f * Mathf.Sin(3 * a + 4.1f) + 0.04f * Mathf.Sin(5 * a + 2.2f);
+                var off = new Vector2(Mathf.Cos(a) * hx * rad, Mathf.Sin(a) * hy * rad) * 0.93f / 32f;
+                var pos = pondCentre + off;
+                pos = new Vector2(Mathf.Round(pos.x * 32f) / 32f, Mathf.Round(pos.y * 32f) / 32f);
+                var sr = WorldBuilder.Deco(holes, "IceHole" + i, fr[0], new Vector3(pos.x, pos.y, 0f), 1f, Color.white, 4, Layer);
+                sr.flipX = i == 1;
+                var ff = sr.gameObject.AddComponent<FrameFlicker>();
+                ff.rest = fr[0]; ff.flicked = fr[1]; ff.period = 6.5f + i * 1.7f; ff.flick = 0.45f; ff.phase = i * 2.9f;
+            }
+        }
+
+        /// <summary>ART-SPEC §3.8 snowfall (island-decor.json "snowfall" = an fx key, 4 frames of 256 x 256) over the Island's landmass + margin.</summary>
+        static void BuildSnowfall(Transform root, string biome)
+        {
+            var e = IslandDecor.For(biome);
+            string file = IslandDecor.IncomingFile(e?.snowfall, "fx");
+            if (file == null) return;
+            var fr = IslandArtBuilder.Frames(file);
+            if (fr.Length < 4) return;
+            var go = new GameObject("Snowfall");
+            go.transform.SetParent(root, false);
+            var sn = go.AddComponent<SnowfallOverlay>();
+            sn.frames = fr;
+            sn.area = new Rect(-24f, -Cells - 24f, Cells + 48f, Cells + 48f);
+            sn.fps = 6f;
+        }
+
         static void Place(Tilemap tm, Vector3Int p, TileBase t, bool flipX = false, bool flipY = false, Color? color = null)
         {
             tm.SetTile(p, t);
@@ -1536,7 +1583,11 @@ namespace IdleGrounds.Editor
                 water.SetTile(C(pr, pc), kit.pond);
                 int hw = PondW / 64, hh = PondH / 64;
                 for (int row = pr - hh; row <= pr + hh; row++) for (int col = pc - hw; col <= pc + hw; col++) { var cc = C(row, col); busy.Add(new Vector2Int(cc.x, cc.y)); }
+                BuildIceHoles(root, new Vector2(pc + 0.5f, -pr - 0.5f));
             }
+
+            // ---- snowy Fishing: light snowfall over the whole Island (island-decor.json "snowfall"; hidden under Motion: calm)
+            BuildSnowfall(root, key);
 
             // ---- Center courtyard: a round flagstone plaza under the Altar + three short paths that wind toward the work
             //      areas and fade out in a few loose stones. VP-17 (owner rule "no 90 degree angles", extended from the coasts):
