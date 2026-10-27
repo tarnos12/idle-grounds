@@ -1,0 +1,25 @@
+Built-in ImageGen prompt — fix_spirittree@64.png
+
+Use case: stylized-concept
+Asset type: production game fixture sprite for Idle Grounds
+Primary request: redraw the accepted Spirit Tree reference as native 64-pixel game art, preserving the same sacred tree identity and silhouette.
+Input image: fix_spirittree.png is the accepted 32-pixel-density design reference.
+Composition: one isolated transparent-background sprite on a 320×384 logical canvas. Gnarled trunk and roots grip the ground inside a 256×256 footprint, roots touch the bottom row. Wide layered jade canopy overhangs about 32 px left and right and reaches up to 128 px above the footprint. Single connected silhouette.
+Style: crisp hand-drawn pixel art, native 64-pixel detail, no antialiasing or soft gradients, chunky 2×2 clusters, strong 2-pixel dark outline, front 3/4 presentation.
+Palette: Idle Grounds P01–P40.
+Details: layered jade canopy, carved gnarled trunk, roots, red prayer ribbons, warm rice-paper charms at least 2×2 pixels, small gold-green glint clusters inside canopy.
+Avoid: sparkles, motes, gold dust, glow, detached leaves, ground shadow, text, watermark, frame, or scenery.
+
+Built-in ImageGen prompt — fix_quarry@64.png
+
+Use case: stylized-concept
+Asset type: production game fixture sprite for Idle Grounds
+Primary request: redraw the accepted Quarry Rock reference as native 64-pixel game art, preserving its boulder-and-pickaxe identity.
+Input image: fix_quarry.png is the accepted 32-pixel-density design reference.
+Composition: one isolated transparent-background sprite on a 128×160 logical canvas, front 3/4 view. Large grey boulder face, grounded base touching bottom row, one connected silhouette. Pickaxe leans against the rock. Pale chips touch the boulder foot.
+Style: crisp hand-drawn pixel art, native 64-pixel detail, no antialiasing or soft gradients, chunky 2×2 pixel clusters, 2-pixel dark outline.
+Palette: Idle Grounds P01–P40.
+Details: 2×2 chisel grooves, grey stone planes, wooden pickaxe handle with metal head, one small jade glint cluster.
+Avoid: detached debris, glow, scenery, shadow, text, watermark, or frame.
+
+Post-processing: crop generated transparency, nearest-neighbour size normalization, binary-alpha threshold, nearest-colour mapping to P01–P40 without dithering, bottom alignment, and connectivity validation.

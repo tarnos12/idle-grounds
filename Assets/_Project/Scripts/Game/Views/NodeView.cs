@@ -27,7 +27,7 @@ namespace IdleGrounds.Game
         [SerializeField] SpriteRenderer[] sparkles;
 
         public bool AutoBadgeShown => autoBadge != null && autoBadge.gameObject.activeSelf;
-        public bool SparklesShown => (overlay != null && overlay.gameObject.activeSelf) || sparkles != null && sparkles.Length > 0 && sparkles[0] != null && sparkles[0].gameObject.activeSelf;
+        public bool SparklesShown => codeAnim != null || (overlay != null && overlay.gameObject.activeSelf) || sparkles != null && sparkles.Length > 0 && sparkles[0] != null && sparkles[0].gameObject.activeSelf;
         static readonly Vector2[] SparkleAt = { new Vector2(-0.28f, -0.72f), new Vector2(0.30f, -0.55f), new Vector2(0.05f, -0.92f) };
 
         public string Area { get; private set; }
@@ -49,6 +49,9 @@ namespace IdleGrounds.Game
         SpriteRenderer overlay; // lazily created child of the sprite renderer (same pivot / scale / flip)
         bool realArt;
         int maxHits;
+        CodeAnimator codeAnim;  // code motion of a single still (code-anim.json, ART-SPEC §3.9.8 step C), e.g. the Spirit Tree sparkles
+        /// <summary>The code animation driving this node's still, or null.</summary>
+        public CodeAnimator CodeAnim => codeAnim;
 
         public void Bind(string area, Node node, Sprite sprite, AreaSpace space, SpriteEntry art = null)
         {
@@ -61,7 +64,18 @@ namespace IdleGrounds.Game
             artFrames = realArt && !decoArt && art.frames != null && art.frames.Length > 1 ? art.frames : null;
             maxHits = Mathf.Max(1, node.hitsLeft);
             if (realArt) sprite = art.sprite;
-            overlayFrames = realArt && !decoArt && art.overlay != null && art.overlay.Length > 0 ? art.overlay : null;
+            // step C (ART-SPEC §3.9.8): a single @64 still with a code-anim.json entry gets its motion from code; the old
+            // 32-px overlay loop (fix_spirittree_sparkle) is then not drawn. Strips (chop / break states, deco variants) keep frames.
+            var animEntry = realArt && !decoArt && artFrames == null ? CodeAnimLibrary.Find(art.key) : null;
+            if (codeAnim != null) { codeAnim.Clear(); codeAnim = null; }
+            if (animEntry != null && animEntry.HasEffects)
+            {
+                spriteRenderer.sprite = sprite;
+                var ca = CodeAnimator.For(spriteRenderer);
+                ca.SelfTick = false;
+                if (ca.Configure(animEntry, spriteRenderer, sprite, _ => null)) { codeAnim = ca; ca.Playing = true; }
+            }
+            overlayFrames = realArt && !decoArt && codeAnim == null && art.overlay != null && art.overlay.Length > 0 ? art.overlay : null;
             if (overlayFrames != null && overlay == null)
             {
                 var go = new GameObject("Overlay");
@@ -141,7 +155,7 @@ namespace IdleGrounds.Game
                 pad.transform.localPosition = Vector3.zero;
             }
             // Spirit Tree: three sparkles at 22% of the sprite size (offsets x fontPx, y down)
-            bool tree = node.isFixed && node.kind == "spirittree" && overlayFrames == null;   // emoji sparkles only without the art overlay
+            bool tree = node.isFixed && node.kind == "spirittree" && overlayFrames == null && codeAnim == null;   // emoji sparkles only without the art overlay
             if (sparkles != null)
                 for (int i = 0; i < sparkles.Length; i++)
                 {
@@ -258,6 +272,7 @@ namespace IdleGrounds.Game
                     fi = (int)(Time.unscaledTime * ArtFps) % artFrames.Length;
                 if (spriteRenderer.sprite != artFrames[fi]) spriteRenderer.sprite = artFrames[fi];
             }
+            if (codeAnim != null) codeAnim.Tick(CodeAnimClock.Now);
             if (overlayFrames != null)
             {
                 int oi = (int)(Time.unscaledTime * OverlayFps) % overlayFrames.Length;

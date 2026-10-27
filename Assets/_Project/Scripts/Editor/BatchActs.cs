@@ -169,6 +169,34 @@ namespace IdleGrounds.Editor
                     if (n == 0) Debug.LogError(Tag + "working: no built " + arg);
                     break;
                 }
+                case "focusNode":   // shot focus "built" = the n-th (default 0) node / fixture of a kind (focusNode:island,kind[,n]; art reviews)
+                {
+                    var p = arg.Split(',');
+                    var ar = runner.State.Area(p[0].Trim());
+                    string kind = p[1].Trim(); int want = p.Length > 2 ? int.Parse(p[2].Trim()) : 0, seen = 0;
+                    IdleGrounds.Sim.Node fn = null;
+                    if (ar != null) foreach (var n in ar.nodes) if (!n.deco && (n.kind == kind || n.spawnerKind == kind) && seen++ == want) { fn = n; break; }
+                    if (fn == null) { Debug.LogError(Tag + "focusNode: no " + arg); break; }
+                    lastBuiltCentre = CellWorld(p[0].Trim(), fn.row + fn.size * 0.5f, fn.col + fn.size * 0.5f);
+                    Debug.Log(Tag + $"focusNode {kind}#{want} at {p[0].Trim()} r{fn.row} c{fn.col} size {fn.size}");
+                    break;
+                }
+                case "hitNodes":   // every chop / break node on an island shows its hit state (frame 1) without being used up (hitNodes:island; art reviews)
+                {
+                    var ar = runner.State.Area(arg.Trim());
+                    int k = 0;
+                    if (ar != null) foreach (var n in ar.nodes) if (!n.deco && !n.isFixed && n.interaction != IdleGrounds.Sim.NodeInteraction.Surface) { n.clicks = System.Math.Max(1, n.clicks); k++; }
+                    Debug.Log(Tag + $"hitNodes {arg.Trim()}: {k}");
+                    break;
+                }
+                case "surfaceNodes":   // every surfacing node (fish, algae) on an island stays surfaced (surfaceNodes:island; art reviews)
+                {
+                    var ar = runner.State.Area(arg.Trim());
+                    int k = 0;
+                    if (ar != null) foreach (var n in ar.nodes) if (n.interaction == IdleGrounds.Sim.NodeInteraction.Surface) { n.surfaceUntil = runner.SimNow + 1e9; k++; }
+                    Debug.Log(Tag + $"surfaceNodes {arg.Trim()}: {k}");
+                    break;
+                }
                 case "hoverNode":
                 {
                     var p = arg.Split(',');

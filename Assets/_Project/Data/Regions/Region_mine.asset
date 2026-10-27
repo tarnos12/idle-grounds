@@ -128,30 +128,30 @@ MonoBehaviour:
   groundColor: {r: 0.38, g: 0.38, b: 0.42, a: 1}
   sprites:
   - key: node_ore
-    sprite: {fileID: -6976155309912069667, guid: bc6d9702eceef744e8b9ee8c987f39d4, type: 3}
+    sprite: {fileID: -339948912918863664, guid: c2e8a52eb4fe91740b14b16f91e41f0e, type: 3}
     frames:
-    - {fileID: -6976155309912069667, guid: bc6d9702eceef744e8b9ee8c987f39d4, type: 3}
-    - {fileID: 54859927784598823, guid: bc6d9702eceef744e8b9ee8c987f39d4, type: 3}
+    - {fileID: -339948912918863664, guid: c2e8a52eb4fe91740b14b16f91e41f0e, type: 3}
+    - {fileID: -4144906127379436171, guid: c2e8a52eb4fe91740b14b16f91e41f0e, type: 3}
     realArt: 1
     overlay: []
   - key: node_ironvein
-    sprite: {fileID: 7478871655754362191, guid: 17400e8f55d41ce46980dbabdc0e5be3, type: 3}
+    sprite: {fileID: -8746342301518923374, guid: 0c8fe2c643e81bf4f95697eb411f8edf, type: 3}
     frames:
-    - {fileID: 7478871655754362191, guid: 17400e8f55d41ce46980dbabdc0e5be3, type: 3}
-    - {fileID: 727058184830667675, guid: 17400e8f55d41ce46980dbabdc0e5be3, type: 3}
+    - {fileID: -8746342301518923374, guid: 0c8fe2c643e81bf4f95697eb411f8edf, type: 3}
+    - {fileID: 669517214763512835, guid: 0c8fe2c643e81bf4f95697eb411f8edf, type: 3}
     realArt: 1
     overlay: []
   - key: node_jadevein
-    sprite: {fileID: 8209227077267360540, guid: a081bb3ed285ab14db5ca3158966a7e6, type: 3}
+    sprite: {fileID: 1603699628746063994, guid: c56d3be55917470498538ac6e64a5611, type: 3}
     frames:
-    - {fileID: 8209227077267360540, guid: a081bb3ed285ab14db5ca3158966a7e6, type: 3}
-    - {fileID: 2543481101769347325, guid: a081bb3ed285ab14db5ca3158966a7e6, type: 3}
+    - {fileID: 1603699628746063994, guid: c56d3be55917470498538ac6e64a5611, type: 3}
+    - {fileID: -2994121935605178620, guid: c56d3be55917470498538ac6e64a5611, type: 3}
     realArt: 1
     overlay: []
   - key: node_ore_2x2
-    sprite: {fileID: 5902746000822143927, guid: d0bf0476667a3e644b9361a4c04f95d5, type: 3}
+    sprite: {fileID: 5898710188374413613, guid: 6ae468181f386c94cbc3a4423047b0c1, type: 3}
     frames:
-    - {fileID: 5902746000822143927, guid: d0bf0476667a3e644b9361a4c04f95d5, type: 3}
-    - {fileID: -8399554576917146418, guid: d0bf0476667a3e644b9361a4c04f95d5, type: 3}
+    - {fileID: 5898710188374413613, guid: 6ae468181f386c94cbc3a4423047b0c1, type: 3}
+    - {fileID: -5143720593562992394, guid: 6ae468181f386c94cbc3a4423047b0c1, type: 3}
     realArt: 1
     overlay: []

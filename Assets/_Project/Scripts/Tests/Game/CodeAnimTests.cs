@@ -44,7 +44,7 @@ namespace IdleGrounds.Game.Tests
                 Assert.Greater(e.StillW, 0, e.key); Assert.Greater(e.StillH, 0, e.key);
                 if (e.keepDeliveredLoop) { Assert.IsFalse(e.HasEffects, e.key + ": accepted loop keeps no code effects"); continue; }
                 Assert.IsTrue(e.HasEffects, e.key);
-                Assert.AreEqual(e.key.StartsWith("npc_"), e.PlaysAlways, e.key + ": NPCs idle always, buildings only while working");
+                Assert.AreEqual(e.key.StartsWith("npc_") || e.key.StartsWith("fix_") || e.key.StartsWith("node_"), e.PlaysAlways, e.key + ": NPCs, fixtures and nodes idle always, buildings only while working");
                 foreach (var x in e.effects)
                 {
                     string id = e.key + "/" + x.name;

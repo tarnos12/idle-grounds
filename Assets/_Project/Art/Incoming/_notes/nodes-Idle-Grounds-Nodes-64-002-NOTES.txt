@@ -1,0 +1,27 @@
+Idle Grounds — Step C2 Mine resource nodes
+
+Contents
+- node_ore_1x1_64x96_2f@64.png: 2 x 64x96 frames in a 128x96 strip.
+- node_ore_2x2_128x160_2f@64.png: 2 x 128x160 frames in a 256x160 strip.
+- node_ironvein_128x160_2f@64.png: 2 x 128x160 frames in a 256x160 strip.
+- node_jadevein_128x160_2f@64.png: 2 x 128x160 frames in a 256x160 strip.
+
+Frame layout
+- Frame 0 (left): intact.
+- Frame 1 (right): localized hit/cracked state derived from frame 0.
+- Each frame is one connected bottom-aligned shape; the bottom eight rows are identical between states.
+
+Technical rules
+- PNG RGBA with alpha values restricted to 0 and 255.
+- Visible pixels use only the exact ART-SPEC v6.31 P01–P40 palette.
+- No detached particles, glow, platform, or out-of-bounds pixels.
+- Narrow mineral veins and cracks are intentionally restrained at native resolution.
+
+Workflow
+- Accepted 32px assets from Idle-Grounds-Nodes-003.zip were used as references.
+- A fresh intact concept was produced with image generation for each node.
+- Each concept was cropped, nearest-neighbor normalized, palette-mapped, and bottom-aligned.
+- Hit states were constructed from the intact frame so only the intended local crack/vein region changes.
+
+Validation
+- See VALIDATION.json for dimensions, alpha set, palette membership, frame bounds, connectivity, bottom alignment, state delta, and pass/fail results.

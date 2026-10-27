@@ -1,0 +1,12 @@
+Idle Grounds — Step C3 Fishing nodes
+
+Contents
+- node_fish@64.png: 64x96 still, based on frame 2 of the accepted koi loop.
+- node_algae@64.png: 64x96 still, based on frame 0 of the accepted algae loop.
+
+Technical rules
+- PNG RGBA, binary alpha, exact v6.31 P01–P40 palette.
+- One connected bottom-aligned shape; transparent surrounding water tile.
+- Fish splash ring is connected and has no detached droplets.
+- Algae mat front edge reaches the bottom row; 2–3 lotus buds, no glow.
+- Bobbing, ripple rings and splash motion are code-driven; no 4-frame loops are included.

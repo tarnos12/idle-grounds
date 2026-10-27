@@ -115,12 +115,12 @@ MonoBehaviour:
   groundColor: {r: 0.55, g: 0.5, b: 0.25, a: 1}
   sprites:
   - key: node_crop
-    sprite: {fileID: 21300000, guid: 193ffec2fbd428f49b9c435708edd5da, type: 3}
+    sprite: {fileID: 21300000, guid: cc40962996455fe44b66ac37f50f4333, type: 3}
     frames: []
     realArt: 1
     overlay: []
   - key: node_cotton
-    sprite: {fileID: 21300000, guid: 542ba8455c7acd64c84310be393c5003, type: 3}
+    sprite: {fileID: 21300000, guid: 33449238871649d4a8ac61d84f214292, type: 3}
     frames: []
     realArt: 1
     overlay: []
