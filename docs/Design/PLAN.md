@@ -1,14 +1,13 @@
 # Idle Grounds: plan
 
-Updated 2026-10-27 02:46. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
+Updated 2026-10-27 03:14. Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs. Do not edit PLAN.md by hand: edit plan.json and run `node tools/plan/build-plan.cjs`.
 
-**48 of 73 tasks done**, 3 in progress, 3 to do, 4 blocked, 14 waiting.
+**51 of 76 tasks done**, 3 in progress, 3 to do, 4 blocked, 15 waiting.
 
 ## Being worked on now
 
 - **M3** South cliff walls, side faces, grass lips: art loop: integrating deliveries as they arrive
 - **M3** Designer team visual pass: find and fix what makes the game look off: Batch A done; waiting for your answers (batch B) and sending the art request (batch C)
-- **M3** Check: flower decor drawn over buildings: Confirmed in normal placement: ground flower tiles show through open building art (Jade Carver stall); needs a code fix (clear tiles under footprints)
 - **M7** Owner tests APK round 2: APK round 2 on Drive
 
 | # | Milestone | Gate | Status | Tasks done |
@@ -16,7 +15,7 @@ Updated 2026-10-27 02:46. Source of truth: docs/Design/plan.json, edited with to
 | M1 | Unity port of the browser game |  | Done | 2 / 2 |
 | M2 | Balance and onboarding |  | Done | 2 / 3 |
 | M2b | Island requesters replace ascension (ADR 0007, accepted) |  | Waiting | 2 / 8 |
-| M3 | 3/4 world look (ADR 0005) |  | In progress | 33 / 46 |
+| M3 | 3/4 world look (ADR 0005) |  | In progress | 36 / 49 |
 | M4 | Art coverage |  | Later | 2 / 4 |
 | M5 | Builds and tech health |  | Waiting | 2 / 3 |
 | M6 | Agent team and background copy |  | In progress | 2 / 2 |
@@ -119,7 +118,10 @@ Give every Island the agreed 3/4 look: cliff walls, side faces, hanging undersid
 | Done | Art redo: Azure Beast Ravine fill, macro, side walls (Islands-063 rejections) | Requested in ART-SPEC v6.19 (§3.7 rows): island_ravine_ground_fill (random low-contrast marks, no glint, not the Lotus layout), _macro (dithered multi-colour organic patches, not discs), _sidewall + _sidewall_variants (no per-tile moss cap, strata). Then the in-game art reviewer checks them on a preview Island. | Claude |
 | Done | Art redo: snow props 64x64 + spring steam (Fixtures-009), Mo portrait (UI-026) | Requested in ART-SPEC v6.16 after the 2026-10-26 review: deco_snow_props_64x64_4f (snow caps vanish on the P06 ground, slab under props) and the steam of fix_spring_snow_flow (lies on the water); npc_mo_portrait (face too small, twin of Lei). Wiring is ready (island-decor.json bigProps/swaps). | Claude |
 | Done | Review snowy Fishing round 3 (Islands-058, Fixtures-009) + Mo portrait UI-026 | Inspect 7 files (macro frames 0+2, ice floes, snow side faces, 64x64 snow props, spring steam loop, Mo portrait); pull each zip alone, integrate, rebuild Island sheets, Play before/after on Fishing, Mo side by side with the 10 portraits; accept/reject per file; ART-SPEC + Drive mirror + feedback; sheet docs/art/reference/snow-fishing-r3.jpg. | Claude |
-| Next | Check: flower decor drawn over buildings **(NOW)** | Seen in the 64 px B3 review 2026-10-27: flower decorations near buildings placed by the review act draw over the building art (one inside the Jade Carver stall). Check normal placement and fix sorting/clearing if real. Checked 2026-10-27 (b64four): not a sorting bug; the flowers are the ground Flowers tilemap (IslandDressingBuilder, layer Ground) baked at build time and never cleared under buildings. They show through transparent openings inside building art: a Jade Carver built over a flower tile with the normal placement rules (World.PlaceReason, same as the build cursor) shows the flower inside its open stall (2,598 transparent px; Bamboo Nursery 1,792 px). Evidence docs/art/reference/b64-012-014.jpg (last panel). Fix options: hide Flowers/Scatter tiles under building footprints, or ask for closed floors. | Claude |
+| Done | Check: flower decor drawn over buildings | Seen in the 64 px B3 review 2026-10-27: flower decorations near buildings placed by the review act draw over the building art (one inside the Jade Carver stall). Check normal placement and fix sorting/clearing if real. Checked 2026-10-27 (b64four): not a sorting bug; the flowers are the ground Flowers tilemap (IslandDressingBuilder, layer Ground) baked at build time and never cleared under buildings. They show through transparent openings inside building art: a Jade Carver built over a flower tile with the normal placement rules (World.PlaceReason, same as the build cursor) shows the flower inside its open stall (2,598 transparent px; Bamboo Nursery 1,792 px). Evidence docs/art/reference/b64-012-014.jpg (last panel). Fix options: hide Flowers/Scatter tiles under building footprints, or ask for closed floors. Fixed 2026-10-27 (bg/fixes): DecorCover hides Flowers + Scatter dressing tiles under every bound building footprint (ghosts, built, loaded) and restores them on demolish (ref-counted, event-driven from BuildingViewSync bind/release); paths, nodes and other layers untouched; EditMode + PlayMode tests. | Claude |
+| Done | Generators show a working state (animations never play) | Found 2026-10-27: no building face reports a generator (Algae Farm, Herb Garden, …) as working, so their code animations never run in normal play. Fixed 2026-10-27 (bg/fixes): BuildingSystem.GenProducing (sim, live: built generator, own pile < gen.cap, output pile < outputPileMax) drives GeneratorFaceView.IsActive, so Algae Farm / Herb Garden code animations play while growing and stop when stalled; sim + PlayMode tests. | Claude |
+| Done | Art review: Buildings-64-015 (B4 set 2) + extras repairs (Creatures-64-008, Islands-068, FX-010) | Blast Forge, Koi Pond, Spirit Paddy @64 stills (B4, Phase 3 buildings: files + preview); dragon_stir@64 3rd send (diff); icicle underside redo (Fishing Play before/after); snowfall as one scrolled still (SnowfallOverlay scroll mode). ART-SPEC + Drive mirror. Result: Blast Forge, Koi Pond, Spirit Paddy @64 validated (Phase 3; code-anim entries added); dragon_stir@64 validated (4,376 px, head+neck only); fx_snowfall_256x256_1f accepted (scrolled in code, SnowfallOverlay single-still mode); icicle underside rejected 2nd time (redo). ART-SPEC v6.26. | Claude |
+| Waiting | Art redo: icicle underside (Islands-066 / -068 rejections; dragon_stir + snowfall passed in v6.26) | ART-SPEC v6.24 section 3.9.8 Extras review: dragon_stir_320x384_3f@64 frame 1 = sleeping frame 0 with only head and neck moved (max ~4,500 px changed, 0 px in rows y>=240, tail, frames 0 and 2); island_underside_icicles_128x128 redrawn like the _3q rocks with hanging icicle spikes and no snow plate; fx_snowfall loop closed (or one 256x256 still scrolled in code). 2026-10-27 v6.26: dragon_stir@64 validated, snowfall accepted as a scrolled still; island_underside_icicles rejected a 2nd time (flat light blocks, dark icicles, no mist) - redo per ART-SPEC §3.9.8 Buildings-64-015 + extras repairs review. | Artist |
 
 ## M4: Art coverage. Later
 
