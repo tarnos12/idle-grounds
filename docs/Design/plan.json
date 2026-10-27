@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-10-27 03:41",
+  "updated": "2026-10-27 04:07",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -356,6 +356,13 @@
         {
           "title": "Art review: 64 px Buildings-64-016 to -018 (B4 sets 3-4, Forge + Spirit Snare repairs)",
           "detail": "In-game art reviewer: Elixir Still, Essence Well, Fire Vent (-016), Forge front redraw + Spirit Snare redraw (-017), Lotus Pond, Reed Press, Star Well (-018). Numbers per file, Forge in Play next to the 64-px burners at the zoom steps (idle + working, code-anim re-measured), the B4 stills as files + review preview (requester rewards / Island buildings, ADR 0007 Phase 3+), code-anim.json entries, accept/validate/reject per file. Result: 4 validated (Essence Well, Fire Vent, Reed Press, Spirit Snare redraw), 4 rejected as small repairs (Forge 3rd time: loose 2-px strip under the plinth, front view now right; Elixir Still lit firebox; Lotus Pond 2 stray fragments; Star Well 81-px edge sliver). ART-SPEC v6.27.",
+          "status": "done",
+          "size": "M",
+          "owner": "Claude"
+        },
+        {
+          "title": "Art review: 64 px Buildings-64-019 / -020 (B4 sets 5-6) + icicle underside 3rd version",
+          "detail": "In-game art reviewer: Lightning Rod, Lotus Distillery, Thunder Forge (-019), Beast Pen, Soul Refinery, Tribulation Array (-020; their 32-px versions were rejected 2026-10-21 as floating mini-islands / diamond view, must be front 3/4 on flat ground), island_underside_icicles_128x128 3rd version (Islands-069; fails again = rejected 3x, awaiting orchestrator). Numbers per file, review previews in Play with code animation, Fishing underside before/after, code-anim.json entries, accept/validate/reject per file. Result: 4 validated (Lightning Rod, Beast Pen, Soul Refinery, Tribulation Array; Beast Pen + Tribulation Array now front 3/4 on flat ground), 2 rejected as small repairs (Lotus Distillery lit firebox, Thunder Forge loose 2-px strip under the plinth), icicle underside rejected 3x - awaiting orchestrator. ART-SPEC v6.28.",
           "status": "done",
           "size": "M",
           "owner": "Claude"
