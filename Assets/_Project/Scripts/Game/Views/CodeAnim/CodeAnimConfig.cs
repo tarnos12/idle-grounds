@@ -118,7 +118,8 @@ namespace IdleGrounds.Game
         public int speed;
         /// <summary>Anchor texels [x0, y0, x1, y1, ...]: flicker sprites (bottom-centre), smoke emitter (bottom-centre of the first puff), line ends.</summary>
         public int[] points;
-        /// <summary>Hex colours (#RRGGBB): tint from → to (glow), fill / outline (sheet), line colour.</summary>
+        /// <summary>Hex colours (#RRGGBB): tint from → to (glow), fill / outline (sheet), line colour; smoke: puff tint (default white;
+        /// the Spirit Bridge motes are cyan / gold).</summary>
         public string colorA, colorB;
         /// <summary>Alpha range [min, max] (quantised to the 4 alpha steps 64 / 128 / 191 / 255).</summary>
         public float[] alpha;
@@ -132,14 +133,16 @@ namespace IdleGrounds.Game
         /// <summary>Additive blend (glows); falls back to alpha blend when the shader is missing.</summary>
         public bool additive;
         /// <summary>Overlay sprite source: "mask" (masked still pixels, shaded white, tinted), "maskColor" (masked still pixels
-        /// in their own colours), "flame", "star", "puff", "sheet". For <c>layer</c>: the part name ("wheel" → &lt;key&gt;_layer_wheel).</summary>
+        /// in their own colours), "flame", "star", "puff", "sheet"; smoke: "puff" (default) or "glint" (plus-shaped motes, odd
+        /// size, tinted by colorA). For <c>layer</c>: the part name ("wheel" → &lt;key&gt;_layer_wheel).</summary>
         public string sprite;
         /// <summary>Generated sprite size [w, h] (smoke: first puff; ripple: first ring; splash: one droplet), smoke / ripple: last size.</summary>
         public int[] size;
         public int[] growTo;
         /// <summary>Smoke: puffs in flight; flicker: shape variants; ripple: rings in flight; splash: droplets per burst.</summary>
         public int count;
-        /// <summary>Smoke: total rise / sideways drift in texels over a puff's life; splash: arc height / sideways reach of a droplet.</summary>
+        /// <summary>Smoke: total rise / sideways drift in texels over a puff's life (negative rise = falls: the motes settling into a
+        /// receiving Spirit Bridge pool); splash: arc height / sideways reach of a droplet.</summary>
         public int rise, drift;
         /// <summary>Smoke / ripple / splash: alpha per life quarter (4 values).</summary>
         public float[] alphaSteps;

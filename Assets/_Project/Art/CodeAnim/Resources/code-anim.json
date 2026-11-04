@@ -759,6 +759,36 @@
         { "type": "glint", "name": "snow glints", "sprite": "glint", "size": [5, 5], "mode": "cycle", "count": 3,
           "masks": [ { "sat": [0, 0.08], "val": [0.9, 1] } ], "onSteps": [16], "colorA": "#FFFFFF", "alpha": [0.75, 0.75], "calm": "hide", "sort": 1 }
       ]
+    },
+    {
+      "key": "bld_spirit_bridge_sending",
+      "note": "Spirit Bridge, paired + sending, drawn on the still bld_spirit_bridge_unpaired@64 (Buildings-64-022) by BridgeFaceView (not a file key). The empty grey pool (P05 #7A809A floor, #3E5A7C inner wall; the platform below y104 uses the same colours, hence the rect) fills with cyan qi; cyan motes rise from the pool between the posts. Calm motion: steady tint, no motes.",
+      "still": [128, 128], "fps": 6, "steps": 4, "play": "working",
+      "effects": [
+        { "type": "glow", "name": "pool qi", "note": "pool floor + inner wall x36-85, y89-103 tinted cyan, slow pulse",
+          "rect": [36, 89, 50, 15], "masks": [ { "hue": [200, 240], "sat": [0.15, 0.55], "val": [0.45, 0.65] } ],
+          "colorA": "#5ED4E8", "colorB": "#C4F6FF", "alpha": [0.5, 0.75], "period": 1.6 },
+        { "type": "smoke", "name": "rising motes left", "note": "3-px additive glint motes rise 44 px out of the pool and fade out (4 in flight per emitter)",
+          "points": [52, 95], "sprite": "glint", "size": [3, 3], "growTo": [3, 3], "rise": 44, "drift": -2, "count": 4, "period": 2.0,
+          "colorA": "#C4F6FF", "alphaSteps": [1, 1, 0.75, 0.5], "additive": true, "sort": 1 },
+        { "type": "smoke", "name": "rising motes right", "points": [70, 97], "sprite": "glint", "size": [3, 3], "growTo": [3, 3], "rise": 52, "drift": 2, "count": 4, "period": 2.6,
+          "colorA": "#C4F6FF", "alphaSteps": [1, 1, 0.75, 0.5], "additive": true, "sort": 1 }
+      ]
+    },
+    {
+      "key": "bld_spirit_bridge_receiving",
+      "note": "Spirit Bridge, paired + receiving, drawn on the still bld_spirit_bridge_unpaired@64 (Buildings-64-022) by BridgeFaceView (not a file key). The pool fills with gold-green qi; gold and jade motes fall between the posts and settle into it. Calm motion: steady tint, no motes.",
+      "still": [128, 128], "fps": 6, "steps": 4, "play": "working",
+      "effects": [
+        { "type": "glow", "name": "pool qi", "note": "same pool mask as sending, jade to gold pulse",
+          "rect": [36, 89, 50, 15], "masks": [ { "hue": [200, 240], "sat": [0.15, 0.55], "val": [0.45, 0.65] } ],
+          "colorA": "#5FCF9C", "colorB": "#F2C94C", "alpha": [0.5, 0.75], "period": 1.6 },
+        { "type": "smoke", "name": "falling motes left", "note": "3-px additive glint motes fall 52 px from between the posts into the pool, fading in (4 in flight per emitter)",
+          "points": [54, 42], "sprite": "glint", "size": [3, 3], "growTo": [3, 3], "rise": -52, "drift": 2, "count": 4, "period": 2.2,
+          "colorA": "#FFF0A0", "alphaSteps": [0.5, 0.75, 1, 1], "additive": true, "sort": 1 },
+        { "type": "smoke", "name": "falling motes right", "points": [69, 46], "sprite": "glint", "size": [3, 3], "growTo": [3, 3], "rise": -48, "drift": -2, "count": 4, "period": 2.8,
+          "colorA": "#A8ECC0", "alphaSteps": [0.5, 0.75, 1, 1], "additive": true, "sort": 1 }
+      ]
     }
   ]
 }

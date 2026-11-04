@@ -942,5 +942,54 @@ namespace IdleGrounds.Game.Tests
             Assert.AreEqual(2, seen.Count);
             foreach (var s in seen) Assert.Contains(s, snow, "glint centred on a snow texel");
         }
+
+        // ------------------------------------------------------------ Spirit Bridge states (paired states in code on the @64 still)
+
+        [Test]
+        public void SpiritBridge_State_Entries_Fit_The_64_Still()
+        {
+            foreach (var (suffix, rising) in new[] { (BridgeFaceView.SendingSuffix, true), (BridgeFaceView.ReceivingSuffix, false) })
+            {
+                var e = CodeAnimLibrary.Find("bld_spirit_bridge" + suffix);
+                Assert.IsNotNull(e, suffix);
+                Assert.AreEqual(128, e.StillW, suffix); Assert.AreEqual(128, e.StillH, suffix);
+                Assert.IsTrue(e.HasEffects && !e.PlaysAlways, suffix + ": plays while paired (the face sets Playing)");
+                int glows = 0, motes = 0;
+                foreach (var x in e.effects)
+                {
+                    if (x.kind == CodeAnimKind.Glow) { glows++; Assert.AreEqual("rest", x.calm, suffix + ": the pool tint stays in calm motion"); }
+                    if (x.kind == CodeAnimKind.Smoke)
+                    {
+                        motes++;
+                        Assert.AreEqual(rising, x.rise > 0, suffix + "/" + x.name + (rising ? ": motes rise" : ": motes fall"));
+                        Assert.AreEqual("glint", x.sprite, suffix + "/" + x.name);
+                    }
+                }
+                Assert.AreEqual(1, glows, suffix + ": one pool tint");
+                Assert.Greater(motes, 0, suffix + ": motes");
+            }
+        }
+
+        [Test]
+        public void Smoke_Takes_ColorA_Glint_Sprite_And_Falls_With_Negative_Rise()
+        {
+            Juice.SetReduceMotion(false);
+            var ca = Animator("{\"type\":\"smoke\",\"name\":\"motes\",\"sprite\":\"glint\",\"points\":[32,40],\"size\":[3,3],\"growTo\":[3,3],\"rise\":-20,\"count\":2,\"period\":1.0,\"colorA\":\"#FF0000\"}", out _, out _);
+            int shown = 0;
+            foreach (var t in new[] { 0.1f, 0.4f, 0.7f })
+            {
+                ca.Tick(t);
+                for (int i = 0; i < ca.SlotCount; i++)
+                {
+                    var r = ca.SlotRenderer(i);
+                    if (!r.enabled) continue;
+                    shown++;
+                    Assert.AreEqual(1f, r.color.r, 1e-3f); Assert.AreEqual(0f, r.color.g, 1e-3f); Assert.AreEqual(0f, r.color.b, 1e-3f);
+                    Assert.AreEqual(new Vector2(3, 3), r.sprite.rect.size, "glint mote");
+                    Assert.LessOrEqual(r.transform.localPosition.y, (96 - 40) / 64f + 1e-4f, "falling motes stay at or below the emitter");
+                }
+            }
+            Assert.Greater(shown, 0);
+        }
     }
 }

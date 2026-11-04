@@ -17,6 +17,7 @@ namespace IdleGrounds.Editor
     ///   questCollapse | questExpand
     ///   menu | settings (Menu on its Settings page) | font:OPTION_ID (Text font setting, applied live; kept in PlayerPrefs)
     ///   recipe:island,TYPE | link:island | bridge:island | pavilion:island   (first BUILT building of that type)
+    ///   pairBridges:island (art reviews: the first two built Spirit Bridges there are paired in memory, 1st sends, 2nd receives)
     ///   give:ITEM,N (hand) | clearHand
     ///   flowerSpot:TYPE@island (log free spots whose footprint covers a flower decor tile) | demolishAt:island,row,col | drop:ITEM,N@island,row,col
     /// </summary>
@@ -167,6 +168,18 @@ namespace IdleGrounds.Editor
                     int n = 0;
                     if (area != null) foreach (var b in area.buildings) if (b.built && b.type == arg.Substring(0, at).Trim()) { b.smeltDoneAt = runner.SimNow + 1e12; n++; }
                     if (n == 0) Debug.LogError(Tag + "working: no built " + arg);
+                    break;
+                }
+                case "pairBridges":   // art reviews: the first two built Spirit Bridges on an island are paired in memory (1st sends, 2nd receives)
+                {
+                    string isl = arg.Trim();
+                    var area = runner.State.Area(isl);
+                    Building s = null, r = null;
+                    if (area != null) foreach (var b in area.buildings) if (b.built && b.type == "spirit_bridge") { if (s == null) s = b; else if (r == null) r = b; }
+                    if (s == null || r == null) { Debug.LogError(Tag + "pairBridges: fewer than 2 built bridges on " + isl); break; }
+                    s.pairIsland = isl; s.pairId = r.id; s.pairSends = true;
+                    r.pairIsland = isl; r.pairId = s.id; r.pairSends = false;
+                    Debug.Log(Tag + $"pairBridges: {isl} #{s.id} (r{s.row} c{s.col}) sends to #{r.id} (r{r.row} c{r.col})");
                     break;
                 }
                 case "focusNode":   // shot focus "built" = the n-th (default 0) node / fixture of a kind (focusNode:island,kind[,n]; art reviews)

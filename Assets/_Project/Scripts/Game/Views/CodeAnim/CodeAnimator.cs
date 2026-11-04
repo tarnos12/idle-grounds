@@ -267,7 +267,7 @@ namespace IdleGrounds.Game
                         {
                             float ca = e.CalmAlpha;
                             if (ca < 0f || s.point != 0) { Hide(ref s); break; }
-                            Show(ref s, fx.sprites[0], new Color(1f, 1f, 1f, ca), SmokePos(fx, 0, 0f, 0)); break;
+                            Show(ref s, fx.sprites[0], WithAlpha(e.colA, ca), SmokePos(fx, 0, 0f, 0)); break;
                         }
                         float life = Mathf.Max(0.2f, e.period);
                         float cyc = t / life + s.point / (float)e.count;
@@ -277,7 +277,7 @@ namespace IdleGrounds.Game
                         var sp = fx.sprites[Mathf.Min(stage, fx.sprites.Length - 1)];
                         float a = e.alphaSteps[Mathf.Min(stage, e.alphaSteps.Length - 1)];
                         int wob = (int)(CodeAnimMath.Hash01(gen, s.point, stage) * 3f) - 1;
-                        Show(ref s, sp, new Color(1f, 1f, 1f, CodeAnimMath.QuantizeAlpha(a)), SmokePos(fx, s.point, u, wob));
+                        Show(ref s, sp, WithAlpha(e.colA, CodeAnimMath.QuantizeAlpha(a)), SmokePos(fx, s.point, u, wob));
                         break;
                     }
                     case CodeAnimKind.Toggle:
@@ -620,7 +620,8 @@ namespace IdleGrounds.Game
                         for (int k = 0; k < 4; k++)
                         {
                             int pw = Mathf.RoundToInt(Mathf.Lerp(w0, w1, k / 3f)), ph = Mathf.RoundToInt(Mathf.Lerp(h0, h1, k / 3f));
-                            var pi = CodeAnimBake.Puff(pw, ph, k);
+                            // sprite "glint": a plus-shaped mote (white, the tint gives the colour) instead of a puff (Spirit Bridge qi motes)
+                            var pi = e.sprite == "glint" ? CodeAnimBake.Glint(pw) : CodeAnimBake.Puff(pw, ph, k);
                             fx.sprites[k] = pi.ToSprite(entry.key + "_puff" + k, ppu, new Vector2(pi.w / 2, pi.h));
                         }
                         fx.emitter = e.points != null && e.points.Length >= 2 ? new Vector2Int(e.points[0], e.points[1]) : new Vector2Int(img.w / 2, 0);
