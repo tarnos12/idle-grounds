@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-11-04 04:43",
+  "updated": "2026-11-04 04:51",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -145,10 +145,9 @@
         {
           "title": "Fix the flaky PlayMode test Logistics_WispLaunches_ConverterCompletes",
           "detail": "The first converter batch takes 20.5 s of game time but the test waits only 18 s; it fails before and after phase 1.",
-          "status": "in-progress",
+          "status": "done",
           "size": "S",
-          "owner": "Claude",
-          "now": "now: agent fixes the wait (task copy flaky)"
+          "owner": "Claude"
         }
       ]
     },
