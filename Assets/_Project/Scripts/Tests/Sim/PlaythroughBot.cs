@@ -135,7 +135,7 @@ namespace IdleGrounds.Sim.Tests
                 SnapFlow();
                 Sim.Tick();
                 Ticks++;
-                if (_clock.NowMs >= _nextAuto) { Sim.AutomationTick(); _nextAuto += AutoMs; }
+                if (_clock.NowMs >= _nextAuto) { Sim.AutomationTick(); _nextAuto += AutoMs; CountAutoSkips(); }
                 CountFlow(false);
                 if (Ticks % 10 == 0) TryClaim();
                 if (CheckInvariants) Invariants();
@@ -195,7 +195,16 @@ namespace IdleGrounds.Sim.Tests
         /// during the world tick (field generators, generator buildings, Automation, disciples, dragon
         /// scales); <c>crafted</c> = converter outputs made during the world tick.
         /// </summary>
-        public sealed class ShareWindow { public long startMs; public long hand, auto, crafted; }
+        public sealed class ShareWindow
+        {
+            public long startMs; public long hand, auto, crafted;
+            /// <summary>Hand-made items in this window, by item (which chores keep the hands busy).</summary>
+            public readonly Dictionary<string, long> handByItem = new Dictionary<string, long>();
+            /// <summary>Automatic raw items in this window, by item.</summary>
+            public readonly Dictionary<string, long> autoByItem = new Dictionary<string, long>();
+            /// <summary>Automation ticks an Island skipped a yield type because too much of it lay loose ("mine:clay" → ticks).</summary>
+            public readonly Dictionary<string, long> autoSkips = new Dictionary<string, long>();
+        }
         public readonly List<ShareWindow> Share = new List<ShareWindow>();
         public long ProdHand, ProdAuto, ProdCrafted;
         /// <summary>Raw items made automatically, by item (whole session).</summary>
@@ -227,10 +236,21 @@ namespace IdleGrounds.Sim.Tests
                 if (d <= 0) continue;
                 var w = CurWindow();
                 string item = it[i].item;
-                if (byHand) { w.hand += d; ProdHand += d; HandByItem[item] = (HandByItem.TryGetValue(item, out long h) ? h : 0) + d; }
+                if (byHand) { w.hand += d; ProdHand += d; HandByItem[item] = (HandByItem.TryGetValue(item, out long h) ? h : 0) + d; w.handByItem[item] = (w.handByItem.TryGetValue(item, out long wh) ? wh : 0) + d; }
                 else if (_craftedItems.Contains(item)) { w.crafted += d; ProdCrafted += d; }
-                else { w.auto += d; ProdAuto += d; AutoByItem[item] = (AutoByItem.TryGetValue(item, out long a) ? a : 0) + d; }
+                else { w.auto += d; ProdAuto += d; AutoByItem[item] = (AutoByItem.TryGetValue(item, out long a) ? a : 0) + d; w.autoByItem[item] = (w.autoByItem.TryGetValue(item, out long wa) ? wa : 0) + d; }
             }
+        }
+
+        void CountAutoSkips()
+        {
+            foreach (var a in S.areas)
+                if (a.autoSkip != null)
+                    foreach (var t in a.autoSkip)
+                    {
+                        var w = CurWindow(); string k = a.key + ":" + t;
+                        w.autoSkips[k] = (w.autoSkips.TryGetValue(k, out long c) ? c : 0) + 1;
+                    }
         }
 
         ShareWindow CurWindow()

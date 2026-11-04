@@ -42,7 +42,7 @@ MonoBehaviour:
         min: 3
         max: 3
       - item: clay
-        min: 1
+        min: 0
         max: 1
       timer: 10
     spawners:
