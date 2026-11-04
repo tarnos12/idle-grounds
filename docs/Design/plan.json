@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-11-04 04:43",
+  "updated": "2026-11-04 05:08",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -74,10 +74,10 @@
         {
           "title": "Rebalance after the empty start",
           "detail": "With no starter buildings, machines out-produce hands only 3.8x mid-run (target 5-10x, ADR 0004); ending at 2:33 is still in the 2-3 h band.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "M",
           "owner": "Claude",
-          "now": "now: balance designer tunes automation to 5-10x (task copy rebal)"
+          "blockedBy": "bg/rebal published: Mine rock clay 1 -> 0-1, mid-run 6.2-9.1x, ending 2:33-2:39; waiting for the orchestrator to merge"
         }
       ]
     },

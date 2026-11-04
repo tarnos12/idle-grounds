@@ -46,10 +46,17 @@ namespace IdleGrounds.Sim.Tests
             foreach (var s in bot.Investments) sb.AppendLine("  invest " + s);
             sb.AppendLine($"  production: hand={bot.ProdHand} auto={bot.ProdAuto} crafted={bot.ProdCrafted}");
             foreach (var w in bot.Share)
-                sb.AppendLine($"  share {PlaythroughBot.Fmt(w.startMs)} hand={w.hand} auto={w.auto} crafted={w.crafted} auto/hand={(w.hand == 0 ? double.PositiveInfinity : (double)w.auto / w.hand):F1}");
+                sb.AppendLine($"  share {PlaythroughBot.Fmt(w.startMs)} hand={w.hand} auto={w.auto} crafted={w.crafted} auto/hand={(w.hand == 0 ? double.PositiveInfinity : (double)w.auto / w.hand):F1}"
+                    + (w.hand > 0 ? " | hand: " + Top(w.handByItem) : "") + (w.auto > 0 ? " | auto: " + Top(w.autoByItem) : "")
+                    + (w.autoSkips.Count > 0 ? " | auto skipped (s): " + Top(w.autoSkips) : ""));
+            sb.AppendLine("  hand by item: " + Top(bot.HandByItem, 12));
+            sb.AppendLine("  auto by item: " + Top(bot.AutoByItem, 12));
             sb.AppendLine($"  game {PlaythroughBot.Fmt(bot.GameLength)} auto/hand first 20%={bot.AutoRatio(0, 0.2):F2} mid (40-80%)={bot.AutoRatio(0.4, 0.8):F2} last 20%={bot.AutoRatio(0.8, 1.01):F2}");
             return sb.ToString();
         }
+
+        static string Top(Dictionary<string, long> d, int n = 4) =>
+            string.Join(", ", d.OrderByDescending(kv => kv.Value).Take(n).Select(kv => kv.Key + " " + kv.Value));
 
         static void AssertCompleted(PlaythroughBot bot)
         {
@@ -80,9 +87,10 @@ namespace IdleGrounds.Sim.Tests
             var (h, a) = FirstMinutes(bot, 20 * Min);
             Assert.Greater(h, a, "hand work dominates the first 20 minutes");
             double mid = bot.AutoRatio(0.4, 0.8);
-            // owner 2026-10-13: a new game starts with no buildings, so the player builds the first machines by hand and the
-            // mid-run ratio drops (starter network: 8.8x, empty start: 3.8x). Floor lowered 5 -> 3; retune in the balance pass.
-            Assert.GreaterOrEqual(mid, 3.0, "by mid-run automated production is ≥ 3× hand production (empty start)");
+            // The empty start (owner 2026-10-13) dropped this to 3.8x: Mine rocks gave 3 stone + 1 clay, nothing hauled the clay
+            // away, Mine Automation paused on 120 loose clay and stone went back to hand work. Rebalance 2026-11-04: Mine rock
+            // clay 1 -> 0-1 gives 6.2-9.1x (human seeds 777, 1, 2); floor back to the ADR 0004 target of 5.
+            Assert.GreaterOrEqual(mid, 5.0, "by mid-run automated production is ≥ 5× hand production");
             Assert.LessOrEqual(mid, 12.0, "…but hand work still matters mid-run (target 5–10×)");
             var tl = bot.Timeline.Select(t => t.what).ToList();
             Assert.GreaterOrEqual(tl.Count(t => t.Contains("/automation")), 3, "bought Automation (several Islands / levels)");

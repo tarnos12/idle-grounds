@@ -13,6 +13,8 @@ Own the numbers: recipes, timers, costs, Tributes, request costs, automation lev
 - Hands early, machines win: first 20-30 min mostly hand work; automation >= 5x hand mid-game. Spirit Bridges beat hand-carrying. TEST mode is a dev toggle, off by default.
 
 **Latest measured numbers**
+- **Empty-start rebalance (2026-11-04, 7 Islands, no starter buildings):** one lever, Mine rock (`AREAS.mine.tiers[0]`) clay drop 1 -> 0-1. Cause found with the bot's new per-window breakdown: the bot (and a new player) builds no hauling line on the Mine, the rock by-product clay piled up to `autoSkipLoose` (120 loose), Mine Automation paused from 0:40 to the end, and stone went back to hand work. Human pace, seeds 777 / 1 / 2: ending 2:33:32 / 2:33:25 / 2:34:39 -> 2:33:46 / 2:39:09 / 2:36:13; mid-run auto/hand 3.77 / 4.06 / 3.89 -> **9.13 / 6.24 / 7.98** (extra seeds 12345 / 3 / 4: 6.58 / 8.86 / 5.10, endings 2:35-2:42). First 20 % stays hand work (0.43-0.50). Dragon 2 (60 clay) is about 1 min later. Expert seed 12345: 1:48:05 -> 1:51:45 (mid 4.30 -> 3.22; expert has no ratio assertion). The test floor is back to 5x.
+- The bot report now prints, per 5-minute window, the top hand items, top automatic items and "auto skipped (s)" (seconds an Island's Automation skipped a yield type because too much lay loose), plus hand/auto totals by item. Read these first when the ratio moves.
 - Phase 1 bot (7 Islands, no requests yet): **2:12:27** human pace start to the ending. This is *before* Shrine, requests and the 4 new Islands, so it is a floor, not the target.
 - Balance pass 1 (`docs/port/balance-pass-1.md`): first ascension human 2:09:40, expert 1:35:39. Auto/hand per 15 min: 0.7, 0.8, 3.7, 3.7, 8.0, 185, 8.9, inf, 9.5; mid-run 7.8x human, 16.6x expert. Bridge 4.8 items/s vs 1.7-2.3 by hand.
 - Tests: fast .NET 167-168, all 169-171 including Slow playthroughs; Unity EditMode 175/175 at Phase 1.
@@ -39,7 +41,8 @@ Own the numbers: recipes, timers, costs, Tributes, request costs, automation lev
 - Ending will move from about 2:10 to about 3:00 once 4 Islands, Shrine and requests land; the bot policies are not written yet (ADR 0007 step 5).
 - Flaky PlayMode test `Logistics_WispLaunches_ConverterCompletes` (timing) hides real wisp-timing regressions.
 - Tribute quantities for Islands 6-10 are first guesses.
-- Automation is node-regrow-bound, not click-bound; lowering `AUTOMATION_CLICKS` barely moves it.
+- Automation is node-regrow-bound, not click-bound; lowering `AUTOMATION_CLICKS` barely moves it. In the empty start it is also **saturation-bound**: a node pauses when any of its yield types has 120 loose on the ground. Mine stone is still skipped late in the run (now on surplus stone, which is fine), and Center leaves and Farm wheat/cotton sit saturated most of the run. A by-product that piles up silently pauses the main product; watch "auto skipped" when adding multi-drop nodes.
+- Farm -> Grove gap is about 35-40 min at human pace (above the ADR 0007 8-30 min gap rule; unchanged by the 2026-11-04 rebalance; revisit with the 11-Island order).
 
 ## Owner feedback that constrains this role
 - `owner-picks-2026-10-12-requesters.json` / `owner-picks-2026-10-12.json`: Tributes of 5 items x 5-20 so automation is the reliable route; requests never gate; fixed order; vows removed (no challenge modifiers).
