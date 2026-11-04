@@ -140,3 +140,5 @@ session orchestrates, reviews, integrates and commits. Rules for every agent:
 5. Run the test gate before pushing (fast `bash tools/simtests/run.sh`; full Unity only at
    milestones) and report results plainly.
 6. Never `cat > file` without a heredoc; never reset the owner's save.
+7. Temp output only in the scratchpad or `<copy>/Logs/bg/`, never on a drive root or loose in
+   `D:WORKUnity` (agents can't delete those); remove merged task copies (`task.sh rm`).

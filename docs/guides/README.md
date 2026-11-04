@@ -28,6 +28,7 @@ Model tiering follows `.claude/rules/personal-workflow.md`: opus where a wrong a
 4. Work only in the background copy (`bash tools/bg/sync.sh` first; Unity via `tools/bg/compile.sh`, `test.sh`, `menu.sh`, `shot.sh`; hand work back with `tools/bg/publish-back.sh <task> -m "..."`); never in the owner's open project or editor.
 5. Test gate before pushing: `bash tools/simtests/run.sh` (fast .NET); full Unity only at milestones. Report results plainly.
 6. Never `cat > file` without a heredoc; never reset or overwrite the owner's save.
+7. Temp output (unpacked zips, screenshot dumps, scratch files) goes only in the session scratchpad or the copy's `Logs/bg/`, never on a drive root (`D:oo`) or loose in `D:WORKUnity` - agents can't clean those up. Remove task copies with `tools/bg/task.sh rm` once merged.
 7. Repo rules from CLAUDE.md still apply (master, commit + push per task, HANDOFF.md in the same commit).
 
 ## How roles work together
