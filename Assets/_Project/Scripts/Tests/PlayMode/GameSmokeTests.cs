@@ -184,7 +184,7 @@ namespace IdleGrounds.PlayMode.Tests
 
         // ------------------------------------------------------------------ 3. logistics
 
-        [UnityTest, Timeout(60000)]
+        [UnityTest, Timeout(120000)]
         public IEnumerator Logistics_WispLaunches_ConverterCompletes()
         {
             int launches = 0;
@@ -196,7 +196,13 @@ namespace IdleGrounds.PlayMode.Tests
             S.starterPlaced = false;
             Sim.Buildings.SetupStarterNetwork();
             bool sawWispView = false, crafted = false;
-            float end = Time.realtimeSinceStartup + 18f;
+            // Deadline = wisp delivery allowance (18 s) + the slowest starter converter batch, read from the
+            // recipe data (BatchMs = timeMs * timeScale * world factor), so a recipe retune can't re-break this.
+            double slowestBatchMs = 0;
+            foreach (var cb in S.Area(Center).buildings)
+                if (cb.built && Sim.Converters.RecipeOf(cb) != null)
+                    slowestBatchMs = System.Math.Max(slowestBatchMs, Sim.Converters.BatchMs(cb, Sim.Ctx.Now));
+            float end = Time.realtimeSinceStartup + 18f + (float)(slowestBatchMs / 1000.0) * 1.5f;
             while (Time.realtimeSinceStartup < end && !(launches > 0 && sawWispView && crafted))
             {
                 if (wispViews.ViewCount > 0) sawWispView = true;
