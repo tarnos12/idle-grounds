@@ -4,111 +4,103 @@
   },
   {
     "id": "layers_finish",
-    "q": "ChatGPT failed the moving-part layers 3 times (Paper Mill wheel/press, Kang raised arm, Xuan base). How should we finish them?",
-    "ctx": "Batch L1R2 (2026-10-26) was the third round. Passed and kept: the Paper Mill front layer, Xuan ring + front, Kang rest arm. Failed a third time (6 files): the wheel (shape, spokes and hub now exact and it turns cleanly in game, but the 8 paddles are missing), the press block (no outline of its own), the Paper Mill base (checkerboard and hatched fill behind the wheel and press), Kang base (flat slab behind the arm), Kang raised arm (a bare skin arm instead of his sleeved arm bent), Xuan base (loose brown bits beside the sphere when the ring turns). No further ChatGPT round is requested until you answer; the game keeps the stills with the code stand-ins (press bob, Kang nod, Xuan ring glints). The wheel and press are small fixes (8 paddles, an outline); the bases and Kang raised arm are painting work. Update 2026-10-27: the next deliveries failed the same way - He lotus layers + base and Yao tail + base (Creatures-64-004), and the Infusion Array crystal, Loom shuttle and Mill beam with their bases (Buildings-64-007): cut-outs of the still that carry background pieces, and flat-filled bases. Their stills are accepted and animated in code; your answer covers these layers too, and ChatGPT delivers the next buildings as stills only until you answer.",
+    "q": "Moving-part layers (wheels, arms, rings) failed 3 times. Who finishes them?",
+    "ctx": "Stills are fine and already animated in code. Only the separate moving layers fail.",
     "imgs": [
       {
         "file": "question-images/layers-l1r2-review.jpg",
-        "cap": "Round 3 review: files enlarged, in-game frames (red = rejected, green = kept)"
-      },
-      {
-        "file": "question-images/layers-l1r2-wheel-strip.png",
-        "cap": "Paper Mill in game, 8 steps of the turning wheel (no paddles, brown disc behind it)"
-      },
-      {
-        "file": "question-images/layers-b3-set1.jpg",
-        "cap": "Same failure in B3 set 1 (Mill, Loom, Infusion Array): base, layer and the Mill beam swinging in game"
+        "cap": "Round 3 review"
       }
     ],
     "o": [
       [
         "inhouse_all",
-        "We finish all 6 ourselves from the kept parts (add paddles, outline the press, paint the bases, draw the raised arm from the rest arm)",
+        "We fix them ourselves",
         true
       ],
       [
         "chatgpt_round",
-        "One more ChatGPT round (L1R3) for the 6 files"
+        "One more ChatGPT try"
       ],
       [
         "mix",
-        "We do the small fixes (wheel paddles, press outline, Xuan base clean-up); ChatGPT redoes the Paper Mill base and Kang base + raised arm"
+        "We do small fixes, ChatGPT redoes the big ones"
       ],
       [
         "standins",
-        "Keep the code stand-ins and drop these layers for now (no turning wheel, brow wipe or turning ring)"
+        "Skip them, keep the code animation"
       ],
       [
         "inhouse_future",
-        "All of the first option, and from now on we make moving-part layers in-house for later batches too (ChatGPT draws stills only)"
+        "We fix them, and make all future moving layers ourselves"
       ]
     ]
   },
   {
     "id": "tiles_finish",
-    "q": "ChatGPT has failed 7 new-island tiles three times. How should we finish them?",
-    "ctx": "For Lotus Marsh and Thunder Crag (islands not in the game yet, ADR 0007 Phase 6), ChatGPT keeps sending the same recoloured template: ground patches as flat one-colour discs, side cliffs with a moss bar every 32 px or a thin dark line, and a Thunder ground fill with rows of cyan dots. Everything else for these islands passed (ground shapes, cliffs, flowers, Lotus fill and water). Azure Beast Ravine has the same three problems on its 2nd try. The accepted islands (Center, Grove, Mine, Farm…) already have good patches, side cliffs and fills that could be recoloured to each new island's palette. Update 2026-10-27: Tribulation Peak's first set has the same three problems (template fill with a dotted lattice, flat disc patches, side cliffs with a mint bar every 32 px); its pale grey ground also makes it look like the snowy Fishing island from afar.",
+    "q": "Tiles for 4 future islands failed 3 times. Who finishes them?",
+    "ctx": "Not in the game yet. We could recolour tiles from islands that already look good.",
     "imgs": [
       {
         "file": "question-images/tiles-finish-1.jpg",
-        "cap": "Thunder Crag round 3 preview: flat disc patches, dark-line side cliffs, dotted fill"
+        "cap": "Thunder Crag round 3 preview"
       }
     ],
     "o": [
       [
         "inhouse_recolour",
-        "We make them in-house: recolour the accepted patches, side cliffs and fills from the closest existing island to each new island's palette (Lotus from Grove, Thunder from Mine, Ravine from Farm/Grove, Tribulation from Volcano/Celestial), then judge them with the same checks",
+        "We recolour existing good tiles",
         true
       ],
       [
         "chatgpt_new_brief",
-        "One more ChatGPT round with a new brief that starts from an accepted island's file instead of its template"
+        "One more ChatGPT try with a new brief"
       ],
       [
         "mix",
-        "Recolour in-house for the side cliffs and fills; ChatGPT redraws only the ground patches"
+        "We do cliffs and fill, ChatGPT does patches"
       ],
       [
         "later",
-        "Leave them until those islands are being built (Phase 6)"
+        "Wait until those islands are built"
       ],
       [
         "all",
-        "In-house now for all three new islands, AND for Tribulation Peak's patches/side cliffs/fill from the start"
+        "We recolour them now for all 4 islands"
       ]
     ]
   },
   {
     "id": "nodes_finish",
-    "q": "Six resource nodes and three 64 px creatures (fox, boar, wolf) failed three or more times. Apply our pixel fixes?",
-    "ctx": "Bamboo (1×1 and 2×2), reed beds (1×1 and 2×2) and the bone heap: ChatGPT's whole-node pictures are good, but the frame shown after the first hit keeps a flaw (a pale flag on the bamboo cut, a stalk that isn't removed, comb-like single-pixel spikes on the reeds, a straight unoutlined edge on the bone heap). The reviewer prepared exact in-house fixes that only touch those pixels (20–45 px for the small ones, a few hundred for the 2×2 bamboo and reed bed) and leave the first frame untouched; the last rows of the sheet show them. Until decided, the game keeps the 32 px bamboo (Spirit Grove); the reeds and bone heap are for islands not built yet. Update: the soul vine (Azure Beast Ravine, not built yet) has now failed 4 times — it still lacks the requested leaf pairs; an in-house fix would add ~120 px of leaves, or it can stay at 32 px until that island is built. Update: the 64 px Fox Spirit (in the game on Center) also failed its 3rd round, but only on details: the eye is a thin chevron, one walk frame's colours drift, and two 1-px stray lines. A 98-pixel in-house fix makes every check pass; until decided, the 32 px fox stays in the game. Update: the 64 px Spirit Boar also failed its 3rd round (colours now right, but frames recoloured separately so still parts flicker; striped hit flash; ragged death cut). Our in-house boar fix gets the loops smooth and the flash flat, but a few limits are still just missed (89 % vs 90 % on two frame pairs, bristle colour drift, the asked-for topple shrinks the body 33 %) — applying it means accepting those small misses. Update: the Azure Wolf (preview-only, Phase 6) now passes idle and walk; its hit and death strips failed a 3rd time on a chest ledge, a 1-px hole and a ragged death cut — a 33-px in-house fix clears them (the death frame becomes a clean cut rather than a dissolve).",
+    "q": "6 resource nodes + fox, boar, wolf failed 3+ times. Use our pixel fixes?",
+    "ctx": "Small flaws only. Our fixes pass almost every check (boar misses a few by a hair).",
     "imgs": [
       {
         "file": "question-images/nodes-finish-1.jpg",
-        "cap": "Review sheet: delivered frames vs our fix candidates (last 5 rows)"
+        "cap": "Review sheet"
       }
     ],
     "o": [
       [
         "apply_fixes",
-        "Apply our pixel fixes to all of them (the six nodes and the fox) and use them",
+        "Yes, use our fixes",
         true
       ],
       [
         "chatgpt_again",
-        "One more ChatGPT round for these five"
+        "One more ChatGPT try"
       ],
       [
         "fixes_small_only",
-        "Apply our fixes only to the small ones (bamboo 1×1, reed bed 1×1, bone heap); ChatGPT redoes the 2×2 bamboo and reed bed"
+        "Fix the small ones, ChatGPT redoes the big ones"
       ],
       [
         "keep_32",
-        "Keep the 32 px versions of these nodes for now"
+        "Keep the old 32 px versions"
       ],
       [
         "all",
-        "Apply our fixes now, and from now on let us fix any node/prop that fails three times without asking"
+        "Use our fixes, and fix anything that fails 3 times without asking"
       ]
     ]
   },
@@ -117,30 +109,30 @@
   },
   {
     "id": "fish_zone",
-    "q": "Fish and algae appear on the snow around the Fishing pond. How should that work?",
-    "ctx": "The fish and algae spawn anywhere in the Fishing island's central zone (43×43 cells), but the drawn pond is only 14×10 cells, so most fish and algae sit on snow. The Algae Farm's 'water only' rule also treats that whole zone as water. Fixing it changes where you fish and how many fish/algae there are at once (spawn targets would be rebalanced so the pace stays the same).",
+    "q": "Fish and algae spawn on the snow, not just in the pond. Fix how?",
+    "ctx": "The fish zone is much bigger than the drawn pond.",
     "imgs": [],
     "o": [
       [
         "pond_zone",
-        "Fish and algae only in the drawn pond (and the Algae Farm only on the pond); rebalance spawn counts so the pace stays the same",
+        "Only in the pond (keep the same pace)",
         true
       ],
       [
         "big_lake",
-        "Make the frozen lake much bigger so it covers the whole central zone (fewer buildable cells on Fishing)"
+        "Make the lake much bigger"
       ],
       [
         "ice_holes",
-        "Keep them spread out, but on snow they appear as ice-fishing holes (new small art piece) — fits the snowy island"
+        "Keep them spread out, as ice-fishing holes"
       ],
       [
         "pond_plus_holes",
-        "Fish in the pond AND at ice-fishing holes on the snow nearby; algae only in the pond"
+        "Pond plus ice holes nearby"
       ],
       [
         "leave",
-        "Leave it as it is for now"
+        "Leave it"
       ]
     ]
   }
