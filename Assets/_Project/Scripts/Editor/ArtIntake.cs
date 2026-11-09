@@ -79,6 +79,7 @@ namespace IdleGrounds.Editor
         void OnPreprocessTexture()
         {
             if (!IsIncomingArt(assetPath)) return;
+            if (AutoTileBuilder.IsSheet(assetPath)) return;      // §3.10 auto-tile sheets: 32 x 32 grid, AutoTileBuilder.Import
             var ti = (TextureImporter)assetImporter;
             string cat = CategoryOf(assetPath);
             string bn = Path.GetFileNameWithoutExtension(assetPath);

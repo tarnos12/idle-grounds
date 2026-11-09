@@ -331,7 +331,7 @@ namespace IdleGrounds.Editor
                     if (id < 0 || !runner.Sim.Demolish(isl, id)) Debug.LogError(Tag + "demolishAt: nothing demolished at " + arg);
                     break;
                 }
-                default: if (!CodeAnimAct(name, arg)) Debug.LogError(Tag + "unknown act '" + a + "'"); break;   // animTime / animPreview: BatchCodeAnimActs.cs
+                default: if (!CodeAnimAct(name, arg) && !AutoTileAct(name, arg)) Debug.LogError(Tag + "unknown act '" + a + "'"); break;   // animTime / animPreview: BatchCodeAnimActs.cs
             }
         }
     }
