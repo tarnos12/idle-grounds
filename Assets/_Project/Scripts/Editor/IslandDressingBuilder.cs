@@ -51,6 +51,7 @@ namespace IdleGrounds.Editor
             int n = 0;
             foreach (var isl in Object.FindObjectsByType<Island>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (!string.IsNullOrEmpty(isl.islandKey) && isl.name == "Island_" + isl.islandKey) { BuildIsland(isl); n++; }
+            AutoTileBuilder.RefreshAll();      // §3.10.3 hand-painted auto-tile data maps (none on the built Islands yet)
             return n;
         }
 

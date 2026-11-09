@@ -1,0 +1,18 @@
+{
+  "mode": "play",
+  "width": 1920,
+  "height": 1080,
+  "warmupFrames": 60,
+  "ui": false,
+  "hideVeils": true,
+  "save": "",
+  "shots": [
+    { "name": "autotile_lotus_1x", "island": "center", "x": 0, "y": -130, "size": 16.875, "act": ["autoTilePreview:all@center,0,-130"] },
+    { "name": "autotile_lotus_2x", "island": "center", "x": 4, "y": -131, "size": 8.4375 },
+    { "name": "autotile_thunder_1x", "island": "center", "x": 44, "y": -130, "size": 16.875 },
+    { "name": "autotile_ravine_1x", "island": "center", "x": 88, "y": -130, "size": 16.875 },
+    { "name": "autotile_tribulation_1x", "island": "center", "x": 132, "y": -130, "size": 16.875 },
+    { "name": "autotile_tribulation_2x", "island": "center", "x": 132, "y": -128, "size": 8.4375 },
+    { "name": "autotile_overview", "island": "center", "x": 66, "y": -130, "size": 40 }
+  ]
+}
