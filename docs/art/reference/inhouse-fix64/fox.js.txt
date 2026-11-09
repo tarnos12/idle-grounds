@@ -1,0 +1,19 @@
+'use strict';
+const {decode,encode}=require('./png.js'),fs=require('fs');
+const HEX='0D0F14 1B1F2B 2E3345 4A5068 7A809A B7BCCD E8ECF3 0F3B34 1F6B57 2F9A7A 5FCF9C A8ECC0 4F7A2F 86B34A C3D67A 4A1417 8C1D22 C8322B EE6A4A 3D2616 6E4524 A8703A D9A45C F2C94C FFF0A0 14405A 2B86B3 5ED4E8 C4F6FF FF8A1F 3A2A63 7D5FC4 C2521C B8862E F0C8A0 C48B68 B9A2F0 2C4A22 3E5A7C F4E6C8'.split(' ');
+const col=p=>{const h=HEX[p-1];return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16),255];};
+const [,,D,O]=process.argv; fs.mkdirSync(O,{recursive:true});
+const nm=k=>`enemy_fox_${k}_64x64_${k==='hit'?2:4}f@64`;
+const im={};for(const k of ['idle','move','hit','die'])im[k]=decode(`${D}/${nm(k)}_v3_REJECTED.png`);
+const log=[];
+const pid=(im_,f,x,y)=>{const i=(y*im_.w+f*64+x)*4;if(im_.rgba[i+3]===0)return null;const h=[0,1,2].map(k=>im_.rgba[i+k].toString(16).padStart(2,'0')).join('').toUpperCase();const j=HEX.indexOf(h);return j<0?'?':j+1;};
+const set=(I,f,x,y,p)=>{const i=(y*I.w+f*64+x)*4;const was=pid(I,f,x,y);const c=p?col(p):[0,0,0,0];for(let k=0;k<4;k++)I.rgba[i+k]=c[k];log.push(`${I.k} f${f} (${x},${y}) P${was}->${p?'P'+p:'clear'}`);};
+for(const k in im)im[k].k=k;
+const eye=(I,f)=>{set(I,f,49,35,7);set(I,f,48,36,7);for(const [x,y] of [[50,35],[51,35],[49,36],[50,36],[51,36]])set(I,f,x,y,1);for(const x of [50,51])if(pid(I,f,x,37)===1)set(I,f,x,37,7);};
+for(let f=0;f<4;f++){eye(im.idle,f);eye(im.move,f);}
+eye(im.hit,0);
+const m=im.move;for(const [x,y] of [[14,34],[15,34],[47,34],[46,35],[8,41]])if(pid(m,3,x,y)===18)set(m,3,x,y,19);else log.push(`move f3 (${x},${y}) is P${pid(m,3,x,y)} NOT P18`);
+for(let y=28;y<=31;y++){set(im.hit,1,48,y,0);set(im.die,0,48,y,0);}
+for(let y=23;y<=25;y++){set(im.die,1,47,y,0);set(im.die,2,47,y,0);}
+for(const k in im)encode(`${O}/${nm(k)}.png`,im[k].w,im[k].h,im[k].rgba);
+fs.writeFileSync(`${O}/fox-fix-log.txt`,log.join('\n')+'\n');console.log(log.length+' entries');
