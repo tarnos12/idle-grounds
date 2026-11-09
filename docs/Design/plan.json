@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-11-09 17:50",
+  "updated": "2026-11-09 17:53",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -643,9 +643,10 @@
         {
           "title": "Auto tiles: dual-grid builder for the Wang-16 sheets (feature builder)",
           "detail": "ART-SPEC §3.10.3 contract: import 128x160 sheets as 32x32 sprites (layout L = [[10,13,12,4],[14,15,7,9],[3,11,5,2],[8,6,1,0]] + F0-F3), display tilemap Auto_<terrain> offset (-0.5,-0.5) fed from a data cell set / hidden data tilemap, overlays at the Macro slot, water 3, path 4, side-face strip frame = cellY mod 4, menu Rebuild Auto Tiles, EditMode test 2x2 block -> [8,12,4]/[10,15,5]/[2,3,1]. Can start now on the template alpha (docs/art/reference/autotile) as placeholder art; preview Island for the AT1 review.",
-          "status": "todo",
+          "status": "in-progress",
           "size": "M",
-          "owner": "Claude"
+          "owner": "Claude",
+          "now": "feature builder wires the dual-grid build on template art (task copy autotile)"
         },
         {
           "title": "Apply in-house pixel fixes: 6 nodes + fox, boar, wolf",
