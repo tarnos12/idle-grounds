@@ -166,11 +166,11 @@ namespace IdleGrounds.Sim
             for (int r = row; r < row + bh; r++)
                 for (int c = col; c < col + bw; c++)
                 {
-                    if (waterOnly ? !CellInZone("centre", r, c) : (!anyZone && InNoBuild(areaKey, r, c)))
+                    if (waterOnly ? !CellInZone(PondShape.ZoneKey, r, c) : (!anyZone && InNoBuild(areaKey, r, c)))
                     {
                         if (waterOnly) water = true; else wild = true;
                     }
-                    if (occ.IsOccupied(area, r, c)) blocked = true;
+                    if (occ.IsOccupied(area, r, c) && !(waterOnly && SurfacedSpawnAt(areaKey, area, r, c) != null)) blocked = true;
                 }
             if (water) return "Water only";
             if (wild) return WildLandReason(areaKey);
@@ -189,6 +189,18 @@ namespace IdleGrounds.Sim
             for (int r = row; r < row + bh; r++)
                 for (int c = col; c < col + bw; c++)
                     if (racks.Contains(CellKey(r, c))) return "Blocked";
+            return null;
+        }
+
+        /// <summary>The surfacing spawner node (fish / algae) alone on a cell, else null. A water-only building (Algae Farm)
+        /// may be placed over such nodes: they dive and respawn elsewhere in the pond (BuildingSystem.PlaceGhost), so the
+        /// small pond never refuses the farm just because fish are up.</summary>
+        public Node SurfacedSpawnAt(string areaKey, AreaState area, int r, int c)
+        {
+            if (BuildingAt(areaKey, r, c) != null) return null;
+            foreach (var n in area.nodes)
+                if (r >= n.row && r < n.row + n.size && c >= n.col && c < n.col + n.size)
+                    return n.spawnerKind != null && n.interaction == NodeInteraction.Surface ? n : null;
             return null;
         }
 

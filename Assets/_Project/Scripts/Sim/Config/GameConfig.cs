@@ -47,6 +47,8 @@ namespace IdleGrounds.Sim
             foreach (var it in items) if (it != null && it.key != null) _items[it.key] = it;
             _zones = new Dictionary<string, ZoneDef>();
             foreach (var z in zones) if (z != null && z.key != null) _zones[z.key] = z;
+            // the Fishing pond is derived from the drawn pond's shape (PondShape), never from data rects
+            _zones[PondShape.ZoneKey] = PondShape.Zone();
             _regions = new Dictionary<string, RegionDef>();
             _regionIndex = new Dictionary<string, int>();
             for (int i = 0; i < regions.Count; i++)

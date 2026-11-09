@@ -947,7 +947,7 @@ namespace IdleGrounds.Editor
             return IslandArtBuilder.Frames(path);
         }
 
-        const int PondW = 448, PondH = 320;
+        const int PondW = IdleGrounds.Sim.PondShape.W, PondH = IdleGrounds.Sim.PondShape.H;     // one shape for the sprite and the Sim pond zone (PondShape)
 
         /// <summary>Fishing pond: the delivered animated water tile, masked to an organic shore with a dark waterline,
         /// a shaded north bank (3/4 view) and a lit south lip; lotus / koi detail kept in ~1 of 4 tiles so it does not wallpaper.</summary>
@@ -967,15 +967,10 @@ namespace IdleGrounds.Editor
             foreach (var kv in counts) if (kv.Value > best) { best = kv.Value; plain = kv.Key; }
             const int frames = 4;
             var px = new Color32[PondW * frames * PondH];
-            const int seed = 4242;
-            float Rad(float a) => 1f + 0.12f * Mathf.Sin(2 * a + 1.3f) + 0.07f * Mathf.Sin(3 * a + 4.1f) + 0.04f * Mathf.Sin(5 * a + 2.2f);
-            float hx = (PondW * 0.5f - 8f) / 1.26f, hy = (PondH * 0.5f - 8f) / 1.26f;
-            float D(int x, int y)
-            {
-                float dx = (x + 0.5f - PondW * 0.5f) / hx, dy = (y + 0.5f - PondH * 0.5f) / hy;
-                float d = Mathf.Sqrt(dx * dx + dy * dy) / Rad(Mathf.Atan2(dy, dx));
-                return d + (Noise(x / 9f, y / 9f, seed) - 0.5f) * 0.08f;
-            }
+            const int seed = IdleGrounds.Sim.PondShape.Seed;
+            float Rad(float a) => IdleGrounds.Sim.PondShape.Rad(a);
+            float hx = IdleGrounds.Sim.PondShape.HX, hy = IdleGrounds.Sim.PondShape.HY;
+            float D(int x, int y) => IdleGrounds.Sim.PondShape.D(x, y);       // the Sim's pond zone = cells whose pixels are all D < 1
             float p1 = 1f / hy;      // ~one pixel in d units
             // VP-14: lotus / koi are stamped at seeded free positions (min 40 px apart, random flip), not kept on the
             // delivered tile's 32-px grid: the water itself is the plain tile with its detail pixels removed
@@ -1225,14 +1220,14 @@ namespace IdleGrounds.Editor
             if (file == null) return;
             var fr = IslandArtBuilder.Frames(file);
             if (fr.Length < 2 || fr[0] == null || fr[1] == null) return;
-            float hx = (PondW * 0.5f - 8f) / 1.26f, hy = (PondH * 0.5f - 8f) / 1.26f;
+            float hx = IdleGrounds.Sim.PondShape.HX, hy = IdleGrounds.Sim.PondShape.HY;
             float[] deg = { -78f, -152f, 28f };
             var holes = new GameObject("IceHoles").transform;
             holes.SetParent(root, false);
             for (int i = 0; i < deg.Length; i++)
             {
                 float a = deg[i] * Mathf.Deg2Rad;
-                float rad = 1f + 0.12f * Mathf.Sin(2 * a + 1.3f) + 0.07f * Mathf.Sin(3 * a + 4.1f) + 0.04f * Mathf.Sin(5 * a + 2.2f);
+                float rad = IdleGrounds.Sim.PondShape.Rad(a);
                 var off = new Vector2(Mathf.Cos(a) * hx * rad, Mathf.Sin(a) * hy * rad) * 0.93f / 32f;
                 var pos = pondCentre + off;
                 pos = new Vector2(Mathf.Round(pos.x * 32f) / 32f, Mathf.Round(pos.y * 32f) / 32f);
@@ -1580,7 +1575,7 @@ namespace IdleGrounds.Editor
             {
                 var water = NewMap(root, "Water", 3, Vector3.zero);
                 water.animationFrameRate = 1f;
-                const int pr = 46, pc = 46;
+                const int pr = IdleGrounds.Sim.PondShape.CentreRow, pc = IdleGrounds.Sim.PondShape.CentreCol;
                 water.SetTile(C(pr, pc), kit.pond);
                 int hw = PondW / 64, hh = PondH / 64;
                 for (int row = pr - hh; row <= pr + hh; row++) for (int col = pc - hw; col <= pc + hw; col++) { var cc = C(row, col); busy.Add(new Vector2Int(cc.x, cc.y)); }
