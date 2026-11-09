@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-11-09 16:47",
+  "updated": "2026-11-09 17:45",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -550,10 +550,9 @@
         {
           "title": "64 px step C: resource nodes + fixtures",
           "detail": "ART-SPEC v6.31 section 3.9.8 \"Step C\": 31 @64 files in sets C1-C11 by Island unlock order (C1 Center first: node_bush_64x96_2f@64, fix_spirittree@64 320x384, fix_quarry@64 128x160), zips Idle-Grounds-Nodes-64-001..011 + Idle-Grounds-Fixtures-64-001..003. Chop/break nodes keep 2 state frames (intact, trimmed/cracked); everything else one still; sparkle, bob, ripple, glow, steam in code; no layers.",
-          "status": "waiting",
+          "status": "done",
           "size": "M",
-          "owner": "Artist",
-          "blockedBy": "C1-C11 delivered and reviewed (v6.32-v6.35): 19 accepted in game, 6 validated (Phase 3+ / peach tree unused), 7 to resend after 2nd small repairs: Nodes-64-018 (bamboostalk x2), -019 (reedbed x2), -020 (boneheap, soulvine), -021 (moonshrub)"
+          "owner": "Artist"
         },
         {
           "title": "64 px step D: trees + standing props",
@@ -565,10 +564,9 @@
         {
           "title": "64 px step F: creatures",
           "detail": "ART-SPEC v6.39 section 3.9.8 \"Step F\": 14 @64 files in sets F1-F5, category creatures, zips Idle-Grounds-Creatures-64-009..013. F1 fox and F2 boar (Center, the only enemies in game; idle/move/hit/die strips 64x64 and 96x64, frame-based, P1), F3 Azure Wolf strips (preview-only, ADR 0007 Phase 6), F4 npc_pen_beast@64 and F5 npc_disciple@64 stills (preview-only, motion in code). Per-frame checks: changed px idle 3-12 % / move 15-40 %, >=90 % in full 2x2 blocks, <=5 % isolated, holes 0, one shape per frame, idle feet rows identical to frame 0.",
-          "status": "waiting",
+          "status": "done",
           "size": "M",
-          "owner": "Artist",
-          "blockedBy": "Round 5 reviewed (v6.47): wolf idle + move pass; hit + die rejected 3x - awaiting the orchestrator (33-px in-house fix in docs/art/reference/wolf64-r5-inhouse); boar v3 and fox v3 also held; pen beast + disciple validated (preview-only)"
+          "owner": "Artist"
         },
         {
           "title": "Art review: 64 px step C sets C1-C4 (Nodes-64-001..004, Fixtures-64-001/-002) + icicle cleanup Islands-070",
@@ -645,10 +643,9 @@
         {
           "title": "Apply in-house pixel fixes: 6 nodes + fox, boar, wolf",
           "detail": "Owner pick 2026-11-09 (nodes_finish = use our fixes). Apply the prepared candidates (bamboo 1x1/2x2, reed bed 1x1/2x2, bone heap, soul vine leaves, fox 98 px, boar, wolf 33 px), integrate the ones whose islands exist (bamboo, fox, boar), check in Play; rest validated as previews.",
-          "status": "in-progress",
+          "status": "done",
           "size": "M",
-          "owner": "Claude",
-          "now": "in-game art reviewer applies + integrates the fixes"
+          "owner": "Claude"
         },
         {
           "title": "Fishing: fish and algae only in the drawn pond, same pace",

@@ -171,20 +171,20 @@ MonoBehaviour:
     realArt: 1
     overlay: []
   - key: enemy
-    sprite: {fileID: 1688976823101074661, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
+    sprite: {fileID: -1109977543562522302, guid: 2200a8bedddb4fc429262871ceef5913, type: 3}
     frames:
-    - {fileID: 1688976823101074661, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
-    - {fileID: -8265550670337478759, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
-    - {fileID: 1188285853192314585, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
-    - {fileID: 370471857877179697, guid: f7d7a52680768194fa2863fde8c73337, type: 3}
+    - {fileID: -1109977543562522302, guid: 2200a8bedddb4fc429262871ceef5913, type: 3}
+    - {fileID: -5970258511657792463, guid: 2200a8bedddb4fc429262871ceef5913, type: 3}
+    - {fileID: 3098068260620904894, guid: 2200a8bedddb4fc429262871ceef5913, type: 3}
+    - {fileID: -600494203737434238, guid: 2200a8bedddb4fc429262871ceef5913, type: 3}
     realArt: 1
     overlay: []
   - key: enemy_bait
-    sprite: {fileID: 1093742558393487552, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
+    sprite: {fileID: 294204231191075312, guid: 281c4f1d90980c747b3ce9ab479f52f6, type: 3}
     frames:
-    - {fileID: 1093742558393487552, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
-    - {fileID: -478341959553124567, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
-    - {fileID: -6496391634586327411, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
-    - {fileID: 7042042739380084074, guid: c97d91b136e50774d8c1190181174ddb, type: 3}
+    - {fileID: 294204231191075312, guid: 281c4f1d90980c747b3ce9ab479f52f6, type: 3}
+    - {fileID: 5078910381143903317, guid: 281c4f1d90980c747b3ce9ab479f52f6, type: 3}
+    - {fileID: -5719972683157457522, guid: 281c4f1d90980c747b3ce9ab479f52f6, type: 3}
+    - {fileID: 7314198684506350806, guid: 281c4f1d90980c747b3ce9ab479f52f6, type: 3}
     realArt: 1
     overlay: []

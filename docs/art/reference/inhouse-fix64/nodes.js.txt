@@ -1,0 +1,62 @@
+'use strict';
+const {decode,encode}=require('./png.js'),fs=require('fs');
+const HEX='0D0F14 1B1F2B 2E3345 4A5068 7A809A B7BCCD E8ECF3 0F3B34 1F6B57 2F9A7A 5FCF9C A8ECC0 4F7A2F 86B34A C3D67A 4A1417 8C1D22 C8322B EE6A4A 3D2616 6E4524 A8703A D9A45C F2C94C FFF0A0 14405A 2B86B3 5ED4E8 C4F6FF FF8A1F 3A2A63 7D5FC4 C2521C B8862E F0C8A0 C48B68 B9A2F0 2C4A22 3E5A7C F4E6C8'.split(' ');
+const col=p=>{const h=HEX[p-1];return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16),255];};
+const [,,R,O]=process.argv;fs.mkdirSync(O,{recursive:true});
+class Img{constructor(f,fw){this.im=decode(f);this.fw=fw;}
+ i(f,x,y){return (y*this.im.w+f*this.fw+x)*4;}
+ p(f,x,y){if(x<0||y<0||x>=this.fw||y>=this.im.h)return null;const i=this.i(f,x,y);if(!this.im.rgba[i+3])return null;const h=[0,1,2].map(k=>this.im.rgba[i+k].toString(16).padStart(2,'0')).join('').toUpperCase();return HEX.indexOf(h)+1;}
+ set(f,x,y,p){const i=this.i(f,x,y);const c=p?col(p):[0,0,0,0];for(let k=0;k<4;k++)this.im.rgba[i+k]=c[k];}
+ copy(from,to,x,y){this.set(to,x,y,this.p(from,x,y));}
+ save(n){encode(`${O}/${n}`,this.im.w,this.im.h,this.im.rgba);}}
+const log=[];const L=s=>{log.push(s);console.log(s);};
+const ld=(n,fw)=>new Img(`${R}/${n}_v3_REJECTED.png`,fw);
+// ---- bamboo 1x1: frame 1 leaf = frame 0 leaf (no pale flag)
+{const I=ld('node_bamboostalk_1x1_64x96_2f@64',64);let n=0;
+ for(let y=64;y<=72;y++)for(let x=22;x<=29;x++){if(x===29&&y<=66)continue;if(I.p(1,x,y)!==I.p(0,x,y)){I.copy(0,1,x,y);n++;}}
+ L('bamboo1x1 f1 leaf restored from f0: '+n+' px');I.save('node_bamboostalk_1x1_64x96_2f@64.png');}
+// ---- bamboo 2x2: frame 1 = frame 0 with the right-hand stalk cut to a stub at y94-97
+{const I=ld('node_bamboostalk_2x2_128x160_2f@64',128);let n=0;
+ for(let y=0;y<160;y++)for(let x=0;x<128;x++){const a=I.p(0,x,y);if(I.p(1,x,y)!==a){I.copy(0,1,x,y);n++;}}
+ let c=0;const clr=(x,y)=>{if(I.p(1,x,y)!==null){I.set(1,x,y,0);c++;}};
+ for(let y=41;y<=46;y++)for(let x=85;x<128;x++)clr(x,y);
+ for(let y=47;y<=93;y++)for(let x=71;x<128;x++)clr(x,y);
+ for(let y=94;y<=97;y++)for(let x=71;x<128;x++)if(x<75||x>87)clr(x,y);
+ for(let y=98;y<=101;y++)for(let x=88;x<128;x++)if(y<=97)clr(x,y);
+ const put=(y,x0,x1,p)=>{for(let x=x0;x<=x1;x++)I.set(1,x,y,p);};
+ put(94,78,84,2);
+ put(95,76,77,2);put(95,78,80,13);put(95,81,81,14);put(95,82,84,15);put(95,85,86,2);
+ put(96,75,75,2);put(96,76,77,13);put(96,78,85,15);put(96,86,86,2);
+ put(97,75,86,2);
+ L('bamboo2x2 f1: reset to f0 ('+n+' px), right stalk cleared '+c+' px, cut face at y94-97');I.save('node_bamboostalk_2x2_128x160_2f@64.png');}
+// ---- reed beds: remove 1-px spikes (no left and no right neighbour) in the broken top band
+function reed(name,fw,y0,y1){const I=ld(name,fw);let tot=0;
+ for(let it=0;it<20;it++){const rm=[];for(let y=y0;y<=y1;y++)for(let x=0;x<fw;x++){if(I.p(1,x,y)===null)continue;
+  if(I.p(1,x-1,y)===null&&I.p(1,x+1,y)===null&&(I.p(1,x,y-1)!==null||I.p(1,x,y+1)!==null))rm.push([x,y]);}
+  rm.forEach(([x,y])=>I.set(1,x,y,0));tot+=rm.length;if(!rm.length)break;}
+ for(let it=0;it<6;it++){const rm=[];for(let y=y0;y<=y1;y++)for(let x=0;x<fw;x++){if(I.p(1,x,y)===null)continue;const nb=[[1,0],[-1,0],[0,1],[0,-1]].filter(([a,b])=>I.p(1,x+a,y+b)!==null).length;if(nb<=1&&y<y1-6)rm.push([x,y]);}rm.forEach(([x,y])=>I.set(1,x,y,0));tot+=rm.length;if(!rm.length)break;}
+ L(name+' f1 vertical 1-px spikes removed: '+tot+' px');I.save(name+'.png');}
+reed('node_reedbed_1x1_64x96_2f@64',64,50,68);reed('node_reedbed_2x2_128x160_2f@64',128,90,112);
+// ---- bone heap: f1 left part (x<=24, y110-140) = f0 (no straight cut / floating bone end)
+{const I=ld('node_boneheap_128x160_2f@64',128);let n=0;for(let y=110;y<=140;y++)for(let x=0;x<=24;x++)if(I.p(1,x,y)!==I.p(0,x,y)){I.copy(0,1,x,y);n++;}
+ L('boneheap f1 left part restored from f0: '+n+' px');I.save('node_boneheap_128x160_2f@64.png');}
+// ---- soul vine
+{const I=ld('node_soulvine_64x96_2f@64',64);const V4=new Img(`${R}/node_soulvine_64x96_2f@64_v4_REJECTED.png`,64);
+ // v4 tip into frame 1 (x24-33, y48-53)
+ let t=0;for(let y=48;y<=53;y++)for(let x=24;x<=33;x++){const v=V4.p(1,x,y);if(I.p(1,x,y)!==v){I.set(1,x,y,v);t++;}}
+ L('soulvine f1 tip from v4: '+t+' px');
+ // leaf: right-pointing, origin = base px (bottom-left). rows listed top to bottom, [dx,dy,pal]
+ const leafR=[[3,-3,1],[4,-3,1],[5,-3,1],[2,-2,1],[3,-2,28],[4,-2,28],[5,-2,26],[6,-2,1],[1,-1,1],[2,-1,26],[3,-1,26],[4,-1,27],[5,-1,27],[6,-1,1],[0,0,1],[1,0,26],[2,0,27],[3,0,27],[4,0,1],[0,1,1],[1,1,1],[2,1,1]];
+ const spec=[[0,82,'R'],[0,82,'L'],[0,64,'R'],[0,64,'L'],[1,67,'L'],[1,57,'R']];
+ const out=[];let tot=0;
+ for(const [win,y,side] of spec){let ox;
+  if(win===0){ox=side==='R'?(()=>{let m=-1;for(let x=22;x<40;x++)if(I.p(0,x,y)!==null)m=x;return m;})():(()=>{for(let x=22;x<40;x++)if(I.p(0,x,y)!==null)return x;})();}
+  else if(side==='L'){for(let x=8;x<20;x++)if(I.p(0,x,y)!==null){ox=x;break;}}
+  else {let m=-1;for(let x=34;x<48;x++)if(I.p(0,x,y)!==null)m=x;ox=m;}
+  let painted=0,touch=0;const px=[];
+  for(const [dx,dy,p] of leafR){const x=side==='R'?ox+dx-1:ox-dx+1,yy=y+dy;px.push([x,yy,p]);}
+  for(const [x,yy,p] of px){if(I.p(0,x,yy)!==null)continue;for(const f of [0,1])if(f===0||I.p(1,x,yy)===null)I.set(f,x,yy,p);painted++;}
+  for(const [x,yy] of px)if([[1,0],[-1,0],[0,1],[0,-1]].some(([a,b])=>I.p(0,x+a,yy+b)!==null&&!px.some(q=>q[0]===x+a&&q[1]===yy+b)))touch++;
+  L(`leaf win${win} y${y} ${side}: origin x${ox}, painted ${painted}, touching vine ${touch}`);tot+=painted;}
+ L('soulvine leaf px total '+tot);I.save('node_soulvine_64x96_2f@64.png');}
+fs.writeFileSync(`${O}/nodes-fix-log.txt`,log.join('\n')+'\n');
