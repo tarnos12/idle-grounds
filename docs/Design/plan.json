@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-11-09 17:45",
+  "updated": "2026-11-09 17:50",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -627,18 +627,25 @@
         {
           "title": "Layers L1R3: one more ChatGPT round for the failed moving-part layers",
           "detail": "Owner pick 2026-11-09 (layers_finish = one more ChatGPT try). Art director writes the L1R3 request on Drive: Paper Mill wheel (8 paddles) + press outline + base, Kang base + raised sleeved arm, Xuan base, plus the B3/Creatures layers that failed the same way. Then in-game art reviewer reviews.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "M",
           "owner": "Claude",
-          "now": "art director writes the L1R3 brief"
+          "blockedBy": "waiting on ChatGPT: L1R3 brief on Drive (ART-SPEC v6.49 §3.9.8, 17 files, Layers-64-007/-008)"
         },
         {
           "title": "Auto tiles: ChatGPT draws Unity auto-tile sets per island (ground, grass, path, walls)",
           "detail": "Owner pick 2026-11-09 (tiles_finish note): replace hand-placed tile pieces with Unity auto tiles (Rule Tiles). Art director defines the auto-tile template (layout, sizes, which sets each island needs) and requests it; feature builder wires Rule Tiles into the island builder; first for the 4 failing future islands, then where it helps on built ones.",
-          "status": "in-progress",
+          "status": "waiting",
           "size": "L",
           "owner": "Claude",
-          "now": "art director designs the auto-tile template + request"
+          "blockedBy": "waiting on ChatGPT: AT1 request on Drive (ART-SPEC v6.49 §3.10, Wang-16 template, Islands-071..074)"
+        },
+        {
+          "title": "Auto tiles: dual-grid builder for the Wang-16 sheets (feature builder)",
+          "detail": "ART-SPEC §3.10.3 contract: import 128x160 sheets as 32x32 sprites (layout L = [[10,13,12,4],[14,15,7,9],[3,11,5,2],[8,6,1,0]] + F0-F3), display tilemap Auto_<terrain> offset (-0.5,-0.5) fed from a data cell set / hidden data tilemap, overlays at the Macro slot, water 3, path 4, side-face strip frame = cellY mod 4, menu Rebuild Auto Tiles, EditMode test 2x2 block -> [8,12,4]/[10,15,5]/[2,3,1]. Can start now on the template alpha (docs/art/reference/autotile) as placeholder art; preview Island for the AT1 review.",
+          "status": "todo",
+          "size": "M",
+          "owner": "Claude"
         },
         {
           "title": "Apply in-house pixel fixes: 6 nodes + fox, boar, wolf",
