@@ -450,22 +450,24 @@
       "spawners": [
         {
           "kind": "fish",
-          "zone": "centre",
+          "zone": "pond",
           "sizes": [
             1
           ],
-          "target": 4,
+          "target": 6,
+          "scaleWithArea": false,
           "interaction": "surface",
           "useTiers": true,
           "swingMs": 350
         },
         {
           "kind": "algae",
-          "zone": "centre",
+          "zone": "pond",
           "sizes": [
             1
           ],
-          "target": 10,
+          "target": 14,
+          "scaleWithArea": false,
           "interaction": "surface",
           "swingMs": 350,
           "sprite": "🪸",

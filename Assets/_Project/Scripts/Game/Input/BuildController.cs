@@ -345,8 +345,10 @@ namespace IdleGrounds.Game
                     for (int c = 0; c < w; c++)
                     {
                         int rr = row + r, cc = col + c;
-                        bool bad = rr < 0 || cc < 0 || rr >= N || cc >= N || Sim.Occupancy.IsOccupied(areaState, rr, cc)
-                            || (!def.anyZone && !def.waterOnly && Sim.World.InNoBuild(area, rr, cc));
+                        bool bad = rr < 0 || cc < 0 || rr >= N || cc >= N
+                            || (Sim.Occupancy.IsOccupied(areaState, rr, cc) && !(def.waterOnly && Sim.World.SurfacedSpawnAt(area, areaState, rr, cc) != null))
+                            || (!def.anyZone && !def.waterOnly && Sim.World.InNoBuild(area, rr, cc))
+                            || (def.waterOnly && !Sim.World.CellInZone(IdleGrounds.Sim.PondShape.ZoneKey, rr, cc));
                         fbBlocked[r * w + c] = bad;
                     }
             fbText = reason != null ? DescribeRefusal(area, def, row, col, reason) : DescribeCost(def);

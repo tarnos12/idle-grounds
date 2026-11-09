@@ -292,6 +292,22 @@ namespace IdleGrounds.Sim
         static Type ListElementType(Type t) =>
             t.IsGenericType && t.GetGenericTypeDefinition() == typeof(List<>) ? t.GetGenericArguments()[0] : null;
 
+        /// <summary>Every cell of a spawner node lies in its spawner's zone (unknown spawner / empty zone: kept).</summary>
+        static bool InSpawnerZone(GameConfig cfg, RegionDef reg, Node n)
+        {
+            var sp = reg.spawners.Find(x => x.kind == n.spawnerKind);
+            var rects = sp != null ? cfg.ZoneRects(sp.zone) : null;
+            if (rects == null || rects.Count == 0) return true;
+            for (int r = n.row; r < n.row + n.size; r++)
+                for (int c = n.col; c < n.col + n.size; c++)
+                {
+                    bool inside = false;
+                    foreach (var z in rects) if (z.Contains(r, c)) { inside = true; break; }
+                    if (!inside) return false;
+                }
+            return true;
+        }
+
         static bool Finite(double d) => !double.IsNaN(d) && !double.IsInfinity(d);
 
         /// <summary>
@@ -609,6 +625,9 @@ namespace IdleGrounds.Sim
                 !(n.deco && n.kind == "deco" ? a.key == "center"
                   : n.isFixed ? reg.fixtures.Exists(fx => fx.kind == n.kind)
                   : reg.spawners.Exists(sp => sp.kind == n.spawnerKind)));
+            // spawner nodes that stand outside their spawner's zone go (2026-11-09: fish / algae moved from the Fishing
+            // centre to the drawn pond); InitArea refills each spawner to its target inside the zone on boot
+            a.nodes.RemoveAll(n => !n.isFixed && !n.deco && !InSpawnerZone(cfg, reg, n));
             a.spawnQueue.RemoveAll(e => e == null || !Finite(e.at) || !reg.spawners.Exists(sp => sp.kind == e.kind));
             a.buildings.RemoveAll(b => b == null || cfg.Building(b.type) == null);
 

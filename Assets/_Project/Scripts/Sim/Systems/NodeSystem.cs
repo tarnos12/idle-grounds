@@ -163,7 +163,7 @@ namespace IdleGrounds.Sim
             for (int attempt = 0; attempt < Cfg.balance.spawnAttempts; attempt++)
             {
                 int size = sp.sizes[Rng.Rand(0, sp.sizes.Count - 1)];
-                var z = rects[Rng.Rand(0, rects.Count - 1)];
+                var z = rects.Count == 1 ? rects[Rng.Rand(0, 0)] : PickByArea(rects);
                 if (z.r1 - z.r0 + 1 < size || z.c1 - z.c0 + 1 < size) continue;
                 int row = Rng.Rand(z.r0, z.r1 - size + 1);
                 int col = Rng.Rand(z.c0, z.c1 - size + 1);
@@ -203,6 +203,21 @@ namespace IdleGrounds.Sim
         }
 
         static double Hypot(double a, double b) => Math.Sqrt(a * a + b * b);
+
+        /// <summary>One rect of a multi-rect zone, weighted by its cell count (one RNG draw), so a zone made of row
+        /// runs (the Fishing pond) spawns evenly per cell instead of crowding its short rows.</summary>
+        ZoneRect PickByArea(List<ZoneRect> rects)
+        {
+            int total = 0;
+            foreach (var r in rects) total += (r.r1 - r.r0 + 1) * (r.c1 - r.c0 + 1);
+            int k = Rng.Rand(0, total - 1);
+            foreach (var r in rects)
+            {
+                k -= (r.r1 - r.r0 + 1) * (r.c1 - r.c0 + 1);
+                if (k < 0) return r;
+            }
+            return rects[rects.Count - 1];
+        }
 
         // ---- §6.5 regrow ----
 

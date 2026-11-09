@@ -197,6 +197,18 @@ namespace IdleGrounds.Sim
         {
             if (PlaceGhostReason(areaKey, type, row, col) != null) return null;
             var area = S.Area(areaKey);
+            var def = Cfg.Building(type);
+            if (def != null && def.waterOnly)
+            {
+                // fish / algae surfacing under a new Algae Farm dive (and respawn elsewhere in the pond)
+                var (w, h) = Cfg.BuildingSize(type);
+                for (int r = row; r < row + h; r++)
+                    for (int c = col; c < col + w; c++)
+                    {
+                        var n = _ctx.World.SurfacedSpawnAt(areaKey, area, r, c);
+                        if (n != null) _ctx.Nodes.DepleteNode(areaKey, n);
+                    }
+            }
             var b = new Building { id = area.nextBuildId++, type = type, row = row, col = col, built = false };
             InitLogistics(b);
             area.buildings.Add(b);

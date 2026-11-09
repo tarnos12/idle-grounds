@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-11-09 17:53",
+  "updated": "2026-11-09 17:59",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -658,10 +658,9 @@
         {
           "title": "Fishing: fish and algae only in the drawn pond, same pace",
           "detail": "Owner pick 2026-11-09 (fish_zone = pond_zone). Spawn fish/algae and the Algae Farm water rule only on pond cells; rebalance spawn targets so the fishing pace stays the same (playthrough bot before/after).",
-          "status": "in-progress",
+          "status": "done",
           "size": "M",
-          "owner": "Claude",
-          "now": "feature builder changes the Sim spawn zone"
+          "owner": "Claude"
         }
       ]
     },

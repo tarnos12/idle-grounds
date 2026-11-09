@@ -181,7 +181,7 @@ namespace IdleGrounds.Sim.Tests
             // anyZone 1x1 inside volcano's centre (noBuild) is fine
             Assert.IsNull(sim.PlaceReason("volcano", "gathering_stone", 40, 40));
             Assert.AreEqual("Water only", sim.PlaceReason("fishing", "algae_farm", 5, 30));
-            Assert.IsNull(sim.PlaceReason("fishing", "algae_farm", 40, 40));
+            Assert.AreEqual("Water only", sim.PlaceReason("fishing", "algae_farm", 40, 40), "snow: only the drawn pond is water (PondTests)");
             Assert.AreEqual("Locked", sim.PlaceReason("volcano", "heavenly_gate", 10, 60), "Celestial Peak still locked");
             sim.State.world.SetUnlocked("celestial", true);
             Assert.AreEqual("Only on Celestial Peak", sim.PlaceReason("volcano", "heavenly_gate", 10, 60));

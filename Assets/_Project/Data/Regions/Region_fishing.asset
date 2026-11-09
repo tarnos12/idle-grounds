@@ -44,10 +44,10 @@ MonoBehaviour:
       timer: 12
     spawners:
     - kind: fish
-      zone: centre
+      zone: pond
       sizes: 01000000
-      target: 4
-      scaleWithArea: 1
+      target: 6
+      scaleWithArea: 0
       spacing: 0
       interaction: 4
       useTiers: 1
@@ -61,10 +61,10 @@ MonoBehaviour:
         item: 
         chance: 0
     - kind: algae
-      zone: centre
+      zone: pond
       sizes: 01000000
-      target: 10
-      scaleWithArea: 1
+      target: 14
+      scaleWithArea: 0
       spacing: 0
       interaction: 4
       useTiers: 0
