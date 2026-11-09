@@ -625,6 +625,38 @@
           "status": "done",
           "size": "S",
           "owner": "Claude"
+        },
+        {
+          "title": "Layers L1R3: one more ChatGPT round for the failed moving-part layers",
+          "detail": "Owner pick 2026-11-09 (layers_finish = one more ChatGPT try). Art director writes the L1R3 request on Drive: Paper Mill wheel (8 paddles) + press outline + base, Kang base + raised sleeved arm, Xuan base, plus the B3/Creatures layers that failed the same way. Then in-game art reviewer reviews.",
+          "status": "in-progress",
+          "size": "M",
+          "owner": "Claude",
+          "now": "art director writes the L1R3 brief"
+        },
+        {
+          "title": "Auto tiles: ChatGPT draws Unity auto-tile sets per island (ground, grass, path, walls)",
+          "detail": "Owner pick 2026-11-09 (tiles_finish note): replace hand-placed tile pieces with Unity auto tiles (Rule Tiles). Art director defines the auto-tile template (layout, sizes, which sets each island needs) and requests it; feature builder wires Rule Tiles into the island builder; first for the 4 failing future islands, then where it helps on built ones.",
+          "status": "in-progress",
+          "size": "L",
+          "owner": "Claude",
+          "now": "art director designs the auto-tile template + request"
+        },
+        {
+          "title": "Apply in-house pixel fixes: 6 nodes + fox, boar, wolf",
+          "detail": "Owner pick 2026-11-09 (nodes_finish = use our fixes). Apply the prepared candidates (bamboo 1x1/2x2, reed bed 1x1/2x2, bone heap, soul vine leaves, fox 98 px, boar, wolf 33 px), integrate the ones whose islands exist (bamboo, fox, boar), check in Play; rest validated as previews.",
+          "status": "in-progress",
+          "size": "M",
+          "owner": "Claude",
+          "now": "in-game art reviewer applies + integrates the fixes"
+        },
+        {
+          "title": "Fishing: fish and algae only in the drawn pond, same pace",
+          "detail": "Owner pick 2026-11-09 (fish_zone = pond_zone). Spawn fish/algae and the Algae Farm water rule only on pond cells; rebalance spawn targets so the fishing pace stays the same (playthrough bot before/after).",
+          "status": "in-progress",
+          "size": "M",
+          "owner": "Claude",
+          "now": "feature builder changes the Sim spawn zone"
         }
       ]
     },

@@ -1,0 +1,10 @@
+{
+  "date": "2026-11-09",
+  "verbatim": "Answers\nlayers_finish: One more ChatGPT try\ntiles_finish: (no pick)  | note: We need chatgpt to create AUTO TILES for Unity, this should fix the issue. We need auto tile for ground, for grass, for path for walls etc(w/e you think is necessary for each island)\nnodes_finish: Yes, use our fixes\nfish_zone: Only in the pond (keep the same pace)",
+  "answers": {
+    "layers_finish": "chatgpt_round",
+    "tiles_finish": "note: ChatGPT makes Unity auto tiles (ground, grass, path, walls etc. per island)",
+    "nodes_finish": "apply_fixes",
+    "fish_zone": "pond_zone"
+  }
+}
