@@ -95,8 +95,18 @@ namespace IdleGrounds.Game
             WorldLabel.Sort(progressFill, WorldLabel.OrderPlate + 2);
             progressTrack.color = Track;
             progressFill.color = WorldLabel.GoldColour;
-            strip.SetAnchor(new Vector3(v.W * 0.5f, v.ArtTop + ViewKit.U(2f), 0f));
+            AnchorStrip(v);
             lastRecipe = -2; LastFace = null; relayout = true; lastHadStatus = false; lastLod = -1;
+        }
+
+        float stripW = 2f, stripH = 0.56f, nextAnchorCheck;
+
+        /// <summary>Strip above the art; in a dense cluster (a building north of it would be covered) it sits on its own art instead.</summary>
+        void AnchorStrip(BuildingView v)
+        {
+            float y = v.ArtTop + ViewKit.U(2f);
+            if (v.RealArt && v.NorthNeighbourCovers(y, stripW, stripH)) y = -stripH - ViewKit.U(2f);
+            strip.SetAnchor(new Vector3(v.W * 0.5f, y, 0f));
         }
 
         int lastFontVersion = -1;
@@ -140,9 +150,10 @@ namespace IdleGrounds.Game
             WorldLabel.SizePlate(backing, 0f, ph * 0.5f, pw, ph);
             barW = pw - ViewKit.U(6f); barX0 = -barW * 0.5f; barY = ViewKit.U(3.5f); barH = ViewKit.U(2f);
             ViewKit.Bar(progressTrack, barX0, barY, barW, barH);
+            stripW = pw; stripH = ph;
             strip.SetBounds(-pw * 0.5f, 0f, pw, ph);
             strip.SetKeep(home, new Vector3(0f, ViewKit.U(6f), 0f));
-            strip.SetAnchor(new Vector3(v.W * 0.5f, v.ArtTop + ViewKit.U(2f), 0f));
+            AnchorStrip(v);
         }
 
         public override void Layout(BuildingView v)
@@ -311,6 +322,7 @@ namespace IdleGrounds.Game
             if (real && strip.LodVersion != lastLod) { lastLod = strip.LodVersion; relayout = true; }
             if (real && lastFontVersion != UiFont.Version) { lastFontVersion = UiFont.Version; relayout = true; }      // Text font setting: the pill is measured in the face it is drawn in
             if (real && relayout) RelayoutReal(v, f);
+            else if (real && Time.unscaledTime >= nextAnchorCheck) { nextAnchorCheck = Time.unscaledTime + 0.5f; AnchorStrip(v); }      // neighbours are built and demolished later
 
             // progress: extrapolated every frame from the batch end time and the sampled batch length
             var b = v.Building;

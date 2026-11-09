@@ -76,6 +76,26 @@ namespace IdleGrounds.Game
             return n;
         }
 
+        /// <summary>
+        /// Would a label (pivot bottom-centre at local <paramref name="y"/>, <paramref name="w"/> wide, <paramref name="h"/> tall) land on
+        /// the art of another building of this Island that stands north of this one? (Art only rises, so a building to the south never
+        /// reaches it.) Cells: local y up = row down.
+        /// </summary>
+        public bool NorthNeighbourCovers(float y, float w, float h)
+        {
+            if (Sync == null || Building == null) return false;
+            float x0 = Building.col + W * 0.5f - w * 0.5f, x1 = x0 + w;
+            float y0 = Building.row - (y + h), y1 = Building.row - y;       // rows covered by the label (top, bottom)
+            foreach (var o in Sync.Views)
+            {
+                if (o == this || o.Area != Area || o.Building == null) continue;
+                float ox = o.Building.col + o.W * 0.5f, ow = o.RealArt ? o.ArtSize.x : o.W;
+                float bottom = o.Building.row + o.H, top = bottom - (o.RealArt ? o.ArtSize.y : o.H);
+                if (x0 < ox + ow * 0.5f && x1 > ox - ow * 0.5f && y0 < bottom - 0.02f && y1 > top + 0.02f) return true;
+            }
+            return false;
+        }
+
         public IReadOnlyList<BuildingFace> Faces => faces;
         public SpriteRenderer Panel => panel;
         /// <summary>The real building art (null for placeholder buildings); used to anchor building panels beside the art.</summary>

@@ -99,10 +99,10 @@ namespace IdleGrounds.Editor
                 File.WriteAllBytes(path, bytes);
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
             }
-            Import(path, true, FilterMode.Point, Ppu, TextureWrapMode.Repeat);
+            Import(path, true, FilterMode.Point, Ppu, TextureWrapMode.Repeat, size >= 64);
         }
 
-        static void Import(string path, bool center, FilterMode filter, float ppu, TextureWrapMode wrap)
+        static void Import(string path, bool center, FilterMode filter, float ppu, TextureWrapMode wrap, bool mips = false)
         {
             var imp = (TextureImporter)AssetImporter.GetAtPath(path);
             if (imp == null) return;
@@ -111,7 +111,7 @@ namespace IdleGrounds.Editor
             imp.spritePixelsPerUnit = ppu;
             imp.filterMode = filter;
             imp.textureCompression = TextureImporterCompression.Uncompressed;
-            imp.mipmapEnabled = false;
+            imp.mipmapEnabled = mips;      // mist tiles: point-sampled mip levels, so zoomed-out views average the noise instead of aliasing into vertical bands
             imp.alphaIsTransparency = true;
             imp.wrapMode = wrap;
             imp.maxTextureSize = 8192;

@@ -5,6 +5,8 @@ commit, git fetch first) live in `CLAUDE.md` — not repeated here.
 
 ## ▶ NEXT SESSION: start here
 
+
+**Batch A follow-ups (2026-11-09, branch bg/vpa, not merged):** (1) Veil banding: the mist tiles (veil_mist_a_256 / b_192) had no mipmaps, so zoomed-out views point-sampled the noise at 2:1 or more and aliased into faint vertical bands; VeilArt now imports them with mipmaps (point filter, nearest mip; .meta changed, no prefab rebuild). Shots Logs/bg/veil-before / veil-after (preset veil-zoomout; before/after at zoom 12 is a mild improvement, not pixel-identical-clean - owner eye check). (2) Converter strips: BuildingView.NorthNeighbourCovers + ConverterFaceView.AnchorStrip - when the default spot above the art would land on a building to the north, the strip sits on its own art instead (re-checked every 0.5 s). Shots Logs/bg/strip-before / strip-after (preset strip-cluster). (3) VP-27 real-mouse checks of hover tags / hand chip stay for a human (not possible headless). Gate: simtests 171/171, compile 0 errors, EditMode Veil|Converter|Building|View 30/30.
 **Hub questions shortened (2026-11-04, owner: too much text):** the 4 open questions (layers_finish, tiles_finish, nodes_finish, fish_zone) cut to one-line question/context + short options, same ids and recommended options; full history stays in ART-SPEC + git (questions.json before this commit). Rule for agents: keep Hub questions this short.
 
 **Flaky test fix (2026-11-04, bg/flaky):** PlayMode `Logistics_WispLaunches_ConverterCompletes` waited a fixed 18 s but the first converter batch needs ~20.5 s. Deadline is now 18 s + 1.5 x the slowest built converter batch (`Converters.BatchMs`, from recipe data); test Timeout 60 s -> 120 s. No balance change. PlayMode Logistics 2x pass, simtests 171/171.

@@ -1,0 +1,8 @@
+{
+  "mode": "play", "width": 1920, "height": 1080, "warmupFrames": 60, "ui": false, "save": "",
+  "shots": [
+    { "name": "strip_cluster_close", "island": "center", "x": -13, "y": 7, "size": 4.21875, "frames": 12,
+      "act": ["welcomeClose", "built:paper_mill@center,36,30", "built:workbench@center,39,30", "built:kiln@center,42,30", "built:paper_mill@center,36,34", "built:workbench@center,39,34", "built:kiln@center,42,34", "working:paper_mill@center", "working:workbench@center", "working:kiln@center"] },
+    { "name": "strip_cluster_mid", "island": "center", "x": -13, "y": 7, "zoom": 1.714, "frames": 8 }
+  ]
+}
