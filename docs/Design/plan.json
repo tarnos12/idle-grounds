@@ -1,6 +1,6 @@
 {
   "title": "Idle Grounds: plan",
-  "updated": "2026-11-04 05:09",
+  "updated": "2026-11-09 16:35",
   "source": "Source of truth: docs/Design/plan.json, edited with tools/plan/set-task.cjs.",
   "statusMeaning": {
     "task": {
@@ -263,9 +263,10 @@
         {
           "title": "Follow-ups from batch A",
           "detail": "Veil shows faint vertical banding beyond the max zoom; converter strips can sit on the building above in dense clusters; real-mouse checks of hover tags and the hand chip (VP-27).",
-          "status": "todo",
+          "status": "in-progress",
           "size": "S",
-          "owner": "Claude"
+          "owner": "Claude",
+          "now": "agent fixes veil banding + converter strip overlap (task copy vpa)"
         },
         {
           "title": "Building art redo: reference sheet for all 26 buildings",
